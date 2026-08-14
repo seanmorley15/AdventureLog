@@ -257,7 +257,7 @@
 							<input
 								type="text"
 								placeholder={$t('calendar.search_placeholder')}
-								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+								class="input w-full pl-10 pr-10 bg-base-100/80"
 								bind:value={searchFilter}
 							/>
 							{#if searchFilter.length > 0}
@@ -271,7 +271,7 @@
 							{/if}
 						</div>
 
-						<div class="tabs tabs-boxed bg-base-200">
+						<div class="tabs tabs-box bg-base-200">
 							<button
 								type="button"
 								class="tab tab-sm gap-2 {viewMode === 'dayGridMonth' ? 'tab-active' : ''}"
@@ -322,7 +322,7 @@
 			<!-- Main content -->
 			<div class="container mx-auto px-6 py-8">
 				{#if loadError}
-					<div class="alert alert-warning mb-6 shadow-sm">
+					<div class="alert alert-warning mb-6 shadow-xs">
 						<span>{$t(loadError)}</span>
 					</div>
 				{/if}

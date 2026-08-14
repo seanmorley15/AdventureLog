@@ -309,8 +309,8 @@
 								{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
 									<button
 										class="join-item btn btn-sm {currentPage === page
-											? 'btn-primary'
-											: 'btn-ghost'}"
+ ? 'btn-primary'
+ : 'btn-ghost'}"
 										onclick={() => handleChangePage(page)}
 									>
 										{page}
@@ -363,51 +363,49 @@
 								{$t('adventures.status_filter')}
 							</h3>
 
-							<div class="space-y-3">
-								<div class="space-y-1">
-									<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
-										<input
-											type="radio"
-											name="is_visited"
-											class="radio radio-primary radio-sm"
-											checked={isVisitedFilter === 'all'}
-											onchange={() => updateVisitedFilter('all')}
-										/>
-										<span class="label-text">{$t('adventures.all')}</span>
-									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
-										<input
-											type="radio"
-											name="is_visited"
-											class="radio radio-primary radio-sm"
-											checked={isVisitedFilter === 'true'}
-											onchange={() => updateVisitedFilter('true')}
-										/>
-										<span class="label-text">{$t('adventures.visited')}</span>
-									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
-										<input
-											type="radio"
-											name="is_visited"
-											class="radio radio-primary radio-sm"
-											checked={isVisitedFilter === 'false'}
-											onchange={() => updateVisitedFilter('false')}
-										/>
-										<span class="label-text">{$t('adventures.not_visited')}</span>
-									</label>
-								</div>
+							<div class="flex flex-col">
+								<label class="filter-option">
+									<input
+										type="radio"
+										name="is_visited"
+										class="radio radio-primary"
+										checked={isVisitedFilter === 'all'}
+										onchange={() => updateVisitedFilter('all')}
+									/>
+									<span class="text-sm leading-snug min-w-0">{$t('adventures.all')}</span>
+								</label>
+								<label class="filter-option">
+									<input
+										type="radio"
+										name="is_visited"
+										class="radio radio-primary"
+										checked={isVisitedFilter === 'true'}
+										onchange={() => updateVisitedFilter('true')}
+									/>
+									<span class="text-sm leading-snug min-w-0">{$t('adventures.visited')}</span>
+								</label>
+								<label class="filter-option">
+									<input
+										type="radio"
+										name="is_visited"
+										class="radio radio-primary"
+										checked={isVisitedFilter === 'false'}
+										onchange={() => updateVisitedFilter('false')}
+									/>
+									<span class="text-sm leading-snug min-w-0">{$t('adventures.not_visited')}</span>
+								</label>
 
 								<div class="divider my-0"></div>
 
-								<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+								<label class="filter-option">
 									<input
 										type="checkbox"
 										id="include_collections"
-										class="checkbox checkbox-primary checkbox-sm"
+										class="checkbox checkbox-primary"
 										checked={includeCollections}
 										onchange={(e) => updateIncludeCollections(e.currentTarget.checked)}
 									/>
-									<span class="label-text">{$t('adventures.collection_locations')}</span>
+									<span class="text-sm leading-snug min-w-0">{$t('adventures.collection_locations')}</span>
 								</label>
 							</div>
 						</div>
@@ -420,10 +418,7 @@
 
 							<div class="space-y-4">
 								<div>
-									<!-- svelte-ignore a11y_label_has_associated_control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_direction')}</span>
-									</label>
+									<p class="text-sm font-medium mb-2">{$t('adventures.order_direction')}</p>
 									<div class="join w-full">
 										<button
 											type="button"
@@ -447,50 +442,47 @@
 								</div>
 
 								<div>
-									<!-- svelte-ignore a11y_label_has_associated_control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
-									</label>
-									<div class="space-y-1">
-										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+									<p class="text-sm font-medium mb-2">{$t('adventures.order_by')}</p>
+									<div class="flex flex-col">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'updated_at'}
 												onchange={() => updateSort('updated_at', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.updated')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.updated')}</span>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'name'}
 												onchange={() => updateSort('name', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.name')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.name')}</span>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'date'}
 												onchange={() => updateSort('date', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.date')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.date')}</span>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'rating'}
 												onchange={() => updateSort('rating', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.rating')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.rating')}</span>
 										</label>
 									</div>
 								</div>

@@ -559,31 +559,25 @@
 					<!-- Left Column -->
 					<div class="space-y-4">
 						<!-- Name Field -->
-						<div class="form-control">
-							<label class="label" for="name">
-								<span class="label-text font-medium">
-									{$t('adventures.name')} <span class="text-error">*</span>
-								</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="name">{$t('adventures.name')} <span class="text-error">*</span></label>
 							<input
 								type="text"
 								id="name"
 								bind:value={lodging.name}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input bg-base-100/80 focus:bg-base-100"
 								placeholder={$t('lodging.enter_lodging_name')}
 								required
 							/>
 						</div>
 
 						<!-- Type Field -->
-						<div class="form-control">
-							<label class="label" for="type">
-								<span class="label-text font-medium"
-									>{$t('transportation.type')} <span class="text-error">*</span></span
-								>
+						<div class="flex flex-col">
+							<label class="field-label" for="type">
+								{$t('transportation.type')} <span class="text-error">*</span>
 							</label>
 							<select
-								class="select select-bordered w-full bg-base-100/80 focus:bg-base-100"
+								class="select w-full bg-base-100/80 focus:bg-base-100"
 								name="type"
 								id="type"
 								required
@@ -605,10 +599,8 @@
 						</div>
 
 						<!-- Rating Field -->
-						<div class="form-control">
-							<label class="label" for="rating">
-								<span class="label-text font-medium">{$t('adventures.rating')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="rating">{$t('adventures.rating')}</label>
 							<div
 								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
 							>
@@ -644,15 +636,13 @@
 						</div>
 
 						<!-- Reservation Number -->
-						<div class="form-control">
-							<label class="label" for="reservation">
-								<span class="label-text font-medium">{$t('lodging.reservation_number')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="reservation">{$t('lodging.reservation_number')}</label>
 							<input
 								type="text"
 								id="reservation"
 								bind:value={lodging.reservation_number}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input bg-base-100/80 focus:bg-base-100"
 								placeholder={$t('lodging.enter_reservation_number')}
 							/>
 						</div>
@@ -661,15 +651,13 @@
 					<!-- Right Column -->
 					<div class="space-y-4">
 						<!-- Link Field -->
-						<div class="form-control">
-							<label class="label" for="link">
-								<span class="label-text font-medium">{$t('adventures.link')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="link">{$t('adventures.link')}</label>
 							<input
 								type="url"
 								id="link"
 								bind:value={lodging.link}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input bg-base-100/80 focus:bg-base-100"
 								placeholder={$t('transportation.enter_link')}
 							/>
 						</div>
@@ -685,10 +673,8 @@
 						/>
 
 						<!-- Description Field -->
-						<div class="form-control">
-							<label class="label" for="description">
-								<span class="label-text font-medium">{$t('adventures.description')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="description">{$t('adventures.description')}</label>
 							<MarkdownEditor bind:text={lodging.description} editor_height="h-32" />
 
 							<div class="flex items-center gap-4 mt-3">
@@ -745,7 +731,7 @@
 								checked={allDay}
 								onchange={handleAllDayToggle}
 							/>
-							<span class="label-text">{$t('adventures.all_day')}</span>
+							<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span>
 						</label>
 
 						{#if collection}
@@ -755,7 +741,7 @@
 									class="toggle toggle-secondary"
 									bind:checked={constrainDates}
 								/>
-								<span class="label-text">{$t('adventures.date_constrain')}</span>
+								<span class="font-semibold text-sm text-base-content">{$t('adventures.date_constrain')}</span>
 							</label>
 						{/if}
 					</div>
@@ -769,15 +755,13 @@
 
 					<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 						<!-- Check-in Date -->
-						<div class="form-control">
-							<label class="label" for="check-in">
-								<span class="label-text font-medium">{$t('adventures.check_in')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="check-in">{$t('adventures.check_in')}</label>
 							{#if allDay}
 								<input
 									id="check-in"
 									type="date"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
@@ -787,7 +771,7 @@
 								<input
 									id="check-in"
 									type="datetime-local"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
@@ -797,15 +781,13 @@
 						</div>
 
 						<!-- Check-out Date -->
-						<div class="form-control">
-							<label class="label" for="check-out">
-								<span class="label-text font-medium">{$t('adventures.check_out')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="check-out">{$t('adventures.check_out')}</label>
 							{#if allDay}
 								<input
 									id="check-out"
 									type="date"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
@@ -815,7 +797,7 @@
 								<input
 									id="check-out"
 									type="datetime-local"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}

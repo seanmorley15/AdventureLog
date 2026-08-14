@@ -658,31 +658,25 @@
 					<!-- Left Column -->
 					<div class="space-y-4">
 						<!-- Name Field -->
-						<div class="form-control">
-							<label class="label" for="name">
-								<span class="label-text font-medium">
-									{$t('adventures.name')} <span class="text-error">*</span>
-								</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="name">{$t('adventures.name')} <span class="text-error">*</span></label>
 							<input
 								type="text"
 								id="name"
 								bind:value={transportation.name}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input bg-base-100/80 focus:bg-base-100"
 								placeholder={$t('transportation.enter_transportation_name')}
 								required
 							/>
 						</div>
 
 						<!-- Type Field -->
-						<div class="form-control">
-							<label class="label" for="type">
-								<span class="label-text font-medium"
-									>{$t('transportation.type')} <span class="text-error">*</span></span
-								>
+						<div class="flex flex-col">
+							<label class="field-label" for="type">
+								{$t('transportation.type')} <span class="text-error">*</span>
 							</label>
 							<select
-								class="select select-bordered w-full bg-base-100/80 focus:bg-base-100"
+								class="select w-full bg-base-100/80 focus:bg-base-100"
 								name="type"
 								id="type"
 								required
@@ -696,15 +690,13 @@
 						</div>
 
 						<!-- Flight Number Field -->
-						<div class="form-control">
-							<label class="label" for="flight_number">
-								<span class="label-text font-medium">{$t('transportation.flight_number')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="flight_number">{$t('transportation.flight_number')}</label>
 							<input
 								type="text"
 								id="flight_number"
 								bind:value={transportation.flight_number}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input bg-base-100/80 focus:bg-base-100"
 								placeholder={$t('transportation.enter_flight_number')}
 							/>
 						</div>
@@ -712,34 +704,30 @@
 						<!-- Start/End Codes -->
 						{#if transportation.type === 'plane' || airportMode}
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-								<div class="form-control">
-									<label class="label" for="start_code">
-										<span class="label-text font-medium"
-											>{$t('transportation.departure_code') || 'Departure code'}</span
-										>
+								<div class="flex flex-col">
+									<label class="field-label" for="start_code">
+										{$t('transportation.departure_code') || 'Departure code'}
 									</label>
 									<input
 										type="text"
 										id="start_code"
 										value={startCodeField}
 										oninput={handleStartCodeEvent}
-										class="input input-bordered bg-base-100/80 focus:bg-base-100 uppercase"
+										class="input bg-base-100/80 focus:bg-base-100 uppercase"
 										maxlength="5"
 										placeholder={airportMode ? 'JFK' : $t('transportation.departure_code')}
 									/>
 								</div>
-								<div class="form-control">
-									<label class="label" for="end_code">
-										<span class="label-text font-medium"
-											>{$t('transportation.arrival_code') || 'Arrival code'}</span
-										>
+								<div class="flex flex-col">
+									<label class="field-label" for="end_code">
+										{$t('transportation.arrival_code') || 'Arrival code'}
 									</label>
 									<input
 										type="text"
 										id="end_code"
 										value={endCodeField}
 										oninput={handleEndCodeEvent}
-										class="input input-bordered bg-base-100/80 focus:bg-base-100 uppercase"
+										class="input bg-base-100/80 focus:bg-base-100 uppercase"
 										maxlength="5"
 										placeholder={airportMode ? 'LHR' : $t('transportation.arrival_code')}
 									/>
@@ -748,10 +736,8 @@
 						{/if}
 
 						<!-- Rating Field -->
-						<div class="form-control">
-							<label class="label" for="rating">
-								<span class="label-text font-medium">{$t('adventures.rating')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="rating">{$t('adventures.rating')}</label>
 							<div
 								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
 							>
@@ -790,15 +776,13 @@
 					<!-- Right Column -->
 					<div class="space-y-4">
 						<!-- Link Field -->
-						<div class="form-control">
-							<label class="label" for="link">
-								<span class="label-text font-medium">{$t('adventures.link')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="link">{$t('adventures.link')}</label>
 							<input
 								type="url"
 								id="link"
 								bind:value={transportation.link}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input bg-base-100/80 focus:bg-base-100"
 								placeholder={$t('transportation.enter_link')}
 							/>
 						</div>
@@ -814,10 +798,8 @@
 						/>
 
 						<!-- Description Field -->
-						<div class="form-control">
-							<label class="label" for="description">
-								<span class="label-text font-medium">{$t('adventures.description')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="description">{$t('adventures.description')}</label>
 							<MarkdownEditor bind:text={transportation.description} editor_height="h-32" />
 
 							<div class="flex items-center gap-4 mt-3">
@@ -874,7 +856,7 @@
 								checked={allDay}
 								onchange={handleAllDayToggle}
 							/>
-							<span class="label-text">{$t('adventures.all_day')}</span>
+							<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span>
 						</label>
 
 						{#if collection}
@@ -884,7 +866,7 @@
 									class="toggle toggle-secondary"
 									bind:checked={constrainDates}
 								/>
-								<span class="label-text">{$t('adventures.date_constrain')}</span>
+								<span class="font-semibold text-sm text-base-content">{$t('adventures.date_constrain')}</span>
 							</label>
 						{/if}
 					</div>
@@ -898,15 +880,13 @@
 
 					<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
 						<!-- Departure Date -->
-						<div class="form-control">
-							<label class="label" for="departure-date">
-								<span class="label-text font-medium">{$t('transportation.departure_date')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="departure-date">{$t('transportation.departure_date')}</label>
 							{#if allDay}
 								<input
 									id="departure-date"
 									type="date"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
@@ -916,7 +896,7 @@
 								<input
 									id="departure-date"
 									type="datetime-local"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
@@ -926,15 +906,13 @@
 						</div>
 
 						<!-- Arrival Date -->
-						<div class="form-control">
-							<label class="label" for="arrival-date">
-								<span class="label-text font-medium">{$t('transportation.arrival_date')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="arrival-date">{$t('transportation.arrival_date')}</label>
 							{#if allDay}
 								<input
 									id="arrival-date"
 									type="date"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
@@ -944,7 +922,7 @@
 								<input
 									id="arrival-date"
 									type="datetime-local"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
+									class="input bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}

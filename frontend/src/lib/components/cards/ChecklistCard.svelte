@@ -226,12 +226,12 @@
 								class="flex w-full items-center gap-3 rounded-lg bg-base-200/60 p-2 text-left transition-colors hover:bg-base-200 disabled:opacity-70"
 							>
 								{#if updatingItemId === item.id}
-									<span class="loading loading-spinner loading-xs text-primary flex-shrink-0"
+									<span class="loading loading-spinner loading-xs text-primary shrink-0"
 									></span>
 								{:else if item.is_checked}
-									<CheckCircle class="w-5 h-5 text-success flex-shrink-0" />
+									<CheckCircle class="w-5 h-5 text-success shrink-0" />
 								{:else}
-									<CheckboxBlankCircleOutline class="w-5 h-5 flex-shrink-0" />
+									<CheckboxBlankCircleOutline class="w-5 h-5 shrink-0" />
 								{/if}
 								<span
 									class="flex-1 text-sm"
@@ -244,9 +244,9 @@
 						{:else}
 							<div class="flex items-center gap-3 rounded-lg bg-base-200/60 p-2">
 								{#if item.is_checked}
-									<CheckCircle class="w-5 h-5 text-success flex-shrink-0" />
+									<CheckCircle class="w-5 h-5 text-success shrink-0" />
 								{:else}
-									<CheckboxBlankCircleOutline class="w-5 h-5 flex-shrink-0" />
+									<CheckboxBlankCircleOutline class="w-5 h-5 shrink-0" />
 								{/if}
 								<span
 									class="flex-1 text-sm"
@@ -273,7 +273,7 @@
 	</dialog>
 {/if}
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="checklist-card"
 >
 	<div class="card-body p-4 space-y-3">
@@ -356,7 +356,7 @@
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<Calendar class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}
@@ -413,9 +413,9 @@
 							{#if updatingItemId === item.id}
 								<span class="loading loading-spinner loading-xs text-primary"></span>
 							{:else if item.is_checked}
-								<CheckCircle class="w-4 h-4 text-success flex-shrink-0" />
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
 							{:else}
-								<CheckboxBlankCircleOutline class="w-4 h-4 flex-shrink-0" />
+								<CheckboxBlankCircleOutline class="w-4 h-4 shrink-0" />
 							{/if}
 							<span
 								class="truncate"
@@ -428,9 +428,9 @@
 					{:else}
 						<div class="flex items-center gap-1.5 text-sm text-base-content/70">
 							{#if item.is_checked}
-								<CheckCircle class="w-4 h-4 text-success flex-shrink-0" />
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
 							{:else}
-								<CheckboxBlankCircleOutline class="w-4 h-4 flex-shrink-0" />
+								<CheckboxBlankCircleOutline class="w-4 h-4 shrink-0" />
 							{/if}
 							<span
 								class="truncate"

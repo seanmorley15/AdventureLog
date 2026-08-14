@@ -908,9 +908,8 @@
 	let typeConfig = $derived(getTypeConfig());
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+<div class="space-y-6">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<!-- Header -->
 				<div class="flex items-center justify-between mb-6">
@@ -923,7 +922,7 @@
 				</div>
 
 				<!-- Settings Section -->
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6">
+				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300 mb-6">
 					<div class="flex items-center gap-2 mb-4">
 						<SettingsIcon class="w-4 h-4 text-base-content/70" />
 						<h3 class="font-medium text-base-content/80">{$t('navbar.settings')}</h3>
@@ -933,7 +932,7 @@
 						<!-- Timezone Selection -->
 
 						<div>
-							<label class="label-text text-sm font-medium" for="timezone-selector"
+							<label class="field-label" for="timezone-selector"
 								>{$t('adventures.timezone')}</label
 							>
 							<div class="mt-1">
@@ -945,7 +944,7 @@
 						<div class="flex flex-wrap gap-6">
 							<div class="flex items-center gap-3">
 								<ClockIcon class="w-4 h-4 text-base-content/70" />
-								<label class="label-text text-sm font-medium" for="all-day-toggle"
+								<label class="font-semibold text-sm text-base-content" for="all-day-toggle"
 									>{$t('adventures.all_day')}</label
 								>
 								<input
@@ -960,7 +959,7 @@
 							{#if collection?.start_date && collection?.end_date}
 								<div class="flex items-center gap-3">
 									<CalendarIcon class="w-4 h-4 text-base-content/70" />
-									<label class="label-text text-sm font-medium" for="constrain-dates"
+									<label class="font-semibold text-sm text-base-content" for="constrain-dates"
 										>{$t('adventures.date_constrain')}</label
 									>
 									<input
@@ -976,20 +975,20 @@
 				</div>
 
 				<!-- Date Selection Section -->
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6">
+				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300 mb-6">
 					<h3 class="font-medium text-base-content/80 mb-4">{$t('adventures.date_selection')}</h3>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<!-- Start Date -->
 						<div>
-							<label class="label-text text-sm font-medium" for="start-date-input">
+							<label class="field-label" for="start-date-input">
 								{typeConfig.startLabel}
 							</label>
 							{#if allDay}
 								<input
 									id="start-date-input"
 									type="date"
-									class="input input-bordered w-full mt-1"
+									class="input w-full mt-1"
 									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : ''}
@@ -999,7 +998,7 @@
 								<input
 									id="start-date-input"
 									type="datetime-local"
-									class="input input-bordered w-full mt-1"
+									class="input w-full mt-1"
 									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : ''}
@@ -1011,14 +1010,14 @@
 						<!-- End Date -->
 						{#if localStartDate}
 							<div>
-								<label class="label-text text-sm font-medium" for="end-date-input">
+								<label class="field-label" for="end-date-input">
 									{typeConfig.endLabel}
 								</label>
 								{#if allDay}
 									<input
 										id="end-date-input"
 										type="date"
-										class="input input-bordered w-full mt-1"
+										class="input w-full mt-1"
 										bind:value={localEndDate}
 										onchange={handleLocalDateChange}
 										min={constrainDates ? localStartDate : ''}
@@ -1028,7 +1027,7 @@
 									<input
 										id="end-date-input"
 										type="datetime-local"
-										class="input input-bordered w-full mt-1"
+										class="input w-full mt-1"
 										bind:value={localEndDate}
 										onchange={handleLocalDateChange}
 										min={constrainDates ? localStartDate : ''}
@@ -1042,12 +1041,12 @@
 					<!-- Notes (Location only) -->
 
 					<div class="mt-4">
-						<label class="label-text text-sm font-medium" for="visit-notes"
+						<label class="field-label" for="visit-notes"
 							>{$t('adventures.notes')}</label
 						>
 						<textarea
 							id="visit-notes"
-							class="textarea textarea-bordered w-full mt-1"
+							class="textarea w-full mt-1"
 							rows="3"
 							placeholder={$t('adventures.notes_placeholder') + '...'}
 							bind:value={note}
@@ -1078,7 +1077,7 @@
 
 				<!-- Visits List (Location only) -->
 
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200">
+				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300">
 					<h3 class="font-medium text-base-content/80 mb-4">
 						{$t('adventures.visits')} ({visits?.length || 0})
 					</h3>
@@ -1132,7 +1131,7 @@
 											</div>
 
 											{#if visit.notes}
-												<p class="text-xs text-base-content/70 bg-base-200/50 p-2 rounded">
+												<p class="text-xs text-base-content/70 bg-base-200/50 p-2 rounded-sm">
 													"{visit.notes}"
 												</p>
 											{/if}
@@ -1248,7 +1247,7 @@
 														<div class="flex items-center gap-2 mb-2">
 															<FileIcon class="w-4 h-4 text-warning" />
 															<label
-																class="label-text font-medium text-warning"
+																class="field-label text-warning mb-0"
 																for="gpx-file-{visit.id}"
 																>{$t('adventures.gpx_file_required')} *</label
 															>
@@ -1258,7 +1257,7 @@
 																id="gpx-file-{visit.id}"
 																type="file"
 																accept=".gpx"
-																class="file-input file-input-bordered file-input-warning flex-1"
+																class="file-input file-input-warning flex-1"
 																onchange={handleGpxFileChange}
 															/>
 															<button
@@ -1285,14 +1284,14 @@
 													<!-- Activity Name -->
 													<div class="md:col-span-2">
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="activity-name-{visit.id}"
 															>{$t('adventures.activity_name')} *</label
 														>
 														<input
 															id="activity-name-{visit.id}"
 															type="text"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder={$t('adventures.activity_name_placeholder')}
 															bind:value={activityForm.name}
 														/>
@@ -1301,12 +1300,12 @@
 													<!-- Sport Type -->
 													<div>
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="sport-type-{visit.id}">{$t('adventures.sport_type')}</label
 														>
 														<select
 															id="sport-type-{visit.id}"
-															class="select select-bordered select-sm w-full mt-1"
+															class="select select-sm w-full mt-1"
 															bind:value={activityForm.sport_type}
 															disabled={isStravaImportPending(visit.id)}
 														>
@@ -1320,14 +1319,14 @@
 
 													<!-- Distance -->
 													<div>
-														<label class="label-text text-xs font-medium" for="distance-{visit.id}"
+														<label class="field-label text-xs" for="distance-{visit.id}"
 															>{$t('adventures.distance')} (km)</label
 														>
 														<input
 															id="distance-{visit.id}"
 															type="number"
 															step="0.01"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="5.2"
 															bind:value={activityForm.distance}
 															readonly={isStravaImportPending(visit.id)}
@@ -1337,14 +1336,14 @@
 													<!-- Moving Time -->
 													<div>
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="moving-time-{visit.id}"
 															>{$t('adventures.moving_time')} (HH:MM:SS)</label
 														>
 														<input
 															id="moving-time-{visit.id}"
 															type="text"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="0:25:30"
 															bind:value={activityForm.moving_time}
 															readonly={isStravaImportPending(visit.id)}
@@ -1354,14 +1353,14 @@
 													<!-- Elapsed Time -->
 													<div>
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="elapsed-time-{visit.id}"
 															>{$t('adventures.elapsed_time')} (HH:MM:SS)</label
 														>
 														<input
 															id="elapsed-time-{visit.id}"
 															type="text"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="0:30:00"
 															bind:value={activityForm.elapsed_time}
 															readonly={isStravaImportPending(visit.id)}
@@ -1371,13 +1370,13 @@
 													<!-- Start Date -->
 													<div>
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="start-date-{visit.id}">{$t('adventures.start_date')}</label
 														>
 														<input
 															id="start-date-{visit.id}"
 															type="datetime-local"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															bind:value={activityForm.start_date}
 															readonly={isStravaImportPending(visit.id)}
 														/>
@@ -1387,14 +1386,14 @@
 													{#if !activityForm.gpx_file}
 														<div>
 															<label
-																class="label-text text-xs font-medium"
+																class="field-label text-xs"
 																for="elevation-gain-{visit.id}"
 																>{$t('adventures.elevation_gain')} (m)</label
 															>
 															<input
 																id="elevation-gain-{visit.id}"
 																type="number"
-																class="input input-bordered input-sm w-full mt-1"
+																class="input input-sm w-full mt-1"
 																placeholder="150"
 																bind:value={activityForm.elevation_gain}
 																readonly={isStravaImportPending(visit.id)}
@@ -1406,14 +1405,14 @@
 													{#if !activityForm.gpx_file}
 														<div>
 															<label
-																class="label-text text-xs font-medium"
+																class="field-label text-xs"
 																for="elevation-loss-{visit.id}"
 																>{$t('adventures.elevation_loss')} (m)</label
 															>
 															<input
 																id="elevation-loss-{visit.id}"
 																type="number"
-																class="input input-bordered input-sm w-full mt-1"
+																class="input input-sm w-full mt-1"
 																placeholder="150"
 																bind:value={activityForm.elevation_loss}
 																readonly={isStravaImportPending(visit.id)}
@@ -1423,13 +1422,13 @@
 
 													<!-- Calories -->
 													<div>
-														<label class="label-text text-xs font-medium" for="calories-{visit.id}"
+														<label class="field-label text-xs" for="calories-{visit.id}"
 															>{$t('adventures.calories')}</label
 														>
 														<input
 															id="calories-{visit.id}"
 															type="number"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="300"
 															bind:value={activityForm.calories}
 															readonly={isStravaImportPending(visit.id)}
@@ -1440,14 +1439,14 @@
 													{#if !activityForm.gpx_file}
 														<div>
 															<label
-																class="label-text text-xs font-medium"
+																class="field-label text-xs"
 																for="elevation-high-{visit.id}"
 																>{$t('adventures.elevation_high')} (m)</label
 															>
 															<input
 																id="elevation-high-{visit.id}"
 																type="number"
-																class="input input-bordered input-sm w-full mt-1"
+																class="input input-sm w-full mt-1"
 																placeholder="2000"
 																bind:value={activityForm.elev_high}
 																readonly={isStravaImportPending(visit.id)}
@@ -1459,14 +1458,14 @@
 													{#if !activityForm.gpx_file}
 														<div>
 															<label
-																class="label-text text-xs font-medium"
+																class="field-label text-xs"
 																for="elevation-low-{visit.id}"
 																>{$t('adventures.elevation_low')} (m)</label
 															>
 															<input
 																id="elevation-low-{visit.id}"
 																type="number"
-																class="input input-bordered input-sm w-full mt-1"
+																class="input input-sm w-full mt-1"
 																placeholder="1000"
 																bind:value={activityForm.elev_low}
 																readonly={isStravaImportPending(visit.id)}
@@ -1476,13 +1475,13 @@
 
 													<!-- Rest Time -->
 													<div>
-														<label class="label-text text-xs font-medium" for="rest-time-{visit.id}"
+														<label class="field-label text-xs" for="rest-time-{visit.id}"
 															>{$t('adventures.rest_time')} (s)</label
 														>
 														<input
 															id="rest-time-{visit.id}"
 															type="number"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="60"
 															bind:value={activityForm.rest_time}
 															readonly={isStravaImportPending(visit.id)}
@@ -1491,14 +1490,14 @@
 
 													<!-- Start Latitude -->
 													<div>
-														<label class="label-text text-xs font-medium" for="start-lat-{visit.id}"
+														<label class="field-label text-xs" for="start-lat-{visit.id}"
 															>{$t('adventures.start_lat')} (°)</label
 														>
 														<input
 															id="start-lat-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="37.7749"
 															bind:value={activityForm.start_lat}
 															readonly={isStravaImportPending(visit.id)}
@@ -1507,14 +1506,14 @@
 
 													<!-- Start Longitude -->
 													<div>
-														<label class="label-text text-xs font-medium" for="start-lng-{visit.id}"
+														<label class="field-label text-xs" for="start-lng-{visit.id}"
 															>{$t('adventures.start_lng')} (°)</label
 														>
 														<input
 															id="start-lng-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="-122.4194"
 															bind:value={activityForm.start_lng}
 															readonly={isStravaImportPending(visit.id)}
@@ -1523,14 +1522,14 @@
 
 													<!-- End Latitude -->
 													<div>
-														<label class="label-text text-xs font-medium" for="end-lat-{visit.id}"
+														<label class="field-label text-xs" for="end-lat-{visit.id}"
 															>{$t('adventures.end_lat')} (°)</label
 														>
 														<input
 															id="end-lat-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="37.7749"
 															bind:value={activityForm.end_lat}
 															readonly={isStravaImportPending(visit.id)}
@@ -1539,14 +1538,14 @@
 
 													<!-- End Longitude -->
 													<div>
-														<label class="label-text text-xs font-medium" for="end-lng-{visit.id}"
+														<label class="field-label text-xs" for="end-lng-{visit.id}"
 															>{$t('adventures.end_lng')} (°)</label
 														>
 														<input
 															id="end-lng-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="-122.4194"
 															bind:value={activityForm.end_lng}
 															readonly={isStravaImportPending(visit.id)}
@@ -1555,7 +1554,7 @@
 
 													<!-- Timezone -->
 													<div>
-														<label class="label-text text-xs font-medium" for="timezone-{visit.id}"
+														<label class="field-label text-xs" for="timezone-{visit.id}"
 															>{$t('adventures.timezone')}</label
 														>
 														<TimezoneSelector bind:selectedTimezone={activityForm.timezone} />
@@ -1564,7 +1563,7 @@
 													<!-- Average Speed -->
 													<div>
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="average-speed-{visit.id}"
 															>{$t('adventures.average_speed')} (m/s)</label
 														>
@@ -1572,7 +1571,7 @@
 															id="average-speed-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="3.5"
 															bind:value={activityForm.average_speed}
 															readonly={isStravaImportPending(visit.id)}
@@ -1581,14 +1580,14 @@
 
 													<!-- Max Speed -->
 													<div>
-														<label class="label-text text-xs font-medium" for="max-speed-{visit.id}"
+														<label class="field-label text-xs" for="max-speed-{visit.id}"
 															>{$t('adventures.max_speed')} (m/s)</label
 														>
 														<input
 															id="max-speed-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="5.0"
 															bind:value={activityForm.max_speed}
 															readonly={isStravaImportPending(visit.id)}
@@ -1598,7 +1597,7 @@
 													<!-- Average Cadence -->
 													<div>
 														<label
-															class="label-text text-xs font-medium"
+															class="field-label text-xs"
 															for="average-cadence-{visit.id}"
 															>{$t('adventures.average_cadence')} (rpm)</label
 														>
@@ -1606,7 +1605,7 @@
 															id="average-cadence-{visit.id}"
 															type="number"
 															step="any"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="80"
 															bind:value={activityForm.average_cadence}
 															readonly={isStravaImportPending(visit.id)}
@@ -1617,12 +1616,12 @@
 													{#if trails && trails.length > 0}
 														<div class="md:col-span-2">
 															<label
-																class="label-text text-xs font-medium"
+																class="field-label text-xs"
 																for="trail-select-{visit.id}">{$t('adventures.trail')}</label
 															>
 															<select
 																id="trail-select-{visit.id}"
-																class="select select-bordered select-sm w-full mt-1"
+																class="select select-sm w-full mt-1"
 																bind:value={activityForm.trail}
 															>
 																<option value="">Select a trail</option>
@@ -1637,14 +1636,14 @@
 													{#if !isStravaImportPending(visit.id)}
 														<div class="md:col-span-2">
 															<label
-																class="label-text text-xs font-medium"
+																class="field-label text-xs"
 																for="gpx-file-manual-{visit.id}">{$t('adventures.gpx_file')}</label
 															>
 															<input
 																id="gpx-file-manual-{visit.id}"
 																type="file"
 																accept=".gpx"
-																class="file-input file-input-bordered file-input-sm w-full mt-1"
+																class="file-input file-input-sm w-full mt-1"
 																onchange={handleGpxFileChange}
 															/>
 														</div>
@@ -1814,7 +1813,7 @@
 		{/if}
 
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" onclick={handleBack}>
+			<button class="btn btn-ghost gap-2" onclick={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
@@ -1824,5 +1823,4 @@
 				{$t('adventures.done')}
 			</button>
 		</div>
-	</div>
 </div>

@@ -76,7 +76,7 @@
 					class:opacity-100={isRaised}
 				>
 					<div
-						class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+						class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
 					>
 						<div class="card-body gap-2 p-3">
 							<h3 class="font-semibold text-sm leading-tight">{rec.name}</h3>

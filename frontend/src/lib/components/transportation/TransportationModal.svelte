@@ -171,7 +171,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<dialog id="transportation_modal" class="modal backdrop-blur-sm">
+<dialog id="transportation_modal" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -195,7 +195,7 @@
 								? $t('transportation.edit_transportation')
 								: $t('transportation.new_transportation')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{transportationToEdit
 								? $t('transportation.update_transportation_details')
 								: $t('transportation.create_new_transportation')}
@@ -218,7 +218,7 @@
 									fill="currentColor"
 									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
 										? 'text-primary'
-										: 'text-base-content/40'}"
+										: 'text-base-content/70'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -229,10 +229,10 @@
 							</div>
 							<button
 								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
-									? 'bg-primary text-primary-content'
-									: 'bg-base-200'} {step.requires_id && !transportation?.id
-									? 'opacity-50 cursor-not-allowed'
-									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
+ ? 'bg-primary text-primary-content'
+ : 'bg-base-200'} {step.requires_id && !transportation?.id
+ ? 'opacity-50 cursor-not-allowed'
+ : 'hover:bg-primary/80 cursor-pointer'} transition-colors"
 								onclick={() => {
 									// Reset all steps
 									steps.forEach((s) => (s.selected = false));

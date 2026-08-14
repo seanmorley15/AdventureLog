@@ -27,13 +27,13 @@
 <div class="toast toast-top toast-end z-[9999] mt-16 gap-3 max-w-md px-4">
 	{#each toastList as { type, message, id }}
 		<div
-			class="alert alert-{type} shadow-2xl backdrop-blur-sm rounded-2xl border-0 min-w-80 max-w-md animate-in slide-in-from-right-5 fade-in duration-300"
+			class="alert alert-{type} shadow-2xl backdrop-blur-xs rounded-2xl border-0 min-w-80 max-w-md animate-in slide-in-from-right-5 fade-in duration-300"
 			role="alert"
 		>
 			<div class="flex items-center gap-4 w-full py-1">
 				<!-- Icon -->
 				<div
-					class="flex-shrink-0 w-10 h-10 rounded-full bg-base-100/20 flex items-center justify-center"
+					class="shrink-0 w-10 h-10 rounded-full bg-base-100/20 flex items-center justify-center"
 				>
 					{@html getIconSvg(type)}
 				</div>
@@ -45,7 +45,7 @@
 
 				<!-- Close Button -->
 				<button
-					class="btn btn-ghost btn-sm btn-circle opacity-70 hover:opacity-100 transition-opacity flex-shrink-0 -mr-1"
+					class="btn btn-ghost btn-sm btn-circle opacity-70 hover:opacity-100 transition-opacity shrink-0 -mr-1"
 					onclick={() => removeToast(id)}
 					aria-label="Close notification"
 				>

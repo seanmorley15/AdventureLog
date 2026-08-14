@@ -23,7 +23,7 @@
 			<div class="card-body text-center">
 				<div class="text-4xl mb-4">🛠️</div>
 				<h3 class="card-title justify-center">{$t('navbar.admin_panel')}</h3>
-				<p class="text-sm text-base-content/70 mb-4">{$t('settings.admin_panel_desc')}</p>
+				<p class="text-sm text-base-content/80 mb-4">{$t('settings.admin_panel_desc')}</p>
 				<a class="btn btn-primary" href={`${publicUrl}/admin/`} target="_blank" rel="noreferrer">
 					{$t('settings.launch_administration_panel')}
 				</a>
@@ -33,7 +33,7 @@
 			<div class="card-body text-center">
 				<div class="text-4xl mb-4">📍</div>
 				<h3 class="card-title justify-center">{$t('settings.region_updates')}</h3>
-				<p class="text-sm text-base-content/70 mb-4">{$t('settings.region_updates_desc')}</p>
+				<p class="text-sm text-base-content/80 mb-4">{$t('settings.region_updates_desc')}</p>
 				<button class="btn btn-info" onclick={onUpdateRegions}>
 					{$t('adventures.update_visited_regions')}
 				</button>

@@ -552,15 +552,15 @@
 								{#if adventure.user.profile_pic}
 									<div class="avatar">
 										<div
-											class="w-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
+											class="w-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
 										>
 											<img src={adventure.user.profile_pic} alt={adventure.user.username} />
 										</div>
 									</div>
 								{:else}
-									<div class="avatar placeholder">
+									<div class="avatar avatar-placeholder">
 										<div
-											class="bg-primary text-primary-content w-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
+											class="bg-primary text-primary-content w-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
 										>
 											<span class="text-xl font-bold">
 												{adventure.user.first_name
@@ -648,7 +648,7 @@
 											{/if}
 										</div>
 										<div class="flex-1 pb-4">
-											<div class="card bg-base-100 shadow">
+											<div class="card bg-base-100 shadow-sm">
 												<div class="card-body p-4">
 													<div class="flex gap-2">
 														<div class="flex-1 min-w-0">
@@ -802,14 +802,14 @@
 										</div>
 
 										<div class="grid grid-cols-2 gap-3 mb-4">
-											<div class="text-center p-2 bg-base-200/70 rounded border border-primary/10">
+											<div class="text-center p-2 bg-base-200/70 rounded-sm border border-primary/10">
 												<div class="text-xs text-primary/70 uppercase tracking-wide">
 													{$t('adventures.latitude')}
 												</div>
 												<div class="text-lg font-bold text-primary">{adventure.latitude}°</div>
 											</div>
 											<div
-												class="text-center p-2 bg-base-200/70 rounded border border-secondary/10"
+												class="text-center p-2 bg-base-200/70 rounded-sm border border-secondary/10"
 											>
 												<div class="text-xs text-secondary/70 uppercase tracking-wide">
 													{$t('adventures.longitude')}
@@ -846,7 +846,7 @@
 															<img
 																src={adventure.country.flag_url}
 																alt={adventure.country.name}
-																class="w-4 h-3 rounded"
+																class="w-4 h-3 rounded-sm"
 															/>
 														{:else}
 															🌎
@@ -999,7 +999,7 @@
 						<div class="space-y-3">
 							{#if adventurePriceLabel}
 								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<div class="text-sm opacity-70 mb-0.5">{$t('adventures.price')}</div>
 										<div class="text-base font-semibold">{adventurePriceLabel}</div>

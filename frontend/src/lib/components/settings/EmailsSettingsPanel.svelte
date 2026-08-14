@@ -9,11 +9,7 @@
 		emails: { email: string; verified?: boolean; primary?: boolean }[];
 		newEmail: string;
 		onVerify: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
-		onMakePrimary: (email: {
-		email: string;
-		verified?: boolean;
-		primary?: boolean;
-	}) => void;
+		onMakePrimary: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
 		onRemove: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
 		onAdd: () => void;
 	}
@@ -80,21 +76,19 @@
 	{:else}
 		<div class="text-center py-8 mb-8">
 			<div class="text-6xl mb-4">📧</div>
-			<p class="text-lg text-base-content/70">{$t('settings.no_email_set')}</p>
+			<p class="text-lg text-base-content/80">{$t('settings.no_email_set')}</p>
 		</div>
 	{/if}
 
-	<div class="divider">{$t('settings.add_new_email')}</div>
+	<div class="divider font-semibold text-base-content">{$t('settings.add_new_email')}</div>
 	<form class="space-y-4" onsubmit={preventDefault(onAdd)}>
-		<div class="form-control">
-			<!-- svelte-ignore a11y_label_has_associated_control -->
-			<label class="label">
-				<span class="label-text font-medium">{$t('settings.add_new_email_address')}</span>
-			</label>
+		<div class="flex flex-col">
+			<label class="field-label" for="settings-new-email">{$t('settings.add_new_email_address')}</label>
 			<input
+				id="settings-new-email"
 				type="email"
 				bind:value={newEmail}
-				class="input input-bordered input-primary w-full"
+				class="input input-primary w-full"
 				placeholder={$t('settings.enter_new_email')}
 				required
 			/>

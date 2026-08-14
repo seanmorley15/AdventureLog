@@ -55,7 +55,7 @@
 	<div class="flex gap-2">
 		<input
 			type="text"
-			class="input input-bordered w-full"
+			class="input w-full"
 			placeholder={$t('adventures.add_a_tag')}
 			bind:value={inputVal}
 			onkeydown={(e) => {
@@ -93,7 +93,7 @@
 	<ul class="space-y-2">
 		{#if tags}
 			{#each tags as activity}
-				<li class="flex items-center justify-between bg-base-200 p-2 rounded">
+				<li class="flex items-center justify-between bg-base-200 p-2 rounded-sm">
 					{activity}
 					<button
 						type="button"

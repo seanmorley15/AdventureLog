@@ -111,42 +111,40 @@
 		/>
 		<form method="post" action="?/changePassword" use:enhance class="space-y-6">
 			{#if user.has_password}
-				<div class="form-control max-w-md">
-					<!-- svelte-ignore a11y_label_has_associated_control -->
-					<label class="label">
-						<span class="label-text font-medium">{$t('settings.current_password')}</span>
-					</label>
+				<div class="flex flex-col max-w-md">
+					<label class="field-label" for="settings-current-password"
+						>{$t('settings.current_password')}</label
+					>
 					<input
+						id="settings-current-password"
 						type="password"
 						name="current_password"
-						class="input input-bordered input-primary w-full"
+						class="input input-primary w-full"
 						placeholder={$t('settings.enter_current_password')}
 					/>
 				</div>
 			{/if}
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
-				<div class="form-control">
-					<!-- svelte-ignore a11y_label_has_associated_control -->
-					<label class="label">
-						<span class="label-text font-medium">{$t('settings.new_password')}</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="settings-new-password">{$t('settings.new_password')}</label>
 					<input
+						id="settings-new-password"
 						type="password"
 						name="password1"
-						class="input input-bordered input-primary w-full"
+						class="input input-primary w-full"
 						minlength={passwordPolicy.min_length}
 						bind:value={newPassword}
 					/>
 				</div>
-				<div class="form-control">
-					<!-- svelte-ignore a11y_label_has_associated_control -->
-					<label class="label">
-						<span class="label-text font-medium">{$t('settings.confirm_new_password')}</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="settings-confirm-password"
+						>{$t('settings.confirm_new_password')}</label
+					>
 					<input
+						id="settings-confirm-password"
 						type="password"
 						name="password2"
-						class="input input-bordered input-primary w-full"
+						class="input input-primary w-full"
 						minlength={passwordPolicy.min_length}
 						bind:value={confirmPassword}
 					/>
@@ -182,7 +180,7 @@
 						<p class="font-semibold truncate">
 							{sessionDeviceLabel(session.user_agent) || $t('settings.sessions_unknown_device')}
 						</p>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{session.ip} · {new Date(session.created_at * 1000).toLocaleDateString()}
 						</p>
 					</div>
@@ -209,7 +207,7 @@
 				{$t('settings.sessions_revoke_others')}
 			</button>
 		{:else}
-			<p class="text-base-content/50 mt-4">{$t('settings.sessions_empty')}</p>
+			<p class="text-base-content/70 mt-4">{$t('settings.sessions_empty')}</p>
 		{/if}
 	</SettingsCard>
 
@@ -233,8 +231,7 @@
 				{#if !emails.some((e) => e.verified)}
 					<button class="btn btn-disabled">{$t('settings.enable_mfa')}</button>
 				{:else}
-					<button class="btn btn-primary" onclick={onEnableMfa}>{$t('settings.enable_mfa')}</button
-					>
+					<button class="btn btn-primary" onclick={onEnableMfa}>{$t('settings.enable_mfa')}</button>
 				{/if}
 			{:else}
 				<button
@@ -250,18 +247,18 @@
 			<div class="mt-4 p-4 bg-base-200 rounded-xl border border-warning/40 space-y-3 max-w-md">
 				<div>
 					<h3 class="font-semibold">{$t('settings.reauth_required_title')}</h3>
-					<p class="text-sm text-base-content/70 mt-1">
+					<p class="text-sm text-base-content/80 mt-1">
 						{$t('settings.reauth_required_disable_desc')}
 					</p>
 				</div>
-				<div class="form-control">
-					<!-- svelte-ignore a11y_label_has_associated_control -->
-					<label class="label">
-						<span class="label-text font-medium">{$t('settings.current_password')}</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="settings-mfa-disable-password"
+						>{$t('settings.current_password')}</label
+					>
 					<input
+						id="settings-mfa-disable-password"
 						type="password"
-						class="input input-bordered input-primary w-full"
+						class="input input-primary w-full"
 						placeholder={$t('settings.enter_current_password')}
 						autocomplete="current-password"
 						bind:value={mfaDisablePassword}
@@ -269,12 +266,9 @@
 						disabled={isVerifyingMfaDisablePassword}
 					/>
 					{#if mfaDisableReauthError}
-						<!-- svelte-ignore a11y_label_has_associated_control -->
-						<label class="label">
-							<span class="label-text-alt text-error">
-								{$t('settings.reauth_incorrect_password')}
-							</span>
-						</label>
+						<p class="text-sm text-error mt-1">
+							{$t('settings.reauth_incorrect_password')}
+						</p>
 					{/if}
 				</div>
 				<div class="flex gap-2 flex-wrap">
@@ -314,7 +308,7 @@
 				<div class="flex items-center justify-between gap-4 flex-wrap">
 					<div>
 						<h3 class="font-semibold">{$t('settings.password_auth')}</h3>
-						<p class="text-sm text-base-content/70">
+						<p class="text-sm text-base-content/80">
 							{user.disable_password || socialProviders.some((p) => p.usage_required)
 								? $t('settings.password_login_disabled')
 								: $t('settings.password_login_enabled')}
@@ -379,7 +373,7 @@
 					<div class="flex items-center justify-between p-4 bg-base-200 rounded-xl gap-4">
 						<div class="min-w-0">
 							<p class="font-semibold truncate">{key.name}</p>
-							<p class="text-sm font-mono text-base-content/60">{key.key_prefix}…</p>
+							<p class="text-sm font-mono text-base-content/80">{key.key_prefix}…</p>
 						</div>
 						<button class="btn btn-error btn-sm shrink-0" onclick={() => onDeleteApiKey(key.id)}>
 							{$t('api_keys.revoke')}
@@ -388,14 +382,14 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-base-content/50 mb-6">{$t('api_keys.no_keys')}</p>
+			<p class="text-base-content/70 mb-6">{$t('api_keys.no_keys')}</p>
 		{/if}
 		<div class="flex gap-3 flex-col sm:flex-row">
 			<input
 				type="text"
 				bind:value={newApiKeyName}
 				placeholder={$t('api_keys.key_name_placeholder')}
-				class="input input-bordered input-primary flex-1"
+				class="input input-primary flex-1"
 				maxlength="100"
 			/>
 			<button class="btn btn-primary" onclick={onCreateApiKey} disabled={!newApiKeyName.trim()}>

@@ -727,7 +727,7 @@
 							<!-- Departure/Arrival -->
 							{#if transportation.date || transportation.end_date}
 								<div class="flex items-start gap-3">
-									<CalendarRange class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CalendarRange class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="w-full space-y-2">
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.dates')}</p>
 										<div class="space-y-2">
@@ -827,7 +827,7 @@
 
 							<!-- Type -->
 							<div class="flex items-start gap-3">
-								<span class="text-xl mt-1 flex-shrink-0"
+								<span class="text-xl mt-1 shrink-0"
 									>{getTransportationIcon(transportation.type)}</span
 								>
 								<div>
@@ -839,7 +839,7 @@
 							<!-- Flight Number -->
 							{#if transportation.flight_number}
 								<div class="flex items-start gap-3">
-									<CardAccountDetails class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CardAccountDetails class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">
 											{$t('transportation.flight_number')}
@@ -852,7 +852,7 @@
 							<!-- Route Codes -->
 							{#if getRouteCodes(transportation)}
 								<div class="flex items-start gap-3">
-									<MapMarker class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<MapMarker class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">
 											{$t('transportation.codes') ?? 'Codes'}
@@ -865,7 +865,7 @@
 							<!-- Distance -->
 							{#if transportation.distance}
 								<div class="flex items-start gap-3">
-									<MapMarkerDistanceIcon class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<MapMarkerDistanceIcon class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">
 											{$t('adventures.distance') ?? 'Distance'}
@@ -878,7 +878,7 @@
 							<!-- Price -->
 							{#if transportationPriceLabel}
 								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.price')}</p>
 										<p class="text-base font-semibold">{transportationPriceLabel}</p>
@@ -889,7 +889,7 @@
 							<!-- Link -->
 							{#if transportation.link}
 								<div class="flex items-start gap-3">
-									<OpenInNew class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<OpenInNew class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="flex-1">
 										<p class="font-semibold text-sm opacity-70 mb-1">{$t('adventures.link')}</p>
 										<a

@@ -38,7 +38,7 @@
 	import { addToast } from '$lib/toasts';
 	import { isVisitAllDay } from '$lib';
 	import Globe from '~icons/mdi/globe';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
 	
 	interface Props {
@@ -1824,7 +1824,7 @@
 {#if canAutoGenerate}
 	<div class="alert alert-info shadow-lg mb-6">
 		<div class="flex-1 flex items-center gap-3 min-w-0">
-			<Info class="w-6 h-6 stroke-current flex-shrink-0" />
+			<Info class="w-6 h-6 stroke-current shrink-0" />
 			<div class="min-w-0">
 				<div class="flex items-baseline gap-3">
 					<h3 class="font-bold truncate">{$t('itinerary.auto_generate_itinerary')}</h3>
@@ -1888,7 +1888,7 @@
 
 					{#if globalItems.length === 0}
 						<div
-							class="card bg-base-100 shadow-sm border border-dashed border-base-300 p-4 text-center"
+							class="card bg-base-100 shadow-xs border border-dashed border-base-300 p-4 text-center"
 						>
 							<div class="card-body p-2">
 								<CalendarBlank class="w-8 h-8 mx-auto mb-2 opacity-40" />
@@ -1924,7 +1924,7 @@
 												title={$t('itinerary.drag_to_reorder')}
 											>
 												<div
-													class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm hover:bg-base-200 cursor-grab active:cursor-grabbing"
+													class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-xs shadow-xs hover:bg-base-200 cursor-grab active:cursor-grabbing"
 													aria-label={$t('itinerary.drag_to_reorder')}
 													role="button"
 													tabindex="0"
@@ -2048,7 +2048,7 @@
 									{#if day.dayMetadata?.name}
 										<input
 											type="text"
-											class="input input-ghost text-base font-medium px-1 py-0 -ml-1 focus:bg-base-100 focus:px-2 transition-all flex-shrink min-w-0"
+											class="input input-ghost text-base font-medium px-1 py-0 -ml-1 focus:bg-base-100 focus:px-2 transition-all shrink min-w-0"
 											style="width: {(day.dayMetadata.name.length + 5) * 8}px; max-width: 300px;"
 											value={day.dayMetadata.name}
 											placeholder="Day name"
@@ -2117,9 +2117,9 @@
 							{#if canModify}
 								<textarea
 									class="textarea textarea-ghost w-full px-2 py-1 text-sm leading-relaxed resize-none focus:bg-base-100 transition-all {day
-										.dayMetadata?.description
-										? ''
-										: 'opacity-40 hover:opacity-70 focus:opacity-100'}"
+ .dayMetadata?.description
+ ? ''
+ : 'opacity-40 hover:opacity-70 focus:opacity-100'}"
 									rows="2"
 									placeholder={'+ ' + $t('itinerary.add_description') + '...'}
 									value={day.dayMetadata?.description || ''}
@@ -2152,10 +2152,7 @@
 								<div
 									class="dropdown dropdown-end z-30"
 									role="group"
-									onpointerdown={(e) => {
-										const el = e.currentTarget;
-										el.classList.toggle('dropdown-top', shouldFlipDropdownUp(el));
-									}}
+									onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 								>
 									<div
 										tabindex="0"
@@ -2169,7 +2166,7 @@
 									</div>
 									<ul
 										tabindex="-1"
-										class="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-56 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
+										class="dropdown-content menu p-2 shadow-sm bg-base-300 rounded-box w-56 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 										role="menu"
 									>
 										<li>
@@ -2266,7 +2263,7 @@
 					<div>
 						{#if day.items.length === 0}
 							<div
-								class="card bg-base-100 shadow-sm border border-dashed border-base-300 p-4 text-center"
+								class="card bg-base-100 shadow-xs border border-dashed border-base-300 p-4 text-center"
 							>
 								<div class="card-body p-2">
 									<CalendarBlank class="w-8 h-8 mx-auto mb-2 opacity-40" />
@@ -2294,8 +2291,8 @@
 
 									<div
 										class="group relative transition-all duration-200 pointer-events-auto h-full {isDraggingShadow
-											? 'opacity-40 scale-95'
-											: ''}"
+ ? 'opacity-40 scale-95'
+ : ''}"
 										animate:flip={{ duration: flipDurationMs }}
 									>
 										{#if resolvedObj}
@@ -2306,7 +2303,7 @@
 													title={$t('itinerary.drag_to_reorder')}
 												>
 													<div
-														class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm hover:bg-base-200 cursor-grab active:cursor-grabbing"
+														class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-xs shadow-xs hover:bg-base-200 cursor-grab active:cursor-grabbing"
 														aria-label={$t('itinerary.drag_to_reorder')}
 														role="button"
 														tabindex="0"
@@ -2595,11 +2592,11 @@
 										class="absolute left-2 top-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
 									>
 										<div
-											class="join bg-base-100/80 rounded-md p-1 shadow-sm backdrop-blur-sm border border-base-300"
+											class="join bg-base-100/80 rounded-md p-1 shadow-xs backdrop-blur-xs border border-base-300"
 										>
 											<button
 												aria-label={$t('itinerary.add_to_day')}
-												class="btn btn-circle btn-xs btn-primary join-item shadow-sm"
+												class="btn btn-circle btn-xs btn-primary join-item shadow-xs"
 												title={$t('itinerary.add_to_day')}
 												onclick={() => handleOpenDayPickerForItem(type, item)}
 											>
@@ -2620,7 +2617,7 @@
 											</button>
 											<button
 												aria-label={$t('itinerary.add_to_trip_context')}
-												class="btn btn-circle btn-xs btn-outline join-item shadow-sm"
+												class="btn btn-circle btn-xs btn-outline join-item shadow-xs"
 												title={$t('itinerary.add_to_trip_context')}
 												onclick={() => addGlobalItineraryItemForObject(type, item.id)}
 											>

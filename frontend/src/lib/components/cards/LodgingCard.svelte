@@ -171,7 +171,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="lodging-card"
 >
 	<!-- Image Section with Overlay -->
@@ -185,7 +185,7 @@
 				data-tip={lodging.is_public ? $t('adventures.public') : $t('adventures.private')}
 			>
 				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-sm"
+					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
 					role="img"
 					aria-label={lodging.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
@@ -287,7 +287,7 @@
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<Calendar class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}
@@ -333,7 +333,7 @@
 		<!-- Location -->
 		{#if lodging.location}
 			<div class="flex items-center gap-2 text-sm text-base-content/70 min-w-0">
-				<MapMarker class="w-4 h-4 text-primary flex-shrink-0" />
+				<MapMarker class="w-4 h-4 text-primary shrink-0" />
 				<span class="truncate">{lodging.location}</span>
 			</div>
 		{/if}
@@ -385,7 +385,7 @@
 							{#if hasExpandableDetails}
 								<div class="flex justify-end">
 									<button
-										class="btn btn-neutral-200 btn-xs"
+										class="btn btn-ghost btn-xs"
 										aria-expanded={showMoreDetails}
 										onclick={() => (showMoreDetails = !showMoreDetails)}
 										type="button"

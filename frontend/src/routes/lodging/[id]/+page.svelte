@@ -492,7 +492,7 @@
 							<!-- Check-in/Check-out -->
 							{#if lodging.check_in || lodging.check_out}
 								<div class="flex items-start gap-3">
-									<CalendarRange class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CalendarRange class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="w-full space-y-3">
 										{#if lodging.check_in}
 											<div class="flex items-start justify-between gap-3 text-sm">
@@ -572,7 +572,7 @@
 
 							<!-- Type -->
 							<div class="flex items-start gap-3">
-								<span class="text-xl mt-1 flex-shrink-0">{getLodgingIcon(lodging.type)}</span>
+								<span class="text-xl mt-1 shrink-0">{getLodgingIcon(lodging.type)}</span>
 								<div>
 									<p class="font-semibold text-sm opacity-70">{$t('transportation.type')}</p>
 									<p class="text-base">{$t(`lodging.${lodging.type}`)}</p>
@@ -582,7 +582,7 @@
 							<!-- Reservation Number -->
 							{#if lodging.reservation_number}
 								<div class="flex items-start gap-3">
-									<CardAccountDetails class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CardAccountDetails class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.reservation')}</p>
 										<p class="text-base font-mono">{lodging.reservation_number}</p>
@@ -593,7 +593,7 @@
 							<!-- Price -->
 							{#if lodgingPriceLabel}
 								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.price')}</p>
 										<p class="text-base font-semibold">{lodgingPriceLabel}</p>
@@ -604,7 +604,7 @@
 							<!-- Link -->
 							{#if lodging.link}
 								<div class="flex items-start gap-3">
-									<OpenInNew class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<OpenInNew class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="flex-1">
 										<p class="font-semibold text-sm opacity-70 mb-1">{$t('adventures.link')}</p>
 										<a

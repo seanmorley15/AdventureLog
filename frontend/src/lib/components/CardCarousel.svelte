@@ -161,9 +161,9 @@
 								<button
 									on:click|stopPropagation={() => (currentSlide = index)}
 									class="w-2 h-2 rounded-full transition-all pointer-events-auto {index ===
-									currentSlide
-										? 'bg-white shadow-lg'
-										: 'bg-white/50 hover:bg-white/80'}"
+ currentSlide
+ ? 'bg-white shadow-lg'
+ : 'bg-white/50 hover:bg-white/80'}"
 									aria-label="Go to image {index + 1}"
 								/>
 							{/each}

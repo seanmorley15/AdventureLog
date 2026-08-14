@@ -93,7 +93,7 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm" onclick={handleClickOutside}>
+<dialog id="my_modal_1" class="modal backdrop-blur-xs" onclick={handleClickOutside}>
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
@@ -145,8 +145,8 @@
 									<button
 										type="button"
 										class="w-2 h-2 rounded-full transition-all {index === currentIndex
-											? 'bg-primary'
-											: 'bg-base-300 hover:bg-base-400'}"
+ ? 'bg-primary'
+ : 'bg-base-300 hover:bg-base-400'}"
 										aria-label={`Go to image ${index + 1}`}
 										onclick={() => goToSlide(index)}
 									></button>
@@ -235,10 +235,10 @@
 					<div class="flex gap-2 overflow-x-auto pb-2">
 						{#each images as imageData, index}
 							<button
-								class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all {index ===
-								currentIndex
-									? 'border-primary shadow-lg'
-									: 'border-base-300 hover:border-base-400'}"
+								class="shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all {index ===
+ currentIndex
+ ? 'border-primary shadow-lg'
+ : 'border-base-300 hover:border-base-400'}"
 								onclick={() => goToSlide(index)}
 							>
 								<img src={imageData.image} alt={name} class="w-full h-full object-cover" />

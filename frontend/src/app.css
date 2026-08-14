@@ -1,0 +1,263 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+@plugin 'daisyui' {
+	themes: dim, night, forest, aqua;
+	logs: false;
+}
+
+/* Custom / overridden themes (migrated from tailwind.config.js) */
+@plugin 'daisyui/theme' {
+	name: 'light';
+	default: true;
+	color-scheme: light;
+	--color-primary: #3e6b57;
+	--color-primary-content: #f7f3ec;
+	--color-secondary: #4f7da3;
+	--color-secondary-content: #f7f3ec;
+	--color-accent: #c89b4b;
+	--color-accent-content: #1e1a14;
+	--color-neutral: #4b4a45;
+	--color-neutral-content: #f7f3ec;
+	--color-base-100: #f5f1e8;
+	--color-base-200: #e7e0d2;
+	--color-base-300: #d5ccbc;
+	--color-base-content: #1d2320;
+	--color-info: #4f7da3;
+	--color-info-content: #f7f3ec;
+	--color-success: #4f7d5e;
+	--color-success-content: #f7f3ec;
+	--color-warning: #d6a13c;
+	--color-warning-content: #1e1a14;
+	--color-error: #b85c4a;
+	--color-error-content: #f7f3ec;
+	--radius-box: 1rem;
+	--radius-field: 0.5rem;
+	--radius-selector: 1.9rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 0;
+	font-family:
+		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@plugin 'daisyui/theme' {
+	name: 'dark';
+	prefersdark: true;
+	color-scheme: dark;
+	--color-primary: #5a8c74;
+	--color-primary-content: #f4f0e8;
+	--color-secondary: #5c8fb5;
+	--color-secondary-content: #f4f0e8;
+	--color-accent: #d1a24a;
+	--color-accent-content: #14120e;
+	--color-neutral: #2c332f;
+	--color-neutral-content: #f4f0e8;
+	--color-base-100: #111713;
+	--color-base-200: #181f1a;
+	--color-base-300: #202822;
+	--color-base-content: #f4f0e8;
+	--color-info: #5c8fb5;
+	--color-info-content: #f4f0e8;
+	--color-success: #6aa37d;
+	--color-success-content: #14120e;
+	--color-warning: #d6a13c;
+	--color-warning-content: #14120e;
+	--color-error: #c96a57;
+	--color-error-content: #f4f0e8;
+	--radius-box: 1rem;
+	--radius-field: 0.5rem;
+	--radius-selector: 1.9rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 0;
+	font-family:
+		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@plugin 'daisyui/theme' {
+	name: 'aestheticLight';
+	color-scheme: light;
+	--color-primary: #5a7c65;
+	--color-primary-content: #dcd5d5;
+	--color-secondary: #a8cfd7;
+	--color-secondary-content: #177a9b;
+	--color-accent: #c78e8e;
+	--color-accent-content: #322020;
+	--color-neutral: #5c5757;
+	--color-neutral-content: #e9e7e7;
+	--color-base-100: #e9e7e7;
+	--color-base-200: #d1cccc;
+	--color-base-300: #b9b1b1;
+	--color-base-content: #100f0f;
+	--color-info: #1c92f2;
+	--color-info-content: #f7fbff;
+	--color-success: #009485;
+	--color-success-content: #f4fffd;
+	--color-warning: #c8c21e;
+	--color-warning-content: #2a2808;
+	--color-error: #ff5724;
+	--color-error-content: #fff7f4;
+	--radius-box: 1rem;
+	--radius-field: 0.5rem;
+	--radius-selector: 1.9rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 0;
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+		monospace;
+}
+
+@plugin 'daisyui/theme' {
+	name: 'aestheticDark';
+	color-scheme: dark;
+	--color-primary: #3e5747;
+	--color-primary-content: #e9e7e7;
+	--color-secondary: #547b82;
+	--color-secondary-content: #c1dfe5;
+	--color-accent: #8b6161;
+	--color-accent-content: #f2eaea;
+	--color-neutral: #2b2a2a;
+	--color-neutral-content: #e9e7e7;
+	--color-base-100: #121212;
+	--color-base-200: #1d1d1d;
+	--color-base-300: #292929;
+	--color-base-content: #e9e7e7;
+	--color-info: #3b7ecb;
+	--color-info-content: #eef5fc;
+	--color-success: #007766;
+	--color-success-content: #e8fffb;
+	--color-warning: #d4c111;
+	--color-warning-content: #2a2808;
+	--color-error: #e64a19;
+	--color-error-content: #fff4f0;
+	--radius-box: 1rem;
+	--radius-field: 0.5rem;
+	--radius-selector: 1.9rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 0;
+	font-family:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+		monospace;
+}
+
+@plugin 'daisyui/theme' {
+	name: 'northernLights';
+	color-scheme: dark;
+	--color-primary: #479bb3;
+	--color-primary-content: #eceff4;
+	--color-secondary: #5e81ac;
+	--color-secondary-content: #eceff4;
+	--color-accent: #b48ead;
+	--color-accent-content: #eceff4;
+	--color-neutral: #4c566a;
+	--color-neutral-content: #d8dee9;
+	--color-base-100: #2e3440;
+	--color-base-200: #3b4252;
+	--color-base-300: #434c5e;
+	--color-base-content: #eceff4;
+	--color-info: #88c0d0;
+	--color-info-content: #2e3440;
+	--color-success: #a3be8c;
+	--color-success-content: #2e3440;
+	--color-warning: #d08770;
+	--color-warning-content: #2e3440;
+	--color-error: #bf616a;
+	--color-error-content: #eceff4;
+	--radius-selector: 1rem;
+	--radius-field: 0.25rem;
+	--radius-box: 0.5rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 0;
+}
+
+/* Compact full-width radio/checkbox rows for filter sidebars.
+   DaisyUI 5 `.label` is inline-flex + nowrap, which nests poorly in these lists. */
+@utility filter-option {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	cursor: pointer;
+	padding-block: 0.375rem;
+	white-space: normal;
+
+	& :where(.radio, .checkbox) {
+		flex-shrink: 0;
+	}
+}
+
+/* DaisyUI 5 `.label` is an input prefix/suffix, not a form caption.
+   Restore DaisyUI 4-weight captions, helper text, and toggle rows. */
+@utility field-label {
+	display: block;
+	margin-bottom: 0.375rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	font-weight: 600;
+	color: var(--color-base-content);
+	white-space: normal;
+}
+
+@utility field-hint {
+	margin-top: 0.25rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: color-mix(in oklab, var(--color-base-content) 80%, transparent);
+}
+
+@utility field-toggle {
+	display: flex;
+	width: 100%;
+	align-items: flex-start;
+	justify-content: flex-start;
+	gap: 1rem;
+	cursor: pointer;
+	padding-block: 0.25rem;
+	white-space: normal;
+
+	& :where(.toggle, .checkbox) {
+		flex-shrink: 0;
+		margin-top: 0.125rem;
+	}
+}
+
+/* DaisyUI 5 default field size is shorter than v4. Restore ~3rem height
+   only for labeled form controls — not search bars, input-sm, or filters. */
+@utility field-input {
+	height: 3rem;
+	min-height: 3rem;
+	font-size: 1rem;
+	padding-inline: 1rem;
+}
+
+:where(.field-label) + :where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
+	height: 3rem;
+	min-height: 3rem;
+	font-size: 1rem;
+	padding-inline: 1rem;
+}
+
+:where(.field-label) + :where(.flex, .relative, .join, .grid, .mt-1, .dropdown) :where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
+	height: 3rem;
+	min-height: 3rem;
+	font-size: 1rem;
+	padding-inline: 1rem;
+}
+
+:where(.field-label) + :where(.dropdown) > :where(.btn):not(.btn-sm):not(.btn-xs):not(.btn-ghost) {
+	height: 3rem;
+	min-height: 3rem;
+}

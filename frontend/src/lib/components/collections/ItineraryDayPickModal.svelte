@@ -38,7 +38,7 @@
 </script>
 
 {#if isOpen}
-	<dialog class="modal modal-open backdrop-blur-sm">
+	<dialog class="modal modal-open backdrop-blur-xs">
 		<div
 			class="modal-box w-11/12 max-w-4xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		>
@@ -86,7 +86,7 @@
 					{@const isScheduled = scheduledDates?.includes(day.date)}
 
 					<div
-						class="card bg-base-100 border border-base-300 shadow-sm hover:border-primary/60 hover:shadow-md transition-all"
+						class="card bg-base-100 border border-base-300 shadow-xs hover:border-primary/60 hover:shadow-md transition-all"
 					>
 						<div class="card-body p-4">
 							<div class="flex flex-row items-center gap-4 mb-3">

@@ -59,7 +59,7 @@
 				<div class="alert alert-info mt-4">
 					<p
 						class="text-muted
-						-foreground"
+ -foreground"
 					>
 						<strong>Hint:</strong> If you are an administrator, please check your PUBLIC_SERVER_URL
 						in the frontend config to make sure it can reach the backend.

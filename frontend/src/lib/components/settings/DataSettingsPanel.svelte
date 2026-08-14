@@ -55,7 +55,7 @@
 	/>
 
 	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-		<p class="text-sm text-base-content/70">
+		<p class="text-sm text-base-content/80">
 			{#if mediaLimitBytes}
 				{$t('settings.media_usage_summary', {
 					values: {
@@ -73,7 +73,7 @@
 		</span>
 	</div>
 
-	<div class="stats stats-vertical lg:stats-horizontal w-full bg-base-200 shadow mb-6">
+	<div class="stats stats-vertical lg:stats-horizontal w-full bg-base-200 shadow-sm mb-6">
 		<div class="stat">
 			<div class="stat-title">{$t('settings.total_used')}</div>
 			<div class="stat-value text-primary text-2xl">{formatBytes(totalMediaBytes)}</div>
@@ -99,7 +99,7 @@
 	/>
 
 	<div class="bg-base-200 rounded-xl p-4 mb-6 text-sm">
-		<h4 class="font-semibold mb-3 text-base-content/70">{$t('settings.whats_included')}</h4>
+		<h4 class="font-semibold mb-3 text-base-content">{$t('settings.whats_included')}</h4>
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 			<div class="space-y-2">
 				{#each [[$t('locations.locations')], [$t('adventures.visits')], [$t('navbar.collections')], [$t('settings.media')]] as [label]}
@@ -117,12 +117,12 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 		<div class="p-6 bg-base-200 rounded-xl">
 			<h3 class="font-semibold mb-2">📤 {$t('settings.backup_your_data')}</h3>
-			<p class="text-sm text-base-content/70 mb-4">{$t('settings.backup_your_data_desc')}</p>
+			<p class="text-sm text-base-content/80 mb-4">{$t('settings.backup_your_data_desc')}</p>
 			<a class="btn btn-primary" href="/api/backup/export">💾 {$t('settings.download_backup')}</a>
 		</div>
 		<div class="p-6 bg-base-200 rounded-xl">
 			<h3 class="font-semibold mb-2">📥 {$t('settings.restore_data')}</h3>
-			<p class="text-sm text-base-content/70 mb-4">{$t('settings.restore_data_desc')}</p>
+			<p class="text-sm text-base-content/80 mb-4">{$t('settings.restore_data_desc')}</p>
 			<div class="alert alert-warning py-2 mb-4 text-sm">
 				<span>⚠️ {$t('settings.data_override_warning')}</span>
 			</div>
@@ -138,7 +138,7 @@
 					type="file"
 					name="file"
 					id="backup-file"
-					class="file-input file-input-bordered file-input-primary file-input-sm w-full"
+					class="file-input file-input-primary file-input-sm w-full"
 					accept=".zip"
 					required
 				/>

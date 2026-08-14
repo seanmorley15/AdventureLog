@@ -99,7 +99,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	id="confirmation_modal"
-	class="modal backdrop-blur-sm"
+	class="modal backdrop-blur-xs"
 	onclick={handleBackdropClick}
 	onkeydown={handleKeydown}
 >
@@ -151,7 +151,7 @@
 					{button_text}
 				</button>
 				<button
-					class="btn btn-neutral-200 flex-1 gap-2 hover:bg-base-content/10 transition-colors"
+					class="btn btn-ghost flex-1 gap-2 hover:bg-base-content/10 transition-colors"
 					onclick={close}
 				>
 					<Cancel class="w-4 h-4" />

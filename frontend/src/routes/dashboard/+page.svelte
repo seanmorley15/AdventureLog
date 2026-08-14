@@ -275,7 +275,7 @@
 					<!-- Trip card -->
 					<div class="relative w-full lg:justify-self-end">
 						<div
-							class="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/10 blur-sm"
+							class="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/10 blur-xs"
 							aria-hidden="true"
 						></div>
 
@@ -309,8 +309,8 @@
 									<div class="mb-3 flex items-center justify-between gap-2">
 										<span
 											class="badge badge-sm gap-1 {heroTripIsActive
-												? 'badge-secondary'
-												: 'badge-primary'}"
+ ? 'badge-secondary'
+ : 'badge-primary'}"
 										>
 											{#if heroTripIsActive}
 												<Airplane class="h-3 w-3" />
@@ -400,7 +400,7 @@
 
 		{#if isNewUser}
 			<div
-				class="mb-10 overflow-hidden rounded-2xl border border-base-300/50 bg-base-100/80 shadow-sm"
+				class="mb-10 overflow-hidden rounded-2xl border border-base-300/50 bg-base-100/80 shadow-xs"
 			>
 				<div class="card-body items-center p-8 text-center sm:p-12">
 					<div class="mb-5 rounded-2xl bg-primary/10 p-6">
@@ -439,7 +439,7 @@
 				<div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
 					<a
 						href="/worldtravel"
-						class="dashboard-stat-card group relative col-span-1 overflow-hidden rounded-2xl border border-success/20 bg-base-100/80 p-5 shadow-sm md:col-span-2 xl:row-span-2"
+						class="dashboard-stat-card group relative col-span-1 overflow-hidden rounded-2xl border border-success/20 bg-base-100/80 p-5 shadow-xs md:col-span-2 xl:row-span-2"
 					>
 						<div class="relative flex h-full flex-col justify-between gap-6">
 							<div class="flex items-start justify-between gap-4">
@@ -475,7 +475,7 @@
 
 					<a
 						href="/locations"
-						class="dashboard-stat-card group rounded-2xl border border-primary/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-primary/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div class="min-w-0">
@@ -504,7 +504,7 @@
 
 					<a
 						href="/collections"
-						class="dashboard-stat-card group rounded-2xl border border-secondary/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-secondary/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div>
@@ -522,7 +522,7 @@
 
 					<a
 						href="/worldtravel"
-						class="dashboard-stat-card group rounded-2xl border border-info/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-info/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div class="min-w-0 flex-1">
@@ -545,7 +545,7 @@
 
 					<a
 						href="/worldtravel"
-						class="dashboard-stat-card group rounded-2xl border border-warning/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-warning/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div class="min-w-0 flex-1">
@@ -568,7 +568,7 @@
 
 					{#if stats.activities_overall.total_count > 0}
 						<div
-							class="dashboard-stat-card rounded-2xl border border-accent/15 bg-base-100/80 p-4 shadow-sm md:col-span-2"
+							class="dashboard-stat-card rounded-2xl border border-accent/15 bg-base-100/80 p-4 shadow-xs md:col-span-2"
 						>
 							<div class="flex items-center justify-between gap-3">
 								<div>
@@ -595,7 +595,7 @@
 			</section>
 
 			<div class="mb-10 grid grid-cols-1 gap-5 xl:grid-cols-2">
-				<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6">
+				<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6">
 					<div class="mb-5">
 						<h2 class="text-lg font-bold text-base-content">{$t('dashboard.whats_next')}</h2>
 						<p class="text-sm text-base-content/55">{$t('dashboard.upcoming_trips')}</p>
@@ -670,7 +670,7 @@
 
 				<section class="flex flex-col gap-5">
 					{#if stats.activities_overall.total_count > 0}
-						<div class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6">
+						<div class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6">
 							<h2 class="mb-4 text-lg font-bold">{$t('dashboard.activity_highlights')}</h2>
 
 							<div class="grid grid-cols-2 gap-3">
@@ -757,7 +757,7 @@
 					{/if}
 
 					<div
-						class="flex-1 rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6"
+						class="flex-1 rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6"
 					>
 						<h2 class="mb-4 text-lg font-bold">{$t('dashboard.quick_links')}</h2>
 
@@ -777,7 +777,7 @@
 			</div>
 		{/if}
 
-		<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6">
+		<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6">
 			<div class="mb-5 flex flex-wrap items-center justify-between gap-4">
 				<div>
 					<h2 class="text-lg font-bold text-primary sm:text-xl">
@@ -853,7 +853,7 @@
 	}
 
 	.dashboard-trip-card {
-		background: linear-gradient(135deg, hsl(var(--b1) / 0.95) 0%, hsl(var(--b2) / 0.85) 100%);
+		background: linear-gradient(135deg, color-mix(in oklab, var(--color-base-100) 95%, transparent) 0%, color-mix(in oklab, var(--color-base-200) 85%, transparent) 100%);
 	}
 
 	.line-clamp-2 {

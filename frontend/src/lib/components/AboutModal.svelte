@@ -80,7 +80,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<dialog id="about_modal" class="modal backdrop-blur-sm" onclick={handleBackdropClick}>
+<dialog id="about_modal" class="modal backdrop-blur-xs" onclick={handleBackdropClick}>
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -105,7 +105,7 @@
 
 			<div class="flex items-start gap-4 pr-10">
 				<div
-					class="h-14 w-14 rounded-2xl bg-base-100/20 backdrop-blur flex items-center justify-center shadow-inner shrink-0"
+					class="h-14 w-14 rounded-2xl bg-base-100/20 backdrop-blur-sm flex items-center justify-center shadow-inner shrink-0"
 				>
 					<img src="/favicon.png" alt="AdventureLog" class="w-9 h-9" />
 				</div>
@@ -138,8 +138,8 @@
 					<button
 						type="button"
 						class="btn btn-ghost btn-xs btn-square shrink-0 {versionCopied
-							? 'text-success'
-							: 'text-base-content/60'}"
+ ? 'text-success'
+ : 'text-base-content/60'}"
 						aria-label={$t('about.copy_version')}
 						title={$t('about.copy_version')}
 						onclick={copyVersion}

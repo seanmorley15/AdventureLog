@@ -900,9 +900,9 @@
 									<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
 										<div
 											class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
-												markerProps,
-												isSelected
-											)}"
+ markerProps,
+ isSelected
+ )}"
 											class:scale-110={isActive || isSelected}
 											role="button"
 											tabindex="0"
@@ -934,7 +934,7 @@
 											class:opacity-100={isActive || isSelected}
 										>
 											<div
-												class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+												class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
 											>
 												<div class="card-body gap-2 p-3">
 													<h3 class="font-semibold text-sm leading-tight truncate">
@@ -943,8 +943,8 @@
 													<div class="flex flex-wrap items-center gap-1.5">
 														<span
 															class="badge badge-sm {markerProps.visitStatus === 'visited'
-																? 'badge-success'
-																: 'badge-info'}"
+ ? 'badge-success'
+ : 'badge-info'}"
 														>
 															{getVisitStatusLabel(markerProps.visitStatus)}
 														</span>
@@ -1138,7 +1138,7 @@
 
 			<!-- Compact title badge -->
 			<div
-				class="absolute bottom-3 left-3 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-base-100/80 backdrop-blur rounded-lg px-3 py-1.5 border border-base-300 shadow-sm"
+				class="absolute bottom-3 left-3 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-base-100/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-base-300 shadow-xs"
 			>
 				<MapIcon class="w-5 h-5 text-primary" />
 				<span class="text-sm font-semibold text-primary">{$t('map.location_map')}</span>
@@ -1243,13 +1243,11 @@
 										{$t('map.nearby_controls')}
 									</h3>
 									<div class="space-y-3">
-										<div class="form-control">
-											<label class="label py-0" for="rec-category">
-												<span class="label-text text-xs">{$t('map.recommendation_category')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label text-xs" for="rec-category">{$t('map.recommendation_category')}</label>
 											<select
 												id="rec-category"
-												class="select select-bordered select-sm w-full"
+												class="select select-sm w-full"
 												bind:value={recCategory}
 											>
 												<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
@@ -1257,13 +1255,11 @@
 												<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
 											</select>
 										</div>
-										<div class="form-control">
-											<label class="label py-0" for="rec-radius">
-												<span class="label-text text-xs">{$t('map.recommendation_radius')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label text-xs" for="rec-radius">{$t('map.recommendation_radius')}</label>
 											<select
 												id="rec-radius"
-												class="select select-bordered select-sm w-full"
+												class="select select-sm w-full"
 												bind:value={recRadius}
 											>
 												{#each recRadiusOptions as opt}
@@ -1318,57 +1314,57 @@
 									<Eye class="w-5 h-5" />
 									{$t('map.display_options')}
 								</h3>
-								<div class="space-y-3">
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+								<div class="flex flex-col">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showVisited}
-											class="checkbox checkbox-success checkbox-sm"
+											class="checkbox checkbox-success"
 										/>
-										<span class="label-text">{$t('adventures.visited')} ({visitedAdventures})</span>
+										<span class="text-sm leading-snug min-w-0">{$t('adventures.visited')} ({visitedAdventures})</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showPlanned}
-											class="checkbox checkbox-info checkbox-sm"
+											class="checkbox checkbox-info"
 										/>
-										<span class="label-text">{$t('adventures.planned')} ({plannedAdventures})</span>
+										<span class="text-sm leading-snug min-w-0">{$t('adventures.planned')} ({plannedAdventures})</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showRegions}
-											class="checkbox checkbox-accent checkbox-sm"
+											class="checkbox checkbox-accent"
 										/>
-										<span class="label-text">{$t('profile.visited_regions')} ({totalRegions})</span>
+										<span class="text-sm leading-snug min-w-0">{$t('profile.visited_regions')} ({totalRegions})</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showCities}
-											class="checkbox checkbox-warning checkbox-sm"
+											class="checkbox checkbox-warning"
 										/>
-										<span class="label-text">{$t('map.show_visited_cities')}</span>
+										<span class="text-sm leading-snug min-w-0">{$t('map.show_visited_cities')}</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showImagePins}
-											class="checkbox checkbox-secondary checkbox-sm"
+											class="checkbox checkbox-secondary"
 										/>
-										<span class="label-text">
+										<span class="text-sm leading-snug min-w-0">
 											{$t('map.photos')}{#if imagePinsLoaded}
 												{' '}({imagePinCount}){/if}
 										</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showActivities}
-											class="checkbox checkbox-error checkbox-sm"
+											class="checkbox checkbox-error"
 										/>
-										<span class="label-text">{$t('settings.activities')}</span>
+										<span class="text-sm leading-snug min-w-0">{$t('settings.activities')}</span>
 									</label>
 								</div>
 							</div>

@@ -609,7 +609,6 @@
 		"signup_error": "Could not create your account. Please check your details and try again.",
 		"password_requirements_title": "Password requirements",
 		"password_requirement_min_length": "At least {min} characters",
-		"password_requirement_not_common": "Not a commonly used password",
 		"password_requirement_not_numeric": "Not entirely numeric",
 		"password_requirement_not_similar": "Not too similar to your profile information",
 		"password_requirement_match": "Passwords match",

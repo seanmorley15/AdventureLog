@@ -217,7 +217,7 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
@@ -275,7 +275,7 @@
 					<input
 						type="text"
 						placeholder="{$t('navbar.search')} {$t('adventures.name_location')}..."
-						class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+						class="input w-full pl-10 pr-10 bg-base-100/80"
 						bind:value={searchQuery}
 					/>
 					{#if searchQuery.length > 0}
@@ -301,7 +301,7 @@
 				<span class="text-sm font-medium text-base-content/60">
 					{$t('worldtravel.filter_by')}:
 				</span>
-				<div class="tabs tabs-boxed bg-base-200">
+				<div class="tabs tabs-box bg-base-200">
 					<button
 						class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
 						onclick={() => (filterOption = 'all')}
@@ -391,12 +391,12 @@
 									{/if}
 								{:else}
 									<!-- Skeleton Loading Card -->
-									<div class="card w-full bg-base-300 shadow animate-pulse">
+									<div class="card w-full bg-base-300 shadow-sm animate-pulse">
 										<div class="h-48 bg-base-200"></div>
 										<div class="card-body gap-3">
-											<div class="h-6 bg-base-200 rounded w-3/4"></div>
-											<div class="h-4 bg-base-200 rounded w-full"></div>
-											<div class="h-4 bg-base-200 rounded w-2/3"></div>
+											<div class="h-6 bg-base-200 rounded-sm w-3/4"></div>
+											<div class="h-4 bg-base-200 rounded-sm w-full"></div>
+											<div class="h-4 bg-base-200 rounded-sm w-2/3"></div>
 										</div>
 									</div>
 								{/if}

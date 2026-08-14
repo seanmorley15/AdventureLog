@@ -210,7 +210,7 @@
 <dialog
 	id="category-modal"
 	bind:this={modal}
-	class="modal modal-bottom md:modal-middle backdrop-blur-sm"
+	class="modal modal-bottom md:modal-middle backdrop-blur-xs"
 	onclick={handleBackdropClick}
 	onkeydown={handleKeydown}
 >
@@ -253,7 +253,7 @@
 			class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col px-4 md:px-6 py-4 md:py-5"
 		>
 			{#if warningMessage}
-				<div role="alert" class="alert alert-warning shadow-sm mb-4 shrink-0">
+				<div role="alert" class="alert alert-warning shadow-xs mb-4 shrink-0">
 					<InfoIcon class="w-5 h-5 shrink-0" />
 					<span class="text-sm md:text-base">{warningMessage}</span>
 				</div>
@@ -285,7 +285,7 @@
 
 						{#if hasLoaded && categories.length > 0}
 							<label
-								class="input input-bordered input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0"
+								class="input input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0"
 							>
 								<SearchIcon class="w-4 h-4 opacity-50 shrink-0" />
 								<input
@@ -331,27 +331,23 @@
 												</p>
 												<form onsubmit={saveCategory} class="space-y-3 min-w-0">
 													<div class="space-y-3">
-														<div class="form-control min-w-0">
-															<label class="label py-0" for="edit-category-name">
-																<span class="label-text">{$t('categories.category_name')}</span>
-															</label>
+														<div class="flex flex-col min-w-0">
+															<label class="field-label" for="edit-category-name">{$t('categories.category_name')}</label>
 															<input
 																id="edit-category-name"
 																type="text"
-																class="input input-bordered w-full min-w-0"
+																class="input w-full min-w-0"
 																bind:value={categoryToEdit.display_name}
 																required
 															/>
 														</div>
-														<div class="form-control min-w-0">
-															<label class="label py-0" for="edit-category-icon">
-																<span class="label-text">{$t('categories.icon')}</span>
-															</label>
+														<div class="flex flex-col min-w-0">
+															<label class="field-label" for="edit-category-icon">{$t('categories.icon')}</label>
 															<div class="join w-full min-w-0">
 																<input
 																	id="edit-category-icon"
 																	type="text"
-																	class="input input-bordered join-item flex-1 min-w-0 w-0"
+																	class="input join-item flex-1 min-w-0 w-0"
 																	bind:value={categoryToEdit.icon}
 																/>
 																<button
@@ -482,29 +478,25 @@
 
 					<div class="md:flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-contain">
 						<form onsubmit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
-							<div class="form-control min-w-0 w-full">
-								<label class="label py-1" for="new-category-name">
-									<span class="label-text font-medium">{$t('categories.category_name')}</span>
-								</label>
+							<div class="flex flex-col min-w-0 w-full">
+								<label class="field-label" for="new-category-name">{$t('categories.category_name')}</label>
 								<input
 									id="new-category-name"
 									type="text"
-									class="input input-bordered w-full min-w-0"
+									class="input w-full min-w-0"
 									bind:value={newCategory.display_name}
 									placeholder={$t('categories.category_name')}
 									required
 								/>
 							</div>
 
-							<div class="form-control min-w-0 w-full">
-								<label class="label py-1" for="new-category-icon">
-									<span class="label-text font-medium">{$t('categories.icon')}</span>
-								</label>
+							<div class="flex flex-col min-w-0 w-full">
+								<label class="field-label" for="new-category-icon">{$t('categories.icon')}</label>
 								<div class="join w-full min-w-0">
 									<input
 										id="new-category-icon"
 										type="text"
-										class="input input-bordered join-item flex-1 min-w-0 w-0"
+										class="input join-item flex-1 min-w-0 w-0"
 										bind:value={newCategory.icon}
 										placeholder="🌍"
 									/>

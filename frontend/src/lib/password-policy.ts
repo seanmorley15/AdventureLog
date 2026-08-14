@@ -3,7 +3,7 @@ export type PasswordPolicy = {
 	validators_enabled: boolean;
 };
 
-export type PasswordRequirementId = 'min_length' | 'not_common' | 'not_numeric' | 'not_similar';
+export type PasswordRequirementId = 'min_length' | 'not_numeric' | 'not_similar';
 
 export type PasswordRequirement = {
 	id: PasswordRequirementId;
@@ -19,34 +19,6 @@ export type PasswordProfileContext = {
 
 export type RequirementStatus = boolean | null;
 
-const COMMON_PASSWORDS = new Set([
-	'password',
-	'password1',
-	'password123',
-	'123456',
-	'12345678',
-	'123456789',
-	'1234567890',
-	'qwerty',
-	'qwerty123',
-	'abc123',
-	'111111',
-	'000000',
-	'letmein',
-	'welcome',
-	'admin',
-	'login',
-	'master',
-	'dragon',
-	'football',
-	'baseball',
-	'monkey',
-	'shadow',
-	'sunshine',
-	'iloveyou',
-	'trustno1'
-]);
-
 export function getPasswordRequirements(policy: PasswordPolicy): PasswordRequirement[] {
 	const requirements: PasswordRequirement[] = [
 		{ id: 'min_length', labelKey: 'auth.password_requirement_min_length' }
@@ -54,7 +26,6 @@ export function getPasswordRequirements(policy: PasswordPolicy): PasswordRequire
 
 	if (policy.validators_enabled) {
 		requirements.push(
-			{ id: 'not_common', labelKey: 'auth.password_requirement_not_common' },
 			{ id: 'not_numeric', labelKey: 'auth.password_requirement_not_numeric' },
 			{ id: 'not_similar', labelKey: 'auth.password_requirement_not_similar' }
 		);
@@ -107,8 +78,6 @@ export function checkPasswordRequirement(
 			return password.length >= policy.min_length;
 		case 'not_numeric':
 			return !/^\d+$/.test(password);
-		case 'not_common':
-			return !COMMON_PASSWORDS.has(password.toLowerCase());
 		case 'not_similar':
 			return !isTooSimilar(password, profile);
 		default:

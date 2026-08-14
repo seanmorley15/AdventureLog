@@ -45,7 +45,7 @@
 				<div class="relative flex items-start justify-between gap-4">
 					<div class="flex items-start gap-4 min-w-0">
 						<div
-							class="h-14 w-14 rounded-2xl bg-base-100/20 backdrop-blur flex items-center justify-center text-3xl shadow-inner shrink-0"
+							class="h-14 w-14 rounded-2xl bg-base-100/20 backdrop-blur-sm flex items-center justify-center text-3xl shadow-inner shrink-0"
 						>
 							{event.extendedProps?.icon || '📅'}
 						</div>

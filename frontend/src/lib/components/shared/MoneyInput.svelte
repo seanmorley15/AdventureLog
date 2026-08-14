@@ -57,17 +57,15 @@
 	}
 </script>
 
-<div class="form-control">
+<div class="flex flex-col">
 	{#if label}
-		<label class="label" for="money-input">
-			<span class="label-text font-medium">{label}</span>
-		</label>
+		<label class="field-label" for="money-input">{label}</label>
 	{/if}
 	<div class="flex gap-3 flex-col sm:flex-row">
 		<input
 			id="money-input"
 			type="number"
-			class="input input-bordered bg-base-100/80 focus:bg-base-100 flex-1"
+			class="input bg-base-100/80 focus:bg-base-100 flex-1"
 			{placeholder}
 			bind:value={value.amount}
 			{min}
@@ -80,6 +78,6 @@
 			options={currencyOptions}
 			on:change={updateCurrency}
 		/>
-		<button type="button" class="btn btn-neutral-200" onclick={clearValue}> Clear </button>
+		<button type="button" class="btn btn-ghost" onclick={clearValue}> Clear </button>
 	</div>
 </div>

@@ -381,8 +381,7 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
+<div class="space-y-6">
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
@@ -405,7 +404,7 @@
 		/>
 
 		<!-- Trails Management -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center justify-between mb-6">
 					<div class="flex items-center gap-3">
@@ -451,14 +450,14 @@
 							<input
 								type="text"
 								bind:value={trailName}
-								class="input input-bordered"
+								class="input"
 								placeholder="Trail name"
 								disabled={isTrailLoading}
 							/>
 							<input
 								type="url"
 								bind:value={trailLink}
-								class="input input-bordered"
+								class="input"
 								placeholder={$t('adventures.external_link') + ' (AllTrails, Trailforks, etc.)'}
 								disabled={isTrailLoading}
 							/>
@@ -503,7 +502,7 @@
 									<input
 										type="text"
 										placeholder={$t('adventures.search_trails_placeholder') + '...'}
-										class="input input-bordered w-full pr-20"
+										class="input w-full pr-20"
 										bind:value={searchQuery}
 										oninput={debouncedSearch}
 										onkeydown={(e) => e.key === 'Enter' && handleSearch()}
@@ -600,13 +599,13 @@
 											<input
 												type="text"
 												bind:value={editingTrailName}
-												class="input input-bordered input-sm"
+												class="input input-sm"
 												placeholder={$t('adventures.trail_name')}
 											/>
 											<input
 												type="url"
 												bind:value={editingTrailLink}
-												class="input input-bordered input-sm"
+												class="input input-sm"
 												placeholder={$t('adventures.external_link')}
 												disabled={editingTrailWandererId.trim() !== ''}
 											/>
@@ -629,11 +628,11 @@
 								{:else}
 									<!-- Normal Display -->
 									<div
-										class="bg-base-50 p-4 rounded-lg border border-base-200 hover:border-base-300 transition-colors"
+										class="bg-base-200/40 p-4 rounded-lg border border-base-300 hover:border-base-300 transition-colors"
 									>
 										<!-- Header -->
 										<div class="flex items-center gap-3 mb-3">
-											<div class="p-2 bg-accent/10 rounded">
+											<div class="p-2 bg-accent/10 rounded-sm">
 												{#if trail.wanderer_id}
 													<Star class="w-4 h-4 text-accent" />
 												{:else}
@@ -737,7 +736,7 @@
 												href={trail.link}
 												target="_blank"
 												rel="noopener noreferrer"
-												class="text-xs text-accent hover:text-accent-focus mb-3 break-all block underline"
+												class="text-xs text-accent hover:text-accent mb-3 break-all block underline"
 											>
 												{trail.link}
 											</a>
@@ -786,7 +785,7 @@
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" onclick={handleBack} disabled={importInProgress}>
+			<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
@@ -796,5 +795,4 @@
 				{$t('adventures.continue')}
 			</button>
 		</div>
-	</div>
 </div>

@@ -36,7 +36,7 @@
 	<img
 		src={country.flag_url}
 		alt=""
-		class="w-12 h-8 object-cover rounded shadow-sm border border-base-300/50"
+		class="w-12 h-8 object-cover rounded-sm shadow-xs border border-base-300/50"
 		loading="lazy"
 	/>
 

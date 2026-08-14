@@ -341,7 +341,7 @@
 							<input
 								type="text"
 								placeholder={$t('navbar.search')}
-								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+								class="input w-full pl-10 pr-10 bg-base-100/80"
 								bind:value={searchQuery}
 							/>
 							{#if searchQuery.length > 0}
@@ -392,7 +392,7 @@
 						<span class="text-sm font-medium text-base-content/60"
 							>{$t('worldtravel.filter_by')}:</span
 						>
-						<div class="tabs tabs-boxed bg-base-200">
+						<div class="tabs tabs-box bg-base-200">
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
 								onclick={() => (filterOption = 'all')}
@@ -837,27 +837,27 @@
 							{$t('worldtravel.filter_by_region')}
 						</h3>
 
-						<div class="space-y-2 max-h-64 overflow-y-auto">
-							<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+						<div class="flex flex-col max-h-64 overflow-y-auto">
+							<label class="filter-option">
 								<input
 									type="radio"
 									name="region"
-									class="radio radio-primary radio-sm"
+									class="radio radio-primary"
 									checked={subRegionOption === ''}
 									onchange={() => (subRegionOption = '')}
 								/>
-								<span class="label-text">{$t('worldtravel.all_regions')}</span>
+								<span class="text-sm leading-snug min-w-0">{$t('worldtravel.all_regions')}</span>
 							</label>
 							{#each worldSubregions as subregion}
-								<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="region"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={subRegionOption === subregion}
 										onchange={() => (subRegionOption = subregion)}
 									/>
-									<span class="label-text text-sm">{subregion}</span>
+									<span class="text-sm leading-snug min-w-0">{subregion}</span>
 								</label>
 							{/each}
 						</div>

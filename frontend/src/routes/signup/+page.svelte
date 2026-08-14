@@ -62,7 +62,7 @@
 								<div class="text-center mb-8">
 									<div class="mb-4">
 										<h1 class="text-3xl font-bold text-primary mb-1">AdventureLog</h1>
-										<div class="w-12 h-1 bg-primary mx-auto rounded"></div>
+										<div class="w-12 h-1 bg-primary mx-auto rounded-sm"></div>
 									</div>
 									<h2 class="text-4xl font-bold text-base-content mb-2">
 										{inviteSignup?.valid ? $t('auth.invite_signup_title') : $t('auth.signup')}
@@ -77,30 +77,26 @@
 										{#if inviteKey}
 											<input type="hidden" name="invite_key" value={inviteKey} />
 										{/if}
-										<div class="form-control">
-											<label class="label" for="username">
-												<span class="label-text font-medium">{$t('auth.username')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label" for="username">{$t('auth.username')}</label>
 											<input
 												name="username"
 												id="username"
 												type="text"
-												class="input input-bordered w-full focus:input-primary"
+												class="input w-full focus:input-primary"
 												placeholder={$t('auth.enter_username')}
 												autocomplete="username"
 												required
 											/>
 										</div>
 
-										<div class="form-control">
-											<label class="label" for="email">
-												<span class="label-text font-medium">{$t('auth.email')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label" for="email">{$t('auth.email')}</label>
 											<input
 												name="email"
 												id="email"
 												type="email"
-												class="input input-bordered w-full focus:input-primary"
+												class="input w-full focus:input-primary"
 												placeholder={$t('auth.enter_email')}
 												autocomplete="email"
 												value={inviteEmail}
@@ -110,29 +106,25 @@
 										</div>
 
 										<div class="grid grid-cols-2 gap-3">
-											<div class="form-control">
-												<label class="label" for="first_name">
-													<span class="label-text font-medium">{$t('auth.first_name')}</span>
-												</label>
+											<div class="flex flex-col">
+												<label class="field-label" for="first_name">{$t('auth.first_name')}</label>
 												<input
 													name="first_name"
 													id="first_name"
 													type="text"
-													class="input input-bordered w-full focus:input-primary"
+													class="input w-full focus:input-primary"
 													placeholder={$t('auth.enter_first_name')}
 													autocomplete="given-name"
 													required
 												/>
 											</div>
-											<div class="form-control">
-												<label class="label" for="last_name">
-													<span class="label-text font-medium">{$t('auth.last_name')}</span>
-												</label>
+											<div class="flex flex-col">
+												<label class="field-label" for="last_name">{$t('auth.last_name')}</label>
 												<input
 													name="last_name"
 													id="last_name"
 													type="text"
-													class="input input-bordered w-full focus:input-primary"
+													class="input w-full focus:input-primary"
 													placeholder={$t('auth.enter_last_name')}
 													autocomplete="family-name"
 													required
@@ -140,15 +132,13 @@
 											</div>
 										</div>
 
-										<div class="form-control">
-											<label class="label" for="password">
-												<span class="label-text font-medium">{$t('auth.password')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label" for="password">{$t('auth.password')}</label>
 											<input
 												type="password"
 												name="password1"
 												id="password"
-												class="input input-bordered w-full focus:input-primary"
+												class="input w-full focus:input-primary"
 												placeholder={$t('auth.enter_password')}
 												autocomplete="new-password"
 												minlength={passwordPolicy.min_length}
@@ -157,15 +147,13 @@
 											/>
 										</div>
 
-										<div class="form-control">
-											<label class="label" for="password2">
-												<span class="label-text font-medium">{$t('auth.confirm_password')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label" for="password2">{$t('auth.confirm_password')}</label>
 											<input
 												type="password"
 												name="password2"
 												id="password2"
-												class="input input-bordered w-full focus:input-primary"
+												class="input w-full focus:input-primary"
 												placeholder={$t('auth.confirm_password')}
 												autocomplete="new-password"
 												minlength={passwordPolicy.min_length}
@@ -177,8 +165,8 @@
 										<PasswordRequirements policy={passwordPolicy} {password} />
 
 										{#if legalRequired}
-											<div class="form-control">
-												<label class="label cursor-pointer justify-start gap-3 items-start py-2">
+											<div class="flex flex-col">
+												<label class="field-toggle">
 													<input
 														type="checkbox"
 														name="accept_terms"
@@ -186,7 +174,7 @@
 														bind:checked={acceptedTerms}
 														required
 													/>
-													<span class="label-text text-left leading-snug">
+													<span class="text-left leading-snug text-base-content">
 														{$t('auth.agree_to_prefix')}
 														{#if signupLegalLinks.terms_of_service_url}
 															<a
@@ -216,7 +204,7 @@
 											</div>
 										{/if}
 
-										<div class="form-control mt-6">
+										<div class="flex flex-col mt-6">
 											<button
 												type="submit"
 												class="btn btn-primary w-full"
@@ -368,7 +356,7 @@
 
 <style>
 	.input:focus {
-		outline: 2px solid hsl(var(--p));
+		outline: 2px solid var(--color-primary);
 		outline-offset: 2px;
 	}
 </style>

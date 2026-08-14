@@ -39,7 +39,7 @@
 
 {#if displayName || hasCoords}
 	<div
-		class={`rounded-lg p-3 bg-gradient-to-br from-primary/10 to-secondary/10 border border-base-300/60 shadow-sm ${className}`}
+		class={`rounded-lg p-3 bg-gradient-to-br from-primary/10 to-secondary/10 border border-base-300/60 shadow-xs ${className}`}
 	>
 		<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
 			<div class="flex items-center gap-2">

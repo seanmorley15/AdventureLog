@@ -30,11 +30,11 @@
 
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-8">
 		<div class="p-4 bg-base-200 rounded-xl">
-			<span class="text-base-content/60">UUID</span>
+			<span class="text-base-content/80">UUID</span>
 			<p class="text-primary font-mono font-semibold mt-1 break-all">{user.uuid}</p>
 		</div>
 		<div class="p-4 bg-base-200 rounded-xl">
-			<span class="text-base-content/60">{$t('settings.staff_status')}</span>
+			<span class="text-base-content/80">{$t('settings.staff_status')}</span>
 			<p class="mt-1">
 				<span class="badge {user.is_staff ? 'badge-success' : 'badge-ghost'}">
 					{user.is_staff ? $t('settings.staff_user') : $t('settings.regular_user')}
@@ -42,11 +42,11 @@
 			</p>
 		</div>
 		<div class="p-4 bg-base-200 rounded-xl">
-			<span class="text-base-content/60">{$t('settings.app_version')}</span>
+			<span class="text-base-content/80">{$t('settings.app_version')}</span>
 			<div class="mt-1"><AppVersionDisplay size="sm" /></div>
 		</div>
 		<div class="p-4 bg-base-200 rounded-xl">
-			<span class="text-base-content/60">{$t('settings.profile_visibility')}</span>
+			<span class="text-base-content/80">{$t('settings.profile_visibility')}</span>
 			<p class="mt-1">
 				<span class="badge {user.public_profile ? 'badge-info' : 'badge-ghost'}">
 					{user.public_profile ? $t('adventures.public') : $t('adventures.private')}
@@ -61,8 +61,8 @@
 	/>
 
 	<div class="text-center space-y-3 py-2">
-		<p class="text-sm text-base-content/70">{$t('about.license')}</p>
-		<p class="text-sm text-base-content/60">
+		<p class="text-sm text-base-content/80">{$t('about.license')}</p>
+		<p class="text-sm text-base-content/70">
 			© {copyrightYear}
 			<a href="https://seanmorley.com" target="_blank" rel="noreferrer" class="link">Sean Morley</a
 			>.

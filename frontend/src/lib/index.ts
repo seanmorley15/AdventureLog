@@ -646,24 +646,31 @@ export function debounce(func: Function, timeout: number) {
 	};
 }
 
-export function getIsDarkMode() {
-	const theme = document.documentElement.getAttribute('data-theme');
+const DARK_THEME_NAMES = new Set([
+	'dark',
+	'night',
+	'aestheticDark',
+	'northernLights',
+	'forest',
+	'dim'
+]);
 
-	if (theme) {
-		const isDark =
-			theme === 'dark' ||
-			theme === 'night' ||
-			theme === 'aestheticDark' ||
-			theme === 'northernLights' ||
-			theme === 'forest' ||
-			theme === 'dim';
-		return isDark;
+export function getIsDarkMode() {
+	if (typeof document === 'undefined') return false;
+
+	try {
+		const scheme = getComputedStyle(document.documentElement).colorScheme.trim();
+		if (scheme === 'dark') return true;
+		if (scheme === 'light') return false;
+	} catch {
+		// ignore missing computed styles during early boot
 	}
 
-	// Fallback to browser preference if no theme cookie is set
+	const theme = document.documentElement.getAttribute('data-theme');
+	if (theme) return DARK_THEME_NAMES.has(theme);
+
 	if (typeof window !== 'undefined' && window.matchMedia) {
-		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		return prefersDark;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
 	return false;

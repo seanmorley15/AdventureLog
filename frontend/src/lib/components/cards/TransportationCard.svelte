@@ -191,7 +191,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="transportation-card"
 >
 	<!-- Image Section with Overlay -->
@@ -217,7 +217,7 @@
 				data-tip={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
 			>
 				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-sm"
+					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
 					role="img"
 					aria-label={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
@@ -308,9 +308,9 @@
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'transportation', id: transportation.id });
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4 " />
+											<Globe class="w-4 h-4" />
 											{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
 										</button>
 									</li>
@@ -320,7 +320,7 @@
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<Calendar class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}
@@ -436,7 +436,7 @@
 					{#if hasExpandableDetails}
 						<div class="flex justify-end">
 							<button
-								class="btn btn-neutral-200 btn-xs"
+								class="btn btn-ghost btn-xs"
 								aria-expanded={showMoreDetails}
 								onclick={() => (showMoreDetails = !showMoreDetails)}
 								type="button"

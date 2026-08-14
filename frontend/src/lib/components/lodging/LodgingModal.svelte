@@ -297,7 +297,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -319,7 +319,7 @@
 						<h1 class="text-3xl font-bold text-primary bg-clip-text">
 							{lodgingToEdit ? $t('lodging.edit_lodging') : $t('lodging.new_lodging')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{lodgingToEdit
 								? $t('lodging.update_lodging_details')
 								: $t('lodging.create_new_lodging')}
@@ -342,7 +342,7 @@
 									fill="currentColor"
 									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
 										? 'text-primary'
-										: 'text-base-content/40'}"
+										: 'text-base-content/70'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -353,12 +353,12 @@
 							</div>
 							<button
 								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
-									? 'bg-primary text-primary-content'
-									: 'bg-base-200'} {step.requires_id && !lodging?.id
-									? 'opacity-50 cursor-not-allowed'
-									: ''} {index === 0 && isEditMode
-									? 'opacity-50 cursor-not-allowed'
-									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
+ ? 'bg-primary text-primary-content'
+ : 'bg-base-200'} {step.requires_id && !lodging?.id
+ ? 'opacity-50 cursor-not-allowed'
+ : ''} {index === 0 && isEditMode
+ ? 'opacity-50 cursor-not-allowed'
+ : 'hover:bg-primary/80 cursor-pointer'} transition-colors"
 								onclick={() => handleStepSelect(index)}
 								disabled={(step.requires_id && !lodging?.id) || (index === 0 && isEditMode)}
 							>

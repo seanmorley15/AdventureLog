@@ -152,9 +152,9 @@
 				role="tab"
 				aria-selected={mode === m.id}
 				class="btn btn-xs sm:btn-sm min-w-0 h-8 sm:h-9 px-1.5 sm:px-2 gap-0.5 sm:gap-1 {mode ===
-				m.id
-					? 'btn-primary'
-					: 'btn-ghost bg-base-100/80'}"
+ m.id
+ ? 'btn-primary'
+ : 'btn-ghost bg-base-100/80'}"
 				onclick={() => handleModeChange(m.id)}
 			>
 				<m.icon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
@@ -175,7 +175,7 @@
 		<div class="relative w-full flex items-center gap-1.5">
 			<div class="relative flex-1 min-w-0">
 				<label
-					class="input input-bordered input-sm flex items-center gap-2 w-full min-w-0 bg-base-100/95 shadow-sm"
+					class="input input-sm flex items-center gap-2 w-full min-w-0 bg-base-100/95 shadow-xs"
 				>
 					<SearchIcon class="h-4 w-4 opacity-70 shrink-0" />
 					<input
@@ -249,7 +249,7 @@
 			{#if mode === 'my'}
 				<button
 					type="button"
-					class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
+					class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-xs"
 					disabled={randomDisabled}
 					onclick={handleRandomClick}
 					aria-label={$t('map.random_location')}

@@ -66,7 +66,7 @@
 	<div class="flex items-start justify-between mb-3">
 		<div class="flex-1 min-w-0">
 			<div class="flex items-center gap-2 mb-2">
-				<RunFastIcon class="w-4 h-4 text-success flex-shrink-0" />
+				<RunFastIcon class="w-4 h-4 text-success shrink-0" />
 				<h5 class="font-semibold text-base truncate">{activity.name}</h5>
 				<div class="flex gap-1">
 					{#if activity.sport_type}
@@ -90,7 +90,7 @@
 	<!-- Main Stats Grid -->
 	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
 		{#if activity.distance}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-primary">
 					{getDistance(measurementSystem, activity.distance)}
 				</div>
@@ -101,7 +101,7 @@
 		{/if}
 
 		{#if activity.moving_time}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-secondary">
 					{formatDuration(activity.moving_time)}
 				</div>
@@ -110,7 +110,7 @@
 		{/if}
 
 		{#if activity.elevation_gain}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-success">
 					{getElevation(measurementSystem, activity.elevation_gain)}
 				</div>
@@ -121,7 +121,7 @@
 		{/if}
 
 		{#if activity.average_speed}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-accent">
 					{formatSpeed(activity.average_speed)}
 				</div>

@@ -13,7 +13,7 @@
 		MediaUsage,
 		AuthUserSession
 	} from '$lib/types.js';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
@@ -86,21 +86,38 @@
 	);
 
 	$effect.pre(() => {
-		if (data.user) {
-			user = data.user;
-			emails = data.props.emails;
-			user.map_style = normalizeBasemapType(user.map_style);
-		}
-		immichIntegration = data.props.immichIntegration;
-		googleMapsEnabled = data.props.googleMapsEnabled;
-		stravaGlobalEnabled = data.props.stravaGlobalEnabled;
-		stravaUserEnabled = data.props.stravaUserEnabled;
-		wandererEnabled = data.props.wandererEnabled;
-		wandererIntegration = data.props.wandererIntegration;
-		endurainEnabled = data.props.endurainEnabled;
-		endurainIntegration = data.props.endurainIntegration;
-		apiKeys = data.props.apiKeys ?? [];
-		sessions = data.props.sessions ?? [];
+		const nextUser = data.user;
+		const nextEmails = data.props.emails;
+		const nextImmich = data.props.immichIntegration;
+		const nextGoogleMaps = data.props.googleMapsEnabled;
+		const nextStravaGlobal = data.props.stravaGlobalEnabled;
+		const nextStravaUser = data.props.stravaUserEnabled;
+		const nextWandererEnabled = data.props.wandererEnabled;
+		const nextWanderer = data.props.wandererIntegration;
+		const nextEndurainEnabled = data.props.endurainEnabled;
+		const nextEndurain = data.props.endurainIntegration;
+		const nextApiKeys = data.props.apiKeys ?? [];
+		const nextSessions = data.props.sessions ?? [];
+
+		untrack(() => {
+			if (nextUser) {
+				user = {
+					...nextUser,
+					map_style: normalizeBasemapType(nextUser.map_style)
+				};
+				emails = nextEmails;
+			}
+			immichIntegration = nextImmich;
+			googleMapsEnabled = nextGoogleMaps;
+			stravaGlobalEnabled = nextStravaGlobal;
+			stravaUserEnabled = nextStravaUser;
+			wandererEnabled = nextWandererEnabled;
+			wandererIntegration = nextWanderer;
+			endurainEnabled = nextEndurainEnabled;
+			endurainIntegration = nextEndurain;
+			apiKeys = nextApiKeys;
+			sessions = nextSessions;
+		});
 	});
 	let isRevokingSession = $state(false);
 	let newApiKeyName = $state('');
@@ -507,7 +524,7 @@
 	<div class="bg-base-100 shadow-lg border-b border-base-300">
 		<div class="container mx-auto px-6 py-8 max-w-7xl">
 			<h1 class="text-4xl font-bold text-primary">{$t('settings.settings_page')}</h1>
-			<p class="text-base-content/60 mt-1">{$t('settings.account_settings')}</p>
+			<p class="mt-1 font-medium text-base-content/80">{$t('settings.account_settings')}</p>
 		</div>
 	</div>
 

@@ -34,7 +34,7 @@
 	type LayerPosition = 'first' | 'middle' | 'last' | 'only';
 
 	function layerBtnClass(show: boolean, position: LayerPosition, activeClass: string) {
-		const rounded =
+		const roundedClass =
 			position === 'only'
 				? 'rounded-xl'
 				: position === 'first'
@@ -43,7 +43,7 @@
 						? 'rounded-r-xl rounded-l-none'
 						: 'rounded-none';
 		const state = show ? activeClass : 'opacity-45';
-		return `${btnBase} ${rounded} ${state}`;
+		return `${btnBase} ${roundedClass} ${state}`;
 	}
 
 	let layerCount = $derived(Number(hasActivities) + Number(hasTrails) + Number(hasImagePins));
@@ -79,17 +79,17 @@
 
 {#if hasActivities || hasTrails || hasImagePins}
 	<div
-		class:pointer-events-none={!embedded}
 		class:absolute={!embedded}
 		class:top-3={!embedded}
 		class:left-3={!embedded}
 		class:z-20={!embedded}
-		class="flex items-center pointer-events-auto"
+		class:pointer-events-none={!embedded}
+		class="flex items-center"
 		role="toolbar"
 		aria-label={$t('map.track_layers')}
 	>
 		<div
-			class="flex items-center rounded-xl border border-base-300 shadow-md bg-base-100/90 backdrop-blur-lg divide-x divide-base-300/80 overflow-hidden"
+			class="pointer-events-auto flex items-center rounded-xl border border-base-300 shadow-md bg-base-100/90 backdrop-blur-lg divide-x divide-base-300/80 overflow-hidden"
 		>
 			{#if hasActivities}
 				<button

@@ -181,7 +181,7 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -209,7 +209,7 @@
 								{$t('checklist.checklist_viewer')}
 							{/if}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{#if checklist?.id && !isReadOnly}
 								{$t('checklist.update_checklist_details')} "{initialName}"
 							{:else if !isReadOnly}
@@ -277,11 +277,9 @@
 							<!-- Left Column -->
 							<div class="space-y-4">
 								<!-- Name Field -->
-								<div class="form-control">
-									<label class="label" for="name">
-										<span class="label-text font-medium"
-											>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
-										>
+								<div class="flex flex-col">
+									<label class="field-label" for="name">
+										{$t('adventures.name')}<span class="text-error ml-1">*</span>
 									</label>
 									<input
 										type="text"
@@ -289,7 +287,7 @@
 										name="name"
 										readonly={isReadOnly}
 										bind:value={newChecklist.name}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										class="input w-full bg-base-100/80 focus:bg-base-100"
 										placeholder={$t('checklist.enter_checklist_title')}
 										required
 									/>
@@ -299,10 +297,8 @@
 							<!-- Right Column -->
 							<div class="space-y-4">
 								<!-- Date Field -->
-								<div class="form-control">
-									<label class="label" for="date">
-										<span class="label-text font-medium">{$t('adventures.date')}</span>
-									</label>
+								<div class="flex flex-col">
+									<label class="field-label" for="date">{$t('adventures.date')}</label>
 									{#if !isReadOnly && hasVisitDateSuggestion}
 										<div
 											class="flex flex-wrap items-center gap-2 mb-2 text-xs text-base-content/70"
@@ -336,7 +332,7 @@
 										min={constrainDates ? collection.start_date : ''}
 										max={constrainDates ? collection.end_date : ''}
 										bind:value={newChecklist.date}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										class="input w-full bg-base-100/80 focus:bg-base-100"
 									/>
 								</div>
 							</div>
@@ -365,10 +361,8 @@
 					<div class="collapse-content bg-base-100/50 pt-4 p-6">
 						<!-- Add New Item Section -->
 						{#if !isReadOnly}
-							<div class="form-control mb-6">
-								<label class="label" for="new-item">
-									<span class="label-text font-medium">{$t('checklist.add_new_item')}</span>
-								</label>
+							<div class="flex flex-col mb-6">
+								<label class="field-label" for="new-item">{$t('checklist.add_new_item')}</label>
 								<div class="flex gap-3 items-center">
 									<input
 										type="checkbox"
@@ -381,7 +375,7 @@
 											id="new-item"
 											placeholder={$t('checklist.new_item')}
 											bind:value={newItem}
-											class="input input-bordered join-item flex-1 bg-base-100/80 focus:bg-base-100"
+											class="input join-item flex-1 bg-base-100/80 focus:bg-base-100"
 											onkeydown={(e) => {
 												if (e.key === 'Enter') {
 													e.preventDefault();
@@ -432,8 +426,8 @@
 												type="text"
 												bind:value={item.name}
 												class="input input-ghost flex-1 bg-transparent focus:bg-base-100/80 {item.is_checked
-													? 'line-through text-base-content/50'
-													: ''}"
+ ? 'line-through text-base-content/50'
+ : ''}"
 												readonly={isReadOnly}
 											/>
 											{#if !isReadOnly}
@@ -523,7 +517,7 @@
 
 				<!-- Action Buttons -->
 				<div class="flex gap-3 justify-end pt-4 border-t border-base-300/50">
-					<button type="button" class="btn btn-neutral-200" onclick={close}>
+					<button type="button" class="btn btn-ghost" onclick={close}>
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"

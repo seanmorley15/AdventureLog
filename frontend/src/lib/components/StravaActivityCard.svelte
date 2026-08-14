@@ -3,6 +3,7 @@
 	import type { StravaActivity } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
 	const dispatch = createEventDispatcher();
 
@@ -163,7 +164,10 @@
 							</svg>
 						{/if}
 					</button>
-					<div class="dropdown dropdown-end">
+					<div
+						class="dropdown dropdown-end relative z-50"
+						onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+					>
 						<div
 							tabindex="0"
 							role="button"
@@ -182,7 +186,7 @@
 						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-sm"
 						>
 							<li>
 								<a href={activity.export_gpx} target="_blank" rel="noopener noreferrer">

@@ -494,7 +494,7 @@
 	});
 </script>
 
-<div class="card bg-base-100 border border-base-300 shadow-lg">
+<div class="card bg-base-100 border border-base-300">
 	<div class="card-body p-6">
 		<div class="flex items-center gap-3 mb-6">
 			<div class="p-2 bg-primary/10 rounded-lg">
@@ -506,14 +506,14 @@
 		<!-- Upload Options Grid -->
 		<div class="grid gap-4 lg:grid-cols-2 mb-6">
 			<!-- File Upload -->
-			<div class="bg-base-50 p-4 rounded-lg border border-base-200">
+			<div class="bg-base-200/40 p-4 rounded-lg border border-base-300">
 				<h4 class="font-medium mb-3 text-base-content/80">
 					{$t('adventures.upload_from_device')}
 				</h4>
 				<input
 					type="file"
 					bind:this={fileInput}
-					class="file-input file-input-bordered w-full"
+					class="file-input w-full"
 					accept="image/*"
 					multiple
 					disabled={isLoading}
@@ -522,7 +522,7 @@
 			</div>
 
 			<!-- URL Upload -->
-			<div class="bg-base-50 p-4 rounded-lg border border-base-200">
+			<div class="bg-base-200/40 p-4 rounded-lg border border-base-300">
 				<h4 class="font-medium mb-3 text-base-content/80">
 					{$t('adventures.upload_from_url')}
 				</h4>
@@ -530,7 +530,7 @@
 					<input
 						type="url"
 						bind:value={url}
-						class="input input-bordered flex-1"
+						class="input flex-1"
 						placeholder="https://example.com/image.jpg"
 						disabled={isLoading}
 					/>
@@ -551,7 +551,7 @@
 			</div>
 
 			<!-- Wikipedia Search -->
-			<div class="bg-base-50 p-4 rounded-lg border border-base-200">
+			<div class="bg-base-200/40 p-4 rounded-lg border border-base-300">
 				<h4 class="font-medium mb-3 text-base-content/80">
 					{$t('adventures.wikipedia')}
 				</h4>
@@ -559,7 +559,7 @@
 					<input
 						type="text"
 						bind:value={imageSearch}
-						class="input input-bordered flex-1"
+						class="input flex-1"
 						placeholder="Search Wikipedia for images"
 						disabled={isLoading}
 					/>
@@ -640,7 +640,7 @@
 
 			<!-- Immich Integration -->
 			{#if immichIntegration}
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200">
+				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300">
 					<h4 class="font-medium mb-3 text-base-content/80">
 						{$t('immich.immich')}
 					</h4>
@@ -656,7 +656,7 @@
 		</div>
 
 		{#if pendingGooglePhotoUrls.length > 0}
-			<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6 relative">
+			<div class="bg-base-200/40 p-4 rounded-lg border border-base-300 mb-6 relative">
 				<div class="flex items-center gap-3 mb-3">
 					<div class="p-2 bg-primary/10 rounded-lg">
 						<GoogleIcon class="w-5 h-5 text-primary" />
@@ -676,17 +676,17 @@
 				<div class="relative mb-4">
 					<div
 						class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 transition-opacity duration-200 {importingGooglePhotos
-							? 'opacity-40 pointer-events-none'
-							: ''}"
+ ? 'opacity-40 pointer-events-none'
+ : ''}"
 					>
 						{#each pendingGooglePhotoUrls as url, i (url + '-' + i)}
 							<button
 								type="button"
 								class="relative aspect-square overflow-hidden rounded-lg border-2 transition-all cursor-pointer group {!deselectedGooglePhotoUrls.has(
-									url
-								)
-									? 'border-primary ring-2 ring-primary/30'
-									: 'border-base-300 opacity-70 hover:opacity-100'}"
+ url
+ )
+ ? 'border-primary ring-2 ring-primary/30'
+ : 'border-base-300 opacity-70 hover:opacity-100'}"
 								onclick={() => toggleGooglePhotoSelection(url)}
 								disabled={importingGooglePhotos || !objectId}
 							>

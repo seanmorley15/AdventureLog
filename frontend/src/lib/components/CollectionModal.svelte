@@ -264,7 +264,7 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -288,7 +288,7 @@
 								? $t('adventures.edit_collection')
 								: $t('collection.new_collection')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{collectionToEdit
 								? $t('collection.update_collection_details')
 								: $t('collection.create_new_collection')}
@@ -320,45 +320,39 @@
 							<!-- Left Column -->
 							<div class="space-y-4">
 								<!-- Name Field -->
-								<div class="form-control">
-									<label class="label" for="name">
-										<span class="label-text font-medium"
-											>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
-										>
+								<div class="flex flex-col">
+									<label class="field-label" for="name">
+										{$t('adventures.name')}<span class="text-error ml-1">*</span>
 									</label>
 									<input
 										type="text"
 										id="name"
 										name="name"
 										bind:value={collection.name}
-										class="input input-bordered w-full"
+										class="input w-full"
 										placeholder={$t('collection.enter_collection_name')}
 										required
 									/>
 								</div>
 
 								<!-- Description Field -->
-								<div class="form-control">
-									<label class="label" for="description">
-										<span class="label-text font-medium">{$t('adventures.description')}</span>
-									</label>
+								<div class="flex flex-col">
+									<label class="field-label" for="description">{$t('adventures.description')}</label>
 									<MarkdownEditor bind:text={collection.description} editor_height={'h-32'} />
 								</div>
 
 								<!-- Link Field -->
-								<div class="form-control">
-									<label class="label" for="link">
-										<span class="label-text font-medium flex items-center gap-2">
-											<LinkIcon class="w-4 h-4" />
-											{$t('adventures.link')}
-										</span>
+								<div class="flex flex-col">
+									<label class="field-label flex items-center gap-2" for="link">
+										<LinkIcon class="w-4 h-4" />
+										{$t('adventures.link')}
 									</label>
 									<input
 										type="text"
 										id="link"
 										name="link"
 										bind:value={collection.link}
-										class="input input-bordered w-full"
+										class="input w-full"
 										placeholder="https://example.com"
 									/>
 								</div>
@@ -367,42 +361,38 @@
 							<!-- Right Column -->
 							<div class="space-y-4">
 								<!-- Start Date -->
-								<div class="form-control">
-									<label class="label" for="start_date">
-										<span class="label-text font-medium flex items-center gap-2">
-											<CalendarIcon class="w-4 h-4" />
-											{$t('adventures.start_date')}
-										</span>
+								<div class="flex flex-col">
+									<label class="field-label flex items-center gap-2" for="start_date">
+										<CalendarIcon class="w-4 h-4" />
+										{$t('adventures.start_date')}
 									</label>
 									<input
 										type="date"
 										id="start_date"
 										name="start_date"
 										bind:value={collection.start_date}
-										class="input input-bordered w-full"
+										class="input w-full"
 									/>
 								</div>
 
 								<!-- End Date -->
-								<div class="form-control">
-									<label class="label" for="end_date">
-										<span class="label-text font-medium flex items-center gap-2">
-											<CalendarIcon class="w-4 h-4" />
-											{$t('adventures.end_date')}
-										</span>
+								<div class="flex flex-col">
+									<label class="field-label flex items-center gap-2" for="end_date">
+										<CalendarIcon class="w-4 h-4" />
+										{$t('adventures.end_date')}
 									</label>
 									<input
 										type="date"
 										id="end_date"
 										name="end_date"
 										bind:value={collection.end_date}
-										class="input input-bordered w-full"
+										class="input w-full"
 									/>
 								</div>
 
 								<!-- Public Toggle -->
-								<div class="form-control">
-									<label class="label cursor-pointer justify-start gap-3">
+								<div class="flex flex-col">
+									<label class="field-toggle">
 										<input
 											type="checkbox"
 											class="toggle toggle-primary"
@@ -410,13 +400,13 @@
 											name="is_public"
 											bind:checked={collection.is_public}
 										/>
-										<span class="label-text font-medium">{$t('collection.public_collection')}</span>
+										<span>
+											<span class="font-semibold text-base-content"
+												>{$t('collection.public_collection')}</span
+											>
+											<p class="field-hint">{$t('collection.public_collection_description')}</p>
+										</span>
 									</label>
-									<div class="pl-12">
-										<span class="text-sm text-base-content/60"
-											>{$t('collection.public_collection_description')}</span
-										>
-									</div>
 								</div>
 							</div>
 						</div>
@@ -485,7 +475,7 @@
 							</div>
 
 							{#if availableImages.length === 0}
-								<div class="alert alert-info shadow-sm">
+								<div class="alert alert-info shadow-xs">
 									<span>
 										{$t('collection.no_images_available') ??
 											'No images available from linked locations yet.'}
@@ -496,10 +486,10 @@
 									{#each availableImages as image (image.id)}
 										<button
 											type="button"
-											class="relative group rounded-xl overflow-hidden border border-base-300 bg-base-200/30 hover:border-primary transition shadow-sm {coverImageId ===
-											image.id
-												? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
-												: ''}"
+											class="relative group rounded-xl overflow-hidden border border-base-300 bg-base-200/30 hover:border-primary transition shadow-xs {coverImageId ===
+ image.id
+ ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
+ : ''}"
 											onclick={() => selectCover(image.id)}
 											aria-pressed={coverImageId === image.id}
 										>
@@ -512,16 +502,16 @@
 												class="absolute inset-0 bg-gradient-to-t from-base-300/60 to-transparent opacity-0 group-hover:opacity-100 transition"
 											></div>
 											{#if coverImageId === image.id}
-												<div class="absolute top-2 left-2 badge badge-primary gap-2 shadow">
+												<div class="absolute top-2 left-2 badge badge-primary gap-2 shadow-sm">
 													{$t('collection.cover') ?? 'Cover'}
 												</div>
 											{:else if image.is_primary}
-												<div class="absolute top-2 left-2 badge badge-ghost shadow">
+												<div class="absolute top-2 left-2 badge badge-ghost shadow-sm">
 													{$t('collection.location_primary') ?? 'Location cover'}
 												</div>
 											{/if}
 											<div
-												class="absolute bottom-2 right-2 btn btn-xs btn-ghost bg-base-100/90 shadow"
+												class="absolute bottom-2 right-2 btn btn-xs btn-ghost bg-base-100/90 shadow-sm"
 											>
 												{coverImageId === image.id
 													? ($t('collection.cover') ?? 'Cover')
@@ -555,7 +545,7 @@
 									type="text"
 									value="{window.location.origin}/collections/{collection.id}"
 									readonly
-									class="input input-bordered flex-1 font-mono text-sm"
+									class="input flex-1 font-mono text-sm"
 								/>
 								<button
 									type="button"

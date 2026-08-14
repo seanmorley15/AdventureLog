@@ -78,7 +78,7 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import CommandPalette from '$lib/components/search/CommandPalette.svelte';
-	import 'tailwindcss/tailwind.css';
+	import '../app.css';
 
 	// Create a promise that resolves when the locale is ready
 	export const localeLoaded = browser ? waitLocale() : Promise.resolve();

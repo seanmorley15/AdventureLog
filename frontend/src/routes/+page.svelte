@@ -146,7 +146,7 @@
 
 							<!-- Floating Badge -->
 							<div
-								class="absolute top-8 left-8 bg-base-100/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border"
+								class="absolute top-8 left-8 bg-base-100/90 backdrop-blur-xs px-4 py-2 rounded-full shadow-lg border"
 							>
 								<div class="flex items-center gap-2">
 									<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -198,7 +198,7 @@
 							class="group hover:bg-base-200/50 p-6 rounded-2xl transition-all duration-300 hover:shadow-lg"
 						>
 							<div class="flex items-start gap-4">
-								<div class="flex-shrink-0 p-3 {feature.bgColor} rounded-xl">
+								<div class="shrink-0 p-3 {feature.bgColor} rounded-xl">
 									<feature.icon class="w-6 h-6 {feature.color}" />
 								</div>
 								<div class="space-y-2">

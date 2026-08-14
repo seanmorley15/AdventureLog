@@ -736,7 +736,7 @@
 
 <!-- Add to Collection CTA (compact) -->
 {#if canModify}
-	<div class="card bg-base-100 shadow-sm mb-3 border border-base-200">
+	<div class="card bg-base-100 shadow-xs mb-3 border border-base-200">
 		<div class="card-body py-3 px-4 gap-2">
 			<div class="flex items-center justify-between gap-3">
 				<div class="flex items-center gap-2 min-w-0">
@@ -836,7 +836,7 @@
 		{#if showFilters}
 			<div class="divider my-1"></div>
 			<div class="space-y-3">
-				<label class="input input-bordered input-xs flex items-center gap-2 h-8 min-h-8">
+				<label class="input input-xs flex items-center gap-2 h-8 min-h-8">
 					<SearchIcon class="h-3.5 w-3.5 opacity-70 shrink-0" />
 					<input
 						type="text"
@@ -939,8 +939,8 @@
 								<button
 									type="button"
 									class="badge badge-sm h-6 {selectedCategories.has(category)
-										? 'badge-primary'
-										: 'badge-ghost border border-base-300/80'} cursor-pointer"
+ ? 'badge-primary'
+ : 'badge-ghost border border-base-300/80'} cursor-pointer"
 									onclick={() => toggleCategory(category)}
 								>
 									{category}
@@ -959,7 +959,7 @@
 							<input
 								type="date"
 								bind:value={startDateFilter}
-								class="input input-xs input-bordered flex-1 min-w-0"
+								class="input input-xs flex-1 min-w-0"
 								min={collectionStartDateISO}
 								max={collectionEndDateISO}
 								aria-label={$t('adventures.start_date')}
@@ -967,7 +967,7 @@
 							<input
 								type="date"
 								bind:value={endDateFilter}
-								class="input input-xs input-bordered flex-1 min-w-0"
+								class="input input-xs flex-1 min-w-0"
 								min={collectionStartDateISO}
 								max={collectionEndDateISO}
 								aria-label={$t('adventures.end_date')}
@@ -1041,8 +1041,8 @@
 						<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
 							<div
 								class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base group-hover:scale-110 transition-all duration-200 {getMarkerColorClass(
-									markerProps
-								)}"
+ markerProps
+ )}"
 								class:scale-110={isActive}
 								class:cursor-pointer={canNavigate(markerProps)}
 								class:cursor-default={!canNavigate(markerProps)}
@@ -1074,7 +1074,7 @@
 								class:pointer-events-auto={isActive}
 							>
 								<div
-									class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-56 max-w-80"
+									class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-56 max-w-80"
 								>
 									<div class="card-body gap-3">
 										<div class="space-y-2">
@@ -1083,12 +1083,12 @@
 												<div class="mt-1 flex flex-wrap items-center gap-2">
 													<div
 														class="badge badge-sm {markerProps.type === 'lodging'
-															? 'badge-secondary'
-															: markerProps.type === 'transportation'
-																? 'badge-accent'
-																: markerProps.visitStatus === 'visited'
-																	? 'badge-success'
-																	: 'badge-info'}"
+ ? 'badge-secondary'
+ : markerProps.type === 'transportation'
+ ? 'badge-accent'
+ : markerProps.visitStatus === 'visited'
+ ? 'badge-success'
+ : 'badge-info'}"
 													>
 														{getTypeLabel(markerProps)}
 													</div>

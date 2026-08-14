@@ -66,12 +66,12 @@
 	}
 </script>
 
-<div class="bg-base-200/50 p-4 rounded-lg shadow-sm">
+<div class="bg-base-200/50 p-4 rounded-lg shadow-xs">
 	<div class="flex items-start justify-between">
 		<div class="flex-1 min-w-0">
 			<!-- Header with trail name and difficulty -->
 			<div class="flex items-center gap-2 mb-2">
-				<MountainIcon class="w-4 h-4 text-primary flex-shrink-0" />
+				<MountainIcon class="w-4 h-4 text-primary shrink-0" />
 				<h5 class="font-semibold text-base truncate">{trail.name}</h5>
 				<span class="badge {getDifficultyBadgeClass(trail.difficulty)} badge-sm">
 					{trail.difficulty}
@@ -149,7 +149,7 @@
 		</div>
 
 		<!-- button to link trail to activity -->
-		<div class="flex-shrink-0 ml-4">
+		<div class="shrink-0 ml-4">
 			<button
 				class="btn btn-primary btn-xs tooltip tooltip-top"
 				onclick={() => dispatch('link', trail)}

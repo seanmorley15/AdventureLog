@@ -27,7 +27,7 @@
 		{#each grouped as group (group.date)}
 			<section>
 				<h3
-					class="sticky top-0 z-10 bg-base-100/95 backdrop-blur py-2 text-sm font-semibold text-primary border-b border-base-300"
+					class="sticky top-0 z-10 bg-base-100/95 backdrop-blur-sm py-2 text-sm font-semibold text-primary border-b border-base-300"
 				>
 					{group.label}
 				</h3>

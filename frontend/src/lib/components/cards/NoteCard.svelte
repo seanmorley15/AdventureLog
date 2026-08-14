@@ -195,7 +195,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="note-card"
 >
 	<div class="card-body p-4 space-y-3">
@@ -266,9 +266,9 @@
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'note', id: note.id });
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4 " />
+											<Globe class="w-4 h-4" />
 											{$t('itinerary.move_to_trip_context')}
 										</button>
 									</li>
@@ -278,7 +278,7 @@
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<CalendarRemove class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}

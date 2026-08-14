@@ -22,7 +22,7 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { CircleLayer, GeoJSON, MapEvents, MapLibre, MarkerLayer } from 'svelte-maplibre';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
-	import { getBasemapUrl } from '$lib';
+	import { getBasemapUrl, getIsDarkMode } from '$lib';
 	import { getMapViewportCenter } from '$lib/map/viewportCenter';
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
@@ -152,6 +152,8 @@
 	// Force the GeoJSON/layer subtree to remount after the new style finishes loading.
 	let styleNonce = $state(0);
 	let lastStyleKey: string | null = $state(null);
+	let isDarkUi = $state(false);
+	let themeEpoch = $state(0);
 	let styleKey = $state(basemapType);
 
 	let resolvedStyle = $state(getBasemapUrl(basemapType));
@@ -195,13 +197,29 @@
 	let clusterErrorContent = $state('#450a0a');
 
 	onMount(() => {
-		clusterBaseContent = resolveThemeColor('--color-base-content', clusterBaseContent);
-		clusterInfo = resolveThemeColor('--color-info', clusterInfo);
-		clusterWarning = resolveThemeColor('--color-warning', clusterWarning);
-		clusterError = resolveThemeColor('--color-error', clusterError);
-		clusterInfoContent = resolveThemeColor('--color-info-content', clusterInfoContent);
-		clusterWarningContent = resolveThemeColor('--color-warning-content', clusterWarningContent);
-		clusterErrorContent = resolveThemeColor('--color-error-content', clusterErrorContent);
+		const syncTheme = () => {
+			isDarkUi = getIsDarkMode();
+			themeEpoch += 1;
+			clusterBaseContent = resolveThemeColor('--color-base-content', clusterBaseContent);
+			clusterInfo = resolveThemeColor('--color-info', clusterInfo);
+			clusterWarning = resolveThemeColor('--color-warning', clusterWarning);
+			clusterError = resolveThemeColor('--color-error', clusterError);
+			clusterInfoContent = resolveThemeColor('--color-info-content', clusterInfoContent);
+			clusterWarningContent = resolveThemeColor('--color-warning-content', clusterWarningContent);
+			clusterErrorContent = resolveThemeColor('--color-error-content', clusterErrorContent);
+		};
+
+		syncTheme();
+
+		const observer = new MutationObserver(syncTheme);
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		const mq = window.matchMedia('(prefers-color-scheme: dark)');
+		mq.addEventListener('change', syncTheme);
+
+		return () => {
+			observer.disconnect();
+			mq.removeEventListener('change', syncTheme);
+		};
 	});
 
 	let resolvedClusterCirclePaint: Record<string, any> = $state({});
@@ -270,7 +288,7 @@
 				: geoJson;
 	});
 	run(() => {
-		styleKey = mapStyle ?? basemapType;
+		styleKey = mapStyle ?? `${basemapType}:${isDarkUi ? 'dark' : 'light'}`;
 	});
 	run(() => {
 		if (map && lastStyleKey !== styleKey) {
@@ -296,6 +314,7 @@
 		}
 	});
 	run(() => {
+		themeEpoch;
 		resolvedStyle = mapStyle ?? getBasemapUrl(basemapType);
 	});
 	run(() => {
@@ -342,20 +361,6 @@
 </script>
 
 <div class="fullmap-root relative h-full w-full min-h-[inherit]" bind:this={mapRootEl}>
-	{#if showMapControls}
-		{#if overlayControls}
-			{@render overlayControls?.({ basemapType, setBasemapType, map, mapRootEl, fullscreenTarget: fullscreenTarget ?? mapRootEl, })}
-		{:else}
-			<MapFloatingControls
-				{map}
-				bind:basemapType
-				{showBasemapSelector}
-				embedded={controlsEmbedded}
-				fullscreenTarget={fullscreenTarget ?? mapRootEl}
-			/>
-		{/if}
-	{/if}
-
 	<MapLibre
 		bind:map
 		style={resolvedStyle}
@@ -384,7 +389,7 @@
 								{@const count = abbreviated ?? (clusterProps && clusterProps['point_count'])}
 								{#if typeof count !== 'undefined' && count !== null}
 									<div
-										class="pointer-events-none select-none font-sans text-xs font-bold text-base-content drop-shadow-sm"
+										class="pointer-events-none select-none font-sans text-xs font-bold text-base-content drop-shadow-xs"
 									>
 										{count}
 									</div>
@@ -433,6 +438,20 @@
 		{@render children?.({ map, })}
 		{@render overlays?.({ map, })}
 	</MapLibre>
+
+	{#if showMapControls}
+		{#if overlayControls}
+			{@render overlayControls?.({ basemapType, setBasemapType, map, mapRootEl, fullscreenTarget: fullscreenTarget ?? mapRootEl, })}
+		{:else}
+			<MapFloatingControls
+				{map}
+				bind:basemapType
+				{showBasemapSelector}
+				embedded={controlsEmbedded}
+				fullscreenTarget={fullscreenTarget ?? mapRootEl}
+			/>
+		{/if}
+	{/if}
 </div>
 
 <style>
@@ -452,6 +471,12 @@
 	:global(.maplibregl-marker.map-pin-active),
 	:global(.mapboxgl-marker.map-pin-active) {
 		z-index: 2147483000 !important;
+	}
+
+	:global(.fullmap-root .fullmap-map),
+	:global(.fullmap-root .maplibregl-map) {
+		position: relative;
+		z-index: 0;
 	}
 
 	:global(.fullmap-root:fullscreen) {

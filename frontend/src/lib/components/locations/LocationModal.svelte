@@ -118,6 +118,35 @@
 	}
 
 
+	function createEmptyLocation(): Location {
+		return {
+			id: '',
+			name: '',
+			visits: [],
+			link: null,
+			description: null,
+			tags: [],
+			rating: NaN,
+			price: null,
+			price_currency: null,
+			is_public: false,
+			latitude: NaN,
+			longitude: NaN,
+			location: null,
+			images: [],
+			user: null,
+			category: {
+				id: '',
+				name: '',
+				display_name: '',
+				icon: '',
+				user: ''
+			},
+			attachments: [],
+			trails: []
+		};
+	}
+
 	interface Props {
 		user?: User | null;
 		collection?: Collection | null;
@@ -137,34 +166,13 @@
 		initialVisitDate = null,
 		itineraryDayLabel = null,
 		skipQuickStart = false,
-		location = $bindable({
-		id: '',
-		name: '',
-		visits: [],
-		link: null,
-		description: null,
-		tags: [],
-		rating: NaN,
-		price: null,
-		price_currency: null,
-		is_public: false,
-		latitude: NaN,
-		longitude: NaN,
-		location: null,
-		images: [],
-		user: null,
-		category: {
-			id: '',
-			name: '',
-			display_name: '',
-			icon: '',
-			user: ''
-		},
-		attachments: [],
-		trails: []
-	}),
+		location = $bindable(),
 		locationToEdit = null
 	}: Props = $props();
+
+	if (!location) {
+		location = createEmptyLocation();
+	}
 
 	let previousLocationId: string | null | undefined = undefined;
 
@@ -270,22 +278,20 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box location-modal-box w-11/12 max-w-6xl bg-base-100 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-t-2xl md:rounded-2xl"
 		role="dialog"
+		aria-labelledby="location-modal-title"
 		onkeydown={handleKeydown}
 		tabindex="0"
 	>
-		<!-- Header Section - Following adventurelog pattern -->
-		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
-		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<div class="p-2 bg-primary/10 rounded-xl">
+		<div class="shrink-0 bg-base-100 border-b border-base-300 px-4 md:px-6 py-3 md:py-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
+					<div class="p-2 bg-primary/10 rounded-xl shrink-0">
 						<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -301,11 +307,11 @@
 							/>
 						</svg>
 					</div>
-					<div>
-						<h1 class="text-3xl font-bold text-primary bg-clip-text">
+					<div class="min-w-0">
+						<h1 id="location-modal-title" class="text-2xl md:text-3xl font-bold text-primary truncate">
 							{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80 truncate">
 							{locationToEdit
 								? $t('adventures.update_location_details')
 								: $t('adventures.create_new_location')}
@@ -328,7 +334,7 @@
 									fill="currentColor"
 									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
 										? 'text-primary'
-										: 'text-base-content/40'}"
+										: 'text-base-content/70'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -360,45 +366,26 @@
 					{/each}
 				</ul>
 
-				<!-- Close Button -->
-				{#if !location.id}
-					<button
-						type="button"
-						class="btn btn-ghost btn-square"
-						aria-label={$t('about.close')}
-						title={$t('about.close')}
-						onclick={close}
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				{:else}
-					<button
-						type="button"
-						class="btn btn-ghost btn-square"
-						aria-label={$t('about.close')}
-						title={$t('about.close')}
-						onclick={close}
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				{/if}
+				<button
+					type="button"
+					class="btn btn-ghost btn-square shrink-0"
+					aria-label={$t('about.close')}
+					title={$t('about.close')}
+					onclick={close}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
 			</div>
 		</div>
 
+		<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
 		{#if steps[0].selected && !isEditMode}
 			<!-- Main Content -->
 			<LocationQuickStart
@@ -496,5 +483,24 @@
 				initialVisitDate={storedInitialVisitDate}
 			/>
 		{/if}
+		</div>
 	</div>
 </dialog>
+
+<style>
+	.location-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 92dvh;
+		max-height: 92dvh;
+	}
+
+	@media (min-width: 768px) {
+		.location-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

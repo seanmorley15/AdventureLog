@@ -14,6 +14,7 @@
 
 	import MobileQR from '$lib/components/MobileQR.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
 	interface Props {
 		user: any;
@@ -91,7 +92,10 @@
 	});
 </script>
 
-<div class="dropdown dropdown-bottom dropdown-end z-[999]">
+<div
+	class="dropdown dropdown-bottom dropdown-end z-[999]"
+	onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+>
 	<div
 		tabindex="0"
 		role="button"
@@ -116,7 +120,7 @@
 		<!-- User Info Header -->
 		<div class="px-2 py-3 mb-3 border-b border-base-300">
 			<div class="flex items-center gap-3">
-				<div class="avatar placeholder">
+				<div class="avatar avatar-placeholder">
 					<div class="w-12 rounded-full ring-2 ring-primary/20 overflow-hidden">
 						<UserAvatar
 							{user}

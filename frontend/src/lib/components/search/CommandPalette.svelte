@@ -281,14 +281,14 @@
 						bind:this={inputElement}
 						bind:value={query}
 						type="text"
-						class="input input-ghost w-full focus:outline-none pl-2 pr-0 text-lg h-12 min-h-0 bg-transparent"
+						class="input input-ghost w-full focus:outline-hidden pl-2 pr-0 text-lg h-12 min-h-0 bg-transparent"
 						placeholder={$t('navbar.search')}
 						autocomplete="off"
 						spellcheck="false"
 					/>
 					<kbd class="kbd kbd-sm hidden sm:inline-flex opacity-70">{modifierHint}</kbd>
 				</div>
-				<div class="tabs tabs-boxed mt-4 bg-base-200/80 p-1 rounded-xl">
+				<div class="tabs tabs-box mt-4 bg-base-200/80 p-1 rounded-xl">
 					<button
 						type="button"
 						class="tab flex-1"
@@ -485,7 +485,7 @@
 			</div>
 
 			<div
-				class="border-t border-base-content/10 px-5 py-3.5 flex items-center justify-between gap-3 bg-base-100/35 backdrop-blur-sm"
+				class="border-t border-base-content/10 px-5 py-3.5 flex items-center justify-between gap-3 bg-base-100/35 backdrop-blur-xs"
 			>
 				<div class="text-xs text-base-content/60 hidden sm:flex gap-3">
 					<span>↑↓ {$t('search.navigate')}</span>

@@ -1259,7 +1259,7 @@
 													tabindex="0"
 												>
 													<div
-														class="w-9 h-9 rounded-full ring ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
+														class="w-9 h-9 rounded-full ring-3 ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
 													>
 														{#if person.profile_pic}
 															<img src={person.profile_pic} alt={collaboratorDisplayName(person)} />
@@ -1275,7 +1275,7 @@
 											{:else}
 												<div class="avatar tooltip" data-tip={collaboratorDisplayName(person)}>
 													<div
-														class="w-9 h-9 rounded-full ring ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
+														class="w-9 h-9 rounded-full ring-3 ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
 													>
 														{#if person.profile_pic}
 															<img src={person.profile_pic} alt={collaboratorDisplayName(person)} />
@@ -1353,7 +1353,7 @@
 				<div class="card bg-base-200 shadow-xl">
 					<div class="card-body">
 						<h3 class="card-title text-lg mb-4">📊 {$t('collections.statistics')}</h3>
-						<div class="stats stats-vertical shadow">
+						<div class="stats stats-vertical bg-base-100 shadow-sm">
 							{#if collection.locations}
 								<div class="stat">
 									<div class="stat-title">{$t('locations.locations')}</div>
@@ -1442,7 +1442,7 @@
 			</div>
 			<ul
 				tabindex="-1"
-				class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
+				class="dropdown-content z-[1] menu p-4 shadow-sm bg-base-300 text-base-content rounded-box w-52 gap-4"
 			>
 				<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 				<!-- Link existing location to collection -->

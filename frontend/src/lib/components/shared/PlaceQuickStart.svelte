@@ -68,7 +68,6 @@
 		basemapType = 'default'
 	}: Props = $props();
 
-
 	let searchQuery = $state('');
 	let searchResults: SelectedPlace[] = $state([]);
 	let selectedLocation: SelectedPlace | null = $state(null);
@@ -573,8 +572,9 @@
 	});
 	let supportsCategory = $derived(mode === 'location');
 	let itemLabel = $derived(mode === 'lodging' ? 'lodging' : 'location');
-	let quickAddEndpoint =
-		$derived(mode === 'lodging' ? '/api/lodging/quick-add/' : '/api/locations/quick-add/');
+	let quickAddEndpoint = $derived(
+		mode === 'lodging' ? '/api/lodging/quick-add/' : '/api/locations/quick-add/'
+	);
 	let formattedItineraryLabel = $derived(itineraryLabel || formatItineraryDate(itineraryDate));
 </script>
 
@@ -614,15 +614,13 @@
 
 	<div class="card bg-base-200/50 border border-base-300">
 		<div class="card-body p-6 space-y-4">
-			<div class="form-control">
-				<label class="label" for="quickstart-search-location">
-					<span class="label-text font-medium">
-						{#if googleEnabled}
-							{mode === 'lodging' ? 'Search Google Maps for Lodging' : 'Search Google Maps'}
-						{:else}
-							{$t('adventures.search_location')}
-						{/if}
-					</span>
+			<div class="flex flex-col">
+				<label class="field-label" for="quickstart-search-location">
+					{#if googleEnabled}
+						{mode === 'lodging' ? 'Search Google Maps for Lodging' : 'Search Google Maps'}
+					{:else}
+						{$t('adventures.search_location')}
+					{/if}
 				</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -635,7 +633,7 @@
 						oninput={handleSearchInput}
 						placeholder={$t('adventures.search_placeholder') ||
 							'Enter city, location, or landmark...'}
-						class="input input-bordered w-full pl-10 pr-4"
+						class="input w-full pl-10 pr-4"
 						class:input-primary={selectedLocation}
 					/>
 					{#if searchQuery && !selectedLocation}
@@ -656,9 +654,7 @@
 				</div>
 			{:else if searchResults.length > 0}
 				<div class="space-y-2">
-					<label class="label" for="quickstart-search-results">
-						<span class="label-text text-sm font-medium">{$t('adventures.search_results')}</span>
-					</label>
+					<label class="field-label text-sm" for="quickstart-search-results">{$t('adventures.search_results')}</label>
 					{#if searchProvider}
 						<div class="text-xs text-base-content/60">
 							Source: {formatProviderLabel(searchProvider)}
@@ -671,7 +667,7 @@
 								onclick={() => selectSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-primary mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -821,10 +817,8 @@
 		{#if googleEnabled && supportsCategory}
 			<div class="card bg-base-100 border border-base-300">
 				<div class="card-body p-4">
-					<div class="form-control gap-2">
-						<label class="label" for="quick-add-category">
-							<span class="label-text font-medium">Category for Quick Add</span>
-						</label>
+					<div class="flex flex-col gap-2">
+						<label class="field-label" for="quick-add-category">Category for Quick Add</label>
 						<div id="quick-add-category">
 							<CategoryDropdown bind:selected_category={selectedQuickAddCategory} />
 						</div>
@@ -846,7 +840,7 @@
 	{/if}
 
 	<div class="flex flex-col sm:flex-row gap-3 pt-2">
-		<button class="btn btn-neutral-200 sm:flex-1" onclick={() => dispatch('cancel')}>
+		<button class="btn btn-ghost sm:flex-1" onclick={() => dispatch('cancel')}>
 			{$t('adventures.cancel') || 'Cancel'}
 		</button>
 

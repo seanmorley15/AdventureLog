@@ -31,59 +31,51 @@
 		/>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			<div class="form-control">
-				<!-- svelte-ignore a11y_label_has_associated_control -->
-				<label class="label"
-					><span class="label-text font-medium">{$t('auth.username')}</span></label
-				>
+			<div class="flex flex-col">
+				<label class="field-label" for="settings-username">{$t('auth.username')}</label>
 				<input
+					id="settings-username"
 					type="text"
 					bind:value={user.username}
 					name="username"
-					class="input input-bordered input-primary w-full"
+					class="input input-primary w-full"
 					placeholder={$t('settings.enter_username')}
 				/>
 			</div>
-			<div class="form-control">
-				<!-- svelte-ignore a11y_label_has_associated_control -->
-				<label class="label"
-					><span class="label-text font-medium">{$t('auth.first_name')}</span></label
-				>
+			<div class="flex flex-col">
+				<label class="field-label" for="settings-first-name">{$t('auth.first_name')}</label>
 				<input
+					id="settings-first-name"
 					type="text"
 					bind:value={user.first_name}
 					name="first_name"
-					class="input input-bordered input-primary w-full"
+					class="input input-primary w-full"
 					placeholder={$t('settings.enter_first_name')}
 				/>
 			</div>
-			<div class="form-control">
-				<!-- svelte-ignore a11y_label_has_associated_control -->
-				<label class="label"
-					><span class="label-text font-medium">{$t('auth.last_name')}</span></label
-				>
+			<div class="flex flex-col">
+				<label class="field-label" for="settings-last-name">{$t('auth.last_name')}</label>
 				<input
+					id="settings-last-name"
 					type="text"
 					bind:value={user.last_name}
 					name="last_name"
-					class="input input-bordered input-primary w-full"
+					class="input input-primary w-full"
 					placeholder={$t('settings.enter_last_name')}
 				/>
 			</div>
-			<div class="form-control">
-				<!-- svelte-ignore a11y_label_has_associated_control -->
-				<label class="label"
-					><span class="label-text font-medium">{$t('auth.profile_picture')}</span></label
-				>
+			<div class="flex flex-col">
+				<label class="field-label" for="settings-profile-pic">{$t('auth.profile_picture')}</label>
 				<input
+					id="settings-profile-pic"
 					type="file"
 					name="profile_pic"
-					class="file-input file-input-bordered file-input-primary w-full"
+					class="file-input file-input-primary w-full file-input-lg"
 					accept="image/*"
 				/>
 			</div>
-			<div class="form-control md:col-span-2">
-				<label class="label cursor-pointer justify-start gap-4">
+			<div class="flex flex-col md:col-span-2">
+				<label class="field-toggle">
 					<input
 						type="checkbox"
 						checked={user.public_profile}
@@ -91,9 +83,9 @@
 						name="public_profile"
 						class="toggle toggle-primary"
 					/>
-					<div>
-						<span class="label-text font-medium">{$t('auth.public_profile')}</span>
-						<p class="text-sm text-base-content/60">{$t('settings.public_profile_desc')}</p>
+					<span>
+						<span class="font-semibold text-base-content">{$t('auth.public_profile')}</span>
+						<p class="text-sm text-base-content/80">{$t('settings.public_profile_desc')}</p>
 						{#if user.public_profile && (user.shared_collection_count ?? 0) > 0}
 							<p class="text-sm text-warning mt-2">
 								{$t('settings.public_profile_sharing_warning', {
@@ -108,7 +100,7 @@
 								})}
 							</p>
 						{/if}
-					</div>
+					</span>
 				</label>
 			</div>
 		</div>
@@ -119,8 +111,8 @@
 		/>
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-			<div class="form-control">
-				<label class="label cursor-pointer justify-start gap-4">
+			<div class="flex flex-col">
+				<label class="field-toggle">
 					<input
 						type="checkbox"
 						checked={user.measurement_system === 'imperial'}
@@ -130,20 +122,19 @@
 							(user.measurement_system =
 								user.measurement_system === 'metric' ? 'imperial' : 'metric')}
 					/>
-					<div>
-						<span class="label-text font-medium">{$t('settings.use_imperial')}</span>
-						<p class="text-sm text-base-content/60">{$t('settings.use_imperial_desc')}</p>
-					</div>
+					<span>
+						<span class="font-semibold text-base-content">{$t('settings.use_imperial')}</span>
+						<p class="text-sm text-base-content/80">{$t('settings.use_imperial_desc')}</p>
+					</span>
 				</label>
 			</div>
-			<div class="form-control">
-				<label class="label" for="default_currency">
-					<span class="label-text font-medium">{$t('settings.preferred_currency')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="default_currency">{$t('settings.preferred_currency')}</label
+				>
 				<select
 					id="default_currency"
 					name="default_currency"
-					class="select select-bordered select-primary w-full"
+					class="select select-primary w-full"
 					bind:value={user.default_currency}
 				>
 					{#each CURRENCY_OPTIONS as code}
@@ -153,23 +144,21 @@
 						</option>
 					{/each}
 				</select>
-				<p class="text-sm text-base-content/60 mt-1">{$t('settings.preferred_currency_desc')}</p>
+				<p class="text-sm text-base-content/80 mt-1">{$t('settings.preferred_currency_desc')}</p>
 			</div>
-			<div class="form-control md:col-span-2">
-				<label class="label" for="map_style">
-					<span class="label-text font-medium">{$t('settings.default_map_style')}</span>
-				</label>
+			<div class="flex flex-col md:col-span-2">
+				<label class="field-label" for="map_style">{$t('settings.default_map_style')}</label>
 				<select
 					id="map_style"
 					name="map_style"
-					class="select select-bordered select-primary w-full"
+					class="select select-primary w-full"
 					bind:value={user.map_style}
 				>
 					{#each basemapOptions as option}
 						<option value={option.value}>{option.label} ({option.category})</option>
 					{/each}
 				</select>
-				<p class="text-sm text-base-content/60 mt-1">{$t('settings.map_style_desc')}</p>
+				<p class="text-sm text-base-content/80 mt-1">{$t('settings.map_style_desc')}</p>
 			</div>
 		</div>
 

@@ -29,20 +29,18 @@
 	};
 </script>
 
-<div class="join justify-center mt-2">
+<div class="join justify-start mt-2">
 	<button
 		type="button"
-		class="join-item btn btn-sm btn-outline"
+		class={['join-item btn btn-sm', !is_preview ? 'btn-neutral' : 'btn-ghost']}
 		onclick={() => (is_preview = false)}
-		class:btn-active={!is_preview}
 	>
 		{$t('transportation.edit')}
 	</button>
 	<button
 		type="button"
-		class="join-item btn btn-sm btn-outline"
+		class={['join-item btn btn-sm', is_preview ? 'btn-neutral' : 'btn-ghost']}
 		onclick={() => (is_preview = true)}
-		class:btn-active={is_preview}
 	>
 		{$t('adventures.preview')}
 	</button>
@@ -52,7 +50,7 @@
 	<!-- Markdown Editor -->
 	{#if !is_preview}
 		<textarea
-			class="textarea textarea-bordered {editor_height}  w-full"
+			class="textarea {editor_height} w-full"
 			bind:this={editorRef}
 			bind:value={text}
 			placeholder={$t('adventures.md_instructions')}

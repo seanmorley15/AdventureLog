@@ -17,10 +17,8 @@
 
 	<div class="w-full max-w-md p-6 shadow-lg rounded-lg bg-base-200">
 		<form method="POST" use:enhance class="flex flex-col space-y-4">
-			<div class="form-control">
-				<label for="password" class="label">
-					<span class="label-text">{$t('auth.password')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="password">{$t('auth.password')}</label>
 				<input
 					type="password"
 					id="password"
@@ -29,14 +27,12 @@
 					minlength={data.passwordPolicy.min_length}
 					bind:value={password}
 					required
-					class="input input-bordered w-full"
+					class="input w-full"
 				/>
 			</div>
 
-			<div class="form-control">
-				<label for="confirm_password" class="label">
-					<span class="label-text">{$t('auth.confirm_password')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="confirm_password">{$t('auth.confirm_password')}</label>
 				<input
 					type="password"
 					id="confirm_password"
@@ -45,13 +41,13 @@
 					minlength={data.passwordPolicy.min_length}
 					bind:value={confirmPassword}
 					required
-					class="input input-bordered w-full"
+					class="input w-full"
 				/>
 			</div>
 
 			<PasswordRequirements policy={data.passwordPolicy} {password} />
 
-			<div class="form-control mt-2">
+			<div class="flex flex-col mt-2">
 				<button type="submit" class="btn btn-primary w-full">
 					{$t('settings.reset_password')}
 				</button>

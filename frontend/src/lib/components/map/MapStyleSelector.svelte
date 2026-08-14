@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { basemapOptions, getBasemapLabel } from '$lib';
 	import { t } from 'svelte-i18n';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 	import MapIcon from '~icons/mdi/map';
 	import CheckIcon from '~icons/mdi/check';
 
-	
 	interface Props {
 		basemapType?: string;
-		/** DaisyUI dropdown placement classes */
-		dropdownClass?: string;
 	}
 
-	let { basemapType = $bindable('default'), dropdownClass = 'dropdown dropdown-left' }: Props = $props();
+	let { basemapType = $bindable('default') }: Props = $props();
 
 	const categoryOrder = [
 		'Standard',
@@ -34,6 +32,7 @@
 	);
 
 	let dropdownOpen = $state(false);
+	let openUpward = $state(false);
 	let dropdownEl: HTMLDivElement | undefined = $state();
 
 	function selectBasemap(value: string) {
@@ -42,6 +41,9 @@
 	}
 
 	function toggleDropdown() {
+		if (!dropdownOpen) {
+			openUpward = shouldFlipDropdownUp(dropdownEl);
+		}
 		dropdownOpen = !dropdownOpen;
 	}
 
@@ -54,7 +56,7 @@
 
 <svelte:window onclick={closeDropdown} />
 
-<div bind:this={dropdownEl} class="{dropdownClass} {dropdownOpen ? 'dropdown-open' : ''}">
+<div bind:this={dropdownEl} class="relative">
 	<button
 		type="button"
 		class="btn btn-sm btn-ghost gap-1.5 min-h-0 h-8 px-2 sm:px-3"
@@ -71,9 +73,11 @@
 		</svg>
 	</button>
 
-	{#if basemapOptions?.length}
+	{#if dropdownOpen && basemapOptions?.length}
 		<div
-			class="dropdown-content z-[100] shadow-xl bg-base-100 rounded-xl border border-base-300 w-56 sm:w-60 p-0"
+			class="absolute {openUpward
+				? 'bottom-full mb-1'
+				: 'top-full mt-1'} right-0 z-[100] shadow-xl bg-base-100 rounded-xl border border-base-300 w-56 sm:w-60 p-0"
 			role="menu"
 			tabindex="-1"
 		>
@@ -88,7 +92,7 @@
 					{#if groupedOptions[category]?.length}
 						<div class="px-2 pt-2 pb-0.5 first:pt-1">
 							<p
-								class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-base-content/45 sticky top-0 bg-base-100/95 backdrop-blur-sm z-[1]"
+								class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-base-content/45 sticky top-0 bg-base-100/95 backdrop-blur-xs z-[1]"
 							>
 								{category}
 							</p>

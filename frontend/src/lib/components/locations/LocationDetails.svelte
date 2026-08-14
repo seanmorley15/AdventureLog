@@ -273,53 +273,48 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
+<div class="space-y-6">
 		<!-- Basic Information Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center gap-3 mb-6">
 					<div class="p-2 bg-primary/10 rounded-lg">
 						<InfoIcon class="w-5 h-5 text-primary" />
 					</div>
-					<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
+					<h2 class="text-xl font-bold text-base-content">{$t('adventures.basic_information')}</h2>
 				</div>
 
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					<!-- Left Column -->
 					<div class="space-y-4">
 						<!-- Name Field -->
-						<div class="form-control">
-							<label class="label" for="name">
-								<span class="label-text font-medium">
-									{$t('adventures.name')} <span class="text-error">*</span>
-								</span>
+						<div class="flex flex-col">
+							<label class="field-label" for="name">
+								{$t('adventures.name')} <span class="text-error">*</span>
 							</label>
 							<input
 								type="text"
 								id="name"
 								bind:value={location.name}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input w-full"
 								placeholder="Enter location name"
 								required
 							/>
 						</div>
 
 						<!-- Category Field -->
-						<div class="form-control">
-							<label class="label" for="category">
-								<span class="label-text font-medium">
-									{$t('adventures.category')} <span class="text-error">*</span>
-								</span>
+						<div class="flex flex-col">
+							<label class="field-label" for="category">
+								{$t('adventures.category')} <span class="text-error">*</span>
 							</label>
 							{#if (user && ownerUser && user.uuid == ownerUser.uuid) || !ownerUser}
 								<CategoryDropdown bind:selected_category={location.category} />
 							{:else}
 								<div
-									class="flex items-center gap-3 p-3 bg-base-100/80 border border-base-300 rounded-lg"
+									class="flex items-center gap-3 p-3 bg-base-200/40 border border-base-300 rounded-lg"
 								>
 									{#if location.category?.icon}
-										<span class="text-xl flex-shrink-0">{location.category.icon}</span>
+										<span class="text-xl shrink-0">{location.category.icon}</span>
 									{/if}
 									<span class="font-medium">
 										{location.category?.display_name || location.category?.name}
@@ -343,12 +338,10 @@
 						/>
 
 						<!-- Rating Field -->
-						<div class="form-control">
-							<label class="label" for="rating">
-								<span class="label-text font-medium">{$t('adventures.rating')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="rating">{$t('adventures.rating')}</label>
 							<div
-								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
+								class="flex items-center gap-4 p-3 bg-base-200/40 border border-base-300 rounded-lg"
 							>
 								<div class="rating">
 									<input
@@ -385,44 +378,40 @@
 					<!-- Right Column -->
 					<div class="space-y-4">
 						<!-- Link Field -->
-						<div class="form-control">
-							<label class="label" for="link">
-								<span class="label-text font-medium">{$t('adventures.link')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="link">{$t('adventures.link')}</label>
 							<input
 								type="url"
 								id="link"
 								bind:value={location.link}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input w-full"
 								placeholder="https://example.com"
 							/>
 						</div>
 
 						<!-- Public Toggle -->
 						{#if !locationToEdit || (locationToEdit.collections && locationToEdit.collections.length === 0)}
-							<div class="form-control">
-								<label class="label cursor-pointer justify-start gap-4" for="is_public">
+							<div class="flex flex-col">
+								<label class="field-toggle" for="is_public">
 									<input
 										type="checkbox"
 										class="toggle toggle-primary"
 										id="is_public"
 										bind:checked={location.is_public}
 									/>
-									<div>
-										<span class="label-text font-medium">{$t('adventures.public_location')}</span>
-										<p class="text-sm text-base-content/60">
+									<span>
+										<span class="font-semibold text-base-content">{$t('adventures.public_location')}</span>
+										<p class="field-hint">
 											{$t('adventures.public_location_description')}
 										</p>
-									</div>
+									</span>
 								</label>
 							</div>
 						{/if}
 
 						<!-- Description Field -->
-						<div class="form-control">
-							<label class="label" for="description">
-								<span class="label-text font-medium">{$t('adventures.description')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="description">{$t('adventures.description')}</label>
 							<MarkdownEditor bind:text={location.description} editor_height="h-32" />
 
 							<div class="flex items-center gap-4 mt-3">
@@ -440,7 +429,7 @@
 									{$t('adventures.generate_desc')}
 								</button>
 								{#if wikiError}
-									<div class="alert alert-error alert-sm">
+									<div class="alert alert-error">
 										<InfoIcon class="w-4 h-4" />
 										<span class="text-sm">{wikiError}</span>
 									</div>
@@ -453,7 +442,7 @@
 		</div>
 
 		<!-- Tags Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center gap-3 mb-6">
 					<div class="p-2 bg-warning/10 rounded-lg">
@@ -468,7 +457,7 @@
 						name="tags"
 						hidden
 						bind:value={location.tags}
-						class="input input-bordered w-full"
+						class="input w-full"
 					/>
 					<TagComplete bind:tags={location.tags} />
 				</div>
@@ -476,7 +465,7 @@
 		</div>
 
 		<!-- Location Selection Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center gap-3 mb-6">
 					<div class="p-2 bg-secondary/10 rounded-lg">
@@ -499,7 +488,7 @@
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" onclick={handleBack}>
+			<button class="btn btn-ghost gap-2" onclick={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
@@ -517,5 +506,4 @@
 				{/if}
 			</button>
 		</div>
-	</div>
 </div>

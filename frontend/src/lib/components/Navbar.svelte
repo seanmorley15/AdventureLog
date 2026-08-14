@@ -21,6 +21,7 @@
 	import { themes } from '$lib';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 	interface Props {
 		data: any;
 	}
@@ -31,6 +32,9 @@
 	let query: string = $state('');
 	let isAboutModalOpen: boolean = $state(false);
 	let isMac = $state(false);
+	let settingsOpen = $state(false);
+	let settingsOpenUpward = $state(false);
+	let settingsMenuEl: HTMLDivElement | undefined = $state();
 
 	run(() => {
 		if ($page.url.pathname === '/search') {
@@ -112,11 +116,34 @@
 	};
 
 	const submitUpdateTheme: SubmitFunction = ({ action }) => {
-		const theme = action.searchParams.get('theme');
-		if (theme) {
-			document.documentElement.setAttribute('data-theme', theme);
+		const nextTheme = action.searchParams.get('theme');
+		if (nextTheme) {
+			document.documentElement.setAttribute('data-theme', nextTheme);
 		}
 	};
+
+	function toggleSettingsMenu(event: MouseEvent) {
+		event.stopPropagation();
+		if (!settingsOpen) {
+			settingsOpenUpward = shouldFlipDropdownUp(settingsMenuEl);
+		}
+		settingsOpen = !settingsOpen;
+	}
+
+	function closeSettingsMenu(event: MouseEvent) {
+		if (!settingsOpen) return;
+		if (settingsMenuEl?.contains(event.target as Node)) return;
+		settingsOpen = false;
+	}
+
+	function handleSettingsKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') settingsOpen = false;
+	}
+
+	function openAbout() {
+		settingsOpen = false;
+		isAboutModalOpen = true;
+	}
 	// Navigation items for better organization
 	const navigationItems = [
 		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
@@ -131,10 +158,12 @@
 	let subscription = $derived(data?.subscription);
 	let cloudMode = $derived(data?.cloudMode);
 	let hasAccess = $derived(data?.hasAccess ?? true);
-	let trialEndsAt = $derived(subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
-	let daysRemaining = $derived(trialEndsAt
-		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
-		: null);
+	let trialEndsAt = $derived(
+		subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+	);
+	let daysRemaining = $derived(
+		trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay)) : null
+	);
 	let isTrial = $derived(subscription?.status === 'trial');
 	let hasScheduledSubscription = $derived(Boolean(subscription?.stripe_subscription_id));
 	let showTrialCta = $derived(isTrial && !hasScheduledSubscription);
@@ -142,6 +171,8 @@
 	let showFullNav = $derived(data?.user && (!cloudMode || hasAccess));
 	let pendingInviteCount = $derived(data?.pendingInviteCount ?? 0);
 </script>
+
+<svelte:window onclick={closeSettingsMenu} onkeydown={handleSettingsKeydown} />
 
 {#if isAboutModalOpen}
 	<AboutModal on:close={() => (isAboutModalOpen = false)} />
@@ -274,7 +305,7 @@
 		{#if showFullNav}
 			<button
 				type="button"
-				class="hidden lg:flex input input-bordered input-sm items-center gap-2 w-64 hover:w-80 transition-all duration-300 text-left"
+				class="hidden lg:flex input input-sm items-center gap-2 w-64 text-left"
 				onclick={() => openSearch()}
 			>
 				<Magnify class="w-4 h-4 opacity-60 shrink-0" />
@@ -312,22 +343,31 @@
 			<Avatar user={data.user} cloudMode={data.cloudMode} />
 		{/if}
 
-		<!-- Settings Dropdown -->
-		<div class="dropdown dropdown-bottom dropdown-end z-[999]">
-			<div tabindex="0" role="button" class="btn btn-neutral-300 btn-sm btn-square">
+		<!-- Settings -->
+		<div
+			bind:this={settingsMenuEl}
+			class="dropdown dropdown-end z-[999]"
+			class:dropdown-open={settingsOpen}
+			class:dropdown-close={!settingsOpen}
+			class:dropdown-top={settingsOpenUpward}
+			class:dropdown-bottom={!settingsOpenUpward}
+		>
+			<button
+				type="button"
+				class="btn btn-neutral-300 btn-sm btn-square"
+				aria-haspopup="menu"
+				aria-expanded={settingsOpen}
+				onclick={toggleSettingsMenu}
+			>
 				<DotsHorizontal class="w-5 h-5" />
-			</div>
-			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+			</button>
 			<ul
-				tabindex="-1"
 				class="dropdown-content bg-base-100 border border-base-300 shadow-2xl z-[999] menu p-4 rounded-2xl w-80"
+				role="menu"
 			>
 				<!-- Quick Actions -->
 				<div class="space-y-2 mb-4">
-					<button
-						class="btn btn-ghost w-full justify-start gap-3"
-						onclick={() => (isAboutModalOpen = true)}
-					>
+					<button class="btn btn-ghost w-full justify-start gap-3" onclick={openAbout}>
 						{$t('navbar.about')}
 					</button>
 					<button
@@ -360,9 +400,10 @@
 					</h3>
 					<form method="POST" use:enhance>
 						<select
-							class="select select-bordered select-sm w-full bg-base-100"
+							class="select select-sm w-full bg-base-100"
 							onchange={submitLocaleChange}
 							bind:value={$locale}
+							onmousedown={(e) => e.stopPropagation()}
 						>
 							{#each $locales as loc (loc)}
 								<option value={loc}>{languages[loc]}</option>
@@ -379,9 +420,10 @@
 					</h3>
 					<form method="POST" use:enhance={submitUpdateTheme}>
 						<select
-							class="select select-bordered select-sm w-full bg-base-100"
+							class="select select-sm w-full bg-base-100"
 							bind:value={theme}
 							onchange={submitThemeChange}
+							onmousedown={(e) => e.stopPropagation()}
 						>
 							{#each themes as themeOption}
 								<option value={themeOption.name}>

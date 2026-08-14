@@ -15,6 +15,7 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import { copyToClipboard } from '$lib/index';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
 	import Plus from '~icons/mdi/plus';
 	import Minus from '~icons/mdi/minus';
@@ -233,7 +234,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
@@ -242,31 +243,31 @@
 		<!-- Status Badge Overlay -->
 		<div class="absolute top-2 left-4 flex items-center gap-2">
 			{#if collection.status === 'folder'}
-				<div class="badge badge-sm badge-neutral shadow-sm">
+				<div class="badge badge-sm badge-neutral shadow-xs">
 					📁 {$t('adventures.folder')}
 				</div>
 			{:else if collection.status === 'upcoming'}
-				<div class="badge badge-sm badge-info shadow-sm">
+				<div class="badge badge-sm badge-info shadow-xs">
 					🚀 {$t('adventures.upcoming')}
 				</div>
 				{#if collection.days_until_start !== null}
-					<div class="badge badge-sm badge-accent shadow-sm">
+					<div class="badge badge-sm badge-accent shadow-xs">
 						⏳ {collection.days_until_start}
 						{collection.days_until_start === 1 ? $t('adventures.day') : $t('adventures.days')}
 					</div>
 				{/if}
 			{:else if collection.status === 'in_progress'}
-				<div class="badge badge-sm badge-success shadow-sm">
+				<div class="badge badge-sm badge-success shadow-xs">
 					🎯 {$t('adventures.in_progress')}
 				</div>
 			{:else if collection.status === 'completed'}
-				<div class="badge badge-sm badge-primary shadow-sm">
+				<div class="badge badge-sm badge-primary shadow-xs">
 					<Check class="w-4 h-4" />
 					{$t('adventures.completed')}
 				</div>
 			{/if}
 			{#if collection.is_archived}
-				<div class="badge badge-sm badge-warning shadow-sm">
+				<div class="badge badge-sm badge-warning shadow-xs">
 					{$t('adventures.archived')}
 				</div>
 			{/if}
@@ -280,8 +281,8 @@
 			>
 				<div
 					class="badge badge-sm {collection.is_public
-						? 'badge-secondary'
-						: 'badge-ghost'} shadow-lg"
+ ? 'badge-secondary'
+ : 'badge-ghost'} shadow-lg"
 					aria-label={collection.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
 					{#if collection.is_public}
@@ -388,7 +389,10 @@
 							{$t('adventures.open_details')}
 						</button>
 						{#if user && user.uuid == collection.user}
-							<div class="dropdown dropdown-end">
+							<div
+								class="dropdown dropdown-end relative z-50"
+								onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+							>
 								<div
 									tabindex="0"
 									role="button"
@@ -399,7 +403,7 @@
 								</div>
 								<ul
 									tabindex="-1"
-									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+									class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-64 p-2 shadow-xl border border-base-300"
 								>
 									{#if type != 'viewonly'}
 										<li>
@@ -510,7 +514,10 @@
 							</div>
 						{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
 							<!-- dropdown with leave button -->
-							<div class="dropdown dropdown-end">
+							<div
+								class="dropdown dropdown-end relative z-50"
+								onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+							>
 								<div
 									tabindex="0"
 									role="button"
@@ -521,7 +528,7 @@
 								</div>
 								<ul
 									tabindex="-1"
-									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+									class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-64 p-2 shadow-xl border border-base-300"
 								>
 									<li>
 										<button

@@ -41,7 +41,7 @@
 		</div>
 	</div>
 
-	<p class="text-sm text-base-content/70 mb-6">{$t('settings.danger_zone_instructions')}</p>
+	<p class="text-sm text-base-content/80 mb-6">{$t('settings.danger_zone_instructions')}</p>
 
 	<form
 		method="POST"
@@ -58,18 +58,16 @@
 		}}
 		class="space-y-4 max-w-md"
 	>
-		<div class="form-control">
-			<label class="label py-1" for="delete-confirmation">
-				<span class="label-text font-medium"
-					>{$t('settings.delete_account_confirmation_label')}</span
-				>
-			</label>
+		<div class="flex flex-col">
+			<label class="field-label" for="delete-confirmation"
+				>{$t('settings.delete_account_confirmation_label')}</label
+			>
 			<input
 				id="delete-confirmation"
 				name="confirmation"
 				type="text"
 				bind:value={deleteConfirmation}
-				class="input input-bordered input-error w-full"
+				class="input input-error w-full"
 				placeholder={user.username}
 				autocomplete="off"
 				required
@@ -77,16 +75,16 @@
 		</div>
 
 		{#if user.has_password && !user.disable_password}
-			<div class="form-control">
-				<label class="label py-1" for="delete-password">
-					<span class="label-text font-medium">{$t('settings.delete_account_password_label')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="delete-password"
+					>{$t('settings.delete_account_password_label')}</label
+				>
 				<input
 					id="delete-password"
 					name="password"
 					type="password"
 					bind:value={deletePassword}
-					class="input input-bordered input-error w-full"
+					class="input input-error w-full"
 					autocomplete="current-password"
 					required
 				/>

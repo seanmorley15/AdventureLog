@@ -169,7 +169,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<dialog id="mobile-qr-modal" class="modal backdrop-blur-sm">
+<dialog id="mobile-qr-modal" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
@@ -180,7 +180,7 @@
 	>
 		<!-- Header Section -->
 		<div
-			class=" top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
 		>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-3">

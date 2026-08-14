@@ -40,7 +40,7 @@
 	}
 </script>
 
-<div class="card bg-base-100 shadow">
+<div class="card bg-base-100 shadow-sm">
 	<div class="card-body p-4">
 		<div class="flex items-start justify-between">
 			<div class="flex-1">

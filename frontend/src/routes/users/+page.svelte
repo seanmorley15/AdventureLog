@@ -116,7 +116,7 @@
 							<input
 								type="text"
 								placeholder={$t('users.search_placeholder')}
-								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+								class="input w-full pl-10 pr-10 bg-base-100/80"
 								bind:value={searchQuery}
 							/>
 							{#if searchQuery.length > 0}
@@ -136,7 +136,7 @@
 						<span class="text-sm font-medium text-base-content/60"
 							>{$t('worldtravel.filter_by')}:</span
 						>
-						<div class="tabs tabs-boxed bg-base-200">
+						<div class="tabs tabs-box bg-base-200">
 							<button
 								type="button"
 								class="tab tab-sm gap-1.5 {filterStaff === 'all' ? 'tab-active' : ''}"

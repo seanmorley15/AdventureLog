@@ -184,7 +184,7 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
@@ -195,7 +195,7 @@
 	>
 		<!-- Header Section -->
 		<div
-			class=" top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
 		>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-3">
@@ -206,7 +206,7 @@
 						<h1 class="text-3xl font-bold text-warning bg-clip-text">
 							{$t('settings.enable_mfa')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{$t('settings.secure_your_account')}
 						</p>
 					</div>
@@ -260,7 +260,7 @@
 								<input
 									type="text"
 									value={secret}
-									class="input input-bordered w-full font-mono text-sm bg-base-100/80"
+									class="input w-full font-mono text-sm bg-base-100/80"
 									readonly
 								/>
 							</div>
@@ -280,26 +280,18 @@
 						<Shield class="w-5 h-5 text-success" />
 						{$t('settings.verify_setup')}
 					</h3>
-					<div class="form-control">
+					<div class="flex flex-col">
 						<!-- svelte-ignore a11y_label_has_associated_control -->
-						<label class="label">
-							<span class="label-text font-medium">
-								{$t('settings.authenticator_code')}
-							</span>
-						</label>
+						<label class="field-label">{$t('settings.authenticator_code')}</label>
 						<input
 							type="text"
 							placeholder={$t('settings.enter_6_digit_code')}
-							class="input input-bordered bg-base-100/80 font-mono text-center text-lg tracking-widest"
+							class="input bg-base-100/80 font-mono text-center text-lg tracking-widest"
 							bind:value={first_code}
 							maxlength="6"
 						/>
 						<!-- svelte-ignore a11y_label_has_associated_control -->
-						<label class="label">
-							<span class="label-text-alt text-base-content/60">
-								{$t('settings.enter_code_from_app')}
-							</span>
-						</label>
+						<label class="field-hint">{$t('settings.enter_code_from_app')}</label>
 					</div>
 				</div>
 			</div>
@@ -315,14 +307,12 @@
 						<p class="text-sm text-base-content/70 mb-4">
 							{$t('settings.reauth_required_desc')}
 						</p>
-						<div class="form-control max-w-md">
+						<div class="flex flex-col max-w-md">
 							<!-- svelte-ignore a11y_label_has_associated_control -->
-							<label class="label">
-								<span class="label-text font-medium">{$t('settings.current_password')}</span>
-							</label>
+							<label class="field-label">{$t('settings.current_password')}</label>
 							<input
 								type="password"
-								class="input input-bordered bg-base-100/80"
+								class="input bg-base-100/80"
 								placeholder={$t('settings.enter_current_password')}
 								autocomplete="current-password"
 								bind:value={reauthPassword}
@@ -331,11 +321,7 @@
 							/>
 							{#if reauthPasswordError}
 								<!-- svelte-ignore a11y_label_has_associated_control -->
-								<label class="label">
-									<span class="label-text-alt text-error">
-										{$t('settings.reauth_incorrect_password')}
-									</span>
-								</label>
+								<p class="text-sm text-error mt-1">{$t('settings.reauth_incorrect_password')}</p>
 							{/if}
 						</div>
 						<div class="mt-4">
@@ -384,7 +370,7 @@
 									<input
 										type="text"
 										value={code}
-										class="input input-bordered input-sm w-full font-mono text-center bg-base-100/80 pr-10"
+										class="input input-sm w-full font-mono text-center bg-base-100/80 pr-10"
 										readonly
 									/>
 									<button

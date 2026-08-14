@@ -175,7 +175,7 @@
 		(groupedItems.otherDays.length || 0));
 </script>
 
-<dialog id="itinerary_link_modal" class="modal backdrop-blur-sm">
+<dialog id="itinerary_link_modal" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -223,7 +223,7 @@
 					</h4>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
 						{#each groupedItems.onThisDay as { type, item }}
-							<div class="card bg-base-100 border border-base-300 shadow-sm">
+							<div class="card bg-base-100 border border-base-300 shadow-xs">
 								<div class="card-body p-2 text-sm">
 									<div class="mb-3">
 										{#if type === 'location'}
@@ -273,7 +273,7 @@
 					</p>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
 						{#each groupedItems.scheduledOnThisDay as { type, item, dates }}
-							<div class="card bg-base-100 border border-base-300 shadow-sm">
+							<div class="card bg-base-100 border border-base-300 shadow-xs">
 								<div class="card-body p-2 text-sm">
 									<div class="mb-3">
 										{#if type === 'location'}
@@ -326,7 +326,7 @@
 					</p>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
 						{#each groupedItems.scheduledOtherDays as { type, item, dates }}
-							<div class="card bg-base-100 border border-base-300 shadow-sm">
+							<div class="card bg-base-100 border border-base-300 shadow-xs">
 								<div class="card-body p-2 text-sm">
 									<div class="mb-3">
 										{#if type === 'location'}
@@ -382,7 +382,7 @@
 					</p>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
 						{#each groupedItems.otherDays as { type, item }}
-							<div class="card bg-base-100 border border-base-300 shadow-sm">
+							<div class="card bg-base-100 border border-base-300 shadow-xs">
 								<div class="card-body p-2 text-sm">
 									<div class="mb-3">
 										{#if type === 'location'}

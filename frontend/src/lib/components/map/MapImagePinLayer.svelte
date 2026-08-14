@@ -186,7 +186,7 @@
 								{@const count = getClusterCount(clusterFeature)}
 					{#if count !== undefined && count !== null}
 						<div
-							class="pointer-events-none grid h-8 w-8 place-items-center select-none font-sans text-xs font-bold text-white drop-shadow-sm"
+							class="pointer-events-none grid h-8 w-8 place-items-center select-none font-sans text-xs font-bold text-white drop-shadow-xs"
 						>
 							{count}
 						</div>

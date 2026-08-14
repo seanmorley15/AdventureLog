@@ -327,7 +327,7 @@
 							<ul class="grid gap-3 sm:grid-cols-2">
 								{#each planFeatures as feature}
 									<li class="flex items-start gap-3">
-										<div class="p-1.5 bg-base-100 rounded-lg shadow-sm">
+										<div class="p-1.5 bg-base-100 rounded-lg shadow-xs">
 											<feature.icon class="w-4 h-4 text-primary" />
 										</div>
 										<span class="text-sm text-base-content/80 pt-0.5">{$t(feature.key)}</span>

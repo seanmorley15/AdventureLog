@@ -3,6 +3,7 @@
 
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
 	interface Props {
 		selectedTimezone?: string;
@@ -20,6 +21,7 @@
 	});
 
 	let dropdownOpen = $state(false);
+	let openUpward = $state(false);
 	let searchQuery = $state('');
 	let searchInput: HTMLInputElement | null = $state(null);
 	let rootRef: HTMLElement | null = $state(null);
@@ -80,10 +82,8 @@
 	});
 </script>
 
-<div class="form-control w-full max-w-xs relative" bind:this={rootRef} id={instanceId}>
-	<label class="label" for={`timezone-display-${instanceId}`}>
-		<span class="label-text">{labelText}</span>
-	</label>
+<div class="flex flex-col w-full max-w-xs relative" bind:this={rootRef} id={instanceId}>
+	<label class="field-label" for={`timezone-display-${instanceId}`}>{labelText}</label>
 
 	<!-- Trigger -->
 	<div
@@ -92,13 +92,21 @@
 		role="button"
 		aria-haspopup="listbox"
 		aria-expanded={dropdownOpen}
-		class="input input-bordered flex justify-between items-center cursor-pointer"
+		class="input flex justify-between items-center cursor-pointer"
 		onpointerdown={(e) => {
 			e.preventDefault();
 			e.stopPropagation();
+			if (!dropdownOpen) {
+				openUpward = shouldFlipDropdownUp(rootRef);
+			}
 			dropdownOpen = !dropdownOpen;
 		}}
-		onclick={() => (dropdownOpen = !dropdownOpen)}
+		onclick={() => {
+			if (!dropdownOpen) {
+				openUpward = shouldFlipDropdownUp(rootRef);
+			}
+			dropdownOpen = !dropdownOpen;
+		}}
 		onkeydown={handleKeydown}
 	>
 		<span class="truncate">{selectedTimezone}</span>
@@ -117,7 +125,9 @@
 	<!-- Dropdown -->
 	{#if dropdownOpen}
 		<div
-			class="absolute mt-1 z-10 bg-base-100 shadow-lg rounded-box w-full max-h-60 overflow-y-auto"
+			class="absolute {openUpward
+				? 'bottom-full mb-1'
+				: 'top-full mt-1'} z-10 bg-base-100 shadow-lg rounded-box w-full max-h-60 overflow-y-auto"
 			role="listbox"
 			aria-labelledby={`timezone-display-${instanceId}`}
 		>
@@ -126,7 +136,7 @@
 				<input
 					type="text"
 					placeholder="Search timezone"
-					class="input input-sm input-bordered w-full"
+					class="input input-sm w-full"
 					bind:value={searchQuery}
 					bind:this={searchInput}
 				/>

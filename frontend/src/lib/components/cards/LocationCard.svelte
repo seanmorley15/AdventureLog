@@ -315,7 +315,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="location-card"
 >
 	<!-- Image Section with Overlay -->
@@ -329,11 +329,11 @@
 				data-tip={adventure.is_visited ? $t('adventures.visited') : $t('adventures.not_visited')}
 			>
 				{#if adventure.is_visited}
-					<div class="badge badge-sm badge-success p-1 rounded-full shadow-sm">
+					<div class="badge badge-sm badge-success p-1 rounded-full shadow-xs">
 						<Calendar class="w-4 h-4" />
 					</div>
 				{:else}
-					<div class="badge badge-sm badge-warning p-1 rounded-full shadow-sm">
+					<div class="badge badge-sm badge-warning p-1 rounded-full shadow-xs">
 						<Clock class="w-4 h-4" />
 					</div>
 				{/if}
@@ -347,7 +347,7 @@
 				data-tip={adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
 			>
 				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-sm"
+					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
 					role="img"
 					aria-label={adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
@@ -378,7 +378,7 @@
 			<div class="absolute bottom-4 right-4">
 				<div class="tooltip tooltip-left" data-tip={creatorDisplayName}>
 					<div class="avatar">
-						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow overflow-hidden">
+						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow-sm overflow-hidden">
 							{#if adventure.user}
 								<UserAvatar
 									user={adventure.user}
@@ -556,7 +556,7 @@
 													isActionsMenuOpen = false;
 													dispatch('moveToGlobal', { type: 'location', id: adventure.id });
 												}}
-												class=" flex items-center gap-2"
+												class="flex items-center gap-2"
 											>
 												<Globe class="w-4 h-4" />
 												{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
@@ -568,7 +568,7 @@
 													isActionsMenuOpen = false;
 													changeDay();
 												}}
-												class=" flex items-center gap-2"
+												class="flex items-center gap-2"
 											>
 												<Calendar class="w-4 h-4" />
 												{$t('itinerary.change_day')}

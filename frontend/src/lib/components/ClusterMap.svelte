@@ -151,7 +151,7 @@
 				'circle-opacity': 1,
 				'circle-stroke-color': withAlpha(baseContent, 0.25),
 				'circle-stroke-width': 2,
-				// Keep clusters crisp; blur can look fuzzy on some displays.
+				// Keep clusters crisp; blur-sm can look fuzzy on some displays.
 				'circle-blur': 0
 			};
 		}

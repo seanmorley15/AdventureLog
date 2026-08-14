@@ -168,7 +168,7 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
@@ -230,7 +230,7 @@
 								{$t('notes.note_viewer')}
 							{/if}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{#if note?.id && !isReadOnly}
 								{$t('notes.update_note_details')} "{initialName}"
 							{:else if !isReadOnly}
@@ -298,11 +298,9 @@
 							<!-- Left Column -->
 							<div class="space-y-4">
 								<!-- Name Field -->
-								<div class="form-control">
-									<label class="label" for="name">
-										<span class="label-text font-medium"
-											>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
-										>
+								<div class="flex flex-col">
+									<label class="field-label" for="name">
+										{$t('adventures.name')}<span class="text-error ml-1">*</span>
 									</label>
 									<input
 										type="text"
@@ -310,17 +308,15 @@
 										name="name"
 										readonly={isReadOnly}
 										bind:value={newNote.name}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										class="input w-full bg-base-100/80 focus:bg-base-100"
 										placeholder={$t('notes.enter_note_title')}
 										required
 									/>
 								</div>
 
 								<!-- Date Field -->
-								<div class="form-control">
-									<label class="label" for="date">
-										<span class="label-text font-medium">{$t('adventures.date')}</span>
-									</label>
+								<div class="flex flex-col">
+									<label class="field-label" for="date">{$t('adventures.date')}</label>
 									{#if !isReadOnly && hasVisitDateSuggestion}
 										<div
 											class="flex flex-wrap items-center gap-2 mb-2 text-xs text-base-content/70"
@@ -354,7 +350,7 @@
 										min={constrainDates ? collection.start_date : ''}
 										max={constrainDates ? collection.end_date : ''}
 										bind:value={newNote.date}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										class="input w-full bg-base-100/80 focus:bg-base-100"
 									/>
 								</div>
 							</div>
@@ -362,15 +358,13 @@
 							<!-- Right Column - Links Section -->
 							<div class="space-y-4">
 								{#if !isReadOnly}
-									<div class="form-control">
-										<label class="label" for="new-link">
-											<span class="label-text font-medium">{$t('adventures.links')}</span>
-										</label>
+									<div class="flex flex-col">
+										<label class="field-label" for="new-link">{$t('adventures.links')}</label>
 										<div class="join w-full">
 											<input
 												type="url"
 												id="new-link"
-												class="input input-bordered join-item flex-1 bg-base-100/80 focus:bg-base-100"
+												class="input join-item flex-1 bg-base-100/80 focus:bg-base-100"
 												placeholder="https://example.com"
 												bind:value={newLink}
 												onkeydown={(e) => {
@@ -408,7 +402,7 @@
 												class="flex items-center gap-2 p-3 bg-base-200/50 rounded-xl border border-base-300/50"
 											>
 												<svg
-													class="w-4 h-4 text-primary flex-shrink-0"
+													class="w-4 h-4 text-primary shrink-0"
 													fill="none"
 													stroke="currentColor"
 													viewBox="0 0 24 24"
@@ -536,7 +530,7 @@
 
 				<!-- Action Buttons -->
 				<div class="flex gap-3 justify-end pt-4 border-t border-base-300/50">
-					<button type="button" class="btn btn-neutral-200" onclick={close}>
+					<button type="button" class="btn btn-ghost" onclick={close}>
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"

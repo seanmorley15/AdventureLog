@@ -25,7 +25,7 @@
 
 {#if cloudMode && subscription && !hideOnBillingPage}
 	{#if !hasAccess}
-		<div role="alert" class="alert alert-warning rounded-none border-b border-warning/40 shadow-sm">
+		<div role="alert" class="alert alert-warning rounded-none border-b border-warning/40 shadow-xs">
 			<div>
 				<p class="font-semibold">{$t('billing.banner_access_paused_title')}</p>
 				<p class="text-sm opacity-80">{$t('billing.banner_access_paused_description')}</p>
@@ -33,7 +33,7 @@
 			<a href="/subscribe" class="btn btn-primary btn-sm">{$t('billing.banner_subscribe')}</a>
 		</div>
 	{:else if isPaidTrial}
-		<div role="alert" class="alert alert-success rounded-none border-b border-success/40 shadow-sm">
+		<div role="alert" class="alert alert-success rounded-none border-b border-success/40 shadow-xs">
 			<div>
 				<p class="font-semibold">{$t('billing.banner_scheduled_title')}</p>
 				<p class="text-sm opacity-80">
@@ -54,7 +54,7 @@
 			</div>
 		</div>
 	{:else if isTrial}
-		<div role="alert" class="alert alert-info rounded-none border-b border-info/40 shadow-sm">
+		<div role="alert" class="alert alert-info rounded-none border-b border-info/40 shadow-xs">
 			<div>
 				<p class="font-semibold">{$t('billing.banner_trial_active_title')}</p>
 				<p class="text-sm opacity-80">

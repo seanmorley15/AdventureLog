@@ -67,17 +67,17 @@
 			{$t('categories.no_categories_found')}
 		</p>
 	{:else}
-		<div class="max-h-40 overflow-y-auto space-y-1 -mx-1 px-1">
+		<div class="max-h-40 overflow-y-auto flex flex-col -mx-1 px-1">
 			{#each sortedAdventureTypes as type (type.id)}
-				<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+				<label class="filter-option">
 					<input
 						type="checkbox"
-						class="checkbox checkbox-primary checkbox-sm"
+						class="checkbox checkbox-primary"
 						value={type.name}
 						onchange={() => toggleSelect(type.name)}
 						checked={types_arr.includes(type.name)}
 					/>
-					<span class="label-text leading-tight">
+					<span class="text-sm leading-snug min-w-0">
 						{type.icon}
 						{type.display_name}
 						<span class="text-base-content/50">({type.num_locations})</span>

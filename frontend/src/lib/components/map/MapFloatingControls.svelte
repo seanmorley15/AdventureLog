@@ -110,21 +110,21 @@
 </script>
 
 <div
-	class:pointer-events-none={!embedded}
 	class:absolute={!embedded}
 	class:top-3={!embedded}
 	class:right-3={!embedded}
 	class:z-20={!embedded}
-	class="flex items-center pointer-events-auto"
+	class:pointer-events-none={!embedded}
+	class="flex items-center"
 	role="toolbar"
 	aria-label={$t('map.map_controls')}
 >
 	<div
-		class="flex items-center rounded-xl border border-base-300 shadow-md bg-base-100/90 backdrop-blur-lg divide-x divide-base-300/80 overflow-visible"
+		class="pointer-events-auto flex items-center rounded-xl border border-base-300 shadow-md bg-base-100/90 backdrop-blur-lg divide-x divide-base-300/80 overflow-visible"
 	>
 		{#if showBasemapSelector}
 			<div class="shrink-0 relative z-[60]">
-				<MapStyleSelector bind:basemapType dropdownClass="dropdown dropdown-end dropdown-bottom" />
+				<MapStyleSelector bind:basemapType />
 			</div>
 		{/if}
 

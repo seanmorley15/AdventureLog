@@ -217,7 +217,7 @@
 			</div>
 		{:else}
 			<div
-				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-sm divide-y divide-base-300"
+				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-xs divide-y divide-base-300"
 			>
 				{#each results as hit (hit.type + hit.id)}
 					<SearchResultRow {hit} spotlight on:select={() => goto(hit.url)} />

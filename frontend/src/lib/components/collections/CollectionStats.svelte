@@ -408,7 +408,7 @@
 					{#if countriesVisited.length}
 						{#each countriesVisited.slice(0, 3) as country}
 							{#if country.flag}
-								<img src={country.flag} alt={country.name} class="w-8 h-6 rounded shadow-sm" />
+								<img src={country.flag} alt={country.name} class="w-8 h-6 rounded-sm shadow-xs" />
 							{/if}
 						{/each}
 					{/if}
@@ -429,14 +429,14 @@
 
 			<!-- Key Stats Row -->
 			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				<div class="stat bg-base-100 rounded-lg shadow p-4 border border-info/20">
+				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-info/20">
 					<div class="stat-figure text-info text-3xl">📍</div>
 					<div class="stat-title text-xs">{$t('adventures.footprints')}</div>
 					<div class="stat-value text-info text-2xl">{visitedLocations.length}</div>
 					<div class="stat-desc">{$t('adventures.locations_visited')}</div>
 				</div>
 
-				<div class="stat bg-base-100 rounded-lg shadow p-4 border border-success/20">
+				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-success/20">
 					<div class="stat-figure text-success text-3xl">📸</div>
 					<div class="stat-title text-xs">{$t('adventures.photos')}</div>
 					<div class="stat-value text-success text-2xl">
@@ -445,7 +445,7 @@
 					<div class="stat-desc">{$t('adventures.images_captured')}</div>
 				</div>
 
-				<div class="stat bg-base-100 rounded-lg shadow p-4 border border-warning/20">
+				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-warning/20">
 					<div class="stat-figure text-warning text-3xl">🗺️</div>
 					<div class="stat-title text-xs">{$t('adventures.countries')}</div>
 					<div class="stat-value text-warning text-2xl">{countriesVisited.length}</div>
@@ -456,7 +456,7 @@
 					</div>
 				</div>
 
-				<div class="stat bg-base-100 rounded-lg shadow p-4 border border-accent/20">
+				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-accent/20">
 					<div class="stat-figure text-accent text-3xl">👥</div>
 					<div class="stat-title text-xs">{$t('adventures.travelers')}</div>
 					<div class="stat-value text-accent text-2xl">
@@ -486,7 +486,7 @@
 						{#each countriesVisited as country}
 							<div class="flex items-center gap-2 badge badge-lg badge-primary badge-outline p-3">
 								{#if country.flag}
-									<img src={country.flag} alt={country.name} class="w-6 h-4 rounded" />
+									<img src={country.flag} alt={country.name} class="w-6 h-4 rounded-sm" />
 								{/if}
 								<span class="font-medium">{country.name}</span>
 							</div>
@@ -616,7 +616,7 @@
 					{$t('adventures.physical_activities')}
 				</h3>
 
-				<div class="stats stats-vertical sm:stats-horizontal shadow mb-4">
+				<div class="stats stats-vertical sm:stats-horizontal bg-base-100 shadow-sm mb-4">
 					<div class="stat bg-accent/10">
 						<div class="stat-figure text-accent text-3xl">🎯</div>
 						<div class="stat-title">{$t('adventures.activities')}</div>

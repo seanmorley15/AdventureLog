@@ -63,7 +63,7 @@
 							<div class="text-center mb-8">
 								<div class="mb-4">
 									<h1 class="text-3xl font-bold text-primary mb-1">AdventureLog</h1>
-									<div class="w-12 h-1 bg-primary mx-auto rounded"></div>
+									<div class="w-12 h-1 bg-primary mx-auto rounded-sm"></div>
 								</div>
 								<h2 class="text-4xl font-bold text-base-content mb-2">{$t('auth.login')}</h2>
 							</div>
@@ -99,30 +99,26 @@
 								{:else}
 									<form method="post" use:enhance={handleEnhanceSubmit} class="space-y-4">
 										<!-- Username or email -->
-										<div class="form-control">
-											<label class="label" for="username">
-												<span class="label-text font-medium">{$t('auth.username_or_email')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label" for="username">{$t('auth.username_or_email')}</label>
 											<input
 												name="username"
 												id="username"
 												type="text"
-												class="input input-bordered w-full focus:input-primary"
+												class="input w-full focus:input-primary"
 												placeholder={$t('auth.enter_username_or_email')}
 												autocomplete="username"
 											/>
 										</div>
 
 										<!-- Password -->
-										<div class="form-control">
-											<label class="label" for="password">
-												<span class="label-text font-medium">{$t('auth.password')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label" for="password">{$t('auth.password')}</label>
 											<input
 												type="password"
 												name="password"
 												id="password"
-												class="input input-bordered w-full focus:input-primary"
+												class="input w-full focus:input-primary"
 												placeholder={$t('auth.enter_password')}
 												autocomplete="current-password"
 											/>
@@ -130,28 +126,22 @@
 
 										<!-- TOTP / recovery code -->
 										{#if $page.form?.mfa_required}
-											<div class="form-control">
-												<label class="label" for="totp">
-													<span class="label-text font-medium">{$t('auth.totp')}</span>
-												</label>
+											<div class="flex flex-col">
+												<label class="field-label" for="totp">{$t('auth.totp')}</label>
 												<input
 													type="text"
 													name="totp"
 													id="totp"
 													autocomplete="one-time-code"
-													class="input input-bordered w-full focus:input-primary"
+													class="input w-full focus:input-primary"
 													placeholder={$t('auth.totp_placeholder')}
 												/>
-												<label class="label" for="totp">
-													<span class="label-text-alt text-base-content/60">
-														{$t('auth.totp_hint')}
-													</span>
-												</label>
+												<label class="field-hint" for="totp">{$t('auth.totp_hint')}</label>
 											</div>
 										{/if}
 
 										<!-- Submit Button -->
-										<div class="form-control mt-6">
+										<div class="flex flex-col mt-6">
 											<button type="submit" class="btn btn-primary w-full" disabled={isSubmitting}>
 												{#if isSubmitting}
 													<span class="loading loading-spinner"></span>
@@ -251,7 +241,7 @@
 
 <style>
 	.input:focus {
-		outline: 2px solid hsl(var(--p));
+		outline: 2px solid var(--color-primary);
 		outline-offset: 2px;
 	}
 </style>

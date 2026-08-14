@@ -115,7 +115,7 @@
 	{:else}
 		<div class="space-y-3">
 			{#each invites as invite}
-				<div class="card bg-base-100 shadow-sm border border-base-300">
+				<div class="card bg-base-100 shadow-xs border border-base-300">
 					<div class="card-body p-4">
 						<div class="flex items-start justify-between">
 							<div class="flex-1">

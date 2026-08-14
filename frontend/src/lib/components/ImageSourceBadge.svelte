@@ -24,7 +24,7 @@
 
 {#if resolvedSource !== 'upload'}
 	<div
-		class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded bg-black/55 p-0.5 shadow-sm pointer-events-none"
+		class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-sm bg-black/55 p-0.5 shadow-xs pointer-events-none"
 		title={$t(tooltipKeys[resolvedSource])}
 		aria-label={$t(tooltipKeys[resolvedSource])}
 	>

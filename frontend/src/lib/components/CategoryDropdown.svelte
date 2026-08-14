@@ -2,6 +2,7 @@
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { Category } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
 	interface Props {
 		selected_category?: Category | null;
@@ -22,6 +23,7 @@
 	let newCategory: Category = $state({ ...emptyCategory });
 	let categories: Category[] = $state([]);
 	let isOpen = $state(false);
+	let openUpward = $state(false);
 	let isEmojiPickerVisible = $state(false);
 	let dropdownRef: HTMLDivElement | undefined = $state();
 	let mobileSearchInputRef: HTMLInputElement | undefined = $state();
@@ -44,6 +46,7 @@
 	}
 
 	async function openDropdown() {
+		openUpward = shouldFlipDropdownUp(dropdownRef);
 		isOpen = true;
 		await tick();
 		(mobileSearchInputRef ?? desktopSearchInputRef)?.focus();
@@ -132,7 +135,7 @@
 	});
 </script>
 
-<div class="dropdown w-full" class:dropdown-open={isOpen} bind:this={dropdownRef}>
+<div class="dropdown w-full" class:dropdown-open={isOpen} class:dropdown-top={openUpward} bind:this={dropdownRef}>
 	<button
 		type="button"
 		class="btn btn-outline w-full justify-between sm:h-auto h-12"
@@ -162,7 +165,7 @@
 	{#if isOpen}
 		<button
 			type="button"
-			class="fixed inset-0 bg-black/50 z-40 sm:hidden focus:outline-none"
+			class="fixed inset-0 bg-black/50 z-40 sm:hidden focus:outline-hidden"
 			aria-label={$t('adventures.back')}
 			onclick={closeDropdown}
 			onkeydown={(event) => event.key === 'Enter' && closeDropdown()}
@@ -171,7 +174,7 @@
 		<div
 			class="fixed bottom-0 left-0 right-0 z-50 bg-base-100 rounded-t-2xl shadow-2xl border-t border-base-300 max-h-[90vh] flex flex-col sm:hidden"
 		>
-			<div class="flex-shrink-0 bg-base-100 border-b border-base-300 p-4">
+			<div class="shrink-0 bg-base-100 border-b border-base-300 p-4">
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold">{$t('categories.select_category')}</h2>
 					<button
@@ -223,14 +226,14 @@
 						<input
 							type="text"
 							placeholder={$t('categories.category_name')}
-							class="input input-bordered w-full h-12 text-base"
+							class="input w-full h-12 text-base"
 							bind:value={newCategory.display_name}
 						/>
 						<div class="join w-full">
 							<input
 								type="text"
 								placeholder={$t('categories.icon')}
-								class="input input-bordered join-item flex-1 h-12 text-base"
+								class="input join-item flex-1 h-12 text-base"
 								bind:value={newCategory.icon}
 							/>
 							<button
@@ -294,11 +297,11 @@
 					</div>
 
 					{#if categories.length > 0}
-						<div class="form-control">
+						<div class="flex flex-col">
 							<input
 								type="text"
 								placeholder={$t('navbar.search')}
-								class="input input-bordered w-full h-12 text-base"
+								class="input w-full h-12 text-base"
 								bind:value={searchTerm}
 								bind:this={mobileSearchInputRef}
 							/>
@@ -316,7 +319,7 @@
 									onclick={() => selectCategory(category)}
 								>
 									<div class="flex items-center gap-3 w-full">
-										<span class="text-2xl flex-shrink-0">{category.icon}</span>
+										<span class="text-2xl shrink-0">{category.icon}</span>
 										<div class="flex-1 min-w-0">
 											<div class="font-medium text-base truncate">{category.display_name}</div>
 											<div class="text-sm opacity-70 mt-1">
@@ -349,13 +352,15 @@
 					{/if}
 				</div>
 
-				<div class="flex-shrink-0 h-4"></div>
+				<div class="shrink-0 h-4"></div>
 			</div>
 		</div>
 
 		<div
 			tabindex="-1"
-			class="dropdown-content z-[1] w-full mt-1 bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[28rem] overflow-y-auto hidden sm:block"
+			class="dropdown-content z-[1] w-full bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[28rem] overflow-y-auto hidden sm:block {openUpward
+				? 'mb-1'
+				: 'mt-1'}"
 		>
 			<div class="p-4 border-b border-base-300 space-y-3">
 				<div class="flex items-center gap-2 text-sm font-semibold text-base-content/80">
@@ -380,19 +385,19 @@
 					<input
 						type="text"
 						placeholder={$t('categories.category_name')}
-						class="input input-bordered input-sm w-full"
+						class="input input-sm w-full"
 						bind:value={newCategory.display_name}
 					/>
-					<div class="input-group">
+					<div class="join w-full">
 						<input
 							type="text"
 							placeholder={$t('categories.icon')}
-							class="input input-bordered input-sm flex-1"
+							class="input input-sm join-item flex-1"
 							bind:value={newCategory.icon}
 						/>
 						<button
 							type="button"
-							class="btn btn-square btn-sm btn-secondary"
+							class="btn btn-square btn-sm btn-secondary join-item"
 							onclick={toggleEmojiPicker}
 							class:btn-active={isEmojiPickerVisible}
 						>
@@ -456,7 +461,7 @@
 					<input
 						type="text"
 						placeholder={$t('navbar.search')}
-						class="input input-bordered input-sm w-full"
+						class="input input-sm w-full"
 						bind:value={searchTerm}
 						bind:this={desktopSearchInputRef}
 					/>

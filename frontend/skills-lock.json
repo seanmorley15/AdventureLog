@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "daisyui": {
+      "source": "saadeghi/daisyui",
+      "sourceType": "github",
+      "skillPath": "skills/daisyui/SKILL.md",
+      "computedHash": "271523943a0b06c22b8bd2ba5b85b16acc8e9a28de736295c20869e19defefda"
+    }
+  }
+}

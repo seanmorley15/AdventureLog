@@ -334,7 +334,7 @@
 							<input
 								type="text"
 								placeholder={$t('navbar.search')}
-								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+								class="input w-full pl-10 pr-10 bg-base-100/80"
 								bind:value={searchQuery}
 							/>
 							{#if searchQuery.length > 0}
@@ -364,7 +364,7 @@
 							<span class="text-sm font-medium text-base-content/60 hidden sm:inline"
 								>{$t('worldtravel.filter_by')}:</span
 							>
-							<div class="tabs tabs-boxed bg-base-200">
+							<div class="tabs tabs-box bg-base-200">
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
 									onclick={() => (filterOption = 'all')}

@@ -435,7 +435,7 @@
 						</div>
 
 						<!-- View Toggle -->
-						<div class="tabs tabs-boxed bg-base-200">
+						<div class="tabs tabs-box bg-base-200">
 							<button
 								class="tab gap-2 {activeView === 'owned' ? 'tab-active' : ''}"
 								onclick={() => switchView('owned')}
@@ -468,8 +468,8 @@
 								<span class="hidden sm:inline">{$t('adventures.archived')}</span>
 								<div
 									class="badge badge-sm {activeView === 'archived'
-										? 'badge-primary'
-										: 'badge-ghost'}"
+ ? 'badge-primary'
+ : 'badge-ghost'}"
 								>
 									{archivedCollections.length}
 								</div>
@@ -487,10 +487,10 @@
 								<span class="hidden sm:inline">{$t('invites.title')}</span>
 								<div
 									class="badge badge-sm {activeView === 'invites'
-										? 'badge-primary'
-										: invites.length > 0
-											? 'badge-error'
-											: 'badge-ghost'}"
+ ? 'badge-primary'
+ : invites.length > 0
+ ? 'badge-error'
+ : 'badge-ghost'}"
 								>
 									{invites.length}
 								</div>
@@ -636,8 +636,8 @@
 								{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
 									<button
 										class="join-item btn btn-sm {currentPage === page
-											? 'btn-primary'
-											: 'btn-ghost'}"
+ ? 'btn-primary'
+ : 'btn-ghost'}"
 										onclick={() => goToPage(page)}
 									>
 										{page}
@@ -672,56 +672,56 @@
 								{$t('adventures.status_filter')}
 							</h3>
 
-							<div class="space-y-2">
-								<label class="label cursor-pointer justify-start gap-3">
+							<div class="flex flex-col">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === ''}
 										onchange={() => updateStatusFilter('')}
 									/>
-									<span class="label-text">{$t('adventures.all')}</span>
+									<span class="text-sm leading-snug min-w-0">{$t('adventures.all')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'folder'}
 										onchange={() => updateStatusFilter('folder')}
 									/>
-									<span class="label-text">📁 {$t('adventures.folder')}</span>
+									<span class="text-sm leading-snug min-w-0">📁 {$t('adventures.folder')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'upcoming'}
 										onchange={() => updateStatusFilter('upcoming')}
 									/>
-									<span class="label-text">🚀 {$t('adventures.upcoming')}</span>
+									<span class="text-sm leading-snug min-w-0">🚀 {$t('adventures.upcoming')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'in_progress'}
 										onchange={() => updateStatusFilter('in_progress')}
 									/>
-									<span class="label-text">🎯 {$t('adventures.in_progress')}</span>
+									<span class="text-sm leading-snug min-w-0">🎯 {$t('adventures.in_progress')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'completed'}
 										onchange={() => updateStatusFilter('completed')}
 									/>
-									<span class="label-text">✓ {$t('adventures.completed')}</span>
+									<span class="text-sm leading-snug min-w-0">✓ {$t('adventures.completed')}</span>
 								</label>
 							</div>
 						</div>
@@ -735,10 +735,7 @@
 
 							<div class="space-y-4">
 								<div>
-									<!-- svelte-ignore a11y_label_has_associated_control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
-									</label>
+									<p class="text-sm font-medium mb-2">{$t(`adventures.order_direction`)}</p>
 									<div class="join w-full">
 										<button
 											class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
@@ -760,40 +757,37 @@
 								</div>
 
 								<div>
-									<!-- svelte-ignore a11y_label_has_associated_control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
-									</label>
-									<div class="space-y-2">
-										<label class="label cursor-pointer justify-start gap-3">
+									<p class="text-sm font-medium mb-2">{$t('adventures.order_by')}</p>
+									<div class="flex flex-col">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by_radio"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'updated_at'}
 												onchange={() => updateSort('updated_at', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.updated')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.updated')}</span>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by_radio"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'start_date'}
 												onchange={() => updateSort('start_date', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.start_date')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.start_date')}</span>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by_radio"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'name'}
 												onchange={() => updateSort('name', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.name')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.name')}</span>
 										</label>
 									</div>
 								</div>

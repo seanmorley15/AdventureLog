@@ -55,8 +55,8 @@
 	<button
 		type="button"
 		class="btn btn-ghost btn-sm btn-square {visited
-			? 'text-success'
-			: 'text-base-content/30 hover:text-success'}"
+ ? 'text-success'
+ : 'text-base-content/30 hover:text-success'}"
 		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
 		onclick={visited ? removeVisit : markVisited}
 	>

@@ -406,15 +406,13 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<!-- Location Selector -->
 				{#if locationsWithCoords.length > 0}
-					<div class="form-control">
-						<label class="label" for="search-around-location">
-							<span class="label-text font-semibold"
-								>{$t('recomendations.search_around_location')}</span
-							>
+					<div class="flex flex-col">
+						<label class="field-label" for="search-around-location">
+							{$t('recomendations.search_around_location')}
 						</label>
 						<select
 							id="search-around-location"
-							class="select select-bordered w-full"
+							class="select w-full"
 							bind:value={selectedLocationId}
 						>
 							<option value={null}>{$t('recomendations.use_search_instead')}...</option>
@@ -426,15 +424,13 @@
 				{/if}
 
 				<!-- Search Input -->
-				<div class="form-control">
-					<label class="label" for="search-by-address">
-						<span class="label-text font-semibold">{$t('recomendations.search_by_address')}</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="search-by-address">{$t('recomendations.search_by_address')}</label>
 					<input
 						id="search-by-address"
 						type="text"
 						placeholder={$t('adventures.search_placeholder')}
-						class="input input-bordered w-full"
+						class="input w-full"
 						bind:value={searchQuery}
 						disabled={selectedLocationId !== null}
 						onkeydown={(e) => e.key === 'Enter' && searchRecommendations()}
@@ -442,13 +438,11 @@
 				</div>
 
 				<!-- Category Selector -->
-				<div class="form-control">
-					<label class="label" for="search-category">
-						<span class="label-text font-semibold">{$t('adventures.category')}</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="search-category">{$t('adventures.category')}</label>
 					<select
 						id="search-category"
-						class="select select-bordered w-full"
+						class="select w-full"
 						bind:value={selectedCategory}
 					>
 						<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
@@ -458,13 +452,11 @@
 				</div>
 
 				<!-- Radius Selector -->
-				<div class="form-control">
-					<label class="label" for="search-radius">
-						<span class="label-text font-semibold"
-							>{$t('recomendations.search_radius_label')} {radiusDisplay}</span
-						>
+				<div class="flex flex-col">
+					<label class="field-label" for="search-radius">
+						{$t('recomendations.search_radius_label')} {radiusDisplay}
 					</label>
-					<select id="search-radius" class="select select-bordered w-full" bind:value={radiusValue}>
+					<select id="search-radius" class="select w-full" bind:value={radiusValue}>
 						{#each radiusOptions as option}
 							<option value={option.value}>{option.label}</option>
 						{/each}
@@ -493,13 +485,11 @@
 			{#if showFilters}
 				<div class="divider">{$t('adventures.filter')}</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="form-control">
-						<label class="label" for="minimum-rating">
-							<span class="label-text">{$t('recomendations.minimum_rating')}</span>
-						</label>
+					<div class="flex flex-col">
+						<label class="field-label" for="minimum-rating">{$t('recomendations.minimum_rating')}</label>
 						<select
 							id="minimum-rating"
-							class="select select-bordered select-sm"
+							class="select select-sm"
 							bind:value={minRating}
 						>
 							<option value={0}>{$t('recomendations.any')}</option>
@@ -510,13 +500,11 @@
 						</select>
 					</div>
 
-					<div class="form-control">
-						<label class="label" for="minimum-reviews">
-							<span class="label-text">{$t('recomendations.minimum_reviews')}</span>
-						</label>
+					<div class="flex flex-col">
+						<label class="field-label" for="minimum-reviews">{$t('recomendations.minimum_reviews')}</label>
 						<select
 							id="minimum-reviews"
-							class="select select-bordered select-sm"
+							class="select select-sm"
 							bind:value={minReviews}
 						>
 							<option value={0}>{$t('recomendations.any')}</option>
@@ -527,9 +515,11 @@
 						</select>
 					</div>
 
-					<div class="form-control">
-						<label class="label cursor-pointer">
-							<span class="label-text">{$t('recomendations.open_now_only')}</span>
+					<div class="flex flex-col">
+						<label class="field-toggle">
+							<span class="font-semibold text-sm text-base-content"
+								>{$t('recomendations.open_now_only')}</span
+							>
 							<input type="checkbox" class="toggle toggle-primary" bind:checked={showOpenOnly} />
 						</label>
 					</div>
@@ -553,7 +543,7 @@
 		</div>
 	{:else if filteredResults.length > 0}
 		<!-- Results Stats -->
-		<div class="stats shadow w-full">
+		<div class="stats bg-base-100 shadow-sm w-full">
 			<div class="stat">
 				<div class="stat-title">{$t('recomendations.total_results')}</div>
 				<div class="stat-value text-primary">{filteredResults.length}</div>

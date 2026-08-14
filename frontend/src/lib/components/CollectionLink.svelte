@@ -138,7 +138,7 @@
 				));
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
@@ -203,7 +203,7 @@
 					<input
 						type="text"
 						placeholder={$t('navbar.search')}
-						class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+						class="input w-full pl-10 pr-10 bg-base-100/80"
 						bind:value={searchQuery}
 					/>
 					{#if searchQuery.length > 0}

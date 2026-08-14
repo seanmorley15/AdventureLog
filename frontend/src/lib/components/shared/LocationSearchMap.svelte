@@ -754,9 +754,9 @@
 			<div class="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/30">
 				<AirplaneIcon class="w-5 h-5 text-primary" />
 				<div class="flex-1">
-					<label class="label cursor-pointer justify-start gap-3">
+					<label class="field-toggle">
 						<input type="checkbox" class="toggle toggle-primary" bind:checked={airportMode} />
-						<span class="label-text font-medium">
+						<span class="font-semibold text-base-content">
 							{airportMode
 								? $t('adventures.airport_search_mode')
 								: $t('adventures.location_search_mode')}
@@ -767,17 +767,13 @@
 		{/if}
 
 		{#if showDisplayNameInput && displayNamePosition === 'before' && !transportationMode}
-			<div class="form-control">
-				<label class="label" for="location-display">
-					<span class="label-text font-medium">
-						{displayNameLabel || $t('adventures.location_display_name')}
-					</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="location-display">{displayNameLabel || $t('adventures.location_display_name')}</label>
 				<input
 					type="text"
 					id="location-display"
 					bind:value={displayName}
-					class="input input-bordered bg-base-100/80 focus:bg-base-100"
+					class="input bg-base-100/80 focus:bg-base-100"
 					placeholder={displayNamePlaceholder || $t('adventures.enter_location_display_name')}
 				/>
 			</div>
@@ -785,12 +781,10 @@
 
 		{#if transportationMode}
 			<!-- Start Location Search -->
-			<div class="form-control">
-				<label class="label" for="search-start-location">
-					<span class="label-text font-medium flex items-center gap-2">
-						<PinIcon class="w-4 h-4 text-success" />
-						{airportMode ? $t('adventures.departure_airport') : $t('adventures.start_location')}
-					</span>
+			<div class="flex flex-col">
+				<label class="field-label flex items-center gap-2" for="search-start-location">
+					<PinIcon class="w-4 h-4 text-success" />
+					{airportMode ? $t('adventures.departure_airport') : $t('adventures.start_location')}
 				</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -804,7 +798,7 @@
 						placeholder={airportMode
 							? $t('adventures.airport_code_examples')
 							: $t('transportation.enter_from_location')}
-						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
+						class="input w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-success={selectedStartLocation}
 					/>
 					{#if startSearchQuery && !selectedStartLocation}
@@ -840,7 +834,7 @@
 								onclick={() => selectStartSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-success mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-success mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -861,12 +855,10 @@
 			{/if}
 
 			<!-- End Location Search -->
-			<div class="form-control">
-				<label class="label" for="search-end-location">
-					<span class="label-text font-medium flex items-center gap-2">
-						<PinIcon class="w-4 h-4 text-error" />
-						{airportMode ? $t('adventures.arrival_airport') : $t('adventures.end_location')}
-					</span>
+			<div class="flex flex-col">
+				<label class="field-label flex items-center gap-2" for="search-end-location">
+					<PinIcon class="w-4 h-4 text-error" />
+					{airportMode ? $t('adventures.arrival_airport') : $t('adventures.end_location')}
 				</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -880,7 +872,7 @@
 						placeholder={airportMode
 							? $t('adventures.airport_code_examples')
 							: $t('transportation.enter_to_location')}
-						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
+						class="input w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-error={selectedEndLocation}
 					/>
 					{#if endSearchQuery && !selectedEndLocation}
@@ -916,7 +908,7 @@
 								onclick={() => selectEndSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-error mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-error mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -949,7 +941,7 @@
 
 								<!-- Start Location -->
 								<div class="flex items-start gap-2">
-									<PinIcon class="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-success mt-0.5 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<p class="text-sm font-medium text-base-content/80 truncate">
 											{selectedStartLocation.name}
@@ -967,7 +959,7 @@
 
 								<!-- End Location -->
 								<div class="flex items-start gap-2">
-									<PinIcon class="w-4 h-4 text-error mt-0.5 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-error mt-0.5 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<p class="text-sm font-medium text-base-content/80 truncate">
 											{selectedEndLocation.name}
@@ -990,10 +982,8 @@
 			{/if}
 		{:else}
 			<!-- Single Location Mode (Original) -->
-			<div class="form-control">
-				<label class="label" for="search-location">
-					<span class="label-text font-medium">{$t('adventures.search_location')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="search-location">{$t('adventures.search_location')}</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 						<SearchIcon class="w-4 h-4 text-base-content/40" />
@@ -1004,7 +994,7 @@
 						bind:value={searchQuery}
 						oninput={handleSearchInput}
 						placeholder={$t('adventures.search_placeholder')}
-						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
+						class="input w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-primary={selectedLocation}
 					/>
 					{#if searchQuery && !selectedLocation}
@@ -1025,9 +1015,7 @@
 				</div>
 			{:else if searchResults.length > 0}
 				<div class="space-y-2">
-					<div class="label">
-						<span class="label-text text-sm font-medium">{$t('adventures.search_results')}</span>
-					</div>
+					<p class="field-hint text-sm">{$t('adventures.search_results')}</p>
 					{#if searchProvider}
 						<div class="text-xs text-base-content/60">
 							Source: {formatProviderLabel(searchProvider)}
@@ -1040,7 +1028,7 @@
 								onclick={() => selectSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-primary mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -1070,17 +1058,13 @@
 			</button>
 
 			{#if showDisplayNameInput && displayNamePosition === 'after'}
-				<div class="form-control">
-					<label class="label" for="location-display-after">
-						<span class="label-text font-medium">
-							{displayNameLabel || $t('adventures.location_display_name')}
-						</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="location-display-after">{displayNameLabel || $t('adventures.location_display_name')}</label>
 					<input
 						type="text"
 						id="location-display-after"
 						bind:value={displayName}
-						class="input input-bordered bg-base-100/80 focus:bg-base-100"
+						class="input bg-base-100/80 focus:bg-base-100"
 						placeholder={displayNamePlaceholder || $t('adventures.enter_location_display_name')}
 					/>
 				</div>
@@ -1143,9 +1127,7 @@
 
 	<div class="space-y-4">
 		<div class="flex items-center justify-between">
-			<div class="label">
-				<span class="label-text font-medium">{$t('worldtravel.interactive_map')}</span>
-			</div>
+			<p class="field-hint">{$t('worldtravel.interactive_map')}</p>
 			{#if isReverseGeocoding}
 				<div class="flex items-center gap-2">
 					<span class="loading loading-spinner loading-sm"></span>

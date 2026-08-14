@@ -78,7 +78,7 @@
 			{#if background.author && background.author.trim() !== ''}
 				<div class="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
 					<div
-						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0"
+						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0"
 					>
 						<AccountIcon class="w-4 h-4 text-primary" />
 					</div>
@@ -93,7 +93,7 @@
 			{#if background.location && background.location.trim() !== ''}
 				<div class="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
 					<div
-						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0"
+						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0"
 					>
 						<LocationIcon class="w-4 h-4 text-primary" />
 					</div>
@@ -108,7 +108,7 @@
 			<div class="bg-primary/5 rounded-lg p-4">
 				<div class="flex items-start gap-3">
 					<div
-						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0 mt-0.5"
 					>
 						<DiscordIcon class="w-4 h-4 text-primary" />
 					</div>

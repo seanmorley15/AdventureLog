@@ -177,7 +177,7 @@
 		{/if}
 	</svg>
 
-	<div class="absolute top-3 left-3 badge badge-primary gap-1 shadow">
+	<div class="absolute top-3 left-3 badge badge-primary gap-1 shadow-sm">
 		<span class="text-xs font-semibold">GPX</span>
 		<span class="text-xs">Route</span>
 	</div>
@@ -186,7 +186,7 @@
 		<button
 			type="button"
 			onclick={stopPropagation(() => openImageModal(0))}
-			class="btn btn-xs btn-neutral absolute bottom-3 right-3 shadow"
+			class="btn btn-xs btn-neutral absolute bottom-3 right-3 shadow-sm"
 		>
 			View photos ({sortedImages.length})
 		</button>
