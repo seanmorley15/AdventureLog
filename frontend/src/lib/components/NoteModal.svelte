@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { createBubbler, preventDefault } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { isValidUrl } from '$lib';
 	import type { Collection, Note, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
@@ -13,21 +16,36 @@
 		return marked(markdown);
 	};
 
-	export let note: Note | null = null;
-	export let collection: Collection;
-	export let user: User | null = null;
-	export let initialVisitDate: string | null = null;
+	interface Props {
+		note?: Note | null;
+		collection: Collection;
+		user?: User | null;
+		initialVisitDate?: string | null;
+	}
 
-	let constrainDates: boolean = true;
+	let {
+		note = null,
+		collection,
+		user = null,
+		initialVisitDate = null
+	}: Props = $props();
 
-	let isReadOnly =
+	let constrainDates: boolean = $state(true);
+
+	let isReadOnly = $derived(
 		!(note && user?.uuid == note?.user) &&
-		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
-		!!note;
+			!(
+				user &&
+				collection &&
+				collection.shared_with &&
+				collection.shared_with.includes(user.uuid)
+			) &&
+			!!note
+	);
 
-	let warning: string | null = '';
+	let warning: string | null = $state('');
 
-	let newLink: string = '';
+	let newLink: string = $state('');
 
 	function addLink() {
 		// check to make it a valid URL
@@ -52,16 +70,32 @@
 		return null;
 	};
 
-	let newNote = {
-		name: note?.name || '',
-		content: note?.content || '',
-		date: getSeedDate() || undefined || null,
-		links: note?.links || [],
-		collection: collection.id,
-		is_public: collection.is_public
-	};
+	let newNote = $state({
+		name: '',
+		content: '',
+		date: null as string | null | undefined,
+		links: [] as string[],
+		collection: '',
+		is_public: false
+	});
+	let previousNoteId: string | null | undefined = undefined;
 
-	const hasVisitDateSuggestion = !!initialVisitDate && !note?.date;
+	$effect.pre(() => {
+		const sourceId = note?.id ?? null;
+		if (sourceId === previousNoteId) return;
+
+		previousNoteId = sourceId;
+		newNote = {
+			name: note?.name || '',
+			content: note?.content || '',
+			date: getSeedDate() || null,
+			links: note?.links || [],
+			collection: collection.id,
+			is_public: collection.is_public
+		};
+	});
+
+	const hasVisitDateSuggestion = $derived(!!initialVisitDate && !note?.date);
 
 	function useVisitDate() {
 		if (isReadOnly) return;
@@ -70,7 +104,7 @@
 		}
 	}
 
-	let initialName: string = note?.name || '';
+	let initialName = $derived(note?.name || '');
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -135,12 +169,12 @@
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
@@ -214,7 +248,7 @@
 					class="btn btn-ghost btn-square"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -230,7 +264,7 @@
 
 		<!-- Main Content -->
 		<div class="px-2">
-			<form method="post" style="width: 100%;" on:submit|preventDefault>
+			<form method="post" style="width: 100%;" onsubmit={preventDefault(bubble('submit'))}>
 				<!-- Basic Information Section -->
 				<div
 					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
@@ -293,7 +327,7 @@
 										>
 											<span class="badge badge-primary badge-soft">Itinerary day</span>
 											<span>Prefilled to match your selected day.</span>
-											<button type="button" class="btn btn-ghost btn-xs" on:click={useVisitDate}>
+											<button type="button" class="btn btn-ghost btn-xs" onclick={useVisitDate}>
 												Reapply date
 											</button>
 										</div>
@@ -339,7 +373,7 @@
 												class="input input-bordered join-item flex-1 bg-base-100/80 focus:bg-base-100"
 												placeholder="https://example.com"
 												bind:value={newLink}
-												on:keydown={(e) => {
+												onkeydown={(e) => {
 													if (e.key === 'Enter') {
 														e.preventDefault();
 														addLink();
@@ -351,7 +385,7 @@
 												class="btn btn-primary join-item"
 												aria-label={$t('adventures.add')}
 												title={$t('adventures.add')}
-												on:click={addLink}
+												onclick={addLink}
 											>
 												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path
@@ -400,7 +434,7 @@
 														class="btn btn-ghost btn-xs text-error"
 														aria-label={$t('adventures.remove')}
 														title={$t('adventures.remove')}
-														on:click={() => {
+														onclick={() => {
 															newNote.links = newNote.links.filter((_, index) => index !== i);
 														}}
 													>
@@ -502,7 +536,7 @@
 
 				<!-- Action Buttons -->
 				<div class="flex gap-3 justify-end pt-4 border-t border-base-300/50">
-					<button type="button" class="btn btn-neutral-200" on:click={close}>
+					<button type="button" class="btn btn-neutral-200" onclick={close}>
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -514,7 +548,7 @@
 						{$t('about.close')}
 					</button>
 					{#if !isReadOnly}
-						<button type="button" class="btn btn-primary" on:click={save}>
+						<button type="button" class="btn btn-primary" onclick={save}>
 							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"

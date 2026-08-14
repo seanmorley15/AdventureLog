@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
 </script>
 
@@ -29,13 +29,13 @@
 				</button>
 			</div>
 
-			{#if $page.form?.message}
+			{#if page.form?.message}
 				<div class="mt-4 text-center text-error">
-					{$t($page.form.message)}
+					{$t(page.form.message)}
 				</div>
 			{/if}
 
-			{#if $page.form?.success}
+			{#if page.form?.success}
 				<div class="mt-4 text-center text-success">
 					{$t('settings.possible_reset')}
 				</div>

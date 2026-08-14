@@ -17,25 +17,37 @@
 	import { addToast } from '$lib/toasts';
 	import StravaGpxList from './transportation/StravaGpxList.svelte';
 
-	// Props
-	export let attachments: Attachment[] = [];
-	export let itemId: string = '';
-	export let contentType: 'location' | 'lodging' | 'transportation' | '' = 'location';
-	export let user: User | null = null;
+	
 
-	export let start_date: string | null = null;
-	export let end_date: string | null = null;
+	interface Props {
+		// Props
+		attachments?: Attachment[];
+		itemId?: string;
+		contentType?: 'location' | 'lodging' | 'transportation' | '';
+		user?: User | null;
+		start_date?: string | null;
+		end_date?: string | null;
+	}
+
+	let {
+		attachments = $bindable([]),
+		itemId = '',
+		contentType = 'location',
+		user = null,
+		start_date = null,
+		end_date = null
+	}: Props = $props();
 
 	// Component state
-	let attachmentFileInput: HTMLInputElement;
-	let attachmentError: string = '';
-	let isAttachmentLoading: boolean = false;
+	let attachmentFileInput: HTMLInputElement | undefined = $state();
+	let attachmentError: string = $state('');
+	let isAttachmentLoading: boolean = $state(false);
 
 	// Attachment state
-	let selectedFile: File | null = null;
-	let attachmentName: string = '';
-	let attachmentToEdit: Attachment | null = null;
-	let editingAttachmentName: string = '';
+	let selectedFile: File | null = $state(null);
+	let attachmentName: string = $state('');
+	let attachmentToEdit: Attachment | null = $state(null);
+	let editingAttachmentName: string = $state('');
 
 	// Allowed file types for attachments
 	const allowedFileTypes = [
@@ -223,7 +235,7 @@
 						class="file-input file-input-bordered col-span-2 md:col-span-1"
 						accept={allowedFileTypes.join(',')}
 						disabled={isAttachmentLoading}
-						on:change={handleAttachmentFileChange}
+						onchange={handleAttachmentFileChange}
 					/>
 					<input
 						type="text"
@@ -236,7 +248,7 @@
 						class="btn btn-secondary btn-sm md:btn-md"
 						class:loading={isAttachmentLoading}
 						disabled={isAttachmentLoading || !selectedFile || !attachmentName.trim()}
-						on:click={uploadAttachment}
+						onclick={uploadAttachment}
 					>
 						{$t('adventures.upload')}
 					</button>
@@ -272,11 +284,11 @@
 									placeholder="Attachment name"
 								/>
 								<div class="flex gap-2">
-									<button class="btn btn-success btn-xs flex-1" on:click={saveAttachmentEdit}>
+									<button class="btn btn-success btn-xs flex-1" onclick={saveAttachmentEdit}>
 										<CheckIcon class="w-3 h-3" />
 										Save
 									</button>
-									<button class="btn btn-ghost btn-xs flex-1" on:click={cancelEditingAttachment}>
+									<button class="btn btn-ghost btn-xs flex-1" onclick={cancelEditingAttachment}>
 										<CloseIcon class="w-3 h-3" />
 										{$t('adventures.cancel')}
 									</button>
@@ -328,7 +340,7 @@
 										type="button"
 										class="btn btn-warning btn-xs btn-square tooltip tooltip-top"
 										data-tip="Edit Name"
-										on:click={() => startEditingAttachment(attachment)}
+										onclick={() => startEditingAttachment(attachment)}
 									>
 										<EditIcon class="w-4 h-4" />
 									</button>
@@ -336,7 +348,7 @@
 										type="button"
 										class="btn btn-error btn-xs btn-square tooltip tooltip-top"
 										data-tip="Remove Attachment"
-										on:click={() => removeAttachment(attachment.id)}
+										onclick={() => removeAttachment(attachment.id)}
 									>
 										<TrashIcon class="w-4 h-4" />
 									</button>

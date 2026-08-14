@@ -9,9 +9,13 @@
 	import ShieldAccount from '~icons/mdi/shield-account';
 	import ChevronRight from '~icons/mdi/chevron-right';
 
-	export let sharing = false;
-	export let shared_with: string[] | undefined = undefined;
-	export let user: User & { status?: 'available' | 'pending' };
+	interface Props {
+		sharing?: boolean;
+		shared_with?: string[] | undefined;
+		user: User & { status?: 'available' | 'pending' };
+	}
+
+	let { sharing = false, shared_with = undefined, user }: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		share: User;
@@ -19,21 +23,21 @@
 		revoke: User;
 	}>();
 
-	$: isShared = shared_with?.includes(user.uuid) || false;
-	$: isPending = user.status === 'pending';
-	$: isAvailable = user.status === 'available';
+	let isShared = $derived(shared_with?.includes(user.uuid) || false);
+	let isPending = $derived(user.status === 'pending');
+	let isAvailable = $derived(user.status === 'available');
 
-	$: displayName =
-		[user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username;
+	let displayName =
+		$derived([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username);
 
-	$: joinedLabel = user.date_joined
+	let joinedLabel = $derived(user.date_joined
 		? new Date(user.date_joined).toLocaleDateString(undefined, {
 				year: 'numeric',
 				month: 'short',
 				day: 'numeric',
 				timeZone: 'UTC'
 			})
-		: '';
+		: '');
 
 	function openProfile() {
 		goto(`/profile/${user.username}`);
@@ -82,19 +86,19 @@
 
 			<div class="card-actions w-full">
 				{#if isShared}
-					<button type="button" class="btn btn-sm btn-error w-full" on:click={handleUnshare}>
+					<button type="button" class="btn btn-sm btn-error w-full" onclick={handleUnshare}>
 						{$t('adventures.remove')}
 					</button>
 				{:else if isPending}
 					<button
 						type="button"
 						class="btn btn-sm btn-warning btn-outline w-full"
-						on:click={handleRevoke}
+						onclick={handleRevoke}
 					>
 						{$t('share.revoke_invite')}
 					</button>
 				{:else if isAvailable}
-					<button type="button" class="btn btn-sm btn-success w-full" on:click={handleShare}>
+					<button type="button" class="btn btn-sm btn-success w-full" onclick={handleShare}>
 						{$t('share.send_invite')}
 					</button>
 				{/if}
@@ -105,7 +109,7 @@
 	<button
 		type="button"
 		class="group card w-full bg-base-100 border border-base-300/60 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-left overflow-hidden"
-		on:click={openProfile}
+		onclick={openProfile}
 	>
 		<div class="h-16 bg-gradient-to-r from-primary/15 via-secondary/10 to-accent/10"></div>
 

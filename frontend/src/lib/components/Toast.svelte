@@ -2,7 +2,7 @@
 	import { toasts, removeToast } from '$lib/toasts';
 	import { onMount } from 'svelte';
 
-	let toastList: any[] = [];
+	let toastList: any[] = $state([]);
 
 	toasts.subscribe((value) => {
 		toastList = value;
@@ -46,7 +46,7 @@
 				<!-- Close Button -->
 				<button
 					class="btn btn-ghost btn-sm btn-circle opacity-70 hover:opacity-100 transition-opacity flex-shrink-0 -mr-1"
-					on:click={() => removeToast(id)}
+					onclick={() => removeToast(id)}
 					aria-label="Close notification"
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

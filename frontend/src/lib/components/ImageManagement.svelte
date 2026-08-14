@@ -18,34 +18,21 @@
 	import ImmichSelect from './ImmichSelect.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 
-	// Props
-	export let images: ContentImage[] = [];
-	export let objectId: string = '';
-	export let contentType: string = 'location'; // 'location', 'adventure', 'collection', etc.
-	export let defaultSearchTerm: string = '';
-	export let immichIntegration: boolean = false;
-	export let copyImmichLocally: boolean = false;
-	/** Google photo URLs from place search; imported only when the user chooses. */
-	export let pendingGooglePhotoUrls: string[] = [];
+	
+	
 
 	// Component state
-	let fileInput: HTMLInputElement;
-	let url: string = '';
-	let imageSearch: string = defaultSearchTerm;
-	let imageError: string = '';
-	let wikiImageError: string = '';
-	let isLoading: boolean = false;
-	let importingGooglePhotos = false;
-	let googlePhotoError = '';
-	let deselectedGooglePhotoUrls = new Set<string>();
+	let fileInput: HTMLInputElement | undefined = $state();
+	let url: string = $state('');
+	let imageSearch: string = $state('');
+	let imageError: string = $state('');
+	let wikiImageError: string = $state('');
+	let isLoading: boolean = $state(false);
+	let importingGooglePhotos = $state(false);
+	let googlePhotoError = $state('');
+	let deselectedGooglePhotoUrls = $state(new Set<string>());
 
-	$: selectedGooglePhotoUrls = pendingGooglePhotoUrls.filter(
-		(url) => !deselectedGooglePhotoUrls.has(url)
-	);
 
-	$: if (pendingGooglePhotoUrls.length === 0) {
-		deselectedGooglePhotoUrls = new Set();
-	}
 
 	// Wikipedia image selection
 	let wikiImageResults: Array<{
@@ -54,7 +41,7 @@
 		height: number;
 		title: string;
 		type: string;
-	}> = [];
+	}> = $state([]);
 
 	const dispatch = createEventDispatcher<{
 		imagesUpdated: ContentImage[];
@@ -132,8 +119,37 @@
 		}
 	}
 
-	// Import temporary recommendation images (id starting with 'rec-') once objectId is available
-	export let importInProgress: boolean = false;
+	
+	interface Props {
+		// Props
+		images?: ContentImage[];
+		objectId?: string;
+		contentType?: string; // 'location', 'adventure', 'collection', etc.
+		defaultSearchTerm?: string;
+		immichIntegration?: boolean;
+		copyImmichLocally?: boolean;
+		/** Google photo URLs from place search; imported only when the user chooses. */
+		pendingGooglePhotoUrls?: string[];
+		// Import temporary recommendation images (id starting with 'rec-') once objectId is available
+		importInProgress?: boolean;
+	}
+
+	let {
+		images = $bindable([]),
+		objectId = '',
+		contentType = 'location',
+		defaultSearchTerm = '',
+		immichIntegration = false,
+		copyImmichLocally = false,
+		pendingGooglePhotoUrls = $bindable([]),
+		importInProgress = $bindable(false)
+	}: Props = $props();
+
+	$effect.pre(() => {
+		if (defaultSearchTerm && !imageSearch) {
+			imageSearch = defaultSearchTerm;
+		}
+	});
 
 	async function importPrefilledImagesIfNeeded() {
 		if (importInProgress) return;
@@ -169,10 +185,6 @@
 		importPrefilledImagesIfNeeded();
 	});
 
-	// React to objectId becoming available later
-	$: if (objectId) {
-		importPrefilledImagesIfNeeded();
-	}
 
 	async function fetchImageFromUrl(imageUrl: string): Promise<Blob | null> {
 		try {
@@ -400,10 +412,6 @@
 		}
 	}
 
-	// Watch for defaultSearchTerm changes
-	$: if (defaultSearchTerm && !imageSearch) {
-		imageSearch = defaultSearchTerm;
-	}
 
 	function toggleGooglePhotoSelection(url: string) {
 		if (deselectedGooglePhotoUrls.has(url)) {
@@ -470,6 +478,20 @@
 	function importSelectedGooglePhotos() {
 		void importGooglePhotos([...selectedGooglePhotoUrls]);
 	}
+	$effect(() => {
+		if (pendingGooglePhotoUrls.length === 0) {
+			deselectedGooglePhotoUrls = new Set();
+		}
+	});
+	let selectedGooglePhotoUrls = $derived(pendingGooglePhotoUrls.filter(
+		(url) => !deselectedGooglePhotoUrls.has(url)
+	));
+	// React to objectId becoming available later
+	$effect(() => {
+		if (objectId) {
+			importPrefilledImagesIfNeeded();
+		}
+	});
 </script>
 
 <div class="card bg-base-100 border border-base-300 shadow-lg">
@@ -495,7 +517,7 @@
 					accept="image/*"
 					multiple
 					disabled={isLoading}
-					on:change={handleMultipleFiles}
+					onchange={handleMultipleFiles}
 				/>
 			</div>
 
@@ -516,7 +538,7 @@
 						class="btn btn-primary btn-sm"
 						class:loading={isLoading}
 						disabled={isLoading || !url.trim()}
-						on:click={handleUrlUpload}
+						onclick={handleUrlUpload}
 					>
 						{$t('adventures.fetch_image')}
 					</button>
@@ -545,7 +567,7 @@
 						class="btn btn-primary btn-sm"
 						class:loading={isLoading}
 						disabled={isLoading || !imageSearch.trim()}
-						on:click={handleWikiImageSearch}
+						onclick={handleWikiImageSearch}
 					>
 						{$t('navbar.search')}
 					</button>
@@ -567,7 +589,7 @@
 							</span>
 							<button
 								class="btn btn-ghost btn-xs"
-								on:click={() => {
+								onclick={() => {
 									wikiImageResults = [];
 									imageSearch = defaultSearchTerm;
 								}}
@@ -580,7 +602,7 @@
 								<button
 									type="button"
 									class="card bg-base-100 border border-base-300 hover:border-primary hover:shadow-lg transition-all duration-200 cursor-pointer group"
-									on:click={() => selectWikiImage(result.source)}
+									onclick={() => selectWikiImage(result.source)}
 									disabled={isLoading}
 								>
 									<figure class="aspect-square bg-base-200 overflow-hidden">
@@ -665,12 +687,12 @@
 								)
 									? 'border-primary ring-2 ring-primary/30'
 									: 'border-base-300 opacity-70 hover:opacity-100'}"
-								on:click={() => toggleGooglePhotoSelection(url)}
+								onclick={() => toggleGooglePhotoSelection(url)}
 								disabled={importingGooglePhotos || !objectId}
 							>
 								<img
 									src={url}
-									alt="Google place photo"
+									alt="Google place"
 									class="w-full h-full object-cover"
 									loading="lazy"
 								/>
@@ -704,7 +726,7 @@
 						type="button"
 						class="btn btn-primary btn-sm"
 						disabled={importingGooglePhotos || !objectId || pendingGooglePhotoUrls.length === 0}
-						on:click={importAllGooglePhotos}
+						onclick={importAllGooglePhotos}
 					>
 						{$t('adventures.google_photos_import_all')}
 					</button>
@@ -712,7 +734,7 @@
 						type="button"
 						class="btn btn-outline btn-sm"
 						disabled={importingGooglePhotos || !objectId || selectedGooglePhotoUrls.length === 0}
-						on:click={importSelectedGooglePhotos}
+						onclick={importSelectedGooglePhotos}
 					>
 						{$t('adventures.google_photos_import_selected')}
 					</button>
@@ -747,15 +769,17 @@
 								class="w-full h-full object-cover transition-transform group-hover:scale-105"
 								loading="lazy"
 							/>
-							<div slot="overlays">
-								{#if image.is_primary}
-									<div
-										class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
-									>
-										<Crown class="h-4 w-4" />
-									</div>
-								{/if}
-							</div>
+							{#snippet overlays()}
+														<div >
+									{#if image.is_primary}
+										<div
+											class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
+										>
+											<Crown class="h-4 w-4" />
+										</div>
+									{/if}
+								</div>
+													{/snippet}
 						</ImageFrame>
 
 						<div
@@ -766,7 +790,7 @@
 									type="button"
 									class="btn btn-success btn-sm tooltip tooltip-top"
 									data-tip="Make Primary"
-									on:click={() => image.id && makePrimaryImage(image.id)}
+									onclick={() => image.id && makePrimaryImage(image.id)}
 									disabled={!image.id}
 								>
 									<Star class="h-4 w-4" />
@@ -777,7 +801,7 @@
 								type="button"
 								class="btn btn-error btn-sm tooltip tooltip-top"
 								data-tip="Remove Image"
-								on:click={() => image.id && removeImage(image.id)}
+								onclick={() => image.id && removeImage(image.id)}
 								disabled={!image.id}
 							>
 								<TrashIcon class="h-4 w-4" />

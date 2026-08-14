@@ -9,28 +9,22 @@
 	import LocationMedia from './LocationMedia.svelte';
 	import LocationVisits from './LocationVisits.svelte';
 
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
-	export let itineraryDayLabel: string | null = null;
-	/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
-	export let skipQuickStart = false;
+	
 
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
-	let storedInitialVisitDate: string | null = initialVisitDate;
+	let storedInitialVisitDate: string | null = $state(null);
 
 	let modal: HTMLDialogElement;
-	let googleMapsEnabled = false;
-	let isEditMode = false;
-	let pendingGooglePhotoUrls: string[] = [];
+	let googleMapsEnabled = $state(false);
+	let isEditMode = $state(false);
+	let pendingGooglePhotoUrls: string[] = $state([]);
 
 	// Whether a save/create occurred during this modal session
-	let didSave = false;
+	let didSave = $state(false);
 
-	let steps = [
+	let steps = $state([
 		{
 			name: $t('adventures.quick_start'),
 			selected: true,
@@ -51,7 +45,7 @@
 			selected: false,
 			requires_id: true
 		}
-	];
+	]);
 
 	function setStep(stepIndex: number) {
 		steps = steps.map((step, index) => ({
@@ -123,7 +117,27 @@
 		}
 	}
 
-	export let location: Location = {
+
+	interface Props {
+		user?: User | null;
+		collection?: Collection | null;
+		initialLatLng?: { lat: number; lng: number } | null; // Used to pass the location from the map selection to the modal
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+		itineraryDayLabel?: string | null;
+		/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
+		skipQuickStart?: boolean;
+		location?: Location;
+		locationToEdit?: Location | null;
+	}
+
+	let {
+		user = null,
+		collection = null,
+		initialLatLng = null,
+		initialVisitDate = null,
+		itineraryDayLabel = null,
+		skipQuickStart = false,
+		location = $bindable({
 		id: '',
 		name: '',
 		visits: [],
@@ -148,38 +162,52 @@
 		},
 		attachments: [],
 		trails: []
-	};
+	}),
+		locationToEdit = null
+	}: Props = $props();
 
-	export let locationToEdit: Location | null = null;
+	let previousLocationId: string | null | undefined = undefined;
 
-	location = {
-		id: locationToEdit?.id || '',
-		name: locationToEdit?.name || '',
-		link: locationToEdit?.link || null,
-		description: locationToEdit?.description || null,
-		tags: locationToEdit?.tags || [],
-		rating: locationToEdit?.rating ?? NaN,
-		price: locationToEdit?.price ?? null,
-		price_currency: locationToEdit?.price_currency ?? null,
-		is_public: locationToEdit?.is_public ?? false,
-		latitude: locationToEdit?.latitude ?? NaN,
-		longitude: locationToEdit?.longitude ?? NaN,
-		location: locationToEdit?.location || null,
-		images: locationToEdit?.images || [],
-		user: locationToEdit?.user || null,
-		visits: locationToEdit?.visits || [],
-		is_visited: locationToEdit?.is_visited ?? false,
-		collections: locationToEdit?.collections || [],
-		category: locationToEdit?.category || {
-			id: '',
-			name: '',
-			display_name: '',
-			icon: '',
-			user: ''
-		},
-		trails: locationToEdit?.trails || [],
-		attachments: locationToEdit?.attachments || []
-	};
+	$effect.pre(() => {
+		if (initialVisitDate && !storedInitialVisitDate) {
+			storedInitialVisitDate = initialVisitDate;
+		}
+	});
+
+	$effect.pre(() => {
+		const currentId = locationToEdit?.id ?? null;
+		if (currentId === previousLocationId) return;
+
+		previousLocationId = currentId;
+		location = {
+			id: locationToEdit?.id || '',
+			name: locationToEdit?.name || '',
+			link: locationToEdit?.link || null,
+			description: locationToEdit?.description || null,
+			tags: locationToEdit?.tags || [],
+			rating: locationToEdit?.rating ?? NaN,
+			price: locationToEdit?.price ?? null,
+			price_currency: locationToEdit?.price_currency ?? null,
+			is_public: locationToEdit?.is_public ?? false,
+			latitude: locationToEdit?.latitude ?? NaN,
+			longitude: locationToEdit?.longitude ?? NaN,
+			location: locationToEdit?.location || null,
+			images: locationToEdit?.images || [],
+			user: locationToEdit?.user || null,
+			visits: locationToEdit?.visits || [],
+			is_visited: locationToEdit?.is_visited ?? false,
+			collections: locationToEdit?.collections || [],
+			category: locationToEdit?.category || {
+				id: '',
+				name: '',
+				display_name: '',
+				icon: '',
+				user: ''
+			},
+			trails: locationToEdit?.trails || [],
+			attachments: locationToEdit?.attachments || []
+		};
+	});
 
 	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
 		if (!loc) return false;
@@ -241,14 +269,14 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following adventurelog pattern -->
@@ -317,7 +345,7 @@
 									: ''} {index === 0 && isEditMode
 									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => handleStepSelect(index)}
+								onclick={() => handleStepSelect(index)}
 								disabled={(step.requires_id && !location.id) || (index === 0 && isEditMode)}
 							>
 								<span class="hidden sm:inline">{step.name}</span>
@@ -339,7 +367,7 @@
 						class="btn btn-ghost btn-square"
 						aria-label={$t('about.close')}
 						title={$t('about.close')}
-						on:click={close}
+						onclick={close}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -356,7 +384,7 @@
 						class="btn btn-ghost btn-square"
 						aria-label={$t('about.close')}
 						title={$t('about.close')}
-						on:click={close}
+						onclick={close}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path

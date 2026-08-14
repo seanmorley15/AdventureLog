@@ -9,30 +9,35 @@
 	import { signupLegalRequired, type SignupLegalLinks } from '$lib/signup-legal';
 	import type { PasswordPolicy } from '$lib/password-policy';
 
-	export let data;
+	let { data } = $props();
 
-	let quote: { quote: string; author: string } = data.props.quote;
-	let background: Background = data.props.background;
-	let is_disabled = data.props.is_disabled as boolean;
-	let is_disabled_message = data.props.is_disabled_message as string;
-	let inviteKey = data.props.invite_key as string | null;
-	let inviteSignup = data.props.inviteSignup as {
+	let quote: { quote: string; author: string } = $derived(data.props.quote);
+	let background: Background = $derived(data.props.background);
+	let is_disabled = $derived(data.props.is_disabled as boolean);
+	let is_disabled_message = $derived(data.props.is_disabled_message as string);
+	let inviteKey = $derived(data.props.invite_key as string | null);
+	let inviteSignup = $derived(data.props.inviteSignup as {
 		valid: boolean;
 		email?: string | null;
 		expired?: boolean;
 		accepted?: boolean;
 		registered?: boolean;
 		message?: string | null;
-	} | null;
-	let passwordPolicy = data.props.passwordPolicy as PasswordPolicy;
-	let signupLegalLinks = data.props.signupLegalLinks as SignupLegalLinks;
-	let legalRequired = signupLegalRequired(signupLegalLinks);
+	} | null);
+	let passwordPolicy = $derived(data.props.passwordPolicy as PasswordPolicy);
+	let signupLegalLinks = $derived(data.props.signupLegalLinks as SignupLegalLinks);
+	let legalRequired = $derived(signupLegalRequired(signupLegalLinks));
 
-	let isImageInfoModalOpen = false;
-	let password = '';
-	let confirmPassword = '';
-	let acceptedTerms = false;
-	let inviteEmail = inviteSignup?.email ?? '';
+	let isImageInfoModalOpen = $state(false);
+	let password = $state('');
+	let confirmPassword = $state('');
+	let acceptedTerms = $state(false);
+	let inviteEmail = $state('');
+	$effect.pre(() => {
+		if (inviteKey) {
+			inviteEmail = inviteSignup?.email ?? '';
+		}
+	});
 </script>
 
 {#if isImageInfoModalOpen}
@@ -346,7 +351,7 @@
 	{#if background.url}
 		<button
 			class="btn btn-circle btn-sm fixed bottom-4 right-4 bg-base-100/80 border-base-300 z-20"
-			on:click={() => (isImageInfoModalOpen = true)}
+			onclick={() => (isImageInfoModalOpen = true)}
 		>
 			<FileImageBox class="w-4 h-4" />
 		</button>

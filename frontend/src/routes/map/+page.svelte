@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { DefaultMarker, Popup, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import MapNearbyRadiusLayer from '$lib/components/map/MapNearbyRadiusLayer.svelte';
 	import { onDestroy, onMount } from 'svelte';
@@ -61,72 +63,81 @@
 	import Compass from '~icons/mdi/compass';
 	import Tag from '~icons/mdi/tag';
 
-	export let data;
+	interface Props {
+		data: any;
+		initialLatLng?: { lat: number; lng: number } | null;
+	}
 
-	let createModalOpen = false;
-	let lodgingModalOpen = false;
-	let showRegions = false;
-	let showActivities = false;
-	let showImagePins = false;
-	let showCities = false;
-	let sidebarOpen = false;
-	let sidebarMode: 'controls' | 'preview' = 'controls';
+	let { data, initialLatLng = $bindable(null) }: Props = $props();
 
-	let basemapType: string = normalizeBasemapType(data.user?.map_style);
+	let createModalOpen = $state(false);
+	let lodgingModalOpen = $state(false);
+	let showRegions = $state(false);
+	let showActivities = $state(false);
+	let showImagePins = $state(false);
+	let showCities = $state(false);
+	let sidebarOpen = $state(false);
+	let sidebarMode: 'controls' | 'preview' = $state('controls');
 
-	let mapZoom: number = 2;
-	let mapCenter: [number, number] = [0, 0];
+	let basemapType: string = $state(normalizeBasemapType(undefined));
+	$effect.pre(() => {
+		basemapType = normalizeBasemapType(data.user?.map_style);
+	});
+
+	let mapZoom: number = $state(2);
+	let mapCenter: [number, number] = $state([0, 0]);
 	/** When true, center/zoom props drive FullMap. Disabled after load so pan/zoom is not fought by easeTo. */
-	let syncViewportFromProps = true;
-	let mapInstance: maplibregl.Map | undefined = undefined;
-	let mapViewportEl: HTMLElement | null = null;
+	let syncViewportFromProps = $state(true);
+	let mapInstance: maplibregl.Map | undefined = $state(undefined);
+	let mapViewportEl: HTMLElement | null = $state(null);
 	let updateUrlTimeout: NodeJS.Timeout | null = null;
 	const MAP_VIEW_STORAGE_KEY = 'adventurelog.map.view';
 
-	export let initialLatLng: { lat: number; lng: number } | null = null;
-
-	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
-	let visitedCities: VisitedCity[] = [];
-	let pins: Pin[] = data.props.pins;
-	let activities: Activity[] = [];
-	let imageMapPins: ImageMapPin[] = [];
-	let imagePinsLoaded = false;
+	let visitedRegions: VisitedRegion[] = $derived(data.props.visitedRegions);
+	let visitedCities: VisitedCity[] = $state([]);
+	let pins: Pin[] = $state<Pin[]>([]);
+	$effect.pre(() => {
+		pins = data.props.pins;
+	});
+	let activities: Activity[] = $state([]);
+	let imageMapPins: ImageMapPin[] = $state([]);
+	let imagePinsLoaded = $state(false);
 	let imagePinsLoading = false;
-	let filteredPins = pins;
+	let filteredPins = $state<Pin[]>([]);
 
-	let showVisited = true;
-	let showPlanned = true;
-	let typeString = '';
-	let searchMode: MapSearchMode = 'my';
-	let searchQuery = '';
-	let selected: MapSelection | null = null;
-	let selectedPlace: PlaceSearchResult | null = null;
-	let recommendations: Recommendation[] = [];
-	let recCategory: 'tourism' | 'food' | 'lodging' = 'tourism';
-	let recRadius = 5000;
-	let recLoading = false;
-	let recError: string | null = null;
-	let showSearchThisArea = false;
+	let showVisited = $state(true);
+	let showPlanned = $state(true);
+	let typeString = $state('');
+	let searchMode: MapSearchMode = $state('my');
+	let searchQuery = $state('');
+	let selected = $state<MapSelection | null>(null);
+	let selectedPlace: PlaceSearchResult | null = $state(null);
+	let recommendations: Recommendation[] = $state([]);
+	let recCategory = $state<'tourism' | 'food' | 'lodging'>('tourism');
+	let recRadius = $state(5000);
+	let recLoading = $state(false);
+	let recError: string | null = $state(null);
+	let showSearchThisArea = $state(false);
 	let lastRecSearchCenter: [number, number] | null = null;
-	let viewportCenter: { lng: number; lat: number } = { lng: 0, lat: 0 };
+	let viewportCenter: { lng: number; lat: number } = $state({ lng: 0, lat: 0 });
 	let unbindViewportCenter: (() => void) | null = null;
 
-	let newMarker: { lngLat: { lng: number; lat: number } } | null = null;
-	let newLongitude: number | null = null;
-	let newLatitude: number | null = null;
+	let newMarker: { lngLat: { lng: number; lat: number } } | null = $state(null);
+	let newLongitude: number | null = $state(null);
+	let newLatitude: number | null = $state(null);
 
 	let locationCache: Map<string, Location> = new Map();
 	let locationRequests: Map<string, Promise<Location | null>> = new Map();
-	let previewLocation: Location | null = null;
-	let previewLoading = false;
-	let previewError: string | null = null;
+	let previewLocation: Location | null = $state(null);
+	let previewLoading = $state(false);
+	let previewError: string | null = $state(null);
 	let previewRequestSeq = 0;
 
-	let isQuickAdding = false;
-	let locationBeingUpdated: Location | undefined = undefined;
-	let modalLocationPrefill: Location | null = null;
-	let modalLodgingPrefill: Lodging | null = null;
-	let modalSkipQuickStart = false;
+	let isQuickAdding = $state(false);
+	let locationBeingUpdated: Location | undefined = $state(undefined);
+	let modalLocationPrefill: Location | null = $state(null);
+	let modalLodgingPrefill: Lodging | null = $state(null);
+	let modalSkipQuickStart = $state(false);
 
 	const PIN_SOURCE_ID = 'map-pins';
 	const pinClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 };
@@ -204,8 +215,6 @@
 		return status === 'visited' ? $t('adventures.visited') : $t('adventures.planned');
 	}
 
-	$: imagePinGeoJson = imageMapPinsToGeoJson(imageMapPins);
-	$: imagePinCount = imagePinGeoJson.features.length;
 
 	async function ensureImageMapPinsLoaded() {
 		if (!browser || imagePinsLoaded || imagePinsLoading) return;
@@ -220,103 +229,14 @@
 		}
 	}
 
-	$: if (browser && showImagePins) {
-		void ensureImageMapPinsLoaded();
-	}
 
-	$: totalAdventures = pins.length;
-	$: visitedAdventures = pins.filter((pin) => pin.is_visited).length;
-	$: plannedAdventures = pins.filter((pin) => !pin.is_visited).length;
-	$: totalRegions = visitedRegions.length;
-	$: categoryFilterNames = typeString ? typeString.split(',').filter((item) => item !== '') : [];
 
-	$: isMetric = data.user?.measurement_system !== 'imperial';
-	$: recRadiusOptions = isMetric
-		? [
-				{ value: 1000, label: '1 km' },
-				{ value: 2000, label: '2 km' },
-				{ value: 5000, label: '5 km' },
-				{ value: 10000, label: '10 km' },
-				{ value: 20000, label: '20 km' },
-				{ value: 50000, label: '50 km' }
-			]
-		: [
-				{ value: 1609, label: '1 mi' },
-				{ value: 3219, label: '2 mi' },
-				{ value: 8047, label: '5 mi' },
-				{ value: 16093, label: '10 mi' },
-				{ value: 32187, label: '20 mi' },
-				{ value: 80467, label: '50 mi' }
-			];
 
-	$: {
-		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
-		filteredPins = pins.filter((pin) => {
-			const statusMatch =
-				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
-			if (!statusMatch) return false;
-			if (categoryFilterNames.length > 0) {
-				const categoryName = pin.category?.name;
-				if (!categoryName || !categoryFilterNames.includes(categoryName)) return false;
-			}
-			if (!query) return true;
-			return (
-				pin.name?.toLowerCase().includes(query) ||
-				pin.category?.display_name?.toLowerCase().includes(query)
-			);
-		});
-		if (query && filteredPins.length > 0 && typeof window !== 'undefined') {
-			zoomToFilteredPins();
-		}
-	}
 
-	$: {
-		if (!newMarker) {
-			newLongitude = null;
-			newLatitude = null;
-		}
-	}
 
-	$: {
-		if (locationBeingUpdated?.id) {
-			const index = pins.findIndex((pin) => pin.id === locationBeingUpdated?.id);
-			const pinData = {
-				id: locationBeingUpdated.id,
-				name: locationBeingUpdated.name,
-				latitude: locationBeingUpdated.latitude?.toString() || '',
-				longitude: locationBeingUpdated.longitude?.toString() || '',
-				is_visited: locationBeingUpdated.is_visited,
-				category: locationBeingUpdated.category
-			};
-			if (index !== -1) {
-				pins[index] = pinData;
-				pins = pins;
-			} else {
-				pins = [pinData, ...pins];
-			}
-			locationCache.set(locationBeingUpdated.id, locationBeingUpdated);
-		}
-	}
 
-	$: {
-		if (showActivities && activities.length === 0) fetchAllActivities();
-	}
-	$: {
-		if (showCities && visitedCities.length === 0) fetchVisitedCities();
-	}
 
-	$: selectedPinId = selected?.kind === 'pin' ? selected.pinId : null;
-	$: selectedRecId = selected?.kind === 'recommendation' ? selected.item.id : null;
-	$: selectedImagePinId = selected?.kind === 'image' ? selected.imageId : null;
-	$: previewImagePin = selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null;
-	$: selectedPin = selectedPinId ? pins.find((p) => p.id === selectedPinId) : null;
-	$: randomEligiblePins = filteredPins.filter((pin) => {
-		const lat = parseCoordinate(pin.latitude);
-		const lng = parseCoordinate(pin.longitude);
-		return lat !== null && lng !== null;
-	});
 
-	$: showLodgingAdd = selected?.kind === 'recommendation' && recCategory === 'lodging';
 
 	async function fetchAllActivities() {
 		const response = await fetch('/api/activities');
@@ -796,10 +716,6 @@
 		}
 	}
 
-	$: if (mapInstance) {
-		sidebarOpen;
-		queueMicrotask(refreshMapLayout);
-	}
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') clearSelection();
@@ -838,6 +754,105 @@
 	onDestroy(() => {
 		unbindViewportCenter?.();
 	});
+	let imagePinGeoJson = $derived(imageMapPinsToGeoJson(imageMapPins));
+	let imagePinCount = $derived(imagePinGeoJson.features.length);
+	run(() => {
+		if (browser && showImagePins) {
+			void ensureImageMapPinsLoaded();
+		}
+	});
+	run(() => {
+		if (locationBeingUpdated?.id) {
+			const index = pins.findIndex((pin) => pin.id === locationBeingUpdated?.id);
+			const pinData = {
+				id: locationBeingUpdated.id,
+				name: locationBeingUpdated.name,
+				latitude: locationBeingUpdated.latitude?.toString() || '',
+				longitude: locationBeingUpdated.longitude?.toString() || '',
+				is_visited: locationBeingUpdated.is_visited,
+				category: locationBeingUpdated.category
+			};
+			if (index !== -1) {
+				pins[index] = pinData;
+				pins = pins;
+			} else {
+				pins = [pinData, ...pins];
+			}
+			locationCache.set(locationBeingUpdated.id, locationBeingUpdated);
+		}
+	});
+	let totalAdventures = $derived(pins.length);
+	let visitedAdventures = $derived(pins.filter((pin) => pin.is_visited).length);
+	let plannedAdventures = $derived(pins.filter((pin) => !pin.is_visited).length);
+	let totalRegions = $derived(visitedRegions.length);
+	let categoryFilterNames = $derived(typeString ? typeString.split(',').filter((item) => item !== '') : []);
+	let isMetric = $derived(data.user?.measurement_system !== 'imperial');
+	let recRadiusOptions = $derived(isMetric
+		? [
+				{ value: 1000, label: '1 km' },
+				{ value: 2000, label: '2 km' },
+				{ value: 5000, label: '5 km' },
+				{ value: 10000, label: '10 km' },
+				{ value: 20000, label: '20 km' },
+				{ value: 50000, label: '50 km' }
+			]
+		: [
+				{ value: 1609, label: '1 mi' },
+				{ value: 3219, label: '2 mi' },
+				{ value: 8047, label: '5 mi' },
+				{ value: 16093, label: '10 mi' },
+				{ value: 32187, label: '20 mi' },
+				{ value: 80467, label: '50 mi' }
+			]);
+	run(() => {
+		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
+		filteredPins = pins.filter((pin) => {
+			const statusMatch =
+				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
+			if (!statusMatch) return false;
+			if (categoryFilterNames.length > 0) {
+				const categoryName = pin.category?.name;
+				if (!categoryName || !categoryFilterNames.includes(categoryName)) return false;
+			}
+			if (!query) return true;
+			return (
+				pin.name?.toLowerCase().includes(query) ||
+				pin.category?.display_name?.toLowerCase().includes(query)
+			);
+		});
+		if (query && filteredPins.length > 0 && typeof window !== 'undefined') {
+			zoomToFilteredPins();
+		}
+	});
+	run(() => {
+		if (!newMarker) {
+			newLongitude = null;
+			newLatitude = null;
+		}
+	});
+	run(() => {
+		if (showActivities && activities.length === 0) fetchAllActivities();
+	});
+	run(() => {
+		if (showCities && visitedCities.length === 0) fetchVisitedCities();
+	});
+	let selectedPinId = $derived(selected?.kind === 'pin' ? selected.pinId : null);
+	let selectedRecId = $derived(selected?.kind === 'recommendation' ? selected.item.id : null);
+	let selectedImagePinId = $derived(selected?.kind === 'image' ? selected.imageId : null);
+	let previewImagePin = $derived(selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null);
+	let selectedPin = $derived(selectedPinId ? pins.find((p) => p.id === selectedPinId) : null);
+	let randomEligiblePins = $derived(filteredPins.filter((pin) => {
+		const lat = parseCoordinate(pin.latitude);
+		const lng = parseCoordinate(pin.longitude);
+		return lat !== null && lng !== null;
+	}));
+	let showLodgingAdd = $derived(selected?.kind === 'recommendation' && recCategory === 'lodging');
+	run(() => {
+		if (mapInstance) {
+			sidebarOpen;
+			queueMicrotask(refreshMapLayout);
+		}
+	});
 </script>
 
 <svelte:head>
@@ -845,7 +860,7 @@
 	<meta name="description" content="View your travels on a map." />
 </svelte:head>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <div class="w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden">
 	<div class="drawer lg:drawer-open h-full w-full">
@@ -874,165 +889,163 @@
 					on:mapClick={addMarker}
 					on:mapMove={handleMapMove}
 				>
-					<svelte:fragment
-						slot="marker"
-						let:markerProps
-						let:markerLngLat
-						let:isActive
-						let:setActive
-					>
-						{#if markerProps && markerLngLat}
-							{@const isSelected = selectedPinId === markerProps.id}
-							<Marker
-								lngLat={markerLngLat}
-								class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
-							>
-								<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
-									<div
-										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
-											markerProps,
-											isSelected
-										)}"
-										class:scale-110={isActive || isSelected}
-										role="button"
-										tabindex="0"
-										aria-label={markerProps.name}
-										aria-pressed={isSelected}
-										on:mouseenter={() => setActive(true)}
-										on:mouseleave={() => {
+					{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
+									
+							{#if markerProps && markerLngLat}
+								{@const isSelected = selectedPinId === markerProps.id}
+								<Marker
+									lngLat={markerLngLat}
+									class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
+								>
+									<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
+										<div
+											class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
+												markerProps,
+												isSelected
+											)}"
+											class:scale-110={isActive || isSelected}
+											role="button"
+											tabindex="0"
+											aria-label={markerProps.name}
+											aria-pressed={isSelected}
+											onmouseenter={() => setActive(true)}
+											onmouseleave={() => {
 											if (!isSelected) setActive(false);
 										}}
-										on:focus={() => setActive(true)}
-										on:blur={() => {
+											onfocus={() => setActive(true)}
+											onblur={() => {
 											if (!isSelected) setActive(false);
 										}}
-										on:click={(e) => {
+											onclick={(e) => {
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
 										}}
-										on:keydown={(e) => {
+											onkeydown={(e) => {
 											if (e.key !== 'Enter') return;
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
 										}}
-									>
-										{markerLabelResolver(markerProps)}
-									</div>
-
-									<div
-										class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
-										class:opacity-100={isActive || isSelected}
-									>
-										<div
-											class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
 										>
-											<div class="card-body gap-2 p-3">
-												<h3 class="font-semibold text-sm leading-tight truncate">
-													{markerProps.name}
-												</h3>
-												<div class="flex flex-wrap items-center gap-1.5">
-													<span
-														class="badge badge-sm {markerProps.visitStatus === 'visited'
-															? 'badge-success'
-															: 'badge-info'}"
-													>
-														{getVisitStatusLabel(markerProps.visitStatus)}
-													</span>
-													{#if markerProps.categoryName}
-														<span class="badge badge-ghost badge-sm">
-															{markerProps.categoryName}
+											{markerLabelResolver(markerProps)}
+										</div>
+
+										<div
+											class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
+											class:opacity-100={isActive || isSelected}
+										>
+											<div
+												class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+											>
+												<div class="card-body gap-2 p-3">
+													<h3 class="font-semibold text-sm leading-tight truncate">
+														{markerProps.name}
+													</h3>
+													<div class="flex flex-wrap items-center gap-1.5">
+														<span
+															class="badge badge-sm {markerProps.visitStatus === 'visited'
+																? 'badge-success'
+																: 'badge-info'}"
+														>
+															{getVisitStatusLabel(markerProps.visitStatus)}
 														</span>
-													{/if}
+														{#if markerProps.categoryName}
+															<span class="badge badge-ghost badge-sm">
+																{markerProps.categoryName}
+															</span>
+														{/if}
+													</div>
+													<p class="text-xs text-base-content/60">{$t('map.view_details')}</p>
 												</div>
-												<p class="text-xs text-base-content/60">{$t('map.view_details')}</p>
 											</div>
 										</div>
 									</div>
-								</div>
-							</Marker>
-						{/if}
-					</svelte:fragment>
-
-					<svelte:fragment slot="overlays">
-						{#if newMarker}
-							<DefaultMarker lngLat={newMarker.lngLat} />
-						{/if}
-
-						{#if selectedPlace}
-							<DefaultMarker lngLat={[selectedPlace.lng, selectedPlace.lat]} />
-						{/if}
-
-						{#if searchMode === 'nearby'}
-							<MapNearbyRadiusLayer
-								visible={true}
-								center={viewportCenter}
-								radiusMeters={recRadius}
-							/>
-						{/if}
-
-						<MapRecommendationsLayer
-							{recommendations}
-							selectedId={selectedRecId}
-							on:select={handleSelectRecommendation}
-						/>
-
-						{#each visitedRegions as region}
-							{#if showRegions}
-								<Marker
-									lngLat={[region.longitude, region.latitude]}
-									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
-								>
-									<LocationIcon class="w-5 h-5 text-green-700" />
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="space-y-2 text-black">
-											<div class="text-lg font-bold">{region.name}</div>
-											<div class="badge badge-success badge-sm">{region.region}</div>
-										</div>
-									</Popup>
 								</Marker>
 							{/if}
-						{/each}
+						
+									{/snippet}
 
-						{#if showCities}
-							{#each visitedCities as city}
-								<Marker
-									lngLat={[city.longitude, city.latitude]}
-									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"
-								>
-									<LocationIcon class="w-5 h-5 text-blue-700" />
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="space-y-2 text-black">
-											<div class="text-lg font-bold">{city.name}</div>
-										</div>
-									</Popup>
-								</Marker>
-							{/each}
-						{/if}
+					{#snippet overlays()}
+									
+							{#if newMarker}
+								<DefaultMarker lngLat={newMarker.lngLat} />
+							{/if}
 
-						{#if showActivities}
-							{#each activities as activity}
-								{#if activity.geojson}
-									<GeoJSON data={activity.geojson}>
-										<LineLayer
-											paint={{
-												'line-color': getActivityColor(activity.sport_type),
-												'line-width': 3,
-												'line-opacity': 0.8
-											}}
-										/>
-									</GeoJSON>
+							{#if selectedPlace}
+								<DefaultMarker lngLat={[selectedPlace.lng, selectedPlace.lat]} />
+							{/if}
+
+							{#if searchMode === 'nearby'}
+								<MapNearbyRadiusLayer
+									visible={true}
+									center={viewportCenter}
+									radiusMeters={recRadius}
+								/>
+							{/if}
+
+							<MapRecommendationsLayer
+								{recommendations}
+								selectedId={selectedRecId}
+								on:select={handleSelectRecommendation}
+							/>
+
+							{#each visitedRegions as region}
+								{#if showRegions}
+									<Marker
+										lngLat={[region.longitude, region.latitude]}
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
+									>
+										<LocationIcon class="w-5 h-5 text-green-700" />
+										<Popup openOn="click" offset={[0, -10]}>
+											<div class="space-y-2 text-black">
+												<div class="text-lg font-bold">{region.name}</div>
+												<div class="badge badge-success badge-sm">{region.region}</div>
+											</div>
+										</Popup>
+									</Marker>
 								{/if}
 							{/each}
-						{/if}
 
-						<MapImagePinLayer
-							geoJson={imagePinGeoJson}
-							visible={showImagePins}
-							navigateOnSelect={false}
-							selectedId={selectedImagePinId}
-							on:select={handleImagePinSelect}
-						/>
-					</svelte:fragment>
+							{#if showCities}
+								{#each visitedCities as city}
+									<Marker
+										lngLat={[city.longitude, city.latitude]}
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"
+									>
+										<LocationIcon class="w-5 h-5 text-blue-700" />
+										<Popup openOn="click" offset={[0, -10]}>
+											<div class="space-y-2 text-black">
+												<div class="text-lg font-bold">{city.name}</div>
+											</div>
+										</Popup>
+									</Marker>
+								{/each}
+							{/if}
+
+							{#if showActivities}
+								{#each activities as activity}
+									{#if activity.geojson}
+										<GeoJSON data={activity.geojson}>
+											<LineLayer
+												paint={{
+													'line-color': getActivityColor(activity.sport_type),
+													'line-width': 3,
+													'line-opacity': 0.8
+												}}
+											/>
+										</GeoJSON>
+									{/if}
+								{/each}
+							{/if}
+
+							<MapImagePinLayer
+								geoJson={imagePinGeoJson}
+								visible={showImagePins}
+								navigateOnSelect={false}
+								selectedId={selectedImagePinId}
+								on:select={handleImagePinSelect}
+							/>
+						
+									{/snippet}
 				</FullMap>
 			</div>
 
@@ -1052,7 +1065,7 @@
 						<button
 							type="button"
 							class="btn btn-primary btn-sm shadow-lg pointer-events-auto gap-2"
-							on:click={searchThisArea}
+							onclick={searchThisArea}
 						>
 							<Compass class="w-4 h-4" />
 							{$t('map.search_this_area')}
@@ -1071,7 +1084,7 @@
 					<button
 						type="button"
 						class="btn btn-ghost btn-square btn-sm bg-base-100/90 shadow-md pointer-events-auto lg:hidden shrink-0 mt-0 relative"
-						on:click={() => (sidebarOpen = !sidebarOpen)}
+						onclick={() => (sidebarOpen = !sidebarOpen)}
 						aria-label={$t('map.map_controls')}
 					>
 						<Filter class="w-5 h-5" />
@@ -1102,11 +1115,11 @@
 				>
 					{#if newMarker}
 						<div class="flex items-center gap-2 pointer-events-auto shrink-0">
-							<button type="button" class="btn btn-primary btn-sm gap-1" on:click={newAdventure}>
+							<button type="button" class="btn btn-primary btn-sm gap-1" onclick={newAdventure}>
 								<Plus class="w-4 h-4" />
 								<span class="hidden sm:inline">{$t('map.add_location_at_marker')}</span>
 							</button>
-							<button type="button" class="btn btn-ghost btn-sm btn-square" on:click={clearMarker}>
+							<button type="button" class="btn btn-ghost btn-sm btn-square" onclick={clearMarker}>
 								<Clear class="w-4 h-4" />
 							</button>
 						</div>
@@ -1262,7 +1275,7 @@
 											type="button"
 											class="btn btn-primary btn-sm w-full"
 											disabled={recLoading}
-											on:click={searchThisArea}
+											onclick={searchThisArea}
 										>
 											{$t('map.search_this_area')}
 										</button>
@@ -1280,7 +1293,7 @@
 														<button
 															type="button"
 															class={selectedRecId === rec.id ? 'active' : ''}
-															on:click={() => selectRecommendation(rec)}
+															onclick={() => selectRecommendation(rec)}
 														>
 															<span class="truncate">{rec.name}</span>
 														</button>

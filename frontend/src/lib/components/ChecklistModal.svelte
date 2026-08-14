@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { createBubbler, preventDefault } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import type { Collection, Checklist, User, ChecklistItem } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -8,27 +11,40 @@
 
 	import CheckboxIcon from '~icons/mdi/checkbox-multiple-marked-outline';
 
-	export let checklist: Checklist | null = null;
-	export let collection: Collection;
-	export let user: User | null = null;
-	export let initialVisitDate: string | null = null;
+	interface Props {
+		checklist?: Checklist | null;
+		collection: Collection;
+		user?: User | null;
+		initialVisitDate?: string | null;
+	}
 
-	let items: ChecklistItem[] = [];
+	let {
+		checklist = null,
+		collection,
+		user = null,
+		initialVisitDate = null
+	}: Props = $props();
 
-	let constrainDates: boolean = true;
+	let items: ChecklistItem[] = $state([]);
 
-	items = checklist?.items || [];
+	let constrainDates: boolean = $state(true);
 
-	let warning: string | null = '';
+	let warning: string | null = $state('');
 
-	let isReadOnly =
+	let isReadOnly = $derived(
 		!(checklist && user?.uuid == checklist?.user) &&
-		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
-		!!checklist;
-	let newStatus: boolean = false;
-	let newItem: string = '';
+			!(
+				user &&
+				collection &&
+				collection.shared_with &&
+				collection.shared_with.includes(user.uuid)
+			) &&
+			!!checklist
+	);
+	let newStatus: boolean = $state(false);
+	let newItem: string = $state('');
 
-	let initialName: string = checklist?.name || '';
+	let initialName = $derived(checklist?.name || '');
 
 	function addItem() {
 		if (newItem.trim() == '') {
@@ -65,15 +81,31 @@
 		return null;
 	};
 
-	let newChecklist = {
-		name: checklist?.name || '',
-		date: getSeedDate() || undefined || null,
-		items: checklist?.items || [],
-		collection: collection.id,
-		is_public: collection.is_public
-	};
+	let newChecklist = $state({
+		name: '',
+		date: null as string | null | undefined,
+		items: [] as ChecklistItem[],
+		collection: '',
+		is_public: false
+	});
+	let previousChecklistId: string | null | undefined = undefined;
 
-	const hasVisitDateSuggestion = !!initialVisitDate && !checklist?.date;
+	$effect.pre(() => {
+		const sourceId = checklist?.id ?? null;
+		if (sourceId === previousChecklistId) return;
+
+		previousChecklistId = sourceId;
+		items = checklist?.items || [];
+		newChecklist = {
+			name: checklist?.name || '',
+			date: getSeedDate() || null,
+			items: checklist?.items || [],
+			collection: collection.id,
+			is_public: collection.is_public
+		};
+	});
+
+	const hasVisitDateSuggestion = $derived(!!initialVisitDate && !checklist?.date);
 
 	function useVisitDate() {
 		if (isReadOnly) return;
@@ -150,12 +182,12 @@
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
@@ -195,7 +227,7 @@
 					class="btn btn-ghost btn-square"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -211,7 +243,7 @@
 
 		<!-- Main Content -->
 		<div class="px-2">
-			<form method="post" style="width: 100%;" on:submit|preventDefault>
+			<form method="post" style="width: 100%;" onsubmit={preventDefault(bubble('submit'))}>
 				<!-- Basic Information Section -->
 				<div
 					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
@@ -277,7 +309,7 @@
 										>
 											<span class="badge badge-primary badge-soft">Itinerary day</span>
 											<span>Prefilled to match your selected day.</span>
-											<button type="button" class="btn btn-ghost btn-xs" on:click={useVisitDate}>
+											<button type="button" class="btn btn-ghost btn-xs" onclick={useVisitDate}>
 												Reapply date
 											</button>
 										</div>
@@ -350,14 +382,14 @@
 											placeholder={$t('checklist.new_item')}
 											bind:value={newItem}
 											class="input input-bordered join-item flex-1 bg-base-100/80 focus:bg-base-100"
-											on:keydown={(e) => {
+											onkeydown={(e) => {
 												if (e.key === 'Enter') {
 													e.preventDefault();
 													addItem();
 												}
 											}}
 										/>
-										<button type="button" class="btn btn-primary join-item" on:click={addItem}>
+										<button type="button" class="btn btn-primary join-item" onclick={addItem}>
 											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path
 													stroke-linecap="round"
@@ -410,7 +442,7 @@
 													class="btn btn-ghost btn-sm text-error opacity-0 group-hover:opacity-100 transition-opacity"
 													aria-label={$t('adventures.remove')}
 													title={$t('adventures.remove')}
-													on:click={() => removeItem(i)}
+													onclick={() => removeItem(i)}
 												>
 													<svg
 														class="w-4 h-4"
@@ -491,7 +523,7 @@
 
 				<!-- Action Buttons -->
 				<div class="flex gap-3 justify-end pt-4 border-t border-base-300/50">
-					<button type="button" class="btn btn-neutral-200" on:click={close}>
+					<button type="button" class="btn btn-neutral-200" onclick={close}>
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -503,7 +535,7 @@
 						{$t('about.close')}
 					</button>
 					{#if !isReadOnly}
-						<button type="button" class="btn btn-primary" on:click={save}>
+						<button type="button" class="btn btn-primary" onclick={save}>
 							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
@@ -6,40 +8,44 @@
 
 	type CurrencyOption = { code: string; label?: string };
 
-	type Props = {
+	interface Props {
 		value?: string | null;
 		options?: string[];
 		placeholder?: string;
 		disabled?: boolean;
 		id?: string;
-	};
+	}
 
-	export let value: Props['value'] = null;
-	export let options: string[] = CURRENCY_OPTIONS;
-	export let placeholder = '';
-	export let disabled = false;
-	export let id: string | undefined;
+	let {
+		value = null,
+		options = CURRENCY_OPTIONS,
+		placeholder = '',
+		disabled = false,
+		id
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{ change: string | null }>();
 
-	let open = false;
-	let search = '';
-	let container: HTMLDivElement | null = null;
-	let searchInput: HTMLInputElement | null = null;
-	let normalizedOptions: CurrencyOption[] = [];
+	let open = $state(false);
+	let search = $state('');
+	let container: HTMLDivElement | null = $state(null);
+	let searchInput: HTMLInputElement | null = $state(null);
+	let normalizedOptions: CurrencyOption[] = $state([]);
 
-	$: normalizedOptions = options.map((code) => ({
-		code,
-		label: $t(`currencies.${code}`) || CURRENCY_LABELS[code]
-	}));
+	run(() => {
+		normalizedOptions = options.map((code) => ({
+			code,
+			label: $t(`currencies.${code}`) || CURRENCY_LABELS[code]
+		}));
+	});
 
-	$: filteredOptions = normalizedOptions.filter((option) => {
+	let filteredOptions = $derived(normalizedOptions.filter((option) => {
 		if (!search.trim()) return true;
 		const term = search.trim().toLowerCase();
 		return (
 			option.code.toLowerCase().includes(term) || (option.label || '').toLowerCase().includes(term)
 		);
-	});
+	}));
 
 	function closeDropdown() {
 		open = false;
@@ -91,7 +97,7 @@
 <div
 	class={`dropdown dropdown-bottom w-full ${open ? 'dropdown-open' : ''}`}
 	bind:this={container}
-	on:focusout={handleFocusOut}
+	onfocusout={handleFocusOut}
 >
 	<button
 		type="button"
@@ -99,8 +105,8 @@
 		aria-haspopup="listbox"
 		aria-expanded={open}
 		aria-controls={id ? `${id}-listbox` : undefined}
-		on:click={toggleDropdown}
-		on:keydown={handleButtonKeydown}
+		onclick={toggleDropdown}
+		onkeydown={handleButtonKeydown}
 		{disabled}
 		{id}
 	>
@@ -151,7 +157,7 @@
 						type="search"
 						placeholder={$t('currencies.search') || 'Search currency'}
 						bind:value={search}
-						on:keydown={handleSearchKeydown}
+						onkeydown={handleSearchKeydown}
 						aria-label={$t('currencies.search') || 'Search currency'}
 						bind:this={searchInput}
 					/>
@@ -172,7 +178,7 @@
 											? 'bg-primary/10 text-primary font-semibold'
 											: 'hover:bg-base-200/80'
 									}`}
-									on:click={() => selectCurrency(option.code)}
+									onclick={() => selectCurrency(option.code)}
 									role="option"
 									aria-selected={value === option.code}
 								>

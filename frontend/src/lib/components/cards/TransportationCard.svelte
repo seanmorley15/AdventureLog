@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
@@ -26,9 +28,9 @@
 	import type { CollectionItineraryItem } from '$lib/types';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	let isActionsMenuOpen = false;
-	let openUpward = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -83,11 +85,21 @@
 				}: ${localTimeZone}.`;
 	};
 
-	export let transportation: Transportation;
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
+	interface Props {
+		transportation: Transportation;
+		user?: User | null;
+		collection?: Collection | null;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+	}
+
+	let {
+		transportation,
+		user = null,
+		collection = null,
+		readOnly = false,
+		itineraryItem = null
+	}: Props = $props();
 
 	const toMiles = (km: any) => (Number(km) * 0.621371).toFixed(1);
 
@@ -106,28 +118,32 @@
 		dispatch('changeDay', { type: 'transportation', item: transportation, forcePicker: true });
 	}
 
-	let travelDurationLabel: string | null = null;
-	$: travelDurationLabel = formatTravelDuration(transportation?.travel_duration_minutes ?? null);
+	let travelDurationLabel: string | null = $state(null);
+	run(() => {
+		travelDurationLabel = formatTravelDuration(transportation?.travel_duration_minutes ?? null);
+	});
 
-	let showMoreDetails = false;
+	let showMoreDetails = $state(false);
 
-	$: hasCodePair = Boolean(transportation?.start_code && transportation?.end_code);
-	$: routeFromLabel = hasCodePair
+	let hasCodePair = $derived(Boolean(transportation?.start_code && transportation?.end_code));
+	let routeFromLabel = $derived(hasCodePair
 		? transportation.start_code
-		: (transportation.from_location ?? transportation.start_code ?? null);
-	$: routeToLabel = hasCodePair
+		: (transportation.from_location ?? transportation.start_code ?? null));
+	let routeToLabel = $derived(hasCodePair
 		? transportation.end_code
-		: (transportation.to_location ?? transportation.end_code ?? null);
-	$: hasExpandableDetails = Boolean(transportation?.end_date || travelDurationLabel);
-	$: if (!hasExpandableDetails) showMoreDetails = false;
-	$: transportationPriceLabel = formatMoney(
+		: (transportation.to_location ?? transportation.end_code ?? null));
+	let hasExpandableDetails = $derived(Boolean(transportation?.end_date || travelDurationLabel));
+	run(() => {
+		if (!hasExpandableDetails) showMoreDetails = false;
+	});
+	let transportationPriceLabel = $derived(formatMoney(
 		toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY)
-	);
+	));
 
-	$: routeGeojson =
-		transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null;
+	let routeGeojson =
+		$derived(transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null);
 
-	let isWarningModalOpen: boolean = false;
+	let isWarningModalOpen: boolean = $state(false);
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -239,7 +255,7 @@
 				<button
 					class="btn btn-sm p-1 text-base-content"
 					aria-label="open-details"
-					on:click={() => goto(`/transportations/${transportation.id}`)}
+					onclick={() => goto(`/transportations/${transportation.id}`)}
 				>
 					<Launch class="w-4 h-4" />
 				</button>
@@ -255,7 +271,7 @@
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
@@ -263,7 +279,7 @@
 								closeAllTransportationMenus();
 								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
 							<DotsHorizontal class="w-5 h-5" />
 						</button>
@@ -273,7 +289,7 @@
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editTransportation();
 									}}
@@ -288,7 +304,7 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'transportation', id: transportation.id });
 											}}
@@ -300,7 +316,7 @@
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
@@ -313,7 +329,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -332,7 +348,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}
@@ -422,7 +438,7 @@
 							<button
 								class="btn btn-neutral-200 btn-xs"
 								aria-expanded={showMoreDetails}
-								on:click={() => (showMoreDetails = !showMoreDetails)}
+								onclick={() => (showMoreDetails = !showMoreDetails)}
 								type="button"
 							>
 								{showMoreDetails

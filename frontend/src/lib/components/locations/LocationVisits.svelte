@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type {
 		Collection,
 		StravaActivity,
@@ -42,50 +44,66 @@
 	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
 
-	// Props
-	export let collection: Collection | null = null;
-	export let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	export let utcStartDate: string | null = null;
-	export let utcEndDate: string | null = null;
-	export let note: string | null = null;
-	export let visits: Visit[] | null = null;
-	export let objectId: string;
-	export let trails: Trail[] = [];
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	
+	interface Props {
+		// Props
+		collection?: Collection | null;
+		selectedStartTimezone?: string;
+		utcStartDate?: string | null;
+		utcEndDate?: string | null;
+		note?: string | null;
+		visits?: Visit[] | null;
+		objectId: string;
+		trails?: Trail[];
+		measurementSystem?: 'metric' | 'imperial';
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+	}
+
+	let {
+		collection = null,
+		selectedStartTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone),
+		utcStartDate = $bindable(null),
+		utcEndDate = $bindable(null),
+		note = $bindable(null),
+		visits = $bindable(null),
+		objectId,
+		trails = $bindable([]),
+		measurementSystem = 'metric',
+		initialVisitDate = $bindable(null)
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher();
 
 	// Types
 
 	// Component state
-	let allDay: boolean = true;
-	let localStartDate: string = '';
-	let localEndDate: string = '';
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
-	let constrainDates: boolean = false;
-	let isEditing = false;
-	let visitIdEditing: string | null = null;
+	let allDay: boolean = $state(true);
+	let localStartDate: string = $state('');
+	let localEndDate: string = $state('');
+	let fullStartDate: string = $state('');
+	let fullEndDate: string = $state('');
+	let constrainDates: boolean = $state(false);
+	let isEditing = $state(false);
+	let visitIdEditing: string | null = $state(null);
 
 	// Activity management state
-	let stravaEnabled: boolean = false;
-	let endurainEnabled: boolean = false;
-	let visitActivities: { [visitId: string]: StravaActivity[] } = {};
-	let endurainVisitActivities: { [visitId: string]: StravaActivity[] } = {};
-	let loadingActivities: { [visitId: string]: boolean } = {};
-	let loadingEndurainActivities: { [visitId: string]: boolean } = {};
-	let expandedVisits: { [visitId: string]: boolean } = {};
-	let expandedEndurainVisits: { [visitId: string]: boolean } = {};
-	let uploadingActivity: { [visitId: string]: boolean } = {};
-	let showActivityUpload: { [visitId: string]: boolean } = {};
+	let stravaEnabled: boolean = $state(false);
+	let endurainEnabled: boolean = $state(false);
+	let visitActivities: { [visitId: string]: StravaActivity[] } = $state({});
+	let endurainVisitActivities: { [visitId: string]: StravaActivity[] } = $state({});
+	let loadingActivities: { [visitId: string]: boolean } = $state({});
+	let loadingEndurainActivities: { [visitId: string]: boolean } = $state({});
+	let expandedVisits: { [visitId: string]: boolean } = $state({});
+	let expandedEndurainVisits: { [visitId: string]: boolean } = $state({});
+	let uploadingActivity: { [visitId: string]: boolean } = $state({});
+	let showActivityUpload: { [visitId: string]: boolean } = $state({});
 	let pendingActivityImport: {
 		[visitId: string]: { activity: StravaActivity; provider: 'strava' | 'endurain' } | null;
-	} = {};
-	let importingEndurainActivity: { [visitId: string]: boolean } = {};
+	} = $state({});
+	let importingEndurainActivity: { [visitId: string]: boolean } = $state({});
 
 	// Activity form state
-	let activityForm = {
+	let activityForm = $state({
 		name: '',
 		sport_type: 'Run',
 		distance: null as number | null,
@@ -109,7 +127,7 @@
 		end_lat: null as number | null,
 		end_lng: null as number | null,
 		timezone: undefined as string | undefined
-	};
+	});
 
 	function getTypeConfig() {
 		return {
@@ -121,43 +139,47 @@
 	}
 
 	// Reactive constraints
-	$: constraintStartDate = allDay
+	let constraintStartDate = $derived(allDay
 		? fullStartDate && fullStartDate.includes('T')
 			? fullStartDate.split('T')[0]
 			: ''
-		: fullStartDate || '';
-	$: constraintEndDate = allDay
+		: fullStartDate || '');
+	let constraintEndDate = $derived(allDay
 		? fullEndDate && fullEndDate.includes('T')
 			? fullEndDate.split('T')[0]
 			: ''
-		: fullEndDate || '';
+		: fullEndDate || '');
 
 	// Set the full date range for constraining purposes
-	$: if (collection && collection.start_date && collection.end_date) {
-		fullStartDate = `${collection.start_date}T00:00`;
-		fullEndDate = `${collection.end_date}T23:59`;
-	}
+	run(() => {
+		if (collection && collection.start_date && collection.end_date) {
+			fullStartDate = `${collection.start_date}T00:00`;
+			fullEndDate = `${collection.end_date}T23:59`;
+		}
+	});
 
 	// Update local display dates whenever timezone or UTC dates change
-	$: if (!isEditing) {
-		if (allDay) {
-			localStartDate = utcStartDate?.substring(0, 10) ?? '';
-			localEndDate = utcEndDate?.substring(0, 10) ?? '';
-		} else {
-			const start = updateLocalDate({
-				utcDate: utcStartDate,
-				timezone: selectedStartTimezone
-			}).localDate;
+	run(() => {
+		if (!isEditing) {
+			if (allDay) {
+				localStartDate = utcStartDate?.substring(0, 10) ?? '';
+				localEndDate = utcEndDate?.substring(0, 10) ?? '';
+			} else {
+				const start = updateLocalDate({
+					utcDate: utcStartDate,
+					timezone: selectedStartTimezone
+				}).localDate;
 
-			const end = updateLocalDate({
-				utcDate: utcEndDate,
-				timezone: selectedStartTimezone
-			}).localDate;
+				const end = updateLocalDate({
+					utcDate: utcEndDate,
+					timezone: selectedStartTimezone
+				}).localDate;
 
-			localStartDate = start;
-			localEndDate = end;
+				localStartDate = start;
+				localEndDate = end;
+			}
 		}
-	}
+	});
 
 	// Helper functions
 	function formatDateInTimezone(utcDate: string, timezone: string): string {
@@ -882,8 +904,8 @@
 		}
 	});
 
-	$: isDateValid = validateDateRange(utcStartDate ?? '', utcEndDate ?? '').valid;
-	$: typeConfig = getTypeConfig();
+	let isDateValid = $derived(validateDateRange(utcStartDate ?? '', utcEndDate ?? '').valid);
+	let typeConfig = $derived(getTypeConfig());
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
@@ -894,7 +916,7 @@
 				<div class="flex items-center justify-between mb-6">
 					<div class="flex items-center gap-3">
 						<div class="p-2 bg-{typeConfig.color}/10 rounded-lg">
-							<svelte:component this={typeConfig.icon} class="w-5 h-5 text-{typeConfig.color}" />
+							<typeConfig.icon class="w-5 h-5 text-{typeConfig.color}" />
 						</div>
 						<h2 class="text-xl font-bold">{$t('adventures.date_information')}</h2>
 					</div>
@@ -931,7 +953,7 @@
 									type="checkbox"
 									class="toggle toggle-{typeConfig.color} toggle-sm"
 									checked={allDay}
-									on:change={handleAllDayToggle}
+									onchange={handleAllDayToggle}
 								/>
 							</div>
 
@@ -969,7 +991,7 @@
 									type="date"
 									class="input input-bordered w-full mt-1"
 									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : ''}
 									max={constrainDates ? constraintEndDate : ''}
 								/>
@@ -979,7 +1001,7 @@
 									type="datetime-local"
 									class="input input-bordered w-full mt-1"
 									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : ''}
 									max={constrainDates ? constraintEndDate : ''}
 								/>
@@ -998,7 +1020,7 @@
 										type="date"
 										class="input input-bordered w-full mt-1"
 										bind:value={localEndDate}
-										on:change={handleLocalDateChange}
+										onchange={handleLocalDateChange}
 										min={constrainDates ? localStartDate : ''}
 										max={constrainDates ? constraintEndDate : ''}
 									/>
@@ -1008,7 +1030,7 @@
 										type="datetime-local"
 										class="input input-bordered w-full mt-1"
 										bind:value={localEndDate}
-										on:change={handleLocalDateChange}
+										onchange={handleLocalDateChange}
 										min={constrainDates ? localStartDate : ''}
 										max={constrainDates ? constraintEndDate : ''}
 									/>
@@ -1038,7 +1060,7 @@
 							class="btn btn-{typeConfig.color} btn-sm gap-2"
 							type="button"
 							disabled={!localStartDate || !isDateValid}
-							on:click={() => addVisit(false)}
+							onclick={() => addVisit(false)}
 						>
 							<PlusIcon class="w-4 h-4" />
 							{visitIdEditing ? $t('adventures.update_visit') : $t('adventures.add_visit')}
@@ -1133,7 +1155,7 @@
 												<button
 													class="btn btn-info btn-xs tooltip tooltip-top gap-1"
 													data-tip={$t('adventures.view_strava_activities')}
-													on:click={() => toggleVisitActivities(visit)}
+													onclick={() => toggleVisitActivities(visit)}
 												>
 													<RunFastIcon class="w-3 h-3" />
 													{#if visitActivities[visit.id]}
@@ -1146,7 +1168,7 @@
 												<button
 													class="btn btn-secondary btn-xs tooltip tooltip-top gap-1"
 													data-tip={$t('adventures.view_endurain_activities')}
-													on:click={() => toggleEndurainVisitActivities(visit)}
+													onclick={() => toggleEndurainVisitActivities(visit)}
 												>
 													<RunFastIcon class="w-3 h-3" />
 													{#if endurainVisitActivities[visit.id]}
@@ -1159,7 +1181,7 @@
 											<button
 												class="btn btn-success btn-xs tooltip tooltip-top gap-1"
 												data-tip={$t('adventures.add_activity')}
-												on:click={() => showActivityUploadForm(visit.id)}
+												onclick={() => showActivityUploadForm(visit.id)}
 											>
 												<UploadIcon class="w-3 h-3" />
 											</button>
@@ -1167,14 +1189,14 @@
 											<button
 												class="btn btn-warning btn-xs tooltip tooltip-top"
 												data-tip={$t('adventures.edit_visit')}
-												on:click={() => editVisit(visit)}
+												onclick={() => editVisit(visit)}
 											>
 												<EditIcon class="w-3 h-3" />
 											</button>
 											<button
 												class="btn btn-error btn-xs tooltip tooltip-top"
 												data-tip={$t('adventures.remove_visit')}
-												on:click={() => removeVisit(visit.id)}
+												onclick={() => removeVisit(visit.id)}
 											>
 												<TrashIcon class="w-3 h-3" />
 											</button>
@@ -1197,7 +1219,7 @@
 												</div>
 												<button
 													class="btn btn-ghost btn-xs"
-													on:click={() => hideActivityUploadForm(visit.id)}
+													onclick={() => hideActivityUploadForm(visit.id)}
 												>
 													<CloseIcon class="w-3 h-3" />
 												</button>
@@ -1237,12 +1259,12 @@
 																type="file"
 																accept=".gpx"
 																class="file-input file-input-bordered file-input-warning flex-1"
-																on:change={handleGpxFileChange}
+																onchange={handleGpxFileChange}
 															/>
 															<button
 																type="button"
 																class="btn btn-warning btn-sm gap-1"
-																on:click={() => {
+																onclick={() => {
 																	const stravaActivity = pendingActivityImport[visit.id]?.activity;
 																	if (stravaActivity && stravaActivity.export_gpx) {
 																		window.open(stravaActivity.export_gpx, '_blank');
@@ -1623,7 +1645,7 @@
 																type="file"
 																accept=".gpx"
 																class="file-input file-input-bordered file-input-sm w-full mt-1"
-																on:change={handleGpxFileChange}
+																onchange={handleGpxFileChange}
 															/>
 														</div>
 													{/if}
@@ -1632,14 +1654,14 @@
 												<div class="flex justify-end gap-2 mt-4">
 													<button
 														class="btn btn-ghost btn-sm"
-														on:click={() => hideActivityUploadForm(visit.id)}
+														onclick={() => hideActivityUploadForm(visit.id)}
 														disabled={uploadingActivity[visit.id]}
 													>
 														Cancel
 													</button>
 													<button
 														class="btn btn-success btn-sm gap-2"
-														on:click={() => uploadActivity(visit.id)}
+														onclick={() => uploadActivity(visit.id)}
 														disabled={uploadingActivity[visit.id] ||
 															!activityForm.name.trim() ||
 															(isStravaImportPending(visit.id) && !activityForm.gpx_file)}
@@ -1792,12 +1814,12 @@
 		{/if}
 
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
+			<button class="btn btn-neutral-200 gap-2" onclick={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
 
-			<button class="btn btn-primary gap-2" on:click={handleClose}>
+			<button class="btn btn-primary gap-2" onclick={handleClose}>
 				<CheckIcon class="w-5 h-5" />
 				{$t('adventures.done')}
 			</button>

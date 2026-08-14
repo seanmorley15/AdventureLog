@@ -10,18 +10,16 @@
 	import QRCode from 'qrcode';
 	import { t } from 'svelte-i18n';
 	import type { User } from '$lib/types';
-	export let user: User | null = null;
-	let secret: string | null = null;
-	let qrCodeDataUrl: string | null = null;
+	let secret: string | null = $state(null);
+	let qrCodeDataUrl: string | null = $state(null);
 	let totpUrl: string | null = null;
-	let first_code: string = '';
-	let recovery_codes: string[] = [];
-	export let is_enabled: boolean;
-	let needsReauth: boolean = false;
-	let reauthPassword: string = '';
-	let reauthPasswordError: boolean = false;
-	let isVerifyingPassword: boolean = false;
-	let isSendingTotp: boolean = false;
+	let first_code: string = $state('');
+	let recovery_codes: string[] = $state([]);
+	let needsReauth: boolean = $state(false);
+	let reauthPassword: string = $state('');
+	let reauthPasswordError: boolean = $state(false);
+	let isVerifyingPassword: boolean = $state(false);
+	let isSendingTotp: boolean = $state(false);
 
 	// import Account from '~icons/mdi/account';
 	import Clear from '~icons/mdi/close';
@@ -34,6 +32,12 @@
 	import Shield from '~icons/mdi/shield-account';
 	import Backup from '~icons/mdi/backup-restore';
 	import Lock from '~icons/mdi/lock';
+	interface Props {
+		user?: User | null;
+		is_enabled: boolean;
+	}
+
+	let { user = null, is_enabled = $bindable() }: Props = $props();
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -181,12 +185,12 @@
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="modal-box w-11/12 max-w-4xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
@@ -217,7 +221,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button class="btn btn-ghost btn-square" onclick={close}>
 					<Clear class="w-5 h-5" />
 				</button>
 			</div>
@@ -260,7 +264,7 @@
 									readonly
 								/>
 							</div>
-							<button class="btn btn-secondary gap-2" on:click={() => copyToClipboard(secret)}>
+							<button class="btn btn-secondary gap-2" onclick={() => copyToClipboard(secret)}>
 								<Copy class="w-4 h-4" />
 								{$t('settings.copy')}
 							</button>
@@ -277,7 +281,7 @@
 						{$t('settings.verify_setup')}
 					</h3>
 					<div class="form-control">
-						<!-- svelte-ignore a11y-label-has-associated-control -->
+						<!-- svelte-ignore a11y_label_has_associated_control -->
 						<label class="label">
 							<span class="label-text font-medium">
 								{$t('settings.authenticator_code')}
@@ -290,7 +294,7 @@
 							bind:value={first_code}
 							maxlength="6"
 						/>
-						<!-- svelte-ignore a11y-label-has-associated-control -->
+						<!-- svelte-ignore a11y_label_has_associated_control -->
 						<label class="label">
 							<span class="label-text-alt text-base-content/60">
 								{$t('settings.enter_code_from_app')}
@@ -312,7 +316,7 @@
 							{$t('settings.reauth_required_desc')}
 						</p>
 						<div class="form-control max-w-md">
-							<!-- svelte-ignore a11y-label-has-associated-control -->
+							<!-- svelte-ignore a11y_label_has_associated_control -->
 							<label class="label">
 								<span class="label-text font-medium">{$t('settings.current_password')}</span>
 							</label>
@@ -322,11 +326,11 @@
 								placeholder={$t('settings.enter_current_password')}
 								autocomplete="current-password"
 								bind:value={reauthPassword}
-								on:keydown={(e) => e.key === 'Enter' && verifyReauthPassword()}
+								onkeydown={(e) => e.key === 'Enter' && verifyReauthPassword()}
 								disabled={isVerifyingPassword}
 							/>
 							{#if reauthPasswordError}
-								<!-- svelte-ignore a11y-label-has-associated-control -->
+								<!-- svelte-ignore a11y_label_has_associated_control -->
 								<label class="label">
 									<span class="label-text-alt text-error">
 										{$t('settings.reauth_incorrect_password')}
@@ -337,7 +341,7 @@
 						<div class="mt-4">
 							<button
 								class="btn btn-warning gap-2"
-								on:click={verifyReauthPassword}
+								onclick={verifyReauthPassword}
 								disabled={!reauthPassword || isVerifyingPassword}
 							>
 								<Lock class="w-4 h-4" />
@@ -359,7 +363,7 @@
 							</h3>
 							<button
 								class="btn btn-info btn-sm gap-2"
-								on:click={() => copyToClipboard(recovery_codes.join(', '))}
+								onclick={() => copyToClipboard(recovery_codes.join(', '))}
 							>
 								<Copy class="w-4 h-4" />
 								{$t('settings.copy_all')}
@@ -385,7 +389,7 @@
 									/>
 									<button
 										class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity btn btn-ghost btn-xs"
-										on:click={() => copyToClipboard(code)}
+										onclick={() => copyToClipboard(code)}
 									>
 										<Copy class="w-3 h-3" />
 									</button>
@@ -414,12 +418,12 @@
 				</div>
 				<div class="flex items-center gap-3">
 					{#if !is_enabled && first_code.length >= 6 && !needsReauth}
-						<button class="btn btn-success gap-2" on:click={sendTotp} disabled={isSendingTotp}>
+						<button class="btn btn-success gap-2" onclick={sendTotp} disabled={isSendingTotp}>
 							<Shield class="w-4 h-4" />
 							{$t('settings.enable_mfa')}
 						</button>
 					{/if}
-					<button class="btn btn-primary gap-2" on:click={close}>
+					<button class="btn btn-primary gap-2" onclick={close}>
 						<Check class="w-4 h-4" />
 						{$t('about.close')}
 					</button>

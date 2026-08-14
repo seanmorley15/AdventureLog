@@ -2,10 +2,14 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
-	export let tags: string[] | undefined | null;
+	interface Props {
+		tags: string[] | undefined | null;
+	}
 
-	let allTags: string[] = [];
-	let inputVal: string = '';
+	let { tags = $bindable() }: Props = $props();
+
+	let allTags: string[] = $state([]);
+	let inputVal: string = $state('');
 
 	if (tags == null || tags == undefined) {
 		tags = [];
@@ -40,11 +44,11 @@
 		}
 	}
 
-	$: filteredItems = allTags.filter(function (activity) {
+	let filteredItems = $derived(allTags.filter(function (activity) {
 		return (
 			activity.toLowerCase().includes(inputVal.toLowerCase()) && (!tags || !tags.includes(activity))
 		);
-	});
+	}));
 </script>
 
 <div class="relative">
@@ -54,26 +58,26 @@
 			class="input input-bordered w-full"
 			placeholder={$t('adventures.add_a_tag')}
 			bind:value={inputVal}
-			on:keydown={(e) => {
+			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					e.preventDefault();
 					addActivity();
 				}
 			}}
 		/>
-		<button type="button" class="btn btn-neutral" on:click={addActivity}
+		<button type="button" class="btn btn-neutral" onclick={addActivity}
 			>{$t('adventures.add')}</button
 		>
 	</div>
 	{#if inputVal && filteredItems.length > 0}
 		<ul class="absolute z-10 w-full bg-base-100 shadow-lg max-h-60 overflow-auto">
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			{#each filteredItems as item}
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<li
 					class="p-2 hover:bg-base-200 cursor-pointer"
-					on:click={() => {
+					onclick={() => {
 						inputVal = item;
 						addActivity();
 					}}
@@ -94,7 +98,7 @@
 					<button
 						type="button"
 						class="btn btn-sm btn-error"
-						on:click={() => removeActivity(activity)}
+						onclick={() => removeActivity(activity)}
 					>
 						{$t('adventures.remove')}
 					</button>

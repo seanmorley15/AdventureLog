@@ -10,8 +10,12 @@
 	import TrendingUp from '~icons/mdi/trending-up';
 	import Users from '~icons/mdi/account-supervisor';
 
-	export let trail: Trail;
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
+	interface Props {
+		trail: Trail;
+		measurementSystem?: 'metric' | 'imperial';
+	}
+
+	let { trail, measurementSystem = 'metric' }: Props = $props();
 
 	function getDistance(meters: number) {
 		return measurementSystem === 'imperial'

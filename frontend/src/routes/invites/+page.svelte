@@ -10,8 +10,8 @@
 		created_at: string; // ISO 8601 date string
 	}
 
-	let invites: CollectionInvite[] = [];
-	let loading = true;
+	let invites: CollectionInvite[] = $state([]);
+	let loading = $state(true);
 
 	async function fetchInvites() {
 		try {
@@ -90,7 +90,7 @@
 <div class="space-y-4">
 	<div class="flex items-center justify-between">
 		<h2 class="text-2xl font-bold">{$t('invites.title')}</h2>
-		<button class="btn btn-sm btn-ghost" on:click={fetchInvites} disabled={loading}>
+		<button class="btn btn-sm btn-ghost" onclick={fetchInvites} disabled={loading}>
 			{#if loading}
 				<span class="loading loading-spinner loading-sm"></span>
 			{:else}
@@ -128,12 +128,12 @@
 								</p>
 							</div>
 							<div class="flex gap-2 ml-4">
-								<button class="btn btn-success btn-sm" on:click={() => acceptInvite(invite)}>
+								<button class="btn btn-success btn-sm" onclick={() => acceptInvite(invite)}>
 									{$t('invites.accept')}
 								</button>
 								<button
 									class="btn btn-error btn-sm btn-outline"
-									on:click={() => declineInvite(invite)}
+									onclick={() => declineInvite(invite)}
 								>
 									{$t('invites.decline')}
 								</button>

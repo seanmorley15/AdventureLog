@@ -4,10 +4,19 @@
 	import { getSearchTypeIcon } from '$lib/search/icons';
 	import type { SearchEntityType, SearchHit } from '$lib/search/types';
 
-	export let hit: SearchHit;
-	export let selected = false;
-	export let compact = false;
-	export let spotlight = false;
+	interface Props {
+		hit: SearchHit;
+		selected?: boolean;
+		compact?: boolean;
+		spotlight?: boolean;
+	}
+
+	let {
+		hit,
+		selected = false,
+		compact = false,
+		spotlight = false
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{ select: SearchHit }>();
 
@@ -17,10 +26,10 @@
 		return translated === key ? type : translated;
 	}
 
-	$: emojiIcon =
-		hit.type === 'location' && hit.meta?.category_icon ? String(hit.meta.category_icon) : null;
+	let emojiIcon =
+		$derived(hit.type === 'location' && hit.meta?.category_icon ? String(hit.meta.category_icon) : null);
 
-	$: rowClass = [
+	let rowClass = $derived([
 		'w-full text-left flex items-center gap-3 transition-colors',
 		spotlight
 			? 'mx-2 px-3 py-2.5 rounded-xl'
@@ -32,10 +41,10 @@
 			: spotlight
 				? 'bg-base-200/25 hover:bg-base-200/45'
 				: 'hover:bg-base-200'
-	].join(' ');
+	].join(' '));
 </script>
 
-<button type="button" class={rowClass} on:click={() => dispatch('select', hit)}>
+<button type="button" class={rowClass} onclick={() => dispatch('select', hit)}>
 	<div
 		class="flex shrink-0 items-center justify-center rounded-xl"
 		class:h-10={spotlight}
@@ -52,8 +61,8 @@
 		{#if emojiIcon}
 			<span aria-hidden="true">{emojiIcon}</span>
 		{:else}
-			<svelte:component
-				this={getSearchTypeIcon(hit.type)}
+			{@const SvelteComponent = getSearchTypeIcon(hit.type)}
+			<SvelteComponent
 				class={spotlight ? 'w-5 h-5' : 'w-4 h-4'}
 			/>
 		{/if}

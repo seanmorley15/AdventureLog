@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
@@ -19,13 +21,13 @@
 	import CalendarClock from '~icons/mdi/calendar-clock';
 	import DatabaseOutline from '~icons/mdi/database-outline';
 
-	export let data;
+	let { data } = $props();
 
-	const subscription: Subscription | null = data.subscription ?? null;
-	const cloudMode = data.cloudMode ?? false;
-	const hasAccess = data.hasAccess ?? true;
-	const user: User | null = data.user ?? null;
-	const mediaUsage: MediaUsage =
+	const subscription = $derived((data.subscription as Subscription | null | undefined) ?? null);
+	const cloudMode = $derived(data.cloudMode ?? false);
+	const hasAccess = $derived(data.hasAccess ?? true);
+	const user: User | null = $derived(data.user ?? null);
+	const mediaUsage: MediaUsage = $derived(
 		data.mediaUsage ??
 		({
 			total_bytes: 0,
@@ -36,15 +38,16 @@
 			images_files: 0,
 			attachments_files: 0,
 			profile_pics_files: 0
-		} as MediaUsage);
+		} as MediaUsage)
+	);
 
 	const msPerDay = 1000 * 60 * 60 * 24;
 	const planPrice = '4.99';
 	const planCurrency = 'USD';
 
-	let isSubscribing = false;
-	let isOpeningPortal = false;
-	let lastFormMessage: string | null = null;
+	let isSubscribing = $state(false);
+	let isOpeningPortal = $state(false);
+	let lastFormMessage: string | null = $state(null);
 
 	const statusConfig: Record<string, { labelKey: string; badgeClass: string; iconClass: string }> =
 		{
@@ -77,44 +80,7 @@
 		{ icon: SyncIcon, key: 'billing.feature_sync' }
 	];
 
-	$: statusKey = subscription?.status ?? 'unknown';
-	$: statusMeta = statusConfig[statusKey] ?? {
-		labelKey: 'billing.status_unknown',
-		badgeClass: 'badge-ghost',
-		iconClass: 'text-base-content/60'
-	};
-	$: trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
-	$: periodEndsAt = subscription?.current_period_ends_at
-		? new Date(subscription.current_period_ends_at)
-		: null;
-	$: daysRemaining = trialEndsAt
-		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
-		: null;
-	$: trialProgress =
-		daysRemaining !== null ? Math.min(100, Math.max(0, ((30 - daysRemaining) / 30) * 100)) : 0;
-	$: isActive = subscription?.status === 'active';
-	$: isTrial = subscription?.status === 'trial';
-	$: isPastDue = subscription?.status === 'past_due';
-	$: isCanceled = subscription?.status === 'canceled';
-	$: hasScheduledSubscription = isTrial && Boolean(subscription?.stripe_subscription_id);
-	$: disableCheckout =
-		!cloudMode ||
-		isActive ||
-		hasScheduledSubscription ||
-		(isPastDue && Boolean(subscription?.stripe_subscription_id));
-	$: canManageBilling =
-		cloudMode && Boolean(subscription?.stripe_customer_id || subscription?.stripe_subscription_id);
 
-	$: totalMediaBytes = mediaUsage.total_bytes ?? 0;
-	$: mediaLimitBytes = mediaUsage.limit_bytes ?? null;
-	$: totalMediaFiles =
-		(mediaUsage.images_files ?? 0) +
-		(mediaUsage.attachments_files ?? 0) +
-		(mediaUsage.profile_pics_files ?? 0);
-	$: overallUsagePercent = mediaLimitBytes
-		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
-		: 0;
-	$: mediaLimitLabel = mediaLimitBytes ? formatBytes(mediaLimitBytes) : $t('billing.unlimited');
 
 	function formatBytes(bytes: number) {
 		if (!bytes || bytes <= 0) return '0 B';
@@ -160,13 +126,6 @@
 		}
 	});
 
-	$: if (browser && $page.form?.message && $page.form.message !== lastFormMessage) {
-		lastFormMessage = $page.form.message;
-		const action = $page.form.action ?? 'subscribe';
-		const title =
-			action === 'portal' ? $t('billing.portal_error_title') : $t('billing.checkout_error_title');
-		addToast('error', `${title}: ${$page.form.message}`);
-	}
 
 	function handleSubscribeEnhance() {
 		isSubscribing = true;
@@ -199,6 +158,52 @@
 			await update();
 		};
 	}
+	let statusKey = $derived(subscription?.status ?? 'unknown');
+	let statusMeta = $derived(statusConfig[statusKey] ?? {
+		labelKey: 'billing.status_unknown',
+		badgeClass: 'badge-ghost',
+		iconClass: 'text-base-content/60'
+	});
+	let trialEndsAt = $derived(subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
+	let periodEndsAt = $derived(subscription?.current_period_ends_at
+		? new Date(subscription.current_period_ends_at)
+		: null);
+	let daysRemaining = $derived(trialEndsAt
+		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
+		: null);
+	let trialProgress =
+		$derived(daysRemaining !== null ? Math.min(100, Math.max(0, ((30 - daysRemaining) / 30) * 100)) : 0);
+	let isActive = $derived(subscription?.status === 'active');
+	let isTrial = $derived(subscription?.status === 'trial');
+	let isPastDue = $derived(subscription?.status === 'past_due');
+	let isCanceled = $derived(subscription?.status === 'canceled');
+	let hasScheduledSubscription = $derived(isTrial && Boolean(subscription?.stripe_subscription_id));
+	let disableCheckout =
+		$derived(!cloudMode ||
+		isActive ||
+		hasScheduledSubscription ||
+		(isPastDue && Boolean(subscription?.stripe_subscription_id)));
+	let canManageBilling =
+		$derived(cloudMode && Boolean(subscription?.stripe_customer_id || subscription?.stripe_subscription_id));
+	let totalMediaBytes = $derived(mediaUsage.total_bytes ?? 0);
+	let mediaLimitBytes = $derived(mediaUsage.limit_bytes ?? null);
+	let totalMediaFiles =
+		$derived((mediaUsage.images_files ?? 0) +
+		(mediaUsage.attachments_files ?? 0) +
+		(mediaUsage.profile_pics_files ?? 0));
+	let overallUsagePercent = $derived(mediaLimitBytes
+		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
+		: 0);
+	let mediaLimitLabel = $derived(mediaLimitBytes ? formatBytes(mediaLimitBytes) : $t('billing.unlimited'));
+	run(() => {
+		if (browser && $page.form?.message && $page.form.message !== lastFormMessage) {
+			lastFormMessage = $page.form.message;
+			const action = $page.form.action ?? 'subscribe';
+			const title =
+				action === 'portal' ? $t('billing.portal_error_title') : $t('billing.checkout_error_title');
+			addToast('error', `${title}: ${$page.form.message}`);
+		}
+	});
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
@@ -323,7 +328,7 @@
 								{#each planFeatures as feature}
 									<li class="flex items-start gap-3">
 										<div class="p-1.5 bg-base-100 rounded-lg shadow-sm">
-											<svelte:component this={feature.icon} class="w-4 h-4 text-primary" />
+											<feature.icon class="w-4 h-4 text-primary" />
 										</div>
 										<span class="text-sm text-base-content/80 pt-0.5">{$t(feature.key)}</span>
 									</li>

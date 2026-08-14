@@ -7,21 +7,18 @@
 	import MediaStep from '../shared/MediaStep.svelte';
 	import TransportationDetails from './TransportationDetails.svelte';
 
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
 
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
-	let storedInitialVisitDate: string | null = initialVisitDate;
+	let storedInitialVisitDate: string | null = $state(null);
 
 	let modal: HTMLDialogElement;
 
 	// Whether a save/create occurred during this modal session
-	let didSave = false;
+	let didSave = $state(false);
 
-	let steps = [
+	let steps = $state([
 		{
 			name: $t('adventures.details'),
 			selected: true,
@@ -32,7 +29,7 @@
 			selected: false,
 			requires_id: true
 		}
-	];
+	]);
 
 	function createEmptyTransportation(): Transportation {
 		return {
@@ -68,17 +65,36 @@
 		};
 	}
 
-	export let transportation: Transportation = createEmptyTransportation();
 
-	export let transportationToEdit: Transportation | null = null;
+	interface Props {
+		user?: User | null;
+		collection?: Collection | null;
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+		transportation?: Transportation;
+		transportationToEdit?: Transportation | null;
+	}
+
+	let {
+		user = null,
+		collection = null,
+		initialVisitDate = null,
+		transportation = $bindable(createEmptyTransportation()),
+		transportationToEdit = null
+	}: Props = $props();
+
+	$effect.pre(() => {
+		if (initialVisitDate && !storedInitialVisitDate) {
+			storedInitialVisitDate = initialVisitDate;
+		}
+	});
 
 	// Track which transportation we're currently editing to prevent unnecessary overwrites
-	let previousTransportationId: string | null = null;
+	let previousTransportationId: string | null = $state(null);
 
 	// Reactively update internal state when switching between edit/new.
 	// This prevents stale values when the parent reuses `bind:transportation`.
 	// Only runs when actually switching to a different transportation, not on every reactive update.
-	$: {
+	$effect.pre(() => {
 		const currentTransportationId = transportationToEdit?.id || null;
 
 		if (currentTransportationId !== previousTransportationId) {
@@ -127,7 +143,7 @@
 				];
 			}
 		}
-	}
+	});
 
 	onMount(async () => {
 		modal = document.getElementById('transportation_modal') as HTMLDialogElement;
@@ -154,14 +170,14 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <dialog id="transportation_modal" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following adventurelog pattern -->
@@ -217,7 +233,7 @@
 									: 'bg-base-200'} {step.requires_id && !transportation?.id
 									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => {
+								onclick={() => {
 									// Reset all steps
 									steps.forEach((s) => (s.selected = false));
 									// Select clicked step
@@ -243,7 +259,7 @@
 					class="btn btn-ghost btn-square"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path

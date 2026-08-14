@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { CircleLayer, GeoJSON, Marker, MarkerLayer } from 'svelte-maplibre';
@@ -8,14 +10,27 @@
 	import type { ImagePinFeatureCollection, ImagePinProperties } from '$lib/map/imagePins';
 	import { getImagePinNavigationUrl } from '$lib/map/imagePins';
 
-	export let geoJson: ImagePinFeatureCollection = { type: 'FeatureCollection', features: [] };
-	export let visible = true;
-	export let clusterEnabled = true;
-	export let clusterOptions: ClusterOptions = { radius: 280, maxZoom: 10, minPoints: 2 };
-	export let sourceId = 'image-pins';
-	/** When true (default), tap navigates to the parent entity. When false, dispatches `select` instead. */
-	export let navigateOnSelect = true;
-	export let selectedId: string | null = null;
+	
+	interface Props {
+		geoJson?: ImagePinFeatureCollection;
+		visible?: boolean;
+		clusterEnabled?: boolean;
+		clusterOptions?: ClusterOptions;
+		sourceId?: string;
+		/** When true (default), tap navigates to the parent entity. When false, dispatches `select` instead. */
+		navigateOnSelect?: boolean;
+		selectedId?: string | null;
+	}
+
+	let {
+		geoJson = { type: 'FeatureCollection', features: [] },
+		visible = true,
+		clusterEnabled = true,
+		clusterOptions = { radius: 280, maxZoom: 10, minPoints: 2 },
+		sourceId = 'image-pins',
+		navigateOnSelect = true,
+		selectedId = null
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		select: { props: ImagePinProperties };
@@ -23,10 +38,10 @@
 
 	let hoveredMarkerId: string | null = null;
 
-	let rose400 = '#fb7185';
-	let rose500 = '#f43f5e';
-	let rose600 = '#e11d48';
-	let baseContent = '#111827';
+	let rose400 = $state('#fb7185');
+	let rose500 = $state('#f43f5e');
+	let rose600 = $state('#e11d48');
+	let baseContent = $state('#111827');
 
 	onMount(() => {
 		rose400 = resolveThemeColor('--color-error', rose400);
@@ -35,24 +50,26 @@
 		baseContent = resolveThemeColor('--color-base-content', baseContent);
 	});
 
-	let clusterCirclePaint: Record<string, unknown> = {};
+	let clusterCirclePaint: Record<string, unknown> = $state({});
 
-	$: clusterCirclePaint = {
-		'circle-color': [
-			'step',
-			['get', 'point_count'],
-			withAlpha(rose400, 0.78),
-			25,
-			withAlpha(rose500, 0.84),
-			80,
-			withAlpha(rose600, 0.9)
-		],
-		'circle-radius': ['step', ['get', 'point_count'], 22, 20, 32, 60, 44],
-		'circle-opacity': 1,
-		'circle-stroke-color': withAlpha(baseContent, 0.22),
-		'circle-stroke-width': 2,
-		'circle-blur': 0
-	};
+	run(() => {
+		clusterCirclePaint = {
+			'circle-color': [
+				'step',
+				['get', 'point_count'],
+				withAlpha(rose400, 0.78),
+				25,
+				withAlpha(rose500, 0.84),
+				80,
+				withAlpha(rose600, 0.9)
+			],
+			'circle-radius': ['step', ['get', 'point_count'], 22, 20, 32, 60, 44],
+			'circle-opacity': 1,
+			'circle-stroke-color': withAlpha(baseContent, 0.22),
+			'circle-stroke-width': 2,
+			'circle-blur': 0
+		};
+	});
 
 	function getPointCoordinates(feature: unknown): [number, number] | null {
 		if (!feature || typeof feature !== 'object') return null;
@@ -164,89 +181,95 @@
 				paint={clusterCirclePaint}
 				on:click={handleClusterClick}
 			/>
-			<MarkerLayer applyToClusters let:feature={clusterFeature}>
-				{@const count = getClusterCount(clusterFeature)}
-				{#if count !== undefined && count !== null}
-					<div
-						class="pointer-events-none grid h-8 w-8 place-items-center select-none font-sans text-xs font-bold text-white drop-shadow-sm"
-					>
-						{count}
-					</div>
-				{/if}
-			</MarkerLayer>
-			<MarkerLayer applyToClusters={false} let:feature={featureData}>
-				{@const markerProps = getMarkerProps(featureData)}
-				{@const markerLngLat = getPointCoordinates(featureData)}
-				{@const markerId = getMarkerId(markerProps)}
-				{@const isRaised = isMarkerRaised(markerId)}
-				{#if markerProps && markerLngLat}
-					<Marker
-						lngLat={markerLngLat}
-						class={isRaised ? 'map-pin-active' : 'map-image-pin-marker'}
-					>
-						<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
-							<div
-								class="map-image-pin map-pin-hit grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-rose-400 to-rose-600 text-sm shadow-lg transition-all duration-200 group-hover:scale-110"
-								class:scale-110={isRaised}
-								class:cursor-pointer={navigateOnSelect ? canNavigate(markerProps) : true}
-								class:cursor-default={navigateOnSelect && !canNavigate(markerProps)}
-								role="button"
-								tabindex="0"
-								aria-label={markerProps.parentName || markerProps.imageId}
-								aria-pressed={selectedId === markerId}
-								on:mouseenter={() => setMarkerHovered(markerProps, true)}
-								on:mouseleave={() => setMarkerHovered(markerProps, false)}
-								on:focus={() => setMarkerHovered(markerProps, true)}
-								on:blur={() => setMarkerHovered(markerProps, false)}
-								on:click={(event) => handleMarkerClick(event, markerProps)}
-								on:keydown={(event) => handleMarkerKeydown(event, markerProps)}
-							>
-								<span aria-hidden="true">📷</span>
-							</div>
-
-							<ImageMapPinPopup props={markerProps} visible={isRaised} />
+			<MarkerLayer applyToClusters >
+				{#snippet children({ feature: clusterFeature }: { feature: unknown })}
+								{@const count = getClusterCount(clusterFeature)}
+					{#if count !== undefined && count !== null}
+						<div
+							class="pointer-events-none grid h-8 w-8 place-items-center select-none font-sans text-xs font-bold text-white drop-shadow-sm"
+						>
+							{count}
 						</div>
-					</Marker>
-				{/if}
-			</MarkerLayer>
+					{/if}
+											{/snippet}
+						</MarkerLayer>
+			<MarkerLayer applyToClusters={false} >
+				{#snippet children({ feature: featureData }: { feature: unknown })}
+								{@const markerProps = getMarkerProps(featureData)}
+					{@const markerLngLat = getPointCoordinates(featureData)}
+					{@const markerId = getMarkerId(markerProps)}
+					{@const isRaised = isMarkerRaised(markerId)}
+					{#if markerProps && markerLngLat}
+						<Marker
+							lngLat={markerLngLat}
+							class={isRaised ? 'map-pin-active' : 'map-image-pin-marker'}
+						>
+							<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
+								<div
+									class="map-image-pin map-pin-hit grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-rose-400 to-rose-600 text-sm shadow-lg transition-all duration-200 group-hover:scale-110"
+									class:scale-110={isRaised}
+									class:cursor-pointer={navigateOnSelect ? canNavigate(markerProps) : true}
+									class:cursor-default={navigateOnSelect && !canNavigate(markerProps)}
+									role="button"
+									tabindex="0"
+									aria-label={markerProps.parentName || markerProps.imageId}
+									aria-pressed={selectedId === markerId}
+									onmouseenter={() => setMarkerHovered(markerProps, true)}
+									onmouseleave={() => setMarkerHovered(markerProps, false)}
+									onfocus={() => setMarkerHovered(markerProps, true)}
+									onblur={() => setMarkerHovered(markerProps, false)}
+									onclick={(event) => handleMarkerClick(event, markerProps)}
+									onkeydown={(event) => handleMarkerKeydown(event, markerProps)}
+								>
+									<span aria-hidden="true">📷</span>
+								</div>
+
+								<ImageMapPinPopup props={markerProps} visible={isRaised} />
+							</div>
+						</Marker>
+					{/if}
+											{/snippet}
+						</MarkerLayer>
 		</GeoJSON>
 	{:else}
 		<GeoJSON id={sourceId} data={geoJson} generateId>
-			<MarkerLayer applyToClusters={false} let:feature={featureData}>
-				{@const markerProps = getMarkerProps(featureData)}
-				{@const markerLngLat = getPointCoordinates(featureData)}
-				{@const markerId = getMarkerId(markerProps)}
-				{@const isRaised = isMarkerRaised(markerId)}
-				{#if markerProps && markerLngLat}
-					<Marker
-						lngLat={markerLngLat}
-						class={isRaised ? 'map-pin-active' : 'map-image-pin-marker'}
-					>
-						<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
-							<div
-								class="map-image-pin map-pin-hit grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-rose-400 to-rose-600 text-sm shadow-lg transition-all duration-200 group-hover:scale-110"
-								class:scale-110={isRaised}
-								class:cursor-pointer={navigateOnSelect ? canNavigate(markerProps) : true}
-								class:cursor-default={navigateOnSelect && !canNavigate(markerProps)}
-								role="button"
-								tabindex="0"
-								aria-label={markerProps.parentName || markerProps.imageId}
-								aria-pressed={selectedId === markerId}
-								on:mouseenter={() => setMarkerHovered(markerProps, true)}
-								on:mouseleave={() => setMarkerHovered(markerProps, false)}
-								on:focus={() => setMarkerHovered(markerProps, true)}
-								on:blur={() => setMarkerHovered(markerProps, false)}
-								on:click={(event) => handleMarkerClick(event, markerProps)}
-								on:keydown={(event) => handleMarkerKeydown(event, markerProps)}
-							>
-								<span aria-hidden="true">📷</span>
-							</div>
+			<MarkerLayer applyToClusters={false} >
+				{#snippet children({ feature: featureData }: { feature: unknown })}
+								{@const markerProps = getMarkerProps(featureData)}
+					{@const markerLngLat = getPointCoordinates(featureData)}
+					{@const markerId = getMarkerId(markerProps)}
+					{@const isRaised = isMarkerRaised(markerId)}
+					{#if markerProps && markerLngLat}
+						<Marker
+							lngLat={markerLngLat}
+							class={isRaised ? 'map-pin-active' : 'map-image-pin-marker'}
+						>
+							<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
+								<div
+									class="map-image-pin map-pin-hit grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-rose-400 to-rose-600 text-sm shadow-lg transition-all duration-200 group-hover:scale-110"
+									class:scale-110={isRaised}
+									class:cursor-pointer={navigateOnSelect ? canNavigate(markerProps) : true}
+									class:cursor-default={navigateOnSelect && !canNavigate(markerProps)}
+									role="button"
+									tabindex="0"
+									aria-label={markerProps.parentName || markerProps.imageId}
+									aria-pressed={selectedId === markerId}
+									onmouseenter={() => setMarkerHovered(markerProps, true)}
+									onmouseleave={() => setMarkerHovered(markerProps, false)}
+									onfocus={() => setMarkerHovered(markerProps, true)}
+									onblur={() => setMarkerHovered(markerProps, false)}
+									onclick={(event) => handleMarkerClick(event, markerProps)}
+									onkeydown={(event) => handleMarkerKeydown(event, markerProps)}
+								>
+									<span aria-hidden="true">📷</span>
+								</div>
 
-							<ImageMapPinPopup props={markerProps} visible={isRaised} />
-						</div>
-					</Marker>
-				{/if}
-			</MarkerLayer>
+								<ImageMapPinPopup props={markerProps} visible={isRaised} />
+							</div>
+						</Marker>
+					{/if}
+											{/snippet}
+						</MarkerLayer>
 		</GeoJSON>
 	{/if}
 {/if}

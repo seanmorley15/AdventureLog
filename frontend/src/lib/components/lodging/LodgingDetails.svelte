@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import {
@@ -31,8 +33,8 @@
 
 	const dispatch = createEventDispatcher();
 
-	let isSaving = false;
-	let isReverseGeocoding = false;
+	let isSaving = $state(false);
+	let isReverseGeocoding = $state(false);
 
 	let initialSelection: {
 		name: string;
@@ -40,14 +42,25 @@
 		lng: number;
 		location: string;
 		category?: any;
-	} | null = null;
+	} | null = $state(null);
 
-	// Props (would be passed in from parent component)
-	export let initialLodging: any = null;
-	export let currentUser: any = null;
-	export let editingLodging: any = null;
-	export let collection: Collection | null = null;
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	
+	interface Props {
+		// Props (would be passed in from parent component)
+		initialLodging?: any;
+		currentUser?: any;
+		editingLodging?: any;
+		collection?: Collection | null;
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+	}
+
+	let {
+		initialLodging = null,
+		currentUser = null,
+		editingLodging = $bindable(null),
+		collection = null,
+		initialVisitDate = null
+	}: Props = $props();
 
 	// Form data properties
 	let lodging: {
@@ -68,7 +81,7 @@
 		category?: Category | null;
 		collection?: string;
 		is_public?: boolean;
-	} = {
+	} = $state({
 		name: '',
 		type: '',
 		description: '',
@@ -84,70 +97,86 @@
 		longitude: null,
 		location: '',
 		category: null,
-		collection: collection?.id,
+		collection: undefined,
 		is_public: true
-	};
+	});
 
-	let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	let localStartDate: string = '';
-	let localEndDate: string = '';
-	let allDay: boolean = true;
-	let constrainDates: boolean = true;
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
+	let collectionId = $derived(collection?.id);
 
-	let user: User | null = null;
-	let lodgingToEdit: Lodging | null = null;
-	let wikiError = '';
-	let isGeneratingDesc = false;
+	let selectedTimezone: string = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	let localStartDate: string = $state('');
+	let localEndDate: string = $state('');
+	let allDay: boolean = $state(true);
+	let constrainDates: boolean = $state(true);
+	let fullStartDate: string = $state('');
+	let fullEndDate: string = $state('');
+
+	let user: User | null = $state(null);
+	let lodgingToEdit: Lodging | null = $state(null);
+	let wikiError = $state('');
+	let isGeneratingDesc = $state(false);
 	let ownerUser: User | null = null;
-	let dateError = '';
-	let moneyValue: MoneyValue = { amount: null, currency: DEFAULT_CURRENCY };
-	let preferredCurrency: string = DEFAULT_CURRENCY;
+	let dateError = $state('');
+	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
+	let preferredCurrency: string = $state(DEFAULT_CURRENCY);
 
-	$: user = currentUser;
-	$: lodgingToEdit = editingLodging;
+	run(() => {
+		user = currentUser;
+	});
+	run(() => {
+		lodgingToEdit = editingLodging;
+	});
 	// Only assign a timezone when this is a timed stay. Keep timezone null for all-day entries.
-	$: lodging.timezone = allDay ? null : selectedTimezone;
-	$: preferredCurrency = user?.default_currency || DEFAULT_CURRENCY;
-	$: {
+	run(() => {
+		lodging.timezone = allDay ? null : selectedTimezone;
+	});
+	run(() => {
+		preferredCurrency = user?.default_currency || DEFAULT_CURRENCY;
+	});
+	run(() => {
 		const isNewLodging = !(initialLodging && initialLodging.id);
 		const isEditing = Boolean(editingLodging && editingLodging.id);
 		if (isNewLodging && !isEditing && lodging.price_currency === DEFAULT_CURRENCY) {
 			lodging.price_currency = preferredCurrency;
 		}
-	}
-	$: moneyValue =
-		lodging.price === null
-			? { amount: null, currency: lodging.price_currency || null }
-			: toMoneyValue(lodging.price, lodging.price_currency, preferredCurrency);
-	$: initialSelection =
-		initialLodging && initialLodging.latitude && initialLodging.longitude
-			? {
-					name: initialLodging.name || '',
-					lat: Number(initialLodging.latitude),
-					lng: Number(initialLodging.longitude),
-					location: initialLodging.location || ''
-				}
-			: null;
+	});
+	run(() => {
+		moneyValue =
+			lodging.price === null
+				? { amount: null, currency: lodging.price_currency || null }
+				: toMoneyValue(lodging.price, lodging.price_currency, preferredCurrency);
+	});
+	run(() => {
+		initialSelection =
+			initialLodging && initialLodging.latitude && initialLodging.longitude
+				? {
+						name: initialLodging.name || '',
+						lat: Number(initialLodging.latitude),
+						lng: Number(initialLodging.longitude),
+						location: initialLodging.location || ''
+					}
+				: null;
+	});
 
 	// Set the full date range for constraining purposes
-	$: if (collection && collection.start_date && collection.end_date) {
-		fullStartDate = `${collection.start_date}T00:00`;
-		fullEndDate = `${collection.end_date}T23:59`;
-	}
+	run(() => {
+		if (collection && collection.start_date && collection.end_date) {
+			fullStartDate = `${collection.start_date}T00:00`;
+			fullEndDate = `${collection.end_date}T23:59`;
+		}
+	});
 
 	// Reactive constraints
-	$: constraintStartDate = allDay
+	let constraintStartDate = $derived(allDay
 		? fullStartDate && fullStartDate.includes('T')
 			? fullStartDate.split('T')[0]
 			: ''
-		: fullStartDate || '';
-	$: constraintEndDate = allDay
+		: fullStartDate || '');
+	let constraintEndDate = $derived(allDay
 		? fullEndDate && fullEndDate.includes('T')
 			? fullEndDate.split('T')[0]
 			: ''
-		: fullEndDate || '';
+		: fullEndDate || '');
 
 	function handleLocationUpdate(
 		event: CustomEvent<{ name?: string; lat: number; lng: number; location: string }>
@@ -297,8 +326,8 @@
 		if (lodging.longitude !== null && typeof lodging.longitude === 'number') {
 			lodging.longitude = parseFloat(lodging.longitude.toFixed(6));
 		}
-		if (collection && collection.id) {
-			lodging.collection = collection.id;
+		if (collectionId) {
+			lodging.collection = collectionId;
 		}
 
 		// Build payload and avoid sending an empty `collection` array when editing
@@ -596,7 +625,7 @@
 											type="radio"
 											name="rating"
 											class="mask mask-star-2 bg-warning"
-											on:click={() => (lodging.rating = star)}
+											onclick={() => (lodging.rating = star)}
 											checked={lodging.rating === star}
 										/>
 									{/each}
@@ -605,7 +634,7 @@
 									<button
 										type="button"
 										class="btn btn-sm btn-error btn-outline gap-2"
-										on:click={() => (lodging.rating = NaN)}
+										onclick={() => (lodging.rating = NaN)}
 									>
 										<ClearIcon class="w-4 h-4" />
 										{$t('adventures.remove')}
@@ -666,7 +695,7 @@
 								<button
 									type="button"
 									class="btn btn-neutral btn-sm gap-2"
-									on:click={generateDesc}
+									onclick={generateDesc}
 									disabled={!lodging.name || isGeneratingDesc || !lodging.type}
 								>
 									{#if isGeneratingDesc}
@@ -714,7 +743,7 @@
 								type="checkbox"
 								class="toggle toggle-primary"
 								checked={allDay}
-								on:change={handleAllDayToggle}
+								onchange={handleAllDayToggle}
 							/>
 							<span class="label-text">{$t('adventures.all_day')}</span>
 						</label>
@@ -750,7 +779,7 @@
 									type="date"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -760,7 +789,7 @@
 									type="datetime-local"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -778,7 +807,7 @@
 									type="date"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -788,7 +817,7 @@
 									type="datetime-local"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -809,7 +838,7 @@
 			<button
 				class="btn btn-primary gap-2"
 				disabled={!lodging.name || !lodging.type || isReverseGeocoding || isSaving}
-				on:click={handleSave}
+				onclick={handleSave}
 			>
 				{#if isSaving}
 					<span class="loading loading-spinner loading-sm"></span>

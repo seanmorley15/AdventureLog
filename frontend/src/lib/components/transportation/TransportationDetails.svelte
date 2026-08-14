@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import {
@@ -31,9 +33,9 @@
 
 	const dispatch = createEventDispatcher();
 
-	let isReverseGeocoding = false;
-	let airportMode = false;
-	let previousTransportationType: string | null = null;
+	let isReverseGeocoding = $state(false);
+	let airportMode = $state(false);
+	let previousTransportationType: string | null = $state(null);
 
 	let initialSelection: {
 		name: string;
@@ -43,15 +45,26 @@
 		category?: any;
 	} | null = null;
 
-	// Props (would be passed in from parent component)
-	export let initialTransportation: any = null;
-	export let currentUser: any = null;
-	export let editingTransportation: any = null;
-	export let collection: Collection | null = null;
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	
+	interface Props {
+		// Props (would be passed in from parent component)
+		initialTransportation?: any;
+		currentUser?: any;
+		editingTransportation?: any;
+		collection?: Collection | null;
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+	}
+
+	let {
+		initialTransportation = null,
+		currentUser = null,
+		editingTransportation = $bindable(null),
+		collection = null,
+		initialVisitDate = null
+	}: Props = $props();
 
 	// Form data properties
-	let transportation: any = {
+	let transportation: any = $state({
 		name: '',
 		type: '',
 		description: '',
@@ -71,41 +84,50 @@
 		start_code: null,
 		end_code: null,
 		distance: null,
-		collection: collection?.id,
+		collection: undefined,
 		is_public: true,
 		price: null,
 		price_currency: DEFAULT_CURRENCY
-	};
+	});
+
+	let collectionId = $derived(collection?.id);
+
 	const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	let selectedStartTimezone: string = browserTimezone;
-	let selectedEndTimezone: string = browserTimezone;
-	let localStartDate: string = '';
-	let localEndDate: string = '';
-	let allDay: boolean = true;
-	let constrainDates: boolean = true;
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
-	let startCodeField: string = '';
-	let endCodeField: string = '';
+	let selectedStartTimezone: string = $state(browserTimezone);
+	let selectedEndTimezone: string = $state(browserTimezone);
+	let localStartDate: string = $state('');
+	let localEndDate: string = $state('');
+	let allDay: boolean = $state(true);
+	let constrainDates: boolean = $state(true);
+	let fullStartDate: string = $state('');
+	let fullEndDate: string = $state('');
+	let startCodeField: string = $state('');
+	let endCodeField: string = $state('');
 
-	let user: User | null = null;
-	let transportationToEdit: Transportation | null = null;
-	let wikiError = '';
-	let isGeneratingDesc = false;
+	let user: User | null = $state(null);
+	let transportationToEdit: Transportation | null = $state(null);
+	let wikiError = $state('');
+	let isGeneratingDesc = $state(false);
 	let ownerUser: User | null = null;
-	let dateError = '';
-	let moneyValue: MoneyValue = { amount: null, currency: DEFAULT_CURRENCY };
-	let preferredCurrency: string = DEFAULT_CURRENCY;
+	let dateError = $state('');
+	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
+	let preferredCurrency: string = $state(DEFAULT_CURRENCY);
 
-	$: user = currentUser;
-	$: transportationToEdit = editingTransportation;
+	run(() => {
+		user = currentUser;
+	});
+	run(() => {
+		transportationToEdit = editingTransportation;
+	});
 	// Set the full date range for constraining purposes (from collection)
-	$: if (collection && collection.start_date && collection.end_date) {
-		fullStartDate = `${collection.start_date}T00:00`;
-		fullEndDate = `${collection.end_date}T23:59`;
-	}
+	run(() => {
+		if (collection && collection.start_date && collection.end_date) {
+			fullStartDate = `${collection.start_date}T00:00`;
+			fullEndDate = `${collection.end_date}T23:59`;
+		}
+	});
 	// Only assign timezones when this is a timed transportation. Keep timezones null for all-day entries.
-	$: {
+	run(() => {
 		const departureZone = selectedStartTimezone || browserTimezone;
 		const arrivalZone = selectedEndTimezone || departureZone;
 		transportation.start_timezone = allDay ? null : departureZone;
@@ -120,7 +142,7 @@
 			transportation.price === null
 				? { amount: null, currency: transportation.price_currency || null }
 				: toMoneyValue(transportation.price, transportation.price_currency, preferredCurrency);
-	}
+	});
 
 	function handleStartCodeInput(value: string) {
 		startCodeField = value;
@@ -157,39 +179,43 @@
 	}
 
 	// Track previous airport mode to detect when user disables it
-	let prevAirportMode = airportMode;
-	$: if (prevAirportMode !== airportMode) {
-		prevAirportMode = airportMode;
-		// When airport mode is disabled, clear airport codes
-		if (!airportMode) {
-			clearAirportCodes();
+	let prevAirportMode = $state(false);
+	run(() => {
+		if (prevAirportMode !== airportMode) {
+			prevAirportMode = airportMode;
+			// When airport mode is disabled, clear airport codes
+			if (!airportMode) {
+				clearAirportCodes();
+			}
 		}
-	}
+	});
 
 	// Auto-enable airport mode only when transportation type CHANGES to plane
 	// Do not continuously re-enable - respect user's manual toggle
-	$: if (
-		transportation.type === 'plane' &&
-		previousTransportationType !== 'plane' &&
-		!airportMode
-	) {
-		previousTransportationType = transportation.type;
-		airportMode = true;
-	} else if (transportation.type !== previousTransportationType) {
-		previousTransportationType = transportation.type;
-	}
+	run(() => {
+		if (
+			transportation.type === 'plane' &&
+			previousTransportationType !== 'plane' &&
+			!airportMode
+		) {
+			previousTransportationType = transportation.type;
+			airportMode = true;
+		} else if (transportation.type !== previousTransportationType) {
+			previousTransportationType = transportation.type;
+		}
+	});
 
 	// Reactive constraints
-	$: constraintStartDate = allDay
+	let constraintStartDate = $derived(allDay
 		? fullStartDate && fullStartDate.includes('T')
 			? fullStartDate.split('T')[0]
 			: ''
-		: fullStartDate || '';
-	$: constraintEndDate = allDay
+		: fullStartDate || '');
+	let constraintEndDate = $derived(allDay
 		? fullEndDate && fullEndDate.includes('T')
 			? fullEndDate.split('T')[0]
 			: ''
-		: fullEndDate || '';
+		: fullEndDate || '');
 
 	function handleTransportationUpdate(
 		event: CustomEvent<{
@@ -400,8 +426,8 @@
 				transportation.destination_longitude.toFixed(6)
 			);
 		}
-		if (collection && collection.id) {
-			transportation.collection = collection.id;
+		if (collectionId) {
+			transportation.collection = collectionId;
 		}
 
 		// Build payload and avoid sending an empty `collection` array when editing
@@ -696,7 +722,7 @@
 										type="text"
 										id="start_code"
 										value={startCodeField}
-										on:input={handleStartCodeEvent}
+										oninput={handleStartCodeEvent}
 										class="input input-bordered bg-base-100/80 focus:bg-base-100 uppercase"
 										maxlength="5"
 										placeholder={airportMode ? 'JFK' : $t('transportation.departure_code')}
@@ -712,7 +738,7 @@
 										type="text"
 										id="end_code"
 										value={endCodeField}
-										on:input={handleEndCodeEvent}
+										oninput={handleEndCodeEvent}
 										class="input input-bordered bg-base-100/80 focus:bg-base-100 uppercase"
 										maxlength="5"
 										placeholder={airportMode ? 'LHR' : $t('transportation.arrival_code')}
@@ -742,7 +768,7 @@
 											type="radio"
 											name="rating"
 											class="mask mask-star-2 bg-warning"
-											on:click={() => (transportation.rating = star)}
+											onclick={() => (transportation.rating = star)}
 											checked={transportation.rating === star}
 										/>
 									{/each}
@@ -751,7 +777,7 @@
 									<button
 										type="button"
 										class="btn btn-sm btn-error btn-outline gap-2"
-										on:click={() => (transportation.rating = NaN)}
+										onclick={() => (transportation.rating = NaN)}
 									>
 										<ClearIcon class="w-4 h-4" />
 										{$t('adventures.remove')}
@@ -798,7 +824,7 @@
 								<button
 									type="button"
 									class="btn btn-neutral btn-sm gap-2"
-									on:click={generateDesc}
+									onclick={generateDesc}
 									disabled={!transportation.name || isGeneratingDesc || !transportation.type}
 								>
 									{#if isGeneratingDesc}
@@ -846,7 +872,7 @@
 								type="checkbox"
 								class="toggle toggle-primary"
 								checked={allDay}
-								on:change={handleAllDayToggle}
+								onchange={handleAllDayToggle}
 							/>
 							<span class="label-text">{$t('adventures.all_day')}</span>
 						</label>
@@ -882,7 +908,7 @@
 									type="date"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -892,7 +918,7 @@
 									type="datetime-local"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -910,7 +936,7 @@
 									type="date"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -920,7 +946,7 @@
 									type="datetime-local"
 									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 								/>
@@ -948,7 +974,7 @@
 			<button
 				class="btn btn-primary gap-2"
 				disabled={!transportation.name || !transportation.type || isReverseGeocoding}
-				on:click={handleSave}
+				onclick={handleSave}
 			>
 				{#if isReverseGeocoding}
 					<span class="loading loading-spinner loading-sm"></span>

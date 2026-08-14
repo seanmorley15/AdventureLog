@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { normalizeBasemapType } from '$lib';
 	import CityCard from '$lib/components/cards/CityCard.svelte';
 	import { addToast } from '$lib/toasts';
@@ -20,33 +22,46 @@
 	import Info from '~icons/mdi/information-outline';
 	import CityIcon from '~icons/mdi/city';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let filteredCities: City[] = [];
-	let searchQuery: string = '';
+	let { data }: Props = $props();
+
+	let filteredCities: City[] = $state([]);
+	let searchQuery: string = $state('');
 	let showGeo: boolean = true;
-	let showMap: boolean = false;
-	let sidebarOpen = false;
-	let filterOption: string = 'all';
+	let showMap: boolean = $state(false);
+	let sidebarOpen = $state(false);
+	let filterOption: string = $state('all');
 
-	const allCities: City[] = data.props?.cities || [];
-	let visitedCities: VisitedCity[] = data.props?.visitedCities || [];
-	const region = data.props?.region || null;
-	let description: string = data.props?.description || '';
+	const allCities: City[] = $derived(data.props?.cities || []);
+	let visitedCities: VisitedCity[] = $state<VisitedCity[]>([]);
+	const region = $derived(data.props?.region || null);
+	let description: string = $derived(data.props?.description || '');
 
-	console.log(data);
+	$effect(() => {
+		console.log(data);
+	});
 
 	// Statistics
-	let numCities: number = allCities.length;
-	let numVisitedCities: number = visitedCities.length;
+	let numCities: number = $derived(allCities.length);
+	let numVisitedCities: number = $state(0);
 
-	$: visitedCount = visitedCities.length;
-	$: notVisitedCount = allCities.length - visitedCount;
-	$: completionPercentage =
-		allCities.length > 0 ? Math.round((visitedCount / allCities.length) * 100) : 0;
+	$effect.pre(() => {
+		visitedCities = (data.props?.visitedCities || []).filter(
+			(visitedCity, index, self) => index === self.findIndex((t) => t.city === visitedCity.city)
+		);
+		numVisitedCities = visitedCities.length;
+	});
+
+	let visitedCount = $derived(visitedCities.length);
+	let notVisitedCount = $derived(allCities.length - visitedCount);
+	let completionPercentage =
+		$derived(allCities.length > 0 ? Math.round((visitedCount / allCities.length) * 100) : 0);
 
 	// Filter cities based on search and filter options
-	$: {
+	run(() => {
 		if (searchQuery === '') {
 			filteredCities = allCities;
 		} else {
@@ -64,12 +79,7 @@
 				(city) => !visitedCities.some((visitedCity) => visitedCity.city === city.id)
 			);
 		}
-	}
-
-	// Remove duplicates from visitedCities
-	visitedCities = visitedCities.filter(
-		(visitedCity, index, self) => index === self.findIndex((t) => t.city === visitedCity.city)
-	);
+	});
 
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
@@ -156,7 +166,7 @@
 		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
 	}
 
-	$: hasMappableCities = allCities.some(hasCoordinates);
+	let hasMappableCities = $derived(allCities.some(hasCoordinates));
 
 	function cityToFeature(city: City): CityFeature | null {
 		const lat = parseCoordinate(city.latitude);
@@ -177,14 +187,14 @@
 	const CITY_SOURCE_ID = 'worldtravel-cities';
 	const cityClusterOptions: ClusterOptions = { radius: 300, maxZoom: 12, minPoints: 2 };
 
-	let citiesGeoJson: CityFeatureCollection = { type: 'FeatureCollection', features: [] };
-	$: {
+	let citiesGeoJson: CityFeatureCollection = $state({ type: 'FeatureCollection', features: [] });
+	run(() => {
 		visitedCities;
 		citiesGeoJson = {
 			type: 'FeatureCollection',
 			features: allCities.map((c) => cityToFeature(c)).filter((f): f is CityFeature => f !== null)
 		};
-	}
+	});
 
 	function getMarkerProps(feature: any): CityFeatureProperties | null {
 		return feature && feature.properties ? feature.properties : null;
@@ -236,7 +246,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden" onclick={toggleSidebar}>
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
@@ -304,7 +314,7 @@
 							{#if searchQuery.length > 0}
 								<button
 									class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-									on:click={() => (searchQuery = '')}
+									onclick={() => (searchQuery = '')}
 								>
 									<Clear class="w-4 h-4" />
 								</button>
@@ -314,7 +324,7 @@
 						{#if hasMappableCities}
 							<button
 								class="btn btn-outline gap-2 {showMap ? 'btn-active' : ''}"
-								on:click={() => (showMap = !showMap)}
+								onclick={() => (showMap = !showMap)}
 							>
 								<Map class="w-4 h-4" />
 								<span class="hidden sm:inline">
@@ -331,21 +341,21 @@
 							<div class="tabs tabs-boxed bg-base-200">
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
-									on:click={() => (filterOption = 'all')}
+									onclick={() => (filterOption = 'all')}
 								>
 									<MapMarker class="w-3 h-3" />
 									{$t('adventures.all')}
 								</button>
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'visited' ? 'tab-active' : ''}"
-									on:click={() => (filterOption = 'visited')}
+									onclick={() => (filterOption = 'visited')}
 								>
 									<Check class="w-3 h-3" />
 									{$t('adventures.visited')}
 								</button>
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'not-visited' ? 'tab-active' : ''}"
-									on:click={() => (filterOption = 'not-visited')}
+									onclick={() => (filterOption = 'not-visited')}
 								>
 									<Cancel class="w-3 h-3" />
 									{$t('adventures.not_visited')}
@@ -353,7 +363,7 @@
 							</div>
 
 							{#if searchQuery || filterOption !== 'all'}
-								<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+								<button class="btn btn-ghost btn-xs gap-1" onclick={clearFilters}>
 									<Clear class="w-3 h-3" />
 									{$t('worldtravel.clear_all')}
 								</button>
@@ -414,7 +424,7 @@
 						<p class="text-base-content/50 text-center max-w-md mb-6">
 							{$t('worldtravel.no_countries_found_desc')}
 						</p>
-						<button class="btn btn-primary gap-2" on:click={clearFilters}>
+						<button class="btn btn-primary gap-2" onclick={clearFilters}>
 							<Clear class="w-4 h-4" />
 							{$t('worldtravel.clear_filters')}
 						</button>
@@ -510,7 +520,7 @@
 
 					{#if hasMappableCities}
 						<div class="space-y-3">
-							<button class="btn btn-outline w-full gap-2" on:click={() => (showMap = !showMap)}>
+							<button class="btn btn-outline w-full gap-2" onclick={() => (showMap = !showMap)}>
 								<Map class="w-4 h-4" />
 								{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
 							</button>

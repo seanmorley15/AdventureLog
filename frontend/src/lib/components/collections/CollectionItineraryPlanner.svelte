@@ -1,5 +1,6 @@
 <script lang="ts">
-	// @ts-nocheck
+	import { run } from 'svelte/legacy';
+
 	import type {
 		Collection,
 		CollectionItineraryItem,
@@ -8,7 +9,8 @@
 		Transportation,
 		Lodging,
 		Note,
-		Checklist
+		Checklist,
+		Visit
 	} from '$lib/types';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
@@ -38,17 +40,82 @@
 	import Globe from '~icons/mdi/globe';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	export let collection: Collection;
-	export let user: any;
-	// Whether the current user can modify this collection (owner or shared user)
-	export let canModify: boolean = false;
+	
+	interface Props {
+		collection: Collection;
+		user: any;
+		// Whether the current user can modify this collection (owner or shared user)
+		canModify?: boolean;
+	}
+
+	let { collection = $bindable(), user, canModify = false }: Props = $props();
 
 	const flipDurationMs = 200;
 
 	// Extended itinerary item with resolved object
+	type ResolvedObject = Location | Transportation | Lodging | Note | Checklist;
+
 	type ResolvedItineraryItem = CollectionItineraryItem & {
-		resolvedObject: Location | Transportation | Lodging | Note | Checklist | null;
+		resolvedObject: ResolvedObject | null;
+		isDndShadowItem?: boolean;
 	};
+
+	type DayPickableItem = {
+		id: string;
+		name?: string;
+		visits?: Visit[];
+		date?: string | null;
+		check_in?: string | null;
+	};
+
+	type ItineraryReorderUpdate = {
+		id: string;
+		date: string | null;
+		order: number;
+		is_global?: boolean;
+	};
+
+	const CONTENT_TYPE_ALIASES: Record<string, string> = {
+		visit: 'location',
+		location: 'location',
+		transportation: 'transportation',
+		lodging: 'lodging',
+		note: 'note',
+		checklist: 'checklist'
+	};
+
+	function getItemType(item: CollectionItineraryItem): string {
+		const raw = item.content_type || '';
+		return CONTENT_TYPE_ALIASES[raw] || raw;
+	}
+
+	function isDndShadow(item: ResolvedItineraryItem): boolean {
+		return Boolean(
+			(item as ResolvedItineraryItem & Record<string, unknown>)[SHADOW_ITEM_MARKER_PROPERTY_NAME]
+		);
+	}
+
+	function getResolvedName(obj: ResolvedObject | null): string | undefined {
+		return obj && 'name' in obj ? obj.name : undefined;
+	}
+
+	function getGlobalItemSecondary(type: string, obj: ResolvedObject | null): string | null {
+		if (!obj) return null;
+		if (type === 'location' && 'location' in obj) return obj.location ?? null;
+		if (type === 'transportation' && 'to_location' in obj) {
+			return obj.to_location || obj.from_location;
+		}
+		if (type === 'lodging' && 'location' in obj) return obj.location ?? null;
+		if ((type === 'note' || type === 'checklist') && 'name' in obj) return obj.name;
+		return null;
+	}
+
+	function getLocationCategoryIcon(obj: ResolvedObject | null): string | undefined {
+		if (obj && 'category' in obj) {
+			return obj.category?.icon;
+		}
+		return undefined;
+	}
 
 	// Group itinerary items by day
 	type DayGroup = {
@@ -60,25 +127,15 @@
 		dayMetadata: CollectionItineraryDay | null; // Day name and description
 	};
 
-	$: days = groupItemsByDay(collection);
-	$: unscheduledItems = getUnscheduledItems(collection);
-	// Trip-wide (global) itinerary items
-	$: globalItems = (collection.itinerary || [])
-		.filter((it) => it.is_global)
-		.map((it) => resolveItineraryItem(it, collection))
-		.sort((a, b) => a.order - b.order);
 
 	// Auto-generate state
-	let isAutoGenerating = false;
+	let isAutoGenerating = $state(false);
 
 	// Saving state for itinerary reorders. When true, disable drag interactions.
-	let isSavingOrder = false;
+	let isSavingOrder = $state(false);
 	// Which day (ISO date string) is currently being saved. Used to show per-day spinner.
-	let savingDay: string | null = null;
+	let savingDay: string | null = $state(null);
 
-	// Check if auto-generate is available (only for users with modify permission)
-	$: canAutoGenerate =
-		canModify && collection.itinerary?.length === 0 && hasDatedRecords(collection);
 
 	function hasDatedRecords(collection: Collection): boolean {
 		// Check if collection has any dated records
@@ -117,9 +174,12 @@
 
 			// Refresh the page to load the updated itinerary
 			window.location.reload();
-		} catch (error) {
+		} catch (error: unknown) {
 			console.error('Auto-generate error:', error);
-			alert(error.message || 'Failed to auto-generate itinerary');
+			alert(
+				(error instanceof Error ? error.message : String(error)) ||
+					'Failed to auto-generate itinerary'
+			);
 			isAutoGenerating = false;
 		}
 	}
@@ -130,8 +190,8 @@
 		days = groupItemsByDay(collection);
 	}
 
-	let locationToEdit: Location | null = null;
-	let isLocationModalOpen: boolean = false;
+	let locationToEdit: Location | null = $state(null);
+	let isLocationModalOpen: boolean = $state(false);
 	function handleEditLocation(event: CustomEvent<Location>) {
 		locationToEdit = event.detail;
 		isLocationModalOpen = true;
@@ -163,15 +223,15 @@
 		unscheduledItems = getUnscheduledItems(collection);
 	}
 
-	let lodgingToEdit: Lodging | null = null;
-	let isLodgingModalOpen: boolean = false;
+	let lodgingToEdit: Lodging | null = $state(null);
+	let isLodgingModalOpen: boolean = $state(false);
 	function handleEditLodging(event: CustomEvent<Lodging>) {
 		lodgingToEdit = event.detail;
 		isLodgingModalOpen = true;
 	}
 
-	let transportationToEdit: Transportation | null = null;
-	let isTransportationModalOpen: boolean = false;
+	let transportationToEdit: Transportation | null = $state(null);
+	let isTransportationModalOpen: boolean = $state(false);
 	function handleEditTransportation(event: CustomEvent<Transportation>) {
 		transportationToEdit = event.detail;
 		isTransportationModalOpen = true;
@@ -347,7 +407,7 @@
 		const itemToDelete = payload as CollectionItineraryItem;
 		collection.itinerary = collection.itinerary?.filter((it) => it.id !== itemToDelete.id);
 		// Also remove the associated object from the collection
-		const objectType = itemToDelete.item?.type || '';
+		const objectType = getItemType(itemToDelete);
 		if (objectType === 'location') {
 			collection.locations = collection.locations?.filter(
 				(loc) => loc.id !== itemToDelete.object_id
@@ -366,32 +426,32 @@
 		days = groupItemsByDay(collection);
 	}
 
-	let locationBeingUpdated: Location | null = null;
-	let lodgingBeingUpdated: Lodging | null = null;
-	let transportationBeingUpdated: Transportation | null = null;
+	let locationBeingUpdated: Location | undefined = $state(undefined);
+	let lodgingBeingUpdated: Lodging | null = $state(null);
+	let transportationBeingUpdated: Transportation | undefined = $state(undefined);
 
-	let isNoteModalOpen = false;
-	let isChecklistModalOpen = false;
-	let isItineraryLinkModalOpen = false;
+	let isNoteModalOpen = $state(false);
+	let isChecklistModalOpen = $state(false);
+	let isItineraryLinkModalOpen = $state(false);
 
-	let noteToEdit: Note | null = null;
-	let checklistToEdit: Checklist | null = null;
+	let noteToEdit: Note | null = $state(null);
+	let checklistToEdit: Checklist | null = $state(null);
 
 	// Store the target date and display date for the link modal
-	let linkModalTargetDate: string = '';
-	let linkModalDisplayDate: string = '';
+	let linkModalTargetDate: string = $state('');
+	let linkModalDisplayDate: string = $state('');
 
 	// Day picker modal state for unscheduled items
-	let isDayPickModalOpen = false;
-	let dayPickItemToAdd: { type: string; item: any } | null = null;
-	let dayPickScheduledDates: string[] = [];
-	let dayPickSourceVisit: { id: string; start_date: string } | null = null;
-	let dayPickSourceItineraryItemId: string | null = null; // Track which specific itinerary item is being moved
+	let isDayPickModalOpen = $state(false);
+	let dayPickItemToAdd: { type: string; item: DayPickableItem } | null = $state(null);
+	let dayPickScheduledDates: string[] = $state([]);
+	let dayPickSourceVisit: { id: string; start_date: string } | null = $state(null);
+	let dayPickSourceItineraryItemId: string | null = $state(null); // Track which specific itinerary item is being moved
 
 	// When opening a "create new item" modal we store the target date here
-	let pendingAddDate: string | null = null;
+	let pendingAddDate: string | null = $state(null);
 	// Track if we've already added this location to the itinerary
-	let addedToItinerary: Set<string> = new Set();
+	let addedToItinerary: Set<string> = $state(new Set());
 
 	function normalizeDateOnly(value: string | null | undefined): string | null {
 		if (!value) return null;
@@ -509,7 +569,7 @@
 				// Remove itinerary items from the old date
 				const itemsToRemove =
 					collection.itinerary?.filter(
-						(it) => it.item?.type === 'note' && it.object_id === note.id && it.date === oldDate
+						(it) => getItemType(it) === 'note' && it.object_id === note.id && it.date === oldDate
 					) || [];
 
 				for (const item of itemsToRemove) {
@@ -518,12 +578,12 @@
 
 				collection.itinerary =
 					collection.itinerary?.filter(
-						(it) => !(it.item?.type === 'note' && it.object_id === note.id && it.date === oldDate)
+						(it) => !(getItemType(it) === 'note' && it.object_id === note.id && it.date === oldDate)
 					) || [];
 			}
 
 			const isAlreadyScheduled = collection.itinerary?.some(
-				(it) => it.item?.type === 'note' && it.object_id === note.id && it.date === targetDate
+				(it) => getItemType(it) === 'note' && it.object_id === note.id && it.date === targetDate
 			);
 
 			if (targetDate && !isAlreadyScheduled) {
@@ -552,7 +612,7 @@
 				const itemsToRemove =
 					collection.itinerary?.filter(
 						(it) =>
-							it.item?.type === 'checklist' && it.object_id === checklist.id && it.date === oldDate
+							getItemType(it) === 'checklist' && it.object_id === checklist.id && it.date === oldDate
 					) || [];
 
 				for (const item of itemsToRemove) {
@@ -563,7 +623,7 @@
 					collection.itinerary?.filter(
 						(it) =>
 							!(
-								it.item?.type === 'checklist' &&
+								getItemType(it) === 'checklist' &&
 								it.object_id === checklist.id &&
 								it.date === oldDate
 							)
@@ -572,7 +632,7 @@
 
 			const isAlreadyScheduled = collection.itinerary?.some(
 				(it) =>
-					it.item?.type === 'checklist' && it.object_id === checklist.id && it.date === targetDate
+					getItemType(it) === 'checklist' && it.object_id === checklist.id && it.date === targetDate
 			);
 
 			if (targetDate && !isAlreadyScheduled) {
@@ -589,118 +649,11 @@
 		}
 	}
 
-	// Sync the
-	//  with the collection.locations array
-	$: if (locationBeingUpdated && locationBeingUpdated.id && collection) {
-		// Make a shallow copy of locations (ensure array exists)
-		const locs = collection.locations ? [...collection.locations] : [];
 
-		const index = locs.findIndex((loc) => loc.id === locationBeingUpdated.id);
 
-		if (index !== -1) {
-			// Ensure visits are properly synced and replace the item immutably
-			locs[index] = {
-				...locs[index],
-				...locationBeingUpdated,
-				visits: locationBeingUpdated.visits || locs[index].visits || []
-			};
-		} else {
-			// Prepend new/updated location
-			locs.unshift({ ...locationBeingUpdated });
-		}
 
-		// Assign back to collection immutably to trigger reactivity
-		collection = { ...collection, locations: locs };
-	}
 
-	// If a new location was just created and we have a pending add-date,
-	// attach it to that date in the itinerary.
-	$: if (
-		locationBeingUpdated?.id &&
-		pendingAddDate &&
-		!addedToItinerary.has(String(locationBeingUpdated.id))
-	) {
-		addItineraryItemForObject('location', locationBeingUpdated.id, pendingAddDate);
-		// Mark this location as added to prevent duplicates
-		addedToItinerary.add(String(locationBeingUpdated.id));
-		addedToItinerary = addedToItinerary; // trigger reactivity
-	}
 
-	// Sync the lodgingBeingUpdated with the collection.lodging array
-	$: if (lodgingBeingUpdated && lodgingBeingUpdated.id && collection) {
-		// Make a shallow copy of lodging (ensure array exists)
-		const lodgings = collection.lodging ? [...collection.lodging] : [];
-
-		const index = lodgings.findIndex((lodge) => lodge.id === lodgingBeingUpdated.id);
-
-		if (index !== -1) {
-			// Replace the item immutably
-			lodgings[index] = {
-				...lodgings[index],
-				...lodgingBeingUpdated
-			};
-		} else {
-			// Prepend new/updated lodging
-			lodgings.unshift({ ...lodgingBeingUpdated });
-		}
-
-		// Assign back to collection immutably to trigger reactivity
-		collection = { ...collection, lodging: lodgings };
-	}
-
-	// If a new lodging was just created and we have a pending add-date,
-	// attach it to that date in the itinerary.
-	$: if (
-		lodgingBeingUpdated?.id &&
-		pendingAddDate &&
-		!addedToItinerary.has(String(lodgingBeingUpdated.id))
-	) {
-		// Normalize check_in to date-only (YYYY-MM-DD) if present
-		const lodgingCheckInDate = lodgingBeingUpdated.check_in
-			? String(lodgingBeingUpdated.check_in).split('T')[0]
-			: null;
-		const targetDate = lodgingCheckInDate || pendingAddDate;
-
-		addItineraryItemForObject('lodging', lodgingBeingUpdated.id, targetDate);
-		// Mark this lodging as added to prevent duplicates
-		addedToItinerary.add(String(lodgingBeingUpdated.id));
-		addedToItinerary = addedToItinerary; // trigger reactivity
-	}
-
-	// Sync the transportationBeingUpdated with the collection.transportations array
-	$: if (transportationBeingUpdated && transportationBeingUpdated.id && collection) {
-		// Make a shallow copy of transportations (ensure array exists)
-		const transports = collection.transportations ? [...collection.transportations] : [];
-
-		const index = transports.findIndex((t) => t.id === transportationBeingUpdated.id);
-
-		if (index !== -1) {
-			// Replace the item immutably
-			transports[index] = {
-				...transports[index],
-				...transportationBeingUpdated
-			};
-		} else {
-			// Prepend new/updated transportation
-			transports.unshift({ ...transportationBeingUpdated });
-		}
-
-		// Assign back to collection immutably to trigger reactivity
-		collection = { ...collection, transportations: transports };
-	}
-
-	// If a new transportation was just created and we have a pending add-date,
-	// attach it to that date in the itinerary.
-	$: if (
-		transportationBeingUpdated?.id &&
-		pendingAddDate &&
-		!addedToItinerary.has(String(transportationBeingUpdated.id))
-	) {
-		addItineraryItemForObject('transportation', transportationBeingUpdated.id, pendingAddDate);
-		// Mark this transportation as added to prevent duplicates
-		addedToItinerary.add(String(transportationBeingUpdated.id));
-		addedToItinerary = addedToItinerary; // trigger reactivity
-	}
 
 	/**
 	 * Get lodging items where the guest is staying overnight on a given date
@@ -714,7 +667,7 @@
 		// Helper: only include lodging that has been added to the itinerary
 		function isLodgingScheduled(lodgingId: any): boolean {
 			return !!collection.itinerary?.some((it) => {
-				const objectType = it.item?.type || '';
+				const objectType = getItemType(it);
 				return objectType === 'lodging' && it.object_id === lodgingId;
 			});
 		}
@@ -755,7 +708,7 @@
 			?.filter((item) => item.is_global)
 			.forEach((item) => {
 				const resolved = resolveItineraryItem(item, collection);
-				const objectType = resolved.item?.type || '';
+				const objectType = getItemType(resolved);
 				const datesToAdd = new Set<string>();
 
 				// Helper to clamp dates to collection range and dedupe
@@ -837,8 +790,8 @@
 	): ResolvedItineraryItem {
 		let resolvedObject = null;
 
-		// Resolve based on item.type which tells us the object type
-		const objectType = item.item?.type || '';
+		// Resolve based on content_type which tells us the object type
+		const objectType = getItemType(item);
 
 		if (objectType === 'location') {
 			// Find location by ID
@@ -1031,9 +984,9 @@
 	async function saveReorderedItems() {
 		try {
 			// Collect all items across all days with their new positions
-			const dayUpdates = days.flatMap((day) =>
+			const dayUpdates: ItineraryReorderUpdate[] = days.flatMap((day) =>
 				day.items
-					.filter((item) => item.id && !item[SHADOW_ITEM_MARKER_PROPERTY_NAME])
+					.filter((item) => item.id && !isDndShadow(item))
 					.map((item, index) => ({
 						id: item.id,
 						date: day.date,
@@ -1041,8 +994,8 @@
 					}))
 			);
 
-			const globalUpdates = globalItems
-				.filter((item) => item.id && !item[SHADOW_ITEM_MARKER_PROPERTY_NAME])
+			const globalUpdates: ItineraryReorderUpdate[] = globalItems
+				.filter((item) => item.id && !isDndShadow(item))
 				.map((item, index) => ({ id: item.id, is_global: true, date: null, order: index }));
 
 			const itemsToUpdate = [...dayUpdates, ...globalUpdates];
@@ -1102,8 +1055,10 @@
 			date: null,
 			is_global: true,
 			order,
-			created_at: new Date().toISOString()
-		};
+			created_at: new Date().toISOString(),
+			start_datetime: null,
+			end_datetime: null
+		} as CollectionItineraryItem;
 
 		collection.itinerary = [...(collection.itinerary || []), newIt];
 		// trigger reactive globals and days
@@ -1155,7 +1110,7 @@
 	// currentItineraryDate: the date of the itinerary entry being moved (if any)
 	function handleOpenDayPickerForItem(
 		type: string,
-		item: any,
+		item: DayPickableItem,
 		forcePicker: boolean = false,
 		currentItineraryDate: string | null = null
 	) {
@@ -1396,9 +1351,12 @@
 			object_id: objectId,
 			item: { id: objectId, type: objectType },
 			date: dateISO,
+			is_global: false,
 			order,
-			created_at: new Date().toISOString()
-		};
+			created_at: new Date().toISOString(),
+			start_datetime: null,
+			end_datetime: null
+		} as CollectionItineraryItem;
 
 		collection.itinerary = [...(collection.itinerary || []), newIt];
 		days = groupItemsByDay(collection);
@@ -1609,6 +1567,138 @@
 			console.error('Error saving day metadata:', err);
 		}
 	}
+	// Sync the
+	//  with the collection.locations array
+	run(() => {
+		const updatedLocation = locationBeingUpdated;
+		if (updatedLocation && updatedLocation.id && collection) {
+			// Make a shallow copy of locations (ensure array exists)
+			const locs = collection.locations ? [...collection.locations] : [];
+
+			const index = locs.findIndex((loc) => loc.id === updatedLocation.id);
+
+			if (index !== -1) {
+				// Ensure visits are properly synced and replace the item immutably
+				locs[index] = {
+					...locs[index],
+					...updatedLocation,
+					visits: updatedLocation.visits || locs[index].visits || []
+				};
+			} else {
+				// Prepend new/updated location
+				locs.unshift({ ...updatedLocation });
+			}
+
+			// Assign back to collection immutably to trigger reactivity
+			collection = { ...collection, locations: locs };
+		}
+	});
+	// Sync the lodgingBeingUpdated with the collection.lodging array
+	run(() => {
+		const updatedLodging = lodgingBeingUpdated;
+		if (updatedLodging && updatedLodging.id && collection) {
+			// Make a shallow copy of lodging (ensure array exists)
+			const lodgings = collection.lodging ? [...collection.lodging] : [];
+
+			const index = lodgings.findIndex((lodge) => lodge.id === updatedLodging.id);
+
+			if (index !== -1) {
+				// Replace the item immutably
+				lodgings[index] = {
+					...lodgings[index],
+					...updatedLodging
+				};
+			} else {
+				// Prepend new/updated lodging
+				lodgings.unshift({ ...updatedLodging });
+			}
+
+			// Assign back to collection immutably to trigger reactivity
+			collection = { ...collection, lodging: lodgings };
+		}
+	});
+	// Sync the transportationBeingUpdated with the collection.transportations array
+	run(() => {
+		const updatedTransportation = transportationBeingUpdated;
+		if (updatedTransportation && updatedTransportation.id && collection) {
+			// Make a shallow copy of transportations (ensure array exists)
+			const transports = collection.transportations ? [...collection.transportations] : [];
+
+			const index = transports.findIndex((t) => t.id === updatedTransportation.id);
+
+			if (index !== -1) {
+				// Replace the item immutably
+				transports[index] = {
+					...transports[index],
+					...updatedTransportation
+				};
+			} else {
+				// Prepend new/updated transportation
+				transports.unshift({ ...updatedTransportation });
+			}
+
+			// Assign back to collection immutably to trigger reactivity
+			collection = { ...collection, transportations: transports };
+		}
+	});
+	let days = $derived(groupItemsByDay(collection));
+	let unscheduledItems = $derived(getUnscheduledItems(collection));
+	// Trip-wide (global) itinerary items
+	let globalItems = $derived((collection.itinerary || [])
+		.filter((it) => it.is_global)
+		.map((it) => resolveItineraryItem(it, collection))
+		.sort((a, b) => a.order - b.order));
+	// Check if auto-generate is available (only for users with modify permission)
+	let canAutoGenerate =
+		$derived(canModify && collection.itinerary?.length === 0 && hasDatedRecords(collection));
+	// If a new location was just created and we have a pending add-date,
+	// attach it to that date in the itinerary.
+	run(() => {
+		if (
+			locationBeingUpdated?.id &&
+			pendingAddDate &&
+			!addedToItinerary.has(String(locationBeingUpdated.id))
+		) {
+			addItineraryItemForObject('location', locationBeingUpdated.id, pendingAddDate);
+			// Mark this location as added to prevent duplicates
+			addedToItinerary.add(String(locationBeingUpdated.id));
+			addedToItinerary = addedToItinerary; // trigger reactivity
+		}
+	});
+	// If a new lodging was just created and we have a pending add-date,
+	// attach it to that date in the itinerary.
+	run(() => {
+		if (
+			lodgingBeingUpdated?.id &&
+			pendingAddDate &&
+			!addedToItinerary.has(String(lodgingBeingUpdated.id))
+		) {
+			// Normalize check_in to date-only (YYYY-MM-DD) if present
+			const lodgingCheckInDate = lodgingBeingUpdated.check_in
+				? String(lodgingBeingUpdated.check_in).split('T')[0]
+				: null;
+			const targetDate = lodgingCheckInDate || pendingAddDate;
+
+			addItineraryItemForObject('lodging', lodgingBeingUpdated.id, targetDate);
+			// Mark this lodging as added to prevent duplicates
+			addedToItinerary.add(String(lodgingBeingUpdated.id));
+			addedToItinerary = addedToItinerary; // trigger reactivity
+		}
+	});
+	// If a new transportation was just created and we have a pending add-date,
+	// attach it to that date in the itinerary.
+	run(() => {
+		if (
+			transportationBeingUpdated?.id &&
+			pendingAddDate &&
+			!addedToItinerary.has(String(transportationBeingUpdated.id))
+		) {
+			addItineraryItemForObject('transportation', transportationBeingUpdated.id, pendingAddDate);
+			// Mark this transportation as added to prevent duplicates
+			addedToItinerary.add(String(transportationBeingUpdated.id));
+			addedToItinerary = addedToItinerary; // trigger reactivity
+		}
+	});
 </script>
 
 {#if isLocationModalOpen}
@@ -1616,14 +1706,14 @@
 		on:close={() => {
 			isLocationModalOpen = false;
 			locationToEdit = null;
-			locationBeingUpdated = null;
+			locationBeingUpdated = undefined;
 			pendingAddDate = null;
 			addedToItinerary.clear();
 			addedToItinerary = addedToItinerary;
 		}}
 		on:quickAddCreated={(e) => handleQuickAddCreated('location', e)}
 		{user}
-		{locationToEdit}
+		locationToEdit={locationToEdit ?? undefined}
 		bind:location={locationBeingUpdated}
 		{collection}
 		initialVisitDate={pendingAddDate}
@@ -1654,13 +1744,13 @@
 		on:close={() => {
 			isTransportationModalOpen = false;
 			transportationToEdit = null;
-			transportationBeingUpdated = null;
+			transportationBeingUpdated = undefined;
 			pendingAddDate = null;
 			addedToItinerary.clear();
 			addedToItinerary = addedToItinerary;
 		}}
 		{user}
-		{transportationToEdit}
+		transportationToEdit={transportationToEdit ?? undefined}
 		bind:transportation={transportationBeingUpdated}
 		{collection}
 		initialVisitDate={pendingAddDate}
@@ -1748,7 +1838,7 @@
 			<button
 				class="btn btn-sm btn-primary"
 				disabled={isAutoGenerating}
-				on:click={handleAutoGenerate}
+				onclick={handleAutoGenerate}
 			>
 				{#if isAutoGenerating}
 					<span class="loading loading-spinner loading-sm"></span>
@@ -1816,12 +1906,12 @@
 								dragDisabled: isSavingOrder || !canModify,
 								dropFromOthersDisabled: true
 							}}
-							on:consider={handleDndConsiderGlobal}
-							on:finalize={handleDndFinalizeGlobal}
+							onconsider={handleDndConsiderGlobal}
+							onfinalize={handleDndFinalizeGlobal}
 							class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
 						>
 							{#each globalItems as item (item.id)}
-								{@const objectType = item.item?.type || ''}
+								{@const objectType = getItemType(item)}
 								{@const resolvedObj = item.resolvedObject}
 								<div
 									class="group relative transition-all duration-200 pointer-events-auto h-full"
@@ -1857,11 +1947,11 @@
 										{/if}
 										{#if objectType === 'location'}
 											<LocationCard
-												adventure={resolvedObj}
+												adventure={resolvedObj as Location}
 												on:edit={handleEditLocation}
 												on:delete={handleItemDelete}
 												on:duplicate={handleDuplicateLocation}
-												itineraryItem={item}
+												itineraryItem={item as CollectionItineraryItem}
 												on:removeFromItinerary={handleRemoveItineraryItem}
 												on:moveToGlobal={(e) => moveItemToGlobal(e.detail.type, e.detail.id)}
 												{user}
@@ -1870,7 +1960,7 @@
 											/>
 										{:else if objectType === 'transportation'}
 											<TransportationCard
-												transportation={resolvedObj}
+												transportation={resolvedObj as Transportation}
 												{user}
 												{collection}
 												on:delete={handleItemDelete}
@@ -1881,7 +1971,7 @@
 											/>
 										{:else if objectType === 'lodging'}
 											<LodgingCard
-												lodging={resolvedObj}
+												lodging={resolvedObj as Lodging}
 												{user}
 												{collection}
 												itineraryItem={item}
@@ -1892,7 +1982,7 @@
 											/>
 										{:else if objectType === 'note'}
 											<NoteCard
-												note={resolvedObj}
+												note={resolvedObj as Note}
 												{user}
 												{collection}
 												on:delete={handleItemDelete}
@@ -1903,7 +1993,7 @@
 											/>
 										{:else if objectType === 'checklist'}
 											<ChecklistCard
-												checklist={resolvedObj}
+												checklist={resolvedObj as Checklist}
 												{user}
 												{collection}
 												on:delete={handleItemDelete}
@@ -1962,7 +2052,7 @@
 											style="width: {(day.dayMetadata.name.length + 5) * 8}px; max-width: 300px;"
 											value={day.dayMetadata.name}
 											placeholder="Day name"
-											on:blur={(e) => {
+											onblur={(e) => {
 												const newName = e.currentTarget.value.trim() || null;
 												if (newName !== day.dayMetadata?.name) {
 													saveDayMetadata(day.date, newName, day.dayMetadata?.description || null);
@@ -1973,8 +2063,8 @@
 										<button
 											type="button"
 											class="text-sm opacity-40 hover:opacity-100 transition-opacity px-1"
-											on:click={(e) => {
-												const input = e.currentTarget.nextElementSibling;
+											onclick={(e) => {
+												const input = e.currentTarget.nextElementSibling as HTMLElement | null;
 												if (input) input.focus();
 											}}
 										>
@@ -1986,7 +2076,7 @@
 											style="max-width: 300px;"
 											placeholder="Day name"
 											value=""
-											on:blur={(e) => {
+											onblur={(e) => {
 												const newName = e.currentTarget.value.trim() || null;
 												if (newName) {
 													saveDayMetadata(day.date, newName, day.dayMetadata?.description || null);
@@ -1995,7 +2085,7 @@
 													e.currentTarget.classList.remove('w-auto');
 												}
 											}}
-											on:focus={(e) => {
+											onfocus={(e) => {
 												e.currentTarget.classList.remove('w-0');
 												e.currentTarget.classList.add('w-auto');
 											}}
@@ -2033,7 +2123,7 @@
 									rows="2"
 									placeholder={'+ ' + $t('itinerary.add_description') + '...'}
 									value={day.dayMetadata?.description || ''}
-									on:blur={(e) => {
+									onblur={(e) => {
 										const newDesc = e.currentTarget.value.trim() || null;
 										if (newDesc !== day.dayMetadata?.description) {
 											saveDayMetadata(day.date, day.dayMetadata?.name || null, newDesc);
@@ -2062,7 +2152,7 @@
 								<div
 									class="dropdown dropdown-end z-30"
 									role="group"
-									on:pointerdown={(e) => {
+									onpointerdown={(e) => {
 										const el = e.currentTarget;
 										el.classList.toggle('dropdown-top', shouldFlipDropdownUp(el));
 									}}
@@ -2087,7 +2177,7 @@
 												type="button"
 												role="menuitem"
 												class="w-full text-left"
-												on:click={() => {
+												onclick={() => {
 													linkModalTargetDate = day.date;
 													linkModalDisplayDate = day.displayDate;
 													isItineraryLinkModalOpen = true;
@@ -2102,10 +2192,10 @@
 												type="button"
 												role="menuitem"
 												class="w-full text-left"
-												on:click={() => {
+												onclick={() => {
 													pendingAddDate = day.date;
 													locationToEdit = null;
-													locationBeingUpdated = null;
+													locationBeingUpdated = undefined;
 													isLocationModalOpen = true;
 												}}
 											>
@@ -2117,7 +2207,7 @@
 												type="button"
 												role="menuitem"
 												class="w-full text-left"
-												on:click={() => {
+												onclick={() => {
 													pendingAddDate = day.date;
 													lodgingToEdit = null;
 													lodgingBeingUpdated = null;
@@ -2132,7 +2222,7 @@
 												type="button"
 												role="menuitem"
 												class="w-full text-left"
-												on:click={() => {
+												onclick={() => {
 													pendingAddDate = day.date;
 													isTransportationModalOpen = true;
 												}}
@@ -2145,7 +2235,7 @@
 												type="button"
 												role="menuitem"
 												class="w-full text-left"
-												on:click={() => {
+												onclick={() => {
 													pendingAddDate = day.date;
 													isNoteModalOpen = true;
 												}}
@@ -2158,7 +2248,7 @@
 												type="button"
 												role="menuitem"
 												class="w-full text-left"
-												on:click={() => {
+												onclick={() => {
 													pendingAddDate = day.date;
 													isChecklistModalOpen = true;
 												}}
@@ -2192,15 +2282,15 @@
 									dragDisabled: isSavingOrder || !canModify,
 									dropFromOthersDisabled: true
 								}}
-								on:consider={(e) => handleDndConsider(dayIndex, e)}
-								on:finalize={(e) => handleDndFinalize(dayIndex, e)}
+								onconsider={(e) => handleDndConsider(dayIndex, e)}
+								onfinalize={(e) => handleDndFinalize(dayIndex, e)}
 								class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
 							>
 								{#each day.items as item, index (item.id)}
-									{@const objectType = item.item?.type || ''}
+									{@const objectType = getItemType(item)}
 									{@const resolvedObj = item.resolvedObject}
 									{@const multiDay = isMultiDay(item)}
-									{@const isDraggingShadow = item[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
+									{@const isDraggingShadow = isDndShadow(item)}
 
 									<div
 										class="group relative transition-all duration-200 pointer-events-auto h-full {isDraggingShadow
@@ -2254,11 +2344,11 @@
 												<!-- Display the appropriate card based on type -->
 												{#if objectType === 'location'}
 													<LocationCard
-														adventure={resolvedObj}
+														adventure={resolvedObj as Location}
 														on:edit={handleEditLocation}
 														on:delete={handleItemDelete}
 														on:duplicate={handleDuplicateLocation}
-														itineraryItem={item}
+														itineraryItem={item as CollectionItineraryItem}
 														on:removeFromItinerary={handleRemoveItineraryItem}
 														on:moveToGlobal={(e) => moveItemToGlobal(e.detail.type, e.detail.id)}
 														{user}
@@ -2274,7 +2364,7 @@
 													/>
 												{:else if objectType === 'transportation'}
 													<TransportationCard
-														transportation={resolvedObj}
+														transportation={resolvedObj as Transportation}
 														{user}
 														{collection}
 														on:delete={handleItemDelete}
@@ -2292,7 +2382,7 @@
 													/>
 												{:else if objectType === 'lodging'}
 													<LodgingCard
-														lodging={resolvedObj}
+														lodging={resolvedObj as Lodging}
 														{user}
 														{collection}
 														itineraryItem={item}
@@ -2310,9 +2400,8 @@
 															)}
 													/>
 												{:else if objectType === 'note'}
-													<!-- @ts-ignore - TypeScript can't narrow union type properly -->
 													<NoteCard
-														note={resolvedObj}
+														note={resolvedObj as Note}
 														{user}
 														{collection}
 														on:delete={handleItemDelete}
@@ -2329,9 +2418,8 @@
 															)}
 													/>
 												{:else if objectType === 'checklist'}
-													<!-- @ts-ignore - TypeScript can't narrow union type properly -->
 													<ChecklistCard
-														checklist={resolvedObj}
+														checklist={resolvedObj as Checklist}
 														{user}
 														{collection}
 														on:delete={handleItemDelete}
@@ -2416,19 +2504,11 @@
 										</div>
 										<div class="space-y-2">
 											{#each day.globalDatedItems as globalItem (globalItem.id)}
-												{@const type = globalItem.item?.type || ''}
+												{@const type = getItemType(globalItem)}
 												{@const obj = globalItem.resolvedObject}
-												{@const name = obj?.name || globalItem.item?.type || 'Item'}
-												{@const secondary =
-													type === 'location'
-														? obj?.location
-														: type === 'transportation'
-															? obj?.to_location || obj?.from_location
-															: type === 'lodging'
-																? obj?.location
-																: type === 'note' || type === 'checklist'
-																	? obj?.name
-																	: null}
+												{@const name = getResolvedName(obj) || type || 'Item'}
+												{@const secondary = getGlobalItemSecondary(type, obj)}
+												{@const categoryIcon = type === 'location' ? getLocationCategoryIcon(obj) : undefined}
 												<div
 													class="flex items-center gap-3 bg-base-100 rounded-lg px-4 py-3 border border-base-300"
 												>
@@ -2438,8 +2518,8 @@
 														{#if type === 'lodging'}
 															<Bed class="w-4 h-4" />
 														{:else if type === 'location'}
-															{#if obj?.category?.icon}
-																<span class="text-lg">{obj.category.icon}</span>
+															{#if categoryIcon}
+																<span class="text-lg">{categoryIcon}</span>
 															{:else}
 																<LocationMarker class="w-4 h-4" />
 															{/if}
@@ -2521,7 +2601,7 @@
 												aria-label={$t('itinerary.add_to_day')}
 												class="btn btn-circle btn-xs btn-primary join-item shadow-sm"
 												title={$t('itinerary.add_to_day')}
-												on:click={() => handleOpenDayPickerForItem(type, item)}
+												onclick={() => handleOpenDayPickerForItem(type, item)}
 											>
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
@@ -2542,7 +2622,7 @@
 												aria-label={$t('itinerary.add_to_trip_context')}
 												class="btn btn-circle btn-xs btn-outline join-item shadow-sm"
 												title={$t('itinerary.add_to_trip_context')}
-												on:click={() => addGlobalItineraryItemForObject(type, item.id)}
+												onclick={() => addGlobalItineraryItemForObject(type, item.id)}
 											>
 												<svg
 													xmlns="http://www.w3.org/2000/svg"

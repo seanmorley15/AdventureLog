@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -30,54 +32,67 @@
 		formatCalendarRange
 	} from '$lib/calendar/events';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-	let apiEvents: CalendarApiEvent[] = (data.props.initialEvents || []) as CalendarApiEvent[];
-	let displayEvents: CalendarDisplayEvent[] = [];
-	let filteredEvents: CalendarDisplayEvent[] = [];
-	let loadError = data.props.loadError;
-	let isLoading = false;
-	let isDownloadingIcs = false;
+	let apiEvents: CalendarApiEvent[] = $state<CalendarApiEvent[]>([]);
+	let displayEvents: CalendarDisplayEvent[] = $state([]);
+	let filteredEvents: CalendarDisplayEvent[] = $state([]);
+	let loadError = $state<string | null>(null);
 
-	let selectedEvent: CalendarDisplayEvent | null = null;
-	let showEventModal = false;
-	let sidebarOpen = false;
+	$effect.pre(() => {
+		apiEvents = (data.props.initialEvents || []) as CalendarApiEvent[];
+		loadError = data.props.loadError;
+	});
+	let isLoading = $state(false);
+	let isDownloadingIcs = $state(false);
 
-	let searchFilter = '';
-	let timezoneMode: 'event' | 'local' = 'event';
-	let activeTypes = new Set<CalendarEventType>(CALENDAR_EVENT_TYPES);
-	let viewMode: CalendarViewMode = 'dayGridMonth';
-	let calendarView = 'dayGridMonth';
+	let selectedEvent: CalendarDisplayEvent | null = $state(null);
+	let showEventModal = $state(false);
+	let sidebarOpen = $state(false);
+
+	let searchFilter = $state('');
+	let timezoneMode: 'event' | 'local' = $state('event');
+	let activeTypes = $state(new Set<CalendarEventType>(CALENDAR_EVENT_TYPES));
+	let viewMode: CalendarViewMode = $state('dayGridMonth');
+	let calendarView = $state('dayGridMonth');
 	let fetchedRanges = new Set<string>();
 
-	$: timezoneLabels = {
+	let timezoneLabels = $derived({
 		eventTimezone: $t('calendar.event timezone'),
 		localTimezone: $t('calendar.your timezone')
-	};
-
-	$: displayEvents = apiEventsToDisplayEvents(
-		apiEvents,
-		timezoneMode,
-		userTimezone,
-		timezoneLabels
-	);
-
-	$: filteredEvents = filterCalendarEvents(displayEvents, {
-		search: searchFilter,
-		types: activeTypes
 	});
 
-	$: stats = computeCalendarStats(displayEvents);
+	run(() => {
+		displayEvents = apiEventsToDisplayEvents(
+			apiEvents,
+			timezoneMode,
+			userTimezone,
+			timezoneLabels
+		);
+	});
 
-	$: agendaEvents = filteredEvents.filter((event) => {
+	run(() => {
+		filteredEvents = filterCalendarEvents(displayEvents, {
+			search: searchFilter,
+			types: activeTypes
+		});
+	});
+
+	let stats = $derived(computeCalendarStats(displayEvents));
+
+	let agendaEvents = $derived(filteredEvents.filter((event) => {
 		const day = event.start.split('T')[0];
 		return day >= new Date().toISOString().split('T')[0];
-	});
+	}));
 
-	$: hasActiveFilters =
-		searchFilter.trim().length > 0 || activeTypes.size !== CALENDAR_EVENT_TYPES.length;
+	let hasActiveFilters =
+		$derived(searchFilter.trim().length > 0 || activeTypes.size !== CALENDAR_EVENT_TYPES.length);
 
 	function handleEventClick(event: CalendarDisplayEvent) {
 		selectedEvent = event;
@@ -186,7 +201,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4 min-w-0">
-							<button class="btn btn-ghost btn-square lg:hidden shrink-0" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden shrink-0" onclick={toggleSidebar}>
 								<FilterIcon class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3 min-w-0">
@@ -249,7 +264,7 @@
 								<button
 									type="button"
 									class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-									on:click={() => (searchFilter = '')}
+									onclick={() => (searchFilter = '')}
 								>
 									<ClearIcon class="w-4 h-4" />
 								</button>
@@ -260,7 +275,7 @@
 							<button
 								type="button"
 								class="tab tab-sm gap-2 {viewMode === 'dayGridMonth' ? 'tab-active' : ''}"
-								on:click={() => setViewMode('dayGridMonth')}
+								onclick={() => setViewMode('dayGridMonth')}
 							>
 								<ViewModule class="w-3.5 h-3.5" />
 								{$t('calendar.month')}
@@ -268,7 +283,7 @@
 							<button
 								type="button"
 								class="tab tab-sm gap-2 {viewMode === 'timeGridWeek' ? 'tab-active' : ''}"
-								on:click={() => setViewMode('timeGridWeek')}
+								onclick={() => setViewMode('timeGridWeek')}
 							>
 								<ViewWeek class="w-3.5 h-3.5" />
 								{$t('calendar.week')}
@@ -276,7 +291,7 @@
 							<button
 								type="button"
 								class="tab tab-sm gap-2 {viewMode === 'agenda' ? 'tab-active' : ''}"
-								on:click={() => setViewMode('agenda')}
+								onclick={() => setViewMode('agenda')}
 							>
 								<ViewAgenda class="w-3.5 h-3.5" />
 								{$t('calendar.agenda')}
@@ -295,7 +310,7 @@
 							</div>
 						{/if}
 						{#if hasActiveFilters}
-							<button type="button" class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+							<button type="button" class="btn btn-ghost btn-xs gap-1" onclick={clearFilters}>
 								<ClearIcon class="w-3 h-3" />
 								{$t('worldtravel.clear_all')}
 							</button>

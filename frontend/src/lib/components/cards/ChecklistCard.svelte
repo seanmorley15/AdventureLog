@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { stopPropagation } from 'svelte/legacy';
+
 	import { addToast } from '$lib/toasts';
 	import type { Checklist, Collection, User } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -19,9 +21,9 @@
 	import type { CollectionItineraryItem } from '$lib/types';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	let isActionsMenuOpen = false;
-	let openUpward = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -46,20 +48,30 @@
 		};
 	});
 
-	export let checklist: Checklist;
-	export let user: User | null = null;
-	export let collection: Collection;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
+	interface Props {
+		checklist: Checklist;
+		user?: User | null;
+		collection: Collection;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+	}
 
-	let isWarningModalOpen: boolean = false;
-	let isDetailsOpen: boolean = false;
-	let updatingItemId: string | null = null;
+	let {
+		checklist = $bindable(),
+		user = null,
+		collection,
+		readOnly = false,
+		itineraryItem = null
+	}: Props = $props();
 
-	$: canEdit =
-		!readOnly &&
+	let isWarningModalOpen: boolean = $state(false);
+	let isDetailsOpen: boolean = $state(false);
+	let updatingItemId: string | null = $state(null);
+
+	let canEdit =
+		$derived(!readOnly &&
 		(checklist.user == user?.uuid ||
-			(collection && user && collection.shared_with?.includes(user.uuid)));
+			(collection && user && collection.shared_with?.includes(user.uuid))));
 
 	const normalizeDateForApi = (date: string | Date | null | undefined): string | null => {
 		if (!date) return null;
@@ -196,7 +208,7 @@
 				<button
 					type="button"
 					class="btn btn-circle btn-ghost btn-sm"
-					on:click={() => (isDetailsOpen = false)}
+					onclick={() => (isDetailsOpen = false)}
 					aria-label={$t('about.close')}
 				>
 					<Close class="w-4 h-4" />
@@ -209,7 +221,7 @@
 						{#if canEdit}
 							<button
 								type="button"
-								on:click={() => toggleItemStatus(item.id)}
+								onclick={() => toggleItemStatus(item.id)}
 								disabled={updatingItemId === item.id}
 								class="flex w-full items-center gap-3 rounded-lg bg-base-200/60 p-2 text-left transition-colors hover:bg-base-200 disabled:opacity-70"
 							>
@@ -252,11 +264,11 @@
 			{/if}
 
 			<div class="modal-action">
-				<button class="btn" on:click={() => (isDetailsOpen = false)}>Close</button>
+				<button class="btn" onclick={() => (isDetailsOpen = false)}>Close</button>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
-			<button aria-label="close" on:click={() => (isDetailsOpen = false)}>Close</button>
+			<button aria-label="close" onclick={() => (isDetailsOpen = false)}>Close</button>
 		</form>
 	</dialog>
 {/if}
@@ -277,7 +289,7 @@
 			<div class="flex items-center gap-2">
 				<button
 					class="btn btn-square btn-sm p-1 text-base-content"
-					on:click={() => (isDetailsOpen = true)}
+					onclick={() => (isDetailsOpen = true)}
 					aria-label={$t('adventures.view')}
 					type="button"
 				>
@@ -295,7 +307,7 @@
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
@@ -303,7 +315,7 @@
 								closeAllChecklistMenus();
 								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
 							<DotsHorizontal class="w-5 h-5" />
 						</button>
@@ -313,7 +325,7 @@
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editChecklist();
 									}}
@@ -328,7 +340,7 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'checklist', id: checklist.id });
 											}}
@@ -340,7 +352,7 @@
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
@@ -353,7 +365,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -372,7 +384,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}
@@ -394,7 +406,7 @@
 					{#if canEdit}
 						<button
 							type="button"
-							on:click={() => toggleItemStatus(item.id)}
+							onclick={() => toggleItemStatus(item.id)}
 							disabled={updatingItemId === item.id}
 							class="flex w-full items-center gap-1.5 rounded-lg px-2 py-0.5 text-left text-sm text-base-content/80 transition-colors hover:bg-base-200/80 disabled:opacity-60"
 						>

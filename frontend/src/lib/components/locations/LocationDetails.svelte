@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
@@ -21,9 +23,9 @@
 
 	const dispatch = createEventDispatcher();
 
-	let isReverseGeocoding = false;
-	let defaultCurrency = DEFAULT_CURRENCY;
-	let moneyValue: MoneyValue = { amount: null, currency: DEFAULT_CURRENCY };
+	let isReverseGeocoding = $state(false);
+	let defaultCurrency = $state(DEFAULT_CURRENCY);
+	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
 
 	let initialSelection: {
 		name: string;
@@ -31,7 +33,7 @@
 		lng: number;
 		location: string;
 		category?: any;
-	} | null = null;
+	} | null = $state(null);
 
 	let location: {
 		name: string;
@@ -47,7 +49,7 @@
 		location: string;
 		tags: string[];
 		collections?: string[];
-	} = {
+	} = $state({
 		name: '',
 		category: null,
 		rating: NaN,
@@ -61,13 +63,13 @@
 		location: '',
 		tags: [],
 		collections: []
-	};
+	});
 
-	let user: User | null = null;
-	let locationToEdit: Location | null = null;
-	let wikiError = '';
-	let isGeneratingDesc = false;
-	let ownerUser: User | null = null;
+	let user: User | null = $state(null);
+	let locationToEdit: Location | null = $state(null);
+	let wikiError = $state('');
+	let isGeneratingDesc = $state(false);
+	let ownerUser: User | null = $state(null);
 
 	function toFiniteNumber(value: unknown): number | null {
 		if (value === null || value === undefined) {
@@ -77,24 +79,41 @@
 		return Number.isFinite(parsed) ? parsed : null;
 	}
 
-	export let initialLocation: any = null;
-	export let currentUser: any = null;
-	export let editingLocation: any = null;
-	export let collection: Collection | null = null;
+	interface Props {
+		initialLocation?: any;
+		currentUser?: any;
+		editingLocation?: any;
+		collection?: Collection | null;
+	}
 
-	$: user = currentUser;
-	$: locationToEdit = editingLocation;
-	$: defaultCurrency = (user && user.default_currency) || DEFAULT_CURRENCY;
-	$: moneyValue =
-		location.price === null
-			? { amount: null, currency: location.price_currency || null }
-			: toMoneyValue(location.price, location.price_currency, defaultCurrency);
-	$: {
+	let {
+		initialLocation = null,
+		currentUser = null,
+		editingLocation = $bindable(null),
+		collection = null
+	}: Props = $props();
+
+	run(() => {
+		user = currentUser;
+	});
+	run(() => {
+		locationToEdit = editingLocation;
+	});
+	run(() => {
+		defaultCurrency = (user && user.default_currency) || DEFAULT_CURRENCY;
+	});
+	run(() => {
+		moneyValue =
+			location.price === null
+				? { amount: null, currency: location.price_currency || null }
+				: toMoneyValue(location.price, location.price_currency, defaultCurrency);
+	});
+	run(() => {
 		if (location.price !== null && !location.price_currency) {
 			location.price_currency = defaultCurrency;
 		}
-	}
-	$: {
+	});
+	run(() => {
 		const lat = toFiniteNumber(initialLocation?.latitude);
 		const lng = toFiniteNumber(initialLocation?.longitude);
 		initialSelection =
@@ -106,7 +125,7 @@
 						location: initialLocation.location || ''
 					}
 				: null;
-	}
+	});
 
 	function handleLocationUpdate(
 		event: CustomEvent<{ name?: string; lat: number; lng: number; location: string }>
@@ -344,7 +363,7 @@
 											type="radio"
 											name="rating"
 											class="mask mask-star-2 bg-warning"
-											on:click={() => (location.rating = star)}
+											onclick={() => (location.rating = star)}
 											checked={location.rating === star}
 										/>
 									{/each}
@@ -353,7 +372,7 @@
 									<button
 										type="button"
 										class="btn btn-sm btn-error btn-outline gap-2"
-										on:click={() => (location.rating = NaN)}
+										onclick={() => (location.rating = NaN)}
 									>
 										<ClearIcon class="w-4 h-4" />
 										{$t('adventures.remove')}
@@ -410,7 +429,7 @@
 								<button
 									type="button"
 									class="btn btn-neutral btn-sm gap-2"
-									on:click={generateDesc}
+									onclick={generateDesc}
 									disabled={!location.name || isGeneratingDesc}
 								>
 									{#if isGeneratingDesc}
@@ -480,14 +499,14 @@
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
+			<button class="btn btn-neutral-200 gap-2" onclick={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
 			<button
 				class="btn btn-primary gap-2"
 				disabled={!location.name || !location.category || isReverseGeocoding}
-				on:click={handleSave}
+				onclick={handleSave}
 			>
 				{#if isReverseGeocoding}
 					<span class="loading loading-spinner loading-sm"></span>

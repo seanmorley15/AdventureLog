@@ -1,26 +1,27 @@
 <script lang="ts">
+	import { stopPropagation } from 'svelte/legacy';
+
 	import ImageDisplayModal from '../ImageDisplayModal.svelte';
 	import type { ContentImage } from '$lib/types';
 
-	export let geojson: any;
-	export let name: string = '';
-	export let images: ContentImage[] = [];
-	export let heightClass: string = 'h-48';
+	interface Props {
+		geojson: any;
+		name?: string;
+		images?: ContentImage[];
+		heightClass?: string;
+	}
 
-	let showImageModal = false;
-	let modalInitialIndex = 0;
+	let {
+		geojson,
+		name = '',
+		images = [],
+		heightClass = 'h-48'
+	}: Props = $props();
 
-	$: sortedImages = [...images]
-		.filter((img) => !!img?.image)
-		.sort((a, b) => Number(b?.is_primary) - Number(a?.is_primary));
+	let showImageModal = $state(false);
+	let modalInitialIndex = $state(0);
 
-	$: routeCoordinates = extractLineCoords(geojson);
-	$: normalizedRoute = normalizeCoords(routeCoordinates);
-	$: pathD = buildPath(normalizedRoute);
-	$: hasRoute = !!pathD;
-	$: startPoint = normalizedRoute.length > 0 ? normalizedRoute[0] : null;
-	$: endPoint =
-		normalizedRoute.length > 1 ? normalizedRoute[normalizedRoute.length - 1] : startPoint;
+
 
 	function openImageModal(initialIndex: number = 0) {
 		if (!sortedImages.length) return;
@@ -107,6 +108,16 @@
 			.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
 			.join(' ');
 	}
+	let sortedImages = $derived([...images]
+		.filter((img) => !!img?.image)
+		.sort((a, b) => Number(b?.is_primary) - Number(a?.is_primary)));
+	let routeCoordinates = $derived(extractLineCoords(geojson));
+	let normalizedRoute = $derived(normalizeCoords(routeCoordinates));
+	let pathD = $derived(buildPath(normalizedRoute));
+	let hasRoute = $derived(!!pathD);
+	let startPoint = $derived(normalizedRoute.length > 0 ? normalizedRoute[0] : null);
+	let endPoint =
+		$derived(normalizedRoute.length > 1 ? normalizedRoute[normalizedRoute.length - 1] : startPoint);
 </script>
 
 {#if showImageModal && sortedImages.length > 0}
@@ -174,7 +185,7 @@
 	{#if sortedImages.length > 0}
 		<button
 			type="button"
-			on:click|stopPropagation={() => openImageModal(0)}
+			onclick={stopPropagation(() => openImageModal(0))}
 			class="btn btn-xs btn-neutral absolute bottom-3 right-3 shadow"
 		>
 			View photos ({sortedImages.length})

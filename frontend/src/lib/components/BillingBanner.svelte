@@ -3,20 +3,24 @@
 	import { t } from 'svelte-i18n';
 	import type { Subscription } from '$lib/types';
 
-	export let subscription: Subscription | null = null;
-	export let hasAccess = true;
-	export let cloudMode = false;
+	interface Props {
+		subscription?: Subscription | null;
+		hasAccess?: boolean;
+		cloudMode?: boolean;
+	}
+
+	let { subscription = null, hasAccess = true, cloudMode = false }: Props = $props();
 
 	const msPerDay = 1000 * 60 * 60 * 24;
 
-	$: trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
-	$: daysRemaining = trialEndsAt
+	let trialEndsAt = $derived(subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
+	let daysRemaining = $derived(trialEndsAt
 		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
-		: null;
-	$: isTrial = subscription?.status === 'trial';
-	$: hasScheduledSubscription = Boolean(subscription?.stripe_subscription_id);
-	$: isPaidTrial = isTrial && hasScheduledSubscription;
-	$: hideOnBillingPage = $page.url.pathname.startsWith('/subscribe');
+		: null);
+	let isTrial = $derived(subscription?.status === 'trial');
+	let hasScheduledSubscription = $derived(Boolean(subscription?.stripe_subscription_id));
+	let isPaidTrial = $derived(isTrial && hasScheduledSubscription);
+	let hideOnBillingPage = $derived($page.url.pathname.startsWith('/subscribe'));
 </script>
 
 {#if cloudMode && subscription && !hideOnBillingPage}

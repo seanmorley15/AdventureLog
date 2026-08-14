@@ -16,16 +16,22 @@
 	const dispatch = createEventDispatcher();
 
 	let modal: HTMLDialogElement;
-	let isVisible = false;
+	let isVisible = $state(false);
 
-	export let title: string;
-	export let button_text: string;
-	export let description: string;
-	export let is_warning: boolean = false;
+	interface Props {
+		title: string;
+		button_text: string;
+		description: string;
+		is_warning?: boolean;
+	}
 
-	$: modalType = is_warning ? 'warning' : 'info';
-	$: iconComponent = is_warning ? AlertTriangle : HelpCircle;
-	$: colorScheme = getColorScheme(modalType);
+	let {
+		title,
+		button_text,
+		description,
+		is_warning = false
+	}: Props = $props();
+
 
 	function getColorScheme(type: string) {
 		switch (type) {
@@ -84,17 +90,21 @@
 			close();
 		}
 	}
+	let modalType = $derived(is_warning ? 'warning' : 'info');
+	let iconComponent = $derived(is_warning ? AlertTriangle : HelpCircle);
+	let colorScheme = $derived(getColorScheme(modalType));
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	id="confirmation_modal"
 	class="modal backdrop-blur-sm"
-	on:click={handleBackdropClick}
-	on:keydown={handleKeydown}
+	onclick={handleBackdropClick}
+	onkeydown={handleKeydown}
 >
 	{#if isVisible}
+		{@const SvelteComponent = iconComponent}
 		<div
 			class="modal-box max-w-md relative overflow-hidden border-2 {colorScheme.border} bg-base-100/95 backdrop-blur-lg shadow-2xl"
 			transition:scale={{ duration: 150, easing: quintOut, start: 0.1 }}
@@ -105,7 +115,7 @@
 			<!-- Close button -->
 			<button
 				class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 hover:bg-base-content/10 transition-colors"
-				on:click={close}
+				onclick={close}
 				aria-label="Close modal"
 			>
 				<Close class="w-4 h-4" />
@@ -117,7 +127,7 @@
 				<div
 					class="w-16 h-16 rounded-full {colorScheme.iconBg} flex items-center justify-center mb-6 ring-4 ring-base-300/20"
 				>
-					<svelte:component this={iconComponent} class="w-8 h-8 {colorScheme.icon}" />
+					<SvelteComponent class="w-8 h-8 {colorScheme.icon}" />
 				</div>
 
 				<!-- Title -->
@@ -135,14 +145,14 @@
 			<div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
 				<button
 					class="btn {colorScheme.button} flex-1 gap-2 shadow-lg hover:shadow-xl transition-all duration-200"
-					on:click={confirm}
+					onclick={confirm}
 				>
 					<Check class="w-4 h-4" />
 					{button_text}
 				</button>
 				<button
 					class="btn btn-neutral-200 flex-1 gap-2 hover:bg-base-content/10 transition-colors"
-					on:click={close}
+					onclick={close}
 				>
 					<Cancel class="w-4 h-4" />
 					{$t('adventures.cancel')}

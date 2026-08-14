@@ -19,29 +19,60 @@
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
 
-	export let collectionToEdit: Collection | null = null;
+	interface Props {
+		collectionToEdit?: Collection | null;
+	}
 
-	let collection: Collection = {
-		id: collectionToEdit?.id || '',
-		name: collectionToEdit?.name || '',
-		description: collectionToEdit?.description || '',
-		start_date: collectionToEdit?.start_date || null,
-		end_date: collectionToEdit?.end_date || null,
-		user: collectionToEdit?.user || '',
-		is_public: collectionToEdit?.is_public || false,
-		locations: collectionToEdit?.locations || [],
-		link: collectionToEdit?.link || '',
-		shared_with: collectionToEdit?.shared_with || [],
-		itinerary: collectionToEdit?.itinerary || [],
-		status: collectionToEdit?.status || 'folder',
-		days_until_start: collectionToEdit?.days_until_start ?? null,
-		primary_image: collectionToEdit?.primary_image ?? null,
-		primary_image_id: collectionToEdit?.primary_image_id ?? null,
+	let { collectionToEdit = null }: Props = $props();
+
+	let collection: Collection = $state({
+		id: '',
+		name: '',
+		description: '',
+		start_date: null,
+		end_date: null,
+		user: '',
+		is_public: false,
+		locations: [],
+		link: '',
+		shared_with: [],
+		itinerary: [],
+		status: 'folder',
+		days_until_start: null,
+		primary_image: null,
+		primary_image_id: null,
 		itinerary_days: []
-	};
+	});
 
-	let availableImages: ContentImage[] = [];
-	let coverImageId: string | null = collection.primary_image?.id || null;
+	let availableImages: ContentImage[] = $state([]);
+	let coverImageId: string | null = $state(null);
+	let previousCollectionId: string | null | undefined = undefined;
+
+	$effect.pre(() => {
+		const sourceId = collectionToEdit?.id ?? null;
+		if (sourceId === previousCollectionId) return;
+
+		previousCollectionId = sourceId;
+		collection = {
+			id: collectionToEdit?.id || '',
+			name: collectionToEdit?.name || '',
+			description: collectionToEdit?.description || '',
+			start_date: collectionToEdit?.start_date || null,
+			end_date: collectionToEdit?.end_date || null,
+			user: collectionToEdit?.user || '',
+			is_public: collectionToEdit?.is_public || false,
+			locations: collectionToEdit?.locations || [],
+			link: collectionToEdit?.link || '',
+			shared_with: collectionToEdit?.shared_with || [],
+			itinerary: collectionToEdit?.itinerary || [],
+			status: collectionToEdit?.status || 'folder',
+			days_until_start: collectionToEdit?.days_until_start ?? null,
+			primary_image: collectionToEdit?.primary_image ?? null,
+			primary_image_id: collectionToEdit?.primary_image_id ?? null,
+			itinerary_days: []
+		};
+		coverImageId = collection.primary_image?.id || null;
+	});
 
 	function setImagesFromCollection(col: Collection) {
 		const seen = new Map<string, ContentImage>();
@@ -234,12 +265,12 @@
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl max-h-[85vh] flex flex-col"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
@@ -266,7 +297,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button class="btn btn-ghost btn-square" onclick={close}>
 					<CloseIcon class="w-5 h-5" />
 				</button>
 			</div>
@@ -274,7 +305,7 @@
 
 		<!-- Main Content -->
 		<div class="p-6 overflow-auto max-h-[70vh]">
-			<form method="post" on:submit={handleSubmit} class="space-y-6">
+			<form method="post" onsubmit={handleSubmit} class="space-y-6">
 				<!-- Basic Information Section -->
 				<div class="card bg-base-100 border border-base-300 shadow-lg">
 					<div class="card-body p-6">
@@ -469,7 +500,7 @@
 											image.id
 												? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
 												: ''}"
-											on:click={() => selectCover(image.id)}
+											onclick={() => selectCover(image.id)}
 											aria-pressed={coverImageId === image.id}
 										>
 											<img
@@ -503,7 +534,7 @@
 									<button
 										type="button"
 										class="btn btn-ghost btn-sm"
-										on:click={() => selectCover(null)}
+										onclick={() => selectCover(null)}
 									>
 										<CloseIcon class="w-4 h-4" />
 										<span>{$t('collection.clear_cover') ?? 'Clear cover'}</span>
@@ -528,7 +559,7 @@
 								/>
 								<button
 									type="button"
-									on:click={async () => {
+									onclick={async () => {
 										try {
 											await copyToClipboard(
 												`${window.location.origin}/collections/${collection.id}`
@@ -550,7 +581,7 @@
 
 				<!-- Action Buttons -->
 				<div class="flex gap-3 justify-end pt-4">
-					<button type="button" class="btn btn-neutral gap-2" on:click={close}>
+					<button type="button" class="btn btn-neutral gap-2" onclick={close}>
 						<CloseIcon class="w-5 h-5" />
 						{$t('about.close')}
 					</button>

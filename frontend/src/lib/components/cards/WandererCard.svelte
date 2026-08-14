@@ -10,7 +10,11 @@
 	import LinkIcon from '~icons/mdi/link-variant';
 	import type { WandererTrail } from '$lib/types';
 
-	export let trail: WandererTrail;
+	interface Props {
+		trail: WandererTrail;
+	}
+
+	let { trail }: Props = $props();
 
 	// Helper functions
 	/**
@@ -148,7 +152,7 @@
 		<div class="flex-shrink-0 ml-4">
 			<button
 				class="btn btn-primary btn-xs tooltip tooltip-top"
-				on:click={() => dispatch('link', trail)}
+				onclick={() => dispatch('link', trail)}
 				aria-label="Link Trail to Activity"
 			>
 				<LinkIcon class="w-3 h-3" />

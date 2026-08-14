@@ -10,36 +10,71 @@
 	type Provider = { name: string; usage_required: boolean };
 	type PasswordPolicy = { min_length: number; validators_enabled: boolean };
 
-	export let user: User;
-	export let emails: { email: string; verified?: boolean; primary?: boolean }[];
-	export let authenticators: boolean;
-	export let socialProviders: Provider[];
-	export let publicUrl: string;
-	export let passwordPolicy: PasswordPolicy;
-	export let newPassword: string;
-	export let confirmPassword: string;
-	export let apiKeys: APIKey[];
-	export let newApiKeyName: string;
-	export let newlyCreatedKey: string | null;
-	export let keyCopied: boolean;
-	export let sessions: AuthUserSession[];
-	export let isRevokingSession: boolean = false;
-	export let onRevokeSession: (id: number) => void;
-	export let onRevokeOtherSessions: () => void;
-	export let onEnableMfa: () => void;
-	export let onDisableMfa: () => void;
-	export let onVerifyMfaDisablePassword: () => void;
-	export let onCancelMfaDisableReauth: () => void;
-	export let onDisablePassword: () => void;
-	export let onCreateApiKey: () => void;
-	export let onCopyKey: () => void;
-	export let onDeleteApiKey: (id: string) => void;
-	export let onDismissNewKey: () => void;
-	export let mfaDisableNeedsReauth: boolean = false;
-	export let mfaDisablePassword: string = '';
-	export let mfaDisableReauthError: boolean = false;
-	export let isDisablingMfa: boolean = false;
-	export let isVerifyingMfaDisablePassword: boolean = false;
+	interface Props {
+		user: User;
+		emails: { email: string; verified?: boolean; primary?: boolean }[];
+		authenticators: boolean;
+		socialProviders: Provider[];
+		publicUrl: string;
+		passwordPolicy: PasswordPolicy;
+		newPassword: string;
+		confirmPassword: string;
+		apiKeys: APIKey[];
+		newApiKeyName: string;
+		newlyCreatedKey: string | null;
+		keyCopied: boolean;
+		sessions: AuthUserSession[];
+		isRevokingSession?: boolean;
+		onRevokeSession: (id: number) => void;
+		onRevokeOtherSessions: () => void;
+		onEnableMfa: () => void;
+		onDisableMfa: () => void;
+		onVerifyMfaDisablePassword: () => void;
+		onCancelMfaDisableReauth: () => void;
+		onDisablePassword: () => void;
+		onCreateApiKey: () => void;
+		onCopyKey: () => void;
+		onDeleteApiKey: (id: string) => void;
+		onDismissNewKey: () => void;
+		mfaDisableNeedsReauth?: boolean;
+		mfaDisablePassword?: string;
+		mfaDisableReauthError?: boolean;
+		isDisablingMfa?: boolean;
+		isVerifyingMfaDisablePassword?: boolean;
+	}
+
+	let {
+		user = $bindable(),
+		emails,
+		authenticators,
+		socialProviders,
+		publicUrl,
+		passwordPolicy,
+		newPassword = $bindable(),
+		confirmPassword = $bindable(),
+		apiKeys,
+		newApiKeyName = $bindable(),
+		newlyCreatedKey,
+		keyCopied,
+		sessions,
+		isRevokingSession = false,
+		onRevokeSession,
+		onRevokeOtherSessions,
+		onEnableMfa,
+		onDisableMfa,
+		onVerifyMfaDisablePassword,
+		onCancelMfaDisableReauth,
+		onDisablePassword,
+		onCreateApiKey,
+		onCopyKey,
+		onDeleteApiKey,
+		onDismissNewKey,
+		mfaDisableNeedsReauth = false,
+		mfaDisablePassword = $bindable(''),
+		mfaDisableReauthError = false,
+		isDisablingMfa = false,
+		isVerifyingMfaDisablePassword = false
+	}: Props = $props();
 
 	function sessionDeviceLabel(userAgent: string): string {
 		const ua = userAgent?.trim() ?? '';
@@ -63,7 +98,7 @@
 		return ua.length > 80 ? `${ua.slice(0, 80)}…` : ua;
 	}
 
-	$: hasOtherSessions = sessions.some((s) => !s.is_current);
+	let hasOtherSessions = $derived(sessions.some((s) => !s.is_current));
 </script>
 
 <div class="space-y-8">
@@ -77,7 +112,7 @@
 		<form method="post" action="?/changePassword" use:enhance class="space-y-6">
 			{#if user.has_password}
 				<div class="form-control max-w-md">
-					<!-- svelte-ignore a11y-label-has-associated-control -->
+					<!-- svelte-ignore a11y_label_has_associated_control -->
 					<label class="label">
 						<span class="label-text font-medium">{$t('settings.current_password')}</span>
 					</label>
@@ -91,7 +126,7 @@
 			{/if}
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
 				<div class="form-control">
-					<!-- svelte-ignore a11y-label-has-associated-control -->
+					<!-- svelte-ignore a11y_label_has_associated_control -->
 					<label class="label">
 						<span class="label-text font-medium">{$t('settings.new_password')}</span>
 					</label>
@@ -104,7 +139,7 @@
 					/>
 				</div>
 				<div class="form-control">
-					<!-- svelte-ignore a11y-label-has-associated-control -->
+					<!-- svelte-ignore a11y_label_has_associated_control -->
 					<label class="label">
 						<span class="label-text font-medium">{$t('settings.confirm_new_password')}</span>
 					</label>
@@ -156,7 +191,7 @@
 					{:else}
 						<button
 							class="btn btn-error btn-sm shrink-0"
-							on:click={() => onRevokeSession(session.id)}
+							onclick={() => onRevokeSession(session.id)}
 							disabled={isRevokingSession}
 						>
 							{$t('settings.sessions_revoke')}
@@ -168,7 +203,7 @@
 		{#if hasOtherSessions}
 			<button
 				class="btn btn-outline btn-warning mt-4"
-				on:click={onRevokeOtherSessions}
+				onclick={onRevokeOtherSessions}
 				disabled={isRevokingSession}
 			>
 				{$t('settings.sessions_revoke_others')}
@@ -198,13 +233,13 @@
 				{#if !emails.some((e) => e.verified)}
 					<button class="btn btn-disabled">{$t('settings.enable_mfa')}</button>
 				{:else}
-					<button class="btn btn-primary" on:click={onEnableMfa}>{$t('settings.enable_mfa')}</button
+					<button class="btn btn-primary" onclick={onEnableMfa}>{$t('settings.enable_mfa')}</button
 					>
 				{/if}
 			{:else}
 				<button
 					class="btn btn-warning"
-					on:click={onDisableMfa}
+					onclick={onDisableMfa}
 					disabled={isDisablingMfa || mfaDisableNeedsReauth}
 				>
 					{$t('settings.disable_mfa')}
@@ -220,7 +255,7 @@
 					</p>
 				</div>
 				<div class="form-control">
-					<!-- svelte-ignore a11y-label-has-associated-control -->
+					<!-- svelte-ignore a11y_label_has_associated_control -->
 					<label class="label">
 						<span class="label-text font-medium">{$t('settings.current_password')}</span>
 					</label>
@@ -230,11 +265,11 @@
 						placeholder={$t('settings.enter_current_password')}
 						autocomplete="current-password"
 						bind:value={mfaDisablePassword}
-						on:keydown={(e) => e.key === 'Enter' && onVerifyMfaDisablePassword()}
+						onkeydown={(e) => e.key === 'Enter' && onVerifyMfaDisablePassword()}
 						disabled={isVerifyingMfaDisablePassword}
 					/>
 					{#if mfaDisableReauthError}
-						<!-- svelte-ignore a11y-label-has-associated-control -->
+						<!-- svelte-ignore a11y_label_has_associated_control -->
 						<label class="label">
 							<span class="label-text-alt text-error">
 								{$t('settings.reauth_incorrect_password')}
@@ -245,14 +280,14 @@
 				<div class="flex gap-2 flex-wrap">
 					<button
 						class="btn btn-warning"
-						on:click={onVerifyMfaDisablePassword}
+						onclick={onVerifyMfaDisablePassword}
 						disabled={!mfaDisablePassword || isVerifyingMfaDisablePassword}
 					>
 						{isVerifyingMfaDisablePassword ? '…' : $t('settings.reauth_verify')}
 					</button>
 					<button
 						class="btn btn-ghost"
-						on:click={onCancelMfaDisableReauth}
+						onclick={onCancelMfaDisableReauth}
 						disabled={isVerifyingMfaDisablePassword}
 					>
 						{$t('about.close')}
@@ -288,7 +323,7 @@
 					<input
 						type="checkbox"
 						bind:checked={user.disable_password}
-						on:change={onDisablePassword}
+						onchange={onDisablePassword}
 						disabled={socialProviders.some((p) => p.usage_required)}
 						class="toggle toggle-primary"
 					/>
@@ -323,14 +358,14 @@
 					class="flex items-center justify-between px-5 py-3 bg-warning/10 border-b border-warning/20"
 				>
 					<span class="text-sm font-semibold text-warning">{$t('api_keys.new_key_title')}</span>
-					<button type="button" class="btn btn-ghost btn-xs" on:click={onDismissNewKey}>✕</button>
+					<button type="button" class="btn btn-ghost btn-xs" onclick={onDismissNewKey}>✕</button>
 				</div>
 				<div class="px-5 py-4">
 					<div class="flex items-center gap-2 bg-base-200 rounded-xl px-4 py-3">
 						<code class="flex-1 text-sm font-mono break-all select-all">{newlyCreatedKey}</code>
 						<button
 							class="btn btn-sm {keyCopied ? 'btn-success' : 'btn-ghost'}"
-							on:click={onCopyKey}
+							onclick={onCopyKey}
 						>
 							{keyCopied ? $t('api_keys.copied') : $t('api_keys.copy')}
 						</button>
@@ -346,7 +381,7 @@
 							<p class="font-semibold truncate">{key.name}</p>
 							<p class="text-sm font-mono text-base-content/60">{key.key_prefix}…</p>
 						</div>
-						<button class="btn btn-error btn-sm shrink-0" on:click={() => onDeleteApiKey(key.id)}>
+						<button class="btn btn-error btn-sm shrink-0" onclick={() => onDeleteApiKey(key.id)}>
 							{$t('api_keys.revoke')}
 						</button>
 					</div>
@@ -363,7 +398,7 @@
 				class="input input-bordered input-primary flex-1"
 				maxlength="100"
 			/>
-			<button class="btn btn-primary" on:click={onCreateApiKey} disabled={!newApiKeyName.trim()}>
+			<button class="btn btn-primary" onclick={onCreateApiKey} disabled={!newApiKeyName.trim()}>
 				{$t('api_keys.create')}
 			</button>
 		</div>

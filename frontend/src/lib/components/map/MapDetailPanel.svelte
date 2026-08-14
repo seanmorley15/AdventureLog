@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
@@ -24,19 +26,37 @@
 	import MapMarker from '~icons/mdi/map-marker';
 	import LinkIcon from '~icons/mdi/link-variant';
 
-	export let selectionKind: 'pin' | 'place' | 'recommendation' | 'image' | null = null;
-	export let location: Location | null = null;
-	export let place: PlaceSearchResult | null = null;
-	export let recommendation: Recommendation | null = null;
-	export let imagePin: ImagePinProperties | null = null;
-	export let pinName = '';
-	export let pinVisitStatus: 'visited' | 'planned' | null = null;
-	export let pinCategoryIcon = '';
-	export let loading = false;
-	export let error: string | null = null;
-	export let isQuickAdding = false;
-	export let showLodgingAdd = false;
-	export let isMetric = true;
+	interface Props {
+		selectionKind?: 'pin' | 'place' | 'recommendation' | 'image' | null;
+		location?: Location | null;
+		place?: PlaceSearchResult | null;
+		recommendation?: Recommendation | null;
+		imagePin?: ImagePinProperties | null;
+		pinName?: string;
+		pinVisitStatus?: 'visited' | 'planned' | null;
+		pinCategoryIcon?: string;
+		loading?: boolean;
+		error?: string | null;
+		isQuickAdding?: boolean;
+		showLodgingAdd?: boolean;
+		isMetric?: boolean;
+	}
+
+	let {
+		selectionKind = null,
+		location = null,
+		place = null,
+		recommendation = null,
+		imagePin = null,
+		pinName = '',
+		pinVisitStatus = null,
+		pinCategoryIcon = '',
+		loading = false,
+		error = null,
+		isQuickAdding = false,
+		showLodgingAdd = false,
+		isMetric = true
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		back: void;
@@ -47,12 +67,12 @@
 		addLodging: void;
 	}>();
 
-	let photoModalOpen = false;
-	let selectedPhotos: ContentImage[] = [];
-	let selectedPhotoIndex = 0;
-	let photoTitle = '';
-	let photoSubtitle = '';
-	let descriptionExpanded = false;
+	let photoModalOpen = $state(false);
+	let selectedPhotos: ContentImage[] = $state([]);
+	let selectedPhotoIndex = $state(0);
+	let photoTitle = $state('');
+	let photoSubtitle = $state('');
+	let descriptionExpanded = $state(false);
 
 	const DESCRIPTION_COLLAPSE_CHARS = 320;
 
@@ -126,65 +146,13 @@
 		photoModalOpen = true;
 	}
 
-	$: title =
-		selectionKind === 'pin'
-			? location?.name || pinName
-			: selectionKind === 'place'
-				? place?.name
-				: selectionKind === 'recommendation'
-					? recommendation?.name
-					: selectionKind === 'image'
-						? imagePin?.parentName || $t('images.map_pin_title')
-						: '';
 
-	$: subtitle =
-		selectionKind === 'pin'
-			? location?.location
-			: selectionKind === 'place'
-				? place?.location
-				: selectionKind === 'recommendation'
-					? recommendation?.address
-					: selectionKind === 'image'
-						? imagePin
-							? $t(getImagePinParentTypeKey(imagePin.parentType))
-							: ''
-						: '';
 
-	$: rating =
-		selectionKind === 'pin'
-			? location?.rating
-			: selectionKind === 'place'
-				? place?.rating
-				: recommendation?.rating;
 
-	$: displayRating = hasValidRating(rating) ? (rating as number) : null;
 
-	$: externalPhotoUrls =
-		selectionKind === 'place'
-			? place?.photos || []
-			: selectionKind === 'recommendation'
-				? recommendation?.photos || []
-				: [];
 
-	$: locationImages = selectionKind === 'pin' && location?.images?.length ? location.images : [];
 
-	$: descriptionText =
-		selectionKind === 'pin'
-			? location?.description
-			: selectionKind === 'place'
-				? place?.description
-				: selectionKind === 'recommendation'
-					? recommendation?.description
-					: null;
 
-	$: providerLabel =
-		selectionKind === 'place'
-			? formatProviderLabel(place?.provider || place?.powered_by)
-			: selectionKind === 'recommendation' && recommendation
-				? recommendation.source === 'google'
-					? 'Google Maps'
-					: 'OpenStreetMap'
-				: null;
 
 	function hasValidRating(value: number | null | undefined): boolean {
 		return value !== null && value !== undefined && !Number.isNaN(value);
@@ -201,8 +169,63 @@
 			.trim();
 	}
 
-	$: selectionKey =
-		selectionKind === 'pin'
+
+
+
+	let title =
+		$derived(selectionKind === 'pin'
+			? location?.name || pinName
+			: selectionKind === 'place'
+				? place?.name
+				: selectionKind === 'recommendation'
+					? recommendation?.name
+					: selectionKind === 'image'
+						? imagePin?.parentName || $t('images.map_pin_title')
+						: '');
+	let subtitle =
+		$derived(selectionKind === 'pin'
+			? location?.location
+			: selectionKind === 'place'
+				? place?.location
+				: selectionKind === 'recommendation'
+					? recommendation?.address
+					: selectionKind === 'image'
+						? imagePin
+							? $t(getImagePinParentTypeKey(imagePin.parentType))
+							: ''
+						: '');
+	let rating =
+		$derived(selectionKind === 'pin'
+			? location?.rating
+			: selectionKind === 'place'
+				? place?.rating
+				: recommendation?.rating);
+	let displayRating = $derived(hasValidRating(rating) ? (rating as number) : null);
+	let externalPhotoUrls =
+		$derived(selectionKind === 'place'
+			? place?.photos || []
+			: selectionKind === 'recommendation'
+				? recommendation?.photos || []
+				: []);
+	let locationImages = $derived(selectionKind === 'pin' && location?.images?.length ? location.images : []);
+	let descriptionText =
+		$derived(selectionKind === 'pin'
+			? location?.description
+			: selectionKind === 'place'
+				? place?.description
+				: selectionKind === 'recommendation'
+					? recommendation?.description
+					: null);
+	let providerLabel =
+		$derived(selectionKind === 'place'
+			? formatProviderLabel(place?.provider || place?.powered_by)
+			: selectionKind === 'recommendation' && recommendation
+				? recommendation.source === 'google'
+					? 'Google Maps'
+					: 'OpenStreetMap'
+				: null);
+	let selectionKey =
+		$derived(selectionKind === 'pin'
 			? (location?.id ?? pinName)
 			: selectionKind === 'place'
 				? (place?.place_id ?? place?.name)
@@ -210,17 +233,17 @@
 					? recommendation?.id
 					: selectionKind === 'image'
 						? imagePin?.imageId
-						: '';
-
-	$: imageParentHref = imagePin ? getImagePinNavigationUrl(imagePin) : null;
-
-	$: (selectionKey, (descriptionExpanded = false));
-
-	$: descriptionPlain = descriptionText?.trim() ? plainTextFromMarkdown(descriptionText) : '';
-	$: descriptionIsLong = descriptionPlain.length > DESCRIPTION_COLLAPSE_CHARS;
-	$: descriptionPreview = descriptionIsLong
+						: '');
+	let imageParentHref = $derived(imagePin ? getImagePinNavigationUrl(imagePin) : null);
+	$effect(() => {
+		selectionKey;
+		descriptionExpanded = false;
+	});
+	let descriptionPlain = $derived(descriptionText?.trim() ? plainTextFromMarkdown(descriptionText) : '');
+	let descriptionIsLong = $derived(descriptionPlain.length > DESCRIPTION_COLLAPSE_CHARS);
+	let descriptionPreview = $derived(descriptionIsLong
 		? `${descriptionPlain.slice(0, DESCRIPTION_COLLAPSE_CHARS).trim()}…`
-		: descriptionPlain;
+		: descriptionPlain);
 </script>
 
 {#if photoModalOpen}
@@ -237,7 +260,7 @@
 	<button
 		type="button"
 		class="btn btn-ghost btn-sm gap-2 justify-start shrink-0 mb-4"
-		on:click={() => dispatch('back')}
+		onclick={() => dispatch('back')}
 	>
 		<ArrowLeft class="w-4 h-4" />
 		{$t('map.back_to_controls')}
@@ -363,17 +386,19 @@
 							<button
 								type="button"
 								class="aspect-square rounded-lg overflow-hidden border border-base-300 hover:ring-2 ring-primary relative w-full"
-								on:click={() => openLocationImages(locationImages, title || '', subtitle || '', i)}
+								onclick={() => openLocationImages(locationImages, title || '', subtitle || '', i)}
 							>
 								<ImageFrame source={image.source} className="w-full h-full">
 									<img src={image.image} alt="" class="w-full h-full object-cover" />
-									<div slot="overlays">
-										{#if image.is_primary}
-											<span class="badge badge-primary badge-xs absolute top-1 right-1"
-												>{$t('settings.primary')}</span
-											>
-										{/if}
-									</div>
+									{#snippet overlays()}
+																						<div >
+											{#if image.is_primary}
+												<span class="badge badge-primary badge-xs absolute top-1 right-1"
+													>{$t('settings.primary')}</span
+												>
+											{/if}
+										</div>
+																					{/snippet}
 								</ImageFrame>
 							</button>
 						{/each}
@@ -387,7 +412,7 @@
 							<button
 								type="button"
 								class="aspect-square rounded-lg overflow-hidden border border-base-300 hover:ring-2 ring-primary w-full"
-								on:click={() => openPhotoUrls(externalPhotoUrls, title || '', subtitle || '', i)}
+								onclick={() => openPhotoUrls(externalPhotoUrls, title || '', subtitle || '', i)}
 							>
 								<ImageFrame source="google" className="w-full h-full">
 									<img src={photo} alt="" class="w-full h-full object-cover" />
@@ -474,7 +499,7 @@
 						<button
 							type="button"
 							class="btn btn-ghost btn-xs mt-2 px-0"
-							on:click={() => (descriptionExpanded = !descriptionExpanded)}
+							onclick={() => (descriptionExpanded = !descriptionExpanded)}
 						>
 							{descriptionExpanded ? $t('map.show_less') : $t('map.show_more')}
 						</button>
@@ -562,7 +587,7 @@
 				<button
 					type="button"
 					class="btn btn-primary w-full"
-					on:click={() => dispatch('viewFull', { pinId: location.id })}
+					onclick={() => dispatch('viewFull', { pinId: location.id })}
 				>
 					{$t('map.view_details')}
 				</button>
@@ -572,7 +597,7 @@
 				<button
 					type="button"
 					class="btn btn-primary w-full"
-					on:click={() => dispatch('viewImageParent', { href: imageParentHref })}
+					onclick={() => dispatch('viewImageParent', { href: imageParentHref })}
 				>
 					{$t('adventures.open_details')}
 				</button>
@@ -584,7 +609,7 @@
 					class="btn btn-primary w-full gap-2"
 					class:loading={isQuickAdding}
 					disabled={isQuickAdding}
-					on:click={() => dispatch('quickAdd')}
+					onclick={() => dispatch('quickAdd')}
 				>
 					<LightningIcon class="w-4 h-4" />
 					{$t('map.quick_add')}
@@ -593,7 +618,7 @@
 					type="button"
 					class="btn btn-outline w-full gap-2"
 					disabled={isQuickAdding}
-					on:click={() => dispatch('addDetails')}
+					onclick={() => dispatch('addDetails')}
 				>
 					<Plus class="w-4 h-4" />
 					{$t('map.add_with_details')}
@@ -602,7 +627,7 @@
 					<button
 						type="button"
 						class="btn btn-ghost w-full gap-2"
-						on:click={() => dispatch('addLodging')}
+						onclick={() => dispatch('addLodging')}
 					>
 						{$t('map.add_as_lodging')}
 					</button>

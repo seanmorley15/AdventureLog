@@ -27,40 +27,54 @@
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 	import WandererCard from '../cards/WandererCard.svelte';
 
-	// Props
-	export let images: ContentImage[] = [];
-	export let attachments: Attachment[] = [];
-	export let itemName: string = '';
-	export let trails: Trail[] = [];
-	export let itemId: string = '';
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let userIsOwner: boolean = false;
-	export let pendingGooglePhotoUrls: string[] = [];
+	
+	interface Props {
+		// Props
+		images?: ContentImage[];
+		attachments?: Attachment[];
+		itemName?: string;
+		trails?: Trail[];
+		itemId?: string;
+		measurementSystem?: 'metric' | 'imperial';
+		userIsOwner?: boolean;
+		pendingGooglePhotoUrls?: string[];
+	}
+
+	let {
+		images = $bindable([]),
+		attachments = $bindable([]),
+		itemName = '',
+		trails = $bindable([]),
+		itemId = '',
+		measurementSystem = 'metric',
+		userIsOwner = false,
+		pendingGooglePhotoUrls = $bindable([])
+	}: Props = $props();
 
 	// Component state
-	let immichIntegration: boolean = false;
-	let copyImmichLocally: boolean = false;
-	let importInProgress: boolean = false;
+	let immichIntegration: boolean = $state(false);
+	let copyImmichLocally: boolean = $state(false);
+	let importInProgress: boolean = $state(false);
 
 	// Trail state
-	let trailName: string = '';
-	let trailLink: string = '';
+	let trailName: string = $state('');
+	let trailLink: string = $state('');
 	let trailWandererId: string = '';
 	let trailWandererAuthorUsername: string = '';
 	let trailWandererAuthorDomain: string = '';
-	let trailError: string = '';
-	let isTrailLoading: boolean = false;
-	let trailToEdit: Trail | null = null;
-	let editingTrailName: string = '';
-	let editingTrailLink: string = '';
-	let editingTrailWandererId: string = '';
-	let showAddTrailForm: boolean = false;
-	let showWandererForm: boolean = false;
-	let isWandererEnabled: boolean = false;
-	let searchQuery: string = '';
-	let isSearching: boolean = false;
+	let trailError: string = $state('');
+	let isTrailLoading: boolean = $state(false);
+	let trailToEdit: Trail | null = $state(null);
+	let editingTrailName: string = $state('');
+	let editingTrailLink: string = $state('');
+	let editingTrailWandererId: string = $state('');
+	let showAddTrailForm: boolean = $state(false);
+	let showWandererForm: boolean = $state(false);
+	let isWandererEnabled: boolean = $state(false);
+	let searchQuery: string = $state('');
+	let isSearching: boolean = $state(false);
 
-	let wandererFetchedTrails: WandererTrail[] = [];
+	let wandererFetchedTrails: WandererTrail[] = $state([]);
 
 	const dispatch = createEventDispatcher();
 
@@ -403,7 +417,7 @@
 					<div class="flex items-center gap-2">
 						<button
 							class="btn btn-accent btn-sm gap-2"
-							on:click={() => {
+							onclick={() => {
 								showAddTrailForm = !showAddTrailForm;
 								if (showAddTrailForm) showWandererForm = false;
 							}}
@@ -414,7 +428,7 @@
 						{#if userIsOwner}
 							<button
 								class="btn btn-accent btn-sm gap-2"
-								on:click={() => {
+								onclick={() => {
 									doShowWandererForm();
 								}}
 							>
@@ -457,7 +471,7 @@
 								<button
 									class="btn btn-ghost btn-sm"
 									disabled={isTrailLoading}
-									on:click={resetTrailForm}
+									onclick={resetTrailForm}
 								>
 									{$t('adventures.cancel')}
 								</button>
@@ -465,7 +479,7 @@
 									class="btn btn-accent btn-sm"
 									class:loading={isTrailLoading}
 									disabled={isTrailLoading || !trailName.trim() || !trailLink.trim()}
-									on:click={createTrail}
+									onclick={createTrail}
 								>
 									{$t('adventures.create_trail')}
 								</button>
@@ -491,14 +505,14 @@
 										placeholder={$t('adventures.search_trails_placeholder') + '...'}
 										class="input input-bordered w-full pr-20"
 										bind:value={searchQuery}
-										on:input={debouncedSearch}
-										on:keydown={(e) => e.key === 'Enter' && handleSearch()}
+										oninput={debouncedSearch}
+										onkeydown={(e) => e.key === 'Enter' && handleSearch()}
 									/>
 									<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
 										{#if searchQuery}
 											<button
 												class="btn btn-ghost btn-xs btn-circle"
-												on:click={clearSearch}
+												onclick={clearSearch}
 												disabled={isSearching}
 												title="Clear search"
 											>
@@ -508,7 +522,7 @@
 										<button
 											class="btn btn-accent btn-xs"
 											class:loading={isSearching}
-											on:click={handleSearch}
+											onclick={handleSearch}
 											disabled={isSearching}
 											title="Search"
 										>
@@ -556,7 +570,7 @@
 							<div class="flex gap-2 justify-end">
 								<button
 									class="btn btn-accent btn-sm"
-									on:click={() => {
+									onclick={() => {
 										showWandererForm = false;
 										showAddTrailForm = false;
 										searchQuery = ''; // Clear search when closing
@@ -601,12 +615,12 @@
 											<button
 												class="btn btn-success btn-xs flex-1"
 												disabled={!validateEditTrailForm()}
-												on:click={saveTrailEdit}
+												onclick={saveTrailEdit}
 											>
 												<CheckIcon class="w-3 h-3" />
 												{$t('notes.save')}
 											</button>
-											<button class="btn btn-ghost btn-xs flex-1" on:click={cancelEditingTrail}>
+											<button class="btn btn-ghost btn-xs flex-1" onclick={cancelEditingTrail}>
 												<CloseIcon class="w-3 h-3" />
 												{$t('adventures.cancel')}
 											</button>
@@ -740,7 +754,7 @@
 													type="button"
 													class="btn btn-warning btn-xs btn-square tooltip tooltip-top"
 													data-tip="Edit Trail"
-													on:click={() => startEditingTrail(trail)}
+													onclick={() => startEditingTrail(trail)}
 												>
 													<EditIcon class="w-3 h-3" />
 												</button>
@@ -749,7 +763,7 @@
 												type="button"
 												class="btn btn-error btn-xs btn-square tooltip tooltip-top"
 												data-tip="Remove Trail"
-												on:click={() => removeTrail(trail.id)}
+												onclick={() => removeTrail(trail.id)}
 											>
 												<TrashIcon class="w-3 h-3" />
 											</button>
@@ -772,12 +786,12 @@
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack} disabled={importInProgress}>
+			<button class="btn btn-neutral-200 gap-2" onclick={handleBack} disabled={importInProgress}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
 
-			<button class="btn btn-primary gap-2" on:click={handleNext} disabled={importInProgress}>
+			<button class="btn btn-primary gap-2" onclick={handleNext} disabled={importInProgress}>
 				<SaveIcon class="w-5 h-5" />
 				{$t('adventures.continue')}
 			</button>

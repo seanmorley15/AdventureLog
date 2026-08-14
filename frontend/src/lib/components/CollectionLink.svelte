@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Location, Collection } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -14,17 +16,21 @@
 	import Link from '~icons/mdi/link-variant';
 	import Share from '~icons/mdi/share-variant';
 
-	let collections: Collection[] = [];
-	let sharedCollections: Collection[] = [];
-	let allCollections: Collection[] = [];
-	let filteredCollections: Collection[] = [];
-	let searchQuery: string = '';
-	let loading = true;
+	let collections: Collection[] = $state([]);
+	let sharedCollections: Collection[] = $state([]);
+	let allCollections: Collection[] = $state([]);
+	let filteredCollections: Collection[] = $state([]);
+	let searchQuery: string = $state('');
+	let loading = $state(true);
 
-	export let linkedCollectionList: string[] | null = null;
+	interface Props {
+		linkedCollectionList?: string[] | null;
+	}
+
+	let { linkedCollectionList = $bindable(null) }: Props = $props();
 
 	// Search functionality following worldtravel pattern
-	$: {
+	run(() => {
 		if (searchQuery === '') {
 			filteredCollections = allCollections;
 		} else {
@@ -32,7 +38,7 @@
 				collection.name.toLowerCase().includes(searchQuery.toLowerCase())
 			);
 		}
-	}
+	});
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -112,33 +118,33 @@
 	}
 
 	// Statistics following worldtravel pattern
-	$: linkedCount = linkedCollectionList ? linkedCollectionList.length : 0;
-	$: totalCollections = collections.length + sharedCollections.length;
-	$: ownCollectionsCount = collections.length;
-	$: sharedCollectionsCount = sharedCollections.length;
+	let linkedCount = $derived(linkedCollectionList ? linkedCollectionList.length : 0);
+	let totalCollections = $derived(collections.length + sharedCollections.length);
+	let ownCollectionsCount = $derived(collections.length);
+	let sharedCollectionsCount = $derived(sharedCollections.length);
 
 	// Filtered collections for display
-	$: filteredOwnCollections =
-		searchQuery === ''
+	let filteredOwnCollections =
+		$derived(searchQuery === ''
 			? collections
 			: collections.filter((collection) =>
 					collection.name.toLowerCase().includes(searchQuery.toLowerCase())
-				);
-	$: filteredSharedCollections =
-		searchQuery === ''
+				));
+	let filteredSharedCollections =
+		$derived(searchQuery === ''
 			? sharedCollections
 			: sharedCollections.filter((collection) =>
 					collection.name.toLowerCase().includes(searchQuery.toLowerCase())
-				);
+				));
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following worldtravel pattern -->
@@ -185,7 +191,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button class="btn btn-ghost btn-square" onclick={close}>
 					<Clear class="w-5 h-5" />
 				</button>
 			</div>
@@ -203,7 +209,7 @@
 					{#if searchQuery.length > 0}
 						<button
 							class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-							on:click={() => (searchQuery = '')}
+							onclick={() => (searchQuery = '')}
 						>
 							<Clear class="w-4 h-4" />
 						</button>
@@ -211,7 +217,7 @@
 				</div>
 
 				{#if searchQuery}
-					<button class="btn btn-ghost btn-xs gap-1" on:click={() => (searchQuery = '')}>
+					<button class="btn btn-ghost btn-xs gap-1" onclick={() => (searchQuery = '')}>
 						<Clear class="w-3 h-3" />
 						{$t('worldtravel.clear_all')}
 					</button>
@@ -238,7 +244,7 @@
 						<p class="text-base-content/50 text-center max-w-md mb-6">
 							{$t('collection.try_different_search')}
 						</p>
-						<button class="btn btn-primary gap-2" on:click={() => (searchQuery = '')}>
+						<button class="btn btn-primary gap-2" onclick={() => (searchQuery = '')}>
 							<Clear class="w-4 h-4" />
 							{$t('worldtravel.clear_filters')}
 						</button>
@@ -329,7 +335,7 @@
 					{linkedCount}
 					{$t('adventures.collections_linked')}
 				</div>
-				<button class="btn btn-primary gap-2" on:click={close}>
+				<button class="btn btn-primary gap-2" onclick={close}>
 					<Link class="w-4 h-4" />
 					{$t('adventures.done')}
 				</button>

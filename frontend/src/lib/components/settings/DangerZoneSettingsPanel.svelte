@@ -6,12 +6,23 @@
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 
-	export let user: User;
-	export let deleteConfirmation: string;
-	export let deletePassword: string;
-	export let isDeletingAccount: boolean;
-	export let canDeleteAccount: boolean;
-	export let onDeleteSubmit: () => boolean;
+	interface Props {
+		user: User;
+		deleteConfirmation: string;
+		deletePassword: string;
+		isDeletingAccount: boolean;
+		canDeleteAccount: boolean;
+		onDeleteSubmit: () => boolean;
+	}
+
+	let {
+		user,
+		deleteConfirmation = $bindable(),
+		deletePassword = $bindable(),
+		isDeletingAccount = $bindable(),
+		canDeleteAccount,
+		onDeleteSubmit
+	}: Props = $props();
 </script>
 
 <SettingsCard className="border border-error/30">

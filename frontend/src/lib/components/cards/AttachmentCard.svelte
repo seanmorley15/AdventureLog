@@ -2,11 +2,15 @@
 	import type { Attachment } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
-	export let attachment: Attachment;
-	export let allowEdit: boolean = false;
 
 	import { createEventDispatcher } from 'svelte';
 	import { addToast } from '$lib/toasts';
+	interface Props {
+		attachment: Attachment;
+		allowEdit?: boolean;
+	}
+
+	let { attachment, allowEdit = false }: Props = $props();
 
 	const dispatch = createEventDispatcher();
 
@@ -33,11 +37,11 @@
 
 <div class="relative rounded-lg shadow-lg group hover:shadow-xl transition-shadow overflow-hidden">
 	<!-- Card Image or Placeholder -->
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		class="w-full h-48 bg-cover bg-center group-hover:opacity-90 transition-opacity"
 		style="background-image: {getCardBackground()}"
-		on:click={() => window.open(attachment.file, '_blank')}
+		onclick={() => window.open(attachment.file, '_blank')}
 		role="button"
 		tabindex="0"
 		aria-label={attachment.file.split('/').pop()}
@@ -79,7 +83,7 @@
 				<button
 					class="btn btn-sm btn-secondary btn-outline"
 					type="button"
-					on:click={() => window.open(attachment.file, '_blank')}
+					onclick={() => window.open(attachment.file, '_blank')}
 				>
 					{$t('notes.open')}
 				</button>
@@ -88,11 +92,11 @@
 				<button
 					class="btn btn-sm btn-info btn-outline"
 					type="button"
-					on:click={() => dispatch('edit', attachment)}
+					onclick={() => dispatch('edit', attachment)}
 				>
 					{$t('transportation.edit')}
 				</button>
-				<button class="btn btn-sm btn-danger btn-outline" type="button" on:click={deleteAttachment}>
+				<button class="btn btn-sm btn-danger btn-outline" type="button" onclick={deleteAttachment}>
 					{$t('adventures.delete')}
 				</button>
 			{/if}

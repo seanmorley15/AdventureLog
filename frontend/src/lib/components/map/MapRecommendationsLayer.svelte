@@ -1,18 +1,24 @@
 <script lang="ts">
+	import { stopPropagation } from 'svelte/legacy';
+
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { Marker } from 'svelte-maplibre';
 	import type { Recommendation } from '$lib/types';
 	import { osmTagToEmoji } from '$lib';
 
-	export let recommendations: Recommendation[] = [];
-	export let selectedId: string | null = null;
+	interface Props {
+		recommendations?: Recommendation[];
+		selectedId?: string | null;
+	}
+
+	let { recommendations = [], selectedId = null }: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		select: { item: Recommendation };
 	}>();
 
-	let hoveredId: string | null = null;
+	let hoveredId: string | null = $state(null);
 
 	function normalizeTag(tag: string): string {
 		return tag.trim().toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_');
@@ -52,15 +58,15 @@
 					type="button"
 					class={recMarkerClass(rec, isSelected, isHovered)}
 					aria-label={rec.name}
-					on:mouseenter={() => (hoveredId = rec.id)}
-					on:mouseleave={() => {
+					onmouseenter={() => (hoveredId = rec.id)}
+					onmouseleave={() => {
 						if (!isSelected) hoveredId = null;
 					}}
-					on:focus={() => (hoveredId = rec.id)}
-					on:blur={() => {
+					onfocus={() => (hoveredId = rec.id)}
+					onblur={() => {
 						if (!isSelected) hoveredId = null;
 					}}
-					on:click|stopPropagation={() => dispatch('select', { item: rec })}
+					onclick={stopPropagation(() => dispatch('select', { item: rec }))}
 				>
 					{recommendationEmoji(rec)}
 				</button>

@@ -9,8 +9,12 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let city: City;
-	export let visited: boolean;
+	interface Props {
+		city: City;
+		visited: boolean;
+	}
+
+	let { city, visited = $bindable() }: Props = $props();
 
 	async function markVisited(e: MouseEvent) {
 		e.stopPropagation();
@@ -54,7 +58,7 @@
 			? 'text-success'
 			: 'text-base-content/30 hover:text-success'}"
 		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
-		on:click={visited ? removeVisit : markVisited}
+		onclick={visited ? removeVisit : markVisited}
 	>
 		{#if visited}
 			<CheckFilled class="w-5 h-5" />

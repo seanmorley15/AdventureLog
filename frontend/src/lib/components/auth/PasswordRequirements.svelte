@@ -9,12 +9,16 @@
 		type RequirementStatus
 	} from '$lib/password-policy';
 
-	export let policy: PasswordPolicy;
-	export let password = '';
+	interface Props {
+		policy: PasswordPolicy;
+		password?: string;
+	}
 
-	$: requirements = getPasswordRequirements(policy);
-	$: lengthStatus = checkPasswordRequirement('min_length', password, policy);
-	$: otherRequirements = requirements.filter((requirement) => requirement.id !== 'min_length');
+	let { policy, password = '' }: Props = $props();
+
+	let requirements = $derived(getPasswordRequirements(policy));
+	let lengthStatus = $derived(checkPasswordRequirement('min_length', password, policy));
+	let otherRequirements = $derived(requirements.filter((requirement) => requirement.id !== 'min_length'));
 
 	function statusClass(status: RequirementStatus): string {
 		if (status === true) return 'text-success';

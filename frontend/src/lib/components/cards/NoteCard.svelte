@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { stopPropagation } from 'svelte/legacy';
+
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
 	import type { Collection, Note, User } from '$lib/types';
@@ -24,9 +26,9 @@
 	import type { CollectionItineraryItem } from '$lib/types';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	let isActionsMenuOpen = false;
-	let openUpward = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -51,19 +53,29 @@
 		};
 	});
 
-	export let note: Note;
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
+	interface Props {
+		note: Note;
+		user?: User | null;
+		collection?: Collection | null;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+	}
 
-	let isWarningModalOpen: boolean = false;
-	let isDetailsOpen: boolean = false;
+	let {
+		note,
+		user = null,
+		collection = null,
+		readOnly = false,
+		itineraryItem = null
+	}: Props = $props();
 
-	$: canEdit =
-		!readOnly &&
+	let isWarningModalOpen: boolean = $state(false);
+	let isDetailsOpen: boolean = $state(false);
+
+	let canEdit =
+		$derived(!readOnly &&
 		(note.user == user?.uuid ||
-			(collection && user && collection.shared_with?.includes(user.uuid)));
+			(collection && user && collection.shared_with?.includes(user.uuid))));
 
 	function editNote() {
 		dispatch('edit', note);
@@ -138,7 +150,7 @@
 				<button
 					type="button"
 					class="btn btn-circle btn-ghost btn-sm"
-					on:click={() => (isDetailsOpen = false)}
+					onclick={() => (isDetailsOpen = false)}
 					aria-label={$t('about.close')}
 				>
 					<Close class="w-4 h-4" />
@@ -173,11 +185,11 @@
 			{/if}
 
 			<div class="modal-action">
-				<button class="btn" on:click={() => (isDetailsOpen = false)}>Close</button>
+				<button class="btn" onclick={() => (isDetailsOpen = false)}>Close</button>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
-			<button aria-label="close" on:click={() => (isDetailsOpen = false)}>Close</button>
+			<button aria-label="close" onclick={() => (isDetailsOpen = false)}>Close</button>
 		</form>
 	</dialog>
 {/if}
@@ -199,7 +211,7 @@
 			<div class="flex items-center gap-2">
 				<button
 					class="btn btn-square btn-sm p-1 text-base-content"
-					on:click={() => (isDetailsOpen = true)}
+					onclick={() => (isDetailsOpen = true)}
 					aria-label={$t('adventures.view')}
 					type="button"
 				>
@@ -217,7 +229,7 @@
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
@@ -225,7 +237,7 @@
 								closeAllNoteMenus();
 								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
 							<DotsHorizontal class="w-5 h-5" />
 						</button>
@@ -235,7 +247,7 @@
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editNote();
 									}}
@@ -250,7 +262,7 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'note', id: note.id });
 											}}
@@ -262,7 +274,7 @@
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
@@ -275,7 +287,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -294,7 +306,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}

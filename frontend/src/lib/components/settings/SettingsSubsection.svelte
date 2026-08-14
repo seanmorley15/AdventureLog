@@ -1,7 +1,17 @@
 <script lang="ts">
-	export let title: string;
-	export let description: string = '';
-	export let showDivider: boolean = true;
+	interface Props {
+		title: string;
+		description?: string;
+		showDivider?: boolean;
+		children?: import('svelte').Snippet;
+	}
+
+	let {
+		title,
+		description = '',
+		showDivider = true,
+		children
+	}: Props = $props();
 </script>
 
 {#if showDivider}
@@ -15,4 +25,4 @@
 	</div>
 {/if}
 
-<slot />
+{@render children?.()}

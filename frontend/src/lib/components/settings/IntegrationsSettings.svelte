@@ -21,39 +21,53 @@
 	import ServerIcon from '~icons/mdi/server';
 	import Sparkles from '~icons/mdi/sparkles';
 
-	export let user: User;
-	export let immichIntegration: ImmichIntegration | null = null;
-	export let googleMapsEnabled = false;
-	export let stravaGlobalEnabled = false;
-	export let stravaUserEnabled = false;
-	export let wandererEnabled = false;
-	export let wandererIntegration: WandererIntegration | null = null;
-	export let endurainEnabled = false;
-	export let endurainIntegration: EndurainIntegration | null = null;
+	interface Props {
+		user: User;
+		immichIntegration?: ImmichIntegration | null;
+		googleMapsEnabled?: boolean;
+		stravaGlobalEnabled?: boolean;
+		stravaUserEnabled?: boolean;
+		wandererEnabled?: boolean;
+		wandererIntegration?: WandererIntegration | null;
+		endurainEnabled?: boolean;
+		endurainIntegration?: EndurainIntegration | null;
+	}
 
-	let endurainServerUrl = '';
-	let endurainUsername = '';
-	let endurainPassword = '';
-	let endurainMfaCode = '';
-	let endurainMfaRequired = false;
+	let {
+		user,
+		immichIntegration = $bindable(null),
+		googleMapsEnabled = $bindable(false),
+		stravaGlobalEnabled = $bindable(false),
+		stravaUserEnabled = $bindable(false),
+		wandererEnabled = $bindable(false),
+		wandererIntegration = $bindable(null),
+		endurainEnabled = $bindable(false),
+		endurainIntegration = $bindable(null)
+	}: Props = $props();
+
+	let endurainServerUrl = $state('');
+	let endurainUsername = $state('');
+	let endurainPassword = $state('');
+	let endurainMfaCode = $state('');
+	let endurainMfaRequired = $state(false);
 	let endurainMfaUsername = '';
 	let endurainMfaServerUrl = '';
 	let endurainMfaToken = '';
-	let endurainConnecting = false;
-	let endurainAuthStep = false;
+	let endurainConnecting = $state(false);
+	let endurainAuthStep = $state(false);
 
-	let newImmichIntegration: ImmichIntegration = {
+	let newImmichIntegration: ImmichIntegration = $state({
 		server_url: '',
 		api_key: '',
 		id: '',
 		copy_locally: true
-	};
+	});
 
-	let newWandererIntegration: WandererIntegration = {
+	let newWandererIntegration: WandererIntegration = $state({
 		server_url: '',
 		api_key: '',
 		id: ''
-	};
+	});
 
 	const builtinIcons = {
 		osm: MapIcon,
@@ -396,7 +410,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-outline"
-								on:click={() => {
+								onclick={() => {
 									if (immichIntegration)
 										newImmichIntegration = { ...immichIntegration, api_key: '' };
 								}}
@@ -406,7 +420,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-error btn-outline"
-								on:click={disableImmichIntegration}
+								onclick={disableImmichIntegration}
 							>
 								{$t('settings.integrations_hub.disconnect')}
 							</button>
@@ -473,7 +487,7 @@
 						<div class="flex flex-wrap items-center gap-2">
 							<button
 								type="button"
-								on:click={enableImmichIntegration}
+								onclick={enableImmichIntegration}
 								class="btn btn-primary w-full sm:w-auto"
 							>
 								{!immichIntegration?.id
@@ -484,7 +498,7 @@
 								<button
 									type="button"
 									class="btn btn-ghost w-full sm:w-auto"
-									on:click={cancelImmichEdit}
+									onclick={cancelImmichEdit}
 								>
 									{$t('settings.integrations_hub.cancel')}
 								</button>
@@ -537,7 +551,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-outline"
-								on:click={() => {
+								onclick={() => {
 									if (wandererIntegration) {
 										newWandererIntegration = { ...wandererIntegration, api_key: '' };
 									}
@@ -548,7 +562,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-error btn-outline"
-								on:click={wandererDisconnect}
+								onclick={wandererDisconnect}
 							>
 								{$t('settings.integrations_hub.disconnect')}
 							</button>
@@ -593,7 +607,7 @@
 							<button
 								type="button"
 								class="btn btn-primary w-full sm:w-auto"
-								on:click={enableWandererIntegration}
+								onclick={enableWandererIntegration}
 							>
 								{!wandererIntegration?.id
 									? $t('settings.integrations_hub.connect')
@@ -603,7 +617,7 @@
 								<button
 									type="button"
 									class="btn btn-ghost w-full sm:w-auto"
-									on:click={cancelWandererEdit}
+									onclick={cancelWandererEdit}
 								>
 									{$t('settings.integrations_hub.cancel')}
 								</button>
@@ -662,7 +676,7 @@
 						<button
 							type="button"
 							class="btn btn-sm btn-error btn-outline"
-							on:click={endurainDisconnect}
+							onclick={endurainDisconnect}
 						>
 							{$t('settings.integrations_hub.disconnect')}
 						</button>
@@ -692,7 +706,7 @@
 							<button
 								type="button"
 								class="btn btn-primary w-full sm:w-auto"
-								on:click={confirmEndurainServerUrl}
+								onclick={confirmEndurainServerUrl}
 								disabled={!endurainServerUrl.trim() || endurainConnecting}
 							>
 								{$t('endurain.continue')}
@@ -701,7 +715,7 @@
 							<button
 								type="button"
 								class="btn btn-ghost btn-sm"
-								on:click={backToEndurainUrlStep}
+								onclick={backToEndurainUrlStep}
 								disabled={endurainConnecting}
 							>
 								{$t('endurain.change_server')}
@@ -723,7 +737,7 @@
 								<button
 									type="button"
 									class="btn btn-primary w-full sm:w-auto"
-									on:click={verifyEndurainMfa}
+									onclick={verifyEndurainMfa}
 									disabled={endurainConnecting}
 								>
 									{$t('endurain.verify_mfa')}
@@ -755,7 +769,7 @@
 									<button
 										type="button"
 										class="btn btn-primary w-full sm:w-auto"
-										on:click={connectEndurainPassword}
+										onclick={connectEndurainPassword}
 										disabled={endurainConnecting}
 									>
 										{$t('settings.integrations_hub.connect')}
@@ -808,7 +822,7 @@
 							<button
 								type="button"
 								class="btn btn-primary w-full sm:w-auto"
-								on:click={stravaAuthorizeRedirect}
+								onclick={stravaAuthorizeRedirect}
 							>
 								{$t('settings.integrations_hub.connect')}
 							</button>
@@ -816,7 +830,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-error btn-outline"
-								on:click={stravaDisconnect}
+								onclick={stravaDisconnect}
 							>
 								{$t('settings.integrations_hub.disconnect')}
 							</button>

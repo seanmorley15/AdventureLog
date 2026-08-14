@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 </script>
 
 <svelte:head>
@@ -12,9 +12,9 @@
 		<div class="card-body space-y-4 text-center">
 			<h1 class="text-2xl font-bold text-error">{$t('auth.social_login_error_title')}</h1>
 			<p class="text-base-content/70">{$t('auth.social_login_error_desc')}</p>
-			{#if $page.url.searchParams.get('error')}
+			{#if page.url.searchParams.get('error')}
 				<p class="text-sm font-mono text-base-content/50 break-all">
-					{$page.url.searchParams.get('error')}
+					{page.url.searchParams.get('error')}
 				</p>
 			{/if}
 			<div class="card-actions justify-center pt-2">

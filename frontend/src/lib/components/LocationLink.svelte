@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Location, User, Pin } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -18,22 +20,26 @@
 	import Private from '~icons/mdi/lock';
 	import Loading from '~icons/mdi/loading';
 
-	let pins: Pin[] = [];
-	let locationCache: Map<string, Location> = new Map();
+	let pins: Pin[] = $state([]);
+	let locationCache: Map<string, Location> = $state(new Map());
 	let loadingLocationIds: Set<string> = new Set();
 	let locationRequests: Map<string, Promise<Location | null>> = new Map();
 
-	let filteredPins: Pin[] = [];
+	let filteredPins: Pin[] = $state([]);
 	let filteredLocations: Map<string, Location | null> = new Map();
-	let searchQuery: string = '';
-	let filterOption: string = 'all';
-	let isLoading: boolean = true;
+	let searchQuery: string = $state('');
+	let filterOption: string = $state('all');
+	let isLoading: boolean = $state(true);
 
-	export let user: User | null;
-	export let collectionId: string;
+	interface Props {
+		user: User | null;
+		collectionId: string;
+	}
+
+	let { user, collectionId }: Props = $props();
 
 	// Search and filter functionality - works with pins and cached locations
-	$: {
+	run(() => {
 		let filtered = pins;
 
 		// Apply search filter - include name and location (using pin data + cached location data)
@@ -67,12 +73,12 @@
 		}
 
 		filteredPins = filtered;
-	}
+	});
 
 	// Statistics following worldtravel pattern
-	$: totalAdventures = pins.length;
-	$: visitedAdventures = pins.filter((p) => p.is_visited === true).length;
-	$: plannedAdventures = pins.filter((p) => p.is_visited !== true).length;
+	let totalAdventures = $derived(pins.length);
+	let visitedAdventures = $derived(pins.filter((p) => p.is_visited === true).length);
+	let plannedAdventures = $derived(pins.filter((p) => p.is_visited !== true).length);
 
 	// Fetch location details lazily (like the map page)
 	async function fetchLocationDetails(locationId: string): Promise<Location | null> {
@@ -113,7 +119,7 @@
 	}
 
 	// Intersection Observer for lazy loading
-	let observer: IntersectionObserver | null = null;
+	let observer: IntersectionObserver | null = $state(null);
 
 	function setupLazyLoading(element: HTMLElement) {
 		observer = new IntersectionObserver(
@@ -141,15 +147,17 @@
 	}
 
 	// Re-observe elements when pins change
-	$: if (observer && filteredPins.length > 0) {
-		// Disconnect and reconnect to observe all pin cards
-		observer.disconnect();
-		setTimeout(() => {
-			const pinCards = document.querySelectorAll('[data-pin-id]');
-			console.log('Observing pin cards:', pinCards.length);
-			pinCards.forEach((el) => observer?.observe(el));
-		}, 0);
-	}
+	run(() => {
+		if (observer && filteredPins.length > 0) {
+			// Disconnect and reconnect to observe all pin cards
+			observer.disconnect();
+			setTimeout(() => {
+				const pinCards = document.querySelectorAll('[data-pin-id]');
+				console.log('Observing pin cards:', pinCards.length);
+				pinCards.forEach((el) => observer?.observe(el));
+			}, 0);
+		}
+	});
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -210,12 +218,12 @@
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following worldtravel pattern -->
@@ -255,7 +263,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button class="btn btn-ghost btn-square" onclick={close}>
 					<Clear class="w-5 h-5" />
 				</button>
 			</div>
@@ -273,7 +281,7 @@
 					{#if searchQuery.length > 0}
 						<button
 							class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-							on:click={() => (searchQuery = '')}
+							onclick={() => (searchQuery = '')}
 						>
 							<Clear class="w-4 h-4" />
 						</button>
@@ -281,7 +289,7 @@
 				</div>
 
 				{#if searchQuery || filterOption !== 'all'}
-					<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+					<button class="btn btn-ghost btn-xs gap-1" onclick={clearFilters}>
 						<Clear class="w-3 h-3" />
 						{$t('worldtravel.clear_all')}
 					</button>
@@ -296,35 +304,35 @@
 				<div class="tabs tabs-boxed bg-base-200">
 					<button
 						class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
-						on:click={() => (filterOption = 'all')}
+						onclick={() => (filterOption = 'all')}
 					>
 						<Adventures class="w-3 h-3" />
 						{$t('adventures.all')}
 					</button>
 					<button
 						class="tab tab-sm gap-2 {filterOption === 'visited' ? 'tab-active' : ''}"
-						on:click={() => (filterOption = 'visited')}
+						onclick={() => (filterOption = 'visited')}
 					>
 						<Check class="w-3 h-3" />
 						{$t('adventures.visited')}
 					</button>
 					<button
 						class="tab tab-sm gap-2 {filterOption === 'not_visited' ? 'tab-active' : ''}"
-						on:click={() => (filterOption = 'not_visited')}
+						onclick={() => (filterOption = 'not_visited')}
 					>
 						<Cancel class="w-3 h-3" />
 						{$t('adventures.not_visited')}
 					</button>
 					<button
 						class="tab tab-sm gap-2 {filterOption === 'public' ? 'tab-active' : ''}"
-						on:click={() => (filterOption = 'public')}
+						onclick={() => (filterOption = 'public')}
 					>
 						<Public class="w-3 h-3" />
 						{$t('adventures.public')}
 					</button>
 					<button
 						class="tab tab-sm gap-2 {filterOption === 'private' ? 'tab-active' : ''}"
-						on:click={() => (filterOption = 'private')}
+						onclick={() => (filterOption = 'private')}
 					>
 						<Private class="w-3 h-3" />
 						{$t('adventures.private')}
@@ -358,7 +366,7 @@
 							<p class="text-base-content/50 text-center max-w-md mb-6">
 								{$t('collection.try_different_search')}
 							</p>
-							<button class="btn btn-primary gap-2" on:click={clearFilters}>
+							<button class="btn btn-primary gap-2" onclick={clearFilters}>
 								<Clear class="w-4 h-4" />
 								{$t('worldtravel.clear_filters')}
 							</button>
@@ -408,7 +416,7 @@
 					{filteredPins.length}
 					{$t('locations.locations')}
 				</div>
-				<button class="btn btn-primary gap-2" on:click={close}>
+				<button class="btn btn-primary gap-2" onclick={close}>
 					<Link class="w-4 h-4" />
 					{$t('adventures.done')}
 				</button>

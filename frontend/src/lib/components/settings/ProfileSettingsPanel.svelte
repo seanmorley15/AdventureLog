@@ -8,8 +8,12 @@
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
 
-	export let user: User;
-	export let onPublicProfileToggle: (nextValue: boolean) => void;
+	interface Props {
+		user: User;
+		onPublicProfileToggle: (nextValue: boolean) => void;
+	}
+
+	let { user = $bindable(), onPublicProfileToggle }: Props = $props();
 </script>
 
 <SettingsCard>
@@ -28,7 +32,7 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			<div class="form-control">
-				<!-- svelte-ignore a11y-label-has-associated-control -->
+				<!-- svelte-ignore a11y_label_has_associated_control -->
 				<label class="label"
 					><span class="label-text font-medium">{$t('auth.username')}</span></label
 				>
@@ -41,7 +45,7 @@
 				/>
 			</div>
 			<div class="form-control">
-				<!-- svelte-ignore a11y-label-has-associated-control -->
+				<!-- svelte-ignore a11y_label_has_associated_control -->
 				<label class="label"
 					><span class="label-text font-medium">{$t('auth.first_name')}</span></label
 				>
@@ -54,7 +58,7 @@
 				/>
 			</div>
 			<div class="form-control">
-				<!-- svelte-ignore a11y-label-has-associated-control -->
+				<!-- svelte-ignore a11y_label_has_associated_control -->
 				<label class="label"
 					><span class="label-text font-medium">{$t('auth.last_name')}</span></label
 				>
@@ -67,7 +71,7 @@
 				/>
 			</div>
 			<div class="form-control">
-				<!-- svelte-ignore a11y-label-has-associated-control -->
+				<!-- svelte-ignore a11y_label_has_associated_control -->
 				<label class="label"
 					><span class="label-text font-medium">{$t('auth.profile_picture')}</span></label
 				>
@@ -83,7 +87,7 @@
 					<input
 						type="checkbox"
 						checked={user.public_profile}
-						on:change={(e) => onPublicProfileToggle(e.currentTarget.checked)}
+						onchange={(e) => onPublicProfileToggle(e.currentTarget.checked)}
 						name="public_profile"
 						class="toggle toggle-primary"
 					/>
@@ -122,7 +126,7 @@
 						checked={user.measurement_system === 'imperial'}
 						name="measurement_system"
 						class="toggle toggle-primary"
-						on:change={() =>
+						onchange={() =>
 							(user.measurement_system =
 								user.measurement_system === 'metric' ? 'imperial' : 'metric')}
 					/>

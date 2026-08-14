@@ -8,17 +8,17 @@
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
 
-	let isSubmitting = false;
+	let isSubmitting = $state(false);
 
-	export let data;
+	let { data } = $props();
 
-	let isImageInfoModalOpen = false;
+	let isImageInfoModalOpen = $state(false);
 
-	let socialProviders = data.props?.socialProviders ?? [];
-	let socialOnly: boolean = data.props?.socialOnly ?? false;
+	let socialProviders = $derived(data.props?.socialProviders ?? []);
+	let socialOnly: boolean = $derived(data.props?.socialOnly ?? false);
 
-	let quote: { quote: string; author: string } = data.props?.quote ?? { quote: '', author: '' };
-	let background: Background = data.props?.background ?? { url: '' };
+	let quote: { quote: string; author: string } = $derived(data.props?.quote ?? { quote: '', author: '' });
+	let background: Background = $derived(data.props?.background ?? { url: '' });
 
 	function handleEnhanceSubmit() {
 		isSubmitting = true;
@@ -234,7 +234,7 @@
 	{#if background.url}
 		<button
 			class="btn btn-circle btn-sm fixed bottom-4 right-4 bg-base-100/80 border-base-300 z-20"
-			on:click={() => (isImageInfoModalOpen = true)}
+			onclick={() => (isImageInfoModalOpen = true)}
 		>
 			<FileImageBox class="w-4 h-4" />
 		</button>

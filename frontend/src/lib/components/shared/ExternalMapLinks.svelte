@@ -1,31 +1,40 @@
 <script lang="ts">
-	export let placeName: string | null = null;
-	export let latitude: number | null = null;
-	export let longitude: number | null = null;
-	export let className = '';
+	interface Props {
+		placeName?: string | null;
+		latitude?: number | null;
+		longitude?: number | null;
+		className?: string;
+	}
+
+	let {
+		placeName = null,
+		latitude = null,
+		longitude = null,
+		className = ''
+	}: Props = $props();
 
 	const normalize = (value: string | null | undefined) => value?.trim() || null;
 
-	$: hasCoords =
-		latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined;
-	$: coordsLabel = hasCoords ? `${latitude}, ${longitude}` : null;
-	$: displayName = normalize(placeName) || null;
-	$: baseQuery =
-		displayName && coordsLabel ? `${displayName} ${coordsLabel}` : displayName || coordsLabel || '';
+	let hasCoords =
+		$derived(latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined);
+	let coordsLabel = $derived(hasCoords ? `${latitude}, ${longitude}` : null);
+	let displayName = $derived(normalize(placeName) || null);
+	let baseQuery =
+		$derived(displayName && coordsLabel ? `${displayName} ${coordsLabel}` : displayName || coordsLabel || '');
 
-	$: appleMapsUrl = hasCoords
+	let appleMapsUrl = $derived(hasCoords
 		? `https://maps.apple.com/?q=${encodeURIComponent(displayName ?? coordsLabel ?? '')}&ll=${latitude},${longitude}`
-		: `https://maps.apple.com/?q=${encodeURIComponent(displayName ?? '')}`;
+		: `https://maps.apple.com/?q=${encodeURIComponent(displayName ?? '')}`);
 
-	$: googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+	let googleMapsUrl = $derived(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
 		baseQuery
-	)}`;
+	)}`);
 
-	$: osmMapsUrl = hasCoords
+	let osmMapsUrl = $derived(hasCoords
 		? `https://www.openstreetmap.org/search?query=${encodeURIComponent(
 				baseQuery
 			)}&mlat=${latitude}&mlon=${longitude}`
-		: `https://www.openstreetmap.org/search?query=${encodeURIComponent(baseQuery)}`;
+		: `https://www.openstreetmap.org/search?query=${encodeURIComponent(baseQuery)}`);
 </script>
 
 {#if displayName || hasCoords}

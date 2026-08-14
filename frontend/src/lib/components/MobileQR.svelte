@@ -16,13 +16,13 @@
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
 
-	let qrCodeData: string | null = null;
-	let apiKeyId: string | null = null;
-	let apiKeyName: string | null = null;
-	let apiKeyPrefix: string | null = null;
+	let qrCodeData: string | null = $state(null);
+	let apiKeyId: string | null = $state(null);
+	let apiKeyName: string | null = $state(null);
+	let apiKeyPrefix: string | null = $state(null);
 	let createdAt: string | null = null;
-	let isLoading = false;
-	let error: string | null = null;
+	let isLoading = $state(false);
+	let error: string | null = $state(null);
 
 	onMount(async () => {
 		modal = document.querySelector('#mobile-qr-modal') as HTMLDialogElement;
@@ -167,15 +167,15 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <dialog id="mobile-qr-modal" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="modal-box w-11/12 max-w-3xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
@@ -198,7 +198,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={closeModal}>
+				<button class="btn btn-ghost btn-square" onclick={closeModal}>
 					<Close class="w-5 h-5" />
 				</button>
 			</div>
@@ -341,20 +341,20 @@
 		>
 			<div class="flex items-center justify-end gap-3">
 				{#if qrCodeData}
-					<button class="btn btn-outline gap-2" on:click={regenerateQRCode}>
+					<button class="btn btn-outline gap-2" onclick={regenerateQRCode}>
 						<Refresh class="w-4 h-4" />
 						{$t('mobile.regenerate', { default: 'Regenerate' })}
 					</button>
-					<button class="btn btn-error gap-2" on:click={deleteApiKey}>
+					<button class="btn btn-error gap-2" onclick={deleteApiKey}>
 						<Delete class="w-4 h-4" />
 						{$t('mobile.delete', { default: 'Delete Key' })}
 					</button>
 				{:else if apiKeyId}
-					<button class="btn btn-primary gap-2" on:click={regenerateQRCode}>
+					<button class="btn btn-primary gap-2" onclick={regenerateQRCode}>
 						<QrCodeIcon class="w-4 h-4" />
 						{$t('mobile.regenerate', { default: 'Regenerate QR Code' })}
 					</button>
-					<button class="btn btn-error gap-2" on:click={deleteApiKey}>
+					<button class="btn btn-error gap-2" onclick={deleteApiKey}>
 						<Delete class="w-4 h-4" />
 						{$t('mobile.delete', { default: 'Delete Key' })}
 					</button>
@@ -365,6 +365,6 @@
 
 	<!-- Backdrop -->
 	<form method="dialog" class="modal-backdrop">
-		<button type="button" on:click={closeModal}>close</button>
+		<button type="button" onclick={closeModal}>close</button>
 	</form>
 </dialog>

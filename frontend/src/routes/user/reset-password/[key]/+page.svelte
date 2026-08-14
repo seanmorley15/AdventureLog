@@ -4,10 +4,10 @@
 	import { t } from 'svelte-i18n';
 	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
 
-	export let data;
+	let { data } = $props();
 
-	let password = '';
-	let confirmPassword = '';
+	let password = $state('');
+	let confirmPassword = $state('');
 </script>
 
 <section class="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-base-100">

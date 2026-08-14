@@ -18,7 +18,7 @@ export function getInviteKeyFromUrl(url: URL): string {
 
 /** Validate invite and stash invited email in the Django session for headless signup. */
 export async function prepareInviteSignup(
-	event: Pick<RequestEvent, 'fetch' | 'cookies'>,
+	event: Pick<RequestEvent, 'fetch' | 'cookies' | 'url'>,
 	inviteKey: string
 ): Promise<InviteSignupState> {
 	if (!inviteKey) {

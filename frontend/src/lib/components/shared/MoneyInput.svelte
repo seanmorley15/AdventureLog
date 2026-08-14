@@ -13,12 +13,23 @@
 		step?: number;
 	};
 
-	export let label: string | undefined;
-	export let value: MoneyValue;
-	export let currencyOptions: string[] = CURRENCY_OPTIONS;
-	export let placeholder = '0.00';
-	export let min: number | undefined = 0;
-	export let step: number | undefined = 0.01;
+	interface Props {
+		label: string | undefined;
+		value: MoneyValue;
+		currencyOptions?: string[];
+		placeholder?: string;
+		min?: number | undefined;
+		step?: number | undefined;
+	}
+
+	let {
+		label,
+		value = $bindable(),
+		currencyOptions = CURRENCY_OPTIONS,
+		placeholder = '0.00',
+		min = 0,
+		step = 0.01
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{ change: MoneyValue }>();
 	const currencyId = `money-currency-${Math.random().toString(36).slice(2, 8)}`;
@@ -61,7 +72,7 @@
 			bind:value={value.amount}
 			{min}
 			{step}
-			on:input={updateAmount}
+			oninput={updateAmount}
 		/>
 		<CurrencyDropdown
 			id={currencyId}
@@ -69,6 +80,6 @@
 			options={currencyOptions}
 			on:change={updateCurrency}
 		/>
-		<button type="button" class="btn btn-neutral-200" on:click={clearValue}> Clear </button>
+		<button type="button" class="btn btn-neutral-200" onclick={clearValue}> Clear </button>
 	</div>
 </div>

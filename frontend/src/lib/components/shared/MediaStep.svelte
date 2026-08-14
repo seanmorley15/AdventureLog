@@ -12,24 +12,39 @@
 	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 
-	// Props
-	export let images: ContentImage[] = [];
-	export let attachments: Attachment[] = [];
-	export let itemName: string = '';
-	export let itemId: string = '';
-	export let contentType: 'location' | 'lodging' | 'transportation' | '' = 'location';
-	export let user: User | null = null;
+	
 
-	export let start_date: string | null = null;
-	export let end_date: string | null = null;
-	export let pendingGooglePhotoUrls: string[] = [];
+	interface Props {
+		// Props
+		images?: ContentImage[];
+		attachments?: Attachment[];
+		itemName?: string;
+		itemId?: string;
+		contentType?: 'location' | 'lodging' | 'transportation' | '';
+		user?: User | null;
+		start_date?: string | null;
+		end_date?: string | null;
+		pendingGooglePhotoUrls?: string[];
+	}
+
+	let {
+		images = $bindable([]),
+		attachments = $bindable([]),
+		itemName = '',
+		itemId = '',
+		contentType = 'location',
+		user = null,
+		start_date = null,
+		end_date = null,
+		pendingGooglePhotoUrls = $bindable([])
+	}: Props = $props();
 	// export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	// export let user: User | null = null;
 
 	// Component state
-	let immichIntegration: boolean = false;
-	let copyImmichLocally: boolean = false;
-	let importInProgress: boolean = false;
+	let immichIntegration: boolean = $state(false);
+	let copyImmichLocally: boolean = $state(false);
+	let importInProgress: boolean = $state(false);
 
 	const dispatch = createEventDispatcher();
 
@@ -103,12 +118,12 @@
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack} disabled={importInProgress}>
+			<button class="btn btn-neutral-200 gap-2" onclick={handleBack} disabled={importInProgress}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
 
-			<button class="btn btn-primary gap-2" on:click={handleClose} disabled={importInProgress}>
+			<button class="btn btn-primary gap-2" onclick={handleClose} disabled={importInProgress}>
 				<CheckIcon class="w-5 h-5" />
 				{$t('adventures.done')}
 			</button>

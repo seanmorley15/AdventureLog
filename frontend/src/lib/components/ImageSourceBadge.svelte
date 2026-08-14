@@ -6,9 +6,13 @@
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import { defaultImageSource } from '$lib/images';
 
-	export let source: ImageSource | null | undefined = 'upload';
+	interface Props {
+		source?: ImageSource | null | undefined;
+	}
 
-	$: resolvedSource = defaultImageSource(source);
+	let { source = 'upload' }: Props = $props();
+
+	let resolvedSource = $derived(defaultImageSource(source));
 
 	const tooltipKeys: Record<Exclude<ImageSource, 'upload'>, string> = {
 		google: 'images.source.google',

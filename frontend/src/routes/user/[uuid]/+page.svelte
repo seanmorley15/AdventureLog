@@ -1,9 +1,15 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 
-	export let data: PageData;
-	const user = data.props.user;
-	console.log(user);
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+	const user = $derived(data.props.user);
+	$effect(() => {
+		console.log(user);
+	});
 </script>
 
 {#if user.profile_pic}

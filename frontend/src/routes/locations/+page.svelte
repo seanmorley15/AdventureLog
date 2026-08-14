@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
@@ -16,25 +18,35 @@
 	import Compass from '~icons/mdi/compass';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 
-	export let data: any;
+	interface Props {
+		data: any;
+	}
+
+	let { data = $bindable() }: Props = $props();
 
 	const resultsPerPage = 25;
 
-	let adventures: Location[] = [];
-	let count = 0;
-	let totalPages = 1;
+	let adventures: Location[] = $state([]);
+	let count = $state(0);
+	let totalPages = $state(1);
 
-	$: adventures = data?.props?.adventures ?? [];
-	$: count = data?.props?.count ?? 0;
-	$: totalPages = Math.max(1, Math.ceil(count / resultsPerPage));
-	$: categoryTypes = $page.url.searchParams.get('types') ?? '';
-	$: orderBy = $page.url.searchParams.get('order_by') || 'updated_at';
-	$: orderDirection = $page.url.searchParams.get('order_direction') || 'asc';
-	$: isVisitedFilter = $page.url.searchParams.get('is_visited') || 'all';
-	$: includeCollections = $page.url.searchParams.get('include_collections') !== 'false';
-	$: currentPage = parseInt($page.url.searchParams.get('page') || '1', 10);
+	run(() => {
+		adventures = data?.props?.adventures ?? [];
+	});
+	run(() => {
+		count = data?.props?.count ?? 0;
+	});
+	run(() => {
+		totalPages = Math.max(1, Math.ceil(count / resultsPerPage));
+	});
+	let categoryTypes = $derived($page.url.searchParams.get('types') ?? '');
+	let orderBy = $derived($page.url.searchParams.get('order_by') || 'updated_at');
+	let orderDirection = $derived($page.url.searchParams.get('order_direction') || 'asc');
+	let isVisitedFilter = $derived($page.url.searchParams.get('is_visited') || 'all');
+	let includeCollections = $derived($page.url.searchParams.get('include_collections') !== 'false');
+	let currentPage = $derived(parseInt($page.url.searchParams.get('page') || '1', 10));
 
-	let locationBeingUpdated: Location | undefined = undefined;
+	let locationBeingUpdated: Location | undefined = $state(undefined);
 
 	function toListLocation(loc: Location): Location {
 		// Keep the in-memory list aligned with the slim list API payload
@@ -47,7 +59,7 @@
 	}
 
 	// Sync the locationBeingUpdated with the adventures array
-	$: {
+	run(() => {
 		if (locationBeingUpdated && locationBeingUpdated.id) {
 			const listItem = toListLocation(locationBeingUpdated);
 			const index = adventures.findIndex((adventure) => adventure.id === listItem.id);
@@ -60,13 +72,13 @@
 				data.props.adventures = adventures; // Update data.props.adventures as well
 			}
 		}
-	}
+	});
 
-	let is_category_modal_open: boolean = false;
-	let adventureToEdit: Location | null = null;
-	let isLocationModalOpen: boolean = false;
-	let editingLocationId: string | null = null;
-	let sidebarOpen = false;
+	let is_category_modal_open: boolean = $state(false);
+	let adventureToEdit: Location | null = $state(null);
+	let isLocationModalOpen: boolean = $state(false);
+	let editingLocationId: string | null = $state(null);
+	let sidebarOpen = $state(false);
 
 	type LocationFilterOverrides = {
 		types?: string;
@@ -202,7 +214,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden" onclick={toggleSidebar}>
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
@@ -261,7 +273,7 @@
 						</p>
 						<button
 							class="btn btn-primary btn-wide mt-6 gap-2"
-							on:click={() => {
+							onclick={() => {
 								adventureToEdit = null;
 								isLocationModalOpen = true;
 							}}
@@ -299,7 +311,7 @@
 										class="join-item btn btn-sm {currentPage === page
 											? 'btn-primary'
 											: 'btn-ghost'}"
-										on:click={() => handleChangePage(page)}
+										onclick={() => handleChangePage(page)}
 									>
 										{page}
 									</button>
@@ -337,7 +349,7 @@
 							<CategoryFilterDropdown types={categoryTypes} on:change={onCategoryChange} />
 							<button
 								type="button"
-								on:click={() => (is_category_modal_open = true)}
+								onclick={() => (is_category_modal_open = true)}
 								class="btn btn-outline btn-sm w-full mt-2 gap-2"
 							>
 								<Tag class="w-4 h-4" />
@@ -359,7 +371,7 @@
 											name="is_visited"
 											class="radio radio-primary radio-sm"
 											checked={isVisitedFilter === 'all'}
-											on:change={() => updateVisitedFilter('all')}
+											onchange={() => updateVisitedFilter('all')}
 										/>
 										<span class="label-text">{$t('adventures.all')}</span>
 									</label>
@@ -369,7 +381,7 @@
 											name="is_visited"
 											class="radio radio-primary radio-sm"
 											checked={isVisitedFilter === 'true'}
-											on:change={() => updateVisitedFilter('true')}
+											onchange={() => updateVisitedFilter('true')}
 										/>
 										<span class="label-text">{$t('adventures.visited')}</span>
 									</label>
@@ -379,7 +391,7 @@
 											name="is_visited"
 											class="radio radio-primary radio-sm"
 											checked={isVisitedFilter === 'false'}
-											on:change={() => updateVisitedFilter('false')}
+											onchange={() => updateVisitedFilter('false')}
 										/>
 										<span class="label-text">{$t('adventures.not_visited')}</span>
 									</label>
@@ -393,7 +405,7 @@
 										id="include_collections"
 										class="checkbox checkbox-primary checkbox-sm"
 										checked={includeCollections}
-										on:change={(e) => updateIncludeCollections(e.currentTarget.checked)}
+										onchange={(e) => updateIncludeCollections(e.currentTarget.checked)}
 									/>
 									<span class="label-text">{$t('adventures.collection_locations')}</span>
 								</label>
@@ -408,7 +420,7 @@
 
 							<div class="space-y-4">
 								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
+									<!-- svelte-ignore a11y_label_has_associated_control -->
 									<label class="label">
 										<span class="label-text font-medium">{$t('adventures.order_direction')}</span>
 									</label>
@@ -418,7 +430,7 @@
 											class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
 												? 'btn-active'
 												: ''}"
-											on:click={() => updateSort(orderBy, 'asc')}
+											onclick={() => updateSort(orderBy, 'asc')}
 										>
 											{$t('adventures.ascending')}
 										</button>
@@ -427,7 +439,7 @@
 											class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
 												? 'btn-active'
 												: ''}"
-											on:click={() => updateSort(orderBy, 'desc')}
+											onclick={() => updateSort(orderBy, 'desc')}
 										>
 											{$t('adventures.descending')}
 										</button>
@@ -435,7 +447,7 @@
 								</div>
 
 								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
+									<!-- svelte-ignore a11y_label_has_associated_control -->
 									<label class="label">
 										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
 									</label>
@@ -446,7 +458,7 @@
 												name="order_by"
 												class="radio radio-primary radio-sm"
 												checked={orderBy === 'updated_at'}
-												on:change={() => updateSort('updated_at', orderDirection)}
+												onchange={() => updateSort('updated_at', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.updated')}</span>
 										</label>
@@ -456,7 +468,7 @@
 												name="order_by"
 												class="radio radio-primary radio-sm"
 												checked={orderBy === 'name'}
-												on:change={() => updateSort('name', orderDirection)}
+												onchange={() => updateSort('name', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.name')}</span>
 										</label>
@@ -466,7 +478,7 @@
 												name="order_by"
 												class="radio radio-primary radio-sm"
 												checked={orderBy === 'date'}
-												on:change={() => updateSort('date', orderDirection)}
+												onchange={() => updateSort('date', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.date')}</span>
 										</label>
@@ -476,7 +488,7 @@
 												name="order_by"
 												class="radio radio-primary radio-sm"
 												checked={orderBy === 'rating'}
-												on:change={() => updateSort('rating', orderDirection)}
+												onchange={() => updateSort('rating', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.rating')}</span>
 										</label>
@@ -509,7 +521,7 @@
 				</div>
 				<button
 					class="btn btn-primary gap-2 w-full"
-					on:click={() => {
+					onclick={() => {
 						isLocationModalOpen = true;
 						adventureToEdit = null;
 					}}

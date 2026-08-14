@@ -12,91 +12,52 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let collection: Collection;
-	export let user: any;
-	export let isFolderView: boolean = false;
 
 	// Whether the current user can modify this collection (owner or shared user)
 
-	// Exported so a parent can bind to them if desired
-	export let locationSearch: string = '';
-	export let locationSort:
+	
+
+
+	
+
+	
+
+	
+
+	
+	interface Props {
+		collection: Collection;
+		user: any;
+		isFolderView?: boolean;
+		// Exported so a parent can bind to them if desired
+		locationSearch?: string;
+		locationSort?: 
 		| 'alphabetical-asc'
 		| 'alphabetical-desc'
 		| 'visited'
 		| 'date-asc'
-		| 'date-desc' = 'alphabetical-asc';
+		| 'date-desc';
+		// Transportations
+		transportationSearch?: string;
+		// Lodging
+		lodgingSearch?: string;
+		// Notes
+		noteSearch?: string;
+		// Checklists
+		checklistSearch?: string;
+	}
 
-	$: sortedLocations = (() => {
-		if (!collection?.locations) return [];
-
-		let filtered = collection.locations.filter(
-			(loc) =>
-				loc.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
-				loc.location?.toLowerCase().includes(locationSearch.toLowerCase())
-		);
-
-		switch (locationSort) {
-			case 'alphabetical-asc':
-				return filtered.sort((a, b) => a.name.localeCompare(b.name));
-			case 'alphabetical-desc':
-				return filtered.sort((a, b) => b.name.localeCompare(a.name));
-			case 'visited':
-				return filtered.sort((a, b) => {
-					const aVisited = a.visits && a.visits.length > 0 ? 1 : 0;
-					const bVisited = b.visits && b.visits.length > 0 ? 1 : 0;
-					return bVisited - aVisited;
-				});
-			case 'date-asc':
-				return filtered.sort((a, b) => {
-					const aDate = a.visits?.[0]?.start_date || '';
-					const bDate = b.visits?.[0]?.start_date || '';
-					return aDate.localeCompare(bDate);
-				});
-			case 'date-desc':
-				return filtered.sort((a, b) => {
-					const aDate = a.visits?.[0]?.start_date || '';
-					const bDate = b.visits?.[0]?.start_date || '';
-					return bDate.localeCompare(aDate);
-				});
-			default:
-				return filtered;
-		}
-	})();
-
-	// Transportations
-	export let transportationSearch: string = '';
-	$: filteredTransportations = (() => {
-		if (!collection?.transportations) return [];
-		return collection.transportations.filter((t) =>
-			t.name.toLowerCase().includes(transportationSearch.toLowerCase())
-		);
-	})();
-
-	// Lodging
-	export let lodgingSearch: string = '';
-	$: filteredLodging = (() => {
-		if (!collection?.lodging) return [];
-		return collection.lodging.filter((l) =>
-			l.name.toLowerCase().includes(lodgingSearch.toLowerCase())
-		);
-	})();
-
-	// Notes
-	export let noteSearch: string = '';
-	$: filteredNotes = (() => {
-		if (!collection?.notes) return [];
-		return collection.notes.filter((n) => n.name.toLowerCase().includes(noteSearch.toLowerCase()));
-	})();
-
-	// Checklists
-	export let checklistSearch: string = '';
-	$: filteredChecklists = (() => {
-		if (!collection?.checklists) return [];
-		return collection.checklists.filter((c) =>
-			c.name.toLowerCase().includes(checklistSearch.toLowerCase())
-		);
-	})();
+	let {
+		collection = $bindable(),
+		user,
+		isFolderView = false,
+		locationSearch = $bindable(''),
+		locationSort = $bindable('alphabetical-asc'),
+		transportationSearch = $bindable(''),
+		lodgingSearch = $bindable(''),
+		noteSearch = $bindable(''),
+		checklistSearch = $bindable('')
+	}: Props = $props();
 
 	// Generic handlers for editing and deleting items in the collection.
 	// `type` should match the collection property name: 'locations', 'transportations', 'lodging', 'notes', 'checklists'
@@ -152,6 +113,64 @@
 			]
 		};
 	}
+	let sortedLocations = $derived((() => {
+		if (!collection?.locations) return [];
+
+		let filtered = collection.locations.filter(
+			(loc) =>
+				loc.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+				loc.location?.toLowerCase().includes(locationSearch.toLowerCase())
+		);
+
+		switch (locationSort) {
+			case 'alphabetical-asc':
+				return filtered.sort((a, b) => a.name.localeCompare(b.name));
+			case 'alphabetical-desc':
+				return filtered.sort((a, b) => b.name.localeCompare(a.name));
+			case 'visited':
+				return filtered.sort((a, b) => {
+					const aVisited = a.visits && a.visits.length > 0 ? 1 : 0;
+					const bVisited = b.visits && b.visits.length > 0 ? 1 : 0;
+					return bVisited - aVisited;
+				});
+			case 'date-asc':
+				return filtered.sort((a, b) => {
+					const aDate = a.visits?.[0]?.start_date || '';
+					const bDate = b.visits?.[0]?.start_date || '';
+					return aDate.localeCompare(bDate);
+				});
+			case 'date-desc':
+				return filtered.sort((a, b) => {
+					const aDate = a.visits?.[0]?.start_date || '';
+					const bDate = b.visits?.[0]?.start_date || '';
+					return bDate.localeCompare(aDate);
+				});
+			default:
+				return filtered;
+		}
+	})());
+	let filteredTransportations = $derived((() => {
+		if (!collection?.transportations) return [];
+		return collection.transportations.filter((t) =>
+			t.name.toLowerCase().includes(transportationSearch.toLowerCase())
+		);
+	})());
+	let filteredLodging = $derived((() => {
+		if (!collection?.lodging) return [];
+		return collection.lodging.filter((l) =>
+			l.name.toLowerCase().includes(lodgingSearch.toLowerCase())
+		);
+	})());
+	let filteredNotes = $derived((() => {
+		if (!collection?.notes) return [];
+		return collection.notes.filter((n) => n.name.toLowerCase().includes(noteSearch.toLowerCase()));
+	})());
+	let filteredChecklists = $derived((() => {
+		if (!collection?.checklists) return [];
+		return collection.checklists.filter((c) =>
+			c.name.toLowerCase().includes(checklistSearch.toLowerCase())
+		);
+	})());
 </script>
 
 <!-- Show each section as its own card so transportations and others

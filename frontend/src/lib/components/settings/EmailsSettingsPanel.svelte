@@ -1,18 +1,31 @@
 <script lang="ts">
+	import { preventDefault } from 'svelte/legacy';
+
 	import { t } from 'svelte-i18n';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 
-	export let emails: { email: string; verified?: boolean; primary?: boolean }[];
-	export let newEmail: string;
-	export let onVerify: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
-	export let onMakePrimary: (email: {
+	interface Props {
+		emails: { email: string; verified?: boolean; primary?: boolean }[];
+		newEmail: string;
+		onVerify: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
+		onMakePrimary: (email: {
 		email: string;
 		verified?: boolean;
 		primary?: boolean;
 	}) => void;
-	export let onRemove: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
-	export let onAdd: () => void;
+		onRemove: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
+		onAdd: () => void;
+	}
+
+	let {
+		emails,
+		newEmail = $bindable(),
+		onVerify,
+		onMakePrimary,
+		onRemove,
+		onAdd
+	}: Props = $props();
 </script>
 
 <SettingsCard>
@@ -43,18 +56,18 @@
 						</div>
 						<div class="flex gap-2 flex-wrap">
 							{#if !email.verified}
-								<button class="btn btn-sm btn-secondary" on:click={() => onVerify(email)}>
+								<button class="btn btn-sm btn-secondary" onclick={() => onVerify(email)}>
 									{$t('settings.verify')}
 								</button>
 							{/if}
 							{#if !email.primary && email.verified}
-								<button class="btn btn-sm btn-primary" on:click={() => onMakePrimary(email)}>
+								<button class="btn btn-sm btn-primary" onclick={() => onMakePrimary(email)}>
 									{$t('settings.make_primary')}
 								</button>
 							{/if}
 							<button
 								class="btn btn-sm btn-warning"
-								on:click={() => onRemove(email)}
+								onclick={() => onRemove(email)}
 								disabled={emails.length === 1 || email.primary}
 							>
 								{$t('adventures.remove')}
@@ -72,9 +85,9 @@
 	{/if}
 
 	<div class="divider">{$t('settings.add_new_email')}</div>
-	<form class="space-y-4" on:submit|preventDefault={onAdd}>
+	<form class="space-y-4" onsubmit={preventDefault(onAdd)}>
 		<div class="form-control">
-			<!-- svelte-ignore a11y-label-has-associated-control -->
+			<!-- svelte-ignore a11y_label_has_associated_control -->
 			<label class="label">
 				<span class="label-text font-medium">{$t('settings.add_new_email_address')}</span>
 			</label>

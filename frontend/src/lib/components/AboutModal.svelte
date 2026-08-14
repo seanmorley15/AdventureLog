@@ -23,8 +23,8 @@
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
 
-	let integrations: Record<string, boolean> | null = null;
-	let versionCopied = false;
+	let integrations: Record<string, boolean> | null = $state(null);
+	let versionCopied = $state(false);
 	let copyResetTimeout: ReturnType<typeof setTimeout> | undefined;
 
 	onMount(() => {
@@ -78,15 +78,15 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<dialog id="about_modal" class="modal backdrop-blur-sm" on:click={handleBackdropClick}>
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<dialog id="about_modal" class="modal backdrop-blur-sm" onclick={handleBackdropClick}>
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-2xl p-0 bg-base-100 border border-base-300 shadow-2xl max-h-[90vh] flex flex-col"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Hero -->
@@ -98,7 +98,7 @@
 				class="btn btn-ghost btn-sm btn-circle absolute top-4 right-4 text-primary-content hover:bg-base-100/20"
 				aria-label={$t('about.close')}
 				title={$t('about.close')}
-				on:click={close}
+				onclick={close}
 			>
 				<CloseIcon class="w-5 h-5" />
 			</button>
@@ -142,7 +142,7 @@
 							: 'text-base-content/60'}"
 						aria-label={$t('about.copy_version')}
 						title={$t('about.copy_version')}
-						on:click={copyVersion}
+						onclick={copyVersion}
 					>
 						{#if versionCopied}
 							<CheckIcon class="w-4 h-4" />
@@ -321,7 +321,7 @@
 			class="flex items-center justify-between gap-4 px-6 py-4 border-t border-base-300 shrink-0 bg-base-100/80"
 		>
 			<p class="text-sm text-base-content/60 m-0">{$t('about.thank_you')}</p>
-			<button class="btn btn-primary btn-sm" on:click={close}>
+			<button class="btn btn-primary btn-sm" onclick={close}>
 				{$t('about.close')}
 			</button>
 		</div>

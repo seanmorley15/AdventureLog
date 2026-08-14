@@ -3,9 +3,13 @@
 	import { t } from 'svelte-i18n';
 	import DOMPurify from 'dompurify'; // Import DOMPurify to sanitize HTML
 
-	export let text: string | null | undefined = ''; // Markdown text
-	export let editor_height: string = 'h-64'; // Editor height
-	let is_preview: boolean = false; // Toggle between Edit and Preview mode
+	interface Props {
+		text?: string | null | undefined; // Markdown text
+		editor_height?: string; // Editor height
+	}
+
+	let { text = $bindable(''), editor_height = 'h-64' }: Props = $props();
+	let is_preview: boolean = $state(false); // Toggle between Edit and Preview mode
 
 	// Function to parse markdown to HTML
 	const renderMarkdown = (markdown: string) => {
@@ -13,8 +17,8 @@
 	};
 
 	// References for scroll syncing
-	let editorRef: HTMLTextAreaElement | null = null;
-	let previewRef: HTMLElement | null = null;
+	let editorRef: HTMLTextAreaElement | null = $state(null);
+	let previewRef: HTMLElement | null = $state(null);
 
 	// Sync scrolling between editor and preview
 	const syncScroll = () => {
@@ -29,7 +33,7 @@
 	<button
 		type="button"
 		class="join-item btn btn-sm btn-outline"
-		on:click={() => (is_preview = false)}
+		onclick={() => (is_preview = false)}
 		class:btn-active={!is_preview}
 	>
 		{$t('transportation.edit')}
@@ -37,7 +41,7 @@
 	<button
 		type="button"
 		class="join-item btn btn-sm btn-outline"
-		on:click={() => (is_preview = true)}
+		onclick={() => (is_preview = true)}
 		class:btn-active={is_preview}
 	>
 		{$t('adventures.preview')}
@@ -52,7 +56,7 @@
 			bind:this={editorRef}
 			bind:value={text}
 			placeholder={$t('adventures.md_instructions')}
-			on:scroll={syncScroll}
+			onscroll={syncScroll}
 		></textarea>
 	{/if}
 

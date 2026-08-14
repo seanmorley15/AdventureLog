@@ -7,19 +7,37 @@
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
 
-	export let mediaUsage: MediaUsage;
-	export let formatBytes: (bytes: number) => string;
-	export let totalMediaBytes: number;
-	export let mediaLimitBytes: number | null;
-	export let totalMediaFiles: number;
-	export let overallUsagePercent: number;
-	export let imagesPercent: number;
-	export let attachmentsPercent: number;
-	export let profilePicsPercent: number;
-	export let mediaLimitLabel: string;
-	export let acknowledgeRestoreOverride: boolean;
-	export let isRestoring: boolean;
-	export let onRestoreStart: () => void;
+	interface Props {
+		mediaUsage: MediaUsage;
+		formatBytes: (bytes: number) => string;
+		totalMediaBytes: number;
+		mediaLimitBytes: number | null;
+		totalMediaFiles: number;
+		overallUsagePercent: number;
+		imagesPercent: number;
+		attachmentsPercent: number;
+		profilePicsPercent: number;
+		mediaLimitLabel: string;
+		acknowledgeRestoreOverride: boolean;
+		isRestoring: boolean;
+		onRestoreStart: () => void;
+	}
+
+	let {
+		mediaUsage,
+		formatBytes,
+		totalMediaBytes,
+		mediaLimitBytes,
+		totalMediaFiles,
+		overallUsagePercent,
+		imagesPercent,
+		attachmentsPercent,
+		profilePicsPercent,
+		mediaLimitLabel,
+		acknowledgeRestoreOverride = $bindable(),
+		isRestoring,
+		onRestoreStart
+	}: Props = $props();
 </script>
 
 <SettingsCard>
@@ -112,7 +130,7 @@
 				method="post"
 				action="?/restoreData"
 				use:enhance
-				on:submit={onRestoreStart}
+				onsubmit={onRestoreStart}
 				enctype="multipart/form-data"
 				class="space-y-3"
 			>

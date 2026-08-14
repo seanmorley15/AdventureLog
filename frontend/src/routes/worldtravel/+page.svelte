@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { goto } from '$app/navigation';
 	import CountryCard from '$lib/components/cards/CountryCard.svelte';
 	import ClusterMap from '$lib/components/ClusterMap.svelte';
@@ -19,16 +21,30 @@
 	import Cancel from '~icons/mdi/cancel';
 	import { normalizeBasemapType } from '$lib';
 
-	export let data: PageData;
-	console.log(data);
+	interface Props {
+		data: PageData;
+	}
 
-	let searchQuery: string = '';
-	let filteredCountries: Country[] = [];
-	const allCountries: Country[] = data.props?.countries || [];
-	let worldSubregions: string[] = [];
-	let showMap: boolean = false;
-	let showGlobeSpin: boolean = false;
-	let sidebarOpen = false;
+	let { data }: Props = $props();
+	$effect(() => {
+		console.log(data);
+	});
+
+	let searchQuery: string = $state('');
+	let filteredCountries: Country[] = $state([]);
+	const allCountries: Country[] = $derived(data.props?.countries || []);
+	let worldSubregions: string[] = $derived(
+		[
+			...new Set(
+				allCountries
+					.map((country) => country.subregion)
+					.filter((subregion): subregion is string => subregion !== null)
+			)
+		].filter((subregion) => subregion !== '')
+	);
+	let showMap: boolean = $state(false);
+	let showGlobeSpin: boolean = $state(false);
+	let sidebarOpen = $state(false);
 
 	type VisitStatus = 'not_visited' | 'partial' | 'complete';
 
@@ -60,10 +76,10 @@
 		minPoints: 1
 	};
 
-	let countriesGeoJson: CountryFeatureCollection = {
+	let countriesGeoJson: CountryFeatureCollection = $state({
 		type: 'FeatureCollection',
 		features: []
-	};
+	});
 
 	function parseCoordinate(value: number | string | null | undefined): number | null {
 		if (value === null || value === undefined) {
@@ -157,31 +173,25 @@
 		goto(`/worldtravel/${countryCode}`);
 	}
 
-	worldSubregions = [
-		...new Set(
-			allCountries
-				.map((country) => country.subregion)
-				.filter((subregion): subregion is string => subregion !== null)
-		)
-	];
-	worldSubregions = worldSubregions.filter((subregion) => subregion !== '');
-	console.log(worldSubregions);
+	$effect(() => {
+		console.log(worldSubregions);
+	});
 
-	let filterOption: string = 'all';
-	let subRegionOption: string = '';
+	let filterOption: string = $state('all');
+	let subRegionOption: string = $state('');
 
 	// Statistics
-	$: totalCountries = allCountries.length;
-	$: visitedCountries = allCountries.filter((country) => country.num_visits > 0).length;
-	$: completeCountries = allCountries.filter(
+	let totalCountries = $derived(allCountries.length);
+	let visitedCountries = $derived(allCountries.filter((country) => country.num_visits > 0).length);
+	let completeCountries = $derived(allCountries.filter(
 		(country) => country.num_visits === country.num_regions
-	).length;
-	$: partialCountries = allCountries.filter(
+	).length);
+	let partialCountries = $derived(allCountries.filter(
 		(country) => country.num_visits > 0 && country.num_visits < country.num_regions
-	).length;
-	$: notVisitedCountries = allCountries.filter((country) => country.num_visits === 0).length;
+	).length);
+	let notVisitedCountries = $derived(allCountries.filter((country) => country.num_visits === 0).length);
 
-	$: {
+	run(() => {
 		if (searchQuery === '') {
 			filteredCountries = allCountries;
 		} else {
@@ -207,21 +217,23 @@
 				(country) => country.subregion === subRegionOption
 			);
 		}
-	}
+	});
 
-	$: countriesGeoJson = {
-		type: 'FeatureCollection',
-		features: filteredCountries
-			.map((country) => {
-				const coordinates = getCountryCoordinates(country);
-				if (!coordinates) {
-					return null;
-				}
+	run(() => {
+		countriesGeoJson = {
+			type: 'FeatureCollection',
+			features: filteredCountries
+				.map((country) => {
+					const coordinates = getCountryCoordinates(country);
+					if (!coordinates) {
+						return null;
+					}
 
-				return countryToFeature(country, coordinates);
-			})
-			.filter((feature): feature is CountryFeature => feature !== null)
-	};
+					return countryToFeature(country, coordinates);
+				})
+				.filter((feature): feature is CountryFeature => feature !== null)
+		};
+	});
 
 	// when isGlobeSpin is enabled, fetch /api/globespin/
 	type GlobeSpinData = {
@@ -237,8 +249,8 @@
 		region: { name: string; num_cities: number };
 		city: { name: string; region_name: string };
 	};
-	let globeSpinData: GlobeSpinData | null = null;
-	let isLoadingGlobeSpin = false;
+	let globeSpinData: GlobeSpinData | null = $state(null);
+	let isLoadingGlobeSpin = $state(false);
 
 	async function fetchGlobeSpin() {
 		isLoadingGlobeSpin = true;
@@ -282,7 +294,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden" onclick={toggleSidebar}>
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
@@ -335,7 +347,7 @@
 							{#if searchQuery.length > 0}
 								<button
 									class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-									on:click={() => (searchQuery = '')}
+									onclick={() => (searchQuery = '')}
 								>
 									<Clear class="w-4 h-4" />
 								</button>
@@ -345,7 +357,7 @@
 						<!-- Map Toggle -->
 						<button
 							class="btn btn-outline gap-2 {showMap ? 'btn-active' : ''}"
-							on:click={() => (showMap = !showMap)}
+							onclick={() => (showMap = !showMap)}
 						>
 							{#if showMap}
 								<Map class="w-4 h-4" />
@@ -358,7 +370,7 @@
 						<!-- Globe Spin Toggle -->
 						<button
 							class="btn btn-outline gap-2 {showGlobeSpin ? 'btn-active' : ''}"
-							on:click={() => {
+							onclick={() => {
 								showGlobeSpin = !showGlobeSpin;
 								if (showGlobeSpin) {
 									fetchGlobeSpin();
@@ -383,28 +395,28 @@
 						<div class="tabs tabs-boxed bg-base-200">
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'all')}
+								onclick={() => (filterOption = 'all')}
 							>
 								<Globe class="w-3 h-3" />
 								{$t('adventures.all')}
 							</button>
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'complete' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'complete')}
+								onclick={() => (filterOption = 'complete')}
 							>
 								<Check class="w-3 h-3" />
 								{$t('worldtravel.complete')}
 							</button>
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'partial' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'partial')}
+								onclick={() => (filterOption = 'partial')}
 							>
 								<Progress class="w-3 h-3" />
 								{$t('worldtravel.partial')}
 							</button>
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'not' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'not')}
+								onclick={() => (filterOption = 'not')}
 							>
 								<Cancel class="w-3 h-3" />
 								{$t('adventures.not_visited')}
@@ -414,14 +426,14 @@
 						{#if subRegionOption}
 							<div class="badge badge-primary gap-1">
 								{subRegionOption}
-								<button on:click={() => (subRegionOption = '')}>
+								<button onclick={() => (subRegionOption = '')}>
 									<Clear class="w-3 h-3" />
 								</button>
 							</div>
 						{/if}
 
 						{#if searchQuery || filterOption !== 'all' || subRegionOption}
-							<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+							<button class="btn btn-ghost btn-xs gap-1" onclick={clearFilters}>
 								<Clear class="w-3 h-3" />
 								{$t('worldtravel.clear_all')}
 							</button>
@@ -672,7 +684,7 @@
 										</a>
 										<button
 											class="btn btn-outline btn-lg gap-2 hover:scale-105 transition-all duration-300"
-											on:click={fetchGlobeSpin}
+											onclick={fetchGlobeSpin}
 										>
 											<Globe class="w-5 h-5 animate-spin" style="animation-duration: 2s;" />
 											{$t('worldtravel.spin_again')}
@@ -691,7 +703,7 @@
 									<p class="text-base-content/50 text-center max-w-md mb-6">
 										{$t('worldtravel.globe_spin_error_desc')}
 									</p>
-									<button class="btn btn-primary gap-2" on:click={fetchGlobeSpin}>
+									<button class="btn btn-primary gap-2" onclick={fetchGlobeSpin}>
 										<Globe class="w-4 h-4" />
 										{$t('worldtravel.try_again')}
 									</button>
@@ -715,7 +727,7 @@
 						<p class="text-base-content/50 text-center max-w-md mb-6">
 							{$t('worldtravel.no_countries_found_desc')}
 						</p>
-						<button class="btn btn-primary gap-2" on:click={clearFilters}>
+						<button class="btn btn-primary gap-2" onclick={clearFilters}>
 							<Clear class="w-4 h-4" />
 							{$t('worldtravel.clear_filters')}
 						</button>
@@ -832,7 +844,7 @@
 									name="region"
 									class="radio radio-primary radio-sm"
 									checked={subRegionOption === ''}
-									on:change={() => (subRegionOption = '')}
+									onchange={() => (subRegionOption = '')}
 								/>
 								<span class="label-text">{$t('worldtravel.all_regions')}</span>
 							</label>
@@ -843,7 +855,7 @@
 										name="region"
 										class="radio radio-primary radio-sm"
 										checked={subRegionOption === subregion}
-										on:change={() => (subRegionOption = subregion)}
+										onchange={() => (subRegionOption = subregion)}
 									/>
 									<span class="label-text text-sm">{subregion}</span>
 								</label>
@@ -852,11 +864,11 @@
 					</div>
 
 					<div class="space-y-3">
-						<button class="btn btn-outline w-full gap-2" on:click={() => (showMap = !showMap)}>
+						<button class="btn btn-outline w-full gap-2" onclick={() => (showMap = !showMap)}>
 							<Map class="w-4 h-4" />
 							{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
 						</button>
-						<button class="btn btn-ghost w-full gap-2" on:click={clearFilters}>
+						<button class="btn btn-ghost w-full gap-2" onclick={clearFilters}>
 							<Clear class="w-4 h-4" />
 							{$t('worldtravel.clear_all_filters')}
 						</button>

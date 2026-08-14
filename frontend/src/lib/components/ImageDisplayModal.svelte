@@ -7,13 +7,26 @@
 	import type { ContentImage } from '$lib/types';
 	import ImageSourceBadge from './ImageSourceBadge.svelte';
 	import { defaultImageSource } from '$lib/images';
-	export let images: ContentImage[] = [];
-	export let initialIndex: number = 0;
-	export let name: string = '';
-	export let location: string = '';
+	interface Props {
+		images?: ContentImage[];
+		initialIndex?: number;
+		name?: string;
+		location?: string;
+	}
 
-	let currentIndex = initialIndex;
-	let currentImage = images[currentIndex]?.image || '';
+	let {
+		images = [],
+		initialIndex = 0,
+		name = '',
+		location = ''
+	}: Props = $props();
+
+	let currentIndex = $state(0);
+	let currentImage = $derived(images[currentIndex]?.image || '');
+
+	$effect.pre(() => {
+		currentIndex = initialIndex;
+	});
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -49,7 +62,6 @@
 
 	function updateCurrentSlide(index: number) {
 		currentIndex = index;
-		currentImage = images[currentIndex]?.image || '';
 	}
 
 	function nextSlide() {
@@ -70,23 +82,24 @@
 		updateCurrentSlide(index);
 	}
 
-	// Reactive statement to handle prop changes
-	$: if (images.length > 0 && currentIndex >= images.length) {
-		updateCurrentSlide(0);
-	}
+	$effect.pre(() => {
+		if (images.length > 0 && currentIndex >= images.length) {
+			updateCurrentSlide(0);
+		}
+	});
 
-	$: currentImageSource = defaultImageSource(images[currentIndex]?.source);
+	let currentImageSource = $derived(defaultImageSource(images[currentIndex]?.source));
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm" on:click={handleClickOutside}>
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<dialog id="my_modal_1" class="modal backdrop-blur-sm" onclick={handleClickOutside}>
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		{#if images.length > 0 && currentImage}
@@ -135,7 +148,7 @@
 											? 'bg-primary'
 											: 'bg-base-300 hover:bg-base-400'}"
 										aria-label={`Go to image ${index + 1}`}
-										on:click={() => goToSlide(index)}
+										onclick={() => goToSlide(index)}
 									></button>
 								{/each}
 							</div>
@@ -148,7 +161,7 @@
 						class="btn btn-ghost btn-square"
 						aria-label={$t('about.close')}
 						title={$t('about.close')}
-						on:click={close}
+						onclick={close}
 					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -171,7 +184,7 @@
 						class="absolute left-4 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-primary/80 hover:btn-primary"
 						aria-label="Previous image"
 						title="Previous image"
-						on:click={previousSlide}
+						onclick={previousSlide}
 					>
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -202,7 +215,7 @@
 						class="absolute right-4 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-primary/80 hover:btn-primary"
 						aria-label="Next image"
 						title="Next image"
-						on:click={nextSlide}
+						onclick={nextSlide}
 					>
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -226,7 +239,7 @@
 								currentIndex
 									? 'border-primary shadow-lg'
 									: 'border-base-300 hover:border-base-400'}"
-								on:click={() => goToSlide(index)}
+								onclick={() => goToSlide(index)}
 							>
 								<img src={imageData.image} alt={name} class="w-full h-full object-cover" />
 							</button>
@@ -267,7 +280,7 @@
 								{$t('adventures.image_modal_navigate')}
 							</div>
 						{/if}
-						<button class="btn btn-primary gap-2" on:click={close}>
+						<button class="btn btn-primary gap-2" onclick={close}>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"

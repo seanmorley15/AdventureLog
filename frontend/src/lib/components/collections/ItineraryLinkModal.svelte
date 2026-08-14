@@ -15,10 +15,19 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let collection: Collection;
-	export let user: any;
-	export let targetDate: string; // ISO date string
-	export let displayDate: string; // Formatted display date
+	interface Props {
+		collection: Collection;
+		user: any;
+		targetDate: string; // ISO date string
+		displayDate: string; // Formatted display date
+	}
+
+	let {
+		collection,
+		user,
+		targetDate,
+		displayDate
+	}: Props = $props();
 
 	let modal: HTMLDialogElement;
 
@@ -34,13 +43,7 @@
 		otherDays: Array<{ type: string; item: any }>;
 	};
 
-	$: groupedItems = getUnscheduledItemsForDate(collection, targetDate);
 
-	$: availableCount =
-		(groupedItems.scheduledOnThisDay.length || 0) +
-		(groupedItems.onThisDay.length || 0) +
-		(groupedItems.scheduledOtherDays.length || 0) +
-		(groupedItems.otherDays.length || 0);
 
 	function getUnscheduledItemsForDate(collection: Collection, targetDate: string): GroupedItems {
 		const itinerary = collection.itinerary || [];
@@ -164,15 +167,21 @@
 		dispatch('addItem', { type, itemId, updateDate });
 		close();
 	}
+	let groupedItems = $derived(getUnscheduledItemsForDate(collection, targetDate));
+	let availableCount =
+		$derived((groupedItems.scheduledOnThisDay.length || 0) +
+		(groupedItems.onThisDay.length || 0) +
+		(groupedItems.scheduledOtherDays.length || 0) +
+		(groupedItems.otherDays.length || 0));
 </script>
 
 <dialog id="itinerary_link_modal" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
@@ -198,7 +207,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button class="btn btn-ghost btn-square" onclick={close}>
 					<Clear class="w-5 h-5" />
 				</button>
 			</div>
@@ -242,7 +251,7 @@
 									</div>
 									<button
 										class="btn btn-primary btn-xs w-full"
-										on:click={() => handleAddItem(type, item.id, false)}
+										onclick={() => handleAddItem(type, item.id, false)}
 									>
 										{$t('adventures.itinerary_link_modal.add_to_itinerary')}
 									</button>
@@ -351,7 +360,7 @@
 										> -->
 										<button
 											class="btn btn-primary btn-xs flex-1"
-											on:click={() => handleAddItem(type, item.id, true)}
+											onclick={() => handleAddItem(type, item.id, true)}
 											>{$t('adventures.itinerary_link_modal.add_here')}</button
 										>
 									</div>
@@ -408,7 +417,7 @@
 										</button> -->
 										<button
 											class="btn btn-primary btn-xs flex-1"
-											on:click={() => handleAddItem(type, item.id, true)}
+											onclick={() => handleAddItem(type, item.id, true)}
 										>
 											{$t('adventures.itinerary_link_modal.add_here')}
 										</button>
@@ -446,7 +455,7 @@
 						String(availableCount)
 					)}
 				</div>
-				<button class="btn btn-primary gap-2" on:click={close}>
+				<button class="btn btn-primary gap-2" onclick={close}>
 					<Link class="w-4 h-4" />
 					{$t('adventures.done')}
 				</button>

@@ -4,12 +4,16 @@
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
-	export let background: Background;
 	import { t } from 'svelte-i18n';
 
 	import AccountIcon from '~icons/mdi/account';
 	import LocationIcon from '~icons/mdi/map-marker';
 	import DiscordIcon from '~icons/mdi/discord';
+	interface Props {
+		background: Background;
+	}
+
+	let { background }: Props = $props();
 
 	onMount(() => {
 		modal = document.getElementById('image_info_modal') as HTMLDialogElement;
@@ -38,18 +42,18 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<dialog id="image_info_modal" class="modal modal-open" on:click={handleBackdropClick}>
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box w-full max-w-md" role="dialog" on:keydown={handleKeydown} tabindex="0">
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<dialog id="image_info_modal" class="modal modal-open" onclick={handleBackdropClick}>
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<div class="modal-box w-full max-w-md" role="dialog" onkeydown={handleKeydown} tabindex="0">
 		<!-- Header -->
 		<div class="flex items-center justify-between mb-4">
 			<h3 class="text-xl font-bold text-base-content">
 				{$t('settings.about_this_background')}
 			</h3>
-			<button class="btn btn-sm btn-circle btn-ghost" on:click={close} aria-label="Close">
+			<button class="btn btn-sm btn-circle btn-ghost" onclick={close} aria-label="Close">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"
@@ -129,7 +133,7 @@
 
 		<!-- Footer -->
 		<div class="modal-action mt-6">
-			<button class="btn btn-primary w-full" on:click={close}>
+			<button class="btn btn-primary w-full" onclick={close}>
 				{$t('about.close')}
 			</button>
 		</div>

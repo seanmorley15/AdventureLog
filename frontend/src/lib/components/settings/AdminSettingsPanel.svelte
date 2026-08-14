@@ -3,8 +3,12 @@
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 
-	export let publicUrl: string;
-	export let onUpdateRegions: () => void;
+	interface Props {
+		publicUrl: string;
+		onUpdateRegions: () => void;
+	}
+
+	let { publicUrl, onUpdateRegions }: Props = $props();
 </script>
 
 <SettingsCard>
@@ -30,7 +34,7 @@
 				<div class="text-4xl mb-4">📍</div>
 				<h3 class="card-title justify-center">{$t('settings.region_updates')}</h3>
 				<p class="text-sm text-base-content/70 mb-4">{$t('settings.region_updates_desc')}</p>
-				<button class="btn btn-info" on:click={onUpdateRegions}>
+				<button class="btn btn-info" onclick={onUpdateRegions}>
 					{$t('adventures.update_visited_regions')}
 				</button>
 			</div>

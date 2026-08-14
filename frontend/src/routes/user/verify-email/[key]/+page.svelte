@@ -2,7 +2,11 @@
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 </script>
 
 <section class="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-base-100">

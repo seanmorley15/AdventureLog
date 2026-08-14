@@ -1,13 +1,17 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 
-	export let activeSection: string;
-	export let isStaff: boolean = false;
-	export let onSelect: (sectionId: string) => void;
+	interface Props {
+		activeSection: string;
+		isStaff?: boolean;
+		onSelect: (sectionId: string) => void;
+	}
+
+	let { activeSection, isStaff = false, onSelect }: Props = $props();
 
 	type NavItem = { id: string; icon: string; label: () => string };
 
-	$: navItems = [
+	let navItems = $derived([
 		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
 		{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
 		{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
@@ -16,7 +20,7 @@
 		...(!isStaff ? [{ id: 'danger', icon: '⚠️', label: () => $t('settings.danger_zone') }] : []),
 		{ id: 'about', icon: 'ℹ️', label: () => $t('settings.about') },
 		...(isStaff ? [{ id: 'admin', icon: '⚙️', label: () => $t('settings.administration') }] : [])
-	] satisfies NavItem[];
+	] satisfies NavItem[]);
 </script>
 
 <div class="bg-base-100 rounded-2xl shadow-xl p-6 sticky top-8">
@@ -32,7 +36,7 @@
 								? 'bg-error text-error-content shadow-lg'
 								: 'bg-primary text-primary-content shadow-lg'
 							: 'hover:bg-base-200'}"
-						on:click={() => onSelect(item.id)}
+						onclick={() => onSelect(item.id)}
 					>
 						<span class="text-xl">{item.icon}</span>
 						<span class="font-medium">{item.label()}</span>

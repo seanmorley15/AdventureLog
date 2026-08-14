@@ -50,35 +50,41 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let mode: 'location' | 'lodging' = 'location';
-	export let googleEnabled = false;
-	export let collectionId: string | null = null;
-	export let itineraryDate: string | null = null;
-	export let itineraryLabel: string | null = null;
-	export let basemapType: string = 'default';
+	interface Props {
+		mode?: 'location' | 'lodging';
+		googleEnabled?: boolean;
+		collectionId?: string | null;
+		itineraryDate?: string | null;
+		itineraryLabel?: string | null;
+		basemapType?: string;
+	}
 
-	$: supportsCategory = mode === 'location';
-	$: itemLabel = mode === 'lodging' ? 'lodging' : 'location';
-	$: quickAddEndpoint =
-		mode === 'lodging' ? '/api/lodging/quick-add/' : '/api/locations/quick-add/';
-	$: formattedItineraryLabel = itineraryLabel || formatItineraryDate(itineraryDate);
+	let {
+		mode = 'location',
+		googleEnabled = false,
+		collectionId = null,
+		itineraryDate = null,
+		itineraryLabel = null,
+		basemapType = 'default'
+	}: Props = $props();
 
-	let searchQuery = '';
-	let searchResults: SelectedPlace[] = [];
-	let selectedLocation: SelectedPlace | null = null;
-	let mapCenter: [number, number] = [-74.5, 40];
-	let mapZoom = 2;
-	let isSearching = false;
-	let isReverseGeocoding = false;
-	let isEnrichingDescription = false;
-	let isQuickAdding = false;
-	let quickAddedLocation: any = null;
+
+	let searchQuery = $state('');
+	let searchResults: SelectedPlace[] = $state([]);
+	let selectedLocation: SelectedPlace | null = $state(null);
+	let mapCenter: [number, number] = $state([-74.5, 40]);
+	let mapZoom = $state(2);
+	let isSearching = $state(false);
+	let isReverseGeocoding = $state(false);
+	let isEnrichingDescription = $state(false);
+	let isQuickAdding = $state(false);
+	let quickAddedLocation: any = $state(null);
 	let searchTimeout: ReturnType<typeof setTimeout>;
-	let selectedMarker: { lng: number; lat: number } | null = null;
-	let locationData: LocationData | null = null;
-	let selectedQuickAddCategory: Category | null = null;
+	let selectedMarker: { lng: number; lat: number } | null = $state(null);
+	let locationData: LocationData | null = $state(null);
+	let selectedQuickAddCategory: Category | null = $state(null);
 	const placeDetailsCache = new Map<string, any>();
-	let searchProvider: string | null = null;
+	let searchProvider: string | null = $state(null);
 
 	function formatProviderLabel(provider?: string | null): string | null {
 		const normalized = (provider || '').trim().toLowerCase();
@@ -565,6 +571,11 @@
 			clearTimeout(searchTimeout);
 		};
 	});
+	let supportsCategory = $derived(mode === 'location');
+	let itemLabel = $derived(mode === 'lodging' ? 'lodging' : 'location');
+	let quickAddEndpoint =
+		$derived(mode === 'lodging' ? '/api/lodging/quick-add/' : '/api/locations/quick-add/');
+	let formattedItineraryLabel = $derived(itineraryLabel || formatItineraryDate(itineraryDate));
 </script>
 
 <div class="space-y-6">
@@ -585,14 +596,14 @@
 				<div class="flex flex-col sm:flex-row gap-3">
 					<button
 						class="btn btn-primary flex-1"
-						on:click={() => dispatch('quickAddedEdit', { location: quickAddedLocation })}
+						onclick={() => dispatch('quickAddedEdit', { location: quickAddedLocation })}
 					>
 						<PencilIcon class="w-4 h-4" />
 						{$t('adventures.add_details') || 'Add Details'}
 					</button>
 					<button
 						class="btn btn-outline flex-1"
-						on:click={() => dispatch('quickAddedDone', { location: quickAddedLocation })}
+						onclick={() => dispatch('quickAddedDone', { location: quickAddedLocation })}
 					>
 						{$t('adventures.done') || 'Done'}
 					</button>
@@ -621,7 +632,7 @@
 						type="text"
 						id="quickstart-search-location"
 						bind:value={searchQuery}
-						on:input={handleSearchInput}
+						oninput={handleSearchInput}
 						placeholder={$t('adventures.search_placeholder') ||
 							'Enter city, location, or landmark...'}
 						class="input input-bordered w-full pl-10 pr-4"
@@ -630,7 +641,7 @@
 					{#if searchQuery && !selectedLocation}
 						<button
 							class="absolute inset-y-0 right-0 pr-3 flex items-center"
-							on:click={clearSelection}
+							onclick={clearSelection}
 						>
 							<ClearIcon class="w-4 h-4 text-base-content/40 hover:text-base-content" />
 						</button>
@@ -657,7 +668,7 @@
 						{#each searchResults as result}
 							<button
 								class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-primary/50 transition-colors"
-								on:click={() => selectSearchResult(result)}
+								onclick={() => selectSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
 									<PinIcon class="w-4 h-4 text-primary mt-1 flex-shrink-0" />
@@ -690,7 +701,7 @@
 				<div class="divider divider-horizontal text-xs">{$t('adventures.or') || 'OR'}</div>
 			</div>
 
-			<button class="btn btn-outline gap-2 w-full" on:click={useCurrentLocation}>
+			<button class="btn btn-outline gap-2 w-full" onclick={useCurrentLocation}>
 				<LocationIcon class="w-4 h-4" />
 				{$t('adventures.use_current_location') || 'Use Current Location'}
 			</button>
@@ -705,7 +716,7 @@
 					{$t('adventures.select_on_map') || 'Select on Map'}
 				</h3>
 				{#if selectedMarker}
-					<button class="btn btn-ghost btn-sm gap-1" on:click={clearSelection}>
+					<button class="btn btn-ghost btn-sm gap-1" onclick={clearSelection}>
 						<ClearIcon class="w-4 h-4" />
 						{$t('adventures.clear') || 'Clear'}
 					</button>
@@ -835,16 +846,16 @@
 	{/if}
 
 	<div class="flex flex-col sm:flex-row gap-3 pt-2">
-		<button class="btn btn-neutral-200 sm:flex-1" on:click={() => dispatch('cancel')}>
+		<button class="btn btn-neutral-200 sm:flex-1" onclick={() => dispatch('cancel')}>
 			{$t('adventures.cancel') || 'Cancel'}
 		</button>
 
 		{#if selectedLocation && selectedMarker && googleEnabled}
-			<button class="btn btn-outline sm:flex-1" on:click={continueWithDetails}>
+			<button class="btn btn-outline sm:flex-1" onclick={continueWithDetails}>
 				<PencilIcon class="w-4 h-4" />
 				{$t('adventures.add_details') || 'Add Details'}
 			</button>
-			<button class="btn btn-primary sm:flex-1" on:click={quickAdd} disabled={isQuickAdding}>
+			<button class="btn btn-primary sm:flex-1" onclick={quickAdd} disabled={isQuickAdding}>
 				{#if isQuickAdding}
 					<span class="loading loading-spinner loading-xs"></span>
 					{$t('adventures.processing') || 'Processing'}...
@@ -856,7 +867,7 @@
 		{:else}
 			<button
 				class="btn btn-primary sm:flex-1"
-				on:click={continueWithDetails}
+				onclick={continueWithDetails}
 				disabled={isReverseGeocoding}
 			>
 				{#if isReverseGeocoding}

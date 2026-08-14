@@ -8,16 +8,20 @@
 	import Check from '~icons/mdi/check-circle';
 	import ProgressIcon from '~icons/mdi/progress-check';
 
-	export let country: Country;
+	interface Props {
+		country: Country;
+	}
 
-	$: visitStatus =
-		country.num_visits === 0
+	let { country }: Props = $props();
+
+	let visitStatus =
+		$derived(country.num_visits === 0
 			? 'none'
 			: country.num_visits >= country.num_regions
 				? 'complete'
-				: 'partial';
-	$: progressPct =
-		country.num_regions > 0 ? Math.round((country.num_visits / country.num_regions) * 100) : 0;
+				: 'partial');
+	let progressPct =
+		$derived(country.num_regions > 0 ? Math.round((country.num_visits / country.num_regions) * 100) : 0);
 
 	function nav() {
 		goto(`/worldtravel/${country.country_code}`);
@@ -27,7 +31,7 @@
 <button
 	type="button"
 	class="w-full grid items-center gap-4 px-4 py-3 text-left hover:bg-base-200/60 active:bg-base-200 transition-colors group country-row"
-	on:click={nav}
+	onclick={nav}
 >
 	<img
 		src={country.flag_url}

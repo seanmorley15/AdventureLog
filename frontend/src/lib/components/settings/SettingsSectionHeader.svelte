@@ -1,8 +1,17 @@
 <script lang="ts">
-	export let icon: string;
-	export let title: string;
-	export let description: string = '';
-	export let iconBgClass: string = 'bg-primary/10';
+	interface Props {
+		icon: string;
+		title: string;
+		description?: string;
+		iconBgClass?: string;
+	}
+
+	let {
+		icon,
+		title,
+		description = '',
+		iconBgClass = 'bg-primary/10'
+	}: Props = $props();
 </script>
 
 <div class="flex items-center gap-4 mb-6">

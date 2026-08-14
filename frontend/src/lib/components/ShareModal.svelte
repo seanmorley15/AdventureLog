@@ -11,7 +11,11 @@
 	import Share from '~icons/mdi/share';
 	import Clear from '~icons/mdi/close';
 
-	export let collection: SlimCollection | Collection;
+	interface Props {
+		collection: SlimCollection | Collection;
+	}
+
+	let { collection = $bindable() }: Props = $props();
 
 	// Extended user interface to include status
 	interface UserWithStatus extends User {
@@ -19,8 +23,8 @@
 	}
 
 	let allUsers: UserWithStatus[] = [];
-	let sharedWithUsers: UserWithStatus[] = [];
-	let notSharedWithUsers: UserWithStatus[] = [];
+	let sharedWithUsers: UserWithStatus[] = $state([]);
+	let notSharedWithUsers: UserWithStatus[] = $state([]);
 
 	// Send invite to user
 	async function sendInvite(user: User) {
@@ -159,13 +163,13 @@
 </script>
 
 <dialog id="my_modal_1" class="modal">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="modal-box w-11/12 max-w-5xl p-6 space-y-6"
 		role="dialog"
 		tabindex="0"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 	>
 		<!-- Title -->
 		<!-- Header -->
@@ -181,7 +185,7 @@
 					<p class="text-sm text-base-content/60">{$t('share.share_desc')}</p>
 				</div>
 			</div>
-			<button class="btn btn-ghost btn-sm btn-square" on:click={close}>
+			<button class="btn btn-ghost btn-sm btn-square" onclick={close}>
 				<Clear class="w-5 h-5" />
 			</button>
 		</div>
@@ -233,7 +237,7 @@
 
 		<!-- Action -->
 		<div class="pt-4 border-t border-base-300 flex justify-end">
-			<button class="btn btn-primary" on:click={close}>
+			<button class="btn btn-primary" onclick={close}>
 				{$t('about.close')}
 			</button>
 		</div>

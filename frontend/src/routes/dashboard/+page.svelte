@@ -33,18 +33,22 @@
 	import ChevronRight from '~icons/mdi/chevron-right';
 	import CompassRose from '~icons/mdi/compass-rose';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	const user = data.user;
-	let stats: UserStats | null = data.props.stats;
-	let recentLocations = data.props.recentLocations;
-	let upcomingTrips: SlimCollection[] = data.props.upcomingTrips;
-	let activeTrip: SlimCollection | null = data.props.activeTrip;
-	let upcomingEvents: CalendarApiEvent[] = data.props.upcomingEvents;
-	let inviteCount = data.props.inviteCount;
-	let loadError = data.props.loadError;
+	let { data }: Props = $props();
 
-	let heroVisible = false;
+	const user = $derived(data.user);
+	let stats: UserStats | null = $derived(data.props.stats);
+	let recentLocations = $derived(data.props.recentLocations);
+	let upcomingTrips: SlimCollection[] = $derived(data.props.upcomingTrips);
+	let activeTrip: SlimCollection | null = $derived(data.props.activeTrip);
+	let upcomingEvents: CalendarApiEvent[] = $derived(data.props.upcomingEvents);
+	let inviteCount = $derived(data.props.inviteCount);
+	let loadError = $derived(data.props.loadError);
+
+	let heroVisible = $state(false);
 
 	onMount(() => {
 		requestAnimationFrame(() => {
@@ -52,33 +56,25 @@
 		});
 	});
 
-	$: stats = data.props.stats;
-	$: recentLocations = data.props.recentLocations;
-	$: upcomingTrips = data.props.upcomingTrips;
-	$: activeTrip = data.props.activeTrip;
-	$: upcomingEvents = data.props.upcomingEvents;
-	$: inviteCount = data.props.inviteCount;
-	$: loadError = data.props.loadError;
-
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	$: measurementSystem = user?.measurement_system || 'metric';
-	$: greetingName = user?.first_name || user?.username || '';
+	let measurementSystem = $derived(user?.measurement_system || 'metric');
+	let greetingName = $derived(user?.first_name || user?.username || '');
 
-	$: timezoneLabels = {
+	let timezoneLabels = $derived({
 		eventTimezone: $t('calendar.event timezone'),
 		localTimezone: $t('calendar.your timezone')
-	};
+	});
 
-	$: displayEvents = apiEventsToDisplayEvents(
+	let displayEvents = $derived(apiEventsToDisplayEvents(
 		upcomingEvents,
 		'event',
 		userTimezone,
 		timezoneLabels
-	);
+	));
 
-	$: agendaEvents = displayEvents
+	let agendaEvents = $derived(displayEvents
 		.filter((event) => event.start.split('T')[0] >= new Date().toISOString().split('T')[0])
-		.slice(0, 5);
+		.slice(0, 5));
 
 	function getPercentage(value: number, total: number): number {
 		if (!total || total <= 0) return 0;
@@ -97,40 +93,40 @@
 		return record.activity_name || record.sport_type || 'Activity';
 	}
 
-	$: worldExplorationPercentage = stats
+	let worldExplorationPercentage = $derived(stats
 		? getPercentage(stats.visited_country_count, stats.total_countries)
-		: 0;
-	$: regionExplorationPercentage = stats
+		: 0);
+	let regionExplorationPercentage = $derived(stats
 		? getPercentage(stats.visited_region_count, stats.total_regions)
-		: 0;
-	$: cityExplorationPercentage = stats
+		: 0);
+	let cityExplorationPercentage = $derived(stats
 		? getPercentage(stats.visited_city_count, stats.total_cities)
-		: 0;
-	$: locationVisitedPercentage = stats
+		: 0);
+	let locationVisitedPercentage = $derived(stats
 		? getPercentage(stats.visited_location_count, stats.location_count)
-		: 0;
+		: 0);
 
-	$: isNewUser =
-		stats &&
+	let isNewUser =
+		$derived(stats &&
 		stats.location_count === 0 &&
 		stats.trips_count === 0 &&
 		upcomingTrips.length === 0 &&
-		!activeTrip;
+		!activeTrip);
 
-	$: profileHref = user ? `/profile/${user.username}` : '/settings';
+	let profileHref = $derived(user ? `/profile/${user.username}` : '/settings');
 
-	$: heroTrip = activeTrip ?? upcomingTrips[0] ?? null;
-	$: heroTripIsActive = Boolean(activeTrip);
+	let heroTrip = $derived(activeTrip ?? upcomingTrips[0] ?? null);
+	let heroTripIsActive = $derived(Boolean(activeTrip));
 
-	$: timeGreetingKey = (() => {
+	let timeGreetingKey = $derived((() => {
 		const hour = new Date().getHours();
 		if (hour < 12) return 'dashboard.greeting_morning';
 		if (hour < 17) return 'dashboard.greeting_afternoon';
 		if (hour < 22) return 'dashboard.greeting_evening';
 		return 'dashboard.greeting_night';
-	})();
+	})());
 
-	$: welcomeSubtitle = loadError
+	let welcomeSubtitle = $derived(loadError
 		? $t('dashboard.stats_error')
 		: stats && stats.visited_country_count > 0
 			? $t('dashboard.hero_countries', { values: { count: stats.visited_country_count } })
@@ -140,7 +136,7 @@
 					: $t('dashboard.hero_locations_logged', {
 							values: { count: stats.location_count }
 						})
-				: $t('dashboard.hero_start_journey');
+				: $t('dashboard.hero_start_journey'));
 
 	function formatTripDate(date: string | null): string {
 		if (!date) return '';
@@ -158,9 +154,9 @@
 		return locationImage?.image ?? null;
 	}
 
-	$: heroTripBannerImage = heroTrip ? getTripBannerImage(heroTrip) : null;
+	let heroTripBannerImage = $derived(heroTrip ? getTripBannerImage(heroTrip) : null);
 
-	$: quickLinks = [
+	let quickLinks = $derived([
 		{ href: '/map', labelKey: 'navbar.map', icon: Map },
 		{
 			href: '/worldtravel',
@@ -175,7 +171,7 @@
 		},
 		{ href: '/search', labelKey: 'navbar.search', icon: Magnify },
 		{ href: profileHref, labelKey: 'navbar.profile', icon: Account }
-	];
+	]);
 </script>
 
 <svelte:head>
@@ -771,7 +767,7 @@
 									href={link.href}
 									class="btn btn-ghost h-auto min-h-0 flex-col gap-1.5 py-3 px-2 normal-case font-normal border border-base-300/40 bg-base-200/30"
 								>
-									<svelte:component this={link.icon} class="h-5 w-5 text-primary" />
+									<link.icon class="h-5 w-5 text-primary" />
 									<span class="text-xs leading-tight text-center">{$t(link.labelKey)}</span>
 								</a>
 							{/each}

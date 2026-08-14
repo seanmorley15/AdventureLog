@@ -14,21 +14,25 @@
 	import EmojiIcon from '~icons/mdi/emoticon-happy-outline';
 
 	const dispatch = createEventDispatcher();
-	let modal: HTMLDialogElement;
+	let modal: HTMLDialogElement | undefined = $state();
 
-	export let categories: Category[] = [];
+	interface Props {
+		categories?: Category[];
+	}
 
-	let categoryToEdit: Category | null = null;
-	let categoryToDelete: Category | null = null;
-	let newCategory = { display_name: '', icon: '' };
-	let isChanged = false;
-	let hasLoaded = false;
-	let warningMessage: string | null = null;
-	let showEmojiPickerAdd = false;
-	let showEmojiPickerEdit = false;
-	let searchTerm = '';
+	let { categories = $bindable([]) }: Props = $props();
 
-	$: filteredCategories = categories
+	let categoryToEdit: Category | null = $state(null);
+	let categoryToDelete: Category | null = $state(null);
+	let newCategory = $state({ display_name: '', icon: '' });
+	let isChanged = $state(false);
+	let hasLoaded = $state(false);
+	let warningMessage: string | null = $state(null);
+	let showEmojiPickerAdd = $state(false);
+	let showEmojiPickerEdit = $state(false);
+	let searchTerm = $state('');
+
+	let filteredCategories = $derived(categories
 		.filter((category) => {
 			if (!searchTerm.trim()) return true;
 			return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -37,7 +41,7 @@
 			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
 			if (usageDiff !== 0) return usageDiff;
 			return a.display_name.localeCompare(b.display_name);
-		});
+		}));
 
 	onMount(async () => {
 		await import('emoji-picker-element');
@@ -201,14 +205,14 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	id="category-modal"
 	bind:this={modal}
 	class="modal modal-bottom md:modal-middle backdrop-blur-sm"
-	on:click={handleBackdropClick}
-	on:keydown={handleKeydown}
+	onclick={handleBackdropClick}
+	onkeydown={handleKeydown}
 >
 	<div
 		class="modal-box category-modal-box w-full max-w-none bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-t-2xl md:rounded-2xl"
@@ -235,7 +239,7 @@
 				</div>
 				<button
 					type="button"
-					on:click={closeModal}
+					onclick={closeModal}
 					class="btn btn-ghost btn-sm md:btn-md btn-square shrink-0"
 					aria-label={$t('about.close')}
 				>
@@ -325,7 +329,7 @@
 												<p class="text-sm font-medium text-primary">
 													{$t('categories.edit_category')}
 												</p>
-												<form on:submit={saveCategory} class="space-y-3 min-w-0">
+												<form onsubmit={saveCategory} class="space-y-3 min-w-0">
 													<div class="space-y-3">
 														<div class="form-control min-w-0">
 															<label class="label py-0" for="edit-category-name">
@@ -352,7 +356,7 @@
 																/>
 																<button
 																	type="button"
-																	on:click={() => {
+																	onclick={() => {
 																		showEmojiPickerEdit = !showEmojiPickerEdit;
 																		showEmojiPickerAdd = false;
 																	}}
@@ -370,7 +374,7 @@
 														<div
 															class="rounded-xl border border-base-300 bg-base-100 overflow-y-auto max-h-64 max-w-full"
 														>
-															<emoji-picker on:emoji-click={handleEmojiSelectEdit}></emoji-picker>
+															<emoji-picker onemoji-click={handleEmojiSelectEdit}></emoji-picker>
 														</div>
 													{/if}
 
@@ -378,7 +382,7 @@
 														<button
 															type="button"
 															class="btn btn-ghost btn-sm"
-															on:click={cancelEdit}
+															onclick={cancelEdit}
 														>
 															{$t('adventures.cancel')}
 														</button>
@@ -401,14 +405,14 @@
 													<button
 														type="button"
 														class="btn btn-ghost btn-sm"
-														on:click={cancelDelete}
+														onclick={cancelDelete}
 													>
 														{$t('adventures.cancel')}
 													</button>
 													<button
 														type="button"
 														class="btn btn-error btn-sm gap-2"
-														on:click={() => confirmDelete(category)}
+														onclick={() => confirmDelete(category)}
 													>
 														<DeleteIcon class="w-4 h-4" />
 														{$t('adventures.remove')}
@@ -434,7 +438,7 @@
 												<div class="flex gap-1 shrink-0">
 													<button
 														type="button"
-														on:click={() => startEdit(category)}
+														onclick={() => startEdit(category)}
 														class="btn btn-ghost btn-sm btn-square"
 														aria-label={$t('lodging.edit')}
 													>
@@ -443,7 +447,7 @@
 													{#if category.name !== 'general'}
 														<button
 															type="button"
-															on:click={() => requestDelete(category)}
+															onclick={() => requestDelete(category)}
 															class="btn btn-ghost btn-sm btn-square text-error hover:bg-error/10"
 															aria-label={$t('adventures.remove')}
 														>
@@ -477,7 +481,7 @@
 					</div>
 
 					<div class="md:flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-contain">
-						<form on:submit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
+						<form onsubmit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
 							<div class="form-control min-w-0 w-full">
 								<label class="label py-1" for="new-category-name">
 									<span class="label-text font-medium">{$t('categories.category_name')}</span>
@@ -506,7 +510,7 @@
 									/>
 									<button
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											showEmojiPickerAdd = !showEmojiPickerAdd;
 											showEmojiPickerEdit = false;
 										}}
@@ -523,7 +527,7 @@
 								<div
 									class="emoji-picker-shell rounded-xl border border-base-300 bg-base-200/30 overflow-y-auto overflow-x-hidden w-full"
 								>
-									<emoji-picker on:emoji-click={handleEmojiSelectAdd}></emoji-picker>
+									<emoji-picker onemoji-click={handleEmojiSelectAdd}></emoji-picker>
 								</div>
 							{/if}
 
@@ -558,7 +562,7 @@
 			<button
 				type="button"
 				class="btn btn-neutral w-full md:w-auto gap-2 shrink-0"
-				on:click={closeModal}
+				onclick={closeModal}
 			>
 				<CloseIcon class="w-4 h-4" />
 				{$t('about.close')}

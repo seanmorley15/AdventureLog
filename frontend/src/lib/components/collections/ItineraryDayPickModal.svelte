@@ -5,10 +5,21 @@
 	import CalendarBlank from '~icons/mdi/calendar-blank';
 	import { t } from 'svelte-i18n';
 
-	export let isOpen: boolean = false;
-	export let days: Array<{ date: string; displayDate: string; items: any[] }> = [];
-	export let itemName: string = 'Item';
-	export let scheduledDates: string[] = [];
+	interface Props {
+		isOpen?: boolean;
+		days?: Array<{ date: string; displayDate: string; items: any[] }>;
+		itemName?: string;
+		scheduledDates?: string[];
+		sourceVisitDate?: string | null;
+	}
+
+	let {
+		isOpen = $bindable(false),
+		days = [],
+		itemName = 'Item',
+		scheduledDates = [],
+		sourceVisitDate = null
+	}: Props = $props();
 	// Optional: source visit info when moving a dated location
 
 	const dispatch = createEventDispatcher();
@@ -49,7 +60,7 @@
 							</p>
 						</div>
 					</div>
-					<button class="btn btn-ghost btn-square" on:click={handleClose}>
+					<button class="btn btn-ghost btn-square" onclick={handleClose}>
 						<span class="text-lg">✕</span>
 					</button>
 				</div>
@@ -111,7 +122,7 @@
 									type="button"
 									class="btn btn-primary btn-sm flex-1"
 									disabled={isScheduled}
-									on:click={() => handleDaySelect(day.date, true)}
+									onclick={() => handleDaySelect(day.date, true)}
 								>
 									{isScheduled ? 'Already scheduled' : 'Move to this day'}
 								</button>
@@ -128,11 +139,11 @@
 					{days.length}
 					{days.length === 1 ? 'day available' : 'days available'}
 				</div>
-				<button type="button" class="btn" on:click={handleClose}>Cancel</button>
+				<button type="button" class="btn" onclick={handleClose}>Cancel</button>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
-			<button type="button" on:click={handleClose}>close</button>
+			<button type="button" onclick={handleClose}>close</button>
 		</form>
 	</dialog>
 {/if}

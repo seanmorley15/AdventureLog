@@ -7,7 +7,11 @@
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
 
-	export let user: User;
+	interface Props {
+		user: User;
+	}
+
+	let { user }: Props = $props();
 </script>
 
 <SettingsCard>

@@ -3,8 +3,12 @@
 	import { t } from 'svelte-i18n';
 	import type { Category } from '$lib/types';
 
-	export let selected_category: Category | null = null;
-	export let searchTerm = '';
+	interface Props {
+		selected_category?: Category | null;
+		searchTerm?: string;
+	}
+
+	let { selected_category = $bindable(null), searchTerm = $bindable('') }: Props = $props();
 
 	const emptyCategory: Category = {
 		name: '',
@@ -15,24 +19,24 @@
 		num_locations: 0
 	};
 
-	let newCategory: Category = { ...emptyCategory };
-	let categories: Category[] = [];
-	let isOpen = false;
-	let isEmojiPickerVisible = false;
-	let dropdownRef: HTMLDivElement;
-	let mobileSearchInputRef: HTMLInputElement;
-	let desktopSearchInputRef: HTMLInputElement;
+	let newCategory: Category = $state({ ...emptyCategory });
+	let categories: Category[] = $state([]);
+	let isOpen = $state(false);
+	let isEmojiPickerVisible = $state(false);
+	let dropdownRef: HTMLDivElement | undefined = $state();
+	let mobileSearchInputRef: HTMLInputElement | undefined = $state();
+	let desktopSearchInputRef: HTMLInputElement | undefined = $state();
 
-	$: sortedCategories = [...categories].sort((a, b) => {
+	let sortedCategories = $derived([...categories].sort((a, b) => {
 		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
 		if (usageDiff !== 0) return usageDiff;
 		return a.display_name.localeCompare(b.display_name);
-	});
+	}));
 
-	$: filteredCategories = sortedCategories.filter((category) => {
+	let filteredCategories = $derived(sortedCategories.filter((category) => {
 		if (!searchTerm) return true;
 		return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-	});
+	}));
 
 	function closeDropdown() {
 		isOpen = false;
@@ -134,7 +138,7 @@
 		class="btn btn-outline w-full justify-between sm:h-auto h-12"
 		aria-haspopup="listbox"
 		aria-expanded={isOpen}
-		on:click={toggleDropdown}
+		onclick={toggleDropdown}
 	>
 		<span class="flex items-center gap-2">
 			{#if selected_category && selected_category.name}
@@ -160,8 +164,8 @@
 			type="button"
 			class="fixed inset-0 bg-black/50 z-40 sm:hidden focus:outline-none"
 			aria-label={$t('adventures.back')}
-			on:click={closeDropdown}
-			on:keydown={(event) => event.key === 'Enter' && closeDropdown()}
+			onclick={closeDropdown}
+			onkeydown={(event) => event.key === 'Enter' && closeDropdown()}
 		></button>
 
 		<div
@@ -175,7 +179,7 @@
 						class="btn btn-ghost btn-sm btn-circle"
 						aria-label={$t('about.close')}
 						title={$t('about.close')}
-						on:click={closeDropdown}
+						onclick={closeDropdown}
 					>
 						<svg
 							class="w-5 h-5"
@@ -232,7 +236,7 @@
 							<button
 								type="button"
 								class="btn join-item h-12 w-12 text-lg"
-								on:click={toggleEmojiPicker}
+								onclick={toggleEmojiPicker}
 								class:btn-active={isEmojiPickerVisible}
 							>
 								😊
@@ -242,7 +246,7 @@
 						<button
 							type="button"
 							class="btn btn-primary h-12 w-full"
-							on:click={createCustomCategory}
+							onclick={createCustomCategory}
 							disabled={!newCategory.display_name.trim()}
 						>
 							<svg
@@ -264,7 +268,7 @@
 
 						{#if isEmojiPickerVisible}
 							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
-								<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+								<emoji-picker onemoji-click={handleEmojiSelect}></emoji-picker>
 							</div>
 						{/if}
 					</div>
@@ -309,7 +313,7 @@
 									class:text-primary-content={selected_category &&
 										selected_category.id === category.id}
 									class:border-primary={selected_category && selected_category.id === category.id}
-									on:click={() => selectCategory(category)}
+									onclick={() => selectCategory(category)}
 								>
 									<div class="flex items-center gap-3 w-full">
 										<span class="text-2xl flex-shrink-0">{category.icon}</span>
@@ -389,7 +393,7 @@
 						<button
 							type="button"
 							class="btn btn-square btn-sm btn-secondary"
-							on:click={toggleEmojiPicker}
+							onclick={toggleEmojiPicker}
 							class:btn-active={isEmojiPickerVisible}
 						>
 							😊
@@ -401,7 +405,7 @@
 					<button
 						type="button"
 						class="btn btn-primary btn-sm"
-						on:click={createCustomCategory}
+						onclick={createCustomCategory}
 						disabled={!newCategory.display_name.trim()}
 					>
 						<svg
@@ -424,7 +428,7 @@
 
 				{#if isEmojiPickerVisible}
 					<div class="p-3 rounded-lg border border-base-300">
-						<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+						<emoji-picker onemoji-click={handleEmojiSelect}></emoji-picker>
 					</div>
 				{/if}
 			</div>
@@ -466,7 +470,7 @@
 								type="button"
 								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
 								class:btn-active={selected_category && selected_category.id === category.id}
-								on:click={() => selectCategory(category)}
+								onclick={() => selectCategory(category)}
 								role="option"
 								aria-selected={selected_category && selected_category.id === category.id}
 							>

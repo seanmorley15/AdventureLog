@@ -9,15 +9,26 @@
 	import FullscreenIcon from '~icons/mdi/fullscreen';
 	import FullscreenExitIcon from '~icons/mdi/fullscreen-exit';
 
-	export let map: any = undefined;
-	export let basemapType = 'default';
-	export let showBasemapSelector = true;
-	export let fullscreenTarget: HTMLElement | null = null;
-	/** When true, render inline (no absolute positioning) for use inside a parent toolbar. */
-	export let embedded = false;
+	
+	interface Props {
+		map?: any;
+		basemapType?: string;
+		showBasemapSelector?: boolean;
+		fullscreenTarget?: HTMLElement | null;
+		/** When true, render inline (no absolute positioning) for use inside a parent toolbar. */
+		embedded?: boolean;
+	}
 
-	let isFullscreen = false;
-	let locating = false;
+	let {
+		map = undefined,
+		basemapType = $bindable('default'),
+		showBasemapSelector = true,
+		fullscreenTarget = null,
+		embedded = false
+	}: Props = $props();
+
+	let isFullscreen = $state(false);
+	let locating = $state(false);
 
 	const btnClass =
 		'btn btn-sm btn-square min-h-8 h-8 w-8 bg-transparent hover:bg-base-200/80 border-0 rounded-none shadow-none';
@@ -117,10 +128,10 @@
 			</div>
 		{/if}
 
-		<button type="button" class={btnClass} on:click={zoomIn} aria-label={$t('map.zoom_in')}>
+		<button type="button" class={btnClass} onclick={zoomIn} aria-label={$t('map.zoom_in')}>
 			<PlusIcon class="w-5 h-5" />
 		</button>
-		<button type="button" class={btnClass} on:click={zoomOut} aria-label={$t('map.zoom_out')}>
+		<button type="button" class={btnClass} onclick={zoomOut} aria-label={$t('map.zoom_out')}>
 			<MinusIcon class="w-5 h-5" />
 		</button>
 		<button
@@ -128,7 +139,7 @@
 			class={btnClass}
 			class:loading={locating}
 			disabled={locating}
-			on:click={locateUser}
+			onclick={locateUser}
 			aria-label={$t('map.locate_me')}
 		>
 			<CrosshairsGpsIcon class="w-5 h-5" />
@@ -136,7 +147,7 @@
 		<button
 			type="button"
 			class={btnClass}
-			on:click={toggleFullscreen}
+			onclick={toggleFullscreen}
 			aria-label={isFullscreen ? $t('map.exit_fullscreen') : $t('map.enter_fullscreen')}
 		>
 			{#if isFullscreen}

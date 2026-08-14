@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import RegionCard from '$lib/components/cards/RegionCard.svelte';
 	import type { Region, VisitedRegion } from '$lib/types';
 	import ClusterMap from '$lib/components/ClusterMap.svelte';
@@ -20,32 +22,46 @@
 	import Flag from '~icons/mdi/flag';
 	import { normalizeBasemapType } from '$lib';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let regions: Region[] = data.props?.regions || [];
-	let visitedRegions: VisitedRegion[] = data.props?.visitedRegions || [];
-	let description: string = data.props?.description || '';
-	let filteredRegions: Region[] = [];
-	let searchQuery: string = '';
+	let { data }: Props = $props();
+
+	let regions: Region[] = $derived(data.props?.regions || []);
+	let visitedRegions: VisitedRegion[] = $state<VisitedRegion[]>([]);
+	let description: string = $derived(data.props?.description || '');
+	let filteredRegions: Region[] = $state([]);
+	let searchQuery: string = $state('');
 	let showGeo: boolean = true;
-	let showMap: boolean = false;
-	let sidebarOpen = false;
-	let filterOption: string = 'all';
+	let showMap: boolean = $state(false);
+	let sidebarOpen = $state(false);
+	let filterOption: string = $state('all');
 
-	const country = data.props?.country || null;
-	console.log(data);
+	const country = $derived(data.props?.country || null);
+	$effect(() => {
+		console.log(data);
+	});
 
 	// Statistics
-	let numRegions: number = country?.num_regions || 0;
-	let numVisitedRegions: number = country?.num_visits || 0;
+	let numRegions: number = $derived(country?.num_regions || 0);
+	let numVisitedRegions: number = $state(0);
 
-	$: visitedCount = visitedRegions.length;
-	$: notVisitedCount = regions.length - visitedCount;
-	$: completionPercentage =
-		regions.length > 0 ? Math.round((visitedCount / regions.length) * 100) : 0;
+	$effect.pre(() => {
+		visitedRegions = (data.props?.visitedRegions || []).filter(
+			(visitedRegion, index, self) =>
+				index === self.findIndex((t) => t.region === visitedRegion.region)
+		);
+		numVisitedRegions = country?.num_visits || 0;
+	});
+
+	let visitedCount = $derived(visitedRegions.length);
+	let notVisitedCount = $derived(regions.length - visitedCount);
+	let completionPercentage =
+		$derived(regions.length > 0 ? Math.round((visitedCount / regions.length) * 100) : 0);
 
 	// Filter regions based on search and filter options
-	$: {
+	run(() => {
 		if (searchQuery === '') {
 			filteredRegions = regions;
 		} else {
@@ -63,13 +79,7 @@
 				(region) => !visitedRegions.some((visitedRegion) => visitedRegion.region === region.id)
 			);
 		}
-	}
-
-	// Remove duplicates from visitedRegions
-	visitedRegions = visitedRegions.filter(
-		(visitedRegion, index, self) =>
-			index === self.findIndex((t) => t.region === visitedRegion.region)
-	);
+	});
 
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
@@ -166,7 +176,7 @@
 		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
 	}
 
-	$: hasMappableRegions = regions.some(hasCoordinates);
+	let hasMappableRegions = $derived(regions.some(hasCoordinates));
 
 	function regionToFeature(region: Region): RegionFeature | null {
 		const lat = parseCoordinate(region.latitude);
@@ -188,15 +198,15 @@
 	const REGION_SOURCE_ID = 'worldtravel-regions';
 	const regionClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 };
 
-	let regionsGeoJson: RegionFeatureCollection = { type: 'FeatureCollection', features: [] };
-	$: {
+	let regionsGeoJson: RegionFeatureCollection = $state({ type: 'FeatureCollection', features: [] });
+	run(() => {
 		// Explicitly depend on visitedRegions to trigger reactivity when visit status changes
 		visitedRegions;
 		regionsGeoJson = {
 			type: 'FeatureCollection',
 			features: regions.map((r) => regionToFeature(r)).filter((f): f is RegionFeature => f !== null)
 		};
-	}
+	});
 
 	function getMarkerProps(feature: any): RegionFeatureProperties | null {
 		return feature && feature.properties ? feature.properties : null;
@@ -258,7 +268,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden" onclick={toggleSidebar}>
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
@@ -330,7 +340,7 @@
 							{#if searchQuery.length > 0}
 								<button
 									class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-									on:click={() => (searchQuery = '')}
+									onclick={() => (searchQuery = '')}
 								>
 									<Clear class="w-4 h-4" />
 								</button>
@@ -340,7 +350,7 @@
 						{#if hasMappableRegions}
 							<button
 								class="btn btn-outline gap-2 {showMap ? 'btn-active' : ''}"
-								on:click={() => (showMap = !showMap)}
+								onclick={() => (showMap = !showMap)}
 							>
 								<Map class="w-4 h-4" />
 								<span class="hidden sm:inline">
@@ -357,21 +367,21 @@
 							<div class="tabs tabs-boxed bg-base-200">
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
-									on:click={() => (filterOption = 'all')}
+									onclick={() => (filterOption = 'all')}
 								>
 									<MapMarker class="w-3 h-3" />
 									{$t('adventures.all')}
 								</button>
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'visited' ? 'tab-active' : ''}"
-									on:click={() => (filterOption = 'visited')}
+									onclick={() => (filterOption = 'visited')}
 								>
 									<Check class="w-3 h-3" />
 									{$t('adventures.visited')}
 								</button>
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'not-visited' ? 'tab-active' : ''}"
-									on:click={() => (filterOption = 'not-visited')}
+									onclick={() => (filterOption = 'not-visited')}
 								>
 									<Cancel class="w-3 h-3" />
 									{$t('adventures.not_visited')}
@@ -379,7 +389,7 @@
 							</div>
 
 							{#if searchQuery || filterOption !== 'all'}
-								<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+								<button class="btn btn-ghost btn-xs gap-1" onclick={clearFilters}>
 									<Clear class="w-3 h-3" />
 									{$t('worldtravel.clear_all')}
 								</button>
@@ -440,7 +450,7 @@
 						<p class="text-base-content/50 text-center max-w-md mb-6">
 							{$t('worldtravel.no_countries_found_desc')}
 						</p>
-						<button class="btn btn-primary gap-2" on:click={clearFilters}>
+						<button class="btn btn-primary gap-2" onclick={clearFilters}>
 							<Clear class="w-4 h-4" />
 							{$t('worldtravel.clear_filters')}
 						</button>
@@ -540,7 +550,7 @@
 
 					{#if hasMappableRegions}
 						<div class="space-y-3">
-							<button class="btn btn-outline w-full gap-2" on:click={() => (showMap = !showMap)}>
+							<button class="btn btn-outline w-full gap-2" onclick={() => (showMap = !showMap)}>
 								<Map class="w-4 h-4" />
 								{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
 							</button>

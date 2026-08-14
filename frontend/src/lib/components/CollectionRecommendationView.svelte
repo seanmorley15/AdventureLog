@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Collection, User, ContentImage } from '$lib/types';
 	import { googleContentImage } from '$lib/images';
 	import { onMount } from 'svelte';
@@ -26,8 +28,12 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Location, Lodging } from '$lib/types';
 
-	export let collection: Collection;
-	export let user: User | null;
+	interface Props {
+		collection: Collection;
+		user: User | null;
+	}
+
+	let { collection = $bindable(), user }: Props = $props();
 	// Whether the current user can modify this collection (owner or shared user)
 
 	type RecommendationResult = {
@@ -53,36 +59,36 @@
 		quality_score?: number;
 	};
 
-	let searchQuery = '';
-	let selectedCategory: 'tourism' | 'lodging' | 'food' = 'tourism';
-	let radiusValue = 5000; // Default 5km
-	let loading = false;
-	let results: RecommendationResult[] = [];
-	let error: string | null = null;
-	let selectedLocationId: string | null = null;
-	let showFilters = false;
-	let mapCenter: { lng: number; lat: number } = { lng: 0, lat: 0 };
+	let searchQuery = $state('');
+	let selectedCategory: 'tourism' | 'lodging' | 'food' = $state('tourism');
+	let radiusValue = $state(5000); // Default 5km
+	let loading = $state(false);
+	let results: RecommendationResult[] = $state([]);
+	let error: string | null = $state(null);
+	let selectedLocationId: string | null = $state(null);
+	let showFilters = $state(false);
+	let mapCenter: { lng: number; lat: number } = $state({ lng: 0, lat: 0 });
 	let mapZoom = 12;
 
 	// Filters
-	let minRating = 0;
-	let minReviews = 0;
-	let showOpenOnly = false;
+	let minRating = $state(0);
+	let minReviews = $state(0);
+	let showOpenOnly = $state(false);
 
 	// Photo modal
-	let photoModalOpen = false;
-	let selectedPhotos: ContentImage[] = [];
-	let selectedPhotoIndex = 0;
-	let selectedPlaceName = '';
-	let selectedPlaceAddress = '';
+	let photoModalOpen = $state(false);
+	let selectedPhotos: ContentImage[] = $state([]);
+	let selectedPhotoIndex = $state(0);
+	let selectedPlaceName = $state('');
+	let selectedPlaceAddress = $state('');
 
 	const dispatch = createEventDispatcher();
 
 	// Modals for creating autofilled items
-	let showLocationModal = false;
-	let showLodgingModal = false;
-	let modalLocationToEdit: Location | null = null;
-	let modalLodgingToEdit: Lodging | null = null;
+	let showLocationModal = $state(false);
+	let showLodgingModal = $state(false);
+	let modalLocationToEdit: Location | null = $state(null);
+	let modalLodgingToEdit: Lodging | null = $state(null);
 
 	function mapPhotosToContentImages(photos: string[]): ContentImage[] {
 		return photos.map((url, i) => googleContentImage(`rec-${i}-${Date.now()}`, url, i === 0));
@@ -167,12 +173,12 @@
 		modalLodgingToEdit = null;
 	}
 
-	$: isMetric = user?.measurement_system === 'metric';
-	$: radiusDisplay = isMetric
+	let isMetric = $derived(user?.measurement_system === 'metric');
+	let radiusDisplay = $derived(isMetric
 		? `${(radiusValue / 1000).toFixed(1)} km`
-		: `${(radiusValue / 1609.34).toFixed(1)} mi`;
+		: `${(radiusValue / 1609.34).toFixed(1)} mi`);
 
-	$: radiusOptions = isMetric
+	let radiusOptions = $derived(isMetric
 		? [
 				{ value: 1000, label: '1 km' },
 				{ value: 2000, label: '2 km' },
@@ -188,10 +194,10 @@
 				{ value: 16093, label: '10 mi' },
 				{ value: 32187, label: '20 mi' },
 				{ value: 80467, label: '50 mi' }
-			];
+			]);
 
 	// Get locations with coordinates for dropdown
-	$: locationsWithCoords = collection.locations.filter((l) => l.latitude && l.longitude);
+	let locationsWithCoords = $derived(collection.locations.filter((l) => l.latitude && l.longitude));
 
 	// Set default selected location and map center
 	onMount(() => {
@@ -205,21 +211,23 @@
 	});
 
 	// Update map center when selected location changes
-	$: if (selectedLocationId) {
-		const location = locationsWithCoords.find((l) => l.id === selectedLocationId);
-		if (location && location.latitude && location.longitude) {
-			mapCenter = { lng: location.longitude, lat: location.latitude };
+	run(() => {
+		if (selectedLocationId) {
+			const location = locationsWithCoords.find((l) => l.id === selectedLocationId);
+			if (location && location.latitude && location.longitude) {
+				mapCenter = { lng: location.longitude, lat: location.latitude };
+			}
 		}
-	}
+	});
 
 	// Filter results
-	$: filteredResults = results.filter((r) => {
+	let filteredResults = $derived(results.filter((r) => {
 		if (minRating > 0 && (r.rating === undefined || r.rating < minRating)) return false;
 		if (minReviews > 0 && (r.review_count === undefined || r.review_count < minReviews))
 			return false;
 		if (showOpenOnly && !r.is_open_now) return false;
 		return true;
-	});
+	}));
 
 	async function searchRecommendations() {
 		if (!searchQuery.trim() && !selectedLocationId) {
@@ -429,7 +437,7 @@
 						class="input input-bordered w-full"
 						bind:value={searchQuery}
 						disabled={selectedLocationId !== null}
-						on:keydown={(e) => e.key === 'Enter' && searchRecommendations()}
+						onkeydown={(e) => e.key === 'Enter' && searchRecommendations()}
 					/>
 				</div>
 
@@ -466,7 +474,7 @@
 
 			<!-- Filters Toggle -->
 			<div class="flex gap-2 mt-4">
-				<button class="btn btn-primary flex-1" on:click={searchRecommendations} disabled={loading}>
+				<button class="btn btn-primary flex-1" onclick={searchRecommendations} disabled={loading}>
 					{#if loading}
 						<span class="loading loading-spinner loading-sm"></span>
 						{$t('recomendations.searching')}
@@ -475,7 +483,7 @@
 						{$t('navbar.search')}
 					{/if}
 				</button>
-				<button class="btn btn-ghost" on:click={() => (showFilters = !showFilters)}>
+				<button class="btn btn-ghost" onclick={() => (showFilters = !showFilters)}>
 					<TuneVariant class="w-5 h-5" />
 					{$t('adventures.filter')}
 				</button>
@@ -650,7 +658,7 @@
 						<figure class="relative h-48 cursor-pointer">
 							<button
 								class="w-full h-full"
-								on:click={() =>
+								onclick={() =>
 									openPhotoModal(result.photos || [], result.name, result.address || '')}
 							>
 								<img src={result.photos[0]} alt={result.name} class="w-full h-full object-cover" />
@@ -788,13 +796,13 @@
 							<!-- Create from recommendation -->
 							<button
 								class="btn btn-sm btn-outline"
-								on:click={() => openCreateLocationFromResult(result)}
+								onclick={() => openCreateLocationFromResult(result)}
 							>
 								{$t('recomendations.add_location')}
 							</button>
 							<button
 								class="btn btn-sm btn-ghost"
-								on:click={() => openCreateLodgingFromResult(result)}
+								onclick={() => openCreateLodgingFromResult(result)}
 							>
 								{$t('recomendations.add_lodging')}
 							</button>

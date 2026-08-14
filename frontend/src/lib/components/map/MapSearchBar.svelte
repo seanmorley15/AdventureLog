@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { MapSearchMode, Pin, PlaceSearchResult } from '$lib/types';
@@ -10,12 +12,23 @@
 	import NearbyIcon from '~icons/mdi/compass-outline';
 	import DiceIcon from '~icons/mdi/dice-5';
 
-	export let mode: MapSearchMode = 'my';
-	export let query = '';
-	export let filteredPins: Pin[] = [];
-	export let isSearching = false;
-	export let searchError: string | null = null;
-	export let randomDisabled = false;
+	interface Props {
+		mode?: MapSearchMode;
+		query?: string;
+		filteredPins?: Pin[];
+		isSearching?: boolean;
+		searchError?: string | null;
+		randomDisabled?: boolean;
+	}
+
+	let {
+		mode = 'my',
+		query = $bindable(''),
+		filteredPins = [],
+		isSearching = $bindable(false),
+		searchError = $bindable(null),
+		randomDisabled = false
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		modeChange: MapSearchMode;
@@ -25,8 +38,8 @@
 		random: void;
 	}>();
 
-	let placeResults: PlaceSearchResult[] = [];
-	let showDropdown = false;
+	let placeResults: PlaceSearchResult[] = $state([]);
+	let showDropdown = $state(false);
 	let searchTimeout: ReturnType<typeof setTimeout>;
 	let placeProvider: string | null = null;
 
@@ -40,8 +53,8 @@
 		{ id: 'nearby', labelKey: 'map.search_mode_nearby', icon: NearbyIcon }
 	];
 
-	$: myResults =
-		mode === 'my' && query.trim()
+	let myResults =
+		$derived(mode === 'my' && query.trim()
 			? filteredPins
 					.filter((pin) => {
 						const q = query.toLowerCase().trim();
@@ -51,12 +64,14 @@
 						);
 					})
 					.slice(0, 8)
-			: [];
+			: []);
 
-	$: showDropdown = Boolean(
-		(mode === 'my' && myResults.length > 0 && query.trim().length > 0) ||
-		(mode === 'places' && (placeResults.length > 0 || isSearching || searchError))
-	);
+	run(() => {
+		showDropdown = Boolean(
+			(mode === 'my' && myResults.length > 0 && query.trim().length > 0) ||
+			(mode === 'places' && (placeResults.length > 0 || isSearching || searchError))
+		);
+	});
 
 	function handleModeChange(newMode: MapSearchMode) {
 		if (newMode === mode) return;
@@ -140,9 +155,9 @@
 				m.id
 					? 'btn-primary'
 					: 'btn-ghost bg-base-100/80'}"
-				on:click={() => handleModeChange(m.id)}
+				onclick={() => handleModeChange(m.id)}
 			>
-				<svelte:component this={m.icon} class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+				<m.icon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
 				<span
 					class="truncate text-[10px] min-[380px]:text-[11px] sm:text-sm leading-none max-[379px]:sr-only"
 				>
@@ -170,8 +185,8 @@
 							? $t('map.search_locations')
 							: $t('map.search_places_placeholder')}
 						bind:value={query}
-						on:input={handleInput}
-						on:focus={() => {
+						oninput={handleInput}
+						onfocus={() => {
 							if (mode === 'places' && placeResults.length) showDropdown = true;
 						}}
 					/>
@@ -179,7 +194,7 @@
 						<button
 							type="button"
 							class="btn btn-ghost btn-xs btn-circle shrink-0"
-							on:click={clearQuery}
+							onclick={clearQuery}
 							aria-label={$t('map.clear_search')}
 						>
 							<ClearIcon class="w-4 h-4" />
@@ -195,7 +210,7 @@
 						{#if mode === 'my'}
 							{#each myResults as pin (pin.id)}
 								<li>
-									<button type="button" on:click={() => selectPin(pin)}>
+									<button type="button" onclick={() => selectPin(pin)}>
 										<span class="truncate">{pin.name}</span>
 										{#if pin.category?.icon}
 											<span class="badge badge-ghost badge-xs">{pin.category.icon}</span>
@@ -216,7 +231,7 @@
 							{:else}
 								{#each placeResults as place (place.id)}
 									<li>
-										<button type="button" on:click={() => selectPlace(place)}>
+										<button type="button" onclick={() => selectPlace(place)}>
 											<div class="flex flex-col items-start min-w-0">
 												<span class="font-medium truncate w-full">{place.name}</span>
 												<span class="text-xs text-base-content/60 truncate w-full"
@@ -236,7 +251,7 @@
 					type="button"
 					class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
 					disabled={randomDisabled}
-					on:click={handleRandomClick}
+					onclick={handleRandomClick}
 					aria-label={$t('map.random_location')}
 					title={$t('map.random_location')}
 				>

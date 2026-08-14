@@ -4,9 +4,14 @@
 	import MapIcon from '~icons/mdi/map';
 	import CheckIcon from '~icons/mdi/check';
 
-	export let basemapType: string = 'default';
-	/** DaisyUI dropdown placement classes */
-	export let dropdownClass = 'dropdown dropdown-left';
+	
+	interface Props {
+		basemapType?: string;
+		/** DaisyUI dropdown placement classes */
+		dropdownClass?: string;
+	}
+
+	let { basemapType = $bindable('default'), dropdownClass = 'dropdown dropdown-left' }: Props = $props();
 
 	const categoryOrder = [
 		'Standard',
@@ -28,8 +33,8 @@
 		{}
 	);
 
-	let dropdownOpen = false;
-	let dropdownEl: HTMLDivElement;
+	let dropdownOpen = $state(false);
+	let dropdownEl: HTMLDivElement | undefined = $state();
 
 	function selectBasemap(value: string) {
 		basemapType = value;
@@ -47,7 +52,7 @@
 	}
 </script>
 
-<svelte:window on:click={closeDropdown} />
+<svelte:window onclick={closeDropdown} />
 
 <div bind:this={dropdownEl} class="{dropdownClass} {dropdownOpen ? 'dropdown-open' : ''}">
 	<button
@@ -55,7 +60,7 @@
 		class="btn btn-sm btn-ghost gap-1.5 min-h-0 h-8 px-2 sm:px-3"
 		aria-haspopup="menu"
 		aria-expanded={dropdownOpen}
-		on:click={toggleDropdown}
+		onclick={toggleDropdown}
 	>
 		<MapIcon class="w-4 h-4 shrink-0" />
 		<span class="text-xs font-medium hidden sm:inline truncate max-w-[5.5rem] md:max-w-none">
@@ -96,7 +101,7 @@
 											option.value
 												? 'bg-primary/15 text-primary font-medium'
 												: 'hover:bg-base-200/80'}"
-											on:click={() => selectBasemap(option.value)}
+											onclick={() => selectBasemap(option.value)}
 											role="menuitemradio"
 											aria-checked={basemapType === option.value}
 										>

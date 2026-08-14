@@ -1,26 +1,34 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 
-	export let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	export let label: string | null = null;
+	interface Props {
+		selectedTimezone?: string;
+		label?: string | null;
+	}
+
+	let { selectedTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone), label = null }: Props = $props();
 	// Generate a unique ID for this component instance
 	const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2);
 	const instanceId = `tz-selector-${uniqueId}`;
 
-	let labelText: string = '';
-	$: labelText = label ?? ($t('adventures.timezone') as string);
+	let labelText: string = $state('');
+	run(() => {
+		labelText = label ?? ($t('adventures.timezone') as string);
+	});
 
-	let dropdownOpen = false;
-	let searchQuery = '';
-	let searchInput: HTMLInputElement | null = null;
-	let rootRef: HTMLElement | null = null;
+	let dropdownOpen = $state(false);
+	let searchQuery = $state('');
+	let searchInput: HTMLInputElement | null = $state(null);
+	let rootRef: HTMLElement | null = $state(null);
 	const timezones = Intl.supportedValuesOf('timeZone');
 
 	// Filter timezones based on search query
-	$: filteredTimezones = searchQuery
+	let filteredTimezones = $derived(searchQuery
 		? timezones.filter((tz) => tz.toLowerCase().includes(searchQuery.toLowerCase()))
-		: timezones;
+		: timezones);
 
 	function selectTimezone(tz: string) {
 		selectedTimezone = tz;
@@ -29,12 +37,14 @@
 	}
 
 	// Focus search input when dropdown opens - with proper null check
-	$: if (dropdownOpen && searchInput) {
-		// Use setTimeout to delay focus until after the element is rendered
-		setTimeout(() => {
-			if (searchInput) searchInput.focus();
-		}, 0);
-	}
+	run(() => {
+		if (dropdownOpen && searchInput) {
+			// Use setTimeout to delay focus until after the element is rendered
+			setTimeout(() => {
+				if (searchInput) searchInput.focus();
+			}, 0);
+		}
+	});
 
 	function handleKeydown(event: KeyboardEvent, tz?: string) {
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -83,13 +93,13 @@
 		aria-haspopup="listbox"
 		aria-expanded={dropdownOpen}
 		class="input input-bordered flex justify-between items-center cursor-pointer"
-		on:pointerdown={(e) => {
+		onpointerdown={(e) => {
 			e.preventDefault();
 			e.stopPropagation();
 			dropdownOpen = !dropdownOpen;
 		}}
-		on:click={() => (dropdownOpen = !dropdownOpen)}
-		on:keydown={handleKeydown}
+		onclick={() => (dropdownOpen = !dropdownOpen)}
+		onkeydown={handleKeydown}
 	>
 		<span class="truncate">{selectedTimezone}</span>
 		<svg
@@ -130,13 +140,13 @@
 							<button
 								type="button"
 								class={`w-full text-left truncate ${tz === selectedTimezone ? 'active font-bold' : ''}`}
-								on:pointerdown={(e) => {
+								onpointerdown={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
 									selectTimezone(tz);
 								}}
-								on:click={() => selectTimezone(tz)}
-								on:keydown={(e) => handleKeydown(e, tz)}
+								onclick={() => selectTimezone(tz)}
+								onkeydown={(e) => handleKeydown(e, tz)}
 								role="option"
 								aria-selected={tz === selectedTimezone}
 							>

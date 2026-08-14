@@ -11,12 +11,23 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { CalendarDisplayEvent } from '$lib/calendar/types';
 
-	export let events: CalendarDisplayEvent[] = [];
-	export let height: string = 'auto';
-	export let view: string = 'dayGridMonth';
-	export let dayMaxEvents: number = 4;
-	export let initialDate: string | Date | null = null;
-	export let bare = false;
+	interface Props {
+		events?: CalendarDisplayEvent[];
+		height?: string;
+		view?: string;
+		dayMaxEvents?: number;
+		initialDate?: string | Date | null;
+		bare?: boolean;
+	}
+
+	let {
+		events = [],
+		height = 'auto',
+		view = 'dayGridMonth',
+		dayMaxEvents = 4,
+		initialDate = null,
+		bare = false
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		eventClick: CalendarDisplayEvent;
@@ -26,7 +37,7 @@
 	let plugins = [TimeGrid, DayGrid, Interaction];
 	let styleInjected = false;
 
-	$: options = {
+	let options = $derived({
 		view,
 		events,
 		date: initialDate || undefined,
@@ -59,7 +70,7 @@
 			info.el.style.cursor = 'pointer';
 		},
 		themeSystem: 'standard'
-	};
+	});
 
 	onMount(() => {
 		if (styleInjected || document.getElementById('adventurelog-calendar-styles')) return;

@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Location, Collection, User } from '$lib/types';
+	import type { Location, Collection, User, CollectionItineraryItem } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
@@ -28,7 +30,6 @@
 	import StarOutline from '~icons/mdi/star-outline';
 	import Eye from '~icons/mdi/eye';
 	import EyeOff from '~icons/mdi/eye-off';
-	import CollectionItineraryPlanner from '../collections/CollectionItineraryPlanner.svelte';
 	import SocialShareModal from '../SocialShareModal.svelte';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
 	import Globe from '~icons/mdi/globe';
@@ -36,37 +37,21 @@
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	export let type: string | null = null;
-	export let user: User | null;
-	export let collection: Collection | null = null;
-	export let readOnly: boolean = false;
-	export let compact: boolean = false; // For compact grid display in itinerary
-	export let itineraryItem: CollectionItineraryPlanner | null = null;
-	export let isEditLoading: boolean = false;
 
-	let isCollectionModalOpen: boolean = false;
-	let isWarningModalOpen: boolean = false;
-	let isSocialShareModalOpen: boolean = false;
-	let copied: boolean = false;
-	let isActionsMenuOpen: boolean = false;
-	let openUpward = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isCollectionModalOpen: boolean = $state(false);
+	let isWarningModalOpen: boolean = $state(false);
+	let isSocialShareModalOpen: boolean = $state(false);
+	let copied: boolean = $state(false);
+	let isActionsMenuOpen: boolean = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => {
 		if (isEditLoading) return;
 		isActionsMenuOpen = false;
 	};
 
-	let wasEditLoading = false;
-	$: {
-		if (isEditLoading) {
-			isActionsMenuOpen = true;
-			wasEditLoading = true;
-		} else if (wasEditLoading) {
-			isActionsMenuOpen = false;
-			wasEditLoading = false;
-		}
-	}
+	let wasEditLoading = $state(false);
 
 	function handleDocumentClick(event: MouseEvent) {
 		if (!isActionsMenuOpen || isEditLoading) return;
@@ -100,32 +85,32 @@
 		}
 	}
 
-	export let adventure: Location;
-	let displayActivityTypes: string[] = [];
-	let remainingCount = 0;
-
-	// Price formatting
-	$: adventurePriceLabel = formatMoney(
-		toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY)
-	);
-
-	// Process activity types for display
-	$: {
-		if (adventure.tags) {
-			if (adventure.tags.length <= 3) {
-				displayActivityTypes = adventure.tags;
-				remainingCount = 0;
-			} else {
-				displayActivityTypes = adventure.tags.slice(0, 3);
-				remainingCount = adventure.tags.length - 3;
-			}
-		}
+	interface Props {
+		type?: string | null;
+		user: User | null;
+		collection?: Collection | null;
+		readOnly?: boolean;
+		compact?: boolean; // For compact grid display in itinerary
+		itineraryItem?: CollectionItineraryItem | null;
+		isEditLoading?: boolean;
+		adventure: Location;
 	}
 
-	// Creator avatar helpers
-	$: creatorDisplayName = adventure.user?.first_name
-		? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
-		: adventure.user?.username || 'Unknown User';
+	let {
+		type = null,
+		user,
+		collection = null,
+		readOnly = false,
+		compact = false,
+		itineraryItem = null,
+		isEditLoading = false,
+		adventure = $bindable()
+	}: Props = $props();
+	let displayActivityTypes: string[] = $state([]);
+	let remainingCount = $state(0);
+
+
+
 
 	// Helper functions for display
 
@@ -224,7 +209,7 @@
 		}
 	}
 
-	let isDuplicating = false;
+	let isDuplicating = $state(false);
 
 	async function duplicateAdventure() {
 		if (isDuplicating) return;
@@ -268,6 +253,35 @@
 	function link() {
 		dispatch('link', adventure);
 	}
+	run(() => {
+		if (isEditLoading) {
+			isActionsMenuOpen = true;
+			wasEditLoading = true;
+		} else if (wasEditLoading) {
+			isActionsMenuOpen = false;
+			wasEditLoading = false;
+		}
+	});
+	// Price formatting
+	let adventurePriceLabel = $derived(formatMoney(
+		toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY)
+	));
+	// Process activity types for display
+	run(() => {
+		if (adventure.tags) {
+			if (adventure.tags.length <= 3) {
+				displayActivityTypes = adventure.tags;
+				remainingCount = 0;
+			} else {
+				displayActivityTypes = adventure.tags.slice(0, 3);
+				remainingCount = adventure.tags.length - 3;
+			}
+		}
+	});
+	// Creator avatar helpers
+	let creatorDisplayName = $derived(adventure.user?.first_name
+		? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
+		: adventure.user?.username || 'Unknown User');
 </script>
 
 {#if isCollectionModalOpen}
@@ -405,7 +419,7 @@
 				<button
 					class="btn btn-sm p-1 text-base-content"
 					aria-label="open-details"
-					on:click={() => goto(`/locations/${adventure.id}`)}
+					onclick={() => goto(`/locations/${adventure.id}`)}
 				>
 					<Launch class="w-4 h-4" />
 				</button>
@@ -422,7 +436,7 @@
 								class="btn btn-square btn-sm p-1 text-base-content"
 								aria-haspopup="menu"
 								aria-label={$t('adventures.location_actions') || 'Location actions'}
-								on:click|stopPropagation={() => {
+								onclick={stopPropagation(() => {
 									if (isEditLoading) return;
 									if (isActionsMenuOpen) {
 										isActionsMenuOpen = false;
@@ -431,7 +445,7 @@
 									closeAllLocationMenus();
 									openUpward = shouldFlipDropdownUp(actionsMenuRef);
 									isActionsMenuOpen = true;
-								}}
+								})}
 							>
 								<DotsHorizontal class="w-5 h-5" />
 							</button>
@@ -441,7 +455,7 @@
 							>
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											editAdventure();
 										}}
 										class="flex items-center gap-2"
@@ -458,7 +472,7 @@
 								{#if user?.uuid == adventure.user?.uuid}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												duplicateAdventure();
 											}}
@@ -473,7 +487,7 @@
 								{#if user?.uuid == adventure.user?.uuid}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												isCollectionModalOpen = true;
 											}}
@@ -486,7 +500,7 @@
 								{:else if collection && user && collection.user == user.uuid}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												removeFromCollection(new CustomEvent('unlink', { detail: collection.id }));
 											}}
@@ -501,7 +515,7 @@
 								{#if adventure.is_public}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												copyLink();
 											}}
@@ -521,7 +535,7 @@
 								{#if adventure.user && adventure.user.uuid == user?.uuid}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												isSocialShareModalOpen = true;
 											}}
@@ -538,7 +552,7 @@
 									{#if !itineraryItem.is_global}
 										<li>
 											<button
-												on:click={() => {
+												onclick={() => {
 													isActionsMenuOpen = false;
 													dispatch('moveToGlobal', { type: 'location', id: adventure.id });
 												}}
@@ -550,7 +564,7 @@
 										</li>
 										<li>
 											<button
-												on:click={() => {
+												onclick={() => {
 													isActionsMenuOpen = false;
 													changeDay();
 												}}
@@ -562,7 +576,7 @@
 										</li>
 										<li>
 											<button
-												on:click={() => {
+												onclick={() => {
 													isActionsMenuOpen = false;
 													removeFromItinerary();
 												}}
@@ -576,7 +590,7 @@
 									{#if itineraryItem.is_global}
 										<li>
 											<button
-												on:click={() => {
+												onclick={() => {
 													isActionsMenuOpen = false;
 													removeFromItinerary();
 												}}
@@ -596,7 +610,7 @@
 											id="delete_adventure"
 											data-umami-event="Delete Adventure"
 											class="text-error flex items-center gap-2"
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												isWarningModalOpen = true;
 											}}
@@ -664,7 +678,7 @@
 	{#if !readOnly}
 		{#if type == 'link'}
 			<div class="card-body p-4 pt-0">
-				<button class="btn btn-primary btn-block btn-sm" on:click={link}>
+				<button class="btn btn-primary btn-block btn-sm" onclick={link}>
 					<Link class="w-4 h-4 mr-2" />
 					Link Adventure
 				</button>

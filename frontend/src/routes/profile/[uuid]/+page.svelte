@@ -1,5 +1,4 @@
 <script lang="ts">
-	export let data;
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
 	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
@@ -31,9 +30,10 @@
 	import Fire from '~icons/mdi/fire';
 	import ChevronDown from '~icons/mdi/chevron-down';
 	import ChevronUp from '~icons/mdi/chevron-up';
+	let { data } = $props();
 
-	let measurementSystem: string = 'metric';
-	let expandedCategories = new Set();
+	let measurementSystem: string = $derived(data.user?.measurement_system || 'metric');
+	let expandedCategories = $state(new Set());
 
 	type ActivityRecord = {
 		metric_key: string;
@@ -105,18 +105,12 @@
 		activity_distance: number;
 		activity_moving_time: number;
 		activity_elevation: number;
-	} | null;
+	} | null = $derived(data.stats || null);
 
-	let user: User = data.user;
-	let adventures: Location[] = data.adventures;
-	let collections: Collection[] = data.collections;
-
-	// Keep values reactive when `data` changes (client navigation between params)
-	$: user = data.user;
-	$: adventures = data.adventures;
-	$: collections = data.collections;
-	$: measurementSystem = data.user?.measurement_system || 'metric';
-	$: stats = data.stats || null;
+	let user: User = $derived(data.user);
+	let adventures: Location[] = $derived(data.adventures);
+	let collections: Collection[] = $derived(data.collections);
+	
 
 	// Activity category configurations
 	const categoryConfig: Record<
@@ -261,19 +255,19 @@
 	}
 
 	// Calculate achievements
-	$: worldExplorationPercentage = stats
+	let worldExplorationPercentage = $derived(stats
 		? getPercentage(stats.visited_country_count, stats.total_countries)
-		: 0;
-	$: regionExplorationPercentage = stats
+		: 0);
+	let regionExplorationPercentage = $derived(stats
 		? getPercentage(stats.visited_region_count, stats.total_regions)
-		: 0;
-	$: cityExplorationPercentage = stats
+		: 0);
+	let cityExplorationPercentage = $derived(stats
 		? getPercentage(stats.visited_city_count, stats.total_cities)
-		: 0;
+		: 0);
 
 	// Achievement levels
-	$: achievementLevel =
-		(stats?.location_count ?? 0) >= 100
+	let achievementLevel =
+		$derived((stats?.location_count ?? 0) >= 100
 			? 'Legendary Explorer'
 			: (stats?.location_count ?? 0) >= 75
 				? 'World Wanderer'
@@ -291,10 +285,10 @@
 										? 'Journey Starter'
 										: (stats?.location_count ?? 0) >= 1
 											? 'Travel Enthusiast'
-											: 'New Explorer';
+											: 'New Explorer');
 
-	$: achievementColor =
-		(stats?.location_count ?? 0) >= 50
+	let achievementColor =
+		$derived((stats?.location_count ?? 0) >= 50
 			? 'text-warning'
 			: (stats?.location_count ?? 0) >= 25
 				? 'text-success'
@@ -302,7 +296,7 @@
 					? 'text-info'
 					: (stats?.location_count ?? 0) >= 5
 						? 'text-secondary'
-						: 'text-primary';
+						: 'text-primary');
 </script>
 
 <svelte:head>
@@ -733,6 +727,7 @@
 								{@const config = categoryConfig[categoryKey]}
 								{@const isExpanded = expandedCategories.has(categoryKey)}
 
+								{@const SvelteComponent = isExpanded ? ChevronUp : ChevronDown}
 								<div
 									class="card bg-gradient-to-br {config.bgGradient} shadow-xl border {config.borderColor} hover:shadow-2xl transition-all duration-300"
 								>
@@ -742,8 +737,8 @@
 											class="flex items-center justify-between cursor-pointer"
 											role="button"
 											tabindex="0"
-											on:click={() => toggleCategory(categoryKey)}
-											on:keydown={(e) => {
+											onclick={() => toggleCategory(categoryKey)}
+											onkeydown={(e) => {
 												if (e.key === 'Enter' || e.key === ' ') {
 													e.preventDefault();
 													toggleCategory(categoryKey);
@@ -752,8 +747,7 @@
 										>
 											<div class="flex items-center gap-4">
 												<div class="p-3 bg-{config.color}/20 rounded-2xl">
-													<svelte:component
-														this={config.icon}
+													<config.icon
 														class="w-6 h-6 text-{config.color}"
 													/>
 												</div>
@@ -776,8 +770,7 @@
 														{getElevation(categoryData.total_elevation_gain)} gain
 													</div>
 												</div>
-												<svelte:component
-													this={isExpanded ? ChevronUp : ChevronDown}
+												<SvelteComponent
 													class="w-5 h-5 text-{config.color}/60"
 												/>
 											</div>

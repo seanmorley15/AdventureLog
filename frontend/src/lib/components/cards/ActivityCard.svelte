@@ -14,13 +14,23 @@
 	import { formatDateInTimezone } from '$lib/dateUtils';
 	import { getDistance, getElevation } from '$lib';
 
-	export let activity: Activity;
-	export let trails: Trail[];
-	export let visit: Visit | TransportationVisit;
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let readOnly: boolean = false;
+	interface Props {
+		activity: Activity;
+		trails: Trail[];
+		visit: Visit | TransportationVisit;
+		measurementSystem?: 'metric' | 'imperial';
+		readOnly?: boolean;
+	}
 
-	$: trail = activity.trail ? trails.find((t) => t.id === activity.trail) : null;
+	let {
+		activity,
+		trails,
+		visit,
+		measurementSystem = 'metric',
+		readOnly = false
+	}: Props = $props();
+
+	let trail = $derived(activity.trail ? trails.find((t) => t.id === activity.trail) : null);
 
 	function deleteActivity(visitId: string, activityId: string) {
 		dispatch('delete', { visitId, activityId });
@@ -70,7 +80,7 @@
 			<button
 				class="btn btn-error btn-xs tooltip tooltip-top ml-2"
 				data-tip="Delete Activity"
-				on:click={() => deleteActivity(visit.id, activity.id)}
+				onclick={() => deleteActivity(visit.id, activity.id)}
 			>
 				<TrashIcon class="w-3 h-3" />
 			</button>

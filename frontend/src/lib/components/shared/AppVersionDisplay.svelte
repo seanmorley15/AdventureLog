@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { appTitle, appVersion, appCodename } from '$lib/config';
 
-	export let size: 'sm' | 'md' = 'md';
-	export let variant: 'default' | 'inverse' = 'default';
+	interface Props {
+		size?: 'sm' | 'md';
+		variant?: 'default' | 'inverse';
+	}
 
-	$: titleClass = variant === 'inverse' ? 'text-primary-content' : 'text-primary';
-	$: versionClass = variant === 'inverse' ? 'text-primary-content/80' : 'text-base-content/70';
-	$: codenameClass = variant === 'inverse' ? 'text-primary-content/90' : 'text-secondary';
+	let { size = 'md', variant = 'default' }: Props = $props();
+
+	let titleClass = $derived(variant === 'inverse' ? 'text-primary-content' : 'text-primary');
+	let versionClass = $derived(variant === 'inverse' ? 'text-primary-content/80' : 'text-base-content/70');
+	let codenameClass = $derived(variant === 'inverse' ? 'text-primary-content/90' : 'text-secondary');
 </script>
 
 <p

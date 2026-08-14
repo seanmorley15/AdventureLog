@@ -1,19 +1,25 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Category } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
-	let types_arr: string[] = [];
-	export let types: string;
-	let adventure_types: Category[] = [];
+	let types_arr: string[] = $state([]);
+	interface Props {
+		types: string;
+	}
+
+	let { types = $bindable() }: Props = $props();
+	let adventure_types: Category[] = $state([]);
 	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
-	$: sortedAdventureTypes = [...adventure_types].sort((a, b) => {
+	let sortedAdventureTypes = $derived([...adventure_types].sort((a, b) => {
 		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
 		if (usageDiff !== 0) return usageDiff;
 		return (a.display_name || '').localeCompare(b.display_name || '');
-	});
+	}));
 
 	onMount(async () => {
 		try {
@@ -26,9 +32,9 @@
 		}
 	});
 
-	$: {
+	run(() => {
 		types_arr = types ? types.split(',').filter((item) => item !== '') : [];
-	}
+	});
 
 	function clearTypes() {
 		types_arr = [];
@@ -50,7 +56,7 @@
 <div>
 	{#if types_arr.length > 0}
 		<div class="flex justify-end mb-2">
-			<button type="button" class="btn btn-ghost btn-xs h-auto min-h-0 px-2" on:click={clearTypes}>
+			<button type="button" class="btn btn-ghost btn-xs h-auto min-h-0 px-2" onclick={clearTypes}>
 				{$t('adventures.clear')}
 			</button>
 		</div>
@@ -68,7 +74,7 @@
 						type="checkbox"
 						class="checkbox checkbox-primary checkbox-sm"
 						value={type.name}
-						on:change={() => toggleSelect(type.name)}
+						onchange={() => toggleSelect(type.name)}
 						checked={types_arr.includes(type.name)}
 					/>
 					<span class="label-text leading-tight">

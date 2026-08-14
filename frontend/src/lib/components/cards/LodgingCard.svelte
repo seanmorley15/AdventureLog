@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
@@ -26,9 +28,9 @@
 	import type { CollectionItineraryItem } from '$lib/types';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	let isActionsMenuOpen = false;
-	let openUpward = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -87,24 +89,28 @@
 	};
 	const hasTimePortion = (date: string | null) => !!date && !isAllDay(date);
 	const isTimedStay = (date: string | null) => hasTimePortion(date);
-	$: lodgingPriceLabel = formatMoney(
-		toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY)
-	);
 
-	let showMoreDetails = false;
-	$: hasExpandableDetails = Boolean(
-		lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in))
-	);
-	$: if (!hasExpandableDetails) showMoreDetails = false;
+	let showMoreDetails = $state(false);
 
-	export let lodging: Lodging;
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
-	export let isMultiDay: boolean = false;
+	interface Props {
+		lodging: Lodging;
+		user?: User | null;
+		collection?: Collection | null;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+		isMultiDay?: boolean;
+	}
 
-	let isWarningModalOpen: boolean = false;
+	let {
+		lodging,
+		user = null,
+		collection = null,
+		readOnly = false,
+		itineraryItem = null,
+		isMultiDay = false
+	}: Props = $props();
+
+	let isWarningModalOpen: boolean = $state(false);
 
 	function editTransportation() {
 		dispatch('edit', lodging);
@@ -142,6 +148,15 @@
 			addToast('error', $t('itinerary.item_remove_error'));
 		}
 	}
+	let lodgingPriceLabel = $derived(formatMoney(
+		toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY)
+	));
+	let hasExpandableDetails = $derived(Boolean(
+		lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in))
+	));
+	run(() => {
+		if (!hasExpandableDetails) showMoreDetails = false;
+	});
 </script>
 
 {#if isWarningModalOpen}
@@ -207,7 +222,7 @@
 				<button
 					class="btn btn-sm p-1 text-base-content"
 					aria-label="open-details"
-					on:click={() => goto(`/lodging/${lodging.id}`)}
+					onclick={() => goto(`/lodging/${lodging.id}`)}
 				>
 					<Launch class="w-4 h-4" />
 				</button>
@@ -223,7 +238,7 @@
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
@@ -231,7 +246,7 @@
 								closeAllLodgingMenus();
 								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
 							<DotsHorizontal class="w-5 h-5" />
 						</button>
@@ -241,7 +256,7 @@
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editTransportation();
 									}}
@@ -256,7 +271,7 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'lodging', id: lodging.id });
 											}}
@@ -268,7 +283,7 @@
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
@@ -281,7 +296,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -300,7 +315,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}
@@ -372,7 +387,7 @@
 									<button
 										class="btn btn-neutral-200 btn-xs"
 										aria-expanded={showMoreDetails}
-										on:click={() => (showMoreDetails = !showMoreDetails)}
+										onclick={() => (showMoreDetails = !showMoreDetails)}
 										type="button"
 									>
 										{showMoreDetails

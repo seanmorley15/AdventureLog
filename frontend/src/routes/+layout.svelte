@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { untrack } from 'svelte';
 	import { register, init, locale, waitLocale } from 'svelte-i18n';
 	import { UmamiAnalyticsEnv } from '@lukulent/svelte-umami';
-	export let data;
 
 	// Register your translations for each locale
 	register('en', () => import('../locales/en.json'));
@@ -27,6 +27,8 @@
 	register('hu', () => import('../locales/hu.json'));
 	register('ca', () => import('../locales/ca.json'));
 	register('cs', () => import('../locales/cs.json'));
+
+	let { data, children } = $props();
 
 	let locales = [
 		'en',
@@ -56,11 +58,12 @@
 	];
 
 	if (browser) {
+		const initialLocale = untrack(() => data.locale);
 		init({
 			fallbackLocale: locales.includes(navigator.language.split('-')[0])
 				? navigator.language.split('-')[0]
 				: 'en',
-			initialLocale: data.locale
+			initialLocale
 		});
 		// get the locale cookie if it exists and set it as the initial locale if it exists
 		const localeCookie = document.cookie
@@ -89,7 +92,7 @@
 		<CommandPalette />
 	{/if}
 	<Toast />
-	<slot />
+	{@render children?.()}
 {/await}
 
 <UmamiAnalyticsEnv />

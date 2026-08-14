@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
 	import { normalizeBasemapType } from '$lib';
@@ -27,69 +29,83 @@
 	import AdminSettingsPanel from '$lib/components/settings/AdminSettingsPanel.svelte';
 	import { isReauthRequired, reauthenticateWithPassword } from '$lib/reauthenticate';
 
-	export let data;
+	let { data = $bindable() } = $props();
 
 	const LEGACY_TAB_MAP: Record<string, string> = {
 		import_export: 'data',
 		advanced: 'about'
 	};
 
-	let user: User;
-	let emails: typeof data.props.emails;
-	if (data.user) {
-		user = data.user;
-		emails = data.props.emails;
-		user.map_style = normalizeBasemapType(user.map_style);
-	}
+	let user = $state({} as User);
+	let emails: typeof data.props.emails = $state([]);
 
 	type Provider = { name: string; usage_required: boolean };
 
-	let new_email = '';
-	let public_url: string = data.props.publicUrl;
-	let immichIntegration = data.props.immichIntegration;
-	let googleMapsEnabled = data.props.googleMapsEnabled;
-	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
-	let stravaUserEnabled = data.props.stravaUserEnabled;
-	let wandererEnabled = data.props.wandererEnabled;
-	let wandererIntegration: WandererIntegration | null = data.props.wandererIntegration;
-	let endurainEnabled = data.props.endurainEnabled;
-	let endurainIntegration: EndurainIntegration | null = data.props.endurainIntegration;
-	let activeSection = 'profile';
+	let new_email = $state('');
+	let public_url: string = $derived(data.props.publicUrl);
+	let immichIntegration = $state<ImmichIntegration | null>(null);
+	let googleMapsEnabled = $state(false);
+	let stravaGlobalEnabled = $state(false);
+	let stravaUserEnabled = $state(false);
+	let wandererEnabled = $state(false);
+	let wandererIntegration: WandererIntegration | null = $state(null);
+	let endurainEnabled = $state(false);
+	let endurainIntegration: EndurainIntegration | null = $state(null);
+	let activeSection = $state('profile');
 
-	let socialProviders: Provider[] = data.props.socialProviders ?? [];
-	let passwordPolicy = data.props.passwordPolicy;
-	let newPassword = '';
-	let confirmPassword = '';
-	let acknowledgeRestoreOverride = false;
-	let isRestoring = false;
-	let isMFAModalOpen = false;
-	let mfaDisableNeedsReauth = false;
-	let mfaDisablePassword = '';
-	let mfaDisableReauthError = false;
-	let isDisablingMfa = false;
-	let isVerifyingMfaDisablePassword = false;
-	let deleteConfirmation = '';
-	let deletePassword = '';
+	let socialProviders: Provider[] = $derived(data.props.socialProviders ?? []);
+	let passwordPolicy = $derived(data.props.passwordPolicy);
+	let newPassword = $state('');
+	let confirmPassword = $state('');
+	let acknowledgeRestoreOverride = $state(false);
+	let isRestoring = $state(false);
+	let isMFAModalOpen = $state(false);
+	let mfaDisableNeedsReauth = $state(false);
+	let mfaDisablePassword = $state('');
+	let mfaDisableReauthError = $state(false);
+	let isDisablingMfa = $state(false);
+	let isVerifyingMfaDisablePassword = $state(false);
+	let deleteConfirmation = $state('');
+	let deletePassword = $state('');
 	let isDeletingAccount = false;
 
-	let apiKeys: APIKey[] = data.props.apiKeys ?? [];
-	let sessions: AuthUserSession[] = data.props.sessions ?? [];
-	let isRevokingSession = false;
-	let newApiKeyName = '';
-	let newlyCreatedKey: string | null = null;
-	let keyCopied = false;
-	let mediaUsage: MediaUsage =
+	let apiKeys: APIKey[] = $state<APIKey[]>([]);
+	let sessions: AuthUserSession[] = $state<AuthUserSession[]>([]);
+	let mediaUsage: MediaUsage = $derived(
 		data.props.mediaUsage ??
-		({
-			total_bytes: 0,
-			limit_bytes: null,
-			images_bytes: 0,
-			attachments_bytes: 0,
-			profile_pics_bytes: 0,
-			images_files: 0,
-			attachments_files: 0,
-			profile_pics_files: 0
-		} as MediaUsage);
+			({
+				total_bytes: 0,
+				limit_bytes: null,
+				images_bytes: 0,
+				attachments_bytes: 0,
+				profile_pics_bytes: 0,
+				images_files: 0,
+				attachments_files: 0,
+				profile_pics_files: 0
+			} as MediaUsage)
+	);
+
+	$effect.pre(() => {
+		if (data.user) {
+			user = data.user;
+			emails = data.props.emails;
+			user.map_style = normalizeBasemapType(user.map_style);
+		}
+		immichIntegration = data.props.immichIntegration;
+		googleMapsEnabled = data.props.googleMapsEnabled;
+		stravaGlobalEnabled = data.props.stravaGlobalEnabled;
+		stravaUserEnabled = data.props.stravaUserEnabled;
+		wandererEnabled = data.props.wandererEnabled;
+		wandererIntegration = data.props.wandererIntegration;
+		endurainEnabled = data.props.endurainEnabled;
+		endurainIntegration = data.props.endurainIntegration;
+		apiKeys = data.props.apiKeys ?? [];
+		sessions = data.props.sessions ?? [];
+	});
+	let isRevokingSession = $state(false);
+	let newApiKeyName = $state('');
+	let newlyCreatedKey: string | null = $state(null);
+	let keyCopied = $state(false);
 
 	const formatBytes = (bytes: number) => {
 		if (!bytes || bytes <= 0) return '0 B';
@@ -100,38 +116,38 @@
 		return `${value.toFixed(precision)} ${units[index]}`;
 	};
 
-	$: totalMediaBytes = mediaUsage?.total_bytes ?? 0;
-	$: mediaLimitBytes = mediaUsage?.limit_bytes ?? null;
-	$: totalMediaFiles =
-		(mediaUsage?.images_files ?? 0) +
+	let totalMediaBytes = $derived(mediaUsage?.total_bytes ?? 0);
+	let mediaLimitBytes = $derived(mediaUsage?.limit_bytes ?? null);
+	let totalMediaFiles =
+		$derived((mediaUsage?.images_files ?? 0) +
 		(mediaUsage?.attachments_files ?? 0) +
-		(mediaUsage?.profile_pics_files ?? 0);
-	$: overallUsagePercent = mediaLimitBytes
+		(mediaUsage?.profile_pics_files ?? 0));
+	let overallUsagePercent = $derived(mediaLimitBytes
 		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
-		: 0;
-	$: imagesPercent = mediaLimitBytes
+		: 0);
+	let imagesPercent = $derived(mediaLimitBytes
 		? Math.min(100, Math.round((mediaUsage.images_bytes / mediaLimitBytes) * 100))
-		: 0;
-	$: attachmentsPercent = mediaLimitBytes
+		: 0);
+	let attachmentsPercent = $derived(mediaLimitBytes
 		? Math.min(100, Math.round((mediaUsage.attachments_bytes / mediaLimitBytes) * 100))
-		: 0;
-	$: profilePicsPercent = mediaLimitBytes
+		: 0);
+	let profilePicsPercent = $derived(mediaLimitBytes
 		? Math.min(100, Math.round((mediaUsage.profile_pics_bytes / mediaLimitBytes) * 100))
-		: 0;
-	$: mediaLimitLabel = mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited';
+		: 0);
+	let mediaLimitLabel = $derived(mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited');
 
-	$: profileSharingImpact =
-		(user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0);
+	let profileSharingImpact =
+		$derived((user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0));
 
-	$: {
+	run(() => {
 		if (browser && $page.form?.deleteAccountError) {
 			addToast('error', $t($page.form.deleteAccountError));
 		}
-	}
+	});
 
-	$: canDeleteAccount =
-		deleteConfirmation.trim() === user?.username &&
-		(!user?.has_password || user?.disable_password || deletePassword.length > 0);
+	let canDeleteAccount =
+		$derived(deleteConfirmation.trim() === user?.username &&
+		(!user?.has_password || user?.disable_password || deletePassword.length > 0));
 
 	function normalizeSection(tab: string | null) {
 		if (!tab) return 'profile';
@@ -198,7 +214,7 @@
 		}
 	});
 
-	$: {
+	run(() => {
 		if (browser && $page.form?.success) {
 			const leftShared = $page.form.left_shared_collections ?? 0;
 			const revokedInvites = $page.form.revoked_collection_invites ?? 0;
@@ -216,7 +232,7 @@
 		}
 		if (browser && $page.form?.error) addToast('error', $t('settings.update_error'));
 		if (browser && $page.form) isRestoring = false;
-	}
+	});
 
 	async function checkVisitedRegions() {
 		const res = await fetch('/api/reverse-geocode/mark_visited_region/', {
