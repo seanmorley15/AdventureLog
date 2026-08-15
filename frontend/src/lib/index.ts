@@ -14,12 +14,52 @@ import type {
 	User
 } from './types';
 
-export function getRandomQuote() {
-	const quotes = inspirationalQuotes.quotes;
-	const randomIndex = Math.floor(Math.random() * quotes.length);
-	let quoteString = quotes[randomIndex].quote;
-	let authorString = quotes[randomIndex].author;
-	return { quote: quoteString, author: authorString };
+type Quote = { quote: string; author: string };
+type MonthDay = { month: number; day: number };
+type SeasonalQuotePeriod = {
+	start: MonthDay;
+	end: MonthDay;
+	spansYearEnd?: boolean;
+	quotes: Quote[];
+};
+
+function monthDayOrdinal(month: number, day: number): number {
+	return month * 100 + day;
+}
+
+function isDateInSeasonalRange(
+	today: Date,
+	start: MonthDay,
+	end: MonthDay,
+	spansYearEnd = false
+): boolean {
+	const todayOrdinal = monthDayOrdinal(today.getMonth() + 1, today.getDate());
+	const startOrdinal = monthDayOrdinal(start.month, start.day);
+	const endOrdinal = monthDayOrdinal(end.month, end.day);
+
+	if (spansYearEnd) {
+		return todayOrdinal >= startOrdinal || todayOrdinal <= endOrdinal;
+	}
+
+	return todayOrdinal >= startOrdinal && todayOrdinal <= endOrdinal;
+}
+
+function pickRandomQuote(quotes: Quote[]): Quote {
+	return quotes[Math.floor(Math.random() * quotes.length)];
+}
+
+export function getRandomQuote(): Quote {
+	const today = new Date();
+	const seasonalPeriods =
+		(inspirationalQuotes as { seasonal?: SeasonalQuotePeriod[] }).seasonal ?? [];
+
+	for (const period of seasonalPeriods) {
+		if (isDateInSeasonalRange(today, period.start, period.end, period.spansYearEnd)) {
+			return pickRandomQuote(period.quotes);
+		}
+	}
+
+	return pickRandomQuote(inspirationalQuotes.quotes);
 }
 
 export function getFlag(size: number, country: string) {
@@ -60,10 +100,7 @@ export function groupLocationsByDate(
 	locations.forEach((location) => {
 		location.visits.forEach((visit: { start_date: string; end_date: string; timezone: any }) => {
 			if (visit.start_date) {
-				// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
-				const startHasZeros = isAllDay(visit.start_date);
-				const endHasZeros = visit.end_date ? isAllDay(visit.end_date) : true;
-				const isAllDayEvent = startHasZeros && endHasZeros;
+				const isAllDayEvent = isVisitAllDay(visit.start_date, visit.end_date);
 
 				let startDT: DateTime;
 				let endDT: DateTime;
@@ -302,11 +339,26 @@ export function groupChecklistsByDate(
 	return groupedChecklists;
 }
 
-// Helper to check if a given date string represents midnight (all-day)
-// Improved isAllDay function to handle different ISO date formats
+// Helper to check if a given date string represents UTC midnight (all-day)
 export function isAllDay(dateStr: string): boolean {
-	// Check for various midnight formats in UTC
-	return dateStr.endsWith('T00:00:00Z') || dateStr.endsWith('T00:00:00.000Z');
+	if (!dateStr || !dateStr.includes('T')) return false;
+	return /^T00:00:00(\.0+)?(Z|[+-]00:00)?$/.test(dateStr.slice(10));
+}
+
+// Legacy itinerary visits stored end-of-day timestamps for all-day events.
+export function isAllDayEnd(dateStr: string): boolean {
+	if (!dateStr || !dateStr.includes('T')) return false;
+	return /^T23:59:59(\.\d+)?(Z|[+-]00:00)?$/.test(dateStr.slice(10));
+}
+
+export function isVisitAllDay(startDate: string, endDate?: string | null): boolean {
+	if (!isAllDay(startDate)) return false;
+	if (!endDate) return true;
+	return isAllDay(endDate) || isAllDayEnd(endDate);
+}
+
+export function allDayDatePart(dateStr: string): string {
+	return dateStr.split('T')[0];
 }
 
 export function continentCodeToString(code: string) {

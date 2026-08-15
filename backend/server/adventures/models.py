@@ -1,7 +1,9 @@
 import os
 import uuid
+from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.utils.deconstruct import deconstructible
+from adventures.utils.geo import has_coordinates, point_to_lat_lon
 from adventures.managers import LocationManager
 import threading
 from django.contrib.auth import get_user_model
@@ -23,12 +25,14 @@ def background_geocode_and_assign(location_id: str):
     print(f"[Location Geocode Thread] Starting geocode for location {location_id}")
     try:
         location = Location.objects.get(id=location_id)
-        if not (location.latitude and location.longitude):
+        if not has_coordinates(location.coordinates):
             return
-        
-        from adventures.geocoding import reverse_geocode  # or wherever you defined it
+
+        latitude, longitude = point_to_lat_lon(location.coordinates)
+        from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
         is_visited = location.is_visited_status()
-        result = reverse_geocode(location.latitude, location.longitude, location.user)
+        selection = reverse_geocode_service(latitude, longitude, location.user)
+        result = selection.data
 
         if 'region_id' in result:
             region = Region.objects.filter(id=result['region_id']).first()
@@ -162,8 +166,7 @@ class Location(models.Model):
     price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
     is_public = models.BooleanField(default=False)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True)
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
@@ -233,7 +236,7 @@ class Location(models.Model):
         if _skip_geocode:
             return result
 
-        if self.latitude and self.longitude:
+        if has_coordinates(self.coordinates):
             thread = threading.Thread(target=background_geocode_and_assign, args=(str(self.id),))
             thread.daemon = True  # Allows the thread to exit when the main program ends
             thread.start()
@@ -321,10 +324,8 @@ class Transportation(models.Model):
     end_timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
     flight_number = models.CharField(max_length=100, blank=True, null=True)
     from_location = models.CharField(max_length=200, blank=True, null=True)
-    origin_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    origin_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    destination_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    destination_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    origin = gis_models.PointField(srid=4326, null=True, blank=True)
+    destination = gis_models.PointField(srid=4326, null=True, blank=True)
     start_code = models.CharField(max_length=100, blank=True, null=True) # Could be airport code, station code, etc.
     end_code = models.CharField(max_length=100, blank=True, null=True)   # Could be airport code, station code, etc.
     to_location = models.CharField(max_length=200, blank=True, null=True)
@@ -447,17 +448,33 @@ class PathAndRename:
 
 class ContentImage(models.Model):
     """Generic image model that can be attached to any content type"""
+
+    class Source(models.TextChoices):
+        UPLOAD = 'upload', 'Upload'
+        GOOGLE = 'google', 'Google'
+        WIKIPEDIA = 'wikipedia', 'Wikipedia'
+        URL = 'url', 'URL'
+        IMMICH = 'immich', 'Immich'
+
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     image = ResizedImageField(
         force_format="WEBP",
         quality=75,
+        keep_meta=True,
         upload_to=PathAndRename('images/'),
         blank=True,
         null=True,
     )
     immich_id = models.CharField(max_length=200, null=True, blank=True)
     is_primary = models.BooleanField(default=False)
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.UPLOAD,
+    )
+    source_url = models.URLField(max_length=2048, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
     
     # Generic foreign key fields
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='content_images')
@@ -492,9 +509,9 @@ class ContentImage(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # Remove file from disk when deleting image
-        if self.image and os.path.isfile(self.image.path):
-            os.remove(self.image.path)
+        # Remove file from storage when deleting image
+        if self.image:
+            self.image.delete(save=False)
         super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -521,8 +538,8 @@ class ContentAttachment(models.Model):
         ]
 
     def delete(self, *args, **kwargs):
-        if self.file and os.path.isfile(self.file.path):
-            os.remove(self.file.path)
+        if self.file:
+            self.file.delete(save=False)
         super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -563,8 +580,7 @@ class Lodging(models.Model):
     timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
     reservation_number = models.CharField(max_length=100, blank=True, null=True)
     price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
     location = models.CharField(max_length=200, blank=True, null=True)
     is_public = models.BooleanField(default=False)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
@@ -609,6 +625,19 @@ class Trail(models.Model):
     # Either an external link (e.g., AllTrails, Trailforks) or a Wanderer ID
     link = models.URLField("External Trail Link", max_length=2083, blank=True, null=True)
     wanderer_id = models.CharField("Wanderer Trail ID", max_length=100, blank=True, null=True)
+    wanderer_author_username = models.CharField(
+        "Wanderer Author Username",
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    wanderer_author_domain = models.CharField(
+        "Wanderer Author Domain",
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Author's Wanderer instance domain for /trail/view/@user@domain/id links.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -671,10 +700,8 @@ class Activity(models.Model):
     calories = models.FloatField(blank=True, null=True)
 
     # Coordinates
-    start_lat = models.FloatField(blank=True, null=True)
-    start_lng = models.FloatField(blank=True, null=True)
-    end_lat = models.FloatField(blank=True, null=True)
-    end_lng = models.FloatField(blank=True, null=True)
+    start_point = gis_models.PointField(srid=4326, null=True, blank=True)
+    end_point = gis_models.PointField(srid=4326, null=True, blank=True)
 
     # Optional links
     external_service_id = models.CharField(max_length=100, blank=True, null=True)  # E.g., Strava ID

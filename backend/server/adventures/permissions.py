@@ -40,6 +40,10 @@ class CollectionShared(permissions.BasePermission):
     - Shared users: full access to collections they're shared with and related objects
     - Public access: read-only for objects marked as public
     """
+    def has_permission(self, request, view):
+        return (request.user and request.user.is_authenticated) or \
+               request.method in permissions.SAFE_METHODS
+
     def has_object_permission(self, request, view, obj):
         user = request.user
         if not user or not user.is_authenticated:

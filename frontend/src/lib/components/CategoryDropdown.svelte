@@ -23,9 +23,11 @@
 	let mobileSearchInputRef: HTMLInputElement;
 	let desktopSearchInputRef: HTMLInputElement;
 
-	$: sortedCategories = [...categories].sort(
-		(a, b) => (b.num_locations || 0) - (a.num_locations || 0)
-	);
+	$: sortedCategories = [...categories].sort((a, b) => {
+		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+		if (usageDiff !== 0) return usageDiff;
+		return a.display_name.localeCompare(b.display_name);
+	});
 
 	$: filteredCategories = sortedCategories.filter((category) => {
 		if (!searchTerm) return true;

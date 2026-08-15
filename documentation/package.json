@@ -1,6 +1,14 @@
 {
+  "name": "adventurelog-documentation",
   "devDependencies": {
-    "vitepress": "^1.6.4"
+    "@braintree/sanitize-url": "^7.1.2",
+    "cytoscape": "^3.34.0",
+    "cytoscape-cose-bilkent": "^4.1.0",
+    "dayjs": "^1.11.21",
+    "debug": "^4.4.3",
+    "mermaid": "^11.16.0",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-mermaid": "^2.0.17"
   },
   "scripts": {
     "docs:dev": "vitepress dev",
@@ -8,7 +16,12 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
-    "prettier": "^3.7.4",
+    "prettier": "^3.9.6",
     "vue": "^3.5.26"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.18"
+    }
   }
 }

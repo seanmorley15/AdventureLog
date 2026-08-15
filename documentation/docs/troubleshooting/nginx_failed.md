@@ -12,8 +12,8 @@ If you're experiencing issues with the Nginx service failing to start in the bac
 
 ### 1. **Check the `server` Service Name**:
 
-- Verify that the service name of the backend container is set to `server` in the `docker-compose.yml` file.
-- The service name should be set to `server` in the `docker-compose.yml` file. For example:
+- Verify that the service name of the backend container is set to `server` in the `docker-compose.advanced.yml` file.
+- The service name should be set to `server` in the `docker-compose.advanced.yml` file. For example:
   ```yaml
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
@@ -31,7 +31,7 @@ If you're experiencing issues with the Nginx service failing to start in the bac
   ```
 
   - Update the `nginx.conf` file to replace all occurrences of `server` with your custom service name.
-  - Mount the custom Nginx configuration file to the backend container in the `docker-compose.yml` file. For example:
+  - Mount the custom Nginx configuration file to the backend container in the `docker-compose.advanced.yml` file. For example:
     ```yaml
     server:
       image: ghcr.io/seanmorley15/adventurelog-backend:latest

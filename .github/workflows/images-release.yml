@@ -1,0 +1,25 @@
+name: Build and push release images
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Image tag to push (e.g. v0.13.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-images.yml
+    with:
+      tag: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+      filter_paths: false
+      include_latest_tag: true
+    secrets: inherit

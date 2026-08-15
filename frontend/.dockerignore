@@ -1,3 +1,8 @@
+# Frontend builds use the unified Dockerfile from the repository root:
+#   docker build -f docker/Dockerfile --target frontend .
+#
+# This file applies only if you run a legacy local build with context ./frontend
+
 node_modules
 build
 .svelte-kit

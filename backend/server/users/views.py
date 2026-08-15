@@ -15,6 +15,7 @@ from adventures.serializers import LocationSerializer, CollectionSerializer
 from adventures.models import Location, Collection
 from allauth.socialaccount.models import SocialAccount
 from .models import APIKey
+from users.media_utils import enforce_media_storage_limit, get_media_storage_limit_bytes, get_uploaded_file_size, get_user_media_usage
 import qrcode
 import io
 import base64
@@ -137,6 +138,21 @@ class UserMetadataView(APIView):
         user = request.user
         serializer = PublicUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserMediaUsageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('User media usage')
+        },
+        operation_description="Get media storage usage for the authenticated user."
+    )
+    def get(self, request):
+        usage = get_user_media_usage(request.user)
+        usage["limit_bytes"] = get_media_storage_limit_bytes()
+        return Response(usage, status=status.HTTP_200_OK)
     
 class UpdateUserMetadataView(APIView):
     """
@@ -155,6 +171,24 @@ class UpdateUserMetadataView(APIView):
     )
     def patch(self, request):
         user = request.user
+        profile_pic = request.FILES.get('profile_pic')
+        if profile_pic:
+            exclude_names = []
+            if user.profile_pic and user.profile_pic.name:
+                exclude_names.append(user.profile_pic.name)
+            allowed, details = enforce_media_storage_limit(
+                user,
+                get_uploaded_file_size(profile_pic),
+                exclude_names=exclude_names,
+            )
+            if not allowed:
+                return Response(
+                    {
+                        "error": "Media storage limit exceeded",
+                        **details,
+                    },
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
         serializer = PublicUserSerializer(user, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()

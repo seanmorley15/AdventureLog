@@ -1,8 +1,25 @@
-# How to use AdventureLog
+# How to Use AdventureLog
 
-Welcome to AdventureLog! This guide will help you get started with AdventureLog and provide you with an overview of the features available to you.
+Welcome to AdventureLog! This guide covers core concepts and features. For server configuration, see [Environment Variables](../configuration/environment_variables.md).
 
-## Key Terms
+## App sections
+
+| Page | Route | Purpose |
+| ---- | ----- | ------- |
+| Dashboard | `/dashboard` | Travel statistics and overview |
+| Locations | `/locations` | Browse, filter, and manage locations |
+| Map | `/map` | Interactive world map with location pins |
+| Collections | `/collections` | Trips, folders, and itineraries |
+| Calendar | `/calendar` | View collections and visits by date |
+| World Travel | `/worldtravel` | Countries, regions, and cities visited |
+| Search | `/search` | Full-text search across your data |
+| Settings | `/settings` | Profile, integrations, security, API keys |
+| Invites | `/invites` | Accept invitations to private instances |
+| Admin | `/admin` | Django admin panel (staff only) |
+
+Configure integrations (Immich, Strava, Wanderer, Google Maps) and security (MFA, API keys) from **Settings**.
+
+## Key terms
 
 #### Locations
 

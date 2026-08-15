@@ -33,7 +33,7 @@ Follow the steps below to generate your own API key:
 
 ## Configuration in AdventureLog
 
-Set the API key in your environment file or configuration under the backend service of AdventureLog. This is typically done in the `docker-compose.yml` file or directly in your environment variables `.env` file.
+Set the API key in your environment file or configuration under the backend service of AdventureLog. This is typically done in the `docker-compose.advanced.yml` file or directly in your environment variables `.env.advanced` file.
 
 ```env
 GOOGLE_MAPS_API_KEY=your_api_key_here

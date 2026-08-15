@@ -29,7 +29,7 @@ Authorization: Api-Key al_your_key_here
 ### Example with `curl`
 
 ```bash
-curl https://your-adventurelog-instance.com/api/adventures/ \
+curl https://your-adventurelog-instance.com/api/locations/ \
   -H "X-API-Key: al_your_key_here"
 ```
 

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { ContentImage } from '$lib/types';
+	import type { ContentImage, ImageSource } from '$lib/types';
+	import { normalizeContentImage } from '$lib/images';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -11,9 +12,11 @@
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
 	import ImageIcon from '~icons/mdi/image';
+	import GoogleIcon from '~icons/mdi/google';
 
 	import { addToast } from '$lib/toasts';
 	import ImmichSelect from './ImmichSelect.svelte';
+	import ImageFrame from './ImageFrame.svelte';
 
 	// Props
 	export let images: ContentImage[] = [];
@@ -22,6 +25,8 @@
 	export let defaultSearchTerm: string = '';
 	export let immichIntegration: boolean = false;
 	export let copyImmichLocally: boolean = false;
+	/** Google photo URLs from place search; imported only when the user chooses. */
+	export let pendingGooglePhotoUrls: string[] = [];
 
 	// Component state
 	let fileInput: HTMLInputElement;
@@ -30,6 +35,17 @@
 	let imageError: string = '';
 	let wikiImageError: string = '';
 	let isLoading: boolean = false;
+	let importingGooglePhotos = false;
+	let googlePhotoError = '';
+	let deselectedGooglePhotoUrls = new Set<string>();
+
+	$: selectedGooglePhotoUrls = pendingGooglePhotoUrls.filter(
+		(url) => !deselectedGooglePhotoUrls.has(url)
+	);
+
+	$: if (pendingGooglePhotoUrls.length === 0) {
+		deselectedGooglePhotoUrls = new Set();
+	}
 
 	// Wikipedia image selection
 	let wikiImageResults: Array<{
@@ -45,17 +61,13 @@
 	}>();
 
 	// Helper functions
-	function createImageFromData(data: {
-		id: string;
-		image: string;
-		immich_id?: string | null;
-	}): ContentImage {
-		return {
-			id: data.id,
-			image: data.image,
-			is_primary: false,
-			immich_id: data.immich_id || null
-		};
+	function createImageFromData(
+		data: Partial<ContentImage> & Pick<ContentImage, 'id' | 'image'>
+	): ContentImage {
+		return normalizeContentImage({
+			...data,
+			is_primary: data.is_primary ?? false
+		});
 	}
 
 	function updateImagesList(newImage: ContentImage) {
@@ -64,7 +76,10 @@
 	}
 
 	// API calls
-	async function uploadImageToServer(file: File) {
+	async function uploadImageToServer(
+		file: File,
+		options: { source?: ImageSource; sourceUrl?: string; immichId?: string } = {}
+	) {
 		if (!objectId) {
 			console.error('Cannot upload image: objectId is not set');
 			addToast('error', 'Cannot upload image: location must be saved first');
@@ -75,6 +90,15 @@
 		formData.append('image', file);
 		formData.append('object_id', objectId);
 		formData.append('content_type', contentType);
+		if (options.source) {
+			formData.append('source', options.source);
+		}
+		if (options.sourceUrl) {
+			formData.append('source_url', options.sourceUrl);
+		}
+		if (options.immichId) {
+			formData.append('immich_id', options.immichId);
+		}
 
 		try {
 			const res = await fetch(`/locations?/image`, {
@@ -85,7 +109,7 @@
 
 			if (res.ok) {
 				const newData = deserialize(await res.text()) as {
-					data: { id: string; image: string; error?: string };
+					data: Partial<ContentImage> & { id: string; image: string; error?: string };
 				};
 				// Check if the server action returned an error
 				if (newData.data && newData.data.error) {
@@ -125,7 +149,7 @@
 				const blob = await res.blob();
 				const file = new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' });
 
-				const newImage = await uploadImageToServer(file);
+				const newImage = await uploadImageToServer(file, { source: 'google' });
 				if (newImage) {
 					images = images.map((i) => (i.id === img.id ? newImage : i));
 					dispatch('imagesUpdated', images);
@@ -216,7 +240,7 @@
 			}
 
 			const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-			const newImage = await uploadImageToServer(file);
+			const newImage = await uploadImageToServer(file, { source: 'url', sourceUrl: url.trim() });
 
 			if (newImage) {
 				updateImagesList(newImage);
@@ -280,7 +304,10 @@
 			}
 
 			const file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
-			const newImage = await uploadImageToServer(file);
+			const newImage = await uploadImageToServer(file, {
+				source: 'wikipedia',
+				sourceUrl: imageUrl
+			});
 
 			if (newImage) {
 				updateImagesList(newImage);
@@ -344,9 +371,104 @@
 		addToast('success', $t('adventures.image_upload_success'));
 	}
 
+	async function handleImmichLocalImage(event: CustomEvent<{ file: File; immichId: string }>) {
+		if (!objectId) {
+			addToast('error', $t('adventures.image_upload_error'));
+			return;
+		}
+
+		isLoading = true;
+		imageError = '';
+
+		try {
+			const newImage = await uploadImageToServer(event.detail.file, {
+				source: 'immich',
+				immichId: event.detail.immichId
+			});
+			if (newImage) {
+				updateImagesList(newImage);
+				addToast('success', $t('adventures.image_upload_success'));
+			} else {
+				throw new Error('Upload failed');
+			}
+		} catch (error) {
+			console.error('Immich local upload error:', error);
+			imageError = $t('adventures.image_fetch_failed');
+			addToast('error', $t('adventures.image_upload_error'));
+		} finally {
+			isLoading = false;
+		}
+	}
+
 	// Watch for defaultSearchTerm changes
 	$: if (defaultSearchTerm && !imageSearch) {
 		imageSearch = defaultSearchTerm;
+	}
+
+	function toggleGooglePhotoSelection(url: string) {
+		if (deselectedGooglePhotoUrls.has(url)) {
+			deselectedGooglePhotoUrls.delete(url);
+		} else {
+			deselectedGooglePhotoUrls.add(url);
+		}
+		deselectedGooglePhotoUrls = deselectedGooglePhotoUrls;
+	}
+
+	async function importGooglePhotos(urls: string[]) {
+		if (!objectId || urls.length === 0) return;
+
+		importingGooglePhotos = true;
+		importInProgress = true;
+		googlePhotoError = '';
+
+		try {
+			const res = await fetch('/api/images/import_from_urls/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					content_type: contentType,
+					object_id: objectId,
+					urls,
+					source: 'google'
+				})
+			});
+
+			if (!res.ok) {
+				googlePhotoError = $t('adventures.google_photos_import_error');
+				addToast('warning', $t('adventures.google_photos_import_error'));
+				return;
+			}
+
+			const data = await res.json();
+			if (Array.isArray(data.created) && data.created.length > 0) {
+				const existingIds = new Set(images.map((img) => img.id));
+				const imported = data.created
+					.filter((img: ContentImage) => !existingIds.has(img.id))
+					.map((img: ContentImage) => createImageFromData(img));
+				images = [...images, ...imported];
+				dispatch('imagesUpdated', images);
+				addToast('success', $t('adventures.google_photos_import_success'));
+			}
+
+			const importedUrls = new Set(urls);
+			pendingGooglePhotoUrls = pendingGooglePhotoUrls.filter((url) => !importedUrls.has(url));
+		} catch {
+			googlePhotoError = $t('adventures.google_photos_import_error');
+			addToast('warning', $t('adventures.google_photos_import_error'));
+		} finally {
+			importingGooglePhotos = false;
+			importInProgress = false;
+		}
+	}
+
+	function importAllGooglePhotos() {
+		void importGooglePhotos([...pendingGooglePhotoUrls]);
+	}
+
+	function importSelectedGooglePhotos() {
+		void importGooglePhotos([...selectedGooglePhotoUrls]);
 	}
 </script>
 
@@ -504,15 +626,109 @@
 						{objectId}
 						{contentType}
 						{copyImmichLocally}
-						on:fetchImage={(e) => {
-							url = e.detail;
-							handleUrlUpload();
-						}}
+						on:localImage={handleImmichLocalImage}
 						on:remoteImmichSaved={handleImmichImageSaved}
 					/>
 				</div>
 			{/if}
 		</div>
+
+		{#if pendingGooglePhotoUrls.length > 0}
+			<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6 relative">
+				<div class="flex items-center gap-3 mb-3">
+					<div class="p-2 bg-primary/10 rounded-lg">
+						<GoogleIcon class="w-5 h-5 text-primary" />
+					</div>
+					<div class="flex-1">
+						<h4 class="font-medium text-base-content/80">
+							{$t('adventures.google_photos_available', {
+								values: { count: pendingGooglePhotoUrls.length }
+							})}
+						</h4>
+						<p class="text-sm text-base-content/60">
+							{$t('adventures.google_photos_select_hint')}
+						</p>
+					</div>
+				</div>
+
+				<div class="relative mb-4">
+					<div
+						class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 transition-opacity duration-200 {importingGooglePhotos
+							? 'opacity-40 pointer-events-none'
+							: ''}"
+					>
+						{#each pendingGooglePhotoUrls as url, i (url + '-' + i)}
+							<button
+								type="button"
+								class="relative aspect-square overflow-hidden rounded-lg border-2 transition-all cursor-pointer group {!deselectedGooglePhotoUrls.has(
+									url
+								)
+									? 'border-primary ring-2 ring-primary/30'
+									: 'border-base-300 opacity-70 hover:opacity-100'}"
+								on:click={() => toggleGooglePhotoSelection(url)}
+								disabled={importingGooglePhotos || !objectId}
+							>
+								<img
+									src={url}
+									alt="Google place photo"
+									class="w-full h-full object-cover"
+									loading="lazy"
+								/>
+								{#if !deselectedGooglePhotoUrls.has(url)}
+									<div
+										class="absolute top-1 right-1 bg-primary text-primary-content rounded-full p-0.5"
+									>
+										<CheckIcon class="h-3 w-3" />
+									</div>
+								{/if}
+							</button>
+						{/each}
+					</div>
+
+					{#if importingGooglePhotos}
+						<div
+							class="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-base-100/60 backdrop-blur-[2px]"
+							role="status"
+							aria-live="polite"
+						>
+							<span class="loading loading-spinner loading-md text-primary"></span>
+							<span class="text-sm font-medium text-base-content/80">
+								{$t('adventures.google_photos_importing')}
+							</span>
+						</div>
+					{/if}
+				</div>
+
+				<div class="flex flex-wrap gap-2">
+					<button
+						type="button"
+						class="btn btn-primary btn-sm"
+						disabled={importingGooglePhotos || !objectId || pendingGooglePhotoUrls.length === 0}
+						on:click={importAllGooglePhotos}
+					>
+						{$t('adventures.google_photos_import_all')}
+					</button>
+					<button
+						type="button"
+						class="btn btn-outline btn-sm"
+						disabled={importingGooglePhotos || !objectId || selectedGooglePhotoUrls.length === 0}
+						on:click={importSelectedGooglePhotos}
+					>
+						{$t('adventures.google_photos_import_selected')}
+					</button>
+				</div>
+
+				{#if !objectId}
+					<p class="text-sm text-warning mt-2">Save the item first to import Google photos.</p>
+				{/if}
+
+				{#if googlePhotoError}
+					<div class="alert alert-error mt-2 py-2">
+						<span class="text-sm">{googlePhotoError}</span>
+					</div>
+				{/if}
+			</div>
+		{/if}
 
 		<!-- Image Gallery -->
 		{#if images.length > 0}
@@ -520,8 +736,10 @@
 			<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 				{#each images as image, i (image.id ?? image.image ?? `img-${i}`)}
 					<div class="relative group">
-						<div
-							class="aspect-square overflow-hidden rounded-lg bg-base-200 border border-base-300"
+						<ImageFrame
+							source={image.source}
+							showSourceBadge
+							className="aspect-square overflow-hidden rounded-lg bg-base-200 border border-base-300"
 						>
 							<img
 								src={image.image}
@@ -529,9 +747,16 @@
 								class="w-full h-full object-cover transition-transform group-hover:scale-105"
 								loading="lazy"
 							/>
-						</div>
-
-						<!-- Image Controls Overlay -->
+							<div slot="overlays">
+								{#if image.is_primary}
+									<div
+										class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
+									>
+										<Crown class="h-4 w-4" />
+									</div>
+								{/if}
+							</div>
+						</ImageFrame>
 
 						<div
 							class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center gap-2"
@@ -558,15 +783,6 @@
 								<TrashIcon class="h-4 w-4" />
 							</button>
 						</div>
-
-						<!-- Primary Badge -->
-						{#if image.is_primary}
-							<div
-								class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
-							>
-								<Crown class="h-4 w-4" />
-							</div>
-						{/if}
 					</div>
 				{/each}
 			</div>

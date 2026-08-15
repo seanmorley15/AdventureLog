@@ -2,8 +2,8 @@
 
 AdventureLog is available in the Unraid Community Applications store. You can install it by searching for `AdventureLog` in the Community Applications store, where you will find the frontend and the backend. The database can be found by searching `PostGIS`.
 
-Community Applications Page for AdventureLog: [AdventureLog on CA Store](https://unraid.net/community/apps?q=AdventureLog)\
-Community Applications Page for PostGIS: [PostGIS on CA Store](https://unraid.net/community/apps?q=PostGIS)
+Community Applications Page for AdventureLog: [AdventureLog on CA Store](https://ca.unraid.net/apps?q=adventurelog)\
+Community Applications Page for PostGIS: [PostGIS on CA Store](https://ca.unraid.net/apps/postgis-0xoswv81175v5s?q=PostGIS)
 
 ## Installation Configuration
 
@@ -19,7 +19,7 @@ docker network create example
 
 - Network type should be set to your **custom network**.
 - There is **no** AdventureLog---Database app, to find the database application search for `PostGIS` on the Unraid App Store then add and fill out the fields as shown below
-- Change the repository version to `postgis/postgis:15-3.3`
+- Change the repository version to `postgis/postgis:16-3.5`
 - Ensure that the variables `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` are set in the `PostGIS` container. If not, then add them as custom variables. The template should have `POSTGRES_PASSWORD` already and you will simply have to add `POSTGRES_DB` and `POSTGRES_USER`.
 - The forwarded port of `5012` is not needed unless you plan to access the database outside of the container's network.
 

@@ -9,6 +9,7 @@
 
 	import { addToast } from '$lib/toasts';
 	import ImageManagement from '../ImageManagement.svelte';
+	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 
 	// Props
@@ -21,6 +22,7 @@
 
 	export let start_date: string | null = null;
 	export let end_date: string | null = null;
+	export let pendingGooglePhotoUrls: string[] = [];
 	// export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	// export let user: User | null = null;
 
@@ -57,11 +59,10 @@
 				const data = await res.json();
 
 				// Check Immich integration
-				if (data.immich) {
+				const immich = parseImmichIntegration(data.immich);
+				if (immich.enabled) {
 					immichIntegration = true;
-					// For copyImmichLocally, we might need to fetch specific details if needed
-					// or set a default value since it's not in the new response structure
-					copyImmichLocally = false;
+					copyImmichLocally = immich.copyLocally;
 				}
 			} else if (res.status !== 404) {
 				addToast('error', $t('immich.integration_fetch_error'));
@@ -79,6 +80,7 @@
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
+			bind:pendingGooglePhotoUrls
 			objectId={itemId}
 			{contentType}
 			defaultSearchTerm={itemName}

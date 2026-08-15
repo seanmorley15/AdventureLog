@@ -9,6 +9,8 @@
 	export let activity: StravaActivity;
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	export let downloadOnly: boolean = false;
+	export let importing: boolean = false;
+	export let provider: 'strava' | 'endurain' = 'strava';
 
 	interface SportConfig {
 		color: string;
@@ -135,16 +137,21 @@
 						type="button"
 						on:click={handleImportActivity}
 						class="btn btn-success btn-sm btn-circle"
+						disabled={importing}
 						aria-label={$t('adventures.import_activity')}
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-							/>
-						</svg>
+						{#if importing}
+							<span class="loading loading-spinner loading-xs"></span>
+						{:else}
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+								/>
+							</svg>
+						{/if}
 					</button>
 					<div class="dropdown dropdown-end">
 						<div
@@ -179,11 +186,13 @@
 							</li>
 							<li>
 								<a
-									href="https://www.strava.com/activities/{activity.id}"
+									href={provider === 'endurain'
+										? activity.export_original
+										: `https://www.strava.com/activities/${activity.id}`}
 									target="_blank"
 									rel="noopener noreferrer"
 								>
-									{$t('adventures.view_on') + ' Strava'}
+									{$t('adventures.view_on') + (provider === 'endurain' ? ' Endurain' : ' Strava')}
 								</a>
 							</li>
 						</ul>

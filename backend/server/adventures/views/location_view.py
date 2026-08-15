@@ -5,10 +5,11 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.db.models import Q, Max, Prefetch
 from django.db.models.functions import Lower
+from django.http import HttpResponse
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-import requests
 from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
@@ -19,9 +20,18 @@ from adventures.serializers import (
     MapPinSerializer,
 )
 from adventures.utils import pagination
-from adventures.geocoding import reverse_geocode
+from adventures.throttling import ExternalGeocodeThrottle
+from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
+from adventures.services.share_image import (
+    build_share_image,
+    get_location_for_share,
+    resolve_share_page_url,
+    share_image_filename,
+    valid_aspect,
+)
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
+from adventures.services.images.metadata import create_content_image
 from .quick_add_utils import (
     build_quick_add_description,
     clean_url,
@@ -34,6 +44,7 @@ from .quick_add_utils import (
     parse_itinerary_date,
     preferred_link,
     resolve_quick_add_collection,
+    resolve_quick_add_location_label,
     sanitize_photo_urls,
     sanitize_tags,
 )
@@ -57,7 +68,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         Public actions allow unauthenticated access to public locations.
         """
         user = self.request.user
-        public_allowed_actions = {'retrieve', 'additional_info'}
+        public_allowed_actions = {'retrieve', 'additional_info', 'share_image'}
 
         if not user.is_authenticated:
             if self.action in public_allowed_actions:
@@ -181,7 +192,12 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     # ==================== CUSTOM ACTIONS ====================
 
-    @action(detail=False, methods=['post'], url_path='quick-add')
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='quick-add',
+        throttle_classes=[ExternalGeocodeThrottle],
+    )
     @transaction.atomic
     def quick_add(self, request):
         """Create a location from lightweight map/place input in one server-side call."""
@@ -204,12 +220,17 @@ class LocationViewSet(viewsets.ModelViewSet):
             return collection
 
         reverse_data = {}
-        _, details = extract_google_place_details(payload, fallback_query=name)
+        # Use centralized services for place details and reverse geocoding
+        details = {}
+        try:
+            _, details = extract_google_place_details(payload, fallback_query=name)
+        except Exception:
+            details = {}
 
         try:
-            reverse_result = reverse_geocode(latitude, longitude, request.user)
-            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
-                reverse_data = reverse_result
+            selection = reverse_geocode_service(latitude, longitude, request.user)
+            if selection and selection.data and not selection.data.get('error'):
+                reverse_data = selection.data
         except Exception:
             reverse_data = {}
 
@@ -225,12 +246,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         phone_number = str(details.get('phone_number') or payload.get('phone_number') or '').strip() or None
 
-        location_label = (
-            str(payload.get('location') or '').strip()
-            or str(reverse_data.get('display_name') or '').strip()
-            or str(details.get('formatted_address') or '').strip()
-            or None
-        )
+        location_label = resolve_quick_add_location_label(payload, reverse_data, details)
 
         description = build_quick_add_description(
             base_description=payload.get('description'),
@@ -281,6 +297,7 @@ class LocationViewSet(viewsets.ModelViewSet):
                 photo_urls,
                 owner=location.user,
                 max_workers=min(5, len(photo_urls)),
+                explicit_source=ContentImage.Source.GOOGLE,
             )
 
         response_data = self.get_serializer(location).data
@@ -377,25 +394,18 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='additional-info')
     def additional_info(self, request, pk=None):
-        """Get adventure with additional sunrise/sunset information."""
+        """Get adventure with extended details (kept for backwards compatibility)."""
         adventure = self.get_object()
         user = request.user
 
-        # Validate access permissions
         if not self._has_adventure_access(adventure, user):
             return Response(
                 {"error": "User does not have permission to access this adventure"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Get base adventure data
         serializer = self.get_serializer(adventure)
-        response_data = serializer.data
-
-        # Add sunrise/sunset data
-        response_data['sun_times'] = self._get_sun_times(adventure, response_data.get('visits', []))
-        
-        return Response(response_data)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
@@ -451,8 +461,7 @@ class LocationViewSet(viewsets.ModelViewSet):
                     location=original.location,
                     tags=list(original.tags) if original.tags else None,
                     is_public=False,
-                    longitude=original.longitude,
-                    latitude=original.latitude,
+                    coordinates=original.coordinates,
                     city=original.city,
                     region=original.region,
                     country=original.country,
@@ -495,21 +504,27 @@ class LocationViewSet(viewsets.ModelViewSet):
 
                         file_name = (img.image.name or '').split('/')[-1] or 'image.webp'
 
-                        ContentImage.objects.create(
+                        create_content_image(
+                            user=request.user,
                             content_type=location_ct,
                             object_id=str(new_location.id),
-                            image=ContentFile(image_bytes, name=file_name),
-                            immich_id=None,
+                            image_file=ContentFile(image_bytes, name=file_name),
+                            file_bytes=image_bytes,
                             is_primary=img.is_primary,
-                            user=request.user,
+                            explicit_source=img.source,
+                            source_url=img.source_url,
+                            coordinates=img.coordinates,
                         )
                     else:
-                        ContentImage.objects.create(
+                        create_content_image(
+                            user=request.user,
                             content_type=location_ct,
                             object_id=str(new_location.id),
                             immich_id=img.immich_id,
                             is_primary=img.is_primary,
-                            user=request.user,
+                            explicit_source=img.source,
+                            source_url=img.source_url,
+                            coordinates=img.coordinates,
                         )
 
             serializer = self.get_serializer(new_location)
@@ -521,6 +536,34 @@ class LocationViewSet(viewsets.ModelViewSet):
                 {"error": "An error occurred while duplicating the location."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path=r'share-image/(?P<aspect>square|story|landscape)',
+    )
+    def share_image(self, request, pk=None, aspect=None):
+        """Generate a branded PNG share card for social media."""
+        if not valid_aspect(aspect):
+            return Response({'error': 'Invalid aspect ratio.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        location = self.get_object()
+        try:
+            location = get_location_for_share(location.id)
+            page_url = resolve_share_page_url(request, f'/locations/{location.id}')
+            png_bytes = build_share_image(location, aspect, page_url)
+        except Exception:
+            logger.exception('Failed to generate share image for location %s', location.id)
+            return Response(
+                {'error': 'Failed to generate share image. Please try again later.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        filename = share_image_filename(location, aspect)
+        disposition = 'attachment' if request.query_params.get('download') else 'inline'
+        response = HttpResponse(png_bytes, content_type='image/png')
+        response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+        return response
 
     # view to return location name and lat/lon for all locations a user owns for the golobal map
     @action(detail=False, methods=['get'], url_path='pins')
@@ -755,39 +798,6 @@ class LocationViewSet(viewsets.ModelViewSet):
                     return True
 
         return False
-
-    def _get_sun_times(self, adventure, visits):
-        """Get sunrise/sunset times for adventure visits."""
-        sun_times = []
-
-        for visit in visits:
-            date = visit.get('start_date')
-            if not (date and adventure.longitude and adventure.latitude):
-                continue
-
-            api_url = (
-                f'https://api.sunrisesunset.io/json?'
-                f'lat={adventure.latitude}&lng={adventure.longitude}&date={date}'
-            )
-            
-            try:
-                response = requests.get(api_url)
-                if response.status_code == 200:
-                    data = response.json()
-                    results = data.get('results', {})
-                    
-                    if results.get('sunrise') and results.get('sunset'):
-                        sun_times.append({
-                            "date": date,
-                            "visit_id": visit.get('id'),
-                            "sunrise": results.get('sunrise'),
-                            "sunset": results.get('sunset')
-                        })
-            except requests.RequestException:
-                # Skip this visit if API call fails
-                continue
-
-        return sun_times
 
     def paginate_and_respond(self, queryset, request):
         """Paginate queryset and return response."""

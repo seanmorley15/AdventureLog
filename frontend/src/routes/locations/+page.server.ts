@@ -4,11 +4,13 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Location } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
-import { fetchCSRFToken } from '$lib/index.server';
+import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
+	event.depends('locations:list');
+
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
@@ -29,7 +31,10 @@ export const load = (async (event) => {
 		const is_visited = event.url.searchParams.get('is_visited') || 'all';
 
 		let initialFetch = await event.fetch(
-			`${serverEndpoint}/api/locations/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`,
+			backendApiUrl(
+				'/api/locations/filtered',
+				`types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`
+			),
 			{
 				headers: {
 					Cookie: `sessionid=${event.cookies.get('sessionid')}`
@@ -54,7 +59,11 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventures,
-				count
+				count,
+				order_by,
+				order_direction,
+				is_visited,
+				include_collections
 			}
 		};
 	}

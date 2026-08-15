@@ -25,6 +25,8 @@
 	register('tr', () => import('../locales/tr.json'));
 	register('uk', () => import('../locales/uk.json'));
 	register('hu', () => import('../locales/hu.json'));
+	register('ca', () => import('../locales/ca.json'));
+	register('cs', () => import('../locales/cs.json'));
 
 	let locales = [
 		'en',
@@ -41,12 +43,16 @@
 		'ru',
 		'ja',
 		'ar',
+		'pt',
 		'pt-br',
 		'ro',
 		'sk',
 		'tr',
 		'uk',
-		'hu'
+		'hu',
+		'ca',
+		'cs',
+		'ta'
 	];
 
 	if (browser) {
@@ -68,6 +74,7 @@
 
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Toast from '$lib/components/Toast.svelte';
+	import CommandPalette from '$lib/components/search/CommandPalette.svelte';
 	import 'tailwindcss/tailwind.css';
 
 	// Create a promise that resolves when the locale is ready
@@ -78,6 +85,9 @@
 	<!-- You can add a loading indicator here if needed -->
 {:then}
 	<Navbar {data} />
+	{#if data.user}
+		<CommandPalette />
+	{/if}
 	<Toast />
 	<slot />
 {/await}

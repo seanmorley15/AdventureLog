@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	export let data: any;
 	import type { SubmitFunction } from '@sveltejs/kit';
+	import { openCommandPalette } from '$lib/search/palette';
 
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import Calendar from '~icons/mdi/calendar';
@@ -18,27 +18,38 @@
 	import { page } from '$app/stores';
 	import { t, locale, locales } from 'svelte-i18n';
 	import { themes } from '$lib';
+	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 
-	let inputElement: HTMLInputElement | null = null;
 	let theme = '';
 	let query: string = '';
 	let isAboutModalOpen: boolean = false;
+	let isMac = false;
 
-	// Event listener for focusing input
+	$: if ($page.url.pathname === '/search') {
+		query = $page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '';
+	}
+
+	$: modifierHint = isMac ? '⌘K' : 'Ctrl+K';
+
+	function openSearch(initialQuery = '') {
+		openCommandPalette(initialQuery || query);
+	}
+
+	// Event listener for opening search palette
 	function handleKeydown(event: KeyboardEvent) {
 		if (
 			event.key === '/' &&
-			!['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName)
+			!['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName) &&
+			showFullNav
 		) {
 			event.preventDefault();
-			if (inputElement) {
-				inputElement.focus();
-			}
+			openSearch();
 		}
 	}
 
 	onMount(() => {
+		isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 		document.addEventListener('keydown', handleKeydown);
 		// @ts-ignore
 		theme = document.documentElement.getAttribute('data-theme');
@@ -63,12 +74,16 @@
 		ru: 'Русский',
 		ja: '日本語',
 		ar: 'العربية',
+		pt: 'Português',
 		'pt-br': 'Português (Brasil)',
 		ro: 'Română',
 		sk: 'Slovenský',
 		tr: 'Türkçe',
 		uk: 'Українська',
-		hu: 'Magyar'
+		hu: 'Magyar',
+		ca: 'Català',
+		cs: 'Čeština',
+		ta: 'தமிழ்'
 	};
 
 	const submitLocaleChange = (event: Event) => {
@@ -94,21 +109,6 @@
 			document.documentElement.setAttribute('data-theme', theme);
 		}
 	};
-
-	const searchGo = async (e: Event) => {
-		e.preventDefault();
-
-		if ($page.url.pathname === '/search') {
-			let url = new URL(window.location.href);
-			url.searchParams.set('query', query);
-			goto(url.toString(), { invalidateAll: true });
-		}
-
-		if (query) {
-			goto(`/search?query=${query}`);
-		}
-	};
-
 	// Navigation items for better organization
 	const navigationItems = [
 		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
@@ -118,6 +118,21 @@
 		{ path: '/calendar', icon: Calendar, label: 'navbar.calendar' },
 		{ path: '/users', icon: AccountMultiple, label: 'navbar.users' }
 	];
+
+	const msPerDay = 1000 * 60 * 60 * 24;
+	$: subscription = data?.subscription;
+	$: cloudMode = data?.cloudMode;
+	$: hasAccess = data?.hasAccess ?? true;
+	$: trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
+	$: daysRemaining = trialEndsAt
+		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
+		: null;
+	$: isTrial = subscription?.status === 'trial';
+	$: hasScheduledSubscription = Boolean(subscription?.stripe_subscription_id);
+	$: showTrialCta = isTrial && !hasScheduledSubscription;
+	$: showExpiredCta = !hasAccess;
+	$: showFullNav = data?.user && (!cloudMode || hasAccess);
+	$: pendingInviteCount = data?.pendingInviteCount ?? 0;
 </script>
 
 {#if isAboutModalOpen}
@@ -150,8 +165,19 @@
 									href={item.path}
 									class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl"
 									class:btn-active={$page.url.pathname === item.path}
+									title={item.path === '/collections' && pendingInviteCount > 0
+										? `${$t(item.label)} (${pendingInviteCount} ${$t('invites.pending_invites')})`
+										: undefined}
 								>
-									<svelte:component this={item.icon} class="w-5 h-5" />
+									<span class="relative inline-flex shrink-0">
+										<svelte:component this={item.icon} class="w-5 h-5" />
+										{#if item.path === '/collections' && pendingInviteCount > 0}
+											<span
+												class="absolute top-0 right-0 h-2 w-2 translate-x-1/3 -translate-y-1/3 rounded-full bg-error ring-2 ring-base-100"
+												aria-hidden="true"
+											></span>
+										{/if}
+									</span>
 									{$t(item.label)}
 								</a>
 							</li>
@@ -167,20 +193,14 @@
 						>
 							{$t('navbar.search')}
 						</h3>
-						<form class="flex gap-2" on:submit={searchGo}>
-							<label class="input input-bordered flex items-center gap-2 flex-1">
-								<Magnify class="h-4 w-4 opacity-70" />
-								<input
-									type="text"
-									bind:value={query}
-									placeholder={$t('navbar.search')}
-									class="grow"
-								/>
-							</label>
-							<button type="submit" class="btn btn-primary btn-square">
-								<Magnify class="w-4 h-4" />
-							</button>
-						</form>
+						<button
+							type="button"
+							class="btn btn-outline w-full justify-start gap-2"
+							on:click={() => openSearch()}
+						>
+							<Magnify class="h-4 w-4 opacity-70" />
+							{$t('search.open_palette')}
+						</button>
 					</div>
 				{:else}
 					<!-- Auth Buttons -->
@@ -211,7 +231,7 @@
 
 	<!-- Desktop Navigation -->
 	<div class="navbar-center hidden lg:flex">
-		{#if data.user}
+		{#if showFullNav}
 			<ul class="menu menu-horizontal gap-1">
 				{#each navigationItems as item}
 					<li>
@@ -220,8 +240,19 @@
 							class="btn btn-ghost gap-2 rounded-xl transition-all duration-200 hover:bg-base-200"
 							class:bg-primary-10={$page.url.pathname === item.path}
 							class:text-primary={$page.url.pathname === item.path}
+							title={item.path === '/collections' && pendingInviteCount > 0
+								? `${$t(item.label)} (${pendingInviteCount} ${$t('invites.pending_invites')})`
+								: undefined}
 						>
-							<svelte:component this={item.icon} class="w-4 h-4" />
+							<span class="relative inline-flex shrink-0">
+								<svelte:component this={item.icon} class="w-4 h-4" />
+								{#if item.path === '/collections' && pendingInviteCount > 0}
+									<span
+										class="absolute top-0 right-0 h-2 w-2 translate-x-1/3 -translate-y-1/3 rounded-full bg-error ring-2 ring-base-100"
+										aria-hidden="true"
+									></span>
+								{/if}
+							</span>
 							<span class="hidden xl:inline">{$t(item.label)}</span>
 						</a>
 					</li>
@@ -232,24 +263,28 @@
 
 	<div class="navbar-end gap-3">
 		<!-- Desktop Search -->
-		{#if data.user}
-			<form class="hidden lg:flex gap-2" on:submit={searchGo}>
-				<label
-					class="input input-bordered input-sm flex items-center gap-2 w-64 focus-within:w-80 transition-all duration-300"
-				>
-					<input
-						type="text"
-						bind:value={query}
-						class="grow"
-						placeholder={$t('navbar.search')}
-						bind:this={inputElement}
-					/>
-					<kbd class="kbd kbd-xs opacity-60">/</kbd>
-				</label>
-				<button type="submit" class="btn btn-ghost btn-sm btn-square">
-					<Magnify class="w-4 h-4" />
-				</button>
-			</form>
+		{#if showFullNav}
+			<button
+				type="button"
+				class="hidden lg:flex input input-bordered input-sm items-center gap-2 w-64 hover:w-80 transition-all duration-300 text-left"
+				on:click={() => openSearch()}
+			>
+				<Magnify class="w-4 h-4 opacity-60 shrink-0" />
+				<span class="grow text-base-content/50 truncate">
+					{query || $t('navbar.search')}
+				</span>
+				<kbd class="kbd kbd-xs opacity-60">{modifierHint}</kbd>
+			</button>
+		{/if}
+
+		{#if data.user && cloudMode && subscription}
+			{#if showExpiredCta}
+				<a href="/subscribe" class="btn btn-warning btn-sm">Access paused</a>
+			{:else if showTrialCta}
+				<a href="/subscribe" class="btn btn-primary btn-sm">
+					Trial: {daysRemaining ?? 0}d left
+				</a>
+			{/if}
 		{/if}
 
 		<!-- Auth Buttons (Desktop) -->
@@ -266,7 +301,7 @@
 
 		<!-- User Avatar -->
 		{#if data.user}
-			<Avatar user={data.user} />
+			<Avatar user={data.user} cloudMode={data.cloudMode} />
 		{/if}
 
 		<!-- Settings Dropdown -->

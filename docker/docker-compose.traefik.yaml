@@ -1,0 +1,93 @@
+services:
+  traefik:
+    image: traefik:v2.11.42
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Set ACME_EMAIL in .env.advanced}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-letsencrypt:/letsencrypt"
+
+  db:
+    image: postgis/postgis:16-3.5
+    container_name: adventurelog-traefik-db
+    restart: unless-stopped
+    env_file: ../.env.advanced
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-adventure} -d ${POSTGRES_DB:-database}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web:
+    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    restart: unless-stopped
+    env_file: ../.env.advanced
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
+      - "traefik.http.routers.adventurelogweb.rule=Host(`${TRAEFIK_DOMAIN:?Set TRAEFIK_DOMAIN in .env.advanced}`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))"
+      - "traefik.http.routers.adventurelogweb.tls=true"
+      - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt"
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  server:
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    restart: unless-stopped
+    env_file: ../.env.advanced
+    volumes:
+      - adventurelog-media:/code/media
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adventurelogserver.entrypoints=websecure"
+      - "traefik.http.routers.adventurelogserver.rule=Host(`${TRAEFIK_DOMAIN}`) && (PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))"
+      - "traefik.http.routers.adventurelogserver.tls=true"
+      - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/health/')\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  postgres-data:
+  adventurelog-media:
+  traefik-letsencrypt:

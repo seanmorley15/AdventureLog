@@ -1,7 +1,7 @@
 from integrations.views import *
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from integrations.views import IntegrationView, StravaIntegrationView, WandererIntegrationViewSet
+from integrations.views import IntegrationView, StravaIntegrationView, WandererIntegrationViewSet, EndurainIntegrationViewSet
 
 # Create the router and register the ViewSet
 router = DefaultRouter()
@@ -10,6 +10,7 @@ router.register(r'', IntegrationView, basename='integrations')
 router.register(r'immich', ImmichIntegrationViewSet, basename='immich_viewset')
 router.register(r'strava', StravaIntegrationView, basename='strava')
 router.register(r'wanderer', WandererIntegrationViewSet, basename='wanderer')
+router.register(r'endurain', EndurainIntegrationViewSet, basename='endurain')
 
 # Include the router URLs
 urlpatterns = [

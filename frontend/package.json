@@ -1,6 +1,7 @@
 {
 	"name": "adventurelog-frontend",
-	"version": "0.12.0",
+	"version": "0.13.0",
+	"packageManager": "pnpm@10.32.1",
 	"scripts": {
 		"dev": "vite dev",
 		"django": "cd .. && cd backend/server && python3 manage.py runserver",
@@ -27,7 +28,7 @@
 		"autoprefixer": "^10.4.21",
 		"baseline-browser-mapping": "^2.9.9",
 		"daisyui": "^4.12.24",
-		"postcss": "^8.5.3",
+		"postcss": "^8.5.18",
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "4.2.19",
@@ -39,6 +40,9 @@
 		"vite": "^5.4.19"
 	},
 	"type": "module",
+	"engines": {
+		"node": ">=22 <26"
+	},
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
 		"dompurify": "^3.2.5",

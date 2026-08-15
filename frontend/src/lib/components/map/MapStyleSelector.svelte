@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { basemapOptions, getBasemapLabel } from '$lib';
-
+	import { t } from 'svelte-i18n';
 	import MapIcon from '~icons/mdi/map';
+	import CheckIcon from '~icons/mdi/check';
 
 	export let basemapType: string = 'default';
+	/** DaisyUI dropdown placement classes */
+	export let dropdownClass = 'dropdown dropdown-left';
 
 	const categoryOrder = [
 		'Standard',
@@ -12,7 +15,7 @@
 		'Topographic',
 		'Clean',
 		'Specialized'
-	];
+	] as const;
 
 	const groupedOptions = basemapOptions.reduce<Record<string, typeof basemapOptions>>(
 		(acc, option) => {
@@ -24,70 +27,94 @@
 		},
 		{}
 	);
+
+	let dropdownOpen = false;
+	let dropdownEl: HTMLDivElement;
+
+	function selectBasemap(value: string) {
+		basemapType = value;
+		dropdownOpen = false;
+	}
+
+	function toggleDropdown() {
+		dropdownOpen = !dropdownOpen;
+	}
+
+	function closeDropdown(event: MouseEvent) {
+		if (!dropdownOpen) return;
+		if (dropdownEl?.contains(event.target as Node)) return;
+		dropdownOpen = false;
+	}
 </script>
 
-<div class="dropdown dropdown-left">
-	<div
-		tabindex="0"
-		role="button"
+<svelte:window on:click={closeDropdown} />
+
+<div bind:this={dropdownEl} class="{dropdownClass} {dropdownOpen ? 'dropdown-open' : ''}">
+	<button
+		type="button"
+		class="btn btn-sm btn-ghost gap-1.5 min-h-0 h-8 px-2 sm:px-3"
 		aria-haspopup="menu"
-		aria-expanded="false"
-		class="btn btn-sm btn-ghost gap-2 min-h-0 h-8 px-3"
+		aria-expanded={dropdownOpen}
+		on:click={toggleDropdown}
 	>
-		<MapIcon class="w-4 h-4" />
-		<span class="text-xs font-medium">{getBasemapLabel(basemapType)}</span>
-		<svg class="w-3 h-3 fill-none" stroke="currentColor" viewBox="0 0 24 24">
+		<MapIcon class="w-4 h-4 shrink-0" />
+		<span class="text-xs font-medium hidden sm:inline truncate max-w-[5.5rem] md:max-w-none">
+			{getBasemapLabel(basemapType)}
+		</span>
+		<svg class="w-3 h-3 shrink-0 fill-none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 		</svg>
-	</div>
+	</button>
+
 	{#if basemapOptions?.length}
 		<div
-			tabindex="-1"
-			class="dropdown-content z-20 shadow-lg bg-base-200 rounded-box w-54 max-h-80 overflow-y-auto overflow-x-hidden p-3"
+			class="dropdown-content z-[100] shadow-xl bg-base-100 rounded-xl border border-base-300 w-56 sm:w-60 p-0"
 			role="menu"
+			tabindex="-1"
 		>
-			{#each categoryOrder as category}
-				{#if groupedOptions[category]?.length}
-					<div class="mb-2 last:mb-0">
-						<p class="px-2 pb-1 text-xs uppercase tracking-wide text-base-content/60">{category}</p>
-						<ul class="space-y-1">
-							{#each groupedOptions[category] as option}
-								<li>
-									<button
-										class="flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors {basemapType ===
-										option.value
-											? 'bg-primary/10 font-medium'
-											: 'hover:bg-base-300/60'}"
-										on:pointerdown={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											basemapType = option.value;
-										}}
-										on:click={() => (basemapType = option.value)}
-										role="menuitem"
-									>
-										<span class="text-lg">{option.icon}</span>
-										<span class="truncate">{option.label}</span>
-										{#if basemapType === option.value}
-											<svg
-												class="w-4 h-4 ml-auto text-primary"
-												fill="currentColor"
-												viewBox="0 0 20 20"
+			<div class="px-3 py-2 border-b border-base-300/80">
+				<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+					{$t('map.map_style')}
+				</p>
+			</div>
+
+			<div class="max-h-64 overflow-y-auto overscroll-contain py-1">
+				{#each categoryOrder as category}
+					{#if groupedOptions[category]?.length}
+						<div class="px-2 pt-2 pb-0.5 first:pt-1">
+							<p
+								class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-base-content/45 sticky top-0 bg-base-100/95 backdrop-blur-sm z-[1]"
+							>
+								{category}
+							</p>
+							<ul class="flex flex-col gap-0.5">
+								{#each groupedOptions[category] as option (option.value)}
+									<li>
+										<button
+											type="button"
+											class="flex items-center gap-2 w-full px-2 py-1.5 text-left text-sm rounded-md transition-colors {basemapType ===
+											option.value
+												? 'bg-primary/15 text-primary font-medium'
+												: 'hover:bg-base-200/80'}"
+											on:click={() => selectBasemap(option.value)}
+											role="menuitemradio"
+											aria-checked={basemapType === option.value}
+										>
+											<span class="text-sm shrink-0 w-5 text-center" aria-hidden="true"
+												>{option.icon}</span
 											>
-												<path
-													fill-rule="evenodd"
-													d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-													clip-rule="evenodd"
-												/>
-											</svg>
-										{/if}
-									</button>
-								</li>
-							{/each}
-						</ul>
-					</div>
-				{/if}
-			{/each}
+											<span class="truncate flex-1 min-w-0">{option.label}</span>
+											{#if basemapType === option.value}
+												<CheckIcon class="w-3.5 h-3.5 shrink-0" />
+											{/if}
+										</button>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
+				{/each}
+			</div>
 		</div>
 	{/if}
 </div>

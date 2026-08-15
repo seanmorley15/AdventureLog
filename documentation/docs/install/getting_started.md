@@ -1,28 +1,64 @@
-# 🚀 Install Options for AdventureLog
+# Install AdventureLog
 
-AdventureLog can be installed in a variety of ways, depending on your platform or preference.
+AdventureLog runs on Docker in most setups. Pick the guide that matches your environment — from Standard Deployment to platform-specific homelab and NAS instructions.
 
-## 📦 Docker Quick Start
+## Choose your setup
 
-::: tip Quick Start Script
-**The fastest way to get started:**  
-[Install AdventureLog with a single command →](quick_start.md)  
-Perfect for Docker beginners.
-:::
+### Docker
 
-## 🐳 Popular Installation Methods
+| I want to… | Guide |
+| ---------- | ----- |
+| One container, one port | <span class="al-rec-badge">Recommended</span> [Standard Deployment](standard.md) |
+| Interactive walkthrough that deploys Standard Deployment | [Quick Start Installer](quick_start.md) |
+| Separate frontend, backend, and database | [Advanced Deployment](docker.md) |
+| HTTPS on a custom domain | [Reverse proxy guides](#reverse-proxy) |
 
-- [Docker](docker.md) — Simple containerized setup
-- [Proxmox LXC](proxmox_lxc.md) — Lightweight virtual environment
-- [Synology NAS](synology_nas.md) — Self-host on your home NAS
-- [Kubernetes + Kustomize](kustomize.md) — Advanced, scalable deployment
-- [Unraid](unraid.md) — Easy integration for homelabbers
-- [Umbrel](https://apps.umbrel.com/app/adventurelog) — Home server app store
-- [TrueNAS](https://apps.truenas.com/catalog/adventurelog/) — TrueNAS app catalog
+### Homelab & NAS platforms
 
-## ⚙️ Advanced & Alternative Setups
+| Platform | Guide |
+| -------- | ----- |
+| Proxmox LXC | [Proxmox LXC](proxmox_lxc.md) |
+| Synology NAS | [Synology NAS](synology_nas.md) |
+| Unraid | [Unraid](unraid.md) |
+| Umbrel | [Umbrel](https://apps.umbrel.com/app/adventurelog) — community app |
+| TrueNAS SCALE | [TrueNAS](https://apps.truenas.com/catalog/adventurelog/) — community app |
 
-- [Nginx Proxy Manager](nginx_proxy_manager.md) - Easy reverse proxy config
-- [Traefik](traefik.md) — Dynamic reverse proxy with automation
-- [Caddy](caddy.md) — Automatic HTTPS with a clean config
-- [Dev Container + WSL](dev_container_wsl.md) - Windows dev environment with WSL 2 + Dev Containers
+These guides use the same AdventureLog Docker images, adapted for each platform.
+
+### Kubernetes
+
+| Platform | Guide |
+| -------- | ----- |
+| Kubernetes cluster | [Kubernetes + Kustomize](kustomize.md) |
+
+### Development
+
+| Use case | Guide |
+| -------- | ----- |
+| Local development on Windows / WSL | [Dev Container + WSL](dev_container_wsl.md) |
+
+### Reverse proxy {#reverse-proxy}
+
+Use these when AdventureLog sits behind HTTPS on a custom domain:
+
+| Proxy | Guide |
+| ----- | ----- |
+| Nginx Proxy Manager | [Nginx Proxy Manager](nginx_proxy_manager.md) |
+| Traefik | [Traefik](traefik.md) — includes `docker/docker-compose.traefik.yaml` |
+| Caddy | [Caddy](caddy.md) |
+
+Set `SITE_URL` to your public HTTPS URL so Django CSRF and SvelteKit origins stay correct. See [Environment Variables](../configuration/environment_variables.md#url-and-networking).
+
+## After installation
+
+1. Log in with your admin credentials (default `admin` / `admin` — change immediately)
+2. Review [How to Use AdventureLog](../usage/usage.md)
+3. Configure optional features in [Configuration](../configuration/environment_variables.md)
+4. Set up [backups](../configuration/operations.md#backup) before going to production
+
+## Requirements
+
+- Docker Engine + Docker Compose v2 (for Docker-based installs)
+- **2 GB RAM** on first boot (world geography import); ~1 GB afterward
+- Linux server, VPS, homelab, or macOS with Docker Desktop
+- Optional: domain name and reverse proxy for HTTPS

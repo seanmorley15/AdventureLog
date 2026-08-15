@@ -2,228 +2,31 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.throttling import UserRateThrottle
+from adventures.throttling import ImageImportThrottle, ImageProxyThrottle
 from django.http import HttpResponse
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import ipaddress
-import mimetypes
-import socket
-from urllib.parse import urljoin
-from urllib.parse import urlparse
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.contrib.contenttypes.models import ContentType
 from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentImage
-from adventures.serializers import ContentImageSerializer
+from adventures.serializers import ContentImageSerializer, ImageMapPinSerializer
 from integrations.models import ImmichIntegration
-from adventures.permissions import IsOwnerOrSharedWithFullAccess  # Your existing permission class
-import requests
+from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.permissions import ContentImagePermission
 import logging
-import uuid
+import requests
+from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
+
+from adventures.services.images.fetch import (
+    download_remote_image,
+    import_remote_images_for_object,
+)
+from adventures.services.images.metadata import (
+    ImageSource,
+    create_content_image,
+    fetch_immich_coordinates,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class ImageProxyThrottle(UserRateThrottle):
-    scope = 'image_proxy'
-
-
-def _public_import_error_message(exc):
-    """Return a safe, user-facing import error without exposing internal details."""
-    if isinstance(exc, ValueError):
-        return "Invalid image URL"
-    if isinstance(exc, requests.exceptions.Timeout):
-        return "Download timeout"
-    if isinstance(exc, requests.exceptions.RequestException):
-        return "Failed to fetch image from the remote server"
-    return "Image import failed"
-
-
-def _is_safe_url(image_url):
-    """
-    Validate a URL for safe proxy use.
-    Returns (True, parsed) on success or (False, error_message) on failure.
-    Checks:
-    - Scheme is http or https
-    - No non-standard ports (only 80 and 443 allowed)
-    - All resolved IPs are public (no private/loopback/reserved/link-local/multicast)
-    """
-    parsed = urlparse(image_url)
-
-    if parsed.scheme not in ('http', 'https'):
-        return False, "Invalid URL scheme. Only http and https are allowed."
-
-    port = parsed.port
-    if port is not None and port not in (80, 443):
-        return False, "Non-standard ports are not allowed."
-
-    hostname = parsed.hostname
-    if not hostname:
-        return False, "Invalid URL: missing hostname."
-
-    try:
-        addr_infos = socket.getaddrinfo(hostname, None)
-    except socket.gaierror:
-        return False, "Could not resolve hostname."
-
-    if not addr_infos:
-        return False, "Could not resolve hostname."
-
-    for addr_info in addr_infos:
-        try:
-            ip = ipaddress.ip_address(addr_info[4][0])
-        except ValueError:
-            return False, "Invalid IP address resolved from hostname."
-        if (ip.is_private or ip.is_loopback or ip.is_reserved
-                or ip.is_link_local or ip.is_multicast):
-            return False, "Access to internal networks is not allowed."
-
-    return True, parsed
-
-
-def download_remote_image(image_url):
-    safe, result = _is_safe_url(image_url)
-    if not safe:
-        raise ValueError(result)
-
-    headers = {'User-Agent': 'AdventureLog/1.0 (Image Import)'}
-    max_redirects = 3
-    current_url = image_url
-
-    response = None
-    for _ in range(max_redirects + 1):
-        response = requests.get(
-            current_url,
-            timeout=10,
-            headers=headers,
-            stream=True,
-            allow_redirects=False,
-        )
-
-        if not response.is_redirect:
-            break
-
-        redirect_url = response.headers.get('Location', '')
-        if not redirect_url:
-            raise ValueError('Redirect with missing Location header')
-
-        # Handle relative redirects safely.
-        redirect_url = urljoin(current_url, redirect_url)
-
-        safe, result = _is_safe_url(redirect_url)
-        if not safe:
-            raise ValueError(f'Redirect blocked: {result}')
-
-        current_url = redirect_url
-    else:
-        raise ValueError('Too many redirects')
-
-    if response is None:
-        raise ValueError('Failed to fetch image')
-
-    response.raise_for_status()
-
-    content_type = response.headers.get('Content-Type', '').split(';')[0].strip().lower()
-    if not content_type.startswith('image/'):
-        raise ValueError('URL does not point to an image')
-
-    content_length = response.headers.get('Content-Length')
-    if content_length and int(content_length) > 20 * 1024 * 1024:
-        raise ValueError('Image too large (max 20MB)')
-
-    ext = mimetypes.guess_extension(content_type) or '.jpg'
-    if ext == '.jpe':
-        ext = '.jpg'
-
-    return {
-        'filename': f"remote_{uuid.uuid4().hex}{ext}",
-        'content': response.content,
-        'content_type': content_type,
-        'source_url': image_url,
-    }
-
-
-def import_remote_images_for_object(content_object, urls, owner=None, max_workers=5):
-    """Download remote URLs and attach them as ContentImage records for a content object."""
-    content_type = ContentType.objects.get_for_model(content_object.__class__)
-    object_id = str(content_object.id)
-    image_owner = owner or getattr(content_object, 'user', None)
-
-    downloaded_results = []
-    worker_count = max(1, min(max_workers, len(urls)))
-
-    with ThreadPoolExecutor(max_workers=worker_count) as executor:
-        futures = {
-            executor.submit(download_remote_image, image_url): (index, image_url)
-            for index, image_url in enumerate(urls)
-        }
-
-        for future in as_completed(futures):
-            index, image_url = futures[future]
-            try:
-                file_data = future.result()
-                downloaded_results.append((index, image_url, file_data, None))
-            except Exception as exc:
-                logger.warning(
-                    "Image import failed for URL %s",
-                    image_url,
-                    exc_info=True,
-                )
-                downloaded_results.append((index, image_url, None, _public_import_error_message(exc)))
-
-    downloaded_results.sort(key=lambda item: item[0])
-
-    existing_image_count = ContentImage.objects.filter(
-        content_type=content_type,
-        object_id=object_id,
-    ).count()
-    set_primary_next = existing_image_count == 0
-
-    created_images = []
-    results = []
-    failed = []
-
-    for _, image_url, file_data, error_message in downloaded_results:
-        if error_message:
-            failure = {
-                'url': image_url,
-                'error': error_message,
-            }
-            results.append({
-                **failure,
-                'status': 'failed',
-            })
-            failed.append(failure)
-            continue
-
-        image_file = ContentFile(file_data['content'], name=file_data['filename'])
-        image = ContentImage.objects.create(
-            user=image_owner,
-            image=image_file,
-            content_type=content_type,
-            object_id=object_id,
-            is_primary=set_primary_next,
-        )
-        if set_primary_next:
-            set_primary_next = False
-
-        created_images.append(image)
-        results.append({
-            'url': image_url,
-            'status': 'created',
-            'id': str(image.id),
-        })
-
-    return {
-        'created_images': created_images,
-        'results': results,
-        'created_count': len(created_images),
-        'requested_count': len(urls),
-        'failed_count': len(failed),
-        'failed': failed,
-    }
-
 
 class ContentImageViewSet(viewsets.ModelViewSet):
     serializer_class = ContentImageSerializer
@@ -332,6 +135,23 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         instance.save()
         return Response({"success": "Image set as primary image"})
 
+    @action(detail=False, methods=['get'], url_path='map_pins')
+    def map_pins(self, request):
+        """Return geotagged images accessible to the current user for map display."""
+        images = (
+            self.get_queryset()
+            .filter(coordinates__isnull=False)
+            .select_related('content_type', 'user')
+            .order_by('-is_primary', 'id')
+        )
+
+        pins = []
+        for image in images.iterator(chunk_size=200):
+            data = ImageMapPinSerializer(image, context={'request': request}).data
+            if data:
+                pins.append(data)
+
+        return Response(pins)
 
     @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
@@ -370,7 +190,12 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
+        throttle_classes=[ImageImportThrottle],
+    )
     def import_from_urls(self, request):
         content_type_name = request.data.get('content_type')
         object_id = request.data.get('object_id')
@@ -392,11 +217,13 @@ class ContentImageViewSet(viewsets.ModelViewSet):
 
         owner = getattr(content_object, 'user', request.user)
 
+        explicit_source = request.data.get('source')
         import_summary = import_remote_images_for_object(
             content_object,
             urls,
             owner=owner,
             max_workers=min(5, len(urls)),
+            explicit_source=explicit_source,
         )
 
         created_images = import_summary['created_images']
@@ -545,26 +372,30 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             
             # Create a Django ContentFile from the downloaded image
             image_file = ContentFile(immich_response.content, name=filename)
-            
-            # Modify request data to use the downloaded image instead of immich_id
-            request_data = request.data.copy()
-            request_data.pop('immich_id', None)  # Remove immich_id
-            request_data['image'] = image_file  # Add the image file
-            request_data['content_type'] = content_type.id
-            request_data['object_id'] = object_id
-            
-            # Create the serializer with the modified data
-            serializer = self.get_serializer(data=request_data)
-            serializer.is_valid(raise_exception=True)
-            
-            # Save with the downloaded image
-            serializer.save(
-                user=content_object.user if hasattr(content_object, 'user') else request.user,
-                image=image_file,
-                content_type=content_type,
-                object_id=object_id
+
+            owner = content_object.user if hasattr(content_object, 'user') else request.user
+            allowed, details = enforce_media_storage_limit(
+                owner,
+                get_uploaded_file_size(image_file),
             )
-            
+            if not allowed:
+                return Response(
+                    {
+                        "error": "Media storage limit exceeded",
+                        **details,
+                    },
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
+
+            image = create_content_image(
+                user=owner,
+                content_type=content_type,
+                object_id=object_id,
+                image_file=image_file,
+                file_bytes=immich_response.content,
+                explicit_source=ImageSource.IMMICH,
+            )
+            serializer = self.get_serializer(image)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
         except requests.exceptions.RequestException:
@@ -580,47 +411,59 @@ class ContentImageViewSet(viewsets.ModelViewSet):
     
     def _create_standard_image(self, request, content_object, content_type, object_id):
         """Handle standard image creation without deepcopy issues"""
-        
-        # Get uploaded image file safely
+
         image_file = request.FILES.get('image')
         immich_id = request.data.get('immich_id')
 
         if not image_file and not immich_id:
             return Response({"error": "No image uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Build a clean dict for serializer input
-        request_data = {
-            'content_type': content_type.id,
-            'object_id': object_id,
-        }
 
-        # Add immich_id if provided
-        if immich_id:
-            request_data['immich_id'] = immich_id
+        owner = getattr(content_object, 'user', request.user)
+        explicit_source = request.data.get('source')
+        source_url = request.data.get('source_url')
 
-        # Optionally add other fields (e.g., caption, alt text) from request.data
-        for key in ['caption', 'alt_text', 'description']:  # update as needed
-            if key in request.data:
-                request_data[key] = request.data[key]
+        coordinates = None
+        immich_integration = None
 
-        # Create and validate serializer
-        serializer = self.get_serializer(data=request_data)
-        serializer.is_valid(raise_exception=True)
-
-        # Prepare save parameters
-        save_kwargs = {
-            'user': getattr(content_object, 'user', request.user),
-            'content_type': content_type,
-            'object_id': object_id,
-        }
-        
-        # Add image file if provided
         if image_file:
-            save_kwargs['image'] = image_file
+            allowed, details = enforce_media_storage_limit(
+                owner,
+                get_uploaded_file_size(image_file),
+            )
+            if not allowed:
+                return Response(
+                    {
+                        "error": "Media storage limit exceeded",
+                        **details,
+                    },
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
 
-        # Save with appropriate parameters
-        serializer.save(**save_kwargs)
+            file_bytes = image_file.read()
+            image_file = ContentFile(file_bytes, name=image_file.name)
 
+            if immich_id:
+                immich_integration = ImmichIntegration.objects.filter(user=owner).first()
+                coordinates = fetch_immich_coordinates(immich_integration, immich_id)
+                immich_id = None
+        else:
+            file_bytes = None
+            immich_integration = ImmichIntegration.objects.filter(user=owner).first()
+
+        image = create_content_image(
+            user=owner,
+            content_type=content_type,
+            object_id=object_id,
+            image_file=image_file,
+            immich_id=immich_id or None,
+            file_bytes=file_bytes,
+            source_url=source_url,
+            explicit_source=explicit_source,
+            immich_integration=immich_integration,
+            coordinates=coordinates,
+        )
+
+        serializer = self.get_serializer(image)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     
