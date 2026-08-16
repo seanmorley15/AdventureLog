@@ -1015,6 +1015,7 @@ class CollectionSerializer(CustomModelSerializer):
             'days_until_start',
             'primary_image',
             'primary_image_id',
+            'map_style',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with', 'status', 'days_until_start', 'primary_image']
 
@@ -1197,7 +1198,7 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 
             'is_archived', 'link', 'created_at', 'updated_at', 'location_images', 
-            'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image'
+            'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image', 'map_style'
         ]
         read_only_fields = fields  # All fields are read-only for listing
 

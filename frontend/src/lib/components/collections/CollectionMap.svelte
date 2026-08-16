@@ -24,8 +24,13 @@
 	export let clusterOptions: any = { radius: 300, maxZoom: 8, minPoints: 2 };
 
 	let basemapType = 'default';
-	$: if (user && basemapType === 'default' && user.map_style) {
-		basemapType = normalizeBasemapType(user.map_style);
+	$: if (basemapType === 'default') {
+		const userStyle = user?.map_style ? normalizeBasemapType(user.map_style) : 'default';
+		const collectionStyle = collection?.map_style
+			? normalizeBasemapType(collection.map_style)
+			: 'default';
+		if (userStyle !== 'default') basemapType = userStyle;
+		else if (collectionStyle !== 'default') basemapType = collectionStyle;
 	}
 
 	type MarkerType = 'location' | 'lodging' | 'transportation';
