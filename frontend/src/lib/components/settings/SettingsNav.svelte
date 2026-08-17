@@ -18,7 +18,7 @@
 			{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
 			{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
 			{ id: 'data', icon: '📦', label: () => $t('settings.data_and_storage') },
-			...(!isStaff ? [{ id: 'danger', icon: '⚠️', label: () => $t('settings.danger_zone') }] : []),
+			{ id: 'danger', icon: '⚠️', label: () => $t('settings.danger_zone') },
 			{ id: 'about', icon: 'ℹ️', label: () => $t('settings.about') },
 			...(isStaff ? [{ id: 'admin', icon: '⚙️', label: () => $t('settings.administration') }] : [])
 		] satisfies NavItem[]

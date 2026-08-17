@@ -793,6 +793,7 @@
 		"delete_account_success": "Your account has been deleted.",
 		"delete_account_error": "Unable to delete your account. Please try again.",
 		"delete_account_staff_blocked": "Staff accounts cannot be deleted via self-service.",
+		"delete_account_staff_blocked_desc": "Remove staff status in the administration panel first, or ask another administrator to delete the account.",
 		"nav_account": "Account",
 		"nav_security": "Security",
 		"nav_connections": "Connections",

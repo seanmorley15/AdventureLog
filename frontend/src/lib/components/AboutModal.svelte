@@ -130,7 +130,7 @@
 				<AppVersionDisplay />
 
 				<div
-					class="flex items-center gap-2 rounded-xl border border-base-300/80 bg-base-100/80 px-3 py-2"
+					class="flex items-center gap-2 rounded-xl border border-base-300/80 bg-base-100/80 px-3 py-2 mt-2"
 				>
 					<code class="flex-1 min-w-0 truncate font-mono text-sm text-base-content/80"
 						>{appVersion}</code
@@ -138,8 +138,8 @@
 					<button
 						type="button"
 						class="btn btn-ghost btn-xs btn-square shrink-0 {versionCopied
- ? 'text-success'
- : 'text-base-content/60'}"
+							? 'text-success'
+							: 'text-base-content/60'}"
 						aria-label={$t('about.copy_version')}
 						title={$t('about.copy_version')}
 						onclick={copyVersion}

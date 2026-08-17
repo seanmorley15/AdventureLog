@@ -24,6 +24,7 @@
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
 	import { getBasemapUrl, getIsDarkMode } from '$lib';
 	import { getMapViewportCenter } from '$lib/map/viewportCenter';
+	import { guardMapRenderQueue } from '$lib/map/renderGuard';
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
 
@@ -120,8 +121,8 @@
 		showMapControls = true,
 		controlsEmbedded = false,
 		fullscreenTarget = null,
-		zoom = 2,
-		center = [0, 0],
+		zoom = undefined,
+		center = undefined,
 		bounds = undefined,
 		mapClickEnabled = true,
 		basemapType = $bindable('default'),
@@ -162,11 +163,17 @@
 	let activeMarkerId: string | null = $state(null);
 
 	const dispatch = createEventDispatcher<{
+		load: unknown;
+		error: unknown;
 		mapClick: { lngLat: { lng: number; lat: number } };
 		markerClick: { feature: unknown; markerProps: Record<string, unknown> | null };
 		clusterClick: LayerClickInfo;
 		mapMove: { center: { lng: number; lat: number }; zoom: number };
 	}>();
+
+	$effect.pre(() => {
+		if (map) guardMapRenderQueue(map);
+	});
 
 	function handleMapClick(e: CustomEvent<{ lngLat: { lng: number; lat: number } }>) {
 		dispatch('mapClick', e.detail);
@@ -369,6 +376,8 @@
 		{zoom}
 		{center}
 		{bounds}
+		on:load={(e) => dispatch('load', e.detail)}
+		on:error={(e) => dispatch('error', e.detail)}
 	>
 		{#key styleNonce}
 			{#if effectiveGeoJson && Array.isArray(effectiveGeoJson.features) && effectiveGeoJson.features.length > 0}

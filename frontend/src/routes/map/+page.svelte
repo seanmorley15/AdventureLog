@@ -25,6 +25,7 @@
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
 	import { bindMapViewportCenterSync, getMapViewportCenter } from '$lib/map/viewportCenter';
+	import { safeMapResize } from '$lib/map/renderGuard';
 	import {
 		enrichPlace,
 		fetchRecommendations,
@@ -87,14 +88,57 @@
 		basemapType = normalizeBasemapType(data.user?.map_style);
 	});
 
-	let mapZoom: number = $state(2);
-	let mapCenter: [number, number] = $state([0, 0]);
+	const MAP_VIEW_STORAGE_KEY = 'adventurelog.map.view';
+
+	function viewFromSearchParams(
+		params: URLSearchParams
+	): { center: [number, number]; zoom: number } | null {
+		const lat = params.get('lat');
+		const lng = params.get('lng');
+		const zoom = params.get('zoom');
+		if (!lat || !lng || zoom === null) return null;
+		const parsedLat = parseFloat(lat);
+		const parsedLng = parseFloat(lng);
+		const parsedZoom = parseFloat(zoom);
+		if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng) || !Number.isFinite(parsedZoom)) {
+			return null;
+		}
+		return { center: [parsedLng, parsedLat], zoom: parsedZoom };
+	}
+
+	function readStoredMapView(): { center: [number, number]; zoom: number } | null {
+		if (typeof window === 'undefined') return null;
+		try {
+			const storedValue = window.localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+			if (!storedValue) return null;
+			const parsed = JSON.parse(storedValue) as { center?: [number, number]; zoom?: number };
+			if (
+				!Array.isArray(parsed.center) ||
+				parsed.center.length < 2 ||
+				typeof parsed.zoom !== 'number'
+			) {
+				return null;
+			}
+			return { center: [parsed.center[0], parsed.center[1]], zoom: parsed.zoom };
+		} catch {
+			return null;
+		}
+	}
+
+	function getInitialMapView(): { center: [number, number]; zoom: number } | null {
+		if (!browser) return null;
+		return viewFromSearchParams($page.url.searchParams) ?? readStoredMapView();
+	}
+
+	const initialView = getInitialMapView();
+	let mapZoom: number = $state(initialView?.zoom ?? 2);
+	let mapCenter: [number, number] = $state(initialView?.center ?? [0, 0]);
 	/** When true, center/zoom props drive FullMap. Disabled after load so pan/zoom is not fought by easeTo. */
 	let syncViewportFromProps = $state(true);
 	let mapInstance: maplibregl.Map | undefined = $state(undefined);
 	let mapViewportEl: HTMLElement | null = $state(null);
+	let mapPageEl: HTMLElement | null = $state(null);
 	let updateUrlTimeout: NodeJS.Timeout | null = null;
-	const MAP_VIEW_STORAGE_KEY = 'adventurelog.map.view';
 
 	let visitedRegions: VisitedRegion[] = $derived(data.props.visitedRegions);
 	let visitedCities: VisitedCity[] = $state([]);
@@ -218,7 +262,6 @@
 		return status === 'visited' ? $t('adventures.visited') : $t('adventures.planned');
 	}
 
-
 	async function ensureImageMapPinsLoaded() {
 		if (!browser || imagePinsLoaded || imagePinsLoading) return;
 		imagePinsLoading = true;
@@ -231,15 +274,6 @@
 			imagePinsLoading = false;
 		}
 	}
-
-
-
-
-
-
-
-
-
 
 	async function fetchAllActivities() {
 		const response = await fetch('/api/activities');
@@ -355,14 +389,19 @@
 	}
 
 	function refreshMapLayout() {
-		if (!mapInstance) return;
-		mapInstance.resize?.();
-		viewportCenter = getMapViewportCenter(mapInstance, mapViewportEl);
+		safeMapResize(mapInstance);
 	}
 
 	function handleMapLoad() {
+		const intended = getInitialMapView() ?? { center: mapCenter, zoom: mapZoom };
+		mapCenter = intended.center;
+		mapZoom = intended.zoom;
+		if (mapInstance && syncViewportFromProps) {
+			mapInstance.jumpTo({ center: intended.center, zoom: intended.zoom });
+		}
 		syncViewportFromProps = false;
 		attachViewportCenterSync();
+		queueMicrotask(refreshMapLayout);
 	}
 
 	function flyTo(lat: number, lng: number, zoom = 14) {
@@ -672,25 +711,6 @@
 		}, 500);
 	}
 
-	function readStoredMapView(): { center: [number, number]; zoom: number } | null {
-		if (typeof window === 'undefined') return null;
-		try {
-			const storedValue = window.localStorage.getItem(MAP_VIEW_STORAGE_KEY);
-			if (!storedValue) return null;
-			const parsed = JSON.parse(storedValue) as { center?: [number, number]; zoom?: number };
-			if (
-				!Array.isArray(parsed.center) ||
-				parsed.center.length < 2 ||
-				typeof parsed.zoom !== 'number'
-			) {
-				return null;
-			}
-			return { center: [parsed.center[0], parsed.center[1]], zoom: parsed.zoom };
-		} catch {
-			return null;
-		}
-	}
-
 	function persistMapView(lat: number, lng: number, zoom: number) {
 		if (typeof window === 'undefined') return;
 		try {
@@ -716,36 +736,11 @@
 		}
 	}
 
-
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') clearSelection();
 	}
 
 	onMount(() => {
-		const params = $page.url.searchParams;
-		const lat = params.get('lat');
-		const lng = params.get('lng');
-		const zoom = params.get('zoom');
-
-		if (lat && lng && zoom) {
-			const parsedLat = parseFloat(lat);
-			const parsedLng = parseFloat(lng);
-			const parsedZoom = parseFloat(zoom);
-			if (Number.isFinite(parsedLat) && Number.isFinite(parsedLng) && Number.isFinite(parsedZoom)) {
-				mapCenter = [parsedLng, parsedLat];
-				mapZoom = parsedZoom;
-				return () => {
-					if (updateUrlTimeout) clearTimeout(updateUrlTimeout);
-				};
-			}
-		}
-
-		const storedView = readStoredMapView();
-		if (storedView) {
-			mapCenter = storedView.center;
-			mapZoom = storedView.zoom;
-		}
-
 		return () => {
 			if (updateUrlTimeout) clearTimeout(updateUrlTimeout);
 		};
@@ -785,25 +780,29 @@
 	let visitedAdventures = $derived(pins.filter((pin) => pin.is_visited).length);
 	let plannedAdventures = $derived(pins.filter((pin) => !pin.is_visited).length);
 	let totalRegions = $derived(visitedRegions.length);
-	let categoryFilterNames = $derived(typeString ? typeString.split(',').filter((item) => item !== '') : []);
+	let categoryFilterNames = $derived(
+		typeString ? typeString.split(',').filter((item) => item !== '') : []
+	);
 	let isMetric = $derived(data.user?.measurement_system !== 'imperial');
-	let recRadiusOptions = $derived(isMetric
-		? [
-				{ value: 1000, label: '1 km' },
-				{ value: 2000, label: '2 km' },
-				{ value: 5000, label: '5 km' },
-				{ value: 10000, label: '10 km' },
-				{ value: 20000, label: '20 km' },
-				{ value: 50000, label: '50 km' }
-			]
-		: [
-				{ value: 1609, label: '1 mi' },
-				{ value: 3219, label: '2 mi' },
-				{ value: 8047, label: '5 mi' },
-				{ value: 16093, label: '10 mi' },
-				{ value: 32187, label: '20 mi' },
-				{ value: 80467, label: '50 mi' }
-			]);
+	let recRadiusOptions = $derived(
+		isMetric
+			? [
+					{ value: 1000, label: '1 km' },
+					{ value: 2000, label: '2 km' },
+					{ value: 5000, label: '5 km' },
+					{ value: 10000, label: '10 km' },
+					{ value: 20000, label: '20 km' },
+					{ value: 50000, label: '50 km' }
+				]
+			: [
+					{ value: 1609, label: '1 mi' },
+					{ value: 3219, label: '2 mi' },
+					{ value: 8047, label: '5 mi' },
+					{ value: 16093, label: '10 mi' },
+					{ value: 32187, label: '20 mi' },
+					{ value: 80467, label: '50 mi' }
+				]
+	);
 	run(() => {
 		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
 		filteredPins = pins.filter((pin) => {
@@ -839,19 +838,23 @@
 	let selectedPinId = $derived(selected?.kind === 'pin' ? selected.pinId : null);
 	let selectedRecId = $derived(selected?.kind === 'recommendation' ? selected.item.id : null);
 	let selectedImagePinId = $derived(selected?.kind === 'image' ? selected.imageId : null);
-	let previewImagePin = $derived(selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null);
+	let previewImagePin = $derived(
+		selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null
+	);
 	let selectedPin = $derived(selectedPinId ? pins.find((p) => p.id === selectedPinId) : null);
-	let randomEligiblePins = $derived(filteredPins.filter((pin) => {
-		const lat = parseCoordinate(pin.latitude);
-		const lng = parseCoordinate(pin.longitude);
-		return lat !== null && lng !== null;
-	}));
+	let randomEligiblePins = $derived(
+		filteredPins.filter((pin) => {
+			const lat = parseCoordinate(pin.latitude);
+			const lng = parseCoordinate(pin.longitude);
+			return lat !== null && lng !== null;
+		})
+	);
 	let showLodgingAdd = $derived(selected?.kind === 'recommendation' && recCategory === 'lodging');
-	run(() => {
-		if (mapInstance) {
-			sidebarOpen;
-			queueMicrotask(refreshMapLayout);
-		}
+	$effect(() => {
+		void sidebarOpen;
+		void sidebarCollapsed;
+		if (syncViewportFromProps || !mapInstance) return;
+		queueMicrotask(refreshMapLayout);
 	});
 </script>
 
@@ -863,7 +866,11 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div
-	class={['map-page w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden', sidebarCollapsed && 'sidebar-collapsed']}
+	bind:this={mapPageEl}
+	class={[
+		'map-page w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden',
+		sidebarCollapsed && 'sidebar-collapsed'
+	]}
 >
 	<div class="drawer map-page-drawer h-full w-full">
 		<input id="map-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
@@ -892,162 +899,158 @@
 					on:mapMove={handleMapMove}
 				>
 					{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
-									
-							{#if markerProps && markerLngLat}
-								{@const isSelected = selectedPinId === markerProps.id}
-								<Marker
-									lngLat={markerLngLat}
-									class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
-								>
-									<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
-										<div
-											class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
- markerProps,
- isSelected
- )}"
-											class:scale-110={isActive || isSelected}
-											role="button"
-											tabindex="0"
-											aria-label={markerProps.name}
-											aria-pressed={isSelected}
-											onmouseenter={() => setActive(true)}
-											onmouseleave={() => {
+						{#if markerProps && markerLngLat}
+							{@const isSelected = selectedPinId === markerProps.id}
+							<Marker
+								lngLat={markerLngLat}
+								class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
+							>
+								<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
+									<div
+										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
+											markerProps,
+											isSelected
+										)}"
+										class:scale-110={isActive || isSelected}
+										role="button"
+										tabindex="0"
+										aria-label={markerProps.name}
+										aria-pressed={isSelected}
+										onmouseenter={() => setActive(true)}
+										onmouseleave={() => {
 											if (!isSelected) setActive(false);
 										}}
-											onfocus={() => setActive(true)}
-											onblur={() => {
+										onfocus={() => setActive(true)}
+										onblur={() => {
 											if (!isSelected) setActive(false);
 										}}
-											onclick={(e) => {
+										onclick={(e) => {
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
 										}}
-											onkeydown={(e) => {
+										onkeydown={(e) => {
 											if (e.key !== 'Enter') return;
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
 										}}
-										>
-											{markerLabelResolver(markerProps)}
-										</div>
+									>
+										{markerLabelResolver(markerProps)}
+									</div>
 
+									<div
+										class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
+										class:opacity-100={isActive || isSelected}
+									>
 										<div
-											class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
-											class:opacity-100={isActive || isSelected}
+											class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
 										>
-											<div
-												class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
-											>
-												<div class="card-body gap-2 p-3">
-													<h3 class="font-semibold text-sm leading-tight truncate">
-														{markerProps.name}
-													</h3>
-													<div class="flex flex-wrap items-center gap-1.5">
-														<span
-															class="badge badge-sm {markerProps.visitStatus === 'visited'
- ? 'badge-success'
- : 'badge-info'}"
-														>
-															{getVisitStatusLabel(markerProps.visitStatus)}
+											<div class="card-body gap-2 p-3">
+												<h3 class="font-semibold text-sm leading-tight truncate">
+													{markerProps.name}
+												</h3>
+												<div class="flex flex-wrap items-center gap-1.5">
+													<span
+														class="badge badge-sm {markerProps.visitStatus === 'visited'
+															? 'badge-success'
+															: 'badge-info'}"
+													>
+														{getVisitStatusLabel(markerProps.visitStatus)}
+													</span>
+													{#if markerProps.categoryName}
+														<span class="badge badge-ghost badge-sm">
+															{markerProps.categoryName}
 														</span>
-														{#if markerProps.categoryName}
-															<span class="badge badge-ghost badge-sm">
-																{markerProps.categoryName}
-															</span>
-														{/if}
-													</div>
-													<p class="text-xs text-base-content/60">{$t('map.view_details')}</p>
+													{/if}
 												</div>
+												<p class="text-xs text-base-content/60">{$t('map.view_details')}</p>
 											</div>
 										</div>
 									</div>
-								</Marker>
-							{/if}
-						
-									{/snippet}
+								</div>
+							</Marker>
+						{/if}
+					{/snippet}
 
 					{#snippet overlays()}
-									
-							{#if newMarker}
-								<DefaultMarker lngLat={newMarker.lngLat} />
-							{/if}
+						{#if newMarker}
+							<DefaultMarker lngLat={newMarker.lngLat} />
+						{/if}
 
-							{#if selectedPlace}
-								<DefaultMarker lngLat={[selectedPlace.lng, selectedPlace.lat]} />
-							{/if}
+						{#if selectedPlace}
+							<DefaultMarker lngLat={[selectedPlace.lng, selectedPlace.lat]} />
+						{/if}
 
-							{#if searchMode === 'nearby'}
-								<MapNearbyRadiusLayer
-									visible={true}
-									center={viewportCenter}
-									radiusMeters={recRadius}
-								/>
-							{/if}
-
-							<MapRecommendationsLayer
-								{recommendations}
-								selectedId={selectedRecId}
-								on:select={handleSelectRecommendation}
+						{#if searchMode === 'nearby'}
+							<MapNearbyRadiusLayer
+								visible={true}
+								center={viewportCenter}
+								radiusMeters={recRadius}
 							/>
+						{/if}
 
-							{#each visitedRegions as region}
-								{#if showRegions}
-									<Marker
-										lngLat={[region.longitude, region.latitude]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
-									>
-										<LocationIcon class="w-5 h-5 text-green-700" />
-										<Popup openOn="click" offset={[0, -10]}>
-											<div class="space-y-2 text-black">
-												<div class="text-lg font-bold">{region.name}</div>
-												<div class="badge badge-success badge-sm">{region.region}</div>
-											</div>
-										</Popup>
-									</Marker>
+						<MapRecommendationsLayer
+							{recommendations}
+							selectedId={selectedRecId}
+							on:select={handleSelectRecommendation}
+						/>
+
+						{#each visitedRegions as region}
+							{#if showRegions}
+								<Marker
+									lngLat={[region.longitude, region.latitude]}
+									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
+								>
+									<LocationIcon class="w-5 h-5 text-green-700" />
+									<Popup openOn="click" offset={[0, -10]}>
+										<div class="space-y-2 text-black">
+											<div class="text-lg font-bold">{region.name}</div>
+											<div class="badge badge-success badge-sm">{region.region}</div>
+										</div>
+									</Popup>
+								</Marker>
+							{/if}
+						{/each}
+
+						{#if showCities}
+							{#each visitedCities as city}
+								<Marker
+									lngLat={[city.longitude, city.latitude]}
+									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"
+								>
+									<LocationIcon class="w-5 h-5 text-blue-700" />
+									<Popup openOn="click" offset={[0, -10]}>
+										<div class="space-y-2 text-black">
+											<div class="text-lg font-bold">{city.name}</div>
+										</div>
+									</Popup>
+								</Marker>
+							{/each}
+						{/if}
+
+						{#if showActivities}
+							{#each activities as activity}
+								{#if activity.geojson}
+									<GeoJSON data={activity.geojson}>
+										<LineLayer
+											paint={{
+												'line-color': getActivityColor(activity.sport_type),
+												'line-width': 3,
+												'line-opacity': 0.8
+											}}
+										/>
+									</GeoJSON>
 								{/if}
 							{/each}
+						{/if}
 
-							{#if showCities}
-								{#each visitedCities as city}
-									<Marker
-										lngLat={[city.longitude, city.latitude]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"
-									>
-										<LocationIcon class="w-5 h-5 text-blue-700" />
-										<Popup openOn="click" offset={[0, -10]}>
-											<div class="space-y-2 text-black">
-												<div class="text-lg font-bold">{city.name}</div>
-											</div>
-										</Popup>
-									</Marker>
-								{/each}
-							{/if}
-
-							{#if showActivities}
-								{#each activities as activity}
-									{#if activity.geojson}
-										<GeoJSON data={activity.geojson}>
-											<LineLayer
-												paint={{
-													'line-color': getActivityColor(activity.sport_type),
-													'line-width': 3,
-													'line-opacity': 0.8
-												}}
-											/>
-										</GeoJSON>
-									{/if}
-								{/each}
-							{/if}
-
-							<MapImagePinLayer
-								geoJson={imagePinGeoJson}
-								visible={showImagePins}
-								navigateOnSelect={false}
-								selectedId={selectedImagePinId}
-								on:select={handleImagePinSelect}
-							/>
-						
-									{/snippet}
+						<MapImagePinLayer
+							geoJson={imagePinGeoJson}
+							visible={showImagePins}
+							navigateOnSelect={false}
+							selectedId={selectedImagePinId}
+							on:select={handleImagePinSelect}
+						/>
+					{/snippet}
 				</FullMap>
 			</div>
 
@@ -1132,7 +1135,7 @@
 							embedded
 							map={mapInstance}
 							bind:basemapType
-							fullscreenTarget={mapViewportEl}
+							fullscreenTarget={mapPageEl}
 						/>
 					</div>
 				</div>
@@ -1251,7 +1254,9 @@
 									</h3>
 									<div class="space-y-3">
 										<div class="flex flex-col">
-											<label class="field-label text-xs" for="rec-category">{$t('map.recommendation_category')}</label>
+											<label class="field-label text-xs" for="rec-category"
+												>{$t('map.recommendation_category')}</label
+											>
 											<select
 												id="rec-category"
 												class="select select-sm w-full"
@@ -1263,7 +1268,9 @@
 											</select>
 										</div>
 										<div class="flex flex-col">
-											<label class="field-label text-xs" for="rec-radius">{$t('map.recommendation_radius')}</label>
+											<label class="field-label text-xs" for="rec-radius"
+												>{$t('map.recommendation_radius')}</label
+											>
 											<select
 												id="rec-radius"
 												class="select select-sm w-full"
@@ -1328,7 +1335,9 @@
 											bind:checked={showVisited}
 											class="checkbox checkbox-success"
 										/>
-										<span class="text-sm leading-snug min-w-0">{$t('adventures.visited')} ({visitedAdventures})</span>
+										<span class="text-sm leading-snug min-w-0"
+											>{$t('adventures.visited')} ({visitedAdventures})</span
+										>
 									</label>
 									<label class="filter-option">
 										<input
@@ -1336,7 +1345,9 @@
 											bind:checked={showPlanned}
 											class="checkbox checkbox-info"
 										/>
-										<span class="text-sm leading-snug min-w-0">{$t('adventures.planned')} ({plannedAdventures})</span>
+										<span class="text-sm leading-snug min-w-0"
+											>{$t('adventures.planned')} ({plannedAdventures})</span
+										>
 									</label>
 									<label class="filter-option">
 										<input
@@ -1344,7 +1355,9 @@
 											bind:checked={showRegions}
 											class="checkbox checkbox-accent"
 										/>
-										<span class="text-sm leading-snug min-w-0">{$t('profile.visited_regions')} ({totalRegions})</span>
+										<span class="text-sm leading-snug min-w-0"
+											>{$t('profile.visited_regions')} ({totalRegions})</span
+										>
 									</label>
 									<label class="filter-option">
 										<input
@@ -1352,7 +1365,8 @@
 											bind:checked={showCities}
 											class="checkbox checkbox-warning"
 										/>
-										<span class="text-sm leading-snug min-w-0">{$t('map.show_visited_cities')}</span>
+										<span class="text-sm leading-snug min-w-0">{$t('map.show_visited_cities')}</span
+										>
 									</label>
 									<label class="filter-option">
 										<input
@@ -1420,6 +1434,23 @@
 		--map-float-inset: 0.75rem;
 		--map-float-width: 20rem;
 		--map-float-gutter: calc(var(--map-float-inset) + var(--map-float-width) + 0.75rem);
+	}
+
+	.map-page:fullscreen,
+	.map-page:-webkit-full-screen {
+		width: 100%;
+		height: 100%;
+		max-height: none;
+		min-height: 100%;
+		background-color: var(--color-base-200);
+	}
+
+	.map-page:fullscreen .map-page-drawer,
+	.map-page:-webkit-full-screen .map-page-drawer,
+	.map-page:fullscreen .drawer-content,
+	.map-page:-webkit-full-screen .drawer-content {
+		width: 100%;
+		height: 100%;
 	}
 
 	@media (min-width: 1024px) {

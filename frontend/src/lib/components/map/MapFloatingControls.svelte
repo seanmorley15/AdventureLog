@@ -2,6 +2,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
+	import { safeMapResize } from '$lib/map/renderGuard';
 	import MapStyleSelector from '$lib/components/map/MapStyleSelector.svelte';
 	import PlusIcon from '~icons/mdi/plus';
 	import MinusIcon from '~icons/mdi/minus';
@@ -96,7 +97,7 @@
 	function handleFullscreenChange() {
 		isFullscreen = Boolean(document.fullscreenElement);
 		requestAnimationFrame(() => {
-			map?.resize?.();
+			safeMapResize(map);
 		});
 	}
 

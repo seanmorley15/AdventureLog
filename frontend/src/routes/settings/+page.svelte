@@ -162,9 +162,11 @@
 		}
 	});
 
-	let canDeleteAccount =
-		$derived(deleteConfirmation.trim() === user?.username &&
-		(!user?.has_password || user?.disable_password || deletePassword.length > 0));
+	let canDeleteAccount = $derived(
+		!user?.is_staff &&
+			deleteConfirmation.trim() === user?.username &&
+			(!user?.has_password || user?.disable_password || deletePassword.length > 0)
+	);
 
 	function normalizeSection(tab: string | null) {
 		if (!tab) return 'profile';
