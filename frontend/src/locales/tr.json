@@ -906,6 +906,7 @@
 		"edit": "Düzenle",
 		"modes": {
 			"car": "Araba",
+			"motorcycle": "Motosiklet",
 			"plane": "Uçak",
 			"train": "Tren",
 			"bus": "Otobüs",

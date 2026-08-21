@@ -449,6 +449,7 @@ export let LODGING_TYPES_ICONS = {
 
 export let TRANSPORTATION_TYPES_ICONS = {
 	car: '🚗',
+	motorcycle: '🏍️',
 	plane: '✈️',
 	train: '🚆',
 	bus: '🚌',

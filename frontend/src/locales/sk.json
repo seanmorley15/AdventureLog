@@ -906,6 +906,7 @@
 		"edit": "Upraviť",
 		"modes": {
 			"car": "Auto",
+			"motorcycle": "Motocykel",
 			"plane": "Lietadlo",
 			"train": "Vlak",
 			"bus": "Autobus",

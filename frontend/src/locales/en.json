@@ -1013,6 +1013,7 @@
 		"edit": "Edit",
 		"modes": {
 			"car": "Car",
+			"motorcycle": "Motorcycle",
 			"plane": "Plane",
 			"train": "Train",
 			"bus": "Bus",

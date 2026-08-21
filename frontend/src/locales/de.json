@@ -906,6 +906,7 @@
 			"bus": "Bus",
 			"walking": "Gehen",
 			"car": "Auto",
+			"motorcycle": "Motorrad",
 			"other": "Andere",
 			"plane": "Flugzeug",
 			"train": "Zug"

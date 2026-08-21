@@ -919,6 +919,7 @@
 			"train": "Trein",
 			"bus": "Bus",
 			"car": "Auto",
+			"motorcycle": "Motorfiets",
 			"other": "Ander",
 			"plane": "Vliegtuig",
 			"walking": "Wandelen"

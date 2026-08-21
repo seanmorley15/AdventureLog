@@ -906,6 +906,7 @@
 		"edit": "Szerkesztés",
 		"modes": {
 			"car": "Autó",
+			"motorcycle": "Motorkerékpár",
 			"plane": "Repülő",
 			"train": "Vonat",
 			"bus": "Busz",
