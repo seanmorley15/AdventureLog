@@ -33,7 +33,7 @@ def gpx_to_geojson(gpx_file):
                         features.append(feature)
         elif gpx.routes:
             for route in gpx.routes:
-                route_name = route.name or "GPX Track"
+                route_name = route.name or "GPX Route"
                 coords = [(point.longitude, point.latitude) for point in route.points]
                 if coords:
                     feature = geojson.Feature(
