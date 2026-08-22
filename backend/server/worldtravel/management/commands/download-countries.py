@@ -12,7 +12,7 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
 from django.conf import settings
-from adventures.utils.geo import make_point
+from adventures.utils.geo import make_point, parse_lon_lat
 
 COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
 
@@ -149,8 +149,7 @@ class Command(BaseCommand):
                 country_name = country['name']
                 country_subregion = country['subregion']
                 country_capital = country['capital']
-                longitude = round(float(country['longitude']), 6) if country['longitude'] else None
-                latitude = round(float(country['latitude']), 6) if country['latitude'] else None
+                longitude, latitude = parse_lon_lat(country.get('longitude'), country.get('latitude'))
 
                 # Store country
                 temp_conn.execute('''INSERT OR REPLACE INTO temp_countries 
@@ -168,8 +167,9 @@ class Command(BaseCommand):
                     for state in country['states']:
                         state_id = f"{country_code}-{state['iso2']}"
                         state_name = state['name']
-                        state_lat = round(float(state['latitude']), 6) if state['latitude'] else None
-                        state_lng = round(float(state['longitude']), 6) if state['longitude'] else None
+                        state_lng, state_lat = parse_lon_lat(state.get('longitude'), state.get('latitude'))
+                        if state_lng is None or state_lat is None:
+                            state_lng, state_lat = longitude, latitude
                         
                         temp_conn.execute('''INSERT OR REPLACE INTO temp_regions 
                             (id, name, country_code, longitude, latitude) 
@@ -183,8 +183,7 @@ class Command(BaseCommand):
                             for city in state['cities']:
                                 city_id = f"{state_id}-{city['id']}"
                                 city_name = city['name']
-                                city_lat = round(float(city['latitude']), 6) if city['latitude'] else None
-                                city_lng = round(float(city['longitude']), 6) if city['longitude'] else None
+                                city_lng, city_lat = parse_lon_lat(city.get('longitude'), city.get('latitude'))
                                 
                                 temp_conn.execute('''INSERT OR REPLACE INTO temp_cities 
                                     (id, name, region_id, longitude, latitude) 
@@ -193,12 +192,12 @@ class Command(BaseCommand):
                                 
                                 city_count += 1
                 else:
-                    # Country without states - create default region
+                    # Country without states (city-states, etc.) — one region at the country centroid
                     state_id = f"{country_code}-00"
                     temp_conn.execute('''INSERT OR REPLACE INTO temp_regions 
                         (id, name, country_code, longitude, latitude) 
                         VALUES (?, ?, ?, ?, ?)''',
-                        (state_id, country_name, country_code, None, None))
+                        (state_id, country_name, country_code, longitude, latitude))
                     region_count += 1
 
                 # Commit periodically to avoid memory buildup
@@ -288,7 +287,7 @@ class Command(BaseCommand):
     def _process_regions_from_temp(self, temp_conn, batch_size):
         """Process regions from temporary database"""
         # Get country mapping once
-        country_map = {c.country_code: c for c in Country.objects.only('id', 'country_code')}
+        country_map = {c.country_code: c for c in Country.objects.only('id', 'country_code', 'coordinates')}
         
         cursor = temp_conn.execute('SELECT id, name, country_code, longitude, latitude FROM temp_regions')
         
@@ -316,6 +315,10 @@ class Command(BaseCommand):
                 
                 if not country_obj:
                     continue
+
+                if longitude is None or latitude is None:
+                    longitude = country_obj.longitude
+                    latitude = country_obj.latitude
                     
                 if region_id in existing_regions:
                     # Update existing

@@ -118,8 +118,8 @@ export type Region = {
 	id: string;
 	name: string;
 	country: string;
-	latitude: number;
-	longitude: number;
+	latitude: number | null;
+	longitude: number | null;
 	num_cities: number;
 	country_name: string;
 };
@@ -138,8 +138,8 @@ export type VisitedRegion = {
 	id: number;
 	region: string;
 	user: string;
-	longitude: number;
-	latitude: number;
+	longitude: number | null;
+	latitude: number | null;
 	name: string;
 };
 
@@ -147,8 +147,8 @@ export type VisitedCity = {
 	id: number;
 	city: string;
 	user: string;
-	longitude: number;
-	latitude: number;
+	longitude: number | null;
+	latitude: number | null;
 	name: string;
 };
 

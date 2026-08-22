@@ -163,12 +163,17 @@
 		latitude: number | string | null;
 		longitude: number | string | null;
 	}) {
-		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
+		const lat = parseCoordinate(item.latitude);
+		const lon = parseCoordinate(item.longitude);
+		if (lat === null || lon === null) return false;
+		if (lat === 0 && lon === 0) return false;
+		return true;
 	}
 
 	let hasMappableCities = $derived(allCities.some(hasCoordinates));
 
 	function cityToFeature(city: City): CityFeature | null {
+		if (!hasCoordinates(city)) return null;
 		const lat = parseCoordinate(city.latitude);
 		const lon = parseCoordinate(city.longitude);
 		if (lat === null || lon === null) return null;

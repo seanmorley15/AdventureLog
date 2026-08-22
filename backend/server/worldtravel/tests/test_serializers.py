@@ -55,3 +55,62 @@ class WorldtravelLatLonSerializerTests(TestCase):
         self.assertIn('longitude', data)
         self.assertIsNone(data['latitude'])
         self.assertIsNone(data['longitude'])
+
+    def test_region_serializer_falls_back_to_country_centroid(self):
+        vatican = Country.objects.create(
+            name='Vatican City State (Holy See)',
+            country_code='VA',
+            coordinates=make_point(12.453389, 41.902916),
+        )
+        region = Region.objects.create(
+            id='VA-00',
+            name='Vatican City State (Holy See)',
+            country=vatican,
+            coordinates=None,
+        )
+        data = RegionSerializer(region).data
+        self.assertAlmostEqual(data['latitude'], 41.902916, places=4)
+        self.assertAlmostEqual(data['longitude'], 12.453389, places=4)
+
+    def test_visited_region_serializer_falls_back_to_country_centroid(self):
+        from users.models import CustomUser
+        from worldtravel.models import VisitedRegion
+        from worldtravel.serializers import VisitedRegionSerializer
+
+        vatican = Country.objects.create(
+            name='Vatican City State (Holy See)',
+            country_code='VA',
+            coordinates=make_point(12.453389, 41.902916),
+        )
+        region = Region.objects.create(
+            id='VA-00',
+            name='Vatican City State (Holy See)',
+            country=vatican,
+            coordinates=None,
+        )
+        user = CustomUser.objects.create_user(
+            username='vatican-visitor',
+            email='vatican-visitor@example.com',
+            password='testpassword123',
+        )
+        visit = VisitedRegion.objects.create(user=user, region=region)
+        data = VisitedRegionSerializer(visit).data
+        self.assertAlmostEqual(data['latitude'], 41.902916, places=4)
+        self.assertAlmostEqual(data['longitude'], 12.453389, places=4)
+        self.assertEqual(data['name'], 'Vatican City State (Holy See)')
+
+    def test_region_null_island_falls_back_to_country_centroid(self):
+        vatican = Country.objects.create(
+            name='Vatican City State (Holy See)',
+            country_code='VA',
+            coordinates=make_point(12.453389, 41.902916),
+        )
+        region = Region.objects.create(
+            id='VA-00',
+            name='Vatican City State (Holy See)',
+            country=vatican,
+            coordinates=make_point(0, 0),
+        )
+        data = RegionSerializer(region).data
+        self.assertAlmostEqual(data['latitude'], 41.902916, places=4)
+        self.assertAlmostEqual(data['longitude'], 12.453389, places=4)

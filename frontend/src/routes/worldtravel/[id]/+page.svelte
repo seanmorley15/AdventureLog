@@ -173,12 +173,17 @@
 		latitude: number | string | null;
 		longitude: number | string | null;
 	}) {
-		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
+		const lat = parseCoordinate(item.latitude);
+		const lon = parseCoordinate(item.longitude);
+		if (lat === null || lon === null) return false;
+		if (lat === 0 && lon === 0) return false;
+		return true;
 	}
 
 	let hasMappableRegions = $derived(regions.some(hasCoordinates));
 
 	function regionToFeature(region: Region): RegionFeature | null {
+		if (!hasCoordinates(region)) return null;
 		const lat = parseCoordinate(region.latitude);
 		const lon = parseCoordinate(region.longitude);
 		if (lat === null || lon === null) return null;

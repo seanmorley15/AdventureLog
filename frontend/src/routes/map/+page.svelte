@@ -140,7 +140,7 @@
 	let mapPageEl: HTMLElement | null = $state(null);
 	let updateUrlTimeout: NodeJS.Timeout | null = null;
 
-	let visitedRegions: VisitedRegion[] = $derived(data.props.visitedRegions);
+	let visitedRegions: VisitedRegion[] = $derived(data.props.visitedRegions ?? []);
 	let visitedCities: VisitedCity[] = $state([]);
 	let pins: Pin[] = $state<Pin[]>([]);
 	$effect.pre(() => {
@@ -204,6 +204,23 @@
 		const numeric = typeof value === 'number' ? value : Number(value);
 		return Number.isFinite(numeric) ? numeric : null;
 	}
+
+	let mappableVisitedRegions = $derived(
+		visitedRegions.flatMap((region) => {
+			const lat = parseCoordinate(region.latitude);
+			const lon = parseCoordinate(region.longitude);
+			if (lat === null || lon === null || (lat === 0 && lon === 0)) return [];
+			return [{ ...region, latitude: lat, longitude: lon }];
+		})
+	);
+	let mappableVisitedCities = $derived(
+		visitedCities.flatMap((city) => {
+			const lat = parseCoordinate(city.latitude);
+			const lon = parseCoordinate(city.longitude);
+			if (lat === null || lon === null || (lat === 0 && lon === 0)) return [];
+			return [{ ...city, latitude: lat, longitude: lon }];
+		})
+	);
 
 	function pinToFeature(pin: Pin) {
 		const lat = parseCoordinate(pin.latitude);
@@ -994,8 +1011,8 @@
 							on:select={handleSelectRecommendation}
 						/>
 
-						{#each visitedRegions as region}
-							{#if showRegions}
+						{#if showRegions}
+							{#each mappableVisitedRegions as region (region.id)}
 								<Marker
 									lngLat={[region.longitude, region.latitude]}
 									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
@@ -1008,11 +1025,11 @@
 										</div>
 									</Popup>
 								</Marker>
-							{/if}
-						{/each}
+							{/each}
+						{/if}
 
 						{#if showCities}
-							{#each visitedCities as city}
+							{#each mappableVisitedCities as city (city.id)}
 								<Marker
 									lngLat={[city.longitude, city.latitude]}
 									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"

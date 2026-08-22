@@ -4,7 +4,7 @@ from rest_framework.test import APIRequestFactory
 
 from adventures.models import Location, Transportation
 from adventures.serializers import LocationSerializer, MapPinSerializer, TransportationSerializer
-from adventures.utils.geo import make_point, point_to_lat_lon, has_coordinates
+from adventures.utils.geo import make_point, point_to_lat_lon, has_coordinates, first_usable_lat_lon, parse_lon_lat
 from users.models import CustomUser
 
 
@@ -20,6 +20,22 @@ class GeoUtilsTests(TestCase):
     def test_make_point_returns_none_for_incomplete_coords(self):
         self.assertIsNone(make_point(None, 40.0))
         self.assertIsNone(make_point(-70.0, None))
+
+    def test_first_usable_lat_lon_skips_missing_and_null_island(self):
+        self.assertEqual(first_usable_lat_lon(None, None), (None, None))
+        self.assertEqual(first_usable_lat_lon(make_point(0, 0)), (None, None))
+        lat, lon = first_usable_lat_lon(None, make_point(0, 0), make_point(12.45, 41.9))
+        self.assertAlmostEqual(lat, 41.9)
+        self.assertAlmostEqual(lon, 12.45)
+
+    def test_parse_lon_lat_treats_empty_and_null_island_as_missing(self):
+        self.assertEqual(parse_lon_lat(None, None), (None, None))
+        self.assertEqual(parse_lon_lat('', ''), (None, None))
+        self.assertEqual(parse_lon_lat(0, 0), (None, None))
+        self.assertEqual(parse_lon_lat('0', '0'), (None, None))
+        lon, lat = parse_lon_lat('12.453389', '41.902916')
+        self.assertAlmostEqual(lon, 12.453389)
+        self.assertAlmostEqual(lat, 41.902916)
 
 
 class LocationSerializerGeoTests(TestCase):
