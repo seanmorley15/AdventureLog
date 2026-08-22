@@ -10,8 +10,9 @@ from rest_framework.response import Response
 
 from django.contrib.contenttypes.models import ContentType
 
-from adventures.geocoding import get_place_details
 from adventures.models import Collection, CollectionItineraryItem, Visit
+from adventures.services.places.details import get_place_details
+from adventures.utils.datetime_utils import aware_utc_from_date
 
 
 def coerce_coordinate(value, min_value, max_value):
@@ -109,6 +110,20 @@ def sanitize_photo_urls(raw_urls, max_urls=5):
 def build_quick_add_description(base_description, detailed_description):
     description = str(detailed_description or "").strip() or str(base_description or "").strip()
     return description or None
+
+
+def resolve_quick_add_location_label(payload, reverse_data, details):
+    """Prefer server reverse-geocoded display_name over raw provider address strings."""
+    reverse_data = reverse_data if isinstance(reverse_data, dict) else {}
+    details = details if isinstance(details, dict) else {}
+    payload = payload if isinstance(payload, dict) else {}
+
+    return (
+        str(reverse_data.get('display_name') or '').strip()
+        or str(payload.get('location') or '').strip()
+        or str(details.get('formatted_address') or '').strip()
+        or None
+    )
 
 
 def resolve_quick_add_collection(collection_id, validate_permissions, permission_error_message):
@@ -251,8 +266,8 @@ def apply_quick_add_itinerary_date(content_object, date_value):
     model_name = content_object._meta.model_name
 
     if model_name == "location":
-        start_dt = datetime.datetime.combine(date_value, datetime.time.min)
-        end_dt = datetime.datetime.combine(date_value, datetime.time.max)
+        start_dt = aware_utc_from_date(date_value)
+        end_dt = aware_utc_from_date(date_value)
 
         exact_match = Visit.objects.filter(
             location=content_object, start_date=start_dt, end_date=end_dt
@@ -280,7 +295,7 @@ def apply_quick_add_itinerary_date(content_object, date_value):
         if content_object.check_in and content_object.check_out:
             return
 
-        check_in = datetime.datetime.combine(date_value, datetime.time.min)
+        check_in = aware_utc_from_date(date_value)
         check_out = check_in + datetime.timedelta(days=1)
         content_object.check_in = check_in
         content_object.check_out = check_out

@@ -1,56 +1,55 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location } from '$lib/types';
+import type { DashboardData } from '$lib/types';
 
+const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+
+const emptyDashboard: DashboardData = {
+	stats: null,
+	recent_locations: [],
+	upcoming_trips: [],
+	active_trip: null,
+	upcoming_events: [],
+	invite_count: 0
+};
 
 export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
-	} else {
-		let adventures: Location[] = [];
+	}
 
-		let initialFetch = await event.fetch(`${serverEndpoint}/api/locations/`, {
+	let loadError = false;
+	let dashboard: DashboardData = { ...emptyDashboard };
+
+	try {
+		const res = await event.fetch(`${serverEndpoint}/api/stats/dashboard/`, {
 			headers: {
 				Cookie: `sessionid=${event.cookies.get('sessionid')}`
 			},
 			credentials: 'include'
 		});
 
-		let stats = null;
-
-		let res = await event.fetch(
-			`${serverEndpoint}/api/stats/counts/${event.locals.user.username}/`,
-			{
-				headers: {
-					Cookie: `sessionid=${event.cookies.get('sessionid')}`
-				}
-			}
-		);
 		if (!res.ok) {
-			console.error('Failed to fetch user stats');
+			console.error('Failed to fetch dashboard data', res.status);
+			loadError = true;
 		} else {
-			stats = await res.json();
+			dashboard = await res.json();
 		}
-
-		if (!initialFetch.ok) {
-			let error_message = await initialFetch.json();
-			console.error(error_message);
-			console.error('Failed to fetch visited adventures');
-			return redirect(302, '/login');
-		} else {
-			let res = await initialFetch.json();
-			let visited = res.results as Location[];
-			// only get the first 3 adventures or less if there are less than 3
-			adventures = visited.slice(0, 3);
-		}
-
-		return {
-			props: {
-				adventures,
-				stats
-			}
-		};
+	} catch (error) {
+		console.error('Error loading dashboard', error);
+		loadError = true;
 	}
+
+	return {
+		props: {
+			stats: dashboard.stats,
+			recentLocations: dashboard.recent_locations ?? [],
+			upcomingTrips: dashboard.upcoming_trips ?? [],
+			activeTrip: dashboard.active_trip,
+			upcomingEvents: dashboard.upcoming_events ?? [],
+			inviteCount: dashboard.invite_count ?? 0,
+			loadError
+		}
+	};
 }) satisfies PageServerLoad;

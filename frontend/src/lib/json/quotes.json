@@ -5,11 +5,11 @@
 			"author": "Lao Tzu"
 		},
 		{
-			"quote": "If we were meant to stay in one place, we’d have roots instead of feet.",
+			"quote": "If we were meant to stay in one place, we'd have roots instead of feet.",
 			"author": "Rachel Wolchin"
 		},
 		{
-			"quote": "Adventure isn’t hanging on a rope off the side of a mountain. Adventure is an attitude that we must apply to the day to day obstacles in life.",
+			"quote": "Adventure isn't hanging on a rope off the side of a mountain. Adventure is an attitude that we must apply to the day to day obstacles in life.",
 			"author": "John Amatt"
 		},
 		{
@@ -17,15 +17,15 @@
 			"author": "Confucius"
 		},
 		{
-			"quote": "Until you step into the unknown, you don’t know what you’re made of.",
+			"quote": "Until you step into the unknown, you don't know what you're made of.",
 			"author": "Roy T. Bennett"
 		},
 		{
-			"quote": "You can’t control the past, but you can control where you go next.",
+			"quote": "You can't control the past, but you can control where you go next.",
 			"author": "Kirsten Hubbard"
 		},
 		{
-			"quote": "Life isn’t about finding yourself. Life is about creating yourself.",
+			"quote": "Life isn't about finding yourself. Life is about creating yourself.",
 			"author": "George Bernard Shaw"
 		},
 		{
@@ -51,6 +51,261 @@
 		{
 			"quote": "Believe you can and you're halfway there.",
 			"author": "Theodore Roosevelt"
+		},
+		{
+			"quote": "Travel makes one modest. You see what a tiny place you occupy in the world.",
+			"author": "Gustave Flaubert"
+		},
+		{
+			"quote": "The real voyage of discovery consists not in seeking new landscapes, but in having new eyes.",
+			"author": "Marcel Proust"
+		},
+		{
+			"quote": "Not all those who wander are lost.",
+			"author": "J.R.R. Tolkien"
+		},
+		{
+			"quote": "To travel is to live.",
+			"author": "Hans Christian Andersen"
+		},
+		{
+			"quote": "Jobs fill your pocket, but adventures fill your soul.",
+			"author": "Jaime Lyn Beatty"
+		},
+		{
+			"quote": "We travel not to escape life, but for life not to escape us.",
+			"author": "Anonymous"
+		},
+		{
+			"quote": "Take only memories, leave only footprints.",
+			"author": "Chief Seattle"
+		}
+	],
+	"seasonal": [
+		{
+			"id": "newYears",
+			"start": { "month": 12, "day": 31 },
+			"end": { "month": 1, "day": 2 },
+			"spansYearEnd": true,
+			"quotes": [
+				{
+					"quote": "Tomorrow is the first blank page of a 365-page book. Write a good one.",
+					"author": "Brad Paisley"
+				},
+				{
+					"quote": "The world is a book, and those who do not travel read only one page.",
+					"author": "Saint Augustine"
+				},
+				{
+					"quote": "We wander for distraction, but we travel for fulfillment.",
+					"author": "Hilaire Belloc"
+				}
+			]
+		},
+		{
+			"id": "valentinesDay",
+			"start": { "month": 2, "day": 14 },
+			"end": { "month": 2, "day": 14 },
+			"quotes": [
+				{
+					"quote": "A journey is best measured in friends, rather than miles.",
+					"author": "Tim Cahill"
+				},
+				{
+					"quote": "The best thing to hold onto in life is each other.",
+					"author": "Audrey Hepburn"
+				},
+				{
+					"quote": "Traveling in the company of those we love is home in motion.",
+					"author": "Leigh Hunt"
+				}
+			]
+		},
+		{
+			"id": "stPatricksDay",
+			"start": { "month": 3, "day": 17 },
+			"end": { "month": 3, "day": 17 },
+			"quotes": [
+				{
+					"quote": "May the road rise up to meet you. May the wind be always at your back.",
+					"author": "Irish Blessing"
+				},
+				{
+					"quote": "There are good ships and wood ships, ships that sail the sea, but the best ships are friendships, and may they always be.",
+					"author": "Irish Toast"
+				}
+			]
+		},
+		{
+			"id": "springEquinox",
+			"start": { "month": 3, "day": 19 },
+			"end": { "month": 3, "day": 21 },
+			"quotes": [
+				{
+					"quote": "Spring is nature's way of saying, 'Let's party!'",
+					"author": "Robin Williams"
+				},
+				{
+					"quote": "No winter lasts forever; no spring skips its turn.",
+					"author": "Hal Borland"
+				},
+				{
+					"quote": "The earth laughs in flowers.",
+					"author": "Ralph Waldo Emerson"
+				}
+			]
+		},
+		{
+			"id": "earthDay",
+			"start": { "month": 4, "day": 22 },
+			"end": { "month": 4, "day": 22 },
+			"quotes": [
+				{
+					"quote": "In every walk with nature one receives far more than he seeks.",
+					"author": "John Muir"
+				},
+				{
+					"quote": "Look deep into nature, and then you will understand everything better.",
+					"author": "Albert Einstein"
+				},
+				{
+					"quote": "The Earth has music for those who listen.",
+					"author": "George Santayana"
+				}
+			]
+		},
+		{
+			"id": "summerSolstice",
+			"start": { "month": 6, "day": 20 },
+			"end": { "month": 6, "day": 22 },
+			"quotes": [
+				{
+					"quote": "Live in the sunshine, swim the sea, drink the wild air.",
+					"author": "Ralph Waldo Emerson"
+				},
+				{
+					"quote": "Summertime is always the best of what might be.",
+					"author": "Charles Bowden"
+				},
+				{
+					"quote": "One way to get the most out of life is to act as though everything is a miracle.",
+					"author": "Albert Einstein"
+				}
+			]
+		},
+		{
+			"id": "adventurelogBirthday",
+			"start": { "month": 8, "day": 15 },
+			"end": { "month": 8, "day": 15 },
+			"quotes": [
+				{
+					"quote": "Every great adventure begins with someone brave enough to take the first step. Thank you for being part of ours.",
+					"author": "Sean Morley"
+				},
+				{
+					"quote": "The best journeys are the ones we share. Happy birthday, AdventureLog — and thank you for logging yours with us.",
+					"author": "Sean Morley"
+				},
+				{
+					"quote": "On August 15, 2024, a community of travelers started writing their stories together. Here's to every adventure since — and all the ones still ahead.",
+					"author": "Sean Morley"
+				}
+			]
+		},
+		{
+			"id": "worldTourismDay",
+			"start": { "month": 9, "day": 27 },
+			"end": { "month": 9, "day": 27 },
+			"quotes": [
+				{
+					"quote": "Tourism is the best way to promote peace and understanding between nations.",
+					"author": "Kofi Annan"
+				},
+				{
+					"quote": "Travel is fatal to prejudice, bigotry, and narrow-mindedness.",
+					"author": "Mark Twain"
+				}
+			]
+		},
+		{
+			"id": "halloween",
+			"start": { "month": 10, "day": 31 },
+			"end": { "month": 10, "day": 31 },
+			"quotes": [
+				{
+					"quote": "Where there is no imagination there is no horror.",
+					"author": "Arthur Conan Doyle"
+				},
+				{
+					"quote": "Every day is Halloween, isn't it? For some of us.",
+					"author": "Tim Burton"
+				},
+				{
+					"quote": "The oldest and strongest emotion of mankind is fear, and the oldest and strongest kind of fear is fear of the unknown.",
+					"author": "H.P. Lovecraft"
+				}
+			]
+		},
+		{
+			"id": "thanksgiving",
+			"start": { "month": 11, "day": 20 },
+			"end": { "month": 11, "day": 30 },
+			"quotes": [
+				{
+					"quote": "Gratitude turns what we have into enough.",
+					"author": "Anonymous"
+				},
+				{
+					"quote": "Feeling gratitude and not expressing it is like wrapping a present and not giving it.",
+					"author": "William Arthur Ward"
+				},
+				{
+					"quote": "The more grateful I am, the more beauty I see.",
+					"author": "Mary Davis"
+				}
+			]
+		},
+		{
+			"id": "winterSolstice",
+			"start": { "month": 12, "day": 21 },
+			"end": { "month": 12, "day": 22 },
+			"quotes": [
+				{
+					"quote": "In the depth of winter, I finally learned that within me there lay an invincible summer.",
+					"author": "Albert Camus"
+				},
+				{
+					"quote": "Winter is not a season, it's a celebration.",
+					"author": "Anamika Mishra"
+				},
+				{
+					"quote": "Laughter is the sun that drives winter from the human face.",
+					"author": "Victor Hugo"
+				}
+			]
+		},
+		{
+			"id": "christmas",
+			"start": { "month": 12, "day": 24 },
+			"end": { "month": 12, "day": 25 },
+			"quotes": [
+				{
+					"quote": "Christmas waves a magic wand over this world, and behold, everything is softer and more beautiful.",
+					"author": "Norman Vincent Peale"
+				},
+				{
+					"quote": "Maybe Christmas doesn't come from a store. Maybe Christmas means a little bit more.",
+					"author": "Dr. Seuss"
+				},
+				{
+					"quote": "Christmas is a season not only of rejoicing but of reflection.",
+					"author": "Winston Churchill"
+				},
+				{
+					"quote": "The best way to spread Christmas cheer is singing loud for all to hear.",
+					"author": "Buddy the Elf"
+				}
+			]
 		}
 	]
 }

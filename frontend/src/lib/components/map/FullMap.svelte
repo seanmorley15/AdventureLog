@@ -21,7 +21,8 @@
 	import { CircleLayer, GeoJSON, MapEvents, MapLibre, MarkerLayer } from 'svelte-maplibre';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
 	import { getBasemapUrl } from '$lib';
-	import MapStyleSelector from '$lib/components/map/MapStyleSelector.svelte';
+	import { getMapViewportCenter } from '$lib/map/viewportCenter';
+	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
 
 	type Feature = FullMapFeature;
@@ -36,7 +37,12 @@
 
 	// Map presentation
 	export let mapClass = 'w-full h-full';
-	export let standardControls = true;
+	/** Custom floating map controls (zoom, locate, fullscreen, basemap). */
+	export let showMapControls = true;
+	/** Render controls inline (no absolute positioning) — for parent toolbars. */
+	export let controlsEmbedded = false;
+	/** Element to fullscreen; defaults to the FullMap root container. */
+	export let fullscreenTarget: HTMLElement | null = null;
 	export let zoom: number | undefined = 2;
 	export let center: [number, number] | { lng: number; lat: number } = [0, 0];
 	export let bounds: [[number, number], [number, number]] | undefined = undefined;
@@ -46,6 +52,8 @@
 	export let basemapType: string = 'default';
 	export let mapStyle: string | null = null;
 	export let showBasemapSelector: boolean = true;
+
+	let mapRootEl: HTMLDivElement | null = null;
 
 	// GeoJSON source
 	export let sourceId = 'fullmap-source';
@@ -145,11 +153,10 @@
 
 	function handleMapMove() {
 		if (!map) return;
-		const mapCenter = map.getCenter();
 		const mapZoom = map.getZoom();
-		if (mapCenter && typeof mapZoom === 'number') {
+		if (typeof mapZoom === 'number') {
 			dispatch('mapMove', {
-				center: { lng: mapCenter.lng, lat: mapCenter.lat },
+				center: getMapViewportCenter(map),
 				zoom: mapZoom
 			});
 		}
@@ -269,24 +276,33 @@
 	}
 </script>
 
-<div class="relative">
-	{#if showBasemapSelector}
+<div class="fullmap-root relative h-full w-full min-h-[inherit]" bind:this={mapRootEl}>
+	{#if showMapControls}
 		{#if $$slots.overlayControls}
-			<slot name="overlayControls" {basemapType} {setBasemapType} />
+			<slot
+				name="overlayControls"
+				{basemapType}
+				{setBasemapType}
+				{map}
+				{mapRootEl}
+				fullscreenTarget={fullscreenTarget ?? mapRootEl}
+			/>
 		{:else}
-			<div class="absolute top-4 right-4 z-10 bg-base-200 backdrop-blur-sm rounded-lg shadow-lg">
-				<div class="p-2">
-					<MapStyleSelector bind:basemapType />
-				</div>
-			</div>
+			<MapFloatingControls
+				{map}
+				bind:basemapType
+				{showBasemapSelector}
+				embedded={controlsEmbedded}
+				fullscreenTarget={fullscreenTarget ?? mapRootEl}
+			/>
 		{/if}
 	{/if}
 
 	<MapLibre
 		bind:map
 		style={resolvedStyle}
-		class={mapClass}
-		{standardControls}
+		class="{mapClass} fullmap-map"
+		standardControls={false}
 		{zoom}
 		{center}
 		{bounds}
@@ -386,5 +402,21 @@
 	:global(.maplibregl-marker.map-pin-active),
 	:global(.mapboxgl-marker.map-pin-active) {
 		z-index: 2147483000 !important;
+	}
+
+	:global(.fullmap-root:fullscreen) {
+		height: 100%;
+		width: 100%;
+		max-height: none;
+		min-height: 100%;
+		background-color: var(--color-base-100, #1a1a1a);
+	}
+
+	:global(.fullmap-root:fullscreen .fullmap-map),
+	:global(.fullmap-root:fullscreen .fullmap-map .maplibregl-map),
+	:global(.fullmap-root:fullscreen .fullmap-map .maplibregl-canvas-container) {
+		height: 100% !important;
+		width: 100% !important;
+		min-height: 100% !important;
 	}
 </style>

@@ -2,9 +2,15 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from os import getenv
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.views.static import serve
-from adventures.utils.file_permissions import checkFilePermission
+from django.core.files.storage import default_storage
+from adventures.utils.file_permissions import (
+    checkFilePermission,
+    is_public_media_path,
+    is_protected_media_path,
+    normalize_media_request_path,
+)
 
 def get_csrf_token(request):
     csrf_token = get_token(request)
@@ -13,43 +19,68 @@ def get_csrf_token(request):
 def get_public_url(request):
     return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
 
-protected_paths = ['images/', 'attachments/']
+def health_check(request):
+    from django.db import connection
+    try:
+        connection.ensure_connection()
+        return JsonResponse({'ok': True, 'db': 'connected'})
+    except Exception:
+        return JsonResponse({'ok': False, 'db': 'disconnected'}, status=503)
+
+def _redirect_storage(path):
+    storage_url = default_storage.url(path)
+    return HttpResponseRedirect(storage_url)
+
+def _resolve_user(request):
+    user = request.user
+
+    if not user.is_authenticated:
+        from users.authentication import APIKeyAuthentication
+        from rest_framework.exceptions import AuthenticationFailed
+        try:
+            result = APIKeyAuthentication().authenticate(request)
+            if result is not None:
+                user, _ = result
+        except AuthenticationFailed:
+            return None
+
+    return user
+
+
+def _serve_media_file(request, path):
+    if settings.USE_S3_MEDIA:
+        return _redirect_storage(path)
+    if settings.DEBUG:
+        return serve(request, path, document_root=settings.MEDIA_ROOT)
+    response = HttpResponse()
+    response['Content-Type'] = ''
+    response['X-Accel-Redirect'] = '/protectedMedia/' + path
+    return response
+
 
 def serve_protected_media(request, path):
-    if any([path.startswith(protected_path) for protected_path in protected_paths]):
-        image_id = path.split('/')[1]
-        user = request.user
+    normalized_path = normalize_media_request_path(path)
+    if normalized_path is None:
+        return HttpResponseForbidden()
 
-        # Session auth won't populate request.user for API key requests, so
-        # attempt API key authentication as a fallback.
-        if not user.is_authenticated:
-            from users.authentication import APIKeyAuthentication
-            from rest_framework.exceptions import AuthenticationFailed
-            try:
-                result = APIKeyAuthentication().authenticate(request)
-                if result is not None:
-                    user, _ = result
-            except AuthenticationFailed:
-                return HttpResponseForbidden()
+    if is_public_media_path(normalized_path):
+        return _serve_media_file(request, normalized_path)
 
-        media_type = path.split('/')[0] + '/'
-        if checkFilePermission(image_id, user, media_type):
-            if settings.DEBUG:
-                # In debug mode, serve the file directly
-                return serve(request, path, document_root=settings.MEDIA_ROOT)
-            else:
-                # In production, use X-Accel-Redirect to serve the file using Nginx
-                response = HttpResponse()
-                response['Content-Type'] = ''
-                response['X-Accel-Redirect'] = '/protectedMedia/' + path
-                return response
-        else:
-            return HttpResponseForbidden()
-    else:
-        if settings.DEBUG:
-            return serve(request, path, document_root=settings.MEDIA_ROOT)
-        else:
-            response = HttpResponse()
-            response['Content-Type'] = ''
-            response['X-Accel-Redirect'] = '/protectedMedia/' + path
-            return response
+    if not is_protected_media_path(normalized_path):
+        return HttpResponseForbidden()
+
+    path_parts = normalized_path.split('/', 1)
+    if len(path_parts) < 2 or not path_parts[1]:
+        return HttpResponseForbidden()
+
+    user = _resolve_user(request)
+    if user is None:
+        return HttpResponseForbidden()
+
+    media_type = path_parts[0] + '/'
+    file_id = path_parts[1]
+
+    if checkFilePermission(file_id, user, media_type):
+        return _serve_media_file(request, normalized_path)
+
+    return HttpResponseForbidden()

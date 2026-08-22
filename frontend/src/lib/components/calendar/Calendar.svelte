@@ -8,24 +8,23 @@
 	// @ts-ignore
 	import Interaction from '@event-calendar/interaction';
 	import { t } from 'svelte-i18n';
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import type { CalendarDisplayEvent } from '$lib/calendar/types';
 
-	export let events: Array<{
-		id: string;
-		start: string;
-		end: string;
-		title: string;
-		backgroundColor?: string;
-		extendedProps?: any;
-	}> = [];
-
-	export let onEventClick: ((event: any) => void) | null = null;
+	export let events: CalendarDisplayEvent[] = [];
 	export let height: string = 'auto';
 	export let view: string = 'dayGridMonth';
-	export let dayMaxEvents: number = 3;
+	export let dayMaxEvents: number = 4;
 	export let initialDate: string | Date | null = null;
+	export let bare = false;
+
+	const dispatch = createEventDispatcher<{
+		eventClick: CalendarDisplayEvent;
+		datesSet: { start: Date; end: Date; view: string };
+	}>();
 
 	let plugins = [TimeGrid, DayGrid, Interaction];
+	let styleInjected = false;
 
 	$: options = {
 		view,
@@ -45,82 +44,63 @@
 		height,
 		eventDisplay: 'block',
 		dayMaxEvents,
-		moreLinkText: (num: number) => `+${num} more`,
-		eventClick: (info: any) => {
-			if (onEventClick) {
-				onEventClick(info.event);
-			}
+		moreLinkText: (num: number) => $t('calendar.more_events', { values: { count: num } }),
+		eventClick: (info: { event: CalendarDisplayEvent }) => {
+			dispatch('eventClick', info.event);
 		},
-		eventMouseEnter: (info: any) => {
+		datesSet: (info: { start: Date; end: Date; view: { type: string } }) => {
+			dispatch('datesSet', {
+				start: info.start,
+				end: info.end,
+				view: info.view.type
+			});
+		},
+		eventMouseEnter: (info: { el: HTMLElement }) => {
 			info.el.style.cursor = 'pointer';
 		},
 		themeSystem: 'standard'
 	};
 
 	onMount(() => {
-		// Add custom CSS for calendar styling
+		if (styleInjected || document.getElementById('adventurelog-calendar-styles')) return;
 		const style = document.createElement('style');
+		style.id = 'adventurelog-calendar-styles';
 		style.textContent = `
 			.ec-toolbar {
 				background: hsl(var(--b2)) !important;
 				border-radius: 0.75rem !important;
-				padding: 1.25rem !important;
-				margin-bottom: 1.5rem !important;
+				padding: 1rem !important;
+				margin-bottom: 1rem !important;
 				border: 1px solid hsl(var(--b3)) !important;
-				box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
 			}
 			.ec-button {
 				background: hsl(var(--b3)) !important;
 				border: 1px solid hsl(var(--b3)) !important;
 				color: hsl(var(--bc)) !important;
 				border-radius: 0.5rem !important;
-				padding: 0.5rem 1rem !important;
+				padding: 0.45rem 0.85rem !important;
 				font-weight: 500 !important;
-				transition: all 0.2s ease !important;
 			}
 			.ec-button:hover {
 				background: hsl(var(--b1)) !important;
-				transform: translateY(-1px) !important;
-				box-shadow: 0 4px 12px rgb(0 0 0 / 0.15) !important;
 			}
 			.ec-button.ec-button-active {
 				background: hsl(var(--p)) !important;
 				color: hsl(var(--pc)) !important;
-				box-shadow: 0 4px 12px hsl(var(--p) / 0.3) !important;
 			}
 			.ec-day {
 				background: hsl(var(--b1)) !important;
 				border: 1px solid hsl(var(--b3)) !important;
-				transition: background-color 0.2s ease !important;
-			}
-			.ec-day:hover {
-				background: hsl(var(--b2)) !important;
 			}
 			.ec-day-today {
 				background: hsl(var(--b2)) !important;
-				position: relative !important;
-			}
-			.ec-day-today::before {
-				content: '' !important;
-				position: absolute !important;
-				top: 0 !important;
-				left: 0 !important;
-				right: 0 !important;
-				height: 3px !important;
-				background: hsl(var(--p)) !important;
-				border-radius: 0.25rem !important;
 			}
 			.ec-event {
 				border-radius: 0.375rem !important;
-				padding: 0.25rem 0.5rem !important;
-				font-size: 0.75rem !important;
+				padding: 0.2rem 0.45rem !important;
+				font-size: 0.72rem !important;
 				font-weight: 600 !important;
-				transition: all 0.2s ease !important;
-				box-shadow: 0 1px 3px rgb(0 0 0 / 0.1) !important;
-			}
-			.ec-event:hover {
-				transform: translateY(-1px) !important;
-				box-shadow: 0 4px 12px rgb(0 0 0 / 0.15) !important;
+				border-width: 0 !important;
 			}
 			.ec-view {
 				background: hsl(var(--b1)) !important;
@@ -129,11 +109,14 @@
 			}
 		`;
 		document.head.appendChild(style);
+		styleInjected = true;
 	});
 </script>
 
-<div class="card bg-base-100 shadow-2xl border border-base-300/50">
-	<div class="card-body p-0">
+{#if bare}
+	<Calendar {plugins} {options} />
+{:else}
+	<div class="rounded-2xl border border-base-300/60 bg-base-100 overflow-hidden">
 		<Calendar {plugins} {options} />
 	</div>
-</div>
+{/if}

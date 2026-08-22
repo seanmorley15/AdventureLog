@@ -6,6 +6,7 @@ from django.db import models
 from adventures.serializers import CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
 from adventures.utils.itinerary import reorder_itinerary_items
 from adventures.utils.autogenerate_itinerary import auto_generate_itinerary
+from adventures.utils.datetime_utils import aware_utc_from_date, aware_utc_from_date_and_time, ensure_aware_utc
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -131,16 +132,16 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
                         # If both are plain dates, convert to datetimes spanning the day
                         if isinstance(parsed_start, datetime.date) and not isinstance(parsed_start, datetime.datetime):
-                            new_start = datetime.datetime.combine(parsed_start, datetime.time.min)
+                            new_start = aware_utc_from_date(parsed_start)
                         elif isinstance(parsed_start, datetime.datetime):
-                            new_start = parsed_start
+                            new_start = ensure_aware_utc(parsed_start)
                         else:
                             new_start = None
 
                         if isinstance(parsed_end, datetime.date) and not isinstance(parsed_end, datetime.datetime):
-                            new_end = datetime.datetime.combine(parsed_end, datetime.time.max)
+                            new_end = aware_utc_from_date(parsed_end)
                         elif isinstance(parsed_end, datetime.datetime):
-                            new_end = parsed_end
+                            new_end = ensure_aware_utc(parsed_end)
                         else:
                             new_end = None
 
@@ -148,8 +149,8 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                         if not new_start or not new_end:
                             try:
                                 d = parse_date(clean_date)
-                                new_start = datetime.datetime.combine(d, datetime.time.min)
-                                new_end = datetime.datetime.combine(d, datetime.time.max)
+                                new_start = aware_utc_from_date(d)
+                                new_end = aware_utc_from_date(d)
                             except Exception:
                                 new_start = None
                                 new_end = None
@@ -209,14 +210,14 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                                     # Extract time from original start date
                                     original_time = old_date.time()
                                     # Create new_date with the new date but preserve the original time
-                                    new_date = datetime.datetime.combine(parse_date(clean_date), original_time)
+                                    new_date = aware_utc_from_date_and_time(parse_date(clean_date), original_time)
                                     # Duration = end_date - date
                                     duration = old_end_date - old_date
                                     # Apply same duration to new date
                                     new_end_date = new_date + duration
                                 else:
                                     # No original end date, set to same as start date
-                                    new_date = datetime.datetime.combine(parse_date(clean_date), datetime.time.min)
+                                    new_date = aware_utc_from_date(parse_date(clean_date))
                                     new_end_date = new_date
                                 
                                 content_object.date = new_date
@@ -232,14 +233,14 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                                     # Extract time from original check_in
                                     original_time = old_check_in.time()
                                     # Create new_check_in with the new date but preserve the original time
-                                    new_check_in = datetime.datetime.combine(parse_date(clean_date), original_time)
+                                    new_check_in = aware_utc_from_date_and_time(parse_date(clean_date), original_time)
                                     # Duration = check_out - check_in
                                     duration = old_check_out - old_check_in
                                     # Apply same duration to new check_in
                                     new_check_out = new_check_in + duration
                                 else:
                                     # No original dates: check_in at midnight on selected day, check_out at midnight next day
-                                    new_check_in = datetime.datetime.combine(parse_date(clean_date), datetime.time.min)
+                                    new_check_in = aware_utc_from_date(parse_date(clean_date))
                                     new_check_out = new_check_in + datetime.timedelta(days=1)
                                 
                                 content_object.check_in = new_check_in

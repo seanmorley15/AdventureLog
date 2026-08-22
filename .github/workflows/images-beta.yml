@@ -1,0 +1,20 @@
+name: Build and push beta images
+
+on:
+  push:
+    branches:
+      - development
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-images.yml
+    with:
+      tag: beta
+      filter_paths: true
+    secrets: inherit

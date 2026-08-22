@@ -6,6 +6,8 @@ from adventures.models import Location, Transportation, Note, Lodging, Visit, Co
 from adventures.serializers import AttachmentSerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.permissions import ContentImagePermission
+from rest_framework.exceptions import ValidationError
+from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
@@ -172,6 +174,17 @@ class AttachmentViewSet(viewsets.ModelViewSet):
 
         # Determine the appropriate user to assign
         attachment_user = self._get_attachment_user(content_object)
+
+        upload_file = serializer.validated_data.get('file')
+        allowed, details = enforce_media_storage_limit(
+            attachment_user,
+            get_uploaded_file_size(upload_file),
+        )
+        if not allowed:
+            raise ValidationError({
+                "error": "Media storage limit exceeded",
+                **details,
+            })
         
         serializer.save(
             user=attachment_user,

@@ -14,12 +14,28 @@ import os
 import json
 import zipfile
 import tempfile
+import logging
 from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
 from adventures.permissions import CollectionShared
 from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
+from adventures.utils.geo import make_point, point_to_lat_lon
 from users.serializers import CustomUserDetailsSerializer as UserSerializer
+from adventures.services.collection_pdf import (
+    build_collection_pdf,
+    get_collection_for_pdf,
+    pdf_filename_for_collection,
+)
+from adventures.services.share_image import (
+    build_share_image,
+    get_collection_for_share,
+    resolve_share_page_url,
+    share_image_filename,
+    valid_aspect,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class CollectionViewSet(viewsets.ModelViewSet):
@@ -144,7 +160,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     | Q(shared_with=self.request.user)
                     | Q(invites__invited_user=self.request.user)
                 ).distinct()
-        elif self.action == 'retrieve':
+        elif self.action in ('retrieve', 'export_pdf', 'share_image'):
             if not self.request.user.is_authenticated:
                 queryset = Collection.objects.filter(is_public=True)
             else:
@@ -320,7 +336,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "User UUID is required"}, status=400)
         
         try:
-            user = User.objects.get(uuid=uuid, public_profile=True)
+            user = User.objects.get(uuid=uuid)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         
@@ -414,7 +430,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "User UUID is required"}, status=400)
         
         try:
-            user = User.objects.get(uuid=uuid, public_profile=True)
+            user = User.objects.get(uuid=uuid)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         
@@ -477,6 +493,53 @@ class CollectionViewSet(viewsets.ModelViewSet):
         
         return Response({"success": success_message})
 
+    @action(detail=True, methods=['get'], url_path='export-pdf')
+    def export_pdf(self, request, pk=None):
+        """Export collection as a printable day-by-day itinerary PDF."""
+        collection = self.get_object()
+        try:
+            collection = get_collection_for_pdf(collection.id)
+            pdf_bytes = build_collection_pdf(collection)
+        except Exception:
+            logger.exception('Failed to generate PDF for collection %s', collection.id)
+            return Response(
+                {'error': 'Failed to generate PDF. Please try again later.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        filename = pdf_filename_for_collection(collection)
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path=r'share-image/(?P<aspect>square|story|landscape)',
+    )
+    def share_image(self, request, pk=None, aspect=None):
+        """Generate a branded PNG share card for social media."""
+        if not valid_aspect(aspect):
+            return Response({'error': 'Invalid aspect ratio.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        collection = self.get_object()
+        try:
+            collection = get_collection_for_share(collection.id)
+            page_url = resolve_share_page_url(request, f'/collections/{collection.id}')
+            png_bytes = build_share_image(collection, aspect, page_url)
+        except Exception:
+            logger.exception('Failed to generate share image for collection %s', collection.id)
+            return Response(
+                {'error': 'Failed to generate share image. Please try again later.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        filename = share_image_filename(collection, aspect)
+        disposition = 'attachment' if request.query_params.get('download') else 'inline'
+        response = HttpResponse(png_bytes, content_type='image/png')
+        response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+        return response
+
     @action(detail=True, methods=['get'], url_path='export')
     def export_collection(self, request, pk=None):
         """Export a single collection and its related content as a ZIP file."""
@@ -516,8 +579,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 'rating': loc.rating,
                 'link': loc.link,
                 'is_public': loc.is_public,
-                'longitude': float(loc.longitude) if loc.longitude is not None else None,
-                'latitude': float(loc.latitude) if loc.latitude is not None else None,
+                'longitude': (
+                    float(lon) if (lon := point_to_lat_lon(loc.coordinates)[1]) is not None else None
+                ),
+                'latitude': (
+                    float(lat) if (lat := point_to_lat_lon(loc.coordinates)[0]) is not None else None
+                ),
                 'city': loc.city.name if loc.city else None,
                 'region': loc.region.name if loc.region else None,
                 'country': loc.country.name if loc.country else None,
@@ -712,7 +779,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 for cand in Location.objects.filter(user=request.user):
                     name_score = _ratio(incoming_name, cand.name)
                     loc_text_score = _ratio(incoming_location_text, getattr(cand, 'location', None))
-                    close_coords = _coords_close(incoming_lat, incoming_lon, cand.latitude, cand.longitude)
+                    cand_lat, cand_lon = point_to_lat_lon(cand.coordinates)
+                    close_coords = _coords_close(incoming_lat, incoming_lon, cand_lat, cand_lon)
                     # Define "very similar": strong name match OR decent name with location/coords match
                     combined_score = max(name_score, (name_score + loc_text_score) / 2.0)
                     if close_coords:
@@ -739,8 +807,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         rating=loc_data.get('rating'),
                         link=loc_data.get('link'),
                         is_public=bool(loc_data.get('is_public', False)),
-                        longitude=incoming_lon,
-                        latitude=incoming_lat,
+                        coordinates=make_point(incoming_lon, incoming_lat),
                         category=cat_obj,
                     )
                     loc.collections.add(new_collection)
@@ -933,10 +1000,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         end_timezone=item.end_timezone,
                         flight_number=item.flight_number,
                         from_location=item.from_location,
-                        origin_latitude=item.origin_latitude,
-                        origin_longitude=item.origin_longitude,
-                        destination_latitude=item.destination_latitude,
-                        destination_longitude=item.destination_longitude,
+                        origin=item.origin,
+                        destination=item.destination,
                         start_code=item.start_code,
                         end_code=item.end_code,
                         to_location=item.to_location,
@@ -972,8 +1037,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         timezone=item.timezone,
                         reservation_number=item.reservation_number,
                         price=item.price,
-                        latitude=item.latitude,
-                        longitude=item.longitude,
+                        coordinates=item.coordinates,
                         location=item.location,
                         is_public=item.is_public,
                     )

@@ -25,6 +25,8 @@ from adventures.models import (
     CollectionItineraryItem
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
+from adventures.utils.geo import make_point, point_to_lat_lon
+from adventures.services.images.metadata import create_content_image
 
 User = get_user_model()
 
@@ -101,13 +103,104 @@ class BackupViewSet(viewsets.ViewSet):
 
         return amount, normalized_currency
 
+    def _optional_str(self, value):
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    def _serialize_trail_export(self, trail):
+        """Export trail data; author fields are optional for backward-compatible backups."""
+        data = {
+            'name': trail.name,
+            'link': trail.link,
+            'wanderer_id': trail.wanderer_id,
+            'created_at': trail.created_at.isoformat() if trail.created_at else None,
+        }
+        username = getattr(trail, 'wanderer_author_username', None)
+        domain = getattr(trail, 'wanderer_author_domain', None)
+        if username:
+            data['wanderer_author_username'] = username
+        if domain:
+            data['wanderer_author_domain'] = domain
+        return data
+
+    def _parse_trail_import(self, trail_data):
+        """
+        Parse trail JSON from backup. Old backups only have name/link/wanderer_id;
+        author username/domain are optional and backfilled on read when missing.
+        """
+        if not isinstance(trail_data, dict):
+            return None
+
+        name = self._optional_str(trail_data.get('name'))
+        if not name:
+            return None
+
+        link = self._optional_str(trail_data.get('link'))
+        wanderer_id = self._optional_str(trail_data.get('wanderer_id'))
+        if not link and not wanderer_id:
+            return None
+
+        domain = self._optional_str(trail_data.get('wanderer_author_domain'))
+        if domain:
+            domain = domain.lstrip('@')
+
+        return {
+            'name': name,
+            'link': link,
+            'wanderer_id': wanderer_id,
+            'wanderer_author_username': self._optional_str(
+                trail_data.get('wanderer_author_username')
+            ),
+            'wanderer_author_domain': domain,
+            'created_at': trail_data.get('created_at'),
+        }
+
+    def _import_trail(self, user, location, trail_data, trail_name_map, summary):
+        parsed = self._parse_trail_import(trail_data)
+        if not parsed:
+            summary['trails_skipped'] += 1
+            return
+
+        create_kwargs = {
+            'user': user,
+            'location': location,
+            'name': parsed['name'],
+            'link': parsed['link'],
+            'wanderer_id': parsed['wanderer_id'],
+            'wanderer_author_username': parsed['wanderer_author_username'],
+            'wanderer_author_domain': parsed['wanderer_author_domain'],
+        }
+        if parsed['created_at']:
+            create_kwargs['created_at'] = parsed['created_at']
+
+        try:
+            trail = Trail.objects.create(**create_kwargs)
+            trail_name_map[(location.id, parsed['name'])] = trail
+            summary['trails'] += 1
+        except Exception as exc:
+            import logging
+            logging.warning(
+                "Skipped trail import for location %s (%r): %s",
+                location.id,
+                parsed.get('name'),
+                exc,
+            )
+            summary['trails_skipped'] += 1
+
     def _serialize_images(self, images_qs):
         """Serialize ContentImage queryset into backup-safe dicts."""
         serialized = []
         for image in images_qs.all():
+            lat, lon = point_to_lat_lon(image.coordinates)
             entry = {
                 'immich_id': image.immich_id,
                 'is_primary': image.is_primary,
+                'source': image.source,
+                'source_url': image.source_url,
+                'latitude': lat,
+                'longitude': lon,
                 'filename': None,
             }
             if image.image:
@@ -140,21 +233,30 @@ class BackupViewSet(viewsets.ViewSet):
     def _import_images(self, images_data, zip_file, user, content_type, object_id, summary):
         created = []
         for img_data in images_data or []:
-            immich_id = (img_data or {}).get('immich_id')
+            img_data = img_data or {}
+            immich_id = img_data.get('immich_id')
+            explicit_source = img_data.get('source')
+            source_url = img_data.get('source_url')
+            coordinates = make_point(img_data.get('longitude'), img_data.get('latitude'))
+            is_primary = img_data.get('is_primary', False)
+
             if immich_id:
                 created.append(
-                    ContentImage.objects.create(
+                    create_content_image(
                         user=user,
                         immich_id=immich_id,
-                        is_primary=(img_data or {}).get('is_primary', False),
+                        is_primary=is_primary,
                         content_type=content_type,
                         object_id=object_id,
+                        explicit_source=explicit_source or ContentImage.Source.IMMICH,
+                        source_url=source_url,
+                        coordinates=coordinates,
                     )
                 )
                 summary['images'] += 1
                 continue
 
-            filename = (img_data or {}).get('filename')
+            filename = img_data.get('filename')
             if not filename:
                 continue
 
@@ -165,12 +267,16 @@ class BackupViewSet(viewsets.ViewSet):
 
             img_file = ContentFile(img_content, name=filename)
             created.append(
-                ContentImage.objects.create(
+                create_content_image(
                     user=user,
-                    image=img_file,
-                    is_primary=(img_data or {}).get('is_primary', False),
+                    image_file=img_file,
+                    file_bytes=img_content,
+                    is_primary=is_primary,
                     content_type=content_type,
                     object_id=object_id,
+                    explicit_source=explicit_source,
+                    source_url=source_url,
+                    coordinates=coordinates,
                 )
             )
             summary['images'] += 1
@@ -278,8 +384,12 @@ class BackupViewSet(viewsets.ViewSet):
                 'price_currency': str(location.price.currency) if location.price else None,
                 'link': location.link,
                 'is_public': location.is_public,
-                'longitude': str(location.longitude) if location.longitude else None,
-                'latitude': str(location.latitude) if location.latitude else None,
+                'longitude': (
+                    str(lon) if (lon := point_to_lat_lon(location.coordinates)[1]) is not None else None
+                ),
+                'latitude': (
+                    str(lat) if (lat := point_to_lat_lon(location.coordinates)[0]) is not None else None
+                ),
                 'city': location.city_id,
                 'region': location.region_id,
                 'country': location.country_id,
@@ -324,10 +434,26 @@ class BackupViewSet(viewsets.ViewSet):
                         'max_speed': float(activity.max_speed) if activity.max_speed else None,
                         'average_cadence': float(activity.average_cadence) if activity.average_cadence else None,
                         'calories': float(activity.calories) if activity.calories else None,
-                        'start_lat': float(activity.start_lat) if activity.start_lat else None,
-                        'start_lng': float(activity.start_lng) if activity.start_lng else None,
-                        'end_lat': float(activity.end_lat) if activity.end_lat else None,
-                        'end_lng': float(activity.end_lng) if activity.end_lng else None,
+                        'start_lat': (
+                            float(s_lat)
+                            if (s_lat := point_to_lat_lon(activity.start_point)[0]) is not None
+                            else None
+                        ),
+                        'start_lng': (
+                            float(s_lng)
+                            if (s_lng := point_to_lat_lon(activity.start_point)[1]) is not None
+                            else None
+                        ),
+                        'end_lat': (
+                            float(e_lat)
+                            if (e_lat := point_to_lat_lon(activity.end_point)[0]) is not None
+                            else None
+                        ),
+                        'end_lng': (
+                            float(e_lng)
+                            if (e_lng := point_to_lat_lon(activity.end_point)[1]) is not None
+                            else None
+                        ),
                         'external_service_id': activity.external_service_id,
                         'trail_name': activity.trail.name if activity.trail else None,  # Link by trail name
                         'gpx_filename': None
@@ -357,13 +483,7 @@ class BackupViewSet(viewsets.ViewSet):
             
             # Add trails for this location
             for trail in location.trails.all():
-                trail_data = {
-                    'name': trail.name,
-                    'link': trail.link,
-                    'wanderer_id': trail.wanderer_id,
-                    'created_at': trail.created_at.isoformat() if trail.created_at else None
-                }
-                location_data['trails'].append(trail_data)
+                location_data['trails'].append(self._serialize_trail_export(trail))
             
             # Add images
             location_data['images'] = self._serialize_images(location.images)
@@ -402,10 +522,26 @@ class BackupViewSet(viewsets.ViewSet):
                 'end_timezone': transport.end_timezone,
                 'flight_number': transport.flight_number,
                 'from_location': transport.from_location,
-                'origin_latitude': str(transport.origin_latitude) if transport.origin_latitude else None,
-                'origin_longitude': str(transport.origin_longitude) if transport.origin_longitude else None,
-                'destination_latitude': str(transport.destination_latitude) if transport.destination_latitude else None,
-                'destination_longitude': str(transport.destination_longitude) if transport.destination_longitude else None,
+                'origin_latitude': (
+                    str(o_lat)
+                    if (o_lat := point_to_lat_lon(transport.origin)[0]) is not None
+                    else None
+                ),
+                'origin_longitude': (
+                    str(o_lon)
+                    if (o_lon := point_to_lat_lon(transport.origin)[1]) is not None
+                    else None
+                ),
+                'destination_latitude': (
+                    str(d_lat)
+                    if (d_lat := point_to_lat_lon(transport.destination)[0]) is not None
+                    else None
+                ),
+                'destination_longitude': (
+                    str(d_lon)
+                    if (d_lon := point_to_lat_lon(transport.destination)[1]) is not None
+                    else None
+                ),
                 'to_location': transport.to_location,
                 'is_public': transport.is_public,
                 'collection_export_id': collection_export_id,
@@ -494,8 +630,12 @@ class BackupViewSet(viewsets.ViewSet):
                 'reservation_number': lodging.reservation_number,
                 'price': str(lodging.price.amount) if lodging.price else None,
                 'price_currency': str(lodging.price.currency) if lodging.price else None,
-                'latitude': str(lodging.latitude) if lodging.latitude else None,
-                'longitude': str(lodging.longitude) if lodging.longitude else None,
+                'latitude': (
+                    str(lat) if (lat := point_to_lat_lon(lodging.coordinates)[0]) is not None else None
+                ),
+                'longitude': (
+                    str(lon) if (lon := point_to_lat_lon(lodging.coordinates)[1]) is not None else None
+                ),
                 'location': lodging.location,
                 'is_public': lodging.is_public,
                 'collection_export_id': collection_export_id,
@@ -832,7 +972,7 @@ class BackupViewSet(viewsets.ViewSet):
             'transportation': 0, 'notes': 0, 'checklists': 0,
             'checklist_items': 0, 'lodging': 0, 'images': 0, 
             'attachments': 0, 'visited_cities': 0, 'visited_regions': 0,
-            'trails': 0, 'activities': 0, 'gpx_files': 0, 'itinerary_items': 0
+            'trails': 0, 'trails_skipped': 0, 'activities': 0, 'gpx_files': 0, 'itinerary_items': 0
         }
 
         # Import Visited Cities
@@ -952,8 +1092,7 @@ class BackupViewSet(viewsets.ViewSet):
                 price_currency=location_price_currency,
                 link=adv_data.get('link'),
                 is_public=adv_data.get('is_public', False),
-                longitude=adv_data.get('longitude'),
-                latitude=adv_data.get('latitude'),
+                coordinates=make_point(adv_data.get('longitude'), adv_data.get('latitude')),
                 city=city,
                 region=region,
                 country=country,
@@ -970,16 +1109,7 @@ class BackupViewSet(viewsets.ViewSet):
             
             # Import trails for this location first
             for trail_data in adv_data.get('trails', []):
-                trail = Trail.objects.create(
-                    user=user,
-                    location=location,
-                    name=trail_data['name'],
-                    link=trail_data.get('link'),
-                    wanderer_id=trail_data.get('wanderer_id'),
-                    created_at=trail_data.get('created_at')
-                )
-                trail_name_map[(location.id, trail_data['name'])] = trail
-                summary['trails'] += 1
+                self._import_trail(user, location, trail_data, trail_name_map, summary)
             
             # Import visits and their activities
             for visit_data in adv_data.get('visits', []):
@@ -1036,10 +1166,12 @@ class BackupViewSet(viewsets.ViewSet):
                         max_speed=activity_data.get('max_speed'),
                         average_cadence=activity_data.get('average_cadence'),
                         calories=activity_data.get('calories'),
-                        start_lat=activity_data.get('start_lat'),
-                        start_lng=activity_data.get('start_lng'),
-                        end_lat=activity_data.get('end_lat'),
-                        end_lng=activity_data.get('end_lng'),
+                        start_point=make_point(
+                            activity_data.get('start_lng'), activity_data.get('start_lat')
+                        ),
+                        end_point=make_point(
+                            activity_data.get('end_lng'), activity_data.get('end_lat')
+                        ),
                         external_service_id=activity_data.get('external_service_id')
                     )
                     
@@ -1127,10 +1259,13 @@ class BackupViewSet(viewsets.ViewSet):
                 end_timezone=trans_data.get('end_timezone'),
                 flight_number=trans_data.get('flight_number'),
                 from_location=trans_data.get('from_location'),
-                origin_latitude=trans_data.get('origin_latitude'),
-                origin_longitude=trans_data.get('origin_longitude'),
-                destination_latitude=trans_data.get('destination_latitude'),
-                destination_longitude=trans_data.get('destination_longitude'),
+                origin=make_point(
+                    trans_data.get('origin_longitude'), trans_data.get('origin_latitude')
+                ),
+                destination=make_point(
+                    trans_data.get('destination_longitude'),
+                    trans_data.get('destination_latitude'),
+                ),
                 to_location=trans_data.get('to_location'),
                 is_public=trans_data.get('is_public', False),
                 collection=collection
@@ -1260,8 +1395,7 @@ class BackupViewSet(viewsets.ViewSet):
                 reservation_number=lodg_data.get('reservation_number'),
                 price=lodging_price,
                 price_currency=lodging_price_currency,
-                latitude=lodg_data.get('latitude'),
-                longitude=lodg_data.get('longitude'),
+                coordinates=make_point(lodg_data.get('longitude'), lodg_data.get('latitude')),
                 location=lodg_data.get('location'),
                 is_public=lodg_data.get('is_public', False),
                 collection=collection

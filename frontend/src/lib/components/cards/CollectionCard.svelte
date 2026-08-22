@@ -20,6 +20,7 @@
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import ShareModal from '../ShareModal.svelte';
+	import SocialShareModal from '../SocialShareModal.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
 	import ExitRun from '~icons/mdi/exit-run';
 	import Eye from '~icons/mdi/eye';
@@ -28,14 +29,18 @@
 	import MapMarker from '~icons/mdi/map-marker-multiple';
 	import LinkIcon from '~icons/mdi/link';
 	import DownloadIcon from '~icons/mdi/download';
+	import FilePdfBox from '~icons/mdi/file-pdf-box';
 	import ContentCopy from '~icons/mdi/content-copy';
+	import ImageOutline from '~icons/mdi/image-outline';
 
 	const dispatch = createEventDispatcher();
 
 	export let type: String | undefined | null;
 	export let linkedCollectionList: string[] | null = null;
 	export let user: User | null;
+	export let readOnly: boolean = false;
 	let isShareModalOpen: boolean = false;
+	let isSocialShareModalOpen: boolean = false;
 	let copied: boolean = false;
 
 	async function copyLink() {
@@ -77,24 +82,51 @@
 		dispatch('edit', collection);
 	}
 
-	async function exportCollectionZip() {
+	async function downloadCollectionBlob(
+		url: string,
+		filename: string,
+		successKey: string,
+		failedKey: string
+	) {
 		try {
-			const res = await fetch(`/api/collections/${collection.id}/export`);
+			const res = await fetch(url);
 			if (!res.ok) {
-				addToast('error', $t('adventures.export_failed') || 'Export failed');
+				addToast('error', $t(failedKey) || 'Export failed');
 				return;
 			}
 			const blob = await res.blob();
-			const url = URL.createObjectURL(blob);
+			const objectUrl = URL.createObjectURL(blob);
 			const a = document.createElement('a');
-			a.href = url;
-			a.download = `collection-${String(collection.name).replace(/\s+/g, '_')}.zip`;
+			a.href = objectUrl;
+			a.download = filename;
 			a.click();
-			URL.revokeObjectURL(url);
-			addToast('success', $t('adventures.export_success') || 'Exported collection');
+			URL.revokeObjectURL(objectUrl);
+			addToast('success', $t(successKey) || 'Exported collection');
 		} catch (e) {
-			addToast('error', $t('adventures.export_failed') || 'Export failed');
+			addToast('error', $t(failedKey) || 'Export failed');
 		}
+	}
+
+	async function exportCollectionZip() {
+		await downloadCollectionBlob(
+			`/api/collections/${collection.id}/export`,
+			`collection-${String(collection.name).replace(/\s+/g, '_')}.zip`,
+			'adventures.export_success',
+			'adventures.export_failed'
+		);
+	}
+
+	async function exportCollectionPdf() {
+		const safeName =
+			String(collection.name)
+				.replace(/[^\w\s-]/g, '')
+				.replace(/\s+/g, '_') || 'collection';
+		await downloadCollectionBlob(
+			`/api/collections/${collection.id}/export-pdf/`,
+			`${safeName}_itinerary.pdf`,
+			'adventures.export_pdf_success',
+			'adventures.export_pdf_failed'
+		);
 	}
 
 	async function archiveCollection(is_archived: boolean) {
@@ -174,6 +206,16 @@
 
 {#if isShareModalOpen}
 	<ShareModal {collection} on:close={() => (isShareModalOpen = false)} />
+{/if}
+
+{#if isSocialShareModalOpen}
+	<SocialShareModal
+		type="collection"
+		id={collection.id}
+		name={collection.name}
+		isPublic={!!collection.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
+	/>
 {/if}
 
 <div
@@ -300,172 +342,198 @@
 		{/if}
 
 		<!-- Actions -->
-		<div class="pt-4 border-t border-base-300">
-			{#if type == 'link'}
-				{#if linkedCollectionList && linkedCollectionList
-						.map(String)
-						.includes(String(collection.id))}
-					<button
-						class="btn btn-error btn-block"
-						on:click={() => dispatch('unlink', collection.id)}
-					>
-						<Minus class="w-4 h-4" />
-						{$t('adventures.remove_from_collection')}
-					</button>
-				{:else}
-					<button
-						class="btn btn-primary btn-block"
-						on:click={() => dispatch('link', collection.id)}
-					>
-						<Plus class="w-4 h-4" />
-						{$t('adventures.add_to_collection')}
-					</button>
-				{/if}
-			{:else}
-				<div class="flex justify-between items-center">
-					<button
-						class="btn btn-neutral btn-sm flex-1 mr-2"
-						on:click={() => goto(`/collections/${collection.id}`)}
-					>
-						<Launch class="w-4 h-4" />
-						{$t('adventures.open_details')}
-					</button>
-					{#if user && user.uuid == collection.user}
-						<div class="dropdown dropdown-end">
-							<div
-								tabindex="0"
-								role="button"
-								aria-haspopup="menu"
-								class="btn btn-square btn-sm btn-base-300"
-							>
-								<DotsHorizontal class="w-5 h-5" />
-							</div>
-							<ul
-								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
-							>
-								{#if type != 'viewonly'}
-									<li>
-										<button class="flex items-center gap-2" on:click={editAdventure}>
-											<FileDocumentEdit class="w-4 h-4" />
-											{$t('adventures.edit_collection')}
-										</button>
-									</li>
-									<li>
-										<button
-											class="flex items-center gap-2"
-											on:click={() => (isShareModalOpen = true)}
-										>
-											<ShareVariant class="w-4 h-4" />
-											{$t('adventures.share')}
-										</button>
-									</li>
-									{#if collection.is_public}
-										<li>
-											<button on:click={copyLink} class="flex items-center gap-2">
-												{#if copied}
-													<Check class="w-4 h-4 text-success" />
-													<span>{$t('adventures.link_copied')}</span>
-												{:else}
-													<LinkIcon class="w-4 h-4" />
-													{$t('adventures.copy_link')}
-												{/if}
-											</button>
-										</li>
-									{/if}
-									{#if collection.is_archived}
-										<li>
-											<button
-												class="flex items-center gap-2"
-												on:click={() => archiveCollection(false)}
-											>
-												<ArchiveArrowUp class="w-4 h-4" />
-												{$t('adventures.unarchive')}
-											</button>
-										</li>
-									{:else}
-										<li>
-											<button
-												class="flex items-center gap-2"
-												on:click={() => archiveCollection(true)}
-											>
-												<ArchiveArrowDown class="w-4 h-4" />
-												{$t('adventures.archive')}
-											</button>
-										</li>
-									{/if}
-									<li>
-										<button class="flex items-center gap-2" on:click={exportCollectionZip}>
-											<DownloadIcon class="w-4 h-4" />
-											{$t('adventures.export_zip')}
-										</button>
-									</li>
-									<li>
-										<button
-											class="flex items-center gap-2"
-											on:click={duplicateCollection}
-											disabled={isDuplicating}
-										>
-											<ContentCopy class="w-4 h-4" />
-											{isDuplicating ? '...' : $t('adventures.duplicate')}
-										</button>
-									</li>
-									<div class="divider my-1"></div>
-									<li>
-										<button
-											id="delete_collection"
-											data-umami-event="Delete Collection"
-											class="text-error flex items-center gap-2"
-											on:click={() => (isWarningModalOpen = true)}
-										>
-											<TrashCan class="w-4 h-4" />
-											{$t('adventures.delete')}
-										</button>
-									</li>
-								{/if}
-								{#if type == 'viewonly'}
-									<li>
-										<button
-											class="flex items-center gap-2"
-											on:click={() => goto(`/collections/${collection.id}`)}
-										>
-											<Launch class="w-4 h-4" />
-											{$t('adventures.open_details')}
-										</button>
-									</li>
-								{/if}
-							</ul>
-						</div>
-					{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
-						<!-- dropdown with leave button -->
-						<div class="dropdown dropdown-end">
-							<div
-								tabindex="0"
-								role="button"
-								aria-haspopup="menu"
-								class="btn btn-square btn-sm btn-base-300"
-							>
-								<DotsHorizontal class="w-5 h-5" />
-							</div>
-							<ul
-								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
-							>
-								<li>
-									<button
-										class="text-error flex items-center gap-2"
-										on:click={() => dispatch('leave', collection.id)}
-									>
-										<ExitRun class="w-4 h-4" />
-										{$t('adventures.leave_collection')}
-									</button>
-								</li>
-							</ul>
-						</div>
+		{#if !readOnly}
+			<div class="pt-4 border-t border-base-300">
+				{#if type == 'link'}
+					{#if linkedCollectionList && linkedCollectionList
+							.map(String)
+							.includes(String(collection.id))}
+						<button
+							class="btn btn-error btn-block"
+							on:click={() => dispatch('unlink', collection.id)}
+						>
+							<Minus class="w-4 h-4" />
+							{$t('adventures.remove_from_collection')}
+						</button>
+					{:else}
+						<button
+							class="btn btn-primary btn-block"
+							on:click={() => dispatch('link', collection.id)}
+						>
+							<Plus class="w-4 h-4" />
+							{$t('adventures.add_to_collection')}
+						</button>
 					{/if}
-				</div>
-			{/if}
-		</div>
+				{:else}
+					<div class="flex justify-between items-center">
+						<button
+							class="btn btn-neutral btn-sm flex-1 mr-2"
+							on:click={() => goto(`/collections/${collection.id}`)}
+						>
+							<Launch class="w-4 h-4" />
+							{$t('adventures.open_details')}
+						</button>
+						{#if user && user.uuid == collection.user}
+							<div class="dropdown dropdown-end">
+								<div
+									tabindex="0"
+									role="button"
+									aria-haspopup="menu"
+									class="btn btn-square btn-sm btn-base-300"
+								>
+									<DotsHorizontal class="w-5 h-5" />
+								</div>
+								<ul
+									tabindex="-1"
+									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+								>
+									{#if type != 'viewonly'}
+										<li>
+											<button class="flex items-center gap-2" on:click={editAdventure}>
+												<FileDocumentEdit class="w-4 h-4" />
+												{$t('adventures.edit_collection')}
+											</button>
+										</li>
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => (isShareModalOpen = true)}
+											>
+												<ShareVariant class="w-4 h-4" />
+												{$t('adventures.share')}
+											</button>
+										</li>
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => (isSocialShareModalOpen = true)}
+											>
+												<ImageOutline class="w-4 h-4" />
+												{$t('social_share.share_externally')}
+											</button>
+										</li>
+										{#if collection.is_public}
+											<li>
+												<button on:click={copyLink} class="flex items-center gap-2">
+													{#if copied}
+														<Check class="w-4 h-4 text-success" />
+														<span>{$t('adventures.link_copied')}</span>
+													{:else}
+														<LinkIcon class="w-4 h-4" />
+														{$t('adventures.copy_link')}
+													{/if}
+												</button>
+											</li>
+										{/if}
+										{#if collection.is_archived}
+											<li>
+												<button
+													class="flex items-center gap-2"
+													on:click={() => archiveCollection(false)}
+												>
+													<ArchiveArrowUp class="w-4 h-4" />
+													{$t('adventures.unarchive')}
+												</button>
+											</li>
+										{:else}
+											<li>
+												<button
+													class="flex items-center gap-2"
+													on:click={() => archiveCollection(true)}
+												>
+													<ArchiveArrowDown class="w-4 h-4" />
+													{$t('adventures.archive')}
+												</button>
+											</li>
+										{/if}
+										<li>
+											<button class="flex items-center gap-2" on:click={exportCollectionPdf}>
+												<FilePdfBox class="w-4 h-4" />
+												{$t('adventures.export_pdf')}
+											</button>
+										</li>
+										<li>
+											<button class="flex items-center gap-2" on:click={exportCollectionZip}>
+												<DownloadIcon class="w-4 h-4" />
+												{$t('adventures.export_zip')}
+											</button>
+										</li>
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={duplicateCollection}
+												disabled={isDuplicating}
+											>
+												<ContentCopy class="w-4 h-4" />
+												{isDuplicating ? '...' : $t('adventures.duplicate')}
+											</button>
+										</li>
+										<div class="divider my-1"></div>
+										<li>
+											<button
+												id="delete_collection"
+												data-umami-event="Delete Collection"
+												class="text-error flex items-center gap-2"
+												on:click={() => (isWarningModalOpen = true)}
+											>
+												<TrashCan class="w-4 h-4" />
+												{$t('adventures.delete')}
+											</button>
+										</li>
+									{/if}
+									{#if type == 'viewonly'}
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => goto(`/collections/${collection.id}`)}
+											>
+												<Launch class="w-4 h-4" />
+												{$t('adventures.open_details')}
+											</button>
+										</li>
+									{/if}
+								</ul>
+							</div>
+						{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
+							<!-- dropdown with leave button -->
+							<div class="dropdown dropdown-end">
+								<div
+									tabindex="0"
+									role="button"
+									aria-haspopup="menu"
+									class="btn btn-square btn-sm btn-base-300"
+								>
+									<DotsHorizontal class="w-5 h-5" />
+								</div>
+								<ul
+									tabindex="-1"
+									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+								>
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => (isSocialShareModalOpen = true)}
+										>
+											<ImageOutline class="w-4 h-4" />
+											{$t('social_share.share_externally')}
+										</button>
+									</li>
+									<li>
+										<button
+											class="text-error flex items-center gap-2"
+											on:click={() => dispatch('leave', collection.id)}
+										>
+											<ExitRun class="w-4 h-4" />
+											{$t('adventures.leave_collection')}
+										</button>
+									</li>
+								</ul>
+							</div>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>
 

@@ -9,17 +9,16 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	} else {
 		let sessionId = event.cookies.get('sessionid');
-		let pinFetch = await fetch(`${endpoint}/api/locations/pins/`, {
+		const fetchOptions = {
 			headers: {
 				Cookie: `sessionid=${sessionId}`
-			}
-		});
+			},
+			signal: event.request.signal
+		};
 
-		let visitedRegionsFetch = await fetch(`${endpoint}/api/visitedregion/`, {
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			}
-		});
+		let pinFetch = await event.fetch(`${endpoint}/api/locations/pins/`, fetchOptions);
+
+		let visitedRegionsFetch = await event.fetch(`${endpoint}/api/visitedregion/`, fetchOptions);
 
 		let visitedRegions = (await visitedRegionsFetch.json()) as VisitedRegion[];
 		let pins = (await pinFetch.json()) as Pin[];

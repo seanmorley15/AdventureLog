@@ -67,17 +67,17 @@ cd AdventureLog
 ### 2. Create the Development `.env` File (via WSL)
 
 ```bash
-cp .env.example .env && sed -i 's/^DEBUG=.*/DEBUG=True/' .env
+cp .env.advanced.example .env && sed -i 's/^DEBUG=.*/DEBUG=True/' .env
 ```
 
 This creates the `.env` file required for the containers to start and enables DEBUG for local development.
 
 > **NOTE**
-> The rest of the defaults in `.env.example` are sufficient for running the project.
+> The rest of the defaults in `.env.advanced.example` are sufficient for running the project.
 
 #### Environment Variables
 
-The Dev Container setup uses the same `.env` configuration as the standard Docker installation.
+The Dev Container setup uses the same `.env` configuration as Advanced Deployment.
 
 For a full list of available environment variables and optional configuration options, see the
 [**Docker 🐋 installation guide**](docker.md#configuration).
@@ -115,7 +115,7 @@ Use the VS Code terminal (inside the Dev Container) for the commands below.
 To start the app, enter the following command:
 
 ```bash
-docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker/docker-compose.dev.yml up --build
 ```
 
 Bringing the app up usually takes around 1-2 minutes.
@@ -123,7 +123,7 @@ Bringing the app up usually takes around 1-2 minutes.
 To fully reset the database and media volumes, run:
 
 ```bash
-docker compose -f docker-compose.dev.yml down -v
+docker compose -f docker/docker-compose.dev.yml down -v
 ```
 
 ## Accessing the App
@@ -134,7 +134,7 @@ docker compose -f docker-compose.dev.yml down -v
 * **Backend (API)**
   [http://localhost:8016](http://localhost:8016)
 
-Admin credentials are taken from your `.env` file. The `docker-compose.dev.yml` setup auto-creates a superuser on startup using those values so you can log in right away.
+Admin credentials are taken from your `.env` file. The `docker/docker-compose.dev.yml` setup auto-creates a superuser on startup using those values so you can log in right away.
 It also checks whether the countries/flags data already exists before re-importing it, so the first build can take longer and subsequent `down`/`up` runs are faster.
 This dev setup can feel a bit slower because hot reload, dependency installs, and initial database bootstrapping all happen inside containers.
 
@@ -173,8 +173,8 @@ This avoids performance issues and file watcher bugs.
 | Debugging    | ❌               | ✅                  |
 | Code editing | ❌               | ✅                  |
 
-For production or personal hosting, follow the standard
-[**Docker 🐋 installation guide**](docker.md).
+For production or personal hosting, follow the
+[**Advanced Deployment guide**](docker.md).
 
 Enjoy contributing to AdventureLog! 🎉
 If you run into issues not covered here, please open a discussion or issue so the docs can be improved.

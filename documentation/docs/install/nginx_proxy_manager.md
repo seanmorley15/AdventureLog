@@ -21,7 +21,7 @@ Ensure that the Nginx Proxy Manager and AdventureLog containers are on the same 
 docker network create nginx-proxy-manager
 ```
 
-Add the following to the bottom of the `docker-compose.yml` file for the Nginx Proxy Manager service and the AdventureLog service.
+Add the following to the bottom of the `docker-compose.advanced.yml` file for the Nginx Proxy Manager service and the AdventureLog service.
 
 ```yaml
 networks:
@@ -37,12 +37,12 @@ networks:
 3. Add a new proxy host for the AdventureLog **frontend**:
    - **Domain Names**: Enter the domain name where you will be hosting AdventureLog.
    - **Scheme**: `http`
-   - **Forward Hostname/IP**: `adventurelog-frontend` The name of the AdventureLog **frontend** container in the `docker-compose.yml` file.
+   - **Forward Hostname/IP**: `adventurelog-frontend` The name of the AdventureLog **frontend** container in the `docker-compose.advanced.yml` file.
    - **Forward Port**: `3000` This is the internal port of the AdventureLog **frontend** container so you will not need to change it even if you change the external port.
 4. Add a new proxy host for the AdventureLog **backend**:
    - **Domain Names**: Enter the domain name where you will be hosting AdventureLog.
    - **Scheme**: `http`
-   - **Forward Hostname/IP**: `adventurelog-backend` The name of the AdventureLog **backend** container in the `docker-compose.yml` file.
+   - **Forward Hostname/IP**: `adventurelog-backend` The name of the AdventureLog **backend** container in the `docker-compose.advanced.yml` file.
    - **Forward Port**: `80` This is the internal port of the AdventureLog **backend** container so you will not need to change it even if you change the external port.
 
 This will allow you to access AdventureLog using the domain name you specified in the Nginx Proxy Manager configuration.

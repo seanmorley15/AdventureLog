@@ -17,7 +17,6 @@
 	import Info from '~icons/mdi/information-outline';
 	import Cancel from '~icons/mdi/cancel';
 	import Trophy from '~icons/mdi/trophy';
-	import Target from '~icons/mdi/target';
 	import Flag from '~icons/mdi/flag';
 	import { normalizeBasemapType } from '$lib';
 
@@ -26,10 +25,10 @@
 	let regions: Region[] = data.props?.regions || [];
 	let visitedRegions: VisitedRegion[] = data.props?.visitedRegions || [];
 	let description: string = data.props?.description || '';
-	let showFullDesc = false;
 	let filteredRegions: Region[] = [];
 	let searchQuery: string = '';
 	let showGeo: boolean = true;
+	let showMap: boolean = false;
 	let sidebarOpen = false;
 	let filterOption: string = 'all';
 
@@ -160,6 +159,15 @@
 		return Number.isFinite(numeric) ? numeric : null;
 	}
 
+	function hasCoordinates(item: {
+		latitude: number | string | null;
+		longitude: number | string | null;
+	}) {
+		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
+	}
+
+	$: hasMappableRegions = regions.some(hasCoordinates);
+
 	function regionToFeature(region: Region): RegionFeature | null {
 		const lat = parseCoordinate(region.latitude);
 		const lon = parseCoordinate(region.longitude);
@@ -178,7 +186,7 @@
 	}
 
 	const REGION_SOURCE_ID = 'worldtravel-regions';
-	const regionClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 1 };
+	const regionClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 };
 
 	let regionsGeoJson: RegionFeatureCollection = { type: 'FeatureCollection', features: [] };
 	$: {
@@ -254,8 +262,12 @@
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
-								<div class="p-2 bg-primary/10 rounded-xl">
-									<Flag class="w-8 h-8 text-primary" />
+								<div class="p-2 bg-primary/10 rounded-xl overflow-hidden">
+									{#if country?.flag_url}
+										<img src={country.flag_url} alt="" class="w-8 h-8 object-cover rounded-lg" />
+									{:else}
+										<Flag class="w-8 h-8 text-primary" />
+									{/if}
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
@@ -263,27 +275,44 @@
 										{country?.name}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{filteredRegions.length} of {regions.length} regions
+										{filteredRegions.length}
+										{$t('worldtravel.of')}
+										{regions.length} regions ·
+										<span class="text-success">{visitedCount} {$t('adventures.visited')}</span>
 									</p>
 								</div>
 							</div>
 						</div>
 
-						<!-- Completion Badge -->
 						<div class="hidden md:flex items-center gap-2">
 							{#if completionPercentage === 100}
 								<div class="badge badge-success gap-2 p-3">
 									<Trophy class="w-4 h-4" />
-									Complete!
+									{$t('worldtravel.complete')}
 								</div>
 							{:else}
 								<div class="badge badge-primary gap-2 p-3">
-									<Target class="w-4 h-4" />
 									{completionPercentage}%
 								</div>
 							{/if}
 						</div>
 					</div>
+
+					{#if description}
+						<details class="mt-3 group">
+							<summary
+								class="text-sm text-base-content/70 cursor-pointer hover:text-primary flex items-center gap-2 list-none"
+							>
+								<Info class="w-4 h-4" />
+								{$t('worldtravel.about_country')}
+							</summary>
+							<p
+								class="text-sm text-base-content/70 mt-2 pl-6 leading-relaxed max-h-32 overflow-y-auto"
+							>
+								{description}
+							</p>
+						</details>
+					{/if}
 
 					<!-- Search and Filters -->
 					<div class="mt-4 flex flex-col lg:flex-row lg:items-center gap-4">
@@ -307,6 +336,18 @@
 								</button>
 							{/if}
 						</div>
+
+						{#if hasMappableRegions}
+							<button
+								class="btn btn-outline gap-2 {showMap ? 'btn-active' : ''}"
+								on:click={() => (showMap = !showMap)}
+							>
+								<Map class="w-4 h-4" />
+								<span class="hidden sm:inline">
+									{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
+								</span>
+							</button>
+						{/if}
 
 						<!-- Filter Chips -->
 						<div class="flex flex-wrap items-center gap-2">
@@ -348,79 +389,46 @@
 				</div>
 			</div>
 
-			<!-- Description Section -->
-			{#if description}
-				<div class="container mx-auto px-6 py-4">
-					<div class="card bg-base-100 shadow-xl">
-						<div class="card-body p-4">
-							<div class="flex items-center gap-2 mb-4">
-								<Info class="w-5 h-5 text-primary" />
-								<h2 class="text-lg font-semibold">{$t('worldtravel.about_country')}</h2>
-							</div>
-							<p
-								class="text-base-content/70 leading-relaxed"
-								class:overflow-hidden={!showFullDesc}
-								style={!showFullDesc && description.length > 400
-									? 'max-height:8rem;overflow:hidden;'
-									: ''}
-							>
-								{description}
-							</p>
-							{#if description.length > 400}
-								<button
-									class="btn btn-ghost btn-sm mt-3"
-									on:click={() => (showFullDesc = !showFullDesc)}
-								>
-									{#if showFullDesc}{$t('worldtravel.show_less')}{:else}{$t(
-											'worldtravel.show_more'
-										)}{/if}
-								</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-			{/if}
-
 			<!-- Map Section -->
-			{#if regions.some((region) => region.latitude && region.longitude)}
+			{#if showMap && hasMappableRegions}
 				<div class="container mx-auto px-6 py-4">
-					<div class="card bg-base-100 shadow-xl">
-						<div class="card-body p-4">
-							<div class="flex items-center justify-between mb-4">
-								<div class="flex items-center gap-2">
-									<Map class="w-5 h-5 text-primary" />
-									<h2 class="text-lg font-semibold">{$t('worldtravel.interactive_map')}</h2>
-								</div>
-								<div class="flex items-center gap-2 text-sm text-base-content/60">
-									<div class="flex items-center gap-1">
-										<div class="w-3 h-3 bg-green-200 rounded-full border"></div>
-										<span>{$t('adventures.visited')}</span>
-									</div>
-									<div class="flex items-center gap-1">
-										<div class="w-3 h-3 bg-red-200 rounded-full border"></div>
-										<span>{$t('adventures.not_visited')}</span>
-									</div>
-								</div>
+					<div class="card bg-base-100 shadow-xl overflow-hidden">
+						<div
+							class="flex items-center justify-between px-4 py-3 bg-base-200/50 border-b border-base-300"
+						>
+							<span class="font-semibold flex items-center gap-2">
+								<Map class="w-5 h-5 text-primary" />
+								{$t('worldtravel.interactive_map')}
+							</span>
+							<div class="flex items-center gap-4 text-sm text-base-content/60">
+								<span class="flex items-center gap-1.5">
+									<span class="w-3 h-3 bg-green-200 rounded-full border"></span>
+									{$t('adventures.visited')}
+								</span>
+								<span class="flex items-center gap-1.5">
+									<span class="w-3 h-3 bg-red-200 rounded-full border"></span>
+									{$t('adventures.not_visited')}
+								</span>
 							</div>
-							<ClusterMap
-								geoJson={regionsGeoJson}
-								sourceId={REGION_SOURCE_ID}
-								clusterOptions={regionClusterOptions}
-								basemapType={normalizeBasemapType(data.user?.map_style)}
-								mapClass="aspect-[16/10] w-full rounded-lg"
-								fitLevel="region"
-								on:markerSelect={handleMarkerSelect}
-								{getMarkerProps}
-								markerClass={markerClassResolver}
-								markerLabel={markerLabelResolver}
-							/>
 						</div>
+						<ClusterMap
+							geoJson={regionsGeoJson}
+							sourceId={REGION_SOURCE_ID}
+							clusterOptions={regionClusterOptions}
+							basemapType={normalizeBasemapType(data.user?.map_style)}
+							mapClass="aspect-[16/10] w-full"
+							fitLevel="region"
+							on:markerSelect={handleMarkerSelect}
+							{getMarkerProps}
+							markerClass={markerClassResolver}
+							markerLabel={markerLabelResolver}
+						/>
 					</div>
 				</div>
 			{/if}
 
 			<!-- Main Content -->
-			<div class="container mx-auto px-6 py-8">
+			<div class="container mx-auto px-6 py-6">
 				{#if filteredRegions.length === 0}
 					<div class="flex flex-col items-center justify-center py-16">
 						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
@@ -438,26 +446,37 @@
 						</button>
 					</div>
 				{:else}
-					<!-- Regions Grid -->
-					<div
-						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-					>
-						{#each filteredRegions as region}
-							<RegionCard
-								{region}
-								visited={visitedRegions.some((visitedRegion) => visitedRegion.region === region.id)}
-								on:visit={(e) => {
-									visitedRegions = [...visitedRegions, e.detail];
-									numVisitedRegions++;
-								}}
-								on:remove={() => {
-									visitedRegions = visitedRegions.filter(
-										(visitedRegion) => visitedRegion.region !== region.id
-									);
-									numVisitedRegions--;
-								}}
-							/>
-						{/each}
+					<div class="card bg-base-100 shadow-xl overflow-hidden">
+						<div
+							class="hidden sm:grid items-center gap-3 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-base-content/50 bg-base-200/50 border-b border-base-300"
+							style="grid-template-columns: 2.5rem 1fr 7rem 5rem 8rem"
+						>
+							<span></span>
+							<span>{$t('map.regions')}</span>
+							<span>Country</span>
+							<span>{$t('worldtravel.cities')}</span>
+							<span></span>
+						</div>
+						<div class="divide-y divide-base-300/50">
+							{#each filteredRegions as region (region.id)}
+								<RegionCard
+									{region}
+									visited={visitedRegions.some(
+										(visitedRegion) => visitedRegion.region === region.id
+									)}
+									on:visit={(e) => {
+										visitedRegions = [...visitedRegions, e.detail];
+										numVisitedRegions++;
+									}}
+									on:remove={() => {
+										visitedRegions = visitedRegions.filter(
+											(visitedRegion) => visitedRegion.region !== region.id
+										);
+										numVisitedRegions--;
+									}}
+								/>
+							{/each}
+						</div>
 					</div>
 				{/if}
 			</div>
@@ -468,7 +487,6 @@
 			<label for="regions-drawer" class="drawer-overlay"></label>
 			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
 				<div class="p-6">
-					<!-- Sidebar Header -->
 					<div class="flex items-center gap-3 mb-8">
 						<div class="p-2 bg-primary/10 rounded-lg">
 							<Filter class="w-6 h-6 text-primary" />
@@ -476,7 +494,6 @@
 						<h2 class="text-xl font-bold">{$t('worldtravel.progress_and_stats')}</h2>
 					</div>
 
-					<!-- Country Progress -->
 					<div class="card bg-base-200/50 p-4 mb-6">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<Flag class="w-5 h-5" />
@@ -487,7 +504,6 @@
 							<div class="stat p-0">
 								<div class="stat-title text-sm">{$t('worldtravel.total_regions')}</div>
 								<div class="stat-value text-2xl">{regions.length}</div>
-								<div class="stat-desc">{$t('worldtravel.available_to_explore')}</div>
 							</div>
 
 							<div class="grid grid-cols-2 gap-4">
@@ -501,7 +517,6 @@
 								</div>
 							</div>
 
-							<!-- Progress Bar -->
 							<div class="space-y-2">
 								<div class="flex justify-between text-sm">
 									<span>{$t('worldtravel.progress')}</span>
@@ -510,35 +525,25 @@
 								<progress
 									class="progress progress-primary w-full"
 									value={visitedCount}
-									max={regions.length}
+									max={regions.length || 1}
 								></progress>
 							</div>
 
 							{#if completionPercentage === 100}
-								<div class="alert alert-success">
+								<div class="alert alert-success py-2">
 									<Trophy class="w-4 h-4" />
-									<span class="text-sm">{$t('worldtravel.country_completed')}! 🎉</span>
+									<span class="text-sm">{$t('worldtravel.country_completed')}!</span>
 								</div>
 							{/if}
 						</div>
 					</div>
-					<!-- Quick Actions -->
-					{#if regions.some((region) => region.latitude && region.longitude)}
-						<div class="space-y-3">
-							<button class="btn btn-outline w-full gap-2" on:click={() => (showGeo = !showGeo)}>
-								{#if showGeo}
-									<Map class="w-4 h-4" />
-									{$t('worldtravel.hide_map_labels')}
-								{:else}
-									<Map class="w-4 h-4" />
-									{$t('worldtravel.show_map_labels')}
-								{/if}
-							</button>
 
-							<!-- <button class="btn btn-ghost w-full gap-2" on:click={clearFilters}>
-							<Clear class="w-4 h-4" />
-							Clear All Filters
-						</button> -->
+					{#if hasMappableRegions}
+						<div class="space-y-3">
+							<button class="btn btn-outline w-full gap-2" on:click={() => (showMap = !showMap)}>
+								<Map class="w-4 h-4" />
+								{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
+							</button>
 						</div>
 					{/if}
 				</div>

@@ -1,0 +1,16 @@
+# AdventureLog scheduled management commands.
+# Schedules are in UTC (CRON_TZ). Job output appears in Docker logs and
+# /var/log/adventurelog/<job-name>.log inside the container.
+# Add new jobs on their own line:
+#   MIN HOUR DOM MON DOW root /code/scripts/run-cron-job.sh <log-name> <command> [args...]
+#
+# Examples:
+#   0 4 * * 0 root /code/scripts/run-cron-job.sh image_cleanup image_cleanup --dry-run
+#   30 2 * * * root /code/scripts/run-cron-job.sh sync_visited_regions sync_visited_regions --batch-size 50
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+CRON_TZ=UTC
+
+# Sync visited regions and cities from user locations (nightly midnight UTC)
+0 0 * * * root /code/scripts/run-cron-job.sh sync_visited_regions sync_visited_regions

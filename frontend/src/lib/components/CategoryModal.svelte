@@ -3,24 +3,45 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
+	import TagIcon from '~icons/mdi/tag-multiple';
+	import CloseIcon from '~icons/mdi/close';
+	import PlusIcon from '~icons/mdi/plus';
+	import PencilIcon from '~icons/mdi/pencil';
+	import DeleteIcon from '~icons/mdi/delete';
+	import SaveIcon from '~icons/mdi/content-save';
+	import SearchIcon from '~icons/mdi/magnify';
+	import InfoIcon from '~icons/mdi/information';
+	import EmojiIcon from '~icons/mdi/emoticon-happy-outline';
+
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
 
 	export let categories: Category[] = [];
 
 	let categoryToEdit: Category | null = null;
+	let categoryToDelete: Category | null = null;
 	let newCategory = { display_name: '', icon: '' };
-	let showAddForm = false;
 	let isChanged = false;
 	let hasLoaded = false;
 	let warningMessage: string | null = null;
 	let showEmojiPickerAdd = false;
 	let showEmojiPickerEdit = false;
+	let searchTerm = '';
+
+	$: filteredCategories = categories
+		.filter((category) => {
+			if (!searchTerm.trim()) return true;
+			return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
+		})
+		.sort((a, b) => {
+			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+			if (usageDiff !== 0) return usageDiff;
+			return a.display_name.localeCompare(b.display_name);
+		});
 
 	onMount(async () => {
 		await import('emoji-picker-element');
-		modal = document.querySelector('#category-modal') as HTMLDialogElement;
-		modal.showModal();
+		modal?.showModal();
 		await loadCategories();
 	});
 
@@ -39,11 +60,25 @@
 
 	function closeModal() {
 		dispatch('close');
-		modal.close();
+		modal?.close();
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
+			if (categoryToEdit) {
+				cancelEdit();
+				return;
+			}
+			if (categoryToDelete) {
+				cancelDelete();
+				return;
+			}
+			closeModal();
+		}
+	}
+
+	function handleBackdropClick(event: MouseEvent) {
+		if (event.target === modal) {
 			closeModal();
 		}
 	}
@@ -90,7 +125,6 @@
 				categories = [...categories, created];
 				isChanged = true;
 				newCategory = { display_name: '', icon: '' };
-				showAddForm = false;
 				showEmojiPickerAdd = false;
 			}
 		} catch (err) {
@@ -129,7 +163,7 @@
 
 	function startEdit(category: Category) {
 		categoryToEdit = { ...category };
-		showAddForm = false;
+		categoryToDelete = null;
 		showEmojiPickerAdd = false;
 		showEmojiPickerEdit = false;
 	}
@@ -139,7 +173,17 @@
 		showEmojiPickerEdit = false;
 	}
 
-	async function removeCategory(category: Category) {
+	function requestDelete(category: Category) {
+		if (category.name === 'general') return;
+		categoryToDelete = category;
+		categoryToEdit = null;
+	}
+
+	function cancelDelete() {
+		categoryToDelete = null;
+	}
+
+	async function confirmDelete(category: Category) {
 		if (category.name === 'general') return;
 
 		try {
@@ -149,6 +193,7 @@
 			if (res.ok) {
 				categories = categories.filter((c) => c.id !== category.id);
 				isChanged = true;
+				categoryToDelete = null;
 			}
 		} catch (err) {
 			console.error('Failed to delete category:', err);
@@ -156,198 +201,421 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<dialog id="category-modal" class="modal" on:keydown={handleKeydown}>
-	<div class="modal-box max-w-2xl">
+<dialog
+	id="category-modal"
+	bind:this={modal}
+	class="modal modal-bottom md:modal-middle backdrop-blur-sm"
+	on:click={handleBackdropClick}
+	on:keydown={handleKeydown}
+>
+	<div
+		class="modal-box category-modal-box w-full max-w-none bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-t-2xl md:rounded-2xl"
+		role="dialog"
+		aria-labelledby="category-modal-title"
+	>
 		<!-- Header -->
-		<div class="flex items-center justify-between mb-6">
-			<h2 class="text-xl font-bold">{$t('categories.manage_categories')}</h2>
-			<button
-				type="button"
-				on:click={closeModal}
-				class="btn btn-sm btn-circle btn-ghost"
-				aria-label="Close"
-			>
-				✕
-			</button>
+		<div
+			class="shrink-0 bg-base-100/90 backdrop-blur-lg border-b border-base-300 px-4 md:px-6 py-3 md:py-4"
+		>
+			<div class="flex items-center justify-between gap-3 md:gap-4">
+				<div class="flex items-center gap-2.5 md:gap-3 min-w-0">
+					<div class="p-1.5 md:p-2 bg-primary/10 rounded-xl shrink-0">
+						<TagIcon class="w-5 h-5 md:w-7 md:h-7 text-primary" />
+					</div>
+					<div class="min-w-0">
+						<h2
+							id="category-modal-title"
+							class="text-lg md:text-2xl font-bold text-primary truncate"
+						>
+							{$t('categories.manage_categories')}
+						</h2>
+					</div>
+				</div>
+				<button
+					type="button"
+					on:click={closeModal}
+					class="btn btn-ghost btn-sm md:btn-md btn-square shrink-0"
+					aria-label={$t('about.close')}
+				>
+					<CloseIcon class="w-5 h-5" />
+				</button>
+			</div>
 		</div>
 
-		<!-- Category List -->
-		{#if hasLoaded}
-			{#if categories.length > 0}
-				<div class="space-y-2 mb-6">
-					{#each categories as category (category.id)}
-						<div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-							<div class="flex items-center gap-3">
-								<span class="text-lg">{category.icon || '🌍'}</span>
-								<span class="font-medium">{category.display_name}</span>
-							</div>
-							<div class="flex gap-2">
-								<button
-									type="button"
-									on:click={() => startEdit(category)}
-									class="btn btn-xs btn-neutral"
-								>
-									{$t('lodging.edit')}
-								</button>
-								{#if category.name !== 'general'}
-									<button
-										type="button"
-										on:click={() => removeCategory(category)}
-										class="btn btn-xs btn-error"
-									>
-										{$t('adventures.remove')}
-									</button>
-								{/if}
-							</div>
-						</div>
-					{/each}
-				</div>
-			{:else}
-				<div class="text-center py-8 text-base-content/60">
-					{$t('categories.no_categories_found')}
+		<!-- Body -->
+		<div
+			class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col px-4 md:px-6 py-4 md:py-5"
+		>
+			{#if warningMessage}
+				<div role="alert" class="alert alert-warning shadow-sm mb-4 shrink-0">
+					<InfoIcon class="w-5 h-5 shrink-0" />
+					<span class="text-sm md:text-base">{warningMessage}</span>
 				</div>
 			{/if}
-		{:else}
-			<div class="text-center py-8">
-				<span class="loading loading-spinner loading-md"></span>
-			</div>
-		{/if}
 
-		<!-- Edit Category Form -->
-		{#if categoryToEdit}
-			<div class="bg-base-100 border border-base-300 rounded-lg p-4 mb-4">
-				<h3 class="font-medium mb-4">{$t('categories.edit_category')}</h3>
-				<form on:submit={saveCategory} class="space-y-4">
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<div>
-							<!-- svelte-ignore a11y-label-has-associated-control -->
-							<label class="label">
-								<span class="label-text">{$t('categories.category_name')}</span>
-							</label>
-							<input
-								type="text"
-								class="input input-bordered w-full"
-								bind:value={categoryToEdit.display_name}
-								required
-							/>
-						</div>
-						<div>
-							<!-- svelte-ignore a11y-label-has-associated-control -->
-							<label class="label">
-								<span class="label-text">{$t('categories.icon')}</span>
-							</label>
-							<div class="flex gap-2">
+			<div
+				class="category-modal-panels flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_20rem] lg:grid-cols-[minmax(0,1fr)_22rem] gap-4 md:gap-6 flex-1 min-h-0 w-full min-w-0 md:overflow-hidden"
+			>
+				<!-- Existing categories -->
+				<section
+					class="order-2 md:order-1 min-w-0 w-full flex flex-col rounded-xl border border-base-300 bg-base-100 shadow-lg md:min-h-0 md:overflow-hidden"
+					aria-labelledby="existing-categories-heading"
+				>
+					<div
+						class="shrink-0 px-4 py-3 border-b border-base-300 bg-base-200/40 rounded-t-xl flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+					>
+						<h3
+							id="existing-categories-heading"
+							class="flex items-center gap-2 text-sm md:text-base font-semibold min-w-0"
+						>
+							<span class="p-1.5 bg-primary/10 rounded-lg shrink-0">
+								<TagIcon class="w-4 h-4 text-primary" />
+							</span>
+							<span class="truncate">{$t('adventures.categories')}</span>
+							{#if hasLoaded}
+								<span class="badge badge-neutral badge-sm shrink-0">{categories.length}</span>
+							{/if}
+						</h3>
+
+						{#if hasLoaded && categories.length > 0}
+							<label
+								class="input input-bordered input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0"
+							>
+								<SearchIcon class="w-4 h-4 opacity-50 shrink-0" />
 								<input
-									type="text"
-									class="input input-bordered flex-1"
-									bind:value={categoryToEdit.icon}
+									type="search"
+									class="grow min-w-0"
+									placeholder={$t('navbar.search')}
+									bind:value={searchTerm}
 								/>
-								<button
-									type="button"
-									on:click={() => (showEmojiPickerEdit = !showEmojiPickerEdit)}
-									class="btn btn-square btn-outline"
-								>
-									😀
-								</button>
-							</div>
-						</div>
+							</label>
+						{/if}
 					</div>
 
-					{#if showEmojiPickerEdit}
-						<div class="p-2 border rounded-lg bg-base-100">
-							<emoji-picker on:emoji-click={handleEmojiSelectEdit}></emoji-picker>
-						</div>
-					{/if}
-
-					<div class="flex justify-end gap-2">
-						<button type="button" class="btn btn-ghost" on:click={cancelEdit}>
-							{$t('adventures.cancel')}
-						</button>
-						<button type="submit" class="btn btn-primary"> {$t('notes.save')} </button>
-					</div>
-				</form>
-			</div>
-		{/if}
-
-		<!-- Add Category Section -->
-		<div class="collapse collapse-plus bg-base-200 mb-4">
-			<input type="checkbox" bind:checked={showAddForm} />
-			<div class="collapse-title font-medium">{$t('categories.add_new_category')}</div>
-			{#if showAddForm}
-				<div class="collapse-content">
-					<form on:submit={createCategory} class="space-y-4">
-						<div>
-							<!-- svelte-ignore a11y-label-has-associated-control -->
-							<label class="label">
-								<span class="label-text">{$t('categories.category_name')}</span>
-							</label>
-							<input
-								type="text"
-								class="input input-bordered w-full"
-								bind:value={newCategory.display_name}
-								required
-							/>
-						</div>
-
-						<div>
-							<!-- svelte-ignore a11y-label-has-associated-control -->
-							<label class="label">
-								<span class="label-text">{$t('categories.icon')}</span>
-							</label>
-							<div class="flex gap-2">
-								<input
-									type="text"
-									class="input input-bordered flex-1"
-									bind:value={newCategory.icon}
-									placeholder="🌍"
-								/>
-								<button
-									type="button"
-									on:click={() => (showEmojiPickerAdd = !showEmojiPickerAdd)}
-									class="btn btn-square btn-outline"
-								>
-									😀
-								</button>
+					<div
+						class="p-3 md:p-4 md:flex-1 md:min-h-0 md:overflow-y-auto md:overflow-x-hidden md:overscroll-contain"
+					>
+						{#if !hasLoaded}
+							<div class="flex justify-center items-center py-16">
+								<span class="loading loading-spinner loading-md text-primary"></span>
 							</div>
+						{:else if categories.length === 0}
+							<div
+								class="flex flex-col items-center justify-center py-16 text-base-content/60 px-4 text-center"
+							>
+								<TagIcon class="w-10 h-10 opacity-40 mb-3" />
+								<p>{$t('categories.no_categories_found')}</p>
+							</div>
+						{:else if filteredCategories.length === 0}
+							<div
+								class="flex items-center justify-center py-12 text-base-content/60 px-4 text-center"
+							>
+								<p>{$t('categories.no_categories_found')}</p>
+							</div>
+						{:else}
+							<ul class="space-y-2 min-w-0">
+								{#each filteredCategories as category (category.id)}
+									<li class="min-w-0">
+										{#if categoryToEdit?.id === category.id}
+											<div
+												class="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-3 min-w-0 overflow-hidden"
+											>
+												<p class="text-sm font-medium text-primary">
+													{$t('categories.edit_category')}
+												</p>
+												<form on:submit={saveCategory} class="space-y-3 min-w-0">
+													<div class="space-y-3">
+														<div class="form-control min-w-0">
+															<label class="label py-0" for="edit-category-name">
+																<span class="label-text">{$t('categories.category_name')}</span>
+															</label>
+															<input
+																id="edit-category-name"
+																type="text"
+																class="input input-bordered w-full min-w-0"
+																bind:value={categoryToEdit.display_name}
+																required
+															/>
+														</div>
+														<div class="form-control min-w-0">
+															<label class="label py-0" for="edit-category-icon">
+																<span class="label-text">{$t('categories.icon')}</span>
+															</label>
+															<div class="join w-full min-w-0">
+																<input
+																	id="edit-category-icon"
+																	type="text"
+																	class="input input-bordered join-item flex-1 min-w-0 w-0"
+																	bind:value={categoryToEdit.icon}
+																/>
+																<button
+																	type="button"
+																	on:click={() => {
+																		showEmojiPickerEdit = !showEmojiPickerEdit;
+																		showEmojiPickerAdd = false;
+																	}}
+																	class="btn join-item btn-square btn-outline shrink-0"
+																	class:btn-active={showEmojiPickerEdit}
+																	aria-label={$t('categories.icon')}
+																>
+																	<EmojiIcon class="w-5 h-5" />
+																</button>
+															</div>
+														</div>
+													</div>
+
+													{#if showEmojiPickerEdit}
+														<div
+															class="rounded-xl border border-base-300 bg-base-100 overflow-y-auto max-h-64 max-w-full"
+														>
+															<emoji-picker on:emoji-click={handleEmojiSelectEdit}></emoji-picker>
+														</div>
+													{/if}
+
+													<div class="flex flex-wrap justify-end gap-2">
+														<button
+															type="button"
+															class="btn btn-ghost btn-sm"
+															on:click={cancelEdit}
+														>
+															{$t('adventures.cancel')}
+														</button>
+														<button type="submit" class="btn btn-primary btn-sm gap-2">
+															<SaveIcon class="w-4 h-4" />
+															{$t('notes.save')}
+														</button>
+													</div>
+												</form>
+											</div>
+										{:else if categoryToDelete?.id === category.id}
+											<div
+												class="rounded-xl border border-error/30 bg-error/5 p-4 flex flex-col gap-3 min-w-0 overflow-hidden"
+											>
+												<p class="text-sm">
+													{$t('adventures.remove')}
+													<span class="font-semibold">{category.display_name}</span>?
+												</p>
+												<div class="flex flex-wrap gap-2 shrink-0 justify-end">
+													<button
+														type="button"
+														class="btn btn-ghost btn-sm"
+														on:click={cancelDelete}
+													>
+														{$t('adventures.cancel')}
+													</button>
+													<button
+														type="button"
+														class="btn btn-error btn-sm gap-2"
+														on:click={() => confirmDelete(category)}
+													>
+														<DeleteIcon class="w-4 h-4" />
+														{$t('adventures.remove')}
+													</button>
+												</div>
+											</div>
+										{:else}
+											<div
+												class="group flex items-center gap-3 p-3 rounded-xl border border-base-300 bg-base-200/30 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+											>
+												<span
+													class="flex items-center justify-center w-11 h-11 rounded-xl bg-base-100 border border-base-300 text-xl shrink-0"
+												>
+													{category.icon || '🌍'}
+												</span>
+												<div class="flex-1 min-w-0">
+													<div class="font-medium truncate">{category.display_name}</div>
+													<div class="text-sm text-base-content/60">
+														{category.num_locations || 0}
+														{$t('locations.locations')}
+													</div>
+												</div>
+												<div class="flex gap-1 shrink-0">
+													<button
+														type="button"
+														on:click={() => startEdit(category)}
+														class="btn btn-ghost btn-sm btn-square"
+														aria-label={$t('lodging.edit')}
+													>
+														<PencilIcon class="w-4 h-4" />
+													</button>
+													{#if category.name !== 'general'}
+														<button
+															type="button"
+															on:click={() => requestDelete(category)}
+															class="btn btn-ghost btn-sm btn-square text-error hover:bg-error/10"
+															aria-label={$t('adventures.remove')}
+														>
+															<DeleteIcon class="w-4 h-4" />
+														</button>
+													{/if}
+												</div>
+											</div>
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</div>
+				</section>
+
+				<!-- Add new category -->
+				<section
+					class="order-1 md:order-2 min-w-0 w-full flex flex-col rounded-xl border border-base-300 bg-base-100 shadow-lg md:min-h-0 md:overflow-hidden"
+					aria-labelledby="add-category-heading"
+				>
+					<div
+						class="shrink-0 px-4 py-3 border-b border-base-300 bg-base-200/40 rounded-t-xl flex items-center gap-2 min-w-0"
+					>
+						<span class="p-1.5 bg-primary/10 rounded-lg shrink-0">
+							<PlusIcon class="w-4 h-4 text-primary" />
+						</span>
+						<h3 id="add-category-heading" class="text-sm md:text-base font-semibold truncate">
+							{$t('categories.add_new_category')}
+						</h3>
+					</div>
+
+					<div class="md:flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-contain">
+						<form on:submit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
+							<div class="form-control min-w-0 w-full">
+								<label class="label py-1" for="new-category-name">
+									<span class="label-text font-medium">{$t('categories.category_name')}</span>
+								</label>
+								<input
+									id="new-category-name"
+									type="text"
+									class="input input-bordered w-full min-w-0"
+									bind:value={newCategory.display_name}
+									placeholder={$t('categories.category_name')}
+									required
+								/>
+							</div>
+
+							<div class="form-control min-w-0 w-full">
+								<label class="label py-1" for="new-category-icon">
+									<span class="label-text font-medium">{$t('categories.icon')}</span>
+								</label>
+								<div class="join w-full min-w-0">
+									<input
+										id="new-category-icon"
+										type="text"
+										class="input input-bordered join-item flex-1 min-w-0 w-0"
+										bind:value={newCategory.icon}
+										placeholder="🌍"
+									/>
+									<button
+										type="button"
+										on:click={() => {
+											showEmojiPickerAdd = !showEmojiPickerAdd;
+											showEmojiPickerEdit = false;
+										}}
+										class="btn join-item btn-square btn-outline shrink-0"
+										class:btn-active={showEmojiPickerAdd}
+										aria-label={$t('categories.icon')}
+									>
+										<EmojiIcon class="w-5 h-5" />
+									</button>
+								</div>
+							</div>
+
 							{#if showEmojiPickerAdd}
-								<div class="mt-2 p-2 border rounded-lg bg-base-100">
+								<div
+									class="emoji-picker-shell rounded-xl border border-base-300 bg-base-200/30 overflow-y-auto overflow-x-hidden w-full"
+								>
 									<emoji-picker on:emoji-click={handleEmojiSelectAdd}></emoji-picker>
 								</div>
 							{/if}
-						</div>
 
-						<button type="submit" class="btn btn-primary w-full">
-							{$t('collection.create')}
-						</button>
-					</form>
-				</div>
-			{/if}
+							<button
+								type="submit"
+								class="btn btn-primary w-full gap-2"
+								disabled={!newCategory.display_name.trim()}
+							>
+								<PlusIcon class="w-4 h-4" />
+								{$t('collection.create')}
+							</button>
+						</form>
+					</div>
+				</section>
+			</div>
 		</div>
 
-		<!-- Messages -->
-		{#if warningMessage}
-			<div class="alert alert-warning mb-4">
-				<span>{warningMessage}</span>
-			</div>
-		{/if}
-
-		{#if isChanged}
-			<div class="alert alert-success mb-4">
-				<span>{$t('categories.location_update_after_refresh')}</span>
-			</div>
-		{/if}
-
 		<!-- Footer -->
-		<div class="flex justify-end">
-			<button type="button" class="btn" on:click={closeModal}> {$t('about.close')} </button>
+		<div
+			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"
+		>
+			{#if isChanged}
+				<p
+					class="text-xs md:text-sm text-base-content/60 flex items-start md:items-center gap-2 min-w-0 md:flex-1"
+				>
+					<InfoIcon class="w-4 h-4 shrink-0 text-info mt-0.5 md:mt-0" />
+					<span>{$t('categories.location_update_after_refresh')}</span>
+				</p>
+			{:else}
+				<span class="hidden md:block md:flex-1"></span>
+			{/if}
+			<button
+				type="button"
+				class="btn btn-neutral w-full md:w-auto gap-2 shrink-0"
+				on:click={closeModal}
+			>
+				<CloseIcon class="w-4 h-4" />
+				{$t('about.close')}
+			</button>
 		</div>
 	</div>
 </dialog>
 
 <style>
-	.modal-box {
-		max-height: 90vh;
-		overflow-y: auto;
+	dialog::backdrop {
+		backdrop-filter: blur(8px);
+		background: rgba(0, 0, 0, 0.3);
+	}
+
+	.category-modal-box {
+		width: 100%;
+		max-width: 100%;
+		max-height: 92dvh;
+	}
+
+	@media (min-width: 768px) {
+		.category-modal-box {
+			width: min(92vw, 72rem);
+			max-width: 72rem;
+			max-height: min(85vh, 760px);
+			min-height: min(34rem, 85vh);
+		}
+
+		.category-modal-panels {
+			grid-template-rows: minmax(0, 1fr);
+		}
+
+		.category-modal-panels > section {
+			min-height: 0;
+		}
+	}
+
+	.emoji-picker-shell {
+		max-height: 14rem;
+	}
+
+	@media (min-width: 768px) {
+		.emoji-picker-shell {
+			max-height: 16rem;
+		}
+	}
+
+	emoji-picker {
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+		--num-columns: 7;
+	}
+
+	@media (min-width: 768px) {
+		emoji-picker {
+			--num-columns: 8;
+		}
 	}
 </style>

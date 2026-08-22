@@ -23,7 +23,10 @@
 	let currentAlbum: string = '';
 	let selectedDate: string = defaultDate || new Date().toISOString().split('T')[0];
 
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{
+		localImage: { file: File; immichId: string };
+		remoteImmichSaved: Record<string, unknown>;
+	}>();
 
 	// Reactive statements
 	$: {
@@ -167,15 +170,45 @@
 		}
 	}
 
-	function handleImageSelect(image: any) {
-		const currentDomain = window.location.origin;
-		const fullUrl = `${currentDomain}/immich/${image.id}`;
-
-		if (copyImmichLocally) {
-			dispatch('fetchImage', fullUrl);
-		} else {
-			saveImmichRemoteUrl(image.id);
+	async function copyImmichImageLocally(image: { id: string }) {
+		if (!objectId) {
+			immichError = $t('immich.error_no_object_id');
+			return;
 		}
+
+		loading = true;
+		immichError = '';
+
+		try {
+			const res = await fetch(`/immich/${image.id}`);
+			if (!res.ok) {
+				immichError = $t('immich.error_saving_image');
+				return;
+			}
+
+			const blob = await res.blob();
+			const contentType = blob.type && blob.type.startsWith('image/') ? blob.type : 'image/jpeg';
+			const extension = contentType.includes('png')
+				? 'png'
+				: contentType.includes('webp')
+					? 'webp'
+					: 'jpg';
+			const file = new File([blob], `immich_${image.id}.${extension}`, { type: contentType });
+			dispatch('localImage', { file, immichId: image.id });
+		} catch (error) {
+			console.error('Error copying Immich image locally:', error);
+			immichError = $t('immich.error_saving_image');
+		} finally {
+			loading = false;
+		}
+	}
+
+	function handleImageSelect(image: { id: string }) {
+		if (copyImmichLocally) {
+			void copyImmichImageLocally(image);
+			return;
+		}
+		saveImmichRemoteUrl(image.id);
 	}
 
 	// Lifecycle

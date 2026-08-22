@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '$lib/types';
-	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -13,9 +12,11 @@
 	import Calendar from '~icons/mdi/calendar';
 	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
 	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
-	import { formatAllDayDate } from '$lib/dateUtils';
-	import { isAllDay } from '$lib';
+	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
+	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '$lib/components/ImageFrame.svelte';
+	import { normalizeContentImage } from '$lib/images';
 	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
 	import CollectionItineraryPlanner from '$lib/components/collections/CollectionItineraryPlanner.svelte';
 	import CollectionRecommendationView from '$lib/components/CollectionRecommendationView.svelte';
@@ -31,6 +32,9 @@
 	import Lightbulb from '~icons/mdi/lightbulb';
 	import ChartBar from '~icons/mdi/chart-bar';
 	import Plus from '~icons/mdi/plus';
+	import FilePdfBox from '~icons/mdi/file-pdf-box';
+	import ImageOutline from '~icons/mdi/image-outline';
+	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 	import { addToast } from '$lib/toasts';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -44,8 +48,14 @@
 
 	export let data: PageData;
 
-	// Handle both 'collection' and 'adventure' properties for backward compatibility
-	let collection: Collection = (data.props as any).collection || (data.props as any).adventure;
+	function getCollectionFromPageData(pageData: PageData): Collection | null | undefined {
+		return (
+			(pageData.props as { collection?: Collection; adventure?: Collection }).collection ??
+			(pageData.props as { collection?: Collection; adventure?: Collection }).adventure
+		);
+	}
+
+	let collection: Collection | undefined;
 	let currentSlide = 0;
 	let notFound: boolean = false;
 	let isLocationModalOpen: boolean = false;
@@ -64,9 +74,6 @@
 	let isImageModalOpen: boolean = false;
 	let isLocationLinkModalOpen: boolean = false;
 	let showCalendarModal = false;
-	let selectedCalendarEvent: any = null;
-	let calendarLocation = '';
-	let calendarDescription = '';
 
 	// Shared helpers for keeping collection sub-items in sync after modal actions
 	type CollectionArrayKey = 'locations' | 'transportations' | 'lodging' | 'notes' | 'checklists';
@@ -80,7 +87,7 @@
 	}
 
 	function upsertCollectionItem(key: CollectionArrayKey, item: any) {
-		if (!item || item.id === undefined || item.id === null) return;
+		if (!item || item.id === undefined || item.id === null || !collection) return;
 		const items = ensureCollectionArray(key);
 		const exists = items.some((entry: any) => String(entry.id) === String(item.id));
 		(collection as any)[key] = exists
@@ -113,6 +120,7 @@
 				(c: any) =>
 					c.name === item.name &&
 					(c.collections || c.collection) &&
+					collection &&
 					String(c.collections || c.collection || '') === String(collection.id)
 			);
 			if (match && match.id) {
@@ -137,6 +145,7 @@
 				form.append('image', file);
 				form.append('object_id', item.id);
 				form.append('content_type', contentType || 'location');
+				form.append('source', img.source || 'google');
 
 				const upload = await fetch('/locations?/image', {
 					method: 'POST',
@@ -150,12 +159,12 @@
 				// Replace temporary image in the item and in the collection
 				item.images = item.images.map((i: any) =>
 					String(i.id) === String(img.id)
-						? {
+						? normalizeContentImage({
+								...newImage,
 								id: newImage.id,
 								image: newImage.image,
-								is_primary: newImage.is_primary || false,
-								immich_id: newImage.immich_id || null
-							}
+								is_primary: newImage.is_primary || false
+							})
 						: i
 				);
 
@@ -191,42 +200,6 @@
 		});
 	})();
 
-	// Define available views based on collection type
-	$: availableViews = {
-		all: true, // Always available
-		itinerary: !isFolderView, // Only for collections with dates
-		map:
-			collection?.locations?.some((l) => l.latitude && l.longitude) ||
-			collection?.lodging?.some((l) => l.latitude && l.longitude) ||
-			collection?.transportations?.some(
-				(t) =>
-					(t.origin_latitude && t.origin_longitude) ||
-					(t.destination_latitude && t.destination_longitude)
-			) ||
-			false,
-		calendar: !isFolderView,
-		recommendations: true, // may be overridden by permission check below
-		stats: true
-	};
-
-	// Get default view based on available views
-	let defaultView: ViewType;
-	$: defaultView = (availableViews.itinerary ? 'itinerary' : 'all') as ViewType;
-
-	// Read view from URL params and validate it's available
-	$: {
-		const view = $page.url.searchParams.get('view') as ViewType;
-		if (
-			view &&
-			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
-			availableViews[view]
-		) {
-			currentView = view;
-		} else {
-			currentView = defaultView;
-		}
-	}
-
 	// Determine whether current user can modify the collection (owner or shared user)
 	$: canModifyCollection = (() => {
 		const u = data.user as any;
@@ -252,25 +225,98 @@
 		return false;
 	})();
 
-	// Enforce recommendations visibility only for owner/shared users
-	$: availableViews.recommendations = !!canModifyCollection;
+	// Public collections: anyone can export/share; private: owner or shared users only
+	$: canExportCollection = !!collection?.is_public || canModifyCollection;
 
-	// Build calendar events from collection visits
-	type TimezoneMode = 'event' | 'local';
+	// Define available views based on collection type
+	$: availableViews = {
+		all: true, // Always available
+		itinerary: !isFolderView, // Only for collections with dates
+		map:
+			collection?.locations?.some((l) => l.latitude && l.longitude) ||
+			collection?.lodging?.some((l) => l.latitude && l.longitude) ||
+			collection?.transportations?.some(
+				(t) =>
+					(t.origin_latitude && t.origin_longitude) ||
+					(t.destination_latitude && t.destination_longitude)
+			) ||
+			false,
+		calendar: !isFolderView,
+		recommendations: canModifyCollection,
+		stats: true
+	};
 
-	let collectionEvents: Array<{
-		id: string;
-		start: string;
-		end: string;
-		title: string;
-		backgroundColor?: string;
-		extendedProps?: any;
-	}> = [];
-	let timezoneMode: TimezoneMode = 'event';
+	// Get default view based on available views
+	let defaultView: ViewType;
+	$: defaultView = (availableViews.itinerary ? 'itinerary' : 'all') as ViewType;
+
+	// Read view from URL params and validate it's available
+	$: {
+		const view = $page.url.searchParams.get('view') as ViewType;
+		if (
+			view &&
+			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
+			availableViews[view]
+		) {
+			currentView = view;
+		} else {
+			currentView = defaultView;
+		}
+	}
+
+	let isExportingPdf = false;
+	let isSocialShareModalOpen = false;
+
+	async function exportCollectionPdf() {
+		if (!collection || isExportingPdf) return;
+		isExportingPdf = true;
+		try {
+			const res = await fetch(`/api/collections/${collection.id}/export-pdf/`);
+			if (!res.ok) {
+				addToast('error', $t('adventures.export_pdf_failed'));
+				return;
+			}
+			const blob = await res.blob();
+			const safeName =
+				String(collection.name)
+					.replace(/[^\w\s-]/g, '')
+					.replace(/\s+/g, '_') || 'collection';
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `${safeName}_itinerary.pdf`;
+			a.click();
+			URL.revokeObjectURL(url);
+			addToast('success', $t('adventures.export_pdf_success'));
+		} catch {
+			addToast('error', $t('adventures.export_pdf_failed'));
+		} finally {
+			isExportingPdf = false;
+		}
+	}
+
+	// Calendar events from collection data
+	let timezoneMode: CalendarTimezoneMode = 'event';
 	let calendarInitialDate: string | null = null;
+	let selectedCalendarEvent: CalendarDisplayEvent | null = null;
 
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const numberLocale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+	$: calendarTimezoneLabels = {
+		eventTimezone: $t('collections.event_timezone'),
+		localTimezone: $t('collections.local_timezone')
+	};
+
+	$: collectionEvents = collection
+		? buildCollectionCalendarEvents(
+				collection,
+				timezoneMode,
+				userTimezone,
+				calendarTimezoneLabels,
+				(key) => $t(key)
+			)
+		: [];
 
 	type CostCategory = 'lodging' | 'transportation' | 'location';
 
@@ -307,12 +353,10 @@
 	let currencyCount = 0;
 
 	$: preferredCurrency = (data.user as any)?.default_currency || DEFAULT_CURRENCY;
-	$: costEntries = buildCostEntries(collection, preferredCurrency);
+	$: costEntries = buildCostEntries(collection ?? null, preferredCurrency);
 	$: costSummary = summarizeCostEntries(costEntries, numberLocale, costCategoryLabels);
 	$: pricedItemCount = costEntries.length;
 	$: currencyCount = costSummary.length;
-
-	$: collectionEvents = buildCollectionEvents(timezoneMode);
 
 	$: if (!calendarInitialDate && collectionEvents.length) {
 		const collectionRangeStart = collection?.start_date
@@ -334,209 +378,6 @@
 		const chosenDate = (inCollectionRange[0] || validEvents[0])?.date;
 
 		calendarInitialDate = chosenDate?.toISODate() || calendarInitialDate;
-	}
-
-	function buildCollectionEvents(mode: TimezoneMode) {
-		const events: typeof collectionEvents = [];
-
-		(collection?.locations || []).forEach((loc) => {
-			if (!loc.visits || loc.visits.length === 0) return;
-
-			loc.visits.forEach((visit) => {
-				const times = buildEventTimes({
-					start: visit.start_date,
-					end: visit.end_date || visit.start_date,
-					timezone: visit.timezone,
-					mode,
-					allDay: isAllDay(visit.start_date)
-				});
-
-				if (!times) return;
-
-				events.push({
-					id: `location-${loc.id}-${visit.id}`,
-					title: `${loc.category?.icon || '📍'} ${loc.name}`,
-					start: times.start,
-					end: times.end,
-					backgroundColor: '#3b82f6',
-					extendedProps: {
-						type: 'location',
-						adventureId: loc.id,
-						adventureName: loc.name,
-						category: loc.category?.display_name || loc.category?.name || 'Adventure',
-						icon: loc.category?.icon || '🗺️',
-						timezone: visit.timezone || userTimezone,
-						timezoneUsed: times.timezoneUsed,
-						timezoneLabel: times.timezoneLabel,
-						timezoneMode: mode,
-						isAllDay: times.isAllDay,
-						formattedStart: times.formattedStart,
-						formattedEnd: times.formattedEnd,
-						location: loc.location || '',
-						description: loc.description || ''
-					}
-				});
-			});
-		});
-
-		(collection?.transportations || []).forEach((transportation) => {
-			if (!transportation.date) return;
-
-			const times = buildEventTimes({
-				start: transportation.date,
-				end: transportation.end_date || transportation.date,
-				timezone: transportation.start_timezone || transportation.end_timezone,
-				mode,
-				allDay: isAllDay(transportation.date)
-			});
-
-			if (!times) return;
-
-			const route = [transportation.from_location, transportation.to_location]
-				.filter(Boolean)
-				.join(' → ');
-
-			events.push({
-				id: `transport-${transportation.id}`,
-				title: `${getTransportIcon(transportation.type)} ${
-					transportation.name || transportation.type || $t('adventures.transportation')
-				}`,
-				start: times.start,
-				end: times.end,
-				backgroundColor: '#f97316',
-				extendedProps: {
-					type: 'transportation',
-					category: transportation.type || 'Transportation',
-					icon: getTransportIcon(transportation.type),
-					timezone: transportation.start_timezone || transportation.end_timezone || userTimezone,
-					timezoneUsed: times.timezoneUsed,
-					timezoneLabel: times.timezoneLabel,
-					timezoneMode: mode,
-					isAllDay: times.isAllDay,
-					formattedStart: times.formattedStart,
-					formattedEnd: times.formattedEnd,
-					location: route || transportation.description || '',
-					description: transportation.description || '',
-					route
-				}
-			});
-		});
-
-		(collection?.lodging || []).forEach((stay) => {
-			const start = stay.check_in || stay.check_out;
-			if (!start) return;
-
-			const calendarEnd = getLodgingCalendarEndDate(stay);
-
-			const times = buildEventTimes({
-				start,
-				end: calendarEnd || start,
-				timezone: stay.timezone,
-				mode,
-				allDay: true
-			});
-
-			if (!times) return;
-
-			events.push({
-				id: `lodging-${stay.id}`,
-				title: `🏨 ${stay.name}`,
-				start: times.start,
-				end: times.end,
-				backgroundColor: '#8b5cf6',
-				extendedProps: {
-					type: 'lodging',
-					category: stay.type || 'Lodging',
-					icon: '🏨',
-					timezone: stay.timezone || userTimezone,
-					timezoneUsed: times.timezoneUsed,
-					timezoneLabel: times.timezoneLabel,
-					timezoneMode: mode,
-					isAllDay: true,
-					formattedStart: times.formattedStart,
-					formattedEnd: times.formattedEnd,
-					checkoutDate: stay.check_out || null,
-					location: stay.location || '',
-					description: stay.description || ''
-				}
-			});
-		});
-
-		return events;
-	}
-
-	function buildEventTimes({
-		start,
-		end,
-		timezone,
-		mode,
-		allDay
-	}: {
-		start: string | null;
-		end: string | null;
-		timezone: string | null | undefined;
-		mode: TimezoneMode;
-		allDay: boolean;
-	}) {
-		if (!start) return null;
-
-		const eventTimezone = timezone || userTimezone;
-		const targetTimezone = mode === 'local' ? userTimezone : eventTimezone;
-
-		if (allDay) {
-			const startDate = start.split('T')[0];
-			const endDate = (end || start).split('T')[0];
-			const endDateObj = new Date(endDate);
-			endDateObj.setDate(endDateObj.getDate() + 1);
-
-			return {
-				start: startDate,
-				end: endDateObj.toISOString().split('T')[0],
-				formattedStart: formatAllDayDate(start),
-				formattedEnd: formatAllDayDate(end || start),
-				timezoneUsed: targetTimezone,
-				timezoneLabel:
-					mode === 'local'
-						? `${$t('calendar.your timezone') || 'Your timezone'} (${userTimezone})`
-						: `${$t('calendar.event timezone') || 'Event timezone'} (${eventTimezone})`,
-				isAllDay: true
-			};
-		}
-
-		const startDateTime = DateTime.fromISO(start, { zone: eventTimezone });
-		const endDateTime = DateTime.fromISO(end || start, { zone: eventTimezone });
-
-		if (!startDateTime.isValid || !endDateTime.isValid) return null;
-
-		const startConverted = startDateTime.setZone(targetTimezone);
-		const endConverted = endDateTime.setZone(targetTimezone);
-
-		return {
-			start: startConverted.toISO(),
-			end: endConverted.toISO(),
-			formattedStart: startConverted.toFormat('ccc, LLL d • t ZZZZ'),
-			formattedEnd: endConverted.toFormat('ccc, LLL d • t ZZZZ'),
-			timezoneUsed: targetTimezone,
-			timezoneLabel:
-				mode === 'local'
-					? `${$t('calendar.your timezone') || 'Your timezone'} (${userTimezone})`
-					: `${$t('calendar.event timezone') || 'Event timezone'} (${eventTimezone})`,
-			isAllDay: false
-		};
-	}
-
-	function getTransportIcon(type?: string | null) {
-		const normalized = (type || '').toLowerCase();
-
-		if (normalized.includes('flight') || normalized.includes('plane') || normalized.includes('air'))
-			return '✈️';
-		if (normalized.includes('train') || normalized.includes('rail')) return '🚆';
-		if (normalized.includes('bus')) return '🚌';
-		if (normalized.includes('car') || normalized.includes('drive')) return '🚗';
-		if (normalized.includes('boat') || normalized.includes('ferry') || normalized.includes('ship'))
-			return '🚢';
-
-		return '🛣️';
 	}
 
 	function buildCostEntries(current: Collection | null, fallbackCurrency: string): CostEntry[] {
@@ -575,26 +416,6 @@
 		});
 
 		return entries;
-	}
-
-	function getLodgingCalendarEndDate(stay: Lodging): string | null {
-		const { check_in, check_out } = stay;
-		if (!check_out) return check_in || null;
-		if (!check_in) return check_out;
-
-		const checkInDate = new Date(check_in.split('T')[0]);
-		const checkOutDate = new Date(check_out.split('T')[0]);
-
-		if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime())) {
-			return check_out;
-		}
-
-		if (checkOutDate <= checkInDate) {
-			return check_out;
-		}
-
-		checkOutDate.setDate(checkOutDate.getDate() - 1);
-		return checkOutDate.toISOString().split('T')[0];
 	}
 
 	function summarizeCostEntries(
@@ -650,7 +471,7 @@
 			.sort((a, b) => a.currency.localeCompare(b.currency));
 	}
 
-	function handleCalendarEventClick(event: any) {
+	function handleCalendarEventClick(event: CalendarDisplayEvent) {
 		selectedCalendarEvent = event;
 		showCalendarModal = true;
 	}
@@ -660,14 +481,40 @@
 		selectedCalendarEvent = null;
 	}
 
-	$: calendarLocation = selectedCalendarEvent?.extendedProps?.location || '';
-	$: calendarDescription = selectedCalendarEvent?.extendedProps?.description || '';
+	function resetCollectionPageUiState() {
+		currentSlide = 0;
+		isLocationModalOpen = false;
+		isLodgingModalOpen = false;
+		isTransportationModalOpen = false;
+		isChecklistModalOpen = false;
+		isNoteModalOpen = false;
+		adventureToEdit = null;
+		transportationToEdit = null;
+		noteToEdit = null;
+		checklistToEdit = null;
+		lodgingToEdit = null;
+		isImageModalOpen = false;
+		isLocationLinkModalOpen = false;
+		showCalendarModal = false;
+		selectedCalendarEvent = null;
+		isSocialShareModalOpen = false;
+		calendarInitialDate = null;
+	}
 
-	onMount(async () => {
-		if (!collection) {
+	function applyCollectionPageData(collectionData: Collection | null | undefined) {
+		if (!collectionData) {
 			notFound = true;
+			collection = undefined;
+			resetCollectionPageUiState();
+			return;
 		}
-	});
+
+		notFound = false;
+		collection = collectionData;
+		resetCollectionPageUiState();
+	}
+
+	$: applyCollectionPageData(getCollectionFromPageData(data));
 
 	function goToSlide(index: number) {
 		currentSlide = index;
@@ -745,6 +592,7 @@
 	async function handleLocationAdded(event: CustomEvent<Location>) {
 		// Link the location to this collection
 		const location = event.detail;
+		if (!collection) return;
 
 		try {
 			const response = await fetch(`/api/locations/${location.id}/`, {
@@ -807,12 +655,22 @@
 	</div>
 {/if}
 
-{#if isImageModalOpen}
+{#if isImageModalOpen && collection}
 	<ImageDisplayModal
 		images={heroImages}
 		initialIndex={modalInitialIndex}
 		name={collection.name}
 		on:close={closeImageModal}
+	/>
+{/if}
+
+{#if isSocialShareModalOpen && collection && canExportCollection}
+	<SocialShareModal
+		type="collection"
+		id={collection.id}
+		name={collection.name}
+		isPublic={!!collection.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
 	/>
 {/if}
 
@@ -825,7 +683,7 @@
 	/>
 {/if}
 
-{#if isNoteModalOpen}
+{#if isNoteModalOpen && collection}
 	<NoteModal
 		on:close={() => {
 			noteToEdit = null;
@@ -847,7 +705,7 @@
 	/>
 {/if}
 
-{#if isLocationModalOpen}
+{#if isLocationModalOpen && collection}
 	<LocationModal
 		on:close={() => {
 			adventureToEdit = null;
@@ -869,7 +727,7 @@
 	/>
 {/if}
 
-{#if isTransportationModalOpen}
+{#if isTransportationModalOpen && collection}
 	<TransportationModal
 		on:close={() => {
 			transportationToEdit = null;
@@ -891,7 +749,7 @@
 	/>
 {/if}
 
-{#if isChecklistModalOpen}
+{#if isChecklistModalOpen && collection}
 	<ChecklistModal
 		on:close={() => {
 			checklistToEdit = null;
@@ -913,7 +771,7 @@
 	/>
 {/if}
 
-{#if isLodgingModalOpen}
+{#if isLodgingModalOpen && collection}
 	<LodgingModal
 		on:close={() => {
 			lodgingToEdit = null;
@@ -938,10 +796,6 @@
 <EventDetailsModal
 	show={showCalendarModal}
 	event={selectedCalendarEvent}
-	isLoadingDetails={false}
-	detailsError={''}
-	location={calendarLocation}
-	description={calendarDescription}
 	{timezoneMode}
 	{userTimezone}
 	onClose={closeCalendarModal}
@@ -976,7 +830,9 @@
 							on:click={() => openImageModal(i)}
 							aria-label={`View full image of ${collection.name}`}
 						>
-							<img src={image.image} class="w-full h-full object-cover" alt={collection.name} />
+							<ImageFrame source={image.source} className="w-full h-full">
+								<img src={image.image} class="w-full h-full object-cover" alt={collection.name} />
+							</ImageFrame>
 						</button>
 					</div>
 				{/each}
@@ -1086,7 +942,7 @@
 	<!-- Main Content -->
 	<div class="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-7xl">
 		<!-- View Switcher -->
-		<div class="flex justify-center mb-6">
+		<div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
 			<div class="join">
 				{#if availableViews.all}
 					<button
@@ -1149,6 +1005,26 @@
 					</button>
 				{/if}
 			</div>
+			{#if canExportCollection}
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="btn btn-outline btn-primary gap-2"
+						on:click={() => (isSocialShareModalOpen = true)}
+					>
+						<ImageOutline class="w-5 h-5" aria-hidden="true" />
+						<span>{$t('social_share.share_externally')}</span>
+					</button>
+					<button
+						class="btn btn-outline btn-primary gap-2"
+						on:click={exportCollectionPdf}
+						disabled={isExportingPdf}
+						aria-busy={isExportingPdf}
+					>
+						<FilePdfBox class="w-5 h-5" aria-hidden="true" />
+						<span>{isExportingPdf ? '...' : $t('adventures.export_pdf')}</span>
+					</button>
+				</div>
+			{/if}
 		</div>
 
 		<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-10">
@@ -1196,7 +1072,7 @@
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('navbar.map')}</h2>
 							<div class="rounded-lg overflow-hidden shadow-lg">
-								<CollectionMap bind:collection user={data.user} />
+								<CollectionMap bind:collection user={data.user} canModify={canModifyCollection} />
 							</div>
 						</div>
 					</div>
@@ -1249,8 +1125,9 @@
 								</p>
 								<CalendarComponent
 									events={collectionEvents}
-									onEventClick={handleCalendarEventClick}
 									initialDate={calendarInitialDate}
+									bare={true}
+									on:eventClick={(e) => handleCalendarEventClick(e.detail)}
 								/>
 							</div>
 						</div>
@@ -1258,7 +1135,7 @@
 				{/if}
 
 				<!-- Recommendations View -->
-				{#if currentView === 'recommendations'}
+				{#if currentView === 'recommendations' && canModifyCollection}
 					<CollectionRecommendationView bind:collection user={data.user} />
 				{/if}
 			</div>
@@ -1494,7 +1371,7 @@
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 								{#each heroImages.slice(0, 12) as image, index}
-									<div class="relative group">
+									<ImageFrame source={image.source} className="relative group">
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
@@ -1503,12 +1380,14 @@
 											role="button"
 											tabindex="0"
 										></div>
-										{#if image.is_primary}
-											<div class="absolute top-1 right-1">
-												<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
-											</div>
-										{/if}
-									</div>
+										<div slot="overlays">
+											{#if image.is_primary}
+												<div class="absolute top-1 right-1">
+													<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
+												</div>
+											{/if}
+										</div>
+									</ImageFrame>
 								{/each}
 							</div>
 							{#if heroImages.length > 12}
@@ -1609,5 +1488,18 @@
 	<title>
 		{collection && collection.name ? `${collection.name}` : 'Collection'}
 	</title>
-	<meta name="description" content="View collection details and locations" />
+	{#if data.shareMeta}
+		<meta name="description" content={data.shareMeta.description} />
+		<meta property="og:title" content={data.shareMeta.title} />
+		<meta property="og:description" content={data.shareMeta.description} />
+		<meta property="og:image" content={data.shareMeta.imageUrl} />
+		<meta property="og:url" content={data.shareMeta.pageUrl} />
+		<meta property="og:type" content="website" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={data.shareMeta.title} />
+		<meta name="twitter:description" content={data.shareMeta.description} />
+		<meta name="twitter:image" content={data.shareMeta.imageUrl} />
+	{:else}
+		<meta name="description" content="View collection details and locations" />
+	{/if}
 </svelte:head>

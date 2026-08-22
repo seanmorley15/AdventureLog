@@ -24,7 +24,6 @@
 	let googleMapsEnabled = false;
 	let isEditMode = false;
 	let pendingGooglePhotoUrls: string[] = [];
-	let importingGooglePhotos = false;
 
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
@@ -58,7 +57,7 @@
 		if (stepIndex === 0 && isEditMode) {
 			return;
 		}
-		if (steps[stepIndex]?.requires_id && !lodging.id) {
+		if (steps[stepIndex]?.requires_id && !lodging?.id) {
 			return;
 		}
 		setStep(stepIndex);
@@ -72,66 +71,36 @@
 		setStep(0);
 	}
 
+	function resolveLodging(): Lodging {
+		if (lodging == null) {
+			lodging = createEmptyLodging();
+		}
+		return lodging;
+	}
+
 	function applyQuickStartPrefill(prefill: any) {
 		if (!prefill) return;
 
-		if (prefill.name) lodging.name = prefill.name;
-		if (prefill.location) lodging.location = prefill.location;
-		if (typeof prefill.latitude === 'number') lodging.latitude = prefill.latitude;
-		if (typeof prefill.longitude === 'number') lodging.longitude = prefill.longitude;
-		if (typeof prefill.rating === 'number') lodging.rating = prefill.rating;
-		if (!lodging.link && (prefill.website || prefill.google_maps_url)) {
-			lodging.link = prefill.website || prefill.google_maps_url;
+		const current = resolveLodging();
+		if (prefill.name) current.name = prefill.name;
+		if (prefill.location) current.location = prefill.location;
+		if (typeof prefill.latitude === 'number') current.latitude = prefill.latitude;
+		if (typeof prefill.longitude === 'number') current.longitude = prefill.longitude;
+		if (typeof prefill.rating === 'number') current.rating = prefill.rating;
+		if (!current.link && (prefill.website || prefill.google_maps_url)) {
+			current.link = prefill.website || prefill.google_maps_url;
 		}
-		if (!lodging.description && prefill.description) {
-			lodging.description = prefill.description;
+		if (!current.description && prefill.description) {
+			current.description = prefill.description;
 		}
 
-		if (!lodging.type) {
-			lodging.type = inferLodgingTypeFromPlace(prefill.type, prefill.types);
+		if (!current.type) {
+			current.type = inferLodgingTypeFromPlace(prefill.type, prefill.types);
 		}
 
 		pendingGooglePhotoUrls = Array.isArray(prefill.photos)
 			? prefill.photos.filter((url: unknown) => typeof url === 'string' && url.trim()).slice(0, 5)
 			: [];
-	}
-
-	async function importPendingGoogleImages(lodgingId: string) {
-		if (!lodgingId || pendingGooglePhotoUrls.length === 0) return;
-		importingGooglePhotos = true;
-
-		try {
-			const res = await fetch('/api/images/import_from_urls/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					content_type: 'lodging',
-					object_id: lodgingId,
-					urls: pendingGooglePhotoUrls
-				})
-			});
-
-			if (!res.ok) {
-				addToast('warning', 'Lodging saved, but Google photos could not be imported');
-				return;
-			}
-
-			const data = await res.json();
-			if (Array.isArray(data.created) && data.created.length > 0) {
-				const existingImages = Array.isArray(lodging.images) ? lodging.images : [];
-				const existingIds = new Set(existingImages.map((img: any) => img.id));
-				const imported = data.created.filter((img: any) => !existingIds.has(img.id));
-				lodging.images = [...existingImages, ...imported];
-			}
-
-			pendingGooglePhotoUrls = [];
-		} catch {
-			addToast('warning', 'Lodging saved, but Google photos import failed');
-		} finally {
-			importingGooglePhotos = false;
-		}
 	}
 
 	async function loadIntegrations() {
@@ -172,7 +141,7 @@
 		};
 	}
 
-	export let lodging: Lodging = createEmptyLodging();
+	export let lodging: Lodging | null = null;
 
 	export let lodgingToEdit: Lodging | null = null;
 
@@ -241,9 +210,57 @@
 		void loadIntegrations();
 	});
 
+	function handleDetailsSave(e: CustomEvent) {
+		void handleDetailsSaveAsync(e);
+	}
+
+	async function handleDetailsSaveAsync(e: CustomEvent) {
+		// Update the entire lodging object with all saved data
+		const detail = e.detail || {};
+		const base = resolveLodging();
+		const previousImages = base.images || [];
+		const previousAttachments = base.attachments || [];
+		const savedLodging: Lodging = { ...base, ...detail };
+		// Preserve any prefilled 'rec-' images or attachments if the server returned an empty array
+		if (Array.isArray(detail.images)) {
+			if (
+				detail.images.length === 0 &&
+				previousImages.some((i) => String(i.id).startsWith('rec-'))
+			) {
+				savedLodging.images = previousImages;
+			}
+		} else {
+			savedLodging.images = previousImages;
+		}
+		if (Array.isArray(detail.attachments)) {
+			if (
+				detail.attachments.length === 0 &&
+				previousAttachments.some((a) => String(a.id).startsWith('rec-'))
+			) {
+				savedLodging.attachments = previousAttachments;
+			}
+		} else {
+			savedLodging.attachments = previousAttachments;
+		}
+
+		lodging = savedLodging;
+
+		// Mark that a save occurred so close() will notify parent
+		didSave = true;
+
+		// Only allow moving to Media once we have a persisted id.
+		if (!savedLodging.id) {
+			addToast('error', $t('adventures.lodging_save_error'));
+			setStep(1);
+			return;
+		}
+
+		setStep(2);
+	}
+
 	function close() {
 		// If a save occurred, notify the parent with appropriate event
-		if (didSave) {
+		if (didSave && lodging) {
 			if (lodgingToEdit) {
 				dispatch('save', lodging);
 			} else {
@@ -406,62 +423,15 @@
 				{collection}
 				bind:editingLodging={lodging}
 				on:back={handleDetailsBack}
-				on:save={async (e) => {
-					// Update the entire lodging object with all saved data
-					const detail = e.detail || {};
-					const previousImages = lodging.images || [];
-					const previousAttachments = lodging.attachments || [];
-					lodging = { ...lodging, ...detail };
-					// Preserve any prefilled 'rec-' images or attachments if the server returned an empty array
-					if (Array.isArray(detail.images)) {
-						if (
-							detail.images.length === 0 &&
-							previousImages.some((i) => String(i.id).startsWith('rec-'))
-						) {
-							lodging.images = previousImages;
-						}
-					} else {
-						lodging.images = previousImages;
-					}
-					if (Array.isArray(detail.attachments)) {
-						if (
-							detail.attachments.length === 0 &&
-							previousAttachments.some((a) => String(a.id).startsWith('rec-'))
-						) {
-							lodging.attachments = previousAttachments;
-						}
-					} else {
-						lodging.attachments = previousAttachments;
-					}
-
-					// Mark that a save occurred so close() will notify parent
-					didSave = true;
-
-					// Only allow moving to Media once we have a persisted id.
-					if (!lodging?.id) {
-						addToast('error', $t('adventures.lodging_save_error'));
-						setStep(1);
-						return;
-					}
-
-					setStep(2);
-					if (pendingGooglePhotoUrls.length > 0) {
-						await importPendingGoogleImages(lodging.id);
-					}
-				}}
+				on:save={handleDetailsSave}
 				initialVisitDate={storedInitialVisitDate}
 			/>
 		{/if}
-		{#if steps[2].selected}
-			{#if importingGooglePhotos}
-				<div class="alert alert-info mb-4">
-					<span class="loading loading-spinner loading-sm"></span>
-					<span>Importing Google photos in the background. They will appear here shortly.</span>
-				</div>
-			{/if}
+		{#if steps[2].selected && lodging}
 			<MediaStep
 				bind:images={lodging.images}
 				bind:attachments={lodging.attachments}
+				bind:pendingGooglePhotoUrls
 				itemName={lodging.name}
 				on:back={() => {
 					setStep(1);

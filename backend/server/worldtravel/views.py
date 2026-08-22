@@ -82,9 +82,9 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
         adventures = Location.objects.filter(user=request.user.id, type='visited')
         count = 0
         for adventure in adventures:
-            if adventure.latitude is not None and adventure.longitude is not None:
+            if adventure.coordinates:
                 try:
-                    point = Point(float(adventure.longitude), float(adventure.latitude), srid=4326)
+                    point = adventure.coordinates
                     region = Region.objects.filter(geometry__contains=point).first()
                     if region:
                         if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():

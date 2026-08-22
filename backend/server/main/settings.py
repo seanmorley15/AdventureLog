@@ -33,6 +33,16 @@ SECRET_KEY = getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = getenv('DEBUG', 'true').lower() == 'true'
 
+# ---------------------------------------------------------------------------
+# Cloud Mode & Billing
+# ---------------------------------------------------------------------------
+CLOUD_MODE = getenv('CLOUD_MODE', 'false').lower() == 'true'
+CLOUD_TRIAL_DAYS = int(getenv('CLOUD_TRIAL_DAYS', '30'))
+STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRICE_ID = getenv('STRIPE_PRICE_ID', '')
+STRIPE_PUBLISHABLE_KEY = getenv('STRIPE_PUBLISHABLE_KEY', '')
+
 # ALLOWED_HOSTS = [
 #     'localhost',
 #     '127.0.0.1',
@@ -51,6 +61,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
@@ -68,6 +79,8 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'billing.apps.BillingConfig',
+    'cloud.apps.CloudConfig',
     'integrations',
     'django.contrib.gis',
     # 'achievements', # Not done yet, will be added later in a future update
@@ -91,6 +104,7 @@ MIDDLEWARE = (
     'adventures.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'cloud.middleware.CloudAccessMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
@@ -154,10 +168,20 @@ USE_L10N = True
 USE_TZ = True
 
 # ---------------------------------------------------------------------------
+# Site URL (optional convenience for reverse-proxy / single-domain setups)
+# ---------------------------------------------------------------------------
+SITE_URL = getenv('SITE_URL', '').strip().rstrip('/')
+
+
+def _env_explicit(name: str) -> bool:
+    return name in os.environ
+
+
+# ---------------------------------------------------------------------------
 # Frontend URL & Cookies
 # ---------------------------------------------------------------------------
 # Derive frontend URL from environment and configure cookie behavior.
-unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
+unParsedFrontenedUrl = getenv('FRONTEND_URL') or (SITE_URL if SITE_URL else 'http://localhost:3000')
 FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
 SESSION_COOKIE_SAMESITE = 'Lax'
@@ -192,6 +216,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # Must match NGINX root for media serving
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
+MEDIA_STORAGE_LIMIT_BYTES = int(getenv('MEDIA_STORAGE_LIMIT_BYTES', '0') or 0)
+MEDIA_STORAGE_LIMIT_MB = int(getenv('MEDIA_STORAGE_LIMIT_MB', '0') or 0)
+if MEDIA_STORAGE_LIMIT_BYTES <= 0 and MEDIA_STORAGE_LIMIT_MB > 0:
+    MEDIA_STORAGE_LIMIT_BYTES = MEDIA_STORAGE_LIMIT_MB * 1024 * 1024
+
+MEDIA_STORAGE = getenv('MEDIA_STORAGE', 'local').lower()
+USE_S3_MEDIA = MEDIA_STORAGE == 's3'
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -200,6 +232,23 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     }
 }
+
+if USE_S3_MEDIA:
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    }
+    AWS_ACCESS_KEY_ID = getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = getenv('AWS_S3_ENDPOINT_URL') or None
+    AWS_S3_REGION_NAME = getenv('AWS_S3_REGION_NAME') or None
+    AWS_S3_ADDRESSING_STYLE = getenv('AWS_S3_ADDRESSING_STYLE', 'path')
+    AWS_S3_SIGNATURE_VERSION = getenv('AWS_S3_SIGNATURE_VERSION', 's3v4')
+    AWS_S3_CUSTOM_DOMAIN = getenv('AWS_S3_CUSTOM_DOMAIN') or None
+    AWS_QUERYSTRING_AUTH = getenv('AWS_QUERYSTRING_AUTH', 'true').lower() == 'true'
+    AWS_QUERYSTRING_EXPIRE = int(getenv('AWS_QUERYSTRING_EXPIRE', '3600'))
+    AWS_S3_FILE_OVERWRITE = getenv('AWS_S3_FILE_OVERWRITE', 'true').lower() == 'true'
+    AWS_DEFAULT_ACL = None
 
 SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
@@ -276,6 +325,24 @@ SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 # Defaults to disabled for local/dev convenience.
 ENABLE_RATE_LIMITS = getenv('ENABLE_RATE_LIMITS', 'false').lower() == 'true'
 
+# Centralized API rate limit defaults (override via env vars as needed).
+RATE_LIMIT_RATES = {
+    'user': getenv('RATE_LIMIT_USER', '10000/hour'),
+    'image_proxy': getenv('RATE_LIMIT_IMAGE_PROXY', '60/minute'),
+    'image_import': getenv('RATE_LIMIT_IMAGE_IMPORT', '12/minute'),
+    'external_geocode': getenv('RATE_LIMIT_EXTERNAL_GEOCODE', '120/minute'),
+    'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
+    'external_wikipedia': getenv('RATE_LIMIT_EXTERNAL_WIKIPEDIA', '60/minute'),
+    'external_sunrise_sunset': getenv('RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET', '30/minute'),
+    # Always applied on Endurain connect/MFA (see EndurainAuthThrottle).
+    'endurain_auth': getenv('RATE_LIMIT_ENDURAIN_AUTH', '10/minute'),
+}
+
+SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60 * 60 * 24 * 30)))
+WIKIPEDIA_DESC_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_DESC_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
+WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
+EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
+
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
 if getenv('EMAIL_BACKEND', 'console') == 'console':
@@ -330,10 +397,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
     ] if ENABLE_RATE_LIMITS else [],
-    'DEFAULT_THROTTLE_RATES': {
-        'user': '100000/day',
-        'image_proxy': '1000/minute',
-    } if ENABLE_RATE_LIMITS else {},
+    'DEFAULT_THROTTLE_RATES': RATE_LIMIT_RATES if ENABLE_RATE_LIMITS else {
+        # Endurain auth throttle is always-on and needs its rate registered.
+        'endurain_auth': RATE_LIMIT_RATES['endurain_auth'],
+    },
 }
 
 if DEBUG:
@@ -350,8 +417,15 @@ else:
 # ---------------------------------------------------------------------------
 # CORS & CSRF
 # ---------------------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
+if _env_explicit('CSRF_TRUSTED_ORIGINS'):
+    _csrf_origins_raw = getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost')
+elif SITE_URL:
+    _csrf_origins_raw = SITE_URL
+else:
+    _csrf_origins_raw = 'http://localhost'
+
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _csrf_origins_raw.split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -387,12 +461,10 @@ LOGGING = {
 # ---------------------------------------------------------------------------
 # Public URLs & Third-Party Integrations
 # ---------------------------------------------------------------------------
-PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
-
-# ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhost:8000')
 
 # Major release version of AdventureLog, not including the patch version date.
-ADVENTURELOG_RELEASE_VERSION = 'v0.12.1'
+ADVENTURELOG_RELEASE_VERSION = 'v0.13.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v3.1'
