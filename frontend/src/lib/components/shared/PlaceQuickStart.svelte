@@ -528,8 +528,12 @@
 				is_public: false
 			};
 
-			if (supportsCategory && selectedQuickAddCategory) {
-				payload.category = selectedQuickAddCategory;
+			if (supportsCategory && selectedQuickAddCategory?.name) {
+				payload.category = {
+					name: selectedQuickAddCategory.name,
+					display_name: selectedQuickAddCategory.display_name,
+					icon: selectedQuickAddCategory.icon || '🌍'
+				};
 			}
 
 			const res = await fetch(quickAddEndpoint, {

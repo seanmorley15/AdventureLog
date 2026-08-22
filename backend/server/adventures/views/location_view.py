@@ -1,7 +1,7 @@
 import logging
 from django.utils import timezone
 from django.db import transaction
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.db.models import Q, Max, Prefetch, Exists, OuterRef
 from django.db.models.functions import Lower
@@ -708,7 +708,7 @@ class LocationViewSet(viewsets.ModelViewSet):
             return None
 
         if isinstance(raw_category, dict):
-            category_id = raw_category.get('id')
+            category_id = str(raw_category.get('id') or '').strip()
             name = str(raw_category.get('name') or '').strip().lower()
             display_name = str(raw_category.get('display_name') or '').strip()
             icon = str(raw_category.get('icon') or '').strip() or '🌍'
@@ -725,12 +725,12 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         category = None
         if category_id:
-            category = Category.objects.filter(id=category_id, user=self.request.user).first()
-            if not category:
-                return Response(
-                    {"error": "Category not found or inaccessible"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+            try:
+                category = Category.objects.filter(
+                    id=category_id, user=self.request.user
+                ).first()
+            except (ValidationError, ValueError, TypeError):
+                category = None
 
         if category:
             return {
@@ -739,7 +739,15 @@ class LocationViewSet(viewsets.ModelViewSet):
                 'icon': category.icon,
             }
 
+        # New categories from the dropdown are assigned a client-side id that
+        # does not exist yet. Fall through to create-by-name, matching
+        # LocationSerializer.get_or_create_category.
         if not name:
+            if category_id:
+                return Response(
+                    {"error": "Category not found or inaccessible"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             return None
 
         return {

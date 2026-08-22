@@ -30,6 +30,8 @@
 	let isOpen = $state(false);
 	let openUpward = $state(false);
 	let isEmojiPickerVisible = $state(false);
+	let isCreatingCategory = $state(false);
+	let createError: string | null = $state(null);
 	let dropdownRef: HTMLDivElement | undefined = $state();
 	let mobileSearchInputRef: HTMLInputElement | undefined = $state();
 	let desktopSearchInputRef: HTMLInputElement | undefined = $state();
@@ -70,26 +72,92 @@
 		closeDropdown();
 	}
 
-	function createCustomCategory() {
+	function categorySlug(displayName: string) {
+		return displayName
+			.toLowerCase()
+			.replace(/\s+/g, '_')
+			.replace(/[^a-z0-9_]/g, '');
+	}
+
+	function findExistingCategory(name: string, displayName: string) {
+		return categories.find(
+			(category) =>
+				category.name === name ||
+				category.display_name.toLowerCase() === displayName.toLowerCase()
+		);
+	}
+
+	async function createCustomCategory() {
 		const displayName = newCategory.display_name.trim();
-		if (!displayName) return;
+		if (!displayName || isCreatingCategory) return;
 
-		const generatedId =
-			newCategory.id ||
-			(typeof crypto !== 'undefined' && 'randomUUID' in crypto
-				? crypto.randomUUID()
-				: `custom-${Date.now()}`);
+		const name = categorySlug(displayName) || displayName.toLowerCase();
+		const icon = newCategory.icon.trim() || '🌍';
+		createError = null;
 
-		const category: Category = {
-			...newCategory,
-			id: generatedId,
-			name: displayName.toLowerCase().replace(/\s+/g, '_'),
-			icon: newCategory.icon || '🌎'
-		};
+		const existing = findExistingCategory(name, displayName);
+		if (existing) {
+			selectCategory(existing);
+			newCategory = { ...emptyCategory };
+			return;
+		}
 
-		categories = [category, ...categories];
-		selectCategory(category);
-		newCategory = { ...emptyCategory };
+		isCreatingCategory = true;
+		try {
+			const res = await fetch('/api/categories', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					display_name: displayName,
+					name,
+					icon
+				})
+			});
+
+			if (res.ok) {
+				const created: Category = await res.json();
+				categories = [created, ...categories];
+				selectCategory(created);
+				newCategory = { ...emptyCategory };
+				return;
+			}
+
+			try {
+				const listRes = await fetch('/api/categories');
+				if (listRes.ok) {
+					const data = await listRes.json();
+					if (Array.isArray(data)) {
+						categories = data;
+						const match = findExistingCategory(name, displayName);
+						if (match) {
+							selectCategory(match);
+							newCategory = { ...emptyCategory };
+							return;
+						}
+					}
+				}
+			} catch {
+				// Fall through to the create error below.
+			}
+
+			const errorData = await res.json().catch(() => ({}));
+			createError =
+				(errorData as { error?: string; detail?: string })?.error ||
+				(errorData as { detail?: string })?.detail ||
+				$t('adventures.error_occurred');
+		} catch (error) {
+			console.error('Unable to create category', error);
+			createError = $t('adventures.error_occurred');
+		} finally {
+			isCreatingCategory = false;
+		}
+	}
+
+	function handleCategoryNameKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			createCustomCategory();
+		}
 	}
 
 	function handleEmojiSelect(event: CustomEvent) {
@@ -237,6 +305,7 @@
 							placeholder={$t('categories.category_name')}
 							class="input w-full h-12 text-base"
 							bind:value={newCategory.display_name}
+							onkeydown={handleCategoryNameKeydown}
 						/>
 						<div class="join w-full">
 							<input
@@ -259,24 +328,31 @@
 							type="button"
 							class="btn btn-primary h-12 w-full"
 							onclick={createCustomCategory}
-							disabled={!newCategory.display_name.trim()}
+							disabled={!newCategory.display_name.trim() || isCreatingCategory}
 						>
-							<svg
-								class="w-4 h-4 mr-1"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-								/>
-							</svg>
+							{#if isCreatingCategory}
+								<span class="loading loading-spinner loading-xs"></span>
+							{:else}
+								<svg
+									class="w-4 h-4 mr-1"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+									/>
+								</svg>
+							{/if}
 							{$t('adventures.add')}
 						</button>
+						{#if createError}
+							<p class="text-sm text-error">{createError}</p>
+						{/if}
 
 						{#if isEmojiPickerVisible}
 							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
@@ -396,6 +472,7 @@
 						placeholder={$t('categories.category_name')}
 						class="input input-sm w-full"
 						bind:value={newCategory.display_name}
+						onkeydown={handleCategoryNameKeydown}
 					/>
 					<div class="join w-full">
 						<input
@@ -420,25 +497,32 @@
 						type="button"
 						class="btn btn-primary btn-sm"
 						onclick={createCustomCategory}
-						disabled={!newCategory.display_name.trim()}
+						disabled={!newCategory.display_name.trim() || isCreatingCategory}
 					>
-						<svg
-							class="w-4 h-4 mr-1"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-							/>
-						</svg>
+						{#if isCreatingCategory}
+							<span class="loading loading-spinner loading-xs"></span>
+						{:else}
+							<svg
+								class="w-4 h-4 mr-1"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+								/>
+							</svg>
+						{/if}
 						{$t('adventures.add')}
 					</button>
 				</div>
+				{#if createError}
+					<p class="text-sm text-error">{createError}</p>
+				{/if}
 
 				{#if isEmojiPickerVisible}
 					<div class="p-3 rounded-lg border border-base-300">
