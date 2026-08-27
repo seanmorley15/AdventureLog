@@ -124,6 +124,7 @@ See [S3 Media Storage](s3_storage.md).
 | Variable | Required | Description |
 | -------- | -------- | ----------- |
 | `GOOGLE_MAPS_API_KEY` | If enabled | Google Maps tiles and place search. |
+| `PUBLIC_CARTO_BASEMAP_API_KEY` | If using CARTO basemaps | Domain-restricted CARTO key sent by the browser with map tile requests. |
 | `STRAVA_CLIENT_ID` | If enabled | Strava OAuth client ID. |
 | `STRAVA_CLIENT_SECRET` | If enabled | Strava OAuth client secret. |
 | `PUBLIC_UMAMI_SRC` | If enabled | Umami analytics script URL. |
