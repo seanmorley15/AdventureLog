@@ -6,7 +6,6 @@ import gpxpy
 
 def _gpx_to_feature_collection(gpx):
     features = []
-
     if gpx.tracks:
         for track in gpx.tracks:
             track_name = track.name or 'GPX Track'
@@ -72,5 +71,5 @@ def gpx_to_geojson(gpx_file):
     except Exception as exc:
         return {
             'error': str(exc),
-            'message': 'Failed to convert GPX to GeoJSON'
+            'message': 'Failed to convert GPX to GeoJSON',
         }
