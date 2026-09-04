@@ -611,6 +611,8 @@
     "logging_in": "Am amelde"
   },
   "users": {
-    "no_users_found": "Kei Benutze gfunde mit öffentliche Profil."
+    "no_users_found": "Kei Benutze gfunde mit öffentliche Profil.",
+    "no_users_desc": "Sobald anderi Reisendi ihres Profil öffentlich mached, erschiineds da.",
+    "no_match": "Kei Benutzer passend zu dinre suechi"
   }
 }
