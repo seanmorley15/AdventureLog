@@ -28,6 +28,12 @@ set +a
 
 echo "Validating $ENV_FILE ..."
 
+# SITE_URL is used to derive FRONTEND_URL, PUBLIC_URL, ORIGIN, and CSRF origins.
+# Without a scheme, Django crashes on startup (urlparse hostname is None).
+if [[ -n "${SITE_URL:-}" ]] && [[ "$SITE_URL" != http://* ]] && [[ "$SITE_URL" != https://* ]]; then
+	error "SITE_URL must start with http:// or https:// — the app will not boot without a scheme"
+fi
+
 IS_STANDARD_DEPLOYMENT=false
 case "$(basename "$ENV_FILE")" in
 	.env.aio)
@@ -46,9 +52,6 @@ if [[ "$IS_STANDARD_DEPLOYMENT" == true ]]; then
 	fi
 	if [[ "${POSTGRES_PASSWORD:-changeme123}" == "changeme123" ]]; then
 		warn "Default POSTGRES_PASSWORD detected — change this for production"
-	fi
-	if [[ -n "${SITE_URL:-}" ]] && [[ "$SITE_URL" != http://* ]] && [[ "$SITE_URL" != https://* ]]; then
-		warn "SITE_URL should start with http:// or https://"
 	fi
 	if [[ "${DJANGO_ADMIN_PASSWORD:-admin}" == "admin" ]] && [[ "${DJANGO_ADMIN_USERNAME:-admin}" == "admin" ]]; then
 		warn "Default admin credentials (admin/admin) detected — change for production"
