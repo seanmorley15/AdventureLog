@@ -819,7 +819,13 @@
 		"verify_email_success": "Verifikimi me email u dërgua me sukses!",
 		"verify_setup": "Verifiko konfigurimin",
 		"whats_included": "Çfarë përfshihet",
-		"world_travel_visits": "Vizitat e Udhëtimit Botëror"
+		"world_travel_visits": "Vizitat e Udhëtimit Botëror",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"api_keys": {
 		"copied": "E kopjuar!",

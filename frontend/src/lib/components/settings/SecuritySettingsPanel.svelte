@@ -6,6 +6,7 @@
 	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	type Provider = { name: string; usage_required: boolean };
 	type PasswordPolicy = { min_length: number; validators_enabled: boolean };
@@ -75,6 +76,8 @@
 		isDisablingMfa = false,
 		isVerifyingMfaDisablePassword = false
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	function sessionDeviceLabel(userAgent: string): string {
 		const ua = userAgent?.trim() ?? '';
@@ -181,7 +184,10 @@
 							{sessionDeviceLabel(session.user_agent) || $t('settings.sessions_unknown_device')}
 						</p>
 						<p class="text-sm text-base-content/80">
-							{session.ip} · {new Date(session.created_at * 1000).toLocaleDateString()}
+							{session.ip} · {formatDisplayDate(
+								new Date(session.created_at * 1000).toISOString().split('T')[0],
+								dateFormat
+							)}
 						</p>
 					</div>
 					{#if session.is_current}

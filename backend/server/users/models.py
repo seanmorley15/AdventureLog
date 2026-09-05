@@ -30,6 +30,13 @@ CURRENCY_CHOICES = (
     ('TRY', 'Turkish Lira'),
 )
 
+DATE_FORMAT_CHOICES = (
+    ('locale', 'Browser default'),
+    ('mdy', 'MM/DD/YYYY'),
+    ('dmy', 'DD/MM/YYYY'),
+    ('ymd', 'YYYY-MM-DD'),
+)
+
 BASEMAP_CHOICES = (
     ('default', 'Default'),
     ('terrain-3d', '3D Terrain'),
@@ -66,6 +73,7 @@ class CustomUser(AbstractUser):
     disable_password = models.BooleanField(default=False)
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
     default_currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default='USD')
+    date_format = models.CharField(max_length=10, choices=DATE_FORMAT_CHOICES, default='locale')
     map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
     legal_consent = models.JSONField(null=True, blank=True, editable=False)
 

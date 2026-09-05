@@ -26,6 +26,8 @@
 	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 	import WandererCard from '../cards/WandererCard.svelte';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	
 	interface Props {
@@ -50,6 +52,8 @@
 		userIsOwner = false,
 		pendingGooglePhotoUrls = $bindable([])
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	// Component state
 	let immichIntegration: boolean = $state(false);
@@ -186,7 +190,8 @@
 	}
 
 	function formatDate(dateString: string | number | Date) {
-		return new Date(dateString).toLocaleDateString();
+		const iso = typeof dateString === 'string' ? dateString : new Date(dateString).toISOString();
+		return formatDisplayDate(iso, dateFormat);
 	}
 
 	async function fetchWandererTrails(filter = '') {

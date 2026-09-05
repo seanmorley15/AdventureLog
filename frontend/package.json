@@ -44,6 +44,7 @@
 	},
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
+		"cally": "^0.9.2",
 		"dompurify": "^3.2.5",
 		"emoji-picker-element": "^1.26.3",
 		"gsap": "^3.12.7",

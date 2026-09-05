@@ -6,6 +6,7 @@
 	import { addToast } from '$lib/toasts';
 	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
+	import DateInput from './shared/DateInput.svelte';
 
 	// Icons
 	import CollectionIcon from '~icons/mdi/folder-multiple';
@@ -366,12 +367,11 @@
 										<CalendarIcon class="w-4 h-4" />
 										{$t('adventures.start_date')}
 									</label>
-									<input
-										type="date"
+									<DateInput
 										id="start_date"
 										name="start_date"
 										bind:value={collection.start_date}
-										class="input w-full"
+										clearable={true}
 									/>
 								</div>
 
@@ -381,12 +381,11 @@
 										<CalendarIcon class="w-4 h-4" />
 										{$t('adventures.end_date')}
 									</label>
-									<input
-										type="date"
+									<DateInput
 										id="end_date"
 										name="end_date"
 										bind:value={collection.end_date}
-										class="input w-full"
+										clearable={true}
 									/>
 								</div>
 

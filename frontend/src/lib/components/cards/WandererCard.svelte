@@ -9,12 +9,16 @@
 	import FileIcon from '~icons/mdi/file';
 	import LinkIcon from '~icons/mdi/link-variant';
 	import type { WandererTrail } from '$lib/types';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface Props {
 		trail: WandererTrail;
 	}
 
 	let { trail }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	// Helper functions
 	/**
@@ -54,7 +58,8 @@
 	 */
 	function formatDate(dateString: string | number | Date) {
 		if (!dateString) return '';
-		return new Date(dateString).toLocaleDateString();
+		const iso = typeof dateString === 'string' ? dateString : new Date(dateString).toISOString();
+		return formatDisplayDate(iso, dateFormat);
 	}
 
 	/**

@@ -8,6 +8,8 @@
 	import Account from '~icons/mdi/account';
 	import ShieldAccount from '~icons/mdi/shield-account';
 	import ChevronRight from '~icons/mdi/chevron-right';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface Props {
 		sharing?: boolean;
@@ -23,6 +25,8 @@
 		revoke: User;
 	}>();
 
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
+
 	let isShared = $derived(shared_with?.includes(user.uuid) || false);
 	let isPending = $derived(user.status === 'pending');
 	let isAvailable = $derived(user.status === 'available');
@@ -30,14 +34,9 @@
 	let displayName =
 		$derived([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username);
 
-	let joinedLabel = $derived(user.date_joined
-		? new Date(user.date_joined).toLocaleDateString(undefined, {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				timeZone: 'UTC'
-			})
-		: '');
+	let joinedLabel = $derived(
+		user.date_joined ? formatDisplayDate(user.date_joined, dateFormat, { timeZone: 'UTC' }) : ''
+	);
 
 	function openProfile() {
 		goto(`/profile/${user.username}`);

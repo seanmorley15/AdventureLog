@@ -11,6 +11,7 @@
 	import { LODGING_TYPES_ICONS } from '$lib';
 	import { formatDateInTimezone } from '$lib/dateUtils';
 	import { formatAllDayDate } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { isAllDay } from '$lib';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -109,6 +110,8 @@
 		itineraryItem = null,
 		isMultiDay = false
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	let isWarningModalOpen: boolean = $state(false);
 
@@ -346,11 +349,12 @@
 					{#if isAllDay(lodging.check_in) && isAllDay(lodging.check_out)}
 						<!-- All-day dates -->
 						<div class="flex items-center gap-2 text-sm">
-							<span class="font-medium text-base-content">{formatAllDayDate(lodging.check_in)}</span
+							<span class="font-medium text-base-content"
+								>{formatAllDayDate(lodging.check_in, dateFormat)}</span
 							>
 							<span class="text-primary">→</span>
 							<span class="font-medium text-base-content"
-								>{formatAllDayDate(lodging.check_out)}</span
+								>{formatAllDayDate(lodging.check_out, dateFormat)}</span
 							>
 						</div>
 					{:else}
@@ -363,9 +367,9 @@
 										<span class="text-xs text-base-content/60">Check-in</span>
 										<span class="text-sm font-semibold text-base-content">
 											{#if isAllDay(lodging.check_in)}
-												{formatAllDayDate(lodging.check_in)}
+												{formatAllDayDate(lodging.check_in, dateFormat)}
 											{:else}
-												{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+												{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
 											{/if}
 										</span>
 									</div>
@@ -405,9 +409,9 @@
 											<span class="text-xs text-base-content/60">Check-out</span>
 											<span class="text-sm font-semibold text-base-content">
 												{#if isAllDay(lodging.check_out)}
-													{formatAllDayDate(lodging.check_out)}
+													{formatAllDayDate(lodging.check_out, dateFormat)}
 												{:else}
-													{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+													{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
 												{/if}
 											</span>
 										</div>
@@ -434,9 +438,9 @@
 								<span class="text-xs text-base-content/60">Check-in</span>
 								<span class="text-sm font-semibold text-base-content">
 									{#if isAllDay(lodging.check_in)}
-										{formatAllDayDate(lodging.check_in)}
+										{formatAllDayDate(lodging.check_in, dateFormat)}
 									{:else}
-										{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+										{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
 									{/if}
 								</span>
 							</div>
@@ -460,9 +464,9 @@
 								<span class="text-xs text-base-content/60">Check-out</span>
 								<span class="text-sm font-semibold text-base-content">
 									{#if isAllDay(lodging.check_out)}
-										{formatAllDayDate(lodging.check_out)}
+										{formatAllDayDate(lodging.check_out, dateFormat)}
 									{:else}
-										{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+										{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
 									{/if}
 								</span>
 							</div>

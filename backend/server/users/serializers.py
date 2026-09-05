@@ -46,6 +46,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('measurement_system')
         if hasattr(UserModel, 'default_currency'):
             extra_fields.append('default_currency')
+        if hasattr(UserModel, 'date_format'):
+            extra_fields.append('date_format')
         if hasattr(UserModel, 'map_style'):
             extra_fields.append('map_style')
 

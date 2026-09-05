@@ -1092,7 +1092,13 @@
 		"public_profile_left_collections": "귀하의 프로필은 이제 비공개입니다. \n귀하는 {count}개의 공유 컬렉션에서 삭제되었습니다.",
 		"public_profile_private_confirm": "프로필을 비공개로 설정하면 {shared} 공유 컬렉션에서 귀하가 제거되고 대기 중인 초대 {invites}이 취소됩니다. \n계속하다?",
 		"public_profile_revoked_invites": "보류 중인 컬렉션 초대 {count}개를 취소했습니다.",
-		"public_profile_sharing_warning": "귀하는 현재 {count}개의 컬렉션에서 공유되었습니다. \n프로필을 비공개로 설정하면 해당 컬렉션에서 귀하가 제거됩니다."
+		"public_profile_sharing_warning": "귀하는 현재 {count}개의 컬렉션에서 공유되었습니다. \n프로필을 비공개로 설정하면 해당 컬렉션에서 귀하가 제거됩니다.",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"share": {
 		"no_users_shared": "공유한 사용자가 없습니다",

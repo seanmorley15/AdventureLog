@@ -150,6 +150,7 @@ export const actions: Actions = {
 			let public_profile = formData.get('public_profile') as string | null | undefined | boolean;
 			let measurement_system = formData.get('measurement_system') as string | null | undefined;
 			let default_currency = formData.get('default_currency') as string | null | undefined;
+			let date_format = formData.get('date_format') as string | null | undefined;
 			let map_style = formData.get('map_style') as string | null | undefined;
 
 			const resCurrent = await djangoSessionFetch(event, '/auth/user-metadata/');
@@ -173,6 +174,9 @@ export const actions: Actions = {
 			if (default_currency !== null && typeof default_currency === 'string') {
 				default_currency = default_currency.trim().toUpperCase();
 			}
+			if (date_format !== null && typeof date_format === 'string') {
+				date_format = date_format.trim().toLowerCase();
+			}
 			if (map_style !== null && typeof map_style === 'string') {
 				map_style = map_style.trim();
 			}
@@ -193,6 +197,9 @@ export const actions: Actions = {
 			}
 			if (!default_currency || default_currency === currentUser.default_currency) {
 				default_currency = undefined;
+			}
+			if (!date_format || date_format === currentUser.date_format) {
+				date_format = undefined;
 			}
 			if (!map_style || map_style === currentUser.map_style) {
 				map_style = undefined;
@@ -216,6 +223,9 @@ export const actions: Actions = {
 			formDataToSend.append('measurement_system', measurement_system.toString());
 			if (default_currency) {
 				formDataToSend.append('default_currency', default_currency);
+			}
+			if (date_format) {
+				formDataToSend.append('date_format', date_format);
 			}
 			if (map_style) {
 				formDataToSend.append('map_style', map_style);

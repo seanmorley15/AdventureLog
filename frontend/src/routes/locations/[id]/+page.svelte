@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
+	import { untrack } from 'svelte';
 
 	import type { Location } from '$lib/types';
 	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '$lib/sunriseSunset';
@@ -13,6 +13,8 @@
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
+	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
@@ -48,6 +50,8 @@
 	}
 
 	let { data }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 	let measurementSystem = $derived(data.user?.measurement_system || 'metric');
 
 	let adventure: Location | undefined = $state();
@@ -104,12 +108,19 @@
 	}
 
 	function applyLocationPageData(adventureData: Location | null | undefined) {
+		const previousId = adventure?.id ?? null;
+		const nextId = adventureData?.id ?? null;
+		const locationChanged = previousId !== nextId;
+
 		if (!adventureData) {
 			notFound = true;
 			adventure = undefined;
 			visitSunriseSunset = {};
 			sunriseSunsetLoading = {};
 			currentSlide = 0;
+			isImageModalOpen = false;
+			isEditModalOpen = false;
+			isSocialShareModalOpen = false;
 			return;
 		}
 
@@ -133,6 +144,10 @@
 			});
 		}
 
+		if (!locationChanged) {
+			return;
+		}
+
 		visitSunriseSunset = {};
 		sunriseSunsetLoading = {};
 		currentSlide = 0;
@@ -141,8 +156,11 @@
 		isSocialShareModalOpen = false;
 	}
 
-	run(() => {
-		applyLocationPageData(data.props.adventure);
+	$effect.pre(() => {
+		const adventureData = data.props.adventure;
+		untrack(() => {
+			applyLocationPageData(adventureData);
+		});
 	});
 
 	let imagePinGeoJson = $derived(adventure
@@ -648,9 +666,10 @@
 																<div class="flex items-center gap-2 mb-2">
 																	<span class="badge badge-primary">All Day</span>
 																	<span class="font-semibold">
-																		{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
-																			? visit.end_date.split('T')[0]
-																			: ''}
+																		{formatAllDayDate(visit.start_date, dateFormat)} – {formatAllDayDate(
+																			visit.end_date,
+																			dateFormat
+																		)}
 																	</span>
 																</div>
 															{:else}
@@ -664,25 +683,18 @@
 																		{/if}
 																	</div>
 																	<div class="text-sm">
-																		{#if visit.timezone}
-																			<strong>{$t('adventures.start')}:</strong>
-																			{DateTime.fromISO(visit.start_date, { zone: 'utc' })
-																				.setZone(visit.timezone)
-																				.toLocaleString(DateTime.DATETIME_MED)}<br />
-																			<strong>{$t('adventures.end')}:</strong>
-																			{DateTime.fromISO(visit.end_date, { zone: 'utc' })
-																				.setZone(visit.timezone)
-																				.toLocaleString(DateTime.DATETIME_MED)}
-																		{:else}
-																			<strong>Start:</strong>
-																			{DateTime.fromISO(visit.start_date).toLocaleString(
-																				DateTime.DATETIME_MED
-																			)}<br />
-																			<strong>End:</strong>
-																			{DateTime.fromISO(visit.end_date).toLocaleString(
-																				DateTime.DATETIME_MED
-																			)}
-																		{/if}
+																		<strong>{$t('adventures.start')}:</strong>
+																		{formatDateInTimezone(
+																			visit.start_date,
+																			visit.timezone,
+																			dateFormat
+																		)}<br />
+																		<strong>{$t('adventures.end')}:</strong>
+																		{formatDateInTimezone(
+																			visit.end_date,
+																			visit.timezone,
+																			dateFormat
+																		)}
 																	</div>
 																</div>
 															{/if}

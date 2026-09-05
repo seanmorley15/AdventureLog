@@ -30,6 +30,7 @@
 	import CardAccountDetails from '~icons/mdi/card-account-details';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
@@ -47,6 +48,7 @@
 	}
 
 	let { data }: Props = $props();
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 	$effect(() => {
 		console.log(data);
 	});
@@ -502,9 +504,9 @@
 													</p>
 													<p class="text-base font-semibold">
 														{#if isAllDay(lodging.check_in)}
-															{formatAllDayDate(lodging.check_in)}
+															{formatAllDayDate(lodging.check_in, dateFormat)}
 														{:else}
-															{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+															{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
 														{/if}
 													</p>
 												</div>
@@ -532,9 +534,9 @@
 													</p>
 													<p class="text-base font-semibold">
 														{#if isAllDay(lodging.check_out)}
-															{formatAllDayDate(lodging.check_out)}
+															{formatAllDayDate(lodging.check_out, dateFormat)}
 														{:else}
-															{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+															{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
 														{/if}
 													</p>
 												</div>

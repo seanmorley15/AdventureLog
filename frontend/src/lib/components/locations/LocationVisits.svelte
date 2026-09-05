@@ -17,8 +17,12 @@
 		validateDateRange,
 		formatUTCDate,
 		toDateOnlyLocal,
-		toTimedLocalDefault
+		toTimedLocalDefault,
+		formatDateInTimezone,
+		formatAllDayDate
 	} from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { isAllDay, isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
@@ -43,6 +47,7 @@
 	import CloseIcon from '~icons/mdi/close';
 	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
+	import DateInput from '../shared/DateInput.svelte';
 
 	
 	interface Props {
@@ -71,6 +76,8 @@
 		measurementSystem = 'metric',
 		initialVisitDate = $bindable(null)
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	const dispatch = createEventDispatcher();
 
@@ -182,22 +189,6 @@
 	});
 
 	// Helper functions
-	function formatDateInTimezone(utcDate: string, timezone: string): string {
-		try {
-			return new Intl.DateTimeFormat(undefined, {
-				timeZone: timezone,
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: true
-			}).format(new Date(utcDate));
-		} catch {
-			return new Date(utcDate).toLocaleString();
-		}
-	}
-
 	function formatDuration(seconds: number): string {
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
@@ -985,27 +976,15 @@
 							<label class="field-label" for="start-date-input">
 								{typeConfig.startLabel}
 							</label>
-							{#if allDay}
-								<input
-									id="start-date-input"
-									type="date"
-									class="input w-full mt-1"
-									bind:value={localStartDate}
-									onchange={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : ''}
-									max={constrainDates ? constraintEndDate : ''}
-								/>
-							{:else}
-								<input
-									id="start-date-input"
-									type="datetime-local"
-									class="input w-full mt-1"
-									bind:value={localStartDate}
-									onchange={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : ''}
-									max={constrainDates ? constraintEndDate : ''}
-								/>
-							{/if}
+							<DateInput
+								id="start-date-input"
+								bind:value={localStartDate}
+								onchange={handleLocalDateChange}
+								showTime={!allDay}
+								min={constrainDates ? constraintStartDate : undefined}
+								max={constrainDates ? constraintEndDate : undefined}
+								clearable={false}
+							/>
 						</div>
 
 						<!-- End Date -->
@@ -1014,27 +993,15 @@
 								<label class="field-label" for="end-date-input">
 									{typeConfig.endLabel}
 								</label>
-								{#if allDay}
-									<input
-										id="end-date-input"
-										type="date"
-										class="input w-full mt-1"
-										bind:value={localEndDate}
-										onchange={handleLocalDateChange}
-										min={constrainDates ? localStartDate : ''}
-										max={constrainDates ? constraintEndDate : ''}
-									/>
-								{:else}
-									<input
-										id="end-date-input"
-										type="datetime-local"
-										class="input w-full mt-1"
-										bind:value={localEndDate}
-										onchange={handleLocalDateChange}
-										min={constrainDates ? localStartDate : ''}
-										max={constrainDates ? constraintEndDate : ''}
-									/>
-								{/if}
+								<DateInput
+									id="end-date-input"
+									bind:value={localEndDate}
+									onchange={handleLocalDateChange}
+									showTime={!allDay}
+									min={constrainDates ? localStartDate : undefined}
+									max={constrainDates ? constraintEndDate : undefined}
+									clearable={false}
+								/>
 							</div>
 						{/if}
 					</div>
@@ -1112,21 +1079,14 @@
 												{/if}
 												<div class="text-sm font-medium truncate">
 													{#if isVisitAllDay(visit.start_date, visit.end_date)}
-														{visit.start_date && typeof visit.start_date === 'string'
-															? visit.start_date.split('T')[0]
-															: ''}
-														– {visit.end_date && typeof visit.end_date === 'string'
-															? visit.end_date.split('T')[0]
-															: ''}
-													{:else if 'start_timezone' in visit && visit.timezone}
-														{formatDateInTimezone(visit.start_date, visit.timezone)}
-														– {formatDateInTimezone(visit.end_date, visit.timezone)}
+														{formatAllDayDate(visit.start_date, dateFormat)}
+														– {formatAllDayDate(visit.end_date, dateFormat)}
 													{:else if visit.timezone}
-														{formatDateInTimezone(visit.start_date, visit.timezone)}
-														– {formatDateInTimezone(visit.end_date, visit.timezone)}
+														{formatDateInTimezone(visit.start_date, visit.timezone, dateFormat)}
+														– {formatDateInTimezone(visit.end_date, visit.timezone, dateFormat)}
 													{:else}
-														{new Date(visit.start_date).toLocaleString()}
-														– {new Date(visit.end_date).toLocaleString()}
+														{formatDateInTimezone(visit.start_date, null, dateFormat)}
+														– {formatDateInTimezone(visit.end_date, null, dateFormat)}
 													{/if}
 												</div>
 											</div>
@@ -1374,11 +1334,12 @@
 															class="field-label text-xs"
 															for="start-date-{visit.id}">{$t('adventures.start_date')}</label
 														>
-														<input
+														<DateInput
 															id="start-date-{visit.id}"
-															type="datetime-local"
-															class="input input-sm w-full mt-1"
 															bind:value={activityForm.start_date}
+															showTime={true}
+															size="sm"
+															clearable={false}
 															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>

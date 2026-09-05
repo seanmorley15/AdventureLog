@@ -15,6 +15,7 @@
 	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
 	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
 	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import ImageFrame from '$lib/components/ImageFrame.svelte';
@@ -54,6 +55,8 @@
 	}
 
 	let { data }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 
 	function getCollectionFromPageData(pageData: PageData): Collection | null | undefined {
 		return (
@@ -419,7 +422,7 @@
 
 	function formatDate(dateString: string | null) {
 		if (!dateString) return '';
-		return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
+		return formatDisplayDate(dateString, dateFormat);
 	}
 
 	function collaboratorDisplayName(person: Collaborator | null | undefined): string {
@@ -604,7 +607,8 @@
 				timezoneMode,
 				userTimezone,
 				calendarTimezoneLabels,
-				(key) => $t(key)
+				(key) => $t(key),
+				dateFormat
 			)
 		: []);
 	// Localized category labels - computed reactively from i18n

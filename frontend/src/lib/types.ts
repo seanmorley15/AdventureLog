@@ -20,6 +20,7 @@ export type User = {
 	disable_password: boolean;
 	measurement_system: 'metric' | 'imperial';
 	default_currency: string;
+	date_format?: string;
 	map_style: string;
 	shared_collection_count?: number;
 	pending_collection_invite_count?: number;

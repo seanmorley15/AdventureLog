@@ -10,6 +10,7 @@
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
 	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { isAllDay } from '$lib';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -100,6 +101,8 @@
 		readOnly = false,
 		itineraryItem = null
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	const toMiles = (km: any) => (Number(km) * 0.621371).toFixed(1);
 
@@ -395,12 +398,12 @@
 					<!-- All-day event -->
 					<div class="flex items-center gap-2 text-sm">
 						<span class="font-medium text-base-content"
-							>{formatAllDayDate(transportation.date)}</span
+							>{formatAllDayDate(transportation.date, dateFormat)}</span
 						>
 						{#if transportation.end_date && transportation.end_date !== transportation.date}
 							<span class="text-base-content/40">→</span>
 							<span class="font-medium text-base-content"
-								>{formatAllDayDate(transportation.end_date)}</span
+								>{formatAllDayDate(transportation.end_date, dateFormat)}</span
 							>
 						{/if}
 					</div>
@@ -411,7 +414,11 @@
 							<div class="flex flex-col gap-0.5 min-w-0">
 								<span class="text-xs text-base-content/60">Departure</span>
 								<span class="text-sm font-semibold text-base-content">
-									{formatDateInTimezone(transportation.date, transportation.start_timezone)}
+									{formatDateInTimezone(
+										transportation.date,
+										transportation.start_timezone,
+										dateFormat
+									)}
 								</span>
 							</div>
 							{#if hasCodePair}
@@ -458,7 +465,8 @@
 											<span class="text-sm font-semibold text-base-content">
 												{formatDateInTimezone(
 													transportation.end_date,
-													transportation.end_timezone ?? transportation.start_timezone
+													transportation.end_timezone ?? transportation.start_timezone,
+													dateFormat
 												)}
 											</span>
 										</div>

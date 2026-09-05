@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface Props {
 		data: PageData;
@@ -7,6 +8,7 @@
 
 	let { data }: Props = $props();
 	const user = $derived(data.props.user);
+	const dateFormat = $derived(dateFormatFromUser(data.user ?? user));
 	$effect(() => {
 		console.log(user);
 	});
@@ -31,7 +33,7 @@
 
 <div class="flex justify-center mt-4">
 	<p class="text-sm text-neutral-content">
-		{user.date_joined ? 'Joined ' + new Date(user.date_joined).toLocaleDateString() : ''}
+		{user.date_joined ? 'Joined ' + formatDisplayDate(user.date_joined, dateFormat) : ''}
 	</p>
 </div>
 

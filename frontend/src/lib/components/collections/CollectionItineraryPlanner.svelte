@@ -37,6 +37,7 @@
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
 	import { isVisitAllDay } from '$lib';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import Globe from '~icons/mdi/globe';
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
@@ -49,6 +50,8 @@
 	}
 
 	let { collection = $bindable(), user, canModify = false }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	const flipDurationMs = 200;
 
@@ -860,7 +863,7 @@
 
 			days.push({
 				date: iso,
-				displayDate: dt.toFormat('cccc, LLLL d, yyyy'),
+				displayDate: formatDisplayDate(iso, dateFormat, { month: 'long' }),
 				items,
 				overnightLodging,
 				globalDatedItems,
@@ -2459,7 +2462,7 @@
 										<div class="space-y-2">
 											{#each day.overnightLodging as lodging}
 												{@const checkOut = lodging.check_out
-													? DateTime.fromISO(lodging.check_out.split('T')[0]).toFormat('LLL d')
+													? formatDisplayDate(lodging.check_out, dateFormat)
 													: null}
 												<div
 													class="flex items-center gap-3 bg-base-100 rounded-lg px-4 py-3 border border-base-300"

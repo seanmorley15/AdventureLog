@@ -7,6 +7,7 @@
 	import CloseIcon from '~icons/mdi/close';
 	import type { ImmichAlbum } from '$lib/types';
 	import { debounce } from '$lib';
+	import DateInput from './shared/DateInput.svelte';
 
 	
 	interface Props {
@@ -296,12 +297,11 @@
 	</div>
 {:else if searchCategory === 'date'}
 	<div class="flex gap-2 items-center">
-		<input
+		<DateInput
 			id="date-picker"
-			type="date"
 			bind:value={selectedDate}
-			class="input flex-1"
 			disabled={loading}
+			clearable={false}
 		/>
 	</div>
 {:else if searchCategory === 'album'}

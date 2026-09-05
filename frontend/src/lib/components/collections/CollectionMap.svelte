@@ -16,6 +16,7 @@
 	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
 	import { t } from 'svelte-i18n';
 	import type { Collection, Location, User } from '$lib/types';
+	import DateInput from '$lib/components/shared/DateInput.svelte';
 
 	
 	interface Props {
@@ -956,21 +957,21 @@
 							{$t('adventures.dates')}
 						</p>
 						<div class="flex gap-2">
-							<input
-								type="date"
+							<DateInput
 								bind:value={startDateFilter}
-								class="input input-xs flex-1 min-w-0"
+								size="xs"
 								min={collectionStartDateISO}
 								max={collectionEndDateISO}
-								aria-label={$t('adventures.start_date')}
+								clearable={true}
+								placeholder={$t('adventures.start_date')}
 							/>
-							<input
-								type="date"
+							<DateInput
 								bind:value={endDateFilter}
-								class="input input-xs flex-1 min-w-0"
+								size="xs"
 								min={collectionStartDateISO}
 								max={collectionEndDateISO}
-								aria-label={$t('adventures.end_date')}
+								clearable={true}
+								placeholder={$t('adventures.end_date')}
 							/>
 						</div>
 					</div>

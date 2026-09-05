@@ -20,6 +20,7 @@
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '$lib/types';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	let isActionsMenuOpen = $state(false);
 	let openUpward = $state(false);
@@ -72,6 +73,8 @@
 		$derived(!readOnly &&
 		(checklist.user == user?.uuid ||
 			(collection && user && collection.shared_with?.includes(user.uuid))));
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	const normalizeDateForApi = (date: string | Date | null | undefined): string | null => {
 		if (!date) return null;
@@ -192,7 +195,7 @@
 							<div class="flex items-center gap-2">
 								<Calendar class="w-4 h-4 text-primary" />
 								<span>
-									{new Date(checklist.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+									{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}
 								</span>
 							</div>
 						{/if}
@@ -456,7 +459,7 @@
 			{#if checklist.date && checklist.date !== ''}
 				<div class="flex items-center gap-1">
 					<Calendar class="w-4 h-4 text-primary" />
-					<span>{new Date(checklist.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
+					<span>{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}</span>
 				</div>
 			{/if}
 

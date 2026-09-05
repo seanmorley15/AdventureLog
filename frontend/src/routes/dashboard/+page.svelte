@@ -7,6 +7,7 @@
 	import type { ActivityRecord, SlimCollection, UserStats } from '$lib/types';
 	import type { CalendarApiEvent } from '$lib/calendar/types';
 	import { apiEventsToDisplayEvents } from '$lib/calendar/events';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import { getDistance, getElevation } from '$lib/index';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -40,6 +41,7 @@
 	let { data }: Props = $props();
 
 	const user = $derived(data.user);
+	const dateFormat = $derived(dateFormatFromUser(user));
 	let stats: UserStats | null = $derived(data.props.stats);
 	let recentLocations = $derived(data.props.recentLocations);
 	let upcomingTrips: SlimCollection[] = $derived(data.props.upcomingTrips);
@@ -69,7 +71,8 @@
 		upcomingEvents,
 		'event',
 		userTimezone,
-		timezoneLabels
+		timezoneLabels,
+		dateFormat
 	));
 
 	let agendaEvents = $derived(displayEvents
@@ -140,12 +143,7 @@
 
 	function formatTripDate(date: string | null): string {
 		if (!date) return '';
-		return new Date(date).toLocaleDateString(undefined, {
-			timeZone: 'UTC',
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
+		return formatDisplayDate(date, dateFormat, { timeZone: 'UTC' });
 	}
 
 	function getTripBannerImage(trip: SlimCollection): string | null {

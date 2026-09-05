@@ -7,6 +7,8 @@
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Category } from '$lib/types';
 	import { fetchFormattedLocation } from '$lib/map/places';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	import SearchIcon from '~icons/mdi/magnify';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
@@ -67,6 +69,8 @@
 		itineraryLabel = null,
 		basemapType = 'default'
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	let searchQuery = $state('');
 	let searchResults: SelectedPlace[] = $state([]);
@@ -468,17 +472,8 @@
 			return null;
 		}
 
-		const date = new Date(`${value}T00:00:00`);
-		if (Number.isNaN(date.getTime())) {
-			return value;
-		}
-
-		return date.toLocaleDateString(undefined, {
-			weekday: 'short',
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
+		const formatted = formatDisplayDate(value, dateFormat);
+		return formatted || value;
 	}
 
 	async function continueWithDetails() {

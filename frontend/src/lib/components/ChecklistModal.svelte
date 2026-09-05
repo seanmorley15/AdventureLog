@@ -10,6 +10,7 @@
 	import { t } from 'svelte-i18n';
 
 	import CheckboxIcon from '~icons/mdi/checkbox-multiple-marked-outline';
+	import DateInput from './shared/DateInput.svelte';
 
 	interface Props {
 		checklist?: Checklist | null;
@@ -325,15 +326,14 @@
 											>
 										</div>
 									{/if}
-									<input
-										type="date"
+									<DateInput
 										id="date"
 										name="date"
 										readonly={isReadOnly}
-										min={constrainDates ? collection.start_date : ''}
-										max={constrainDates ? collection.end_date : ''}
+										min={constrainDates ? collection.start_date || undefined : undefined}
+										max={constrainDates ? collection.end_date || undefined : undefined}
 										bind:value={newChecklist.date}
-										class="input w-full bg-base-100/80 focus:bg-base-100"
+										clearable={!isReadOnly}
 									/>
 								</div>
 							</div>

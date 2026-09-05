@@ -1176,7 +1176,13 @@
 		"public_profile_left_collections": "あなたのプロフィールは非公開になりました。\nあなたは {count} 個の共有コレクションから削除されました。",
 		"public_profile_private_confirm": "プロフィールを非公開にすると、{shared} 個の共有コレクションからあなたが削除され、{invites} 個の保留中の招待がキャンセルされます。\n続く？",
 		"public_profile_revoked_invites": "{count} 件の保留中のコレクションへの招待をキャンセルしました。",
-		"public_profile_sharing_warning": "あなたは現在 {count} 個のコレクションで共有されています。\nプロフィールを非公開にすると、それらのコレクションから削除されます。"
+		"public_profile_sharing_warning": "あなたは現在 {count} 個のコレクションで共有されています。\nプロフィールを非公開にすると、それらのコレクションから削除されます。",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"share": {
 		"available": "利用可能",

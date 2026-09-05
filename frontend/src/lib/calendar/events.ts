@@ -8,6 +8,7 @@ import type {
 } from './types';
 import { formatAllDayDate } from '$lib/dateUtils';
 import { isAllDay, isVisitAllDay } from '$lib';
+import type { DateFormatPreference } from '$lib/dateFormat';
 // @ts-ignore luxon types are not bundled in this project
 import { DateTime } from 'luxon';
 import type { Collection, Lodging, Transportation } from '$lib/types';
@@ -67,7 +68,8 @@ export function buildEventTimes({
 	allDay,
 	userTimezone,
 	timezoneLabelEvent,
-	timezoneLabelLocal
+	timezoneLabelLocal,
+	dateFormat
 }: {
 	start: string | null;
 	end: string | null;
@@ -77,6 +79,7 @@ export function buildEventTimes({
 	userTimezone: string;
 	timezoneLabelEvent: string;
 	timezoneLabelLocal: string;
+	dateFormat?: DateFormatPreference;
 }) {
 	if (!start) return null;
 
@@ -92,8 +95,8 @@ export function buildEventTimes({
 		return {
 			start: startDate,
 			end: endDateObj.toISOString().split('T')[0],
-			formattedStart: formatAllDayDate(start),
-			formattedEnd: formatAllDayDate(end || start),
+			formattedStart: formatAllDayDate(start, dateFormat),
+			formattedEnd: formatAllDayDate(end || start, dateFormat),
 			timezoneUsed: targetTimezone,
 			timezoneLabel:
 				mode === 'local'
@@ -128,7 +131,8 @@ export function apiEventToDisplayEvent(
 	event: CalendarApiEvent,
 	mode: CalendarTimezoneMode,
 	userTimezone: string,
-	labels: { eventTimezone: string; localTimezone: string }
+	labels: { eventTimezone: string; localTimezone: string },
+	dateFormat?: DateFormatPreference
 ): CalendarDisplayEvent | null {
 	const normalizedType = event.type === 'location' ? 'visit' : event.type;
 	const allDay = event.all_day || isAllDay(event.start);
@@ -140,7 +144,8 @@ export function apiEventToDisplayEvent(
 		allDay,
 		userTimezone,
 		timezoneLabelEvent: labels.eventTimezone,
-		timezoneLabelLocal: labels.localTimezone
+		timezoneLabelLocal: labels.localTimezone,
+		dateFormat
 	});
 	if (!times) return null;
 
@@ -180,10 +185,11 @@ export function apiEventsToDisplayEvents(
 	events: CalendarApiEvent[],
 	mode: CalendarTimezoneMode,
 	userTimezone: string,
-	labels: { eventTimezone: string; localTimezone: string }
+	labels: { eventTimezone: string; localTimezone: string },
+	dateFormat?: DateFormatPreference
 ): CalendarDisplayEvent[] {
 	return events
-		.map((event) => apiEventToDisplayEvent(event, mode, userTimezone, labels))
+		.map((event) => apiEventToDisplayEvent(event, mode, userTimezone, labels, dateFormat))
 		.filter((event): event is CalendarDisplayEvent => event !== null);
 }
 
@@ -268,7 +274,8 @@ export function buildCollectionCalendarEvents(
 	mode: CalendarTimezoneMode,
 	userTimezone: string,
 	labels: { eventTimezone: string; localTimezone: string },
-	translate: (key: string) => string
+	translate: (key: string) => string,
+	dateFormat?: DateFormatPreference
 ): CalendarDisplayEvent[] {
 	const events: CalendarDisplayEvent[] = [];
 
@@ -283,7 +290,8 @@ export function buildCollectionCalendarEvents(
 				allDay: isVisitAllDay(visit.start_date, visit.end_date),
 				userTimezone,
 				timezoneLabelEvent: labels.eventTimezone,
-				timezoneLabelLocal: labels.localTimezone
+				timezoneLabelLocal: labels.localTimezone,
+				dateFormat
 			});
 			if (!times) return;
 
@@ -328,7 +336,8 @@ export function buildCollectionCalendarEvents(
 			allDay: isAllDay(transportation.date),
 			userTimezone,
 			timezoneLabelEvent: labels.eventTimezone,
-			timezoneLabelLocal: labels.localTimezone
+			timezoneLabelLocal: labels.localTimezone,
+			dateFormat
 		});
 		if (!times) return;
 
@@ -380,7 +389,8 @@ export function buildCollectionCalendarEvents(
 			allDay: true,
 			userTimezone,
 			timezoneLabelEvent: labels.eventTimezone,
-			timezoneLabelLocal: labels.localTimezone
+			timezoneLabelLocal: labels.localTimezone,
+			dateFormat
 		});
 		if (!times) return;
 

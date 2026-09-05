@@ -24,6 +24,7 @@
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import MoneyInput from '../shared/MoneyInput.svelte';
+	import DateInput from '../shared/DateInput.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '$lib/money';
 	import { normalizeBasemapType } from '$lib';
 	// @ts-ignore
@@ -842,53 +843,29 @@
 						<!-- Departure Date -->
 						<div class="flex flex-col">
 							<label class="field-label" for="departure-date">{$t('transportation.departure_date')}</label>
-							{#if allDay}
-								<input
-									id="departure-date"
-									type="date"
-									class="input bg-base-100/80 focus:bg-base-100"
-									bind:value={localStartDate}
-									onchange={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : undefined}
-									max={constrainDates ? constraintEndDate : undefined}
-								/>
-							{:else}
-								<input
-									id="departure-date"
-									type="datetime-local"
-									class="input bg-base-100/80 focus:bg-base-100"
-									bind:value={localStartDate}
-									onchange={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : undefined}
-									max={constrainDates ? constraintEndDate : undefined}
-								/>
-							{/if}
+							<DateInput
+								id="departure-date"
+								bind:value={localStartDate}
+								onchange={handleLocalDateChange}
+								showTime={!allDay}
+								min={constrainDates ? constraintStartDate : undefined}
+								max={constrainDates ? constraintEndDate : undefined}
+								clearable={false}
+							/>
 						</div>
 
 						<!-- Arrival Date -->
 						<div class="flex flex-col">
 							<label class="field-label" for="arrival-date">{$t('transportation.arrival_date')}</label>
-							{#if allDay}
-								<input
-									id="arrival-date"
-									type="date"
-									class="input bg-base-100/80 focus:bg-base-100"
-									bind:value={localEndDate}
-									onchange={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : undefined}
-									max={constrainDates ? constraintEndDate : undefined}
-								/>
-							{:else}
-								<input
-									id="arrival-date"
-									type="datetime-local"
-									class="input bg-base-100/80 focus:bg-base-100"
-									bind:value={localEndDate}
-									onchange={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : undefined}
-									max={constrainDates ? constraintEndDate : undefined}
-								/>
-							{/if}
+							<DateInput
+								id="arrival-date"
+								bind:value={localEndDate}
+								onchange={handleLocalDateChange}
+								showTime={!allDay}
+								min={constrainDates ? constraintStartDate : undefined}
+								max={constrainDates ? constraintEndDate : undefined}
+								clearable={false}
+							/>
 						</div>
 
 						<!-- Timezone Selector (only for timed transportation) -->

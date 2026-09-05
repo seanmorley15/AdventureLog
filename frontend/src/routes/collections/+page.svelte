@@ -22,12 +22,15 @@
 	import CloseIcon from '~icons/mdi/close';
 	import { addToast } from '$lib/toasts';
 	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface Props {
 		data: any;
 	}
 
 	let { data }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 	$effect(() => {
 		console.log('Collections page data:', data);
 	});
@@ -353,7 +356,7 @@
 	}
 
 	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString();
+		return formatDisplayDate(dateString, dateFormat);
 	}
 </script>
 

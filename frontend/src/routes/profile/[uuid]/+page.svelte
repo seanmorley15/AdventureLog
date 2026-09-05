@@ -4,6 +4,7 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import type { Location, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	// Icons
 	import Calendar from '~icons/mdi/calendar';
@@ -33,6 +34,7 @@
 	let { data } = $props();
 
 	let measurementSystem: string = $derived(data.user?.measurement_system || 'metric');
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 	let expandedCategories = $state(new Set());
 
 	type ActivityRecord = {
@@ -355,9 +357,8 @@
 							<Calendar class="w-5 h-5" />
 							<span class="text-lg">
 								{$t('profile.member_since')}
-								{new Date(user.date_joined).toLocaleDateString(undefined, {
+								{formatDisplayDate(user.date_joined, dateFormat, {
 									timeZone: 'UTC',
-									year: 'numeric',
 									month: 'long'
 								})}
 							</span>

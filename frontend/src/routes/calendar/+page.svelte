@@ -31,6 +31,7 @@
 		filterCalendarEvents,
 		formatCalendarRange
 	} from '$lib/calendar/events';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 
 	interface Props {
 		data: PageData;
@@ -39,6 +40,7 @@
 	let { data }: Props = $props();
 
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 
 	let apiEvents: CalendarApiEvent[] = $state<CalendarApiEvent[]>([]);
 	let displayEvents: CalendarDisplayEvent[] = $state([]);
@@ -73,7 +75,8 @@
 			apiEvents,
 			timezoneMode,
 			userTimezone,
-			timezoneLabels
+			timezoneLabels,
+			dateFormat
 		);
 	});
 

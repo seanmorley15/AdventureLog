@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { t } from 'svelte-i18n';
 	import type { Subscription } from '$lib/types';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface Props {
 		subscription?: Subscription | null;
@@ -12,6 +13,7 @@
 	let { subscription = null, hasAccess = true, cloudMode = false }: Props = $props();
 
 	const msPerDay = 1000 * 60 * 60 * 24;
+	const dateFormat = $derived(dateFormatFromUser($page.data?.user));
 
 	let trialEndsAt = $derived(subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
 	let daysRemaining = $derived(trialEndsAt
@@ -21,6 +23,10 @@
 	let hasScheduledSubscription = $derived(Boolean(subscription?.stripe_subscription_id));
 	let isPaidTrial = $derived(isTrial && hasScheduledSubscription);
 	let hideOnBillingPage = $derived($page.url.pathname.startsWith('/subscribe'));
+
+	function formatBillingDate(date: Date) {
+		return formatDisplayDate(date.toISOString().split('T')[0], dateFormat);
+	}
 </script>
 
 {#if cloudMode && subscription && !hideOnBillingPage}
@@ -40,11 +46,7 @@
 					{#if trialEndsAt}
 						{$t('billing.banner_scheduled_description', {
 							values: {
-								date: trialEndsAt.toLocaleDateString(undefined, {
-									year: 'numeric',
-									month: 'long',
-									day: 'numeric'
-								})
+								date: formatBillingDate(trialEndsAt)
 							}
 						})}
 					{:else}

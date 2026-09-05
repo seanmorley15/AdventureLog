@@ -8,6 +8,7 @@
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
 	import type { MediaUsage, Subscription, User } from '$lib/types';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	import CloudOutline from '~icons/mdi/cloud-outline';
 	import CreditCardOutline from '~icons/mdi/credit-card-outline';
@@ -27,6 +28,7 @@
 	const cloudMode = $derived(data.cloudMode ?? false);
 	const hasAccess = $derived(data.hasAccess ?? true);
 	const user: User | null = $derived(data.user ?? null);
+	const dateFormat = $derived(dateFormatFromUser(user));
 	const mediaUsage: MediaUsage = $derived(
 		data.mediaUsage ??
 		({
@@ -98,11 +100,7 @@
 	}
 
 	function formatDate(date: Date) {
-		return date.toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		});
+		return formatDisplayDate(date.toISOString().split('T')[0], dateFormat);
 	}
 
 	function clearQueryParam(param: string) {

@@ -12,7 +12,9 @@
 	import CaloriesIcon from '~icons/mdi/fire';
 	import LocationIcon from '~icons/mdi/map-marker';
 	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { getDistance, getElevation } from '$lib';
+	import { page } from '$app/state';
 
 	interface Props {
 		activity: Activity;
@@ -29,6 +31,8 @@
 		measurementSystem = 'metric',
 		readOnly = false
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	let trail = $derived(activity.trail ? trails.find((t) => t.id === activity.trail) : null);
 
@@ -218,7 +222,8 @@
 				<div>
 					Started: {formatDateInTimezone(
 						activity.start_date,
-						activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+						activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+						dateFormat
 					)}
 				</div>
 				{#if activity.timezone}

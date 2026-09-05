@@ -12,6 +12,8 @@
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import ImageFrame from '$lib/components/ImageFrame.svelte';
 	import { googleContentImage } from '$lib/images';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	import ArrowLeft from '~icons/mdi/arrow-left';
 	import OpenInNew from '~icons/mdi/open-in-new';
@@ -58,6 +60,8 @@
 		isMetric = true
 	}: Props = $props();
 
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
+
 	const dispatch = createEventDispatcher<{
 		back: void;
 		viewFull: { pinId: string };
@@ -86,7 +90,7 @@
 
 	function formatDate(value: string | null | undefined): string {
 		if (!value) return '';
-		return value.split('T')[0] ?? value;
+		return formatDisplayDate(value, dateFormat);
 	}
 
 	function renderStars(rating: number | null | undefined) {

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import type { StravaActivity } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import { page } from '$app/state';
 
 	const dispatch = createEventDispatcher();
 
@@ -22,6 +24,8 @@
 		importing = false,
 		provider = 'strava'
 	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	interface SportConfig {
 		color: string;
@@ -52,16 +56,6 @@
 			return `${hours}h ${minutes}m ${secs}s`;
 		}
 		return `${minutes}m ${secs}s`;
-	}
-
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
 	}
 
 	function formatPace(seconds: number, system: 'metric' | 'imperial'): string {
@@ -117,7 +111,8 @@
 						<span
 							>{formatDateInTimezone(
 								activity.start_date,
-								activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+								activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+								dateFormat
 							)} ({activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone})</span
 						>
 					</div>

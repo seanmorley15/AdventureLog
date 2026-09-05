@@ -14,6 +14,7 @@
 	import { t } from 'svelte-i18n';
 	// lodging icons and helpers
 	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface Props {
 		collection: Collection;
@@ -21,6 +22,8 @@
 	}
 
 	let { collection, user = null }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	function getLodgingIcon(type: string): string {
 		return (LODGING_TYPES_ICONS as Record<string, string>)[type] || '🏨';
@@ -266,7 +269,7 @@
 
 	let windowLabel =
 		$derived(tripStart && tripEnd
-			? `${tripStart.toLocaleString(DateTime.DATE_MED)} - ${tripEnd.toLocaleString(DateTime.DATE_MED)}`
+			? `${formatDisplayDate(tripStart.toISODate(), dateFormat)} - ${formatDisplayDate(tripEnd.toISODate(), dateFormat)}`
 			: null);
 
 	function normalizeTransportType(type?: string | null): string {

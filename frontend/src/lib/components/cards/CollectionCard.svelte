@@ -35,6 +35,7 @@
 	import FilePdfBox from '~icons/mdi/file-pdf-box';
 	import ContentCopy from '~icons/mdi/content-copy';
 	import ImageOutline from '~icons/mdi/image-outline';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	const dispatch = createEventDispatcher();
 
@@ -206,6 +207,8 @@
 	}
 
 	let isWarningModalOpen: boolean = $state(false);
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 </script>
 
 {#if isWarningModalOpen}
@@ -342,17 +345,11 @@
 		<!-- Date Range (if exists) -->
 		{#if collection.start_date && collection.end_date}
 			<div class="text-xs text-base-content/60">
-				{new Date(collection.start_date).toLocaleDateString(undefined, {
-					timeZone: 'UTC',
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})} – {new Date(collection.end_date).toLocaleDateString(undefined, {
-					timeZone: 'UTC',
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})}
+				{formatDisplayDate(collection.start_date, dateFormat, { timeZone: 'UTC' })} – {formatDisplayDate(
+					collection.end_date,
+					dateFormat,
+					{ timeZone: 'UTC' }
+				)}
 			</div>
 		{/if}
 

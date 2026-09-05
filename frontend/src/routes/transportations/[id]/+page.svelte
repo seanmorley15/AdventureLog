@@ -27,6 +27,7 @@
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
 	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
@@ -45,6 +46,7 @@
 	}
 
 	let { data }: Props = $props();
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 	$effect(() => {
 		console.log(data);
 	});
@@ -133,9 +135,9 @@
 		const formatDate = (date: string | null, timezone: string | null) => {
 			if (!date) return '';
 			if (isAllDay(date)) {
-				return formatAllDayDate(date);
+				return formatAllDayDate(date, dateFormat);
 			}
-			return formatDateInTimezone(date, timezone);
+			return formatDateInTimezone(date, timezone, dateFormat);
 		};
 
 		if (start && end) {
@@ -739,11 +741,12 @@
 														</p>
 														<p class="text-base font-semibold">
 															{#if isAllDay(transportation.date)}
-																{formatAllDayDate(transportation.date)}
+																{formatAllDayDate(transportation.date, dateFormat)}
 															{:else}
 																{formatDateInTimezone(
 																	transportation.date,
-																	transportation.start_timezone
+																	transportation.start_timezone,
+																	dateFormat
 																)}
 															{/if}
 														</p>
@@ -772,11 +775,12 @@
 														</p>
 														<p class="text-base font-semibold">
 															{#if isAllDay(transportation.end_date)}
-																{formatAllDayDate(transportation.end_date)}
+																{formatAllDayDate(transportation.end_date, dateFormat)}
 															{:else}
 																{formatDateInTimezone(
 																	transportation.end_date,
-																	transportation.end_timezone ?? transportation.start_timezone
+																	transportation.end_timezone ?? transportation.start_timezone,
+																	dateFormat
 																)}
 															{/if}
 														</p>

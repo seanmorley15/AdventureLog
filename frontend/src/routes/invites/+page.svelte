@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface CollectionInvite {
 		id: string;
@@ -12,6 +14,8 @@
 
 	let invites: CollectionInvite[] = $state([]);
 	let loading = $state(true);
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	async function fetchInvites() {
 		try {
@@ -79,7 +83,7 @@
 	}
 
 	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString();
+		return formatDisplayDate(dateString, dateFormat);
 	}
 
 	onMount(() => {

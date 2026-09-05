@@ -25,6 +25,7 @@
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '$lib/types';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	let isActionsMenuOpen = $state(false);
 	let openUpward = $state(false);
@@ -76,6 +77,8 @@
 		$derived(!readOnly &&
 		(note.user == user?.uuid ||
 			(collection && user && collection.shared_with?.includes(user.uuid))));
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	function editNote() {
 		dispatch('edit', note);
@@ -134,8 +137,7 @@
 						{#if note.date && note.date !== ''}
 							<div class="flex items-center gap-2">
 								<Calendar class="w-4 h-4 text-primary" />
-								<span>{new Date(note.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span
-								>
+								<span>{formatDisplayDate(note.date, dateFormat, { timeZone: 'UTC' })}</span>
 							</div>
 						{/if}
 						{#if note.links && note.links?.length > 0}
@@ -335,7 +337,7 @@
 			{#if note.date && note.date !== ''}
 				<div class="flex items-center gap-1">
 					<Calendar class="w-4 h-4 text-primary" />
-					<span>{new Date(note.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
+					<span>{formatDisplayDate(note.date, dateFormat, { timeZone: 'UTC' })}</span>
 				</div>
 			{/if}
 

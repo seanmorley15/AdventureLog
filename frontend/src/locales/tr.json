@@ -819,7 +819,13 @@
 				"overpass_desc": "OpenStreetMap verilerini kullanarak yakınlardaki önerileri sağlar.",
 				"overpass_features": "Harita önerileri için kullanılır ve Google kullanılamadığında yedek olarak devreye girer."
 			}
-		}
+		},
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"collection": {
 		"collection_created": "Koleksiyon başarıyla oluşturuldu!",

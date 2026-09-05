@@ -22,6 +22,7 @@ class CustomUserAdmin(UserAdmin):
         'public_profile',
         'measurement_system',
         'default_currency',
+        'date_format',
         'map_style',
         'profile_preview',
         'date_joined',
@@ -33,6 +34,7 @@ class CustomUserAdmin(UserAdmin):
         'public_profile',
         'measurement_system',
         'default_currency',
+        'date_format',
         'map_style',
     )
     search_fields = ('username', 'email', 'first_name', 'last_name', 'uuid')
@@ -66,6 +68,7 @@ class CustomUserAdmin(UserAdmin):
                     'disable_password',
                     'measurement_system',
                     'default_currency',
+                    'date_format',
                     'map_style',
                 ),
             },
