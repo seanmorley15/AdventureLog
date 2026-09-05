@@ -696,12 +696,18 @@ export type CollectionItineraryDay = {
 	updated_at: string; // ISO 8601 date string
 };
 
+export type CollectionItineraryLinkedItem = {
+	id: string;
+	type: string; // Content type model name (location, lodging, ...)
+};
+
 export type CollectionItineraryItem = {
 	id: string;
 	collection: string; // UUID of the collection
-	content_type: string; // Content type model name
+	content_type: string | number; // Model name, or a numeric ContentType PK from older payloads
 	object_id: string; // UUID of the referenced object
-	item: Visit | Transportation | Lodging | Note | Checklist; // The actual referenced object
+	object_name?: string; // Content type model name
+	item?: CollectionItineraryLinkedItem | null; // Slim reference to the linked object
 	date: string | null; // ISO 8601 date string
 	is_global?: boolean; // Trip-wide item (no specific date)
 	order: number; // Manual order within a day

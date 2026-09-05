@@ -86,8 +86,14 @@
 		checklist: 'checklist'
 	};
 
+	function isContentTypeName(value: unknown): value is string {
+		return typeof value === 'string' && value.length > 0 && !/^\d+$/.test(value);
+	}
+
 	function getItemType(item: CollectionItineraryItem): string {
-		const raw = item.content_type || '';
+		// API historically returned ContentType PK in `content_type` and the model
+		// name in `object_name` / `item.type`. Prefer a real model name.
+		const raw = [item.content_type, item.object_name, item.item?.type].find(isContentTypeName) || '';
 		return CONTENT_TYPE_ALIASES[raw] || raw;
 	}
 
@@ -788,18 +794,18 @@
 
 		// Resolve based on content_type which tells us the object type
 		const objectType = getItemType(item);
+		const objectId = String(item.object_id);
 
 		if (objectType === 'location') {
-			// Find location by ID
-			resolvedObject = collection.locations?.find((loc) => loc.id === item.object_id) || null;
+			resolvedObject = collection.locations?.find((loc) => String(loc.id) === objectId) || null;
 		} else if (objectType === 'transportation') {
-			resolvedObject = collection.transportations?.find((t) => t.id === item.object_id) || null;
+			resolvedObject = collection.transportations?.find((t) => String(t.id) === objectId) || null;
 		} else if (objectType === 'lodging') {
-			resolvedObject = collection.lodging?.find((l) => l.id === item.object_id) || null;
+			resolvedObject = collection.lodging?.find((l) => String(l.id) === objectId) || null;
 		} else if (objectType === 'note') {
-			resolvedObject = collection.notes?.find((n) => n.id === item.object_id) || null;
+			resolvedObject = collection.notes?.find((n) => String(n.id) === objectId) || null;
 		} else if (objectType === 'checklist') {
-			resolvedObject = collection.checklists?.find((c) => c.id === item.object_id) || null;
+			resolvedObject = collection.checklists?.find((c) => String(c.id) === objectId) || null;
 		}
 
 		return {

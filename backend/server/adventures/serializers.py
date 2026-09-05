@@ -1441,6 +1441,15 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
             'type': obj.content_type.model,
         }
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Frontend resolves itinerary rows by model name (`location`, `lodging`, ...),
+        # while DRF would otherwise emit the ContentType primary key.
+        representation['content_type'] = instance.content_type.model if instance.content_type_id else None
+        representation['object_id'] = str(instance.object_id)
+        representation['collection'] = str(instance.collection_id)
+        return representation
+
 
 class SearchHitSerializer(serializers.Serializer):
     type = serializers.CharField()

@@ -31,9 +31,6 @@
 	let { data }: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(data.user));
-	$effect(() => {
-		console.log('Collections page data:', data);
-	});
 
 	let collections: SlimCollection[] = $state<SlimCollection[]>([]);
 	let sharedCollections: SlimCollection[] = $state<SlimCollection[]>([]);

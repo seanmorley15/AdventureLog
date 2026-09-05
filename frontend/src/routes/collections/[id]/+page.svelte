@@ -228,7 +228,6 @@
 
 	// Calendar events from collection data
 	let timezoneMode: CalendarTimezoneMode = $state('event');
-	let calendarInitialDate: string | null = $state(null);
 	let selectedCalendarEvent: CalendarDisplayEvent | null = $state(null);
 
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -379,7 +378,6 @@
 		showCalendarModal = false;
 		selectedCalendarEvent = null;
 		isSocialShareModalOpen = false;
-		calendarInitialDate = null;
 	}
 
 	function applyCollectionPageData(collectionData: Collection | null | undefined) {
@@ -624,33 +622,28 @@
 	run(() => {
 		currencyCount = costSummary.length;
 	});
-	run(() => {
-		if (!calendarInitialDate && collectionEvents.length) {
-			const collectionRangeStart = collection?.start_date
-				? DateTime.fromISO(collection.start_date)
-				: null;
-			const collectionRangeEnd = collection?.end_date
-				? DateTime.fromISO(collection.end_date)
-				: null;
+	let calendarInitialDate = $derived.by(() => {
+		if (!collectionEvents.length) return null;
 
-			const validEvents = collectionEvents
-				.map((ev) => ({ date: DateTime.fromISO(ev.start), event: ev }))
-				.filter(({ date }) => date.isValid)
-				.sort((a, b) => a.date.toMillis() - b.date.toMillis());
+		const collectionRangeStart = collection?.start_date
+			? DateTime.fromISO(collection.start_date)
+			: null;
+		const collectionRangeEnd = collection?.end_date ? DateTime.fromISO(collection.end_date) : null;
 
-			const inCollectionRange = validEvents.filter(({ date }) => {
-				if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day'))
-					return false;
-				if (collectionRangeEnd?.isValid && date > collectionRangeEnd.endOf('day')) return false;
-				return true;
-			});
+		const validEvents = collectionEvents
+			.map((ev) => ({ date: DateTime.fromISO(ev.start), event: ev }))
+			.filter(({ date }) => date.isValid)
+			.sort((a, b) => a.date.toMillis() - b.date.toMillis());
 
-			const chosenDate = (inCollectionRange[0] || validEvents[0])?.date;
+		const inCollectionRange = validEvents.filter(({ date }) => {
+			if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day')) return false;
+			if (collectionRangeEnd?.isValid && date > collectionRangeEnd.endOf('day')) return false;
+			return true;
+		});
 
-			calendarInitialDate = chosenDate?.toISODate() || calendarInitialDate;
-		}
+		return (inCollectionRange[0] || validEvents[0])?.date?.toISODate() || null;
 	});
-	run(() => {
+	$effect.pre(() => {
 		applyCollectionPageData(getCollectionFromPageData(data));
 	});
 </script>
