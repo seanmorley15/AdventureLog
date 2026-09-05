@@ -2,7 +2,6 @@
 	import type { Attachment } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
-
 	import { createEventDispatcher } from 'svelte';
 	import { addToast } from '$lib/toasts';
 	interface Props {

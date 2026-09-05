@@ -58,7 +58,9 @@
 	let loadingMore = $state(false);
 	let loadMoreError = $state('');
 
-	let query = $derived($page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '');
+	let query = $derived(
+		$page.url.searchParams.get('q') || $page.url.searchParams.get('query') || ''
+	);
 	let activeFilter = $derived($page.url.searchParams.get('filter') || 'all');
 	let hasQuery = $derived(query.trim().length > 0);
 	let hasResults = $derived(results.length > 0);

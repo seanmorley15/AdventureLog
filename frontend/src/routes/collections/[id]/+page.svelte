@@ -192,14 +192,8 @@
 	type ViewType = 'all' | 'itinerary' | 'map' | 'calendar' | 'recommendations' | 'stats';
 	let currentView: ViewType = $state('itinerary');
 
-
-
-
-
-
 	// Get default view based on available views
 	let defaultView: ViewType = $state('itinerary');
-
 
 	let isExportingPdf = $state(false);
 	let isSocialShareModalOpen = $state(false);
@@ -240,8 +234,6 @@
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const numberLocale = Intl.DateTimeFormat().resolvedOptions().locale;
 
-
-
 	type CostCategory = 'lodging' | 'transportation' | 'location';
 
 	type CostEntry = {
@@ -263,14 +255,11 @@
 		}>;
 	};
 
-
 	let preferredCurrency: string = $state(DEFAULT_CURRENCY);
 	let costEntries: CostEntry[] = $state([]);
 	let costSummary: CurrencyBreakdown[] = $state([]);
 	let pricedItemCount = $state(0);
 	let currencyCount = $state(0);
-
-
 
 	function buildCostEntries(current: Collection | null, fallbackCurrency: string): CostEntry[] {
 		if (!current) return [];
@@ -406,7 +395,6 @@
 		resetCollectionPageUiState();
 	}
 
-
 	function goToSlide(index: number) {
 		currentSlide = index;
 	}
@@ -539,29 +527,31 @@
 		})();
 	});
 	// Determine whether current user can modify the collection (owner or shared user)
-	let canModifyCollection = $derived((() => {
-		const u = data.user as any;
-		if (!u || !collection) return false;
+	let canModifyCollection = $derived(
+		(() => {
+			const u = data.user as any;
+			if (!u || !collection) return false;
 
-		const userUuid = u.uuid || null;
-		const username = u.username || null;
-		const pk = u.pk !== undefined && u.pk !== null ? String(u.pk) : null;
-		const owner = collection.user;
+			const userUuid = u.uuid || null;
+			const username = u.username || null;
+			const pk = u.pk !== undefined && u.pk !== null ? String(u.pk) : null;
+			const owner = collection.user;
 
-		// Direct matches: UUID (primary), username, or numeric pk (stringified)
-		if (userUuid && owner === userUuid) return true;
-		if (username && owner === username) return true;
-		if (pk && owner === pk) return true;
+			// Direct matches: UUID (primary), username, or numeric pk (stringified)
+			if (userUuid && owner === userUuid) return true;
+			if (username && owner === username) return true;
+			if (pk && owner === pk) return true;
 
-		// Shared with may contain UUIDs or other identifiers
-		if (collection.shared_with && Array.isArray(collection.shared_with)) {
-			if (userUuid && collection.shared_with.includes(userUuid)) return true;
-			if (username && collection.shared_with.includes(username)) return true;
-			if (pk && collection.shared_with.includes(pk)) return true;
-		}
+			// Shared with may contain UUIDs or other identifiers
+			if (collection.shared_with && Array.isArray(collection.shared_with)) {
+				if (userUuid && collection.shared_with.includes(userUuid)) return true;
+				if (username && collection.shared_with.includes(username)) return true;
+				if (pk && collection.shared_with.includes(pk)) return true;
+			}
 
-		return false;
-	})());
+			return false;
+		})()
+	);
 	// Public collections: anyone can export/share; private: owner or shared users only
 	let canExportCollection = $derived(!!collection?.is_public || canModifyCollection);
 	// Define available views based on collection type
@@ -601,16 +591,18 @@
 		eventTimezone: $t('collections.event_timezone'),
 		localTimezone: $t('collections.local_timezone')
 	});
-	let collectionEvents = $derived(collection
-		? buildCollectionCalendarEvents(
-				collection,
-				timezoneMode,
-				userTimezone,
-				calendarTimezoneLabels,
-				(key) => $t(key),
-				dateFormat
-			)
-		: []);
+	let collectionEvents = $derived(
+		collection
+			? buildCollectionCalendarEvents(
+					collection,
+					timezoneMode,
+					userTimezone,
+					calendarTimezoneLabels,
+					(key) => $t(key),
+					dateFormat
+				)
+			: []
+	);
 	// Localized category labels - computed reactively from i18n
 	let costCategoryLabels = $derived({
 		lodging: $t('adventures.lodging') || 'Lodging',
@@ -637,7 +629,9 @@
 			const collectionRangeStart = collection?.start_date
 				? DateTime.fromISO(collection.start_date)
 				: null;
-			const collectionRangeEnd = collection?.end_date ? DateTime.fromISO(collection.end_date) : null;
+			const collectionRangeEnd = collection?.end_date
+				? DateTime.fromISO(collection.end_date)
+				: null;
 
 			const validEvents = collectionEvents
 				.map((ev) => ({ date: DateTime.fromISO(ev.start), event: ev }))
@@ -645,7 +639,8 @@
 				.sort((a, b) => a.date.toMillis() - b.date.toMillis());
 
 			const inCollectionRange = validEvents.filter(({ date }) => {
-				if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day')) return false;
+				if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day'))
+					return false;
 				if (collectionRangeEnd?.isValid && date > collectionRangeEnd.endOf('day')) return false;
 				return true;
 			});
@@ -1389,14 +1384,16 @@
 											tabindex="0"
 										></div>
 										{#snippet overlays()}
-																				<div >
+											<div>
 												{#if image.is_primary}
 													<div class="absolute top-1 right-1">
-														<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
+														<span class="badge badge-primary badge-xs"
+															>{$t('settings.primary')}</span
+														>
 													</div>
 												{/if}
 											</div>
-																			{/snippet}
+										{/snippet}
 									</ImageFrame>
 								{/each}
 							</div>

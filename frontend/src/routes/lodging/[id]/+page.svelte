@@ -73,24 +73,28 @@
 	});
 	let showImagePins = $state(true);
 
-	let imagePinGeoJson = $derived(lodging
-		? contentImagesToGeoJson(lodging.images, {
-				parentType: 'lodging',
-				parentId: lodging.id,
-				parentName: lodging.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON);
+	let imagePinGeoJson = $derived(
+		lodging
+			? contentImagesToGeoJson(lodging.images, {
+					parentType: 'lodging',
+					parentId: lodging.id,
+					parentName: lodging.name
+				})
+			: EMPTY_IMAGE_PIN_GEOJSON
+	);
 	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
 
-	let lodgingPriceLabel = $derived(lodging
-		? formatMoney(
-				toMoneyValue(
-					lodging.price,
-					lodging.price_currency,
-					data.user?.default_currency || DEFAULT_CURRENCY
+	let lodgingPriceLabel = $derived(
+		lodging
+			? formatMoney(
+					toMoneyValue(
+						lodging.price,
+						lodging.price_currency,
+						data.user?.default_currency || DEFAULT_CURRENCY
+					)
 				)
-			)
-		: null);
+			: null
+	);
 
 	function getLodgingIcon(type: string) {
 		if (type in LODGING_TYPES_ICONS) {
@@ -341,7 +345,9 @@
 							<div class="flex items-center justify-center gap-4 mb-3">
 								<button
 									onclick={() =>
-										goToSlide(currentSlide > 0 ? currentSlide - 1 : (lodging?.images.length ?? 1) - 1)}
+										goToSlide(
+											currentSlide > 0 ? currentSlide - 1 : (lodging?.images.length ?? 1) - 1
+										)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.previous_image')}
 								>
@@ -354,7 +360,9 @@
 
 								<button
 									onclick={() =>
-										goToSlide(currentSlide < (lodging?.images.length ?? 1) - 1 ? currentSlide + 1 : 0)}
+										goToSlide(
+											currentSlide < (lodging?.images.length ?? 1) - 1 ? currentSlide + 1 : 0
+										)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.next_image')}
 								>
@@ -424,12 +432,7 @@
 									zoom={13}
 								>
 									{#snippet overlayControls({ map, fullscreenTarget })}
-																		<div
-											
-											
-											
-											class="pointer-events-none absolute inset-0 z-20"
-										>
+										<div class="pointer-events-none absolute inset-0 z-20">
 											<MapTrackLayerControls bind:showImagePins {hasImagePins} />
 											<MapFloatingControls
 												{map}
@@ -437,7 +440,7 @@
 												bind:basemapType={mapBasemapType}
 											/>
 										</div>
-																	{/snippet}
+									{/snippet}
 
 									<DefaultMarker lngLat={[lodging.longitude, lodging.latitude]}>
 										<Popup openOn="click" offset={[0, -10]}>
@@ -536,7 +539,11 @@
 														{#if isAllDay(lodging.check_out)}
 															{formatAllDayDate(lodging.check_out, dateFormat)}
 														{:else}
-															{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
+															{formatDateInTimezone(
+																lodging.check_out,
+																lodging.timezone,
+																dateFormat
+															)}
 														{/if}
 													</p>
 												</div>

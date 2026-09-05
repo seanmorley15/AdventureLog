@@ -67,17 +67,15 @@
 		localTimezone: $t('calendar.your timezone')
 	});
 
-	let displayEvents = $derived(apiEventsToDisplayEvents(
-		upcomingEvents,
-		'event',
-		userTimezone,
-		timezoneLabels,
-		dateFormat
-	));
+	let displayEvents = $derived(
+		apiEventsToDisplayEvents(upcomingEvents, 'event', userTimezone, timezoneLabels, dateFormat)
+	);
 
-	let agendaEvents = $derived(displayEvents
-		.filter((event) => event.start.split('T')[0] >= new Date().toISOString().split('T')[0])
-		.slice(0, 5));
+	let agendaEvents = $derived(
+		displayEvents
+			.filter((event) => event.start.split('T')[0] >= new Date().toISOString().split('T')[0])
+			.slice(0, 5)
+	);
 
 	function getPercentage(value: number, total: number): number {
 		if (!total || total <= 0) return 0;
@@ -96,50 +94,55 @@
 		return record.activity_name || record.sport_type || 'Activity';
 	}
 
-	let worldExplorationPercentage = $derived(stats
-		? getPercentage(stats.visited_country_count, stats.total_countries)
-		: 0);
-	let regionExplorationPercentage = $derived(stats
-		? getPercentage(stats.visited_region_count, stats.total_regions)
-		: 0);
-	let cityExplorationPercentage = $derived(stats
-		? getPercentage(stats.visited_city_count, stats.total_cities)
-		: 0);
-	let locationVisitedPercentage = $derived(stats
-		? getPercentage(stats.visited_location_count, stats.location_count)
-		: 0);
+	let worldExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_country_count, stats.total_countries) : 0
+	);
+	let regionExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_region_count, stats.total_regions) : 0
+	);
+	let cityExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_city_count, stats.total_cities) : 0
+	);
+	let locationVisitedPercentage = $derived(
+		stats ? getPercentage(stats.visited_location_count, stats.location_count) : 0
+	);
 
-	let isNewUser =
-		$derived(stats &&
-		stats.location_count === 0 &&
-		stats.trips_count === 0 &&
-		upcomingTrips.length === 0 &&
-		!activeTrip);
+	let isNewUser = $derived(
+		stats &&
+			stats.location_count === 0 &&
+			stats.trips_count === 0 &&
+			upcomingTrips.length === 0 &&
+			!activeTrip
+	);
 
 	let profileHref = $derived(user ? `/profile/${user.username}` : '/settings');
 
 	let heroTrip = $derived(activeTrip ?? upcomingTrips[0] ?? null);
 	let heroTripIsActive = $derived(Boolean(activeTrip));
 
-	let timeGreetingKey = $derived((() => {
-		const hour = new Date().getHours();
-		if (hour < 12) return 'dashboard.greeting_morning';
-		if (hour < 17) return 'dashboard.greeting_afternoon';
-		if (hour < 22) return 'dashboard.greeting_evening';
-		return 'dashboard.greeting_night';
-	})());
+	let timeGreetingKey = $derived(
+		(() => {
+			const hour = new Date().getHours();
+			if (hour < 12) return 'dashboard.greeting_morning';
+			if (hour < 17) return 'dashboard.greeting_afternoon';
+			if (hour < 22) return 'dashboard.greeting_evening';
+			return 'dashboard.greeting_night';
+		})()
+	);
 
-	let welcomeSubtitle = $derived(loadError
-		? $t('dashboard.stats_error')
-		: stats && stats.visited_country_count > 0
-			? $t('dashboard.hero_countries', { values: { count: stats.visited_country_count } })
-			: stats && stats.location_count > 0
-				? stats.location_count === 1
-					? $t('dashboard.hero_location_logged')
-					: $t('dashboard.hero_locations_logged', {
-							values: { count: stats.location_count }
-						})
-				: $t('dashboard.hero_start_journey'));
+	let welcomeSubtitle = $derived(
+		loadError
+			? $t('dashboard.stats_error')
+			: stats && stats.visited_country_count > 0
+				? $t('dashboard.hero_countries', { values: { count: stats.visited_country_count } })
+				: stats && stats.location_count > 0
+					? stats.location_count === 1
+						? $t('dashboard.hero_location_logged')
+						: $t('dashboard.hero_locations_logged', {
+								values: { count: stats.location_count }
+							})
+					: $t('dashboard.hero_start_journey')
+	);
 
 	function formatTripDate(date: string | null): string {
 		if (!date) return '';
@@ -307,8 +310,8 @@
 									<div class="mb-3 flex items-center justify-between gap-2">
 										<span
 											class="badge badge-sm gap-1 {heroTripIsActive
- ? 'badge-secondary'
- : 'badge-primary'}"
+												? 'badge-secondary'
+												: 'badge-primary'}"
 										>
 											{#if heroTripIsActive}
 												<Airplane class="h-3 w-3" />
@@ -851,7 +854,11 @@
 	}
 
 	.dashboard-trip-card {
-		background: linear-gradient(135deg, color-mix(in oklab, var(--color-base-100) 95%, transparent) 0%, color-mix(in oklab, var(--color-base-200) 85%, transparent) 100%);
+		background: linear-gradient(
+			135deg,
+			color-mix(in oklab, var(--color-base-100) 95%, transparent) 0%,
+			color-mix(in oklab, var(--color-base-200) 85%, transparent) 100%
+		);
 	}
 
 	.line-clamp-2 {

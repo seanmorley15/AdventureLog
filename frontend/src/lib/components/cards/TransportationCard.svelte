@@ -129,22 +129,27 @@
 	let showMoreDetails = $state(false);
 
 	let hasCodePair = $derived(Boolean(transportation?.start_code && transportation?.end_code));
-	let routeFromLabel = $derived(hasCodePair
-		? transportation.start_code
-		: (transportation.from_location ?? transportation.start_code ?? null));
-	let routeToLabel = $derived(hasCodePair
-		? transportation.end_code
-		: (transportation.to_location ?? transportation.end_code ?? null));
+	let routeFromLabel = $derived(
+		hasCodePair
+			? transportation.start_code
+			: (transportation.from_location ?? transportation.start_code ?? null)
+	);
+	let routeToLabel = $derived(
+		hasCodePair
+			? transportation.end_code
+			: (transportation.to_location ?? transportation.end_code ?? null)
+	);
 	let hasExpandableDetails = $derived(Boolean(transportation?.end_date || travelDurationLabel));
 	run(() => {
 		if (!hasExpandableDetails) showMoreDetails = false;
 	});
-	let transportationPriceLabel = $derived(formatMoney(
-		toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY)
-	));
+	let transportationPriceLabel = $derived(
+		formatMoney(toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY))
+	);
 
-	let routeGeojson =
-		$derived(transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null);
+	let routeGeojson = $derived(
+		transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null
+	);
 
 	let isWarningModalOpen: boolean = $state(false);
 

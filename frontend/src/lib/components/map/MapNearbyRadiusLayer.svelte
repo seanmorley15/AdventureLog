@@ -12,10 +12,11 @@
 
 	const SOURCE_ID = 'map-nearby-radius';
 
-	let circleData =
-		$derived(visible && center && Number.isFinite(center.lng) && Number.isFinite(center.lat)
+	let circleData = $derived(
+		visible && center && Number.isFinite(center.lng) && Number.isFinite(center.lat)
 			? circleFeatureCollection(center.lng, center.lat, radiusMeters)
-			: { type: 'FeatureCollection' as const, features: [] });
+			: { type: 'FeatureCollection' as const, features: [] }
+	);
 </script>
 
 {#if visible && center}

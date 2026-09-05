@@ -10,7 +10,6 @@
 	import type { ImagePinFeatureCollection, ImagePinProperties } from '$lib/map/imagePins';
 	import { getImagePinNavigationUrl } from '$lib/map/imagePins';
 
-	
 	interface Props {
 		geoJson?: ImagePinFeatureCollection;
 		visible?: boolean;
@@ -181,9 +180,9 @@
 				paint={clusterCirclePaint}
 				on:click={handleClusterClick}
 			/>
-			<MarkerLayer applyToClusters >
+			<MarkerLayer applyToClusters>
 				{#snippet children({ feature: clusterFeature }: { feature: unknown })}
-								{@const count = getClusterCount(clusterFeature)}
+					{@const count = getClusterCount(clusterFeature)}
 					{#if count !== undefined && count !== null}
 						<div
 							class="pointer-events-none grid h-8 w-8 place-items-center select-none font-sans text-xs font-bold text-white drop-shadow-xs"
@@ -191,11 +190,11 @@
 							{count}
 						</div>
 					{/if}
-											{/snippet}
-						</MarkerLayer>
-			<MarkerLayer applyToClusters={false} >
+				{/snippet}
+			</MarkerLayer>
+			<MarkerLayer applyToClusters={false}>
 				{#snippet children({ feature: featureData }: { feature: unknown })}
-								{@const markerProps = getMarkerProps(featureData)}
+					{@const markerProps = getMarkerProps(featureData)}
 					{@const markerLngLat = getPointCoordinates(featureData)}
 					{@const markerId = getMarkerId(markerProps)}
 					{@const isRaised = isMarkerRaised(markerId)}
@@ -228,14 +227,14 @@
 							</div>
 						</Marker>
 					{/if}
-											{/snippet}
-						</MarkerLayer>
+				{/snippet}
+			</MarkerLayer>
 		</GeoJSON>
 	{:else}
 		<GeoJSON id={sourceId} data={geoJson} generateId>
-			<MarkerLayer applyToClusters={false} >
+			<MarkerLayer applyToClusters={false}>
 				{#snippet children({ feature: featureData }: { feature: unknown })}
-								{@const markerProps = getMarkerProps(featureData)}
+					{@const markerProps = getMarkerProps(featureData)}
 					{@const markerLngLat = getPointCoordinates(featureData)}
 					{@const markerId = getMarkerId(markerProps)}
 					{@const isRaised = isMarkerRaised(markerId)}
@@ -268,8 +267,8 @@
 							</div>
 						</Marker>
 					{/if}
-											{/snippet}
-						</MarkerLayer>
+				{/snippet}
+			</MarkerLayer>
 		</GeoJSON>
 	{/if}
 {/if}

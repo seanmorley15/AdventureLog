@@ -29,9 +29,7 @@
 		ymd: 'settings.date_format_ymd'
 	};
 
-	const selectedDateFormat = $derived(
-		normalizeDateFormat(user.date_format || DEFAULT_DATE_FORMAT)
-	);
+	const selectedDateFormat = $derived(normalizeDateFormat(user.date_format || DEFAULT_DATE_FORMAT));
 
 	const BASEMAP_CATEGORY_ORDER = [
 		'Standard',
@@ -164,7 +162,8 @@
 				<p class="field-hint">{$t('settings.preferred_date_format_desc')}</p>
 			</div>
 			<div class="flex flex-col">
-				<label class="field-label" for="default_currency">{$t('settings.preferred_currency')}</label>
+				<label class="field-label" for="default_currency">{$t('settings.preferred_currency')}</label
+				>
 				<select
 					id="default_currency"
 					name="default_currency"

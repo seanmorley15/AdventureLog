@@ -1,8 +1,4 @@
-import type {
-	CalendarDateProps,
-	CalendarMonthProps,
-	CalendarRangeProps
-} from 'cally';
+import type { CalendarDateProps, CalendarMonthProps, CalendarRangeProps } from 'cally';
 import type { HTMLAttributes } from 'svelte/elements';
 
 type MapEvents<T> = {

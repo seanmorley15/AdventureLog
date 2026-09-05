@@ -151,12 +151,12 @@
 			addToast('error', $t('itinerary.item_remove_error'));
 		}
 	}
-	let lodgingPriceLabel = $derived(formatMoney(
-		toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY)
-	));
-	let hasExpandableDetails = $derived(Boolean(
-		lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in))
-	));
+	let lodgingPriceLabel = $derived(
+		formatMoney(toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY))
+	);
+	let hasExpandableDetails = $derived(
+		Boolean(lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in)))
+	);
 	run(() => {
 		if (!hasExpandableDetails) showMoreDetails = false;
 	});

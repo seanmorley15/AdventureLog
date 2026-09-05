@@ -284,8 +284,8 @@
 			>
 				<div
 					class="badge badge-sm {collection.is_public
- ? 'badge-secondary'
- : 'badge-ghost'} shadow-lg"
+						? 'badge-secondary'
+						: 'badge-ghost'} shadow-lg"
 					aria-label={collection.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
 					{#if collection.is_public}

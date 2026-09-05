@@ -18,7 +18,9 @@
 
 	let requirements = $derived(getPasswordRequirements(policy));
 	let lengthStatus = $derived(checkPasswordRequirement('min_length', password, policy));
-	let otherRequirements = $derived(requirements.filter((requirement) => requirement.id !== 'min_length'));
+	let otherRequirements = $derived(
+		requirements.filter((requirement) => requirement.id !== 'min_length')
+	);
 
 	function statusClass(status: RequirementStatus): string {
 		if (status === true) return 'text-success';

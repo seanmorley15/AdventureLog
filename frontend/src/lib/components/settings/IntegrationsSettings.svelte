@@ -565,7 +565,9 @@
 				{#if !wandererIntegration || newWandererIntegration.id}
 					<div class="mt-4 space-y-4">
 						<div class="flex flex-col">
-							<label class="field-label" for="wanderer-server-url">{$t('wanderer.server_url')}</label>
+							<label class="field-label" for="wanderer-server-url"
+								>{$t('wanderer.server_url')}</label
+							>
 							<input
 								id="wanderer-server-url"
 								type="url"
@@ -670,7 +672,9 @@
 				{:else}
 					<div class="mt-4 space-y-4">
 						<div class="flex flex-col">
-							<label class="field-label" for="endurain-server-url">{$t('endurain.server_url')}</label>
+							<label class="field-label" for="endurain-server-url"
+								>{$t('endurain.server_url')}</label
+							>
 							<input
 								id="endurain-server-url"
 								type="url"
@@ -705,7 +709,9 @@
 
 							{#if endurainMfaRequired}
 								<div class="flex flex-col">
-									<label class="field-label" for="endurain-mfa-code">{$t('endurain.mfa_code')}</label>
+									<label class="field-label" for="endurain-mfa-code"
+										>{$t('endurain.mfa_code')}</label
+									>
 									<input
 										id="endurain-mfa-code"
 										type="text"
@@ -725,7 +731,9 @@
 							{:else}
 								<div class="bg-base-100 rounded-lg p-4 border border-base-300 space-y-4">
 									<div class="flex flex-col">
-										<label class="field-label" for="endurain-username">{$t('endurain.username')}</label>
+										<label class="field-label" for="endurain-username"
+											>{$t('endurain.username')}</label
+										>
 										<input
 											id="endurain-username"
 											type="text"
@@ -734,7 +742,9 @@
 										/>
 									</div>
 									<div class="flex flex-col">
-										<label class="field-label" for="endurain-password">{$t('endurain.password')}</label>
+										<label class="field-label" for="endurain-password"
+											>{$t('endurain.password')}</label
+										>
 										<input
 											id="endurain-password"
 											type="password"

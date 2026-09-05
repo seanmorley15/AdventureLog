@@ -28,9 +28,11 @@
 	const renderMarkdown = (markdown: string) => DOMPurify.sanitize(marked(markdown) as string);
 
 	let detailUrl = $derived(event?.extendedProps?.url || '');
-	let typeLabel = $derived(event?.extendedProps?.type
-		? $t(`calendar.type_${event.extendedProps.type}`)
-		: $t('calendar.event'));
+	let typeLabel = $derived(
+		event?.extendedProps?.type
+			? $t(`calendar.type_${event.extendedProps.type}`)
+			: $t('calendar.event')
+	);
 </script>
 
 {#if show && event}

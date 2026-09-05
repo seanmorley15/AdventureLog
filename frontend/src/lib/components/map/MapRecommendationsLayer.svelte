@@ -75,9 +75,7 @@
 					class="map-rec-popup absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200"
 					class:opacity-100={isRaised}
 				>
-					<div
-						class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
-					>
+					<div class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72">
 						<div class="card-body gap-2 p-3">
 							<h3 class="font-semibold text-sm leading-tight">{rec.name}</h3>
 							{#if rec.address}

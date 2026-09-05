@@ -9,7 +9,6 @@
 	import { debounce } from '$lib';
 	import DateInput from './shared/DateInput.svelte';
 
-	
 	interface Props {
 		// Props
 		copyImmichLocally?: boolean;
@@ -46,7 +45,6 @@
 		localImage: { file: File; immichId: string };
 		remoteImmichSaved: Record<string, unknown>;
 	}>();
-
 
 	// Helper functions
 	function clearAlbumSelection() {
@@ -297,20 +295,10 @@
 	</div>
 {:else if searchCategory === 'date'}
 	<div class="flex gap-2 items-center">
-		<DateInput
-			id="date-picker"
-			bind:value={selectedDate}
-			disabled={loading}
-			clearable={false}
-		/>
+		<DateInput id="date-picker" bind:value={selectedDate} disabled={loading} clearable={false} />
 	</div>
 {:else if searchCategory === 'album'}
-	<select
-		id="album-select"
-		class="select w-full"
-		bind:value={currentAlbum}
-		disabled={loading}
-	>
+	<select id="album-select" class="select w-full" bind:value={currentAlbum} disabled={loading}>
 		<option value="" disabled>
 			{albums.length > 0 ? $t('immich.select_album') : $t('immich.loading_albums')}
 		</option>
@@ -377,11 +365,7 @@
 		<!-- Load More Button -->
 		{#if immichNextURL}
 			<div class="flex justify-center mt-3">
-				<button
-					class="btn btn-outline btn-sm btn-wide"
-					onclick={loadMoreImmich}
-					disabled={loading}
-				>
+				<button class="btn btn-outline btn-sm btn-wide" onclick={loadMoreImmich} disabled={loading}>
 					{loading ? $t('immich.loading') : $t('immich.load_more')}
 				</button>
 			</div>

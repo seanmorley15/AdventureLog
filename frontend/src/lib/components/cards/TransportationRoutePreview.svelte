@@ -11,17 +11,10 @@
 		heightClass?: string;
 	}
 
-	let {
-		geojson,
-		name = '',
-		images = [],
-		heightClass = 'h-48'
-	}: Props = $props();
+	let { geojson, name = '', images = [], heightClass = 'h-48' }: Props = $props();
 
 	let showImageModal = $state(false);
 	let modalInitialIndex = $state(0);
-
-
 
 	function openImageModal(initialIndex: number = 0) {
 		if (!sortedImages.length) return;
@@ -108,16 +101,19 @@
 			.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
 			.join(' ');
 	}
-	let sortedImages = $derived([...images]
-		.filter((img) => !!img?.image)
-		.sort((a, b) => Number(b?.is_primary) - Number(a?.is_primary)));
+	let sortedImages = $derived(
+		[...images]
+			.filter((img) => !!img?.image)
+			.sort((a, b) => Number(b?.is_primary) - Number(a?.is_primary))
+	);
 	let routeCoordinates = $derived(extractLineCoords(geojson));
 	let normalizedRoute = $derived(normalizeCoords(routeCoordinates));
 	let pathD = $derived(buildPath(normalizedRoute));
 	let hasRoute = $derived(!!pathD);
 	let startPoint = $derived(normalizedRoute.length > 0 ? normalizedRoute[0] : null);
-	let endPoint =
-		$derived(normalizedRoute.length > 1 ? normalizedRoute[normalizedRoute.length - 1] : startPoint);
+	let endPoint = $derived(
+		normalizedRoute.length > 1 ? normalizedRoute[normalizedRoute.length - 1] : startPoint
+	);
 </script>
 
 {#if showImageModal && sortedImages.length > 0}

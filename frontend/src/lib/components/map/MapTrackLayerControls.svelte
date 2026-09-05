@@ -6,7 +6,6 @@
 	import HikingIcon from '~icons/mdi/hiking';
 	import CameraIcon from '~icons/mdi/camera';
 
-	
 	interface Props {
 		showActivities?: boolean;
 		showTrails?: boolean;

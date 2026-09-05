@@ -53,8 +53,8 @@
 		{ id: 'nearby', labelKey: 'map.search_mode_nearby', icon: NearbyIcon }
 	];
 
-	let myResults =
-		$derived(mode === 'my' && query.trim()
+	let myResults = $derived(
+		mode === 'my' && query.trim()
 			? filteredPins
 					.filter((pin) => {
 						const q = query.toLowerCase().trim();
@@ -64,7 +64,8 @@
 						);
 					})
 					.slice(0, 8)
-			: []);
+			: []
+	);
 
 	run(() => {
 		showDropdown = Boolean(
@@ -152,9 +153,9 @@
 				role="tab"
 				aria-selected={mode === m.id}
 				class="btn btn-xs sm:btn-sm min-w-0 h-8 sm:h-9 px-1.5 sm:px-2 gap-0.5 sm:gap-1 {mode ===
- m.id
- ? 'btn-primary'
- : 'btn-ghost bg-base-100/80'}"
+				m.id
+					? 'btn-primary'
+					: 'btn-ghost bg-base-100/80'}"
 				onclick={() => handleModeChange(m.id)}
 			>
 				<m.icon class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />

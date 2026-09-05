@@ -14,12 +14,7 @@
 		location?: string;
 	}
 
-	let {
-		images = [],
-		initialIndex = 0,
-		name = '',
-		location = ''
-	}: Props = $props();
+	let { images = [], initialIndex = 0, name = '', location = '' }: Props = $props();
 
 	let currentIndex = $state(0);
 	let currentImage = $derived(images[currentIndex]?.image || '');
@@ -145,8 +140,8 @@
 									<button
 										type="button"
 										class="w-2 h-2 rounded-full transition-all {index === currentIndex
- ? 'bg-primary'
- : 'bg-base-300 hover:bg-base-400'}"
+											? 'bg-primary'
+											: 'bg-base-300 hover:bg-base-400'}"
 										aria-label={`Go to image ${index + 1}`}
 										onclick={() => goToSlide(index)}
 									></button>
@@ -236,9 +231,9 @@
 						{#each images as imageData, index}
 							<button
 								class="shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all {index ===
- currentIndex
- ? 'border-primary shadow-lg'
- : 'border-base-300 hover:border-base-400'}"
+								currentIndex
+									? 'border-primary shadow-lg'
+									: 'border-base-300 hover:border-base-400'}"
 								onclick={() => goToSlide(index)}
 							>
 								<img src={imageData.image} alt={name} class="w-full h-full object-cover" />

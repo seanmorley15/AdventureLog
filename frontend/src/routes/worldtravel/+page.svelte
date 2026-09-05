@@ -183,13 +183,17 @@
 	// Statistics
 	let totalCountries = $derived(allCountries.length);
 	let visitedCountries = $derived(allCountries.filter((country) => country.num_visits > 0).length);
-	let completeCountries = $derived(allCountries.filter(
-		(country) => country.num_visits === country.num_regions
-	).length);
-	let partialCountries = $derived(allCountries.filter(
-		(country) => country.num_visits > 0 && country.num_visits < country.num_regions
-	).length);
-	let notVisitedCountries = $derived(allCountries.filter((country) => country.num_visits === 0).length);
+	let completeCountries = $derived(
+		allCountries.filter((country) => country.num_visits === country.num_regions).length
+	);
+	let partialCountries = $derived(
+		allCountries.filter(
+			(country) => country.num_visits > 0 && country.num_visits < country.num_regions
+		).length
+	);
+	let notVisitedCountries = $derived(
+		allCountries.filter((country) => country.num_visits === 0).length
+	);
 
 	run(() => {
 		if (searchQuery === '') {
@@ -755,4 +759,3 @@
 		</div>
 	</div>
 </div>
-

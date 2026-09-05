@@ -10,7 +10,6 @@
 	import FullscreenIcon from '~icons/mdi/fullscreen';
 	import FullscreenExitIcon from '~icons/mdi/fullscreen-exit';
 
-	
 	interface Props {
 		map?: any;
 		basemapType?: string;

@@ -29,9 +29,9 @@
 	const DEV_UNLOCK_KEYWORD = 'dev';
 
 	// Get display name
-	let displayName = $derived(user.first_name
-		? `${user.first_name} ${user.last_name || ''}`.trim()
-		: user.username || 'User');
+	let displayName = $derived(
+		user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username || 'User'
+	);
 
 	// Menu items for better organization
 	let menuItems = $derived([
@@ -56,14 +56,16 @@
 	]);
 
 	// Add admin item if user is staff
-	let adminMenuItem = $derived(user.is_staff
-		? {
-				path: '/admin',
-				icon: Shield,
-				label: 'navbar.admin_panel',
-				section: 'secondary'
-			}
-		: null);
+	let adminMenuItem = $derived(
+		user.is_staff
+			? {
+					path: '/admin',
+					icon: Shield,
+					label: 'navbar.admin_panel',
+					section: 'secondary'
+				}
+			: null
+	);
 
 	function openMobileQR() {
 		showMobileQR = true;

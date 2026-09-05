@@ -189,7 +189,7 @@
 			min={minDate}
 			max={maxDate}
 			{locale}
-			firstDayOfWeek={firstDayOfWeek}
+			{firstDayOfWeek}
 		>
 			<svg
 				aria-label="Previous"

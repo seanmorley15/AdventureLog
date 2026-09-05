@@ -100,7 +100,11 @@
 		const parsedLat = parseFloat(lat);
 		const parsedLng = parseFloat(lng);
 		const parsedZoom = parseFloat(zoom);
-		if (!Number.isFinite(parsedLat) || !Number.isFinite(parsedLng) || !Number.isFinite(parsedZoom)) {
+		if (
+			!Number.isFinite(parsedLat) ||
+			!Number.isFinite(parsedLng) ||
+			!Number.isFinite(parsedZoom)
+		) {
 			return null;
 		}
 		return { center: [parsedLng, parsedLat], zoom: parsedZoom };

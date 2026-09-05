@@ -69,10 +69,11 @@
 	let isDetailsOpen: boolean = $state(false);
 	let updatingItemId: string | null = $state(null);
 
-	let canEdit =
-		$derived(!readOnly &&
-		(checklist.user == user?.uuid ||
-			(collection && user && collection.shared_with?.includes(user.uuid))));
+	let canEdit = $derived(
+		!readOnly &&
+			(checklist.user == user?.uuid ||
+				(collection && user && collection.shared_with?.includes(user.uuid)))
+	);
 
 	const dateFormat = $derived(dateFormatFromUser(user));
 
@@ -229,8 +230,7 @@
 								class="flex w-full items-center gap-3 rounded-lg bg-base-200/60 p-2 text-left transition-colors hover:bg-base-200 disabled:opacity-70"
 							>
 								{#if updatingItemId === item.id}
-									<span class="loading loading-spinner loading-xs text-primary shrink-0"
-									></span>
+									<span class="loading loading-spinner loading-xs text-primary shrink-0"></span>
 								{:else if item.is_checked}
 									<CheckCircle class="w-5 h-5 text-success shrink-0" />
 								{:else}

@@ -10,7 +10,10 @@
 		label?: string | null;
 	}
 
-	let { selectedTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone), label = null }: Props = $props();
+	let {
+		selectedTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone),
+		label = null
+	}: Props = $props();
 	// Generate a unique ID for this component instance
 	const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2);
 	const instanceId = `tz-selector-${uniqueId}`;
@@ -28,9 +31,11 @@
 	const timezones = Intl.supportedValuesOf('timeZone');
 
 	// Filter timezones based on search query
-	let filteredTimezones = $derived(searchQuery
-		? timezones.filter((tz) => tz.toLowerCase().includes(searchQuery.toLowerCase()))
-		: timezones);
+	let filteredTimezones = $derived(
+		searchQuery
+			? timezones.filter((tz) => tz.toLowerCase().includes(searchQuery.toLowerCase()))
+			: timezones
+	);
 
 	function selectTimezone(tz: string) {
 		selectedTimezone = tz;

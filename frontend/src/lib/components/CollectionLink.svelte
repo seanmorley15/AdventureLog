@@ -124,18 +124,20 @@
 	let sharedCollectionsCount = $derived(sharedCollections.length);
 
 	// Filtered collections for display
-	let filteredOwnCollections =
-		$derived(searchQuery === ''
+	let filteredOwnCollections = $derived(
+		searchQuery === ''
 			? collections
 			: collections.filter((collection) =>
 					collection.name.toLowerCase().includes(searchQuery.toLowerCase())
-				));
-	let filteredSharedCollections =
-		$derived(searchQuery === ''
+				)
+	);
+	let filteredSharedCollections = $derived(
+		searchQuery === ''
 			? sharedCollections
 			: sharedCollections.filter((collection) =>
 					collection.name.toLowerCase().includes(searchQuery.toLowerCase())
-				));
+				)
+	);
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-xs">

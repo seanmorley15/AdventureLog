@@ -17,8 +17,6 @@
 	import { addToast } from '$lib/toasts';
 	import StravaGpxList from './transportation/StravaGpxList.svelte';
 
-	
-
 	interface Props {
 		// Props
 		attachments?: Attachment[];

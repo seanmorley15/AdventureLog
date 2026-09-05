@@ -45,7 +45,6 @@
 		category?: any;
 	} | null = null;
 
-	
 	interface Props {
 		// Props (would be passed in from parent component)
 		initialTransportation?: any;
@@ -191,11 +190,7 @@
 	// Auto-enable airport mode only when transportation type CHANGES to plane
 	// Do not continuously re-enable - respect user's manual toggle
 	run(() => {
-		if (
-			transportation.type === 'plane' &&
-			previousTransportationType !== 'plane' &&
-			!airportMode
-		) {
+		if (transportation.type === 'plane' && previousTransportationType !== 'plane' && !airportMode) {
 			previousTransportationType = transportation.type;
 			airportMode = true;
 		} else if (transportation.type !== previousTransportationType) {
@@ -204,16 +199,20 @@
 	});
 
 	// Reactive constraints
-	let constraintStartDate = $derived(allDay
-		? fullStartDate && fullStartDate.includes('T')
-			? fullStartDate.split('T')[0]
-			: ''
-		: fullStartDate || '');
-	let constraintEndDate = $derived(allDay
-		? fullEndDate && fullEndDate.includes('T')
-			? fullEndDate.split('T')[0]
-			: ''
-		: fullEndDate || '');
+	let constraintStartDate = $derived(
+		allDay
+			? fullStartDate && fullStartDate.includes('T')
+				? fullStartDate.split('T')[0]
+				: ''
+			: fullStartDate || ''
+	);
+	let constraintEndDate = $derived(
+		allDay
+			? fullEndDate && fullEndDate.includes('T')
+				? fullEndDate.split('T')[0]
+				: ''
+			: fullEndDate || ''
+	);
 
 	function handleTransportationUpdate(
 		event: CustomEvent<{
@@ -572,339 +571,352 @@
 	});
 </script>
 
-<div class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5">
+<div
+	class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5"
+>
 	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
-	<div class="max-w-full mx-auto space-y-6">
-		<!-- Location Search & Map Section - FIRST! -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-secondary/10 rounded-lg">
-						<MapIcon class="w-5 h-5 text-secondary" />
+		<div class="max-w-full mx-auto space-y-6">
+			<!-- Location Search & Map Section - FIRST! -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-secondary/10 rounded-lg">
+							<MapIcon class="w-5 h-5 text-secondary" />
+						</div>
+						<div>
+							<h2 class="text-xl font-bold">{$t('adventures.location_map')}</h2>
+						</div>
 					</div>
-					<div>
-						<h2 class="text-xl font-bold">{$t('adventures.location_map')}</h2>
-					</div>
-				</div>
 
-				<LocationSearchMap
-					bind:isReverseGeocoding
-					basemapType={normalizeBasemapType(user?.map_style)}
-					transportationMode={true}
-					bind:airportMode
-					showDisplayNameInput={false}
-					initialStartLocation={initialTransportation?.origin_latitude &&
-					initialTransportation?.origin_longitude
-						? {
-								name: initialTransportation.from_location || '',
-								lat: Number(initialTransportation.origin_latitude),
-								lng: Number(initialTransportation.origin_longitude),
-								location: initialTransportation.from_location || ''
-							}
-						: null}
-					initialEndLocation={initialTransportation?.destination_latitude &&
-					initialTransportation?.destination_longitude
-						? {
-								name: initialTransportation.to_location || '',
-								lat: Number(initialTransportation.destination_latitude),
-								lng: Number(initialTransportation.destination_longitude),
-								location: initialTransportation.to_location || ''
-							}
-						: null}
-					initialStartCode={initialTransportation?.start_code || null}
-					initialEndCode={initialTransportation?.end_code || null}
-					on:transportationUpdate={handleTransportationUpdate}
-					on:clear={handleLocationClear}
-				/>
+					<LocationSearchMap
+						bind:isReverseGeocoding
+						basemapType={normalizeBasemapType(user?.map_style)}
+						transportationMode={true}
+						bind:airportMode
+						showDisplayNameInput={false}
+						initialStartLocation={initialTransportation?.origin_latitude &&
+						initialTransportation?.origin_longitude
+							? {
+									name: initialTransportation.from_location || '',
+									lat: Number(initialTransportation.origin_latitude),
+									lng: Number(initialTransportation.origin_longitude),
+									location: initialTransportation.from_location || ''
+								}
+							: null}
+						initialEndLocation={initialTransportation?.destination_latitude &&
+						initialTransportation?.destination_longitude
+							? {
+									name: initialTransportation.to_location || '',
+									lat: Number(initialTransportation.destination_latitude),
+									lng: Number(initialTransportation.destination_longitude),
+									location: initialTransportation.to_location || ''
+								}
+							: null}
+						initialStartCode={initialTransportation?.start_code || null}
+						initialEndCode={initialTransportation?.end_code || null}
+						on:transportationUpdate={handleTransportationUpdate}
+						on:clear={handleLocationClear}
+					/>
+				</div>
 			</div>
-		</div>
 
-		<!-- Basic Information Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-primary/10 rounded-lg">
-						<InfoIcon class="w-5 h-5 text-primary" />
+			<!-- Basic Information Section -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-primary/10 rounded-lg">
+							<InfoIcon class="w-5 h-5 text-primary" />
+						</div>
+						<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
 					</div>
-					<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
-				</div>
 
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					<!-- Left Column -->
-					<div class="space-y-4">
-						<!-- Name Field -->
-						<div class="flex flex-col">
-							<label class="field-label" for="name">{$t('adventures.name')} <span class="text-error">*</span></label>
-							<input
-								type="text"
-								id="name"
-								bind:value={transportation.name}
-								class="input bg-base-100/80 focus:bg-base-100"
-								placeholder={$t('transportation.enter_transportation_name')}
-								required
-							/>
-						</div>
-
-						<!-- Type Field -->
-						<div class="flex flex-col">
-							<label class="field-label" for="type">
-								{$t('transportation.type')} <span class="text-error">*</span>
-							</label>
-							<select
-								class="select w-full bg-base-100 text-base-content"
-								name="type"
-								id="type"
-								required
-								bind:value={transportation.type}
-							>
-								<option disabled value="">{$t('transportation.select_type')}</option>
-								{#each Object.entries(TRANSPORTATION_TYPES_ICONS) as [key, icon]}
-									<option value={key}>{icon} {key.charAt(0).toUpperCase() + key.slice(1)}</option>
-								{/each}
-							</select>
-						</div>
-
-						<!-- Flight Number Field -->
-						<div class="flex flex-col">
-							<label class="field-label" for="flight_number">{$t('transportation.flight_number')}</label>
-							<input
-								type="text"
-								id="flight_number"
-								bind:value={transportation.flight_number}
-								class="input bg-base-100/80 focus:bg-base-100"
-								placeholder={$t('transportation.enter_flight_number')}
-							/>
-						</div>
-
-						<!-- Start/End Codes -->
-						{#if transportation.type === 'plane' || airportMode}
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-								<div class="flex flex-col">
-									<label class="field-label" for="start_code">
-										{$t('transportation.departure_code') || 'Departure code'}
-									</label>
-									<input
-										type="text"
-										id="start_code"
-										value={startCodeField}
-										oninput={handleStartCodeEvent}
-										class="input bg-base-100/80 focus:bg-base-100 uppercase"
-										maxlength="5"
-										placeholder={airportMode ? 'JFK' : $t('transportation.departure_code')}
-									/>
-								</div>
-								<div class="flex flex-col">
-									<label class="field-label" for="end_code">
-										{$t('transportation.arrival_code') || 'Arrival code'}
-									</label>
-									<input
-										type="text"
-										id="end_code"
-										value={endCodeField}
-										oninput={handleEndCodeEvent}
-										class="input bg-base-100/80 focus:bg-base-100 uppercase"
-										maxlength="5"
-										placeholder={airportMode ? 'LHR' : $t('transportation.arrival_code')}
-									/>
-								</div>
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<!-- Left Column -->
+						<div class="space-y-4">
+							<!-- Name Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="name"
+									>{$t('adventures.name')} <span class="text-error">*</span></label
+								>
+								<input
+									type="text"
+									id="name"
+									bind:value={transportation.name}
+									class="input bg-base-100/80 focus:bg-base-100"
+									placeholder={$t('transportation.enter_transportation_name')}
+									required
+								/>
 							</div>
-						{/if}
 
-						<!-- Rating Field -->
-						<div class="flex flex-col">
-							<label class="field-label" for="rating">{$t('adventures.rating')}</label>
-							<div
-								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
-							>
-								<div class="rating">
-									<input
-										type="radio"
-										name="rating"
-										id="rating"
-										class="rating-hidden"
-										checked={Number.isNaN(transportation.rating)}
-									/>
-									{#each [1, 2, 3, 4, 5] as star}
+							<!-- Type Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="type">
+									{$t('transportation.type')} <span class="text-error">*</span>
+								</label>
+								<select
+									class="select w-full bg-base-100 text-base-content"
+									name="type"
+									id="type"
+									required
+									bind:value={transportation.type}
+								>
+									<option disabled value="">{$t('transportation.select_type')}</option>
+									{#each Object.entries(TRANSPORTATION_TYPES_ICONS) as [key, icon]}
+										<option value={key}>{icon} {key.charAt(0).toUpperCase() + key.slice(1)}</option>
+									{/each}
+								</select>
+							</div>
+
+							<!-- Flight Number Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="flight_number"
+									>{$t('transportation.flight_number')}</label
+								>
+								<input
+									type="text"
+									id="flight_number"
+									bind:value={transportation.flight_number}
+									class="input bg-base-100/80 focus:bg-base-100"
+									placeholder={$t('transportation.enter_flight_number')}
+								/>
+							</div>
+
+							<!-- Start/End Codes -->
+							{#if transportation.type === 'plane' || airportMode}
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+									<div class="flex flex-col">
+										<label class="field-label" for="start_code">
+											{$t('transportation.departure_code') || 'Departure code'}
+										</label>
+										<input
+											type="text"
+											id="start_code"
+											value={startCodeField}
+											oninput={handleStartCodeEvent}
+											class="input bg-base-100/80 focus:bg-base-100 uppercase"
+											maxlength="5"
+											placeholder={airportMode ? 'JFK' : $t('transportation.departure_code')}
+										/>
+									</div>
+									<div class="flex flex-col">
+										<label class="field-label" for="end_code">
+											{$t('transportation.arrival_code') || 'Arrival code'}
+										</label>
+										<input
+											type="text"
+											id="end_code"
+											value={endCodeField}
+											oninput={handleEndCodeEvent}
+											class="input bg-base-100/80 focus:bg-base-100 uppercase"
+											maxlength="5"
+											placeholder={airportMode ? 'LHR' : $t('transportation.arrival_code')}
+										/>
+									</div>
+								</div>
+							{/if}
+
+							<!-- Rating Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="rating">{$t('adventures.rating')}</label>
+								<div
+									class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
+								>
+									<div class="rating">
 										<input
 											type="radio"
 											name="rating"
-											class="mask mask-star-2 bg-warning"
-											onclick={() => (transportation.rating = star)}
-											checked={transportation.rating === star}
+											id="rating"
+											class="rating-hidden"
+											checked={Number.isNaN(transportation.rating)}
 										/>
-									{/each}
+										{#each [1, 2, 3, 4, 5] as star}
+											<input
+												type="radio"
+												name="rating"
+												class="mask mask-star-2 bg-warning"
+												onclick={() => (transportation.rating = star)}
+												checked={transportation.rating === star}
+											/>
+										{/each}
+									</div>
+									{#if !Number.isNaN(transportation.rating)}
+										<button
+											type="button"
+											class="btn btn-sm btn-error btn-outline gap-2"
+											onclick={() => (transportation.rating = NaN)}
+										>
+											<ClearIcon class="w-4 h-4" />
+											{$t('adventures.remove')}
+										</button>
+									{/if}
 								</div>
-								{#if !Number.isNaN(transportation.rating)}
-									<button
-										type="button"
-										class="btn btn-sm btn-error btn-outline gap-2"
-										onclick={() => (transportation.rating = NaN)}
-									>
-										<ClearIcon class="w-4 h-4" />
-										{$t('adventures.remove')}
-									</button>
-								{/if}
+							</div>
+						</div>
+
+						<!-- Right Column -->
+						<div class="space-y-4">
+							<!-- Link Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="link">{$t('adventures.link')}</label>
+								<input
+									type="url"
+									id="link"
+									bind:value={transportation.link}
+									class="input bg-base-100/80 focus:bg-base-100"
+									placeholder={$t('transportation.enter_link')}
+								/>
+							</div>
+
+							<MoneyInput
+								label={$t('adventures.price')}
+								value={moneyValue}
+								defaultCurrency={preferredCurrency}
+								on:change={(event) => {
+									transportation.price = event.detail.amount;
+									transportation.price_currency = event.detail.currency || preferredCurrency;
+								}}
+							/>
+
+							<!-- Description Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="description">{$t('adventures.description')}</label>
+								<MarkdownEditor
+									id="description"
+									bind:text={transportation.description}
+									editor_height="h-32"
+									enableFetch
+									fetchName={transportation.name}
+									fetchLang={$locale || 'en'}
+									fetchDisabled={!transportation.name || !transportation.type}
+								/>
 							</div>
 						</div>
 					</div>
-
-					<!-- Right Column -->
-					<div class="space-y-4">
-						<!-- Link Field -->
-						<div class="flex flex-col">
-							<label class="field-label" for="link">{$t('adventures.link')}</label>
-							<input
-								type="url"
-								id="link"
-								bind:value={transportation.link}
-								class="input bg-base-100/80 focus:bg-base-100"
-								placeholder={$t('transportation.enter_link')}
-							/>
-						</div>
-
-						<MoneyInput
-							label={$t('adventures.price')}
-							value={moneyValue}
-							defaultCurrency={preferredCurrency}
-							on:change={(event) => {
-								transportation.price = event.detail.amount;
-								transportation.price_currency = event.detail.currency || preferredCurrency;
-							}}
-						/>
-
-						<!-- Description Field -->
-						<div class="flex flex-col">
-							<label class="field-label" for="description">{$t('adventures.description')}</label>
-							<MarkdownEditor
-								id="description"
-								bind:text={transportation.description}
-								editor_height="h-32"
-								enableFetch
-								fetchName={transportation.name}
-								fetchLang={$locale || 'en'}
-								fetchDisabled={!transportation.name || !transportation.type}
-							/>
-						</div>
-					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Departure/Arrival Dates & Timezone Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-info/10 rounded-lg">
-						<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-							/>
-						</svg>
+			<!-- Departure/Arrival Dates & Timezone Section -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-info/10 rounded-lg">
+							<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
+							</svg>
+						</div>
+						<h2 class="text-xl font-bold">{$t('adventures.dates')}</h2>
 					</div>
-					<h2 class="text-xl font-bold">{$t('adventures.dates')}</h2>
-				</div>
 
-				<div class="space-y-4">
-					<!-- All Day and Constrain Dates Toggles -->
-					<div class="flex flex-wrap gap-4">
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input
-								type="checkbox"
-								class="toggle toggle-primary"
-								checked={allDay}
-								onchange={handleAllDayToggle}
-							/>
-							<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span>
-						</label>
-
-						{#if collection}
+					<div class="space-y-4">
+						<!-- All Day and Constrain Dates Toggles -->
+						<div class="flex flex-wrap gap-4">
 							<label class="flex items-center gap-2 cursor-pointer">
 								<input
 									type="checkbox"
-									class="toggle toggle-secondary"
-									bind:checked={constrainDates}
+									class="toggle toggle-primary"
+									checked={allDay}
+									onchange={handleAllDayToggle}
 								/>
-								<span class="font-semibold text-sm text-base-content">{$t('adventures.date_constrain')}</span>
+								<span class="font-semibold text-sm text-base-content"
+									>{$t('adventures.all_day')}</span
+								>
 							</label>
+
+							{#if collection}
+								<label class="flex items-center gap-2 cursor-pointer">
+									<input
+										type="checkbox"
+										class="toggle toggle-secondary"
+										bind:checked={constrainDates}
+									/>
+									<span class="font-semibold text-sm text-base-content"
+										>{$t('adventures.date_constrain')}</span
+									>
+								</label>
+							{/if}
+						</div>
+
+						{#if dateError}
+							<div class="alert alert-error bg-error/10 border border-error/30 text-error">
+								<InfoIcon class="w-4 h-4" />
+								<span class="text-sm">{dateError}</span>
+							</div>
 						{/if}
-					</div>
 
-					{#if dateError}
-						<div class="alert alert-error bg-error/10 border border-error/30 text-error">
-							<InfoIcon class="w-4 h-4" />
-							<span class="text-sm">{dateError}</span>
+						<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+							<!-- Departure Date -->
+							<div class="flex flex-col">
+								<label class="field-label" for="departure-date"
+									>{$t('transportation.departure_date')}</label
+								>
+								<DateInput
+									id="departure-date"
+									bind:value={localStartDate}
+									onchange={handleLocalDateChange}
+									showTime={!allDay}
+									min={constrainDates ? constraintStartDate : undefined}
+									max={constrainDates ? constraintEndDate : undefined}
+									clearable={false}
+								/>
+							</div>
+
+							<!-- Arrival Date -->
+							<div class="flex flex-col">
+								<label class="field-label" for="arrival-date"
+									>{$t('transportation.arrival_date')}</label
+								>
+								<DateInput
+									id="arrival-date"
+									bind:value={localEndDate}
+									onchange={handleLocalDateChange}
+									showTime={!allDay}
+									min={constrainDates ? constraintStartDate : undefined}
+									max={constrainDates ? constraintEndDate : undefined}
+									clearable={false}
+								/>
+							</div>
+
+							<!-- Timezone Selector (only for timed transportation) -->
+							{#if !allDay}
+								<TimezoneSelector
+									bind:selectedTimezone={selectedStartTimezone}
+									label={$t('transportation.departure_timezone') ?? 'Departure timezone'}
+								/>
+								<TimezoneSelector
+									bind:selectedTimezone={selectedEndTimezone}
+									label={$t('transportation.arrival_timezone') ?? 'Arrival timezone'}
+								/>
+							{/if}
 						</div>
-					{/if}
-
-					<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-						<!-- Departure Date -->
-						<div class="flex flex-col">
-							<label class="field-label" for="departure-date">{$t('transportation.departure_date')}</label>
-							<DateInput
-								id="departure-date"
-								bind:value={localStartDate}
-								onchange={handleLocalDateChange}
-								showTime={!allDay}
-								min={constrainDates ? constraintStartDate : undefined}
-								max={constrainDates ? constraintEndDate : undefined}
-								clearable={false}
-							/>
-						</div>
-
-						<!-- Arrival Date -->
-						<div class="flex flex-col">
-							<label class="field-label" for="arrival-date">{$t('transportation.arrival_date')}</label>
-							<DateInput
-								id="arrival-date"
-								bind:value={localEndDate}
-								onchange={handleLocalDateChange}
-								showTime={!allDay}
-								min={constrainDates ? constraintStartDate : undefined}
-								max={constrainDates ? constraintEndDate : undefined}
-								clearable={false}
-							/>
-						</div>
-
-						<!-- Timezone Selector (only for timed transportation) -->
-						{#if !allDay}
-							<TimezoneSelector
-								bind:selectedTimezone={selectedStartTimezone}
-								label={$t('transportation.departure_timezone') ?? 'Departure timezone'}
-							/>
-							<TimezoneSelector
-								bind:selectedTimezone={selectedEndTimezone}
-								label={$t('transportation.arrival_timezone') ?? 'Arrival timezone'}
-							/>
-						{/if}
 					</div>
 				</div>
 			</div>
 		</div>
-
-	</div>
 	</div>
 
-		<!-- Action Buttons -->
-		<div
-			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button
+			class="btn btn-primary gap-2"
+			disabled={!transportation.name || !transportation.type || isReverseGeocoding}
+			onclick={handleSave}
 		>
-			<button
-				class="btn btn-primary gap-2"
-				disabled={!transportation.name || !transportation.type || isReverseGeocoding}
-				onclick={handleSave}
-			>
-				{#if isReverseGeocoding}
-					<span class="loading loading-spinner loading-sm"></span>
-					{$t('adventures.processing')}...
-				{:else}
-					<SaveIcon class="w-5 h-5" />
-					{$t('adventures.continue')}
-				{/if}
-			</button>
-		</div>
+			{#if isReverseGeocoding}
+				<span class="loading loading-spinner loading-sm"></span>
+				{$t('adventures.processing')}...
+			{:else}
+				<SaveIcon class="w-5 h-5" />
+				{$t('adventures.continue')}
+			{/if}
+		</button>
+	</div>
 </div>
 
 <style>

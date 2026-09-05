@@ -12,8 +12,6 @@
 	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 
-	
-
 	interface Props {
 		// Props
 		images?: ContentImage[];
@@ -90,48 +88,49 @@
 	});
 </script>
 
-<div class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5">
+<div
+	class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5"
+>
 	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
-	<div class="max-w-full mx-auto space-y-6">
-		<!-- Image Management Section -->
-		<ImageManagement
-			bind:images
-			bind:pendingGooglePhotoUrls
-			objectId={itemId}
-			{contentType}
-			defaultSearchTerm={itemName}
-			{immichIntegration}
-			{copyImmichLocally}
-			on:imagesUpdated={handleImagesUpdated}
-			bind:importInProgress
-		/>
+		<div class="max-w-full mx-auto space-y-6">
+			<!-- Image Management Section -->
+			<ImageManagement
+				bind:images
+				bind:pendingGooglePhotoUrls
+				objectId={itemId}
+				{contentType}
+				defaultSearchTerm={itemName}
+				{immichIntegration}
+				{copyImmichLocally}
+				on:imagesUpdated={handleImagesUpdated}
+				bind:importInProgress
+			/>
 
-		<!-- Attachment Management Section -->
-		<AttachmentManagement
-			bind:attachments
-			{itemId}
-			{contentType}
-			on:attachmentsUpdated={handleAttachmentsUpdated}
-			{start_date}
-			{end_date}
-			{user}
-		/>
-
-	</div>
-	</div>
-
-		<!-- Action Buttons -->
-		<div
-			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
-		>
-			<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
-				<ArrowLeftIcon class="w-5 h-5" />
-				{$t('adventures.back')}
-			</button>
-
-			<button class="btn btn-primary gap-2" onclick={handleClose} disabled={importInProgress}>
-				<CheckIcon class="w-5 h-5" />
-				{$t('adventures.done')}
-			</button>
+			<!-- Attachment Management Section -->
+			<AttachmentManagement
+				bind:attachments
+				{itemId}
+				{contentType}
+				on:attachmentsUpdated={handleAttachmentsUpdated}
+				{start_date}
+				{end_date}
+				{user}
+			/>
 		</div>
+	</div>
+
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
+			<ArrowLeftIcon class="w-5 h-5" />
+			{$t('adventures.back')}
+		</button>
+
+		<button class="btn btn-primary gap-2" onclick={handleClose} disabled={importInProgress}>
+			<CheckIcon class="w-5 h-5" />
+			{$t('adventures.done')}
+		</button>
+	</div>
 </div>

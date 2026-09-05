@@ -41,7 +41,6 @@
 	import Globe from '~icons/mdi/globe';
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
-	
 	interface Props {
 		collection: Collection;
 		user: any;
@@ -130,7 +129,6 @@
 		dayMetadata: CollectionItineraryDay | null; // Day name and description
 	};
 
-
 	// Auto-generate state
 	let isAutoGenerating = $state(false);
 
@@ -138,7 +136,6 @@
 	let isSavingOrder = $state(false);
 	// Which day (ISO date string) is currently being saved. Used to show per-day spinner.
 	let savingDay: string | null = $state(null);
-
 
 	function hasDatedRecords(collection: Collection): boolean {
 		// Check if collection has any dated records
@@ -615,7 +612,9 @@
 				const itemsToRemove =
 					collection.itinerary?.filter(
 						(it) =>
-							getItemType(it) === 'checklist' && it.object_id === checklist.id && it.date === oldDate
+							getItemType(it) === 'checklist' &&
+							it.object_id === checklist.id &&
+							it.date === oldDate
 					) || [];
 
 				for (const item of itemsToRemove) {
@@ -651,12 +650,6 @@
 			isChecklistModalOpen = false;
 		}
 	}
-
-
-
-
-
-
 
 	/**
 	 * Get lodging items where the guest is staying overnight on a given date
@@ -1647,13 +1640,16 @@
 	let days = $derived(groupItemsByDay(collection));
 	let unscheduledItems = $derived(getUnscheduledItems(collection));
 	// Trip-wide (global) itinerary items
-	let globalItems = $derived((collection.itinerary || [])
-		.filter((it) => it.is_global)
-		.map((it) => resolveItineraryItem(it, collection))
-		.sort((a, b) => a.order - b.order));
+	let globalItems = $derived(
+		(collection.itinerary || [])
+			.filter((it) => it.is_global)
+			.map((it) => resolveItineraryItem(it, collection))
+			.sort((a, b) => a.order - b.order)
+	);
 	// Check if auto-generate is available (only for users with modify permission)
-	let canAutoGenerate =
-		$derived(canModify && collection.itinerary?.length === 0 && hasDatedRecords(collection));
+	let canAutoGenerate = $derived(
+		canModify && collection.itinerary?.length === 0 && hasDatedRecords(collection)
+	);
 	// If a new location was just created and we have a pending add-date,
 	// attach it to that date in the itinerary.
 	run(() => {
@@ -2120,9 +2116,9 @@
 							{#if canModify}
 								<textarea
 									class="textarea textarea-ghost w-full px-2 py-1 text-sm leading-relaxed resize-none focus:bg-base-100 transition-all {day
- .dayMetadata?.description
- ? ''
- : 'opacity-40 hover:opacity-70 focus:opacity-100'}"
+										.dayMetadata?.description
+										? ''
+										: 'opacity-40 hover:opacity-70 focus:opacity-100'}"
 									rows="2"
 									placeholder={'+ ' + $t('itinerary.add_description') + '...'}
 									value={day.dayMetadata?.description || ''}
@@ -2294,8 +2290,8 @@
 
 									<div
 										class="group relative transition-all duration-200 pointer-events-auto h-full {isDraggingShadow
- ? 'opacity-40 scale-95'
- : ''}"
+											? 'opacity-40 scale-95'
+											: ''}"
 										animate:flip={{ duration: flipDurationMs }}
 									>
 										{#if resolvedObj}
@@ -2508,7 +2504,8 @@
 												{@const obj = globalItem.resolvedObject}
 												{@const name = getResolvedName(obj) || type || 'Item'}
 												{@const secondary = getGlobalItemSecondary(type, obj)}
-												{@const categoryIcon = type === 'location' ? getLocationCategoryIcon(obj) : undefined}
+												{@const categoryIcon =
+													type === 'location' ? getLocationCategoryIcon(obj) : undefined}
 												<div
 													class="flex items-center gap-3 bg-base-100 rounded-lg px-4 py-3 border border-base-300"
 												>

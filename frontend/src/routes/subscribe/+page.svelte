@@ -31,16 +31,16 @@
 	const dateFormat = $derived(dateFormatFromUser(user));
 	const mediaUsage: MediaUsage = $derived(
 		data.mediaUsage ??
-		({
-			total_bytes: 0,
-			limit_bytes: null,
-			images_bytes: 0,
-			attachments_bytes: 0,
-			profile_pics_bytes: 0,
-			images_files: 0,
-			attachments_files: 0,
-			profile_pics_files: 0
-		} as MediaUsage)
+			({
+				total_bytes: 0,
+				limit_bytes: null,
+				images_bytes: 0,
+				attachments_bytes: 0,
+				profile_pics_bytes: 0,
+				images_files: 0,
+				attachments_files: 0,
+				profile_pics_files: 0
+			} as MediaUsage)
 	);
 
 	const msPerDay = 1000 * 60 * 60 * 24;
@@ -82,8 +82,6 @@
 		{ icon: SyncIcon, key: 'billing.feature_sync' }
 	];
 
-
-
 	function formatBytes(bytes: number) {
 		if (!bytes || bytes <= 0) return '0 B';
 		const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -124,7 +122,6 @@
 		}
 	});
 
-
 	function handleSubscribeEnhance() {
 		isSubscribing = true;
 		return async ({
@@ -157,42 +154,52 @@
 		};
 	}
 	let statusKey = $derived(subscription?.status ?? 'unknown');
-	let statusMeta = $derived(statusConfig[statusKey] ?? {
-		labelKey: 'billing.status_unknown',
-		badgeClass: 'badge-ghost',
-		iconClass: 'text-base-content/60'
-	});
-	let trialEndsAt = $derived(subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
-	let periodEndsAt = $derived(subscription?.current_period_ends_at
-		? new Date(subscription.current_period_ends_at)
-		: null);
-	let daysRemaining = $derived(trialEndsAt
-		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
-		: null);
-	let trialProgress =
-		$derived(daysRemaining !== null ? Math.min(100, Math.max(0, ((30 - daysRemaining) / 30) * 100)) : 0);
+	let statusMeta = $derived(
+		statusConfig[statusKey] ?? {
+			labelKey: 'billing.status_unknown',
+			badgeClass: 'badge-ghost',
+			iconClass: 'text-base-content/60'
+		}
+	);
+	let trialEndsAt = $derived(
+		subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+	);
+	let periodEndsAt = $derived(
+		subscription?.current_period_ends_at ? new Date(subscription.current_period_ends_at) : null
+	);
+	let daysRemaining = $derived(
+		trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay)) : null
+	);
+	let trialProgress = $derived(
+		daysRemaining !== null ? Math.min(100, Math.max(0, ((30 - daysRemaining) / 30) * 100)) : 0
+	);
 	let isActive = $derived(subscription?.status === 'active');
 	let isTrial = $derived(subscription?.status === 'trial');
 	let isPastDue = $derived(subscription?.status === 'past_due');
 	let isCanceled = $derived(subscription?.status === 'canceled');
 	let hasScheduledSubscription = $derived(isTrial && Boolean(subscription?.stripe_subscription_id));
-	let disableCheckout =
-		$derived(!cloudMode ||
-		isActive ||
-		hasScheduledSubscription ||
-		(isPastDue && Boolean(subscription?.stripe_subscription_id)));
-	let canManageBilling =
-		$derived(cloudMode && Boolean(subscription?.stripe_customer_id || subscription?.stripe_subscription_id));
+	let disableCheckout = $derived(
+		!cloudMode ||
+			isActive ||
+			hasScheduledSubscription ||
+			(isPastDue && Boolean(subscription?.stripe_subscription_id))
+	);
+	let canManageBilling = $derived(
+		cloudMode && Boolean(subscription?.stripe_customer_id || subscription?.stripe_subscription_id)
+	);
 	let totalMediaBytes = $derived(mediaUsage.total_bytes ?? 0);
 	let mediaLimitBytes = $derived(mediaUsage.limit_bytes ?? null);
-	let totalMediaFiles =
-		$derived((mediaUsage.images_files ?? 0) +
-		(mediaUsage.attachments_files ?? 0) +
-		(mediaUsage.profile_pics_files ?? 0));
-	let overallUsagePercent = $derived(mediaLimitBytes
-		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
-		: 0);
-	let mediaLimitLabel = $derived(mediaLimitBytes ? formatBytes(mediaLimitBytes) : $t('billing.unlimited'));
+	let totalMediaFiles = $derived(
+		(mediaUsage.images_files ?? 0) +
+			(mediaUsage.attachments_files ?? 0) +
+			(mediaUsage.profile_pics_files ?? 0)
+	);
+	let overallUsagePercent = $derived(
+		mediaLimitBytes ? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100)) : 0
+	);
+	let mediaLimitLabel = $derived(
+		mediaLimitBytes ? formatBytes(mediaLimitBytes) : $t('billing.unlimited')
+	);
 	run(() => {
 		if (browser && $page.form?.message && $page.form.message !== lastFormMessage) {
 			lastFormMessage = $page.form.message;

@@ -72,8 +72,6 @@
 	});
 	let showImagePins = $state(true);
 
-
-
 	function getTransportationIcon(type: string) {
 		if (type in TRANSPORTATION_TYPES_ICONS) {
 			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
@@ -105,7 +103,6 @@
 			notFound = true;
 		}
 	});
-
 
 	function closeImageModal() {
 		isImageModalOpen = false;
@@ -295,24 +292,27 @@
 		return tz !== localTimeZone;
 	}
 
-
-	let imagePinGeoJson = $derived(transportation
-		? contentImagesToGeoJson(transportation.images, {
-				parentType: 'transportation',
-				parentId: transportation.id,
-				parentName: transportation.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON);
+	let imagePinGeoJson = $derived(
+		transportation
+			? contentImagesToGeoJson(transportation.images, {
+					parentType: 'transportation',
+					parentId: transportation.id,
+					parentName: transportation.name
+				})
+			: EMPTY_IMAGE_PIN_GEOJSON
+	);
 	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
-	let transportationPriceLabel = $derived(transportation
-		? formatMoney(
-				toMoneyValue(
-					transportation.price,
-					transportation.price_currency,
-					data.user?.default_currency || DEFAULT_CURRENCY
+	let transportationPriceLabel = $derived(
+		transportation
+			? formatMoney(
+					toMoneyValue(
+						transportation.price,
+						transportation.price_currency,
+						data.user?.default_currency || DEFAULT_CURRENCY
+					)
 				)
-			)
-		: null);
+			: null
+	);
 	run(() => {
 		mapCenter = transportation ? getMapCenter(transportation) : null;
 	});
@@ -582,12 +582,7 @@
 									zoom={13}
 								>
 									{#snippet overlayControls({ map, fullscreenTarget })}
-																		<div
-											
-											
-											
-											class="pointer-events-none absolute inset-0 z-20"
-										>
+										<div class="pointer-events-none absolute inset-0 z-20">
 											<MapTrackLayerControls bind:showImagePins {hasImagePins} />
 											<MapFloatingControls
 												{map}
@@ -595,7 +590,7 @@
 												bind:basemapType={mapBasemapType}
 											/>
 										</div>
-																	{/snippet}
+									{/snippet}
 
 									{#if hasOriginCoordinates(transportation)}
 										<DefaultMarker

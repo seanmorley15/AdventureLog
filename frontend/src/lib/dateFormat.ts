@@ -26,7 +26,9 @@ export function normalizeDateFormat(value: unknown): DateFormatPreference {
 }
 
 /** Resolve an Intl locale tag for the given preference. */
-export function resolveDateFormatLocale(preference: DateFormatPreference = DEFAULT_DATE_FORMAT): string {
+export function resolveDateFormatLocale(
+	preference: DateFormatPreference = DEFAULT_DATE_FORMAT
+): string {
 	if (preference === 'locale') {
 		if (typeof navigator !== 'undefined' && navigator.language) {
 			return navigator.language;

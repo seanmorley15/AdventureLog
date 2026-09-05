@@ -275,8 +275,13 @@
 	min-height: 3rem;
 }
 
-:where(.field-label) + :where(.dropdown) > :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs),
-:where(.field-label) + * > :where(.dropdown) > :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs) {
+:where(.field-label)
+	+ :where(.dropdown)
+	> :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs),
+:where(.field-label)
+	+ *
+	> :where(.dropdown)
+	> :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs) {
 	height: 3rem;
 	min-height: 3rem;
 }

@@ -36,16 +36,20 @@
 	let mobileSearchInputRef: HTMLInputElement | undefined = $state();
 	let desktopSearchInputRef: HTMLInputElement | undefined = $state();
 
-	let sortedCategories = $derived([...categories].sort((a, b) => {
-		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
-		if (usageDiff !== 0) return usageDiff;
-		return a.display_name.localeCompare(b.display_name);
-	}));
+	let sortedCategories = $derived(
+		[...categories].sort((a, b) => {
+			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+			if (usageDiff !== 0) return usageDiff;
+			return a.display_name.localeCompare(b.display_name);
+		})
+	);
 
-	let filteredCategories = $derived(sortedCategories.filter((category) => {
-		if (!searchTerm) return true;
-		return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-	}));
+	let filteredCategories = $derived(
+		sortedCategories.filter((category) => {
+			if (!searchTerm) return true;
+			return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
+		})
+	);
 
 	function closeDropdown() {
 		isOpen = false;
@@ -82,8 +86,7 @@
 	function findExistingCategory(name: string, displayName: string) {
 		return categories.find(
 			(category) =>
-				category.name === name ||
-				category.display_name.toLowerCase() === displayName.toLowerCase()
+				category.name === name || category.display_name.toLowerCase() === displayName.toLowerCase()
 		);
 	}
 
@@ -208,7 +211,12 @@
 	});
 </script>
 
-<div class="dropdown w-full" class:dropdown-open={isOpen} class:dropdown-top={openUpward} bind:this={dropdownRef}>
+<div
+	class="dropdown w-full"
+	class:dropdown-open={isOpen}
+	class:dropdown-top={openUpward}
+	bind:this={dropdownRef}
+>
 	<button
 		type="button"
 		{id}

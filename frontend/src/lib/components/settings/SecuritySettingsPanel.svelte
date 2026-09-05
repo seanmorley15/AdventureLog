@@ -129,7 +129,9 @@
 			{/if}
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
 				<div class="flex flex-col">
-					<label class="field-label" for="settings-new-password">{$t('settings.new_password')}</label>
+					<label class="field-label" for="settings-new-password"
+						>{$t('settings.new_password')}</label
+					>
 					<input
 						id="settings-new-password"
 						type="password"

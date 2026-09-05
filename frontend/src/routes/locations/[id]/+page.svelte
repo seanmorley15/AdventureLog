@@ -59,15 +59,17 @@
 	let sunriseSunsetLoading: Record<string, boolean> = $state({});
 	let currentSlide = $state(0);
 
-	let adventurePriceLabel = $derived(adventure
-		? formatMoney(
-				toMoneyValue(
-					adventure.price,
-					adventure.price_currency,
-					data.user?.default_currency || DEFAULT_CURRENCY
+	let adventurePriceLabel = $derived(
+		adventure
+			? formatMoney(
+					toMoneyValue(
+						adventure.price,
+						adventure.price_currency,
+						data.user?.default_currency || DEFAULT_CURRENCY
+					)
 				)
-			)
-		: null);
+			: null
+	);
 
 	function goToSlide(index: number) {
 		currentSlide = index;
@@ -163,13 +165,15 @@
 		});
 	});
 
-	let imagePinGeoJson = $derived(adventure
-		? contentImagesToGeoJson(adventure.images, {
-				parentType: 'location',
-				parentId: adventure.id,
-				parentName: adventure.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON);
+	let imagePinGeoJson = $derived(
+		adventure
+			? contentImagesToGeoJson(adventure.images, {
+					parentType: 'location',
+					parentId: adventure.id,
+					parentName: adventure.name
+				})
+			: EMPTY_IMAGE_PIN_GEOJSON
+	);
 	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
 
 	function hasActivityGeojson(adventure: Location) {
@@ -806,7 +810,9 @@
 										</div>
 
 										<div class="grid grid-cols-2 gap-3 mb-4">
-											<div class="text-center p-2 bg-base-200/70 rounded-sm border border-primary/10">
+											<div
+												class="text-center p-2 bg-base-200/70 rounded-sm border border-primary/10"
+											>
 												<div class="text-xs text-primary/70 uppercase tracking-wide">
 													{$t('adventures.latitude')}
 												</div>
@@ -896,12 +902,7 @@
 									zoom={adventure.longitude ? 12 : 1}
 								>
 									{#snippet overlayControls({ map, fullscreenTarget })}
-																		<div
-											
-											
-											
-											class="pointer-events-none absolute inset-0 z-20"
-										>
+										<div class="pointer-events-none absolute inset-0 z-20">
 											<MapTrackLayerControls
 												bind:showActivities={showActivityTracks}
 												bind:showTrails={showTrailTracks}
@@ -916,7 +917,7 @@
 												bind:basemapType={mapBasemapType}
 											/>
 										</div>
-																	{/snippet}
+									{/snippet}
 
 									<!-- Activity GPS tracks -->
 									{#if showActivityTracks}
@@ -1109,14 +1110,16 @@
 											tabindex="0"
 										></div>
 										{#snippet overlays()}
-																				<div >
+											<div>
 												{#if image.is_primary}
 													<div class="absolute top-1 right-1">
-														<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
+														<span class="badge badge-primary badge-xs"
+															>{$t('settings.primary')}</span
+														>
 													</div>
 												{/if}
 											</div>
-																			{/snippet}
+										{/snippet}
 									</ImageFrame>
 								{/each}
 							</div>

@@ -17,15 +17,17 @@
 	let showImageModal = $state(false);
 	let modalInitialIndex = $state(0);
 
-	let sortedImages = $derived([...images].sort((a, b) => {
-		if (a.is_primary && !b.is_primary) {
-			return -1;
-		} else if (!a.is_primary && b.is_primary) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}));
+	let sortedImages = $derived(
+		[...images].sort((a, b) => {
+			if (a.is_primary && !b.is_primary) {
+				return -1;
+			} else if (!a.is_primary && b.is_primary) {
+				return 1;
+			} else {
+				return 0;
+			}
+		})
+	);
 
 	run(() => {
 		if (sortedImages.length > 0) {

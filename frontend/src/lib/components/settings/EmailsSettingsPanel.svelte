@@ -83,7 +83,9 @@
 	<div class="divider font-semibold text-base-content">{$t('settings.add_new_email')}</div>
 	<form class="space-y-4" onsubmit={preventDefault(onAdd)}>
 		<div class="flex flex-col">
-			<label class="field-label" for="settings-new-email">{$t('settings.add_new_email_address')}</label>
+			<label class="field-label" for="settings-new-email"
+				>{$t('settings.add_new_email_address')}</label
+			>
 			<input
 				id="settings-new-email"
 				type="email"

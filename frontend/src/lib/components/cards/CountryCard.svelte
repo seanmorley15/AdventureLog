@@ -14,14 +14,16 @@
 
 	let { country }: Props = $props();
 
-	let visitStatus =
-		$derived(country.num_visits === 0
+	let visitStatus = $derived(
+		country.num_visits === 0
 			? 'none'
 			: country.num_visits >= country.num_regions
 				? 'complete'
-				: 'partial');
-	let progressPct =
-		$derived(country.num_regions > 0 ? Math.round((country.num_visits / country.num_regions) * 100) : 0);
+				: 'partial'
+	);
+	let progressPct = $derived(
+		country.num_regions > 0 ? Math.round((country.num_visits / country.num_regions) * 100) : 0
+	);
 
 	function nav() {
 		goto(`/worldtravel/${country.country_code}`);

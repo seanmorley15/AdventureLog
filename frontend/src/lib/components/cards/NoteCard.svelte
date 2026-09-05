@@ -73,10 +73,11 @@
 	let isWarningModalOpen: boolean = $state(false);
 	let isDetailsOpen: boolean = $state(false);
 
-	let canEdit =
-		$derived(!readOnly &&
-		(note.user == user?.uuid ||
-			(collection && user && collection.shared_with?.includes(user.uuid))));
+	let canEdit = $derived(
+		!readOnly &&
+			(note.user == user?.uuid ||
+				(collection && user && collection.shared_with?.includes(user.uuid)))
+	);
 
 	const dateFormat = $derived(dateFormatFromUser(user));
 

@@ -80,21 +80,25 @@
 	}
 
 	let typeConfig = $derived(getTypeConfig(activity.sport_type));
-	let distance =
-		$derived(measurementSystem === 'metric'
+	let distance = $derived(
+		measurementSystem === 'metric'
 			? { value: activity.distance_km, unit: 'km' }
-			: { value: activity.distance_miles, unit: 'mi' });
-	let speed =
-		$derived(measurementSystem === 'metric'
+			: { value: activity.distance_miles, unit: 'mi' }
+	);
+	let speed = $derived(
+		measurementSystem === 'metric'
 			? { value: activity.average_speed_kmh, unit: 'km/h' }
-			: { value: activity.average_speed_mph, unit: 'mph' });
-	let maxSpeed =
-		$derived(measurementSystem === 'metric'
+			: { value: activity.average_speed_mph, unit: 'mph' }
+	);
+	let maxSpeed = $derived(
+		measurementSystem === 'metric'
 			? { value: activity.max_speed_kmh, unit: 'km/h' }
-			: { value: activity.max_speed_mph, unit: 'mph' });
+			: { value: activity.max_speed_mph, unit: 'mph' }
+	);
 	let elevation = $derived(convertElevation(activity.total_elevation_gain, measurementSystem));
-	let paceSeconds =
-		$derived(measurementSystem === 'metric' ? activity.pace_per_km_seconds : activity.pace_per_mile_seconds);
+	let paceSeconds = $derived(
+		measurementSystem === 'metric' ? activity.pace_per_km_seconds : activity.pace_per_mile_seconds
+	);
 </script>
 
 <div class="card bg-base-50 border border-base-200 hover:shadow-md transition-shadow">

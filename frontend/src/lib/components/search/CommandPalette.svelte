@@ -41,7 +41,6 @@
 		return selected ? 'bg-primary text-primary-content' : paletteEntryIdleClass;
 	}
 
-
 	function buildPaletteItems(
 		tab: SearchTab,
 		hits: SearchHit[],
@@ -174,9 +173,6 @@
 		}
 	}, 300);
 
-
-
-
 	function handleKeydown(event: KeyboardEvent) {
 		if (!$commandPaletteOpen) return;
 
@@ -244,13 +240,9 @@
 	});
 	let showActions = $derived(!query.trim() || query.trim().startsWith('>'));
 	let filteredActions = $derived(filterQuickNavActions(query));
-	let paletteItems = $derived(buildPaletteItems(
-		activeTab,
-		appResults,
-		placeItems,
-		showActions,
-		filteredActions
-	));
+	let paletteItems = $derived(
+		buildPaletteItems(activeTab, appResults, placeItems, showActions, filteredActions)
+	);
 	run(() => {
 		if ($commandPaletteOpen) {
 			query;

@@ -32,22 +32,15 @@
 	// Optional level context (e.g. 'country' | 'region' | 'city'). When provided,
 	// `fitMaxZooms` can supply level-specific maximum zoom values used when
 	// fitting bounds. This lets callers choose different fit zooms for country,
-	
 
 	// Effective fit max zoom (prefers level-specific value if available)
 	let effectiveFitMaxZoom: number = $state(8);
-
-
-
-
-
 
 	const DEFAULT_CLUSTER_CIRCLE_PAINT: Record<string, any> = {
 		'circle-color': ['step', ['get', 'point_count'], '#60a5fa', 20, '#facc15', 60, '#f472b6'],
 		'circle-radius': ['step', ['get', 'point_count'], 24, 20, 34, 60, 46],
 		'circle-opacity': 0.85
 	};
-
 
 	const DEFAULT_CLUSTER_SYMBOL_LAYOUT: Record<string, any> = {
 		'text-field': '{point_count_abbreviated}',
@@ -56,7 +49,6 @@
 		'text-font': ['Noto Sans Regular', 'Arial Unicode MS Regular'],
 		'text-size': 12
 	};
-
 
 	const DEFAULT_CLUSTER_SYMBOL_PAINT: Record<string, any> = { 'text-color': '#1f2937' };
 	interface Props {
@@ -102,14 +94,13 @@
 		fitLevel = '',
 		fitMaxZooms = { country: 4, region: 7, city: 12 },
 		getMarkerProps = (feature) =>
-		feature && typeof feature === 'object' && feature !== null && 'properties' in (feature as any)
-			? ((feature as any).properties as MarkerProps)
-			: null,
+			feature && typeof feature === 'object' && feature !== null && 'properties' in (feature as any)
+				? ((feature as any).properties as MarkerProps)
+				: null,
 		markerBaseClass = 'grid px-2 py-1 place-items-center rounded-full border border-gray-200 text-black focus:outline-6 focus:outline-black cursor-pointer whitespace-nowrap',
 		markerClass = (props) =>
-		props && typeof props.visitStatus === 'string' ? props.visitStatus : '',
-		markerTitle = (props) =>
-		props && typeof props.name === 'string' ? props.name : '',
+			props && typeof props.visitStatus === 'string' ? props.visitStatus : '',
+		markerTitle = (props) => (props && typeof props.name === 'string' ? props.name : ''),
 		markerLabel = markerTitle,
 		clusterCirclePaint = $bindable(DEFAULT_CLUSTER_CIRCLE_PAINT),
 		clusterSymbolLayout = $bindable(DEFAULT_CLUSTER_SYMBOL_LAYOUT),
@@ -188,12 +179,13 @@
 		clusterClick: LayerClickInfo;
 	}>();
 
-	let resolvedClusterCirclePaint: Record<string, any> = $state(clusterCirclePaint as Record<string, any>);
+	let resolvedClusterCirclePaint: Record<string, any> = $state(
+		clusterCirclePaint as Record<string, any>
+	);
 
 	// Map instance (bound from FullMap) and bounding state
 	let map: any = $state(undefined);
 	let _lastBoundsKey: string | null = $state(null);
-
 
 	function handleClusterClick(event: CustomEvent<LayerClickInfo>) {
 		dispatch('clusterClick', event.detail);
@@ -307,20 +299,22 @@
 	on:markerClick={handleMarkerClick}
 >
 	{#snippet marker({ featureData, markerProps, markerLngLat, isActive, setActive })}
-	
-			{#if marker_render}{@render marker_render({ featureData, markerProps, markerLngLat, isActive, setActive, })}{:else}
-				{#if markerProps}
-					<button
-						type="button"
-						class={`${markerBaseClass} ${markerClass(markerProps)}`.trim()}
-						title={markerTitle(markerProps)}
-						aria-label={markerLabel(markerProps)}
-					>
-						<span class="text-xs font-medium">{markerLabel(markerProps)}</span>
-					</button>
-				{/if}
-			{/if}
-		
+		{#if marker_render}{@render marker_render({
+				featureData,
+				markerProps,
+				markerLngLat,
+				isActive,
+				setActive
+			})}{:else if markerProps}
+			<button
+				type="button"
+				class={`${markerBaseClass} ${markerClass(markerProps)}`.trim()}
+				title={markerTitle(markerProps)}
+				aria-label={markerLabel(markerProps)}
+			>
+				<span class="text-xs font-medium">{markerLabel(markerProps)}</span>
+			</button>
+		{/if}
 	{/snippet}
 </FullMap>
 

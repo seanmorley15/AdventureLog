@@ -11,18 +11,16 @@
 
 	type NavItem = { id: string; icon: string; label: () => string };
 
-	let navItems = $derived(
-		[
-			{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
-			{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
-			{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
-			{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
-			{ id: 'data', icon: '📦', label: () => $t('settings.data_and_storage') },
-			{ id: 'danger', icon: '⚠️', label: () => $t('settings.danger_zone') },
-			{ id: 'about', icon: 'ℹ️', label: () => $t('settings.about') },
-			...(isStaff ? [{ id: 'admin', icon: '⚙️', label: () => $t('settings.administration') }] : [])
-		] satisfies NavItem[]
-	);
+	let navItems = $derived([
+		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
+		{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
+		{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
+		{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
+		{ id: 'data', icon: '📦', label: () => $t('settings.data_and_storage') },
+		{ id: 'danger', icon: '⚠️', label: () => $t('settings.danger_zone') },
+		{ id: 'about', icon: 'ℹ️', label: () => $t('settings.about') },
+		...(isStaff ? [{ id: 'admin', icon: '⚙️', label: () => $t('settings.administration') }] : [])
+	] satisfies NavItem[]);
 </script>
 
 <div class="bg-base-100 rounded-2xl shadow-xl p-6 sticky top-8">

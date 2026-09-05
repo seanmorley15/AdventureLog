@@ -9,8 +9,12 @@
 	let { size = 'md', variant = 'default' }: Props = $props();
 
 	let titleClass = $derived(variant === 'inverse' ? 'text-primary-content' : 'text-primary');
-	let versionClass = $derived(variant === 'inverse' ? 'text-primary-content/80' : 'text-base-content/70');
-	let codenameClass = $derived(variant === 'inverse' ? 'text-primary-content/90' : 'text-secondary');
+	let versionClass = $derived(
+		variant === 'inverse' ? 'text-primary-content/80' : 'text-base-content/70'
+	);
+	let codenameClass = $derived(
+		variant === 'inverse' ? 'text-primary-content/90' : 'text-secondary'
+	);
 </script>
 
 <p

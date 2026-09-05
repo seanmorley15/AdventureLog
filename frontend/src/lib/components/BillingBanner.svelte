@@ -15,10 +15,12 @@
 	const msPerDay = 1000 * 60 * 60 * 24;
 	const dateFormat = $derived(dateFormatFromUser($page.data?.user));
 
-	let trialEndsAt = $derived(subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null);
-	let daysRemaining = $derived(trialEndsAt
-		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
-		: null);
+	let trialEndsAt = $derived(
+		subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+	);
+	let daysRemaining = $derived(
+		trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay)) : null
+	);
 	let isTrial = $derived(subscription?.status === 'trial');
 	let hasScheduledSubscription = $derived(Boolean(subscription?.stripe_subscription_id));
 	let isPaidTrial = $derived(isTrial && hasScheduledSubscription);

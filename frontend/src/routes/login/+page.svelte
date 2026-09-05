@@ -17,7 +17,9 @@
 	let socialProviders = $derived(data.props?.socialProviders ?? []);
 	let socialOnly: boolean = $derived(data.props?.socialOnly ?? false);
 
-	let quote: { quote: string; author: string } = $derived(data.props?.quote ?? { quote: '', author: '' });
+	let quote: { quote: string; author: string } = $derived(
+		data.props?.quote ?? { quote: '', author: '' }
+	);
 	let background: Background = $derived(data.props?.background ?? { url: '' });
 
 	function handleEnhanceSubmit() {
@@ -100,7 +102,9 @@
 									<form method="post" use:enhance={handleEnhanceSubmit} class="space-y-4">
 										<!-- Username or email -->
 										<div class="flex flex-col">
-											<label class="field-label" for="username">{$t('auth.username_or_email')}</label>
+											<label class="field-label" for="username"
+												>{$t('auth.username_or_email')}</label
+											>
 											<input
 												name="username"
 												id="username"

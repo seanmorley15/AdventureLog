@@ -371,7 +371,9 @@
 										bind:checked={location.is_public}
 									/>
 									<span>
-										<span class="font-semibold text-base-content">{$t('adventures.public_location')}</span>
+										<span class="font-semibold text-base-content"
+											>{$t('adventures.public_location')}</span
+										>
 										<p class="field-hint">
 											{$t('adventures.public_location_description')}
 										</p>
@@ -441,29 +443,28 @@
 				/>
 			</div>
 		</div>
-
 	</div>
 
-		<!-- Action Buttons -->
-		<div
-			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button class="btn btn-ghost gap-2" onclick={handleBack}>
+			<ArrowLeftIcon class="w-5 h-5" />
+			{$t('adventures.back')}
+		</button>
+		<button
+			class="btn btn-primary gap-2"
+			disabled={!location.name || !location.category || isReverseGeocoding}
+			onclick={handleSave}
 		>
-			<button class="btn btn-ghost gap-2" onclick={handleBack}>
-				<ArrowLeftIcon class="w-5 h-5" />
-				{$t('adventures.back')}
-			</button>
-			<button
-				class="btn btn-primary gap-2"
-				disabled={!location.name || !location.category || isReverseGeocoding}
-				onclick={handleSave}
-			>
-				{#if isReverseGeocoding}
-					<span class="loading loading-spinner loading-sm"></span>
-					{$t('adventures.processing')}...
-				{:else}
-					<SaveIcon class="w-5 h-5" />
-					{$t('adventures.continue')}
-				{/if}
-			</button>
-		</div>
+			{#if isReverseGeocoding}
+				<span class="loading loading-spinner loading-sm"></span>
+				{$t('adventures.processing')}...
+			{:else}
+				<SaveIcon class="w-5 h-5" />
+				{$t('adventures.continue')}
+			{/if}
+		</button>
+	</div>
 </div>

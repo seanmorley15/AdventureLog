@@ -32,16 +32,18 @@
 	let showEmojiPickerEdit = $state(false);
 	let searchTerm = $state('');
 
-	let filteredCategories = $derived(categories
-		.filter((category) => {
-			if (!searchTerm.trim()) return true;
-			return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-		})
-		.sort((a, b) => {
-			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
-			if (usageDiff !== 0) return usageDiff;
-			return a.display_name.localeCompare(b.display_name);
-		}));
+	let filteredCategories = $derived(
+		categories
+			.filter((category) => {
+				if (!searchTerm.trim()) return true;
+				return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
+			})
+			.sort((a, b) => {
+				const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+				if (usageDiff !== 0) return usageDiff;
+				return a.display_name.localeCompare(b.display_name);
+			})
+	);
 
 	onMount(async () => {
 		await import('emoji-picker-element');
@@ -284,9 +286,7 @@
 						</h3>
 
 						{#if hasLoaded && categories.length > 0}
-							<label
-								class="input input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0"
-							>
+							<label class="input input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0">
 								<SearchIcon class="w-4 h-4 opacity-50 shrink-0" />
 								<input
 									type="search"
@@ -332,7 +332,9 @@
 												<form onsubmit={saveCategory} class="space-y-3 min-w-0">
 													<div class="space-y-3">
 														<div class="flex flex-col min-w-0">
-															<label class="field-label" for="edit-category-name">{$t('categories.category_name')}</label>
+															<label class="field-label" for="edit-category-name"
+																>{$t('categories.category_name')}</label
+															>
 															<input
 																id="edit-category-name"
 																type="text"
@@ -342,7 +344,9 @@
 															/>
 														</div>
 														<div class="flex flex-col min-w-0">
-															<label class="field-label" for="edit-category-icon">{$t('categories.icon')}</label>
+															<label class="field-label" for="edit-category-icon"
+																>{$t('categories.icon')}</label
+															>
 															<div class="join w-full min-w-0">
 																<input
 																	id="edit-category-icon"
@@ -375,11 +379,7 @@
 													{/if}
 
 													<div class="flex flex-wrap justify-end gap-2">
-														<button
-															type="button"
-															class="btn btn-ghost btn-sm"
-															onclick={cancelEdit}
-														>
+														<button type="button" class="btn btn-ghost btn-sm" onclick={cancelEdit}>
 															{$t('adventures.cancel')}
 														</button>
 														<button type="submit" class="btn btn-primary btn-sm gap-2">
@@ -398,11 +398,7 @@
 													<span class="font-semibold">{category.display_name}</span>?
 												</p>
 												<div class="flex flex-wrap gap-2 shrink-0 justify-end">
-													<button
-														type="button"
-														class="btn btn-ghost btn-sm"
-														onclick={cancelDelete}
-													>
+													<button type="button" class="btn btn-ghost btn-sm" onclick={cancelDelete}>
 														{$t('adventures.cancel')}
 													</button>
 													<button
@@ -479,7 +475,9 @@
 					<div class="md:flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-contain">
 						<form onsubmit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
 							<div class="flex flex-col min-w-0 w-full">
-								<label class="field-label" for="new-category-name">{$t('categories.category_name')}</label>
+								<label class="field-label" for="new-category-name"
+									>{$t('categories.category_name')}</label
+								>
 								<input
 									id="new-category-name"
 									type="text"

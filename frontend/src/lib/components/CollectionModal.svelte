@@ -338,7 +338,8 @@
 
 								<!-- Description Field -->
 								<div class="flex flex-col">
-									<label class="field-label" for="description">{$t('adventures.description')}</label>
+									<label class="field-label" for="description">{$t('adventures.description')}</label
+									>
 									<MarkdownEditor bind:text={collection.description} editor_height={'h-32'} />
 								</div>
 
@@ -486,9 +487,9 @@
 										<button
 											type="button"
 											class="relative group rounded-xl overflow-hidden border border-base-300 bg-base-200/30 hover:border-primary transition shadow-xs {coverImageId ===
- image.id
- ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
- : ''}"
+											image.id
+												? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100'
+												: ''}"
 											onclick={() => selectCover(image.id)}
 											aria-pressed={coverImageId === image.id}
 										>

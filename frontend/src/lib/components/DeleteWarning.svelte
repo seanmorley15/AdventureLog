@@ -25,13 +25,7 @@
 		is_warning?: boolean;
 	}
 
-	let {
-		title,
-		button_text,
-		description,
-		is_warning = false
-	}: Props = $props();
-
+	let { title, button_text, description, is_warning = false }: Props = $props();
 
 	function getColorScheme(type: string) {
 		switch (type) {

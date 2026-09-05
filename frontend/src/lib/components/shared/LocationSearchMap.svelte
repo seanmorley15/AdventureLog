@@ -37,7 +37,6 @@
 
 	const dispatch = createEventDispatcher();
 
-	
 	interface Props {
 		initialSelection?: GeoSelection | null;
 		searchQuery?: string;
@@ -52,17 +51,17 @@
 		airportMode?: boolean; // New prop for airport-specific search
 		// Props for initial transportation locations when editing
 		initialStartLocation?: {
-		name: string;
-		lat: number;
-		lng: number;
-		location: string;
-	} | null;
+			name: string;
+			lat: number;
+			lng: number;
+			location: string;
+		} | null;
 		initialEndLocation?: {
-		name: string;
-		lat: number;
-		lng: number;
-		location: string;
-	} | null;
+			name: string;
+			lat: number;
+			lng: number;
+			location: string;
+		} | null;
 		initialStartCode?: string | null;
 		initialEndCode?: string | null;
 	}
@@ -768,7 +767,9 @@
 
 		{#if showDisplayNameInput && displayNamePosition === 'before' && !transportationMode}
 			<div class="flex flex-col">
-				<label class="field-label" for="location-display">{displayNameLabel || $t('adventures.location_display_name')}</label>
+				<label class="field-label" for="location-display"
+					>{displayNameLabel || $t('adventures.location_display_name')}</label
+				>
 				<input
 					type="text"
 					id="location-display"
@@ -1059,7 +1060,9 @@
 
 			{#if showDisplayNameInput && displayNamePosition === 'after'}
 				<div class="flex flex-col">
-					<label class="field-label" for="location-display-after">{displayNameLabel || $t('adventures.location_display_name')}</label>
+					<label class="field-label" for="location-display-after"
+						>{displayNameLabel || $t('adventures.location_display_name')}</label
+					>
 					<input
 						type="text"
 						id="location-display-after"

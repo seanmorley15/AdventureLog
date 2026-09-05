@@ -23,24 +23,26 @@
 	let filterStaff: 'all' | 'staff' = $state('all');
 	let sidebarOpen = $state(false);
 
-	let filteredUsers = $derived(users
-		.filter((user) => {
-			if (filterStaff === 'staff' && !user.is_staff) return false;
-			const q = searchQuery.trim().toLowerCase();
-			if (!q) return true;
-			const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
-			return name.includes(q) || user.username.toLowerCase().includes(q);
-		})
-		.sort((a, b) => {
-			if (sortBy === 'recent') {
-				const aTime = a.date_joined ? new Date(a.date_joined).getTime() : 0;
-				const bTime = b.date_joined ? new Date(b.date_joined).getTime() : 0;
-				return bTime - aTime;
-			}
-			const aName = (a.first_name || a.username).toLowerCase();
-			const bName = (b.first_name || b.username).toLowerCase();
-			return aName.localeCompare(bName);
-		}));
+	let filteredUsers = $derived(
+		users
+			.filter((user) => {
+				if (filterStaff === 'staff' && !user.is_staff) return false;
+				const q = searchQuery.trim().toLowerCase();
+				if (!q) return true;
+				const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
+				return name.includes(q) || user.username.toLowerCase().includes(q);
+			})
+			.sort((a, b) => {
+				if (sortBy === 'recent') {
+					const aTime = a.date_joined ? new Date(a.date_joined).getTime() : 0;
+					const bTime = b.date_joined ? new Date(b.date_joined).getTime() : 0;
+					return bTime - aTime;
+				}
+				const aName = (a.first_name || a.username).toLowerCase();
+				const bName = (b.first_name || b.username).toLowerCase();
+				return aName.localeCompare(bName);
+			})
+	);
 
 	let staffCount = $derived(users.filter((u) => u.is_staff).length);
 	let hasActiveFilters = $derived(searchQuery.trim().length > 0 || filterStaff !== 'all');

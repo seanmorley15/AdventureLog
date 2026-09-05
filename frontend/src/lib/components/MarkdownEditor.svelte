@@ -31,7 +31,9 @@
 	let fetchError = $state('');
 	let googleMapsEnabled = $state(false);
 
-	let canFetch = $derived(enableFetch && !fetchDisabled && Boolean(fetchName?.trim()) && !isFetching);
+	let canFetch = $derived(
+		enableFetch && !fetchDisabled && Boolean(fetchName?.trim()) && !isFetching
+	);
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;

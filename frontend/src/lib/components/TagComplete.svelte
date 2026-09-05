@@ -44,11 +44,14 @@
 		}
 	}
 
-	let filteredItems = $derived(allTags.filter(function (activity) {
-		return (
-			activity.toLowerCase().includes(inputVal.toLowerCase()) && (!tags || !tags.includes(activity))
-		);
-	}));
+	let filteredItems = $derived(
+		allTags.filter(function (activity) {
+			return (
+				activity.toLowerCase().includes(inputVal.toLowerCase()) &&
+				(!tags || !tags.includes(activity))
+			);
+		})
+	);
 </script>
 
 <div class="relative">

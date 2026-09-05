@@ -16,14 +16,16 @@
 	let is_disabled = $derived(data.props.is_disabled as boolean);
 	let is_disabled_message = $derived(data.props.is_disabled_message as string);
 	let inviteKey = $derived(data.props.invite_key as string | null);
-	let inviteSignup = $derived(data.props.inviteSignup as {
-		valid: boolean;
-		email?: string | null;
-		expired?: boolean;
-		accepted?: boolean;
-		registered?: boolean;
-		message?: string | null;
-	} | null);
+	let inviteSignup = $derived(
+		data.props.inviteSignup as {
+			valid: boolean;
+			email?: string | null;
+			expired?: boolean;
+			accepted?: boolean;
+			registered?: boolean;
+			message?: string | null;
+		} | null
+	);
 	let passwordPolicy = $derived(data.props.passwordPolicy as PasswordPolicy);
 	let signupLegalLinks = $derived(data.props.signupLegalLinks as SignupLegalLinks);
 	let legalRequired = $derived(signupLegalRequired(signupLegalLinks));
@@ -148,7 +150,9 @@
 										</div>
 
 										<div class="flex flex-col">
-											<label class="field-label" for="password2">{$t('auth.confirm_password')}</label>
+											<label class="field-label" for="password2"
+												>{$t('auth.confirm_password')}</label
+											>
 											<input
 												type="password"
 												name="password2"

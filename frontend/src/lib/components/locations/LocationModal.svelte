@@ -9,8 +9,6 @@
 	import LocationMedia from './LocationMedia.svelte';
 	import LocationVisits from './LocationVisits.svelte';
 
-	
-
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
@@ -116,7 +114,6 @@
 			googleMapsEnabled = false;
 		}
 	}
-
 
 	function createEmptyLocation(): Location {
 		return {
@@ -308,7 +305,10 @@
 						</svg>
 					</div>
 					<div class="min-w-0">
-						<h1 id="location-modal-title" class="text-2xl md:text-3xl font-bold text-primary truncate">
+						<h1
+							id="location-modal-title"
+							class="text-2xl md:text-3xl font-bold text-primary truncate"
+						>
 							{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
 						</h1>
 						<p class="text-sm text-base-content/80 truncate">
@@ -386,103 +386,103 @@
 		</div>
 
 		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
-		{#if steps[0].selected && !isEditMode}
-			<!-- Main Content -->
-			<LocationQuickStart
-				googleEnabled={googleMapsEnabled}
-				collectionId={collection?.id || null}
-				itineraryDate={storedInitialVisitDate}
-				itineraryLabel={itineraryDayLabel}
-				basemapType={normalizeBasemapType(user?.map_style)}
-				on:addDetails={(e) => {
-					applyQuickStartPrefill(e.detail.prefill);
-					setStep(1);
-				}}
-				on:manual={() => {
-					setStep(1);
-				}}
-				on:quickAdded={(e) => {
-					location = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					dispatch('quickAddCreated', {
-						location: e.detail.location,
-						itineraryItem: e.detail.itineraryItem || null,
-						itineraryDate: e.detail.itineraryDate || null
-					});
-					close();
-				}}
-				on:quickAddedEdit={(e) => {
-					location = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					setStep(1);
-				}}
-				on:quickAddedDone={(e) => {
-					location = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					close();
-				}}
-				on:cancel={() => close()}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<LocationDetails
-				currentUser={user}
-				initialLocation={location}
-				{collection}
-				bind:editingLocation={location}
-				on:back={handleDetailsBack}
-				on:save={async (e) => {
-					location = {
-						...location,
-						...e.detail,
-						tags: e.detail.tags || location.tags || [],
-						images: e.detail.images || location.images || [],
-						attachments: e.detail.attachments || location.attachments || [],
-						trails: e.detail.trails || location.trails || [],
-						visits: e.detail.visits || location.visits || []
-					};
-
-					// Mark that a save occurred so close() will notify parent
-					didSave = true;
-
-					if (location.id) {
-						setStep(2);
-					} else {
-						// Stay on details if save failed (no ID returned)
+			{#if steps[0].selected && !isEditMode}
+				<!-- Main Content -->
+				<LocationQuickStart
+					googleEnabled={googleMapsEnabled}
+					collectionId={collection?.id || null}
+					itineraryDate={storedInitialVisitDate}
+					itineraryLabel={itineraryDayLabel}
+					basemapType={normalizeBasemapType(user?.map_style)}
+					on:addDetails={(e) => {
+						applyQuickStartPrefill(e.detail.prefill);
 						setStep(1);
-					}
-				}}
-			/>
-		{/if}
-		{#if steps[2].selected}
-			<LocationMedia
-				bind:images={location.images}
-				bind:attachments={location.attachments}
-				bind:trails={location.trails}
-				bind:pendingGooglePhotoUrls
-				itemName={location.name}
-				userIsOwner={user?.uuid === location.user?.uuid}
-				on:back={() => setStep(1)}
-				itemId={location.id}
-				on:next={() => setStep(3)}
-				measurementSystem={user?.measurement_system || 'metric'}
-			/>
-		{/if}
-		{#if steps[3].selected}
-			<LocationVisits
-				bind:visits={location.visits}
-				bind:trails={location.trails}
-				objectId={location.id}
-				on:back={() => setStep(2)}
-				on:close={() => close()}
-				measurementSystem={user?.measurement_system || 'metric'}
-				{collection}
-				initialVisitDate={storedInitialVisitDate}
-			/>
-		{/if}
+					}}
+					on:manual={() => {
+						setStep(1);
+					}}
+					on:quickAdded={(e) => {
+						location = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						dispatch('quickAddCreated', {
+							location: e.detail.location,
+							itineraryItem: e.detail.itineraryItem || null,
+							itineraryDate: e.detail.itineraryDate || null
+						});
+						close();
+					}}
+					on:quickAddedEdit={(e) => {
+						location = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						setStep(1);
+					}}
+					on:quickAddedDone={(e) => {
+						location = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						close();
+					}}
+					on:cancel={() => close()}
+				/>
+			{/if}
+			{#if steps[1].selected}
+				<LocationDetails
+					currentUser={user}
+					initialLocation={location}
+					{collection}
+					bind:editingLocation={location}
+					on:back={handleDetailsBack}
+					on:save={async (e) => {
+						location = {
+							...location,
+							...e.detail,
+							tags: e.detail.tags || location.tags || [],
+							images: e.detail.images || location.images || [],
+							attachments: e.detail.attachments || location.attachments || [],
+							trails: e.detail.trails || location.trails || [],
+							visits: e.detail.visits || location.visits || []
+						};
+
+						// Mark that a save occurred so close() will notify parent
+						didSave = true;
+
+						if (location.id) {
+							setStep(2);
+						} else {
+							// Stay on details if save failed (no ID returned)
+							setStep(1);
+						}
+					}}
+				/>
+			{/if}
+			{#if steps[2].selected}
+				<LocationMedia
+					bind:images={location.images}
+					bind:attachments={location.attachments}
+					bind:trails={location.trails}
+					bind:pendingGooglePhotoUrls
+					itemName={location.name}
+					userIsOwner={user?.uuid === location.user?.uuid}
+					on:back={() => setStep(1)}
+					itemId={location.id}
+					on:next={() => setStep(3)}
+					measurementSystem={user?.measurement_system || 'metric'}
+				/>
+			{/if}
+			{#if steps[3].selected}
+				<LocationVisits
+					bind:visits={location.visits}
+					bind:trails={location.trails}
+					objectId={location.id}
+					on:back={() => setStep(2)}
+					on:close={() => close()}
+					measurementSystem={user?.measurement_system || 'metric'}
+					{collection}
+					initialVisitDate={storedInitialVisitDate}
+				/>
+			{/if}
 		</div>
 	</div>
 </dialog>

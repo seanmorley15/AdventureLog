@@ -212,7 +212,9 @@
 										{/if}
 									</span>
 									{#if option.label}
-										<span class="w-full text-xs font-normal text-base-content/70">{option.label}</span>
+										<span class="w-full text-xs font-normal text-base-content/70"
+											>{option.label}</span
+										>
 									{/if}
 								</button>
 							</li>

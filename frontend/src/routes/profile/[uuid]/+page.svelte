@@ -112,7 +112,6 @@
 	let user: User = $derived(data.user);
 	let adventures: Location[] = $derived(data.adventures);
 	let collections: Collection[] = $derived(data.collections);
-	
 
 	// Activity category configurations
 	const categoryConfig: Record<
@@ -257,19 +256,19 @@
 	}
 
 	// Calculate achievements
-	let worldExplorationPercentage = $derived(stats
-		? getPercentage(stats.visited_country_count, stats.total_countries)
-		: 0);
-	let regionExplorationPercentage = $derived(stats
-		? getPercentage(stats.visited_region_count, stats.total_regions)
-		: 0);
-	let cityExplorationPercentage = $derived(stats
-		? getPercentage(stats.visited_city_count, stats.total_cities)
-		: 0);
+	let worldExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_country_count, stats.total_countries) : 0
+	);
+	let regionExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_region_count, stats.total_regions) : 0
+	);
+	let cityExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_city_count, stats.total_cities) : 0
+	);
 
 	// Achievement levels
-	let achievementLevel =
-		$derived((stats?.location_count ?? 0) >= 100
+	let achievementLevel = $derived(
+		(stats?.location_count ?? 0) >= 100
 			? 'Legendary Explorer'
 			: (stats?.location_count ?? 0) >= 75
 				? 'World Wanderer'
@@ -287,10 +286,11 @@
 										? 'Journey Starter'
 										: (stats?.location_count ?? 0) >= 1
 											? 'Travel Enthusiast'
-											: 'New Explorer');
+											: 'New Explorer'
+	);
 
-	let achievementColor =
-		$derived((stats?.location_count ?? 0) >= 50
+	let achievementColor = $derived(
+		(stats?.location_count ?? 0) >= 50
 			? 'text-warning'
 			: (stats?.location_count ?? 0) >= 25
 				? 'text-success'
@@ -298,7 +298,8 @@
 					? 'text-info'
 					: (stats?.location_count ?? 0) >= 5
 						? 'text-secondary'
-						: 'text-primary');
+						: 'text-primary'
+	);
 </script>
 
 <svelte:head>
@@ -748,9 +749,7 @@
 										>
 											<div class="flex items-center gap-4">
 												<div class="p-3 bg-{config.color}/20 rounded-2xl">
-													<config.icon
-														class="w-6 h-6 text-{config.color}"
-													/>
+													<config.icon class="w-6 h-6 text-{config.color}" />
 												</div>
 												<div>
 													<h5 class="text-xl font-bold text-{config.color}">{config.name}</h5>
@@ -771,9 +770,7 @@
 														{getElevation(categoryData.total_elevation_gain)} gain
 													</div>
 												</div>
-												<SvelteComponent
-													class="w-5 h-5 text-{config.color}/60"
-												/>
+												<SvelteComponent class="w-5 h-5 text-{config.color}/60" />
 											</div>
 										</div>
 

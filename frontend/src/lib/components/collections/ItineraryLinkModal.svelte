@@ -22,12 +22,7 @@
 		displayDate: string; // Formatted display date
 	}
 
-	let {
-		collection,
-		user,
-		targetDate,
-		displayDate
-	}: Props = $props();
+	let { collection, user, targetDate, displayDate }: Props = $props();
 
 	let modal: HTMLDialogElement;
 
@@ -42,8 +37,6 @@
 		scheduledOtherDays: Array<{ type: string; item: any; dates?: string[] }>;
 		otherDays: Array<{ type: string; item: any }>;
 	};
-
-
 
 	function getUnscheduledItemsForDate(collection: Collection, targetDate: string): GroupedItems {
 		const itinerary = collection.itinerary || [];
@@ -168,11 +161,12 @@
 		close();
 	}
 	let groupedItems = $derived(getUnscheduledItemsForDate(collection, targetDate));
-	let availableCount =
-		$derived((groupedItems.scheduledOnThisDay.length || 0) +
-		(groupedItems.onThisDay.length || 0) +
-		(groupedItems.scheduledOtherDays.length || 0) +
-		(groupedItems.otherDays.length || 0));
+	let availableCount = $derived(
+		(groupedItems.scheduledOnThisDay.length || 0) +
+			(groupedItems.onThisDay.length || 0) +
+			(groupedItems.scheduledOtherDays.length || 0) +
+			(groupedItems.otherDays.length || 0)
+	);
 </script>
 
 <dialog id="itinerary_link_modal" class="modal backdrop-blur-xs">

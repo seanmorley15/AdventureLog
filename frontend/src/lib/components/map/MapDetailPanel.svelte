@@ -150,14 +150,6 @@
 		photoModalOpen = true;
 	}
 
-
-
-
-
-
-
-
-
 	function hasValidRating(value: number | null | undefined): boolean {
 		return value !== null && value !== undefined && !Number.isNaN(value);
 	}
@@ -173,11 +165,8 @@
 			.trim();
 	}
 
-
-
-
-	let title =
-		$derived(selectionKind === 'pin'
+	let title = $derived(
+		selectionKind === 'pin'
 			? location?.name || pinName
 			: selectionKind === 'place'
 				? place?.name
@@ -185,9 +174,10 @@
 					? recommendation?.name
 					: selectionKind === 'image'
 						? imagePin?.parentName || $t('images.map_pin_title')
-						: '');
-	let subtitle =
-		$derived(selectionKind === 'pin'
+						: ''
+	);
+	let subtitle = $derived(
+		selectionKind === 'pin'
 			? location?.location
 			: selectionKind === 'place'
 				? place?.location
@@ -197,39 +187,46 @@
 						? imagePin
 							? $t(getImagePinParentTypeKey(imagePin.parentType))
 							: ''
-						: '');
-	let rating =
-		$derived(selectionKind === 'pin'
+						: ''
+	);
+	let rating = $derived(
+		selectionKind === 'pin'
 			? location?.rating
 			: selectionKind === 'place'
 				? place?.rating
-				: recommendation?.rating);
+				: recommendation?.rating
+	);
 	let displayRating = $derived(hasValidRating(rating) ? (rating as number) : null);
-	let externalPhotoUrls =
-		$derived(selectionKind === 'place'
+	let externalPhotoUrls = $derived(
+		selectionKind === 'place'
 			? place?.photos || []
 			: selectionKind === 'recommendation'
 				? recommendation?.photos || []
-				: []);
-	let locationImages = $derived(selectionKind === 'pin' && location?.images?.length ? location.images : []);
-	let descriptionText =
-		$derived(selectionKind === 'pin'
+				: []
+	);
+	let locationImages = $derived(
+		selectionKind === 'pin' && location?.images?.length ? location.images : []
+	);
+	let descriptionText = $derived(
+		selectionKind === 'pin'
 			? location?.description
 			: selectionKind === 'place'
 				? place?.description
 				: selectionKind === 'recommendation'
 					? recommendation?.description
-					: null);
-	let providerLabel =
-		$derived(selectionKind === 'place'
+					: null
+	);
+	let providerLabel = $derived(
+		selectionKind === 'place'
 			? formatProviderLabel(place?.provider || place?.powered_by)
 			: selectionKind === 'recommendation' && recommendation
 				? recommendation.source === 'google'
 					? 'Google Maps'
 					: 'OpenStreetMap'
-				: null);
-	let selectionKey =
-		$derived(selectionKind === 'pin'
+				: null
+	);
+	let selectionKey = $derived(
+		selectionKind === 'pin'
 			? (location?.id ?? pinName)
 			: selectionKind === 'place'
 				? (place?.place_id ?? place?.name)
@@ -237,17 +234,22 @@
 					? recommendation?.id
 					: selectionKind === 'image'
 						? imagePin?.imageId
-						: '');
+						: ''
+	);
 	let imageParentHref = $derived(imagePin ? getImagePinNavigationUrl(imagePin) : null);
 	$effect(() => {
 		selectionKey;
 		descriptionExpanded = false;
 	});
-	let descriptionPlain = $derived(descriptionText?.trim() ? plainTextFromMarkdown(descriptionText) : '');
+	let descriptionPlain = $derived(
+		descriptionText?.trim() ? plainTextFromMarkdown(descriptionText) : ''
+	);
 	let descriptionIsLong = $derived(descriptionPlain.length > DESCRIPTION_COLLAPSE_CHARS);
-	let descriptionPreview = $derived(descriptionIsLong
-		? `${descriptionPlain.slice(0, DESCRIPTION_COLLAPSE_CHARS).trim()}…`
-		: descriptionPlain);
+	let descriptionPreview = $derived(
+		descriptionIsLong
+			? `${descriptionPlain.slice(0, DESCRIPTION_COLLAPSE_CHARS).trim()}…`
+			: descriptionPlain
+	);
 </script>
 
 {#if photoModalOpen}
@@ -395,14 +397,14 @@
 								<ImageFrame source={image.source} className="w-full h-full">
 									<img src={image.image} alt="" class="w-full h-full object-cover" />
 									{#snippet overlays()}
-																						<div >
+										<div>
 											{#if image.is_primary}
 												<span class="badge badge-primary badge-xs absolute top-1 right-1"
 													>{$t('settings.primary')}</span
 												>
 											{/if}
 										</div>
-																					{/snippet}
+									{/snippet}
 								</ImageFrame>
 							</button>
 						{/each}

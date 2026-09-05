@@ -7,7 +7,6 @@
 	import MediaStep from '../shared/MediaStep.svelte';
 	import TransportationDetails from './TransportationDetails.svelte';
 
-
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
@@ -64,7 +63,6 @@
 			attachments: []
 		};
 	}
-
 
 	interface Props {
 		user?: User | null;
@@ -229,10 +227,10 @@
 							</div>
 							<button
 								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
- ? 'bg-primary text-primary-content'
- : 'bg-base-200'} {step.requires_id && !transportation?.id
- ? 'opacity-50 cursor-not-allowed'
- : 'hover:bg-primary/80 cursor-pointer'} transition-colors"
+									? 'bg-primary text-primary-content'
+									: 'bg-base-200'} {step.requires_id && !transportation?.id
+									? 'opacity-50 cursor-not-allowed'
+									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
 								onclick={() => {
 									// Reset all steps
 									steps.forEach((s) => (s.selected = false));
@@ -274,54 +272,54 @@
 		</div>
 
 		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
-		{#if steps[0].selected}
-			<TransportationDetails
-				currentUser={user}
-				initialTransportation={transportation}
-				{collection}
-				bind:editingTransportation={transportation}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:save={(e) => {
-					// Update the entire transportation object with all saved data
-					transportation = { ...transportation, ...e.detail };
-
-					// Mark that a save occurred so close() will notify parent
-					didSave = true;
-
-					// Only allow moving to Media once we have a persisted id.
-					if (!transportation?.id) {
-						addToast('error', $t('adventures.lodging_save_error'));
+			{#if steps[0].selected}
+				<TransportationDetails
+					currentUser={user}
+					initialTransportation={transportation}
+					{collection}
+					bind:editingTransportation={transportation}
+					on:back={() => {
 						steps[1].selected = false;
 						steps[0].selected = true;
-						return;
-					}
+					}}
+					on:save={(e) => {
+						// Update the entire transportation object with all saved data
+						transportation = { ...transportation, ...e.detail };
 
-					steps[0].selected = false;
-					steps[1].selected = true;
-				}}
-				initialVisitDate={storedInitialVisitDate}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<MediaStep
-				bind:images={transportation.images}
-				bind:attachments={transportation.attachments}
-				itemName={transportation.name}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:close={() => close()}
-				itemId={transportation.id}
-				contentType="transportation"
-				start_date={transportation.date}
-				end_date={transportation.end_date}
-				{user}
-			/>
-		{/if}
+						// Mark that a save occurred so close() will notify parent
+						didSave = true;
+
+						// Only allow moving to Media once we have a persisted id.
+						if (!transportation?.id) {
+							addToast('error', $t('adventures.lodging_save_error'));
+							steps[1].selected = false;
+							steps[0].selected = true;
+							return;
+						}
+
+						steps[0].selected = false;
+						steps[1].selected = true;
+					}}
+					initialVisitDate={storedInitialVisitDate}
+				/>
+			{/if}
+			{#if steps[1].selected}
+				<MediaStep
+					bind:images={transportation.images}
+					bind:attachments={transportation.attachments}
+					itemName={transportation.name}
+					on:back={() => {
+						steps[1].selected = false;
+						steps[0].selected = true;
+					}}
+					on:close={() => close()}
+					itemId={transportation.id}
+					contentType="transportation"
+					start_date={transportation.date}
+					end_date={transportation.end_date}
+					{user}
+				/>
+			{/if}
 		</div>
 	</div>
 </dialog>

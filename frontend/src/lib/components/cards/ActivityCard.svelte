@@ -24,13 +24,7 @@
 		readOnly?: boolean;
 	}
 
-	let {
-		activity,
-		trails,
-		visit,
-		measurementSystem = 'metric',
-		readOnly = false
-	}: Props = $props();
+	let { activity, trails, visit, measurementSystem = 'metric', readOnly = false }: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 

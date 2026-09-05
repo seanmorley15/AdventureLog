@@ -18,9 +18,6 @@
 	import ImmichSelect from './ImmichSelect.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 
-	
-	
-
 	// Component state
 	let fileInput: HTMLInputElement | undefined = $state();
 	let url: string = $state('');
@@ -31,8 +28,6 @@
 	let importingGooglePhotos = $state(false);
 	let googlePhotoError = $state('');
 	let deselectedGooglePhotoUrls = $state(new Set<string>());
-
-
 
 	// Wikipedia image selection
 	let wikiImageResults: Array<{
@@ -119,7 +114,6 @@
 		}
 	}
 
-	
 	interface Props {
 		// Props
 		images?: ContentImage[];
@@ -184,7 +178,6 @@
 	onMount(() => {
 		importPrefilledImagesIfNeeded();
 	});
-
 
 	async function fetchImageFromUrl(imageUrl: string): Promise<Blob | null> {
 		try {
@@ -412,7 +405,6 @@
 		}
 	}
 
-
 	function toggleGooglePhotoSelection(url: string) {
 		if (deselectedGooglePhotoUrls.has(url)) {
 			deselectedGooglePhotoUrls.delete(url);
@@ -483,9 +475,9 @@
 			deselectedGooglePhotoUrls = new Set();
 		}
 	});
-	let selectedGooglePhotoUrls = $derived(pendingGooglePhotoUrls.filter(
-		(url) => !deselectedGooglePhotoUrls.has(url)
-	));
+	let selectedGooglePhotoUrls = $derived(
+		pendingGooglePhotoUrls.filter((url) => !deselectedGooglePhotoUrls.has(url))
+	);
 	// React to objectId becoming available later
 	$effect(() => {
 		if (objectId) {
@@ -676,17 +668,17 @@
 				<div class="relative mb-4">
 					<div
 						class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 transition-opacity duration-200 {importingGooglePhotos
- ? 'opacity-40 pointer-events-none'
- : ''}"
+							? 'opacity-40 pointer-events-none'
+							: ''}"
 					>
 						{#each pendingGooglePhotoUrls as url, i (url + '-' + i)}
 							<button
 								type="button"
 								class="relative aspect-square overflow-hidden rounded-lg border-2 transition-all cursor-pointer group {!deselectedGooglePhotoUrls.has(
- url
- )
- ? 'border-primary ring-2 ring-primary/30'
- : 'border-base-300 opacity-70 hover:opacity-100'}"
+									url
+								)
+									? 'border-primary ring-2 ring-primary/30'
+									: 'border-base-300 opacity-70 hover:opacity-100'}"
 								onclick={() => toggleGooglePhotoSelection(url)}
 								disabled={importingGooglePhotos || !objectId}
 							>
@@ -770,7 +762,7 @@
 								loading="lazy"
 							/>
 							{#snippet overlays()}
-														<div >
+								<div>
 									{#if image.is_primary}
 										<div
 											class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
@@ -779,7 +771,7 @@
 										</div>
 									{/if}
 								</div>
-													{/snippet}
+							{/snippet}
 						</ImageFrame>
 
 						<div

@@ -89,13 +89,16 @@
 
 	let stats = $derived(computeCalendarStats(displayEvents));
 
-	let agendaEvents = $derived(filteredEvents.filter((event) => {
-		const day = event.start.split('T')[0];
-		return day >= new Date().toISOString().split('T')[0];
-	}));
+	let agendaEvents = $derived(
+		filteredEvents.filter((event) => {
+			const day = event.start.split('T')[0];
+			return day >= new Date().toISOString().split('T')[0];
+		})
+	);
 
-	let hasActiveFilters =
-		$derived(searchFilter.trim().length > 0 || activeTypes.size !== CALENDAR_EVENT_TYPES.length);
+	let hasActiveFilters = $derived(
+		searchFilter.trim().length > 0 || activeTypes.size !== CALENDAR_EVENT_TYPES.length
+	);
 
 	function handleEventClick(event: CalendarDisplayEvent) {
 		selectedEvent = event;

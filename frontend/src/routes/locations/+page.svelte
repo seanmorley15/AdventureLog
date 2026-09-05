@@ -309,8 +309,8 @@
 								{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
 									<button
 										class="join-item btn btn-sm {currentPage === page
- ? 'btn-primary'
- : 'btn-ghost'}"
+											? 'btn-primary'
+											: 'btn-ghost'}"
 										onclick={() => handleChangePage(page)}
 									>
 										{page}
@@ -405,7 +405,9 @@
 										checked={includeCollections}
 										onchange={(e) => updateIncludeCollections(e.currentTarget.checked)}
 									/>
-									<span class="text-sm leading-snug min-w-0">{$t('adventures.collection_locations')}</span>
+									<span class="text-sm leading-snug min-w-0"
+										>{$t('adventures.collection_locations')}</span
+									>
 								</label>
 							</div>
 						</div>

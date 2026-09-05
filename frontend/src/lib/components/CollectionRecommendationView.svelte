@@ -174,27 +174,29 @@
 	}
 
 	let isMetric = $derived(user?.measurement_system === 'metric');
-	let radiusDisplay = $derived(isMetric
-		? `${(radiusValue / 1000).toFixed(1)} km`
-		: `${(radiusValue / 1609.34).toFixed(1)} mi`);
+	let radiusDisplay = $derived(
+		isMetric ? `${(radiusValue / 1000).toFixed(1)} km` : `${(radiusValue / 1609.34).toFixed(1)} mi`
+	);
 
-	let radiusOptions = $derived(isMetric
-		? [
-				{ value: 1000, label: '1 km' },
-				{ value: 2000, label: '2 km' },
-				{ value: 5000, label: '5 km' },
-				{ value: 10000, label: '10 km' },
-				{ value: 20000, label: '20 km' },
-				{ value: 50000, label: '50 km' }
-			]
-		: [
-				{ value: 1609, label: '1 mi' },
-				{ value: 3219, label: '2 mi' },
-				{ value: 8047, label: '5 mi' },
-				{ value: 16093, label: '10 mi' },
-				{ value: 32187, label: '20 mi' },
-				{ value: 80467, label: '50 mi' }
-			]);
+	let radiusOptions = $derived(
+		isMetric
+			? [
+					{ value: 1000, label: '1 km' },
+					{ value: 2000, label: '2 km' },
+					{ value: 5000, label: '5 km' },
+					{ value: 10000, label: '10 km' },
+					{ value: 20000, label: '20 km' },
+					{ value: 50000, label: '50 km' }
+				]
+			: [
+					{ value: 1609, label: '1 mi' },
+					{ value: 3219, label: '2 mi' },
+					{ value: 8047, label: '5 mi' },
+					{ value: 16093, label: '10 mi' },
+					{ value: 32187, label: '20 mi' },
+					{ value: 80467, label: '50 mi' }
+				]
+	);
 
 	// Get locations with coordinates for dropdown
 	let locationsWithCoords = $derived(collection.locations.filter((l) => l.latitude && l.longitude));
@@ -221,13 +223,15 @@
 	});
 
 	// Filter results
-	let filteredResults = $derived(results.filter((r) => {
-		if (minRating > 0 && (r.rating === undefined || r.rating < minRating)) return false;
-		if (minReviews > 0 && (r.review_count === undefined || r.review_count < minReviews))
-			return false;
-		if (showOpenOnly && !r.is_open_now) return false;
-		return true;
-	}));
+	let filteredResults = $derived(
+		results.filter((r) => {
+			if (minRating > 0 && (r.rating === undefined || r.rating < minRating)) return false;
+			if (minReviews > 0 && (r.review_count === undefined || r.review_count < minReviews))
+				return false;
+			if (showOpenOnly && !r.is_open_now) return false;
+			return true;
+		})
+	);
 
 	async function searchRecommendations() {
 		if (!searchQuery.trim() && !selectedLocationId) {
@@ -425,7 +429,9 @@
 
 				<!-- Search Input -->
 				<div class="flex flex-col">
-					<label class="field-label" for="search-by-address">{$t('recomendations.search_by_address')}</label>
+					<label class="field-label" for="search-by-address"
+						>{$t('recomendations.search_by_address')}</label
+					>
 					<input
 						id="search-by-address"
 						type="text"
@@ -440,11 +446,7 @@
 				<!-- Category Selector -->
 				<div class="flex flex-col">
 					<label class="field-label" for="search-category">{$t('adventures.category')}</label>
-					<select
-						id="search-category"
-						class="select w-full"
-						bind:value={selectedCategory}
-					>
+					<select id="search-category" class="select w-full" bind:value={selectedCategory}>
 						<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
 						<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
 						<option value="food">🍴 {$t('recomendations.food')}</option>
@@ -454,7 +456,8 @@
 				<!-- Radius Selector -->
 				<div class="flex flex-col">
 					<label class="field-label" for="search-radius">
-						{$t('recomendations.search_radius_label')} {radiusDisplay}
+						{$t('recomendations.search_radius_label')}
+						{radiusDisplay}
 					</label>
 					<select id="search-radius" class="select w-full" bind:value={radiusValue}>
 						{#each radiusOptions as option}
@@ -486,12 +489,10 @@
 				<div class="divider">{$t('adventures.filter')}</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 					<div class="flex flex-col">
-						<label class="field-label" for="minimum-rating">{$t('recomendations.minimum_rating')}</label>
-						<select
-							id="minimum-rating"
-							class="select select-sm"
-							bind:value={minRating}
+						<label class="field-label" for="minimum-rating"
+							>{$t('recomendations.minimum_rating')}</label
 						>
+						<select id="minimum-rating" class="select select-sm" bind:value={minRating}>
 							<option value={0}>{$t('recomendations.any')}</option>
 							<option value={3}>3+ ⭐</option>
 							<option value={3.5}>3.5+ ⭐</option>
@@ -501,12 +502,10 @@
 					</div>
 
 					<div class="flex flex-col">
-						<label class="field-label" for="minimum-reviews">{$t('recomendations.minimum_reviews')}</label>
-						<select
-							id="minimum-reviews"
-							class="select select-sm"
-							bind:value={minReviews}
+						<label class="field-label" for="minimum-reviews"
+							>{$t('recomendations.minimum_reviews')}</label
 						>
+						<select id="minimum-reviews" class="select select-sm" bind:value={minReviews}>
 							<option value={0}>{$t('recomendations.any')}</option>
 							<option value={10}>10+</option>
 							<option value={50}>50+</option>

@@ -70,17 +70,18 @@
 	let sidebarOpen = $state(false);
 	let collectionToEdit: Collection | null = $state(null);
 
-	let currentCollections =
-		$derived(activeView === 'owned'
+	let currentCollections = $derived(
+		activeView === 'owned'
 			? collections
 			: activeView === 'shared'
 				? sharedCollections
 				: activeView === 'archived'
 					? archivedCollections
-					: []);
+					: []
+	);
 
-	let currentCount =
-		$derived(activeView === 'owned'
+	let currentCount = $derived(
+		activeView === 'owned'
 			? collections.length
 			: activeView === 'shared'
 				? sharedCollections.length
@@ -88,7 +89,8 @@
 					? archivedCollections.length
 					: activeView === 'invites'
 						? invites.length
-						: 0);
+						: 0
+	);
 
 	// Optionally, keep count in sync with collections only for owned view
 	run(() => {
@@ -471,8 +473,8 @@
 								<span class="hidden sm:inline">{$t('adventures.archived')}</span>
 								<div
 									class="badge badge-sm {activeView === 'archived'
- ? 'badge-primary'
- : 'badge-ghost'}"
+										? 'badge-primary'
+										: 'badge-ghost'}"
 								>
 									{archivedCollections.length}
 								</div>
@@ -490,10 +492,10 @@
 								<span class="hidden sm:inline">{$t('invites.title')}</span>
 								<div
 									class="badge badge-sm {activeView === 'invites'
- ? 'badge-primary'
- : invites.length > 0
- ? 'badge-error'
- : 'badge-ghost'}"
+										? 'badge-primary'
+										: invites.length > 0
+											? 'badge-error'
+											: 'badge-ghost'}"
 								>
 									{invites.length}
 								</div>
@@ -639,8 +641,8 @@
 								{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
 									<button
 										class="join-item btn btn-sm {currentPage === page
- ? 'btn-primary'
- : 'btn-ghost'}"
+											? 'btn-primary'
+											: 'btn-ghost'}"
 										onclick={() => goToPage(page)}
 									>
 										{page}
@@ -714,7 +716,8 @@
 										checked={statusFilter === 'in_progress'}
 										onchange={() => updateStatusFilter('in_progress')}
 									/>
-									<span class="text-sm leading-snug min-w-0">🎯 {$t('adventures.in_progress')}</span>
+									<span class="text-sm leading-snug min-w-0">🎯 {$t('adventures.in_progress')}</span
+									>
 								</label>
 								<label class="filter-option">
 									<input
@@ -780,7 +783,8 @@
 												checked={orderBy === 'start_date'}
 												onchange={() => updateSort('start_date', orderDirection)}
 											/>
-											<span class="text-sm leading-snug min-w-0">{$t('adventures.start_date')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.start_date')}</span
+											>
 										</label>
 										<label class="filter-option">
 											<input

@@ -31,8 +31,9 @@
 	let isPending = $derived(user.status === 'pending');
 	let isAvailable = $derived(user.status === 'available');
 
-	let displayName =
-		$derived([user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username);
+	let displayName = $derived(
+		[user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username
+	);
 
 	let joinedLabel = $derived(
 		user.date_joined ? formatDisplayDate(user.date_joined, dateFormat, { timeZone: 'UTC' }) : ''

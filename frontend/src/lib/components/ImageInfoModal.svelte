@@ -77,9 +77,7 @@
 			<!-- Author Info -->
 			{#if background.author && background.author.trim() !== ''}
 				<div class="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
-					<div
-						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0"
-					>
+					<div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
 						<AccountIcon class="w-4 h-4 text-primary" />
 					</div>
 					<div>
@@ -92,9 +90,7 @@
 			<!-- Location Info -->
 			{#if background.location && background.location.trim() !== ''}
 				<div class="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
-					<div
-						class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0"
-					>
+					<div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
 						<LocationIcon class="w-4 h-4 text-primary" />
 					</div>
 					<div>

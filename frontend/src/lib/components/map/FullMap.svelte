@@ -31,27 +31,7 @@
 	type Feature = FullMapFeature;
 	type FeatureCollection = FullMapFeatureCollection;
 
-	
-
-	
-
-	
-	
-	
-	
-
-	
-
 	let mapRootEl: HTMLDivElement | null = $state(null);
-
-	
-
-	
-
-	
-
-	
-
 
 	function getPointCoordinates(feature: unknown): [number, number] | null {
 		if (!feature || typeof feature !== 'object') return null;
@@ -69,7 +49,6 @@
 	// Effective GeoJSON (either derived from items or passed directly)
 	let effectiveGeoJson: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
 
-	
 	interface Props {
 		// Generic item input (optional). If you provide `items` + `toFeature`, FullMap builds the GeoJSON.
 		items?: unknown[];
@@ -136,12 +115,11 @@
 		clusterSymbolLayout = null,
 		clusterSymbolPaint = null,
 		getMarkerProps = (feature) =>
-		feature && typeof feature === 'object' && feature !== null && 'properties' in (feature as any)
-			? ((feature as any).properties as Record<string, unknown>)
-			: null,
-		getMarkerId = (
-		markerProps
-	) => (markerProps && typeof markerProps.id === 'string' ? markerProps.id : null),
+			feature && typeof feature === 'object' && feature !== null && 'properties' in (feature as any)
+				? ((feature as any).properties as Record<string, unknown>)
+				: null,
+		getMarkerId = (markerProps) =>
+			markerProps && typeof markerProps.id === 'string' ? markerProps.id : null,
 		map = $bindable(undefined),
 		overlayControls,
 		marker,
@@ -219,7 +197,10 @@
 		syncTheme();
 
 		const observer = new MutationObserver(syncTheme);
-		observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['data-theme']
+		});
 		const mq = window.matchMedia('(prefers-color-scheme: dark)');
 		mq.addEventListener('change', syncTheme);
 
@@ -232,9 +213,6 @@
 	let resolvedClusterCirclePaint: Record<string, any> = $state({});
 	let resolvedClusterSymbolLayout: Record<string, any> = $state({});
 	let resolvedClusterSymbolPaint: Record<string, any> = $state({});
-
-
-
 
 	type ClusterSource = {
 		getClusterExpansionZoom: (
@@ -391,9 +369,9 @@
 							on:click={handleClusterClick}
 						/>
 						<!-- Render cluster counts as HTML so they don't depend on map glyph/font availability -->
-						<MarkerLayer applyToClusters >
+						<MarkerLayer applyToClusters>
 							{#snippet children({ feature: clusterFeature }: { feature: unknown })}
-														{@const clusterProps = getMarkerProps(clusterFeature)}
+								{@const clusterProps = getMarkerProps(clusterFeature)}
 								{@const abbreviated = clusterProps && clusterProps['point_count_abbreviated']}
 								{@const count = abbreviated ?? (clusterProps && clusterProps['point_count'])}
 								{#if typeof count !== 'undefined' && count !== null}
@@ -403,37 +381,41 @@
 										{count}
 									</div>
 								{/if}
-																				{/snippet}
-												</MarkerLayer>
-						<MarkerLayer
-							applyToClusters={false}
-							on:click={handleMarkerLayerClick}
-							
-						>
+							{/snippet}
+						</MarkerLayer>
+						<MarkerLayer applyToClusters={false} on:click={handleMarkerLayerClick}>
 							{#snippet children({ feature: featureData }: { feature: unknown })}
-														{@const markerProps = getMarkerProps(featureData)}
+								{@const markerProps = getMarkerProps(featureData)}
 								{@const markerLngLat = getPointCoordinates(featureData)}
 								{@const markerId = getMarkerId(markerProps)}
 								{@const isActive = markerId !== null && activeMarkerId === markerId}
-								{@render marker?.({ featureData, markerProps, markerLngLat, isActive, setActive: makeSetActive(markerProps), })}
-																				{/snippet}
-												</MarkerLayer>
+								{@render marker?.({
+									featureData,
+									markerProps,
+									markerLngLat,
+									isActive,
+									setActive: makeSetActive(markerProps)
+								})}
+							{/snippet}
+						</MarkerLayer>
 					</GeoJSON>
 				{:else}
 					<GeoJSON id={sourceId} data={effectiveGeoJson} generateId>
-						<MarkerLayer
-							applyToClusters={false}
-							on:click={handleMarkerLayerClick}
-							
-						>
+						<MarkerLayer applyToClusters={false} on:click={handleMarkerLayerClick}>
 							{#snippet children({ feature: featureData }: { feature: unknown })}
-														{@const markerProps = getMarkerProps(featureData)}
+								{@const markerProps = getMarkerProps(featureData)}
 								{@const markerLngLat = getPointCoordinates(featureData)}
 								{@const markerId = getMarkerId(markerProps)}
 								{@const isActive = markerId !== null && activeMarkerId === markerId}
-								{@render marker?.({ featureData, markerProps, markerLngLat, isActive, setActive: makeSetActive(markerProps), })}
-																				{/snippet}
-												</MarkerLayer>
+								{@render marker?.({
+									featureData,
+									markerProps,
+									markerLngLat,
+									isActive,
+									setActive: makeSetActive(markerProps)
+								})}
+							{/snippet}
+						</MarkerLayer>
 					</GeoJSON>
 				{/if}
 			{/if}
@@ -444,13 +426,19 @@
 		{:else}
 			<MapEvents on:moveend={handleMapMove} />
 		{/if}
-		{@render children?.({ map, })}
-		{@render overlays?.({ map, })}
+		{@render children?.({ map })}
+		{@render overlays?.({ map })}
 	</MapLibre>
 
 	{#if showMapControls}
 		{#if overlayControls}
-			{@render overlayControls?.({ basemapType, setBasemapType, map, mapRootEl, fullscreenTarget: fullscreenTarget ?? mapRootEl, })}
+			{@render overlayControls?.({
+				basemapType,
+				setBasemapType,
+				map,
+				mapRootEl,
+				fullscreenTarget: fullscreenTarget ?? mapRootEl
+			})}
 		{:else}
 			<MapFloatingControls
 				{map}

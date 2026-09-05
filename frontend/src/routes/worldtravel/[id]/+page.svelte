@@ -57,8 +57,9 @@
 
 	let visitedCount = $derived(visitedRegions.length);
 	let notVisitedCount = $derived(regions.length - visitedCount);
-	let completionPercentage =
-		$derived(regions.length > 0 ? Math.round((visitedCount / regions.length) * 100) : 0);
+	let completionPercentage = $derived(
+		regions.length > 0 ? Math.round((visitedCount / regions.length) * 100) : 0
+	);
 
 	// Filter regions based on search and filter options
 	run(() => {

@@ -29,7 +29,6 @@
 	import { page } from '$app/state';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
-	
 	interface Props {
 		// Props
 		images?: ContentImage[];
@@ -788,21 +787,20 @@
 				{/if}
 			</div>
 		</div>
-
 	</div>
 
-		<!-- Action Buttons -->
-		<div
-			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
-		>
-			<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
-				<ArrowLeftIcon class="w-5 h-5" />
-				{$t('adventures.back')}
-			</button>
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
+			<ArrowLeftIcon class="w-5 h-5" />
+			{$t('adventures.back')}
+		</button>
 
-			<button class="btn btn-primary gap-2" onclick={handleNext} disabled={importInProgress}>
-				<SaveIcon class="w-5 h-5" />
-				{$t('adventures.continue')}
-			</button>
-		</div>
+		<button class="btn btn-primary gap-2" onclick={handleNext} disabled={importInProgress}>
+			<SaveIcon class="w-5 h-5" />
+			{$t('adventures.continue')}
+		</button>
+	</div>
 </div>

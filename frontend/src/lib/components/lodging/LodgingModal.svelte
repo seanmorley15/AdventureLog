@@ -10,7 +10,6 @@
 	import MediaStep from '../shared/MediaStep.svelte';
 	import { inferLodgingTypeFromPlace } from '$lib/utils/lodgingType';
 
-
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
@@ -137,7 +136,6 @@
 		};
 	}
 
-
 	interface Props {
 		user?: User | null;
 		collection?: Collection | null;
@@ -212,7 +210,6 @@
 			}
 		}
 	});
-
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -353,12 +350,12 @@
 							</div>
 							<button
 								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
- ? 'bg-primary text-primary-content'
- : 'bg-base-200'} {step.requires_id && !lodging?.id
- ? 'opacity-50 cursor-not-allowed'
- : ''} {index === 0 && isEditMode
- ? 'opacity-50 cursor-not-allowed'
- : 'hover:bg-primary/80 cursor-pointer'} transition-colors"
+									? 'bg-primary text-primary-content'
+									: 'bg-base-200'} {step.requires_id && !lodging?.id
+									? 'opacity-50 cursor-not-allowed'
+									: ''} {index === 0 && isEditMode
+									? 'opacity-50 cursor-not-allowed'
+									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
 								onclick={() => handleStepSelect(index)}
 								disabled={(step.requires_id && !lodging?.id) || (index === 0 && isEditMode)}
 							>
@@ -395,71 +392,71 @@
 		</div>
 
 		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
-		{#if steps[0].selected && !isEditMode}
-			<LodgingQuickStart
-				googleEnabled={googleMapsEnabled}
-				collectionId={collection?.id || null}
-				itineraryDate={storedInitialVisitDate}
-				itineraryLabel={itineraryDayLabel}
-				basemapType={normalizeBasemapType(user?.map_style)}
-				on:addDetails={(e) => {
-					applyQuickStartPrefill(e.detail.prefill);
-					setStep(1);
-				}}
-				on:manual={() => {
-					setStep(1);
-				}}
-				on:quickAdded={(e) => {
-					lodging = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					dispatch('quickAddCreated', {
-						location: e.detail.location,
-						itineraryItem: e.detail.itineraryItem || null,
-						itineraryDate: e.detail.itineraryDate || null
-					});
-					close();
-				}}
-				on:quickAddedEdit={(e) => {
-					lodging = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					setStep(1);
-				}}
-				on:quickAddedDone={(e) => {
-					lodging = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					close();
-				}}
-				on:cancel={() => close()}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<LodgingDetails
-				currentUser={user}
-				initialLodging={lodging}
-				{collection}
-				bind:editingLodging={lodging}
-				on:back={handleDetailsBack}
-				on:save={handleDetailsSave}
-				initialVisitDate={storedInitialVisitDate}
-			/>
-		{/if}
-		{#if steps[2].selected && lodging}
-			<MediaStep
-				bind:images={lodging.images}
-				bind:attachments={lodging.attachments}
-				bind:pendingGooglePhotoUrls
-				itemName={lodging.name}
-				on:back={() => {
-					setStep(1);
-				}}
-				on:close={() => close()}
-				itemId={lodging.id}
-				contentType="lodging"
-			/>
-		{/if}
+			{#if steps[0].selected && !isEditMode}
+				<LodgingQuickStart
+					googleEnabled={googleMapsEnabled}
+					collectionId={collection?.id || null}
+					itineraryDate={storedInitialVisitDate}
+					itineraryLabel={itineraryDayLabel}
+					basemapType={normalizeBasemapType(user?.map_style)}
+					on:addDetails={(e) => {
+						applyQuickStartPrefill(e.detail.prefill);
+						setStep(1);
+					}}
+					on:manual={() => {
+						setStep(1);
+					}}
+					on:quickAdded={(e) => {
+						lodging = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						dispatch('quickAddCreated', {
+							location: e.detail.location,
+							itineraryItem: e.detail.itineraryItem || null,
+							itineraryDate: e.detail.itineraryDate || null
+						});
+						close();
+					}}
+					on:quickAddedEdit={(e) => {
+						lodging = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						setStep(1);
+					}}
+					on:quickAddedDone={(e) => {
+						lodging = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						close();
+					}}
+					on:cancel={() => close()}
+				/>
+			{/if}
+			{#if steps[1].selected}
+				<LodgingDetails
+					currentUser={user}
+					initialLodging={lodging}
+					{collection}
+					bind:editingLodging={lodging}
+					on:back={handleDetailsBack}
+					on:save={handleDetailsSave}
+					initialVisitDate={storedInitialVisitDate}
+				/>
+			{/if}
+			{#if steps[2].selected && lodging}
+				<MediaStep
+					bind:images={lodging.images}
+					bind:attachments={lodging.attachments}
+					bind:pendingGooglePhotoUrls
+					itemName={lodging.name}
+					on:back={() => {
+						setStep(1);
+					}}
+					on:close={() => close()}
+					itemId={lodging.id}
+					contentType="lodging"
+				/>
+			{/if}
 		</div>
 	</div>
 </dialog>

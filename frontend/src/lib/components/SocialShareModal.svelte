@@ -21,12 +21,7 @@
 		isPublic?: boolean;
 	}
 
-	let {
-		type,
-		id,
-		name,
-		isPublic = false
-	}: Props = $props();
+	let { type, id, name, isPublic = false }: Props = $props();
 
 	type Aspect = 'square' | 'story' | 'landscape';
 
@@ -39,11 +34,14 @@
 	let copiedLink = $state(false);
 	let canNativeShare = $state(false);
 
-	let publicUrl =
-		$derived(typeof window !== 'undefined'
+	let publicUrl = $derived(
+		typeof window !== 'undefined'
 			? `${window.location.origin}/${type === 'collection' ? 'collections' : 'locations'}/${id}`
-			: '');
-	let imageUrl = $derived(`/api/${type === 'collection' ? 'collections' : 'locations'}/${id}/share-image/${selectedAspect}/`);
+			: ''
+	);
+	let imageUrl = $derived(
+		`/api/${type === 'collection' ? 'collections' : 'locations'}/${id}/share-image/${selectedAspect}/`
+	);
 	let previewUrl = $derived(`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${selectedAspect}`);
 
 	onMount(() => {
@@ -234,8 +232,8 @@
 				src={previewUrl}
 				alt={name}
 				class="max-w-full object-contain {previewLoading ? 'hidden' : ''} {previewError
- ? 'hidden'
- : ''}"
+					? 'hidden'
+					: ''}"
 				style="max-height: {previewMaxHeight(selectedAspect)}"
 				onload={handlePreviewLoad}
 				onerror={handlePreviewError}

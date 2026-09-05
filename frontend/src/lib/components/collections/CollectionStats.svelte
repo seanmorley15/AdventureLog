@@ -103,154 +103,187 @@
 		}
 	}
 
-	let tripDurationDays =
-		$derived(tripStart && tripEnd ? Math.max(1, Math.floor(tripEnd.diff(tripStart, 'days').days) + 1) : null);
+	let tripDurationDays = $derived(
+		tripStart && tripEnd ? Math.max(1, Math.floor(tripEnd.diff(tripStart, 'days').days) + 1) : null
+	);
 
-	let visitedLocations = $derived((collection.locations || []).filter((loc) =>
-		loc.visits?.some((visit) => overlapsCollectionRange(visit.start_date, visit.end_date))
-	));
+	let visitedLocations = $derived(
+		(collection.locations || []).filter((loc) =>
+			loc.visits?.some((visit) => overlapsCollectionRange(visit.start_date, visit.end_date))
+		)
+	);
 
-	let visitsInRange = $derived(visitedLocations.flatMap((loc) =>
-		(loc.visits || []).filter((visit) => overlapsCollectionRange(visit.start_date, visit.end_date))
-	));
+	let visitsInRange = $derived(
+		visitedLocations.flatMap((loc) =>
+			(loc.visits || []).filter((visit) =>
+				overlapsCollectionRange(visit.start_date, visit.end_date)
+			)
+		)
+	);
 
-	let countriesVisited = $derived((() => {
-		const map = new Map<string, { name: string; code: string; flag?: string }>();
-		visitedLocations.forEach((loc) => {
-			const country = loc.country;
-			if (!country) return;
-			const key = country.country_code || String(country.id) || country.name;
-			if (!key) return;
-			if (!map.has(key))
-				map.set(key, {
-					name: country.name,
-					code: country.country_code || '',
-					flag: country.flag_url || ''
-				});
-		});
-		return Array.from(map.values());
-	})());
+	let countriesVisited = $derived(
+		(() => {
+			const map = new Map<string, { name: string; code: string; flag?: string }>();
+			visitedLocations.forEach((loc) => {
+				const country = loc.country;
+				if (!country) return;
+				const key = country.country_code || String(country.id) || country.name;
+				if (!key) return;
+				if (!map.has(key))
+					map.set(key, {
+						name: country.name,
+						code: country.country_code || '',
+						flag: country.flag_url || ''
+					});
+			});
+			return Array.from(map.values());
+		})()
+	);
 
-	let transportSegments = $derived((collection.transportations || []).filter((segment) =>
-		overlapsCollectionRange(segment.date, segment.end_date)
-	));
+	let transportSegments = $derived(
+		(collection.transportations || []).filter((segment) =>
+			overlapsCollectionRange(segment.date, segment.end_date)
+		)
+	);
 
-	let totalDistance = $derived(convertDistance(
-		transportSegments.reduce((sum, segment) => sum + (segment.distance || 0), 0)
-	));
+	let totalDistance = $derived(
+		convertDistance(transportSegments.reduce((sum, segment) => sum + (segment.distance || 0), 0))
+	);
 
-	let lodgingStays = $derived((collection.lodging || []).filter((stay) =>
-		overlapsCollectionRange(stay.check_in, stay.check_out)
-	));
+	let lodgingStays = $derived(
+		(collection.lodging || []).filter((stay) =>
+			overlapsCollectionRange(stay.check_in, stay.check_out)
+		)
+	);
 
-	let lodgingNights = $derived(lodgingStays.reduce((sum, stay) => {
-		if (!stay.check_in || !stay.check_out) return sum;
-		const start = DateTime.fromISO(stay.check_in);
-		const end = DateTime.fromISO(stay.check_out);
-		if (!start.isValid || !end.isValid) return sum;
+	let lodgingNights = $derived(
+		lodgingStays.reduce((sum, stay) => {
+			if (!stay.check_in || !stay.check_out) return sum;
+			const start = DateTime.fromISO(stay.check_in);
+			const end = DateTime.fromISO(stay.check_out);
+			if (!start.isValid || !end.isValid) return sum;
 
-		const startDay = start.startOf('day');
-		const endDay = end.startOf('day');
-		let diff = endDay.diff(startDay, 'days').days;
+			const startDay = start.startOf('day');
+			const endDay = end.startOf('day');
+			let diff = endDay.diff(startDay, 'days').days;
 
-		if (!Number.isFinite(diff)) return sum;
-		if (diff <= 0) diff = 1;
+			if (!Number.isFinite(diff)) return sum;
+			if (diff <= 0) diff = 1;
 
-		return sum + diff;
-	}, 0));
+			return sum + diff;
+		}, 0)
+	);
 
-	let notesInRange = $derived((collection.notes || []).filter((note: Note) =>
-		overlapsCollectionRange(note.date, note.date)
-	));
+	let notesInRange = $derived(
+		(collection.notes || []).filter((note: Note) => overlapsCollectionRange(note.date, note.date))
+	);
 
-	let checklistsInRange = $derived((collection.checklists || []).filter((list: Checklist) =>
-		overlapsCollectionRange(list.date, list.date)
-	));
+	let checklistsInRange = $derived(
+		(collection.checklists || []).filter((list: Checklist) =>
+			overlapsCollectionRange(list.date, list.date)
+		)
+	);
 
-	let imagesInRange = $derived((() => {
-		let total = 0;
-		visitedLocations.forEach((loc) => (total += loc.images?.length || 0));
-		transportSegments.forEach((segment) => (total += segment.images?.length || 0));
-		lodgingStays.forEach((stay) => (total += stay.images?.length || 0));
-		return total;
-	})());
+	let imagesInRange = $derived(
+		(() => {
+			let total = 0;
+			visitedLocations.forEach((loc) => (total += loc.images?.length || 0));
+			transportSegments.forEach((segment) => (total += segment.images?.length || 0));
+			lodgingStays.forEach((stay) => (total += stay.images?.length || 0));
+			return total;
+		})()
+	);
 
-	let regionsVisited = $derived((() => {
-		const map = new Map<string, { name: string; country: string }>();
-		visitedLocations.forEach((loc) => {
-			const region = loc.region;
-			if (!region) return;
-			const key = String(region.id || region.name);
-			if (!key) return;
-			if (!map.has(key)) map.set(key, { name: region.name, country: region.country_name || '' });
-		});
-		return Array.from(map.values());
-	})());
+	let regionsVisited = $derived(
+		(() => {
+			const map = new Map<string, { name: string; country: string }>();
+			visitedLocations.forEach((loc) => {
+				const region = loc.region;
+				if (!region) return;
+				const key = String(region.id || region.name);
+				if (!key) return;
+				if (!map.has(key)) map.set(key, { name: region.name, country: region.country_name || '' });
+			});
+			return Array.from(map.values());
+		})()
+	);
 
-	let citiesVisited = $derived((() => {
-		const map = new Map<string, { name: string; region: string }>();
-		visitedLocations.forEach((loc) => {
-			const city = loc.city;
-			if (!city) return;
-			const key = String(city.id || city.name);
-			if (!key) return;
-			if (!map.has(key)) map.set(key, { name: city.name, region: city.region_name || '' });
-		});
-		return Array.from(map.values());
-	})());
+	let citiesVisited = $derived(
+		(() => {
+			const map = new Map<string, { name: string; region: string }>();
+			visitedLocations.forEach((loc) => {
+				const city = loc.city;
+				if (!city) return;
+				const key = String(city.id || city.name);
+				if (!key) return;
+				if (!map.has(key)) map.set(key, { name: city.name, region: city.region_name || '' });
+			});
+			return Array.from(map.values());
+		})()
+	);
 
-	let categoriesWithIcons = $derived((() => {
-		const map = new Map<string, { name: string; icon: string; count: number }>();
-		visitedLocations.forEach((loc) => {
-			if (!loc.category) return;
-			const name = loc.category.display_name || loc.category.name;
-			const icon = loc.category.icon || '📍';
-			if (!name) return;
-			if (!map.has(name)) {
-				map.set(name, { name, icon, count: 0 });
-			}
-			const existing = map.get(name)!;
-			existing.count++;
-		});
-		return Array.from(map.values()).sort((a, b) => b.count - a.count);
-	})());
+	let categoriesWithIcons = $derived(
+		(() => {
+			const map = new Map<string, { name: string; icon: string; count: number }>();
+			visitedLocations.forEach((loc) => {
+				if (!loc.category) return;
+				const name = loc.category.display_name || loc.category.name;
+				const icon = loc.category.icon || '📍';
+				if (!name) return;
+				if (!map.has(name)) {
+					map.set(name, { name, icon, count: 0 });
+				}
+				const existing = map.get(name)!;
+				existing.count++;
+			});
+			return Array.from(map.values()).sort((a, b) => b.count - a.count);
+		})()
+	);
 
-	let activitiesInRange = $derived((() => {
-		const activities: Activity[] = [];
-		visitsInRange.forEach((visit: Visit) => {
-			if (visit.activities && visit.activities.length > 0) {
-				activities.push(...visit.activities);
-			}
-		});
-		return activities;
-	})());
+	let activitiesInRange = $derived(
+		(() => {
+			const activities: Activity[] = [];
+			visitsInRange.forEach((visit: Visit) => {
+				if (visit.activities && visit.activities.length > 0) {
+					activities.push(...visit.activities);
+				}
+			});
+			return activities;
+		})()
+	);
 
-	let totalActivityDistance = $derived(convertDistance(
-		activitiesInRange.reduce((sum, act) => sum + (act.distance || 0), 0) / 1000
-	));
-	let totalActivityElevation = $derived(convertElevation(
-		activitiesInRange.reduce((sum, act) => sum + (act.elevation_gain || 0), 0)
-	));
-	let totalActivityCalories = $derived(activitiesInRange.reduce((sum, act) => sum + (act.calories || 0), 0));
+	let totalActivityDistance = $derived(
+		convertDistance(activitiesInRange.reduce((sum, act) => sum + (act.distance || 0), 0) / 1000)
+	);
+	let totalActivityElevation = $derived(
+		convertElevation(activitiesInRange.reduce((sum, act) => sum + (act.elevation_gain || 0), 0))
+	);
+	let totalActivityCalories = $derived(
+		activitiesInRange.reduce((sum, act) => sum + (act.calories || 0), 0)
+	);
 
-	let sportTypes = $derived((() => {
-		const types = new Map<string, number>();
-		activitiesInRange.forEach((act) => {
-			const sport = act.sport_type || 'Other';
-			types.set(sport, (types.get(sport) || 0) + 1);
-		});
-		return Array.from(types.entries()).sort((a, b) => b[1] - a[1]);
-	})());
+	let sportTypes = $derived(
+		(() => {
+			const types = new Map<string, number>();
+			activitiesInRange.forEach((act) => {
+				const sport = act.sport_type || 'Other';
+				types.set(sport, (types.get(sport) || 0) + 1);
+			});
+			return Array.from(types.entries()).sort((a, b) => b[1] - a[1]);
+		})()
+	);
 
-	let activeDayCount = $derived((() => {
-		const days = new Set<string>();
-		visitsInRange.forEach((visit: Visit) => addRangeDays(visit.start_date, visit.end_date, days));
-		transportSegments.forEach((segment: Transportation) =>
-			addRangeDays(segment.date, segment.end_date, days)
-		);
-		lodgingStays.forEach((stay: Lodging) => addRangeDays(stay.check_in, stay.check_out, days));
-		return days.size;
-	})());
+	let activeDayCount = $derived(
+		(() => {
+			const days = new Set<string>();
+			visitsInRange.forEach((visit: Visit) => addRangeDays(visit.start_date, visit.end_date, days));
+			transportSegments.forEach((segment: Transportation) =>
+				addRangeDays(segment.date, segment.end_date, days)
+			);
+			lodgingStays.forEach((stay: Lodging) => addRangeDays(stay.check_in, stay.check_out, days));
+			return days.size;
+		})()
+	);
 
 	let scopeLabel = $derived.by(() => {
 		const dayCount = tripDurationDays || 0;
@@ -267,10 +300,11 @@
 		return [dayPart, countryPart].filter(Boolean).join(` ${connector} `);
 	});
 
-	let windowLabel =
-		$derived(tripStart && tripEnd
+	let windowLabel = $derived(
+		tripStart && tripEnd
 			? `${formatDisplayDate(tripStart.toISODate(), dateFormat)} - ${formatDisplayDate(tripEnd.toISODate(), dateFormat)}`
-			: null);
+			: null
+	);
 
 	function normalizeTransportType(type?: string | null): string {
 		return (type || 'other').trim().toLowerCase();
@@ -332,72 +366,84 @@
 		return String(key).replace(/([a-z])([A-Z])/g, '$1 $2');
 	}
 
-	let distanceByTransportType = $derived((() => {
-		const types = new Map<
-			string,
-			{
-				icon: string;
-				label: string;
-				distance: number;
-			}
-		>();
+	let distanceByTransportType = $derived(
+		(() => {
+			const types = new Map<
+				string,
+				{
+					icon: string;
+					label: string;
+					distance: number;
+				}
+			>();
 
-		transportSegments.forEach((segment) => {
-			const meta = getTransportMeta(segment.type);
-			const distance = convertDistance(segment.distance || 0);
-			const existing = types.get(meta.key);
-			if (existing) {
-				existing.distance += distance;
-			} else {
-				types.set(meta.key, {
-					icon: meta.icon,
-					label: meta.label,
-					distance
-				});
-			}
-		});
+			transportSegments.forEach((segment) => {
+				const meta = getTransportMeta(segment.type);
+				const distance = convertDistance(segment.distance || 0);
+				const existing = types.get(meta.key);
+				if (existing) {
+					existing.distance += distance;
+				} else {
+					types.set(meta.key, {
+						icon: meta.icon,
+						label: meta.label,
+						distance
+					});
+				}
+			});
 
-		return Array.from(types.values()).sort((a, b) => b.distance - a.distance);
-	})());
+			return Array.from(types.values()).sort((a, b) => b.distance - a.distance);
+		})()
+	);
 
-	let averageLocationRating = $derived((() => {
-		const rated = visitedLocations.filter((loc) => loc.rating !== null && loc.rating !== undefined);
-		if (rated.length === 0) return 0;
-		return rated.reduce((sum, loc) => sum + (loc.rating || 0), 0) / rated.length;
-	})());
+	let averageLocationRating = $derived(
+		(() => {
+			const rated = visitedLocations.filter(
+				(loc) => loc.rating !== null && loc.rating !== undefined
+			);
+			if (rated.length === 0) return 0;
+			return rated.reduce((sum, loc) => sum + (loc.rating || 0), 0) / rated.length;
+		})()
+	);
 
-	let checklistStats = $derived((() => {
-		let totalItems = 0;
-		let checkedItems = 0;
-		checklistsInRange.forEach((list) => {
-			if (list.items) {
-				totalItems += list.items.length;
-				checkedItems += list.items.filter((item) => item.is_checked).length;
-			}
-		});
-		return {
-			total: totalItems,
-			checked: checkedItems,
-			percentage: totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0
-		};
-	})());
+	let checklistStats = $derived(
+		(() => {
+			let totalItems = 0;
+			let checkedItems = 0;
+			checklistsInRange.forEach((list) => {
+				if (list.items) {
+					totalItems += list.items.length;
+					checkedItems += list.items.filter((item) => item.is_checked).length;
+				}
+			});
+			return {
+				total: totalItems,
+				checked: checkedItems,
+				percentage: totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0
+			};
+		})()
+	);
 
-	let lodgingTypeBreakdown = $derived((() => {
-		const types = new Map<string, number>();
-		lodgingStays.forEach((stay) => {
-			const type = stay.type || 'Other';
-			types.set(type, (types.get(type) || 0) + 1);
-		});
-		return Array.from(types.entries()).sort((a, b) => b[1] - a[1]);
-	})());
+	let lodgingTypeBreakdown = $derived(
+		(() => {
+			const types = new Map<string, number>();
+			lodgingStays.forEach((stay) => {
+				const type = stay.type || 'Other';
+				types.set(type, (types.get(type) || 0) + 1);
+			});
+			return Array.from(types.entries()).sort((a, b) => b[1] - a[1]);
+		})()
+	);
 
-	let totalAttachments = $derived((() => {
-		let total = 0;
-		visitedLocations.forEach((loc) => (total += loc.attachments?.length || 0));
-		transportSegments.forEach((segment) => (total += segment.attachments?.length || 0));
-		lodgingStays.forEach((stay) => (total += stay.attachments?.length || 0));
-		return total;
-	})());
+	let totalAttachments = $derived(
+		(() => {
+			let total = 0;
+			visitedLocations.forEach((loc) => (total += loc.attachments?.length || 0));
+			transportSegments.forEach((segment) => (total += segment.attachments?.length || 0));
+			lodgingStays.forEach((stay) => (total += stay.attachments?.length || 0));
+			return total;
+		})()
+	);
 </script>
 
 <div class="space-y-6">

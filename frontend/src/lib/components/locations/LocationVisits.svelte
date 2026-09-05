@@ -49,7 +49,6 @@
 	import ActivityCard from '../cards/ActivityCard.svelte';
 	import DateInput from '../shared/DateInput.svelte';
 
-	
 	interface Props {
 		// Props
 		collection?: Collection | null;
@@ -146,16 +145,20 @@
 	}
 
 	// Reactive constraints
-	let constraintStartDate = $derived(allDay
-		? fullStartDate && fullStartDate.includes('T')
-			? fullStartDate.split('T')[0]
-			: ''
-		: fullStartDate || '');
-	let constraintEndDate = $derived(allDay
-		? fullEndDate && fullEndDate.includes('T')
-			? fullEndDate.split('T')[0]
-			: ''
-		: fullEndDate || '');
+	let constraintStartDate = $derived(
+		allDay
+			? fullStartDate && fullStartDate.includes('T')
+				? fullStartDate.split('T')[0]
+				: ''
+			: fullStartDate || ''
+	);
+	let constraintEndDate = $derived(
+		allDay
+			? fullEndDate && fullEndDate.includes('T')
+				? fullEndDate.split('T')[0]
+				: ''
+			: fullEndDate || ''
+	);
 
 	// Set the full date range for constraining purposes
 	run(() => {
@@ -924,9 +927,7 @@
 						<!-- Timezone Selection -->
 
 						<div>
-							<label class="field-label" for="timezone-selector"
-								>{$t('adventures.timezone')}</label
-							>
+							<label class="field-label" for="timezone-selector">{$t('adventures.timezone')}</label>
 							<div class="mt-1">
 								<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 							</div>
@@ -1009,9 +1010,7 @@
 					<!-- Notes (Location only) -->
 
 					<div class="mt-4">
-						<label class="field-label" for="visit-notes"
-							>{$t('adventures.notes')}</label
-						>
+						<label class="field-label" for="visit-notes">{$t('adventures.notes')}</label>
 						<textarea
 							id="visit-notes"
 							class="textarea w-full mt-1"
@@ -1207,9 +1206,7 @@
 													<div class="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-lg">
 														<div class="flex items-center gap-2 mb-2">
 															<FileIcon class="w-4 h-4 text-warning" />
-															<label
-																class="field-label text-warning mb-0"
-																for="gpx-file-{visit.id}"
+															<label class="field-label text-warning mb-0" for="gpx-file-{visit.id}"
 																>{$t('adventures.gpx_file_required')} *</label
 															>
 														</div>
@@ -1244,9 +1241,7 @@
 												<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 													<!-- Activity Name -->
 													<div class="md:col-span-2">
-														<label
-															class="field-label text-xs"
-															for="activity-name-{visit.id}"
+														<label class="field-label text-xs" for="activity-name-{visit.id}"
 															>{$t('adventures.activity_name')} *</label
 														>
 														<input
@@ -1260,9 +1255,8 @@
 
 													<!-- Sport Type -->
 													<div>
-														<label
-															class="field-label text-xs"
-															for="sport-type-{visit.id}">{$t('adventures.sport_type')}</label
+														<label class="field-label text-xs" for="sport-type-{visit.id}"
+															>{$t('adventures.sport_type')}</label
 														>
 														<select
 															id="sport-type-{visit.id}"
@@ -1296,9 +1290,7 @@
 
 													<!-- Moving Time -->
 													<div>
-														<label
-															class="field-label text-xs"
-															for="moving-time-{visit.id}"
+														<label class="field-label text-xs" for="moving-time-{visit.id}"
 															>{$t('adventures.moving_time')} (HH:MM:SS)</label
 														>
 														<input
@@ -1313,9 +1305,7 @@
 
 													<!-- Elapsed Time -->
 													<div>
-														<label
-															class="field-label text-xs"
-															for="elapsed-time-{visit.id}"
+														<label class="field-label text-xs" for="elapsed-time-{visit.id}"
 															>{$t('adventures.elapsed_time')} (HH:MM:SS)</label
 														>
 														<input
@@ -1330,9 +1320,8 @@
 
 													<!-- Start Date -->
 													<div>
-														<label
-															class="field-label text-xs"
-															for="start-date-{visit.id}">{$t('adventures.start_date')}</label
+														<label class="field-label text-xs" for="start-date-{visit.id}"
+															>{$t('adventures.start_date')}</label
 														>
 														<DateInput
 															id="start-date-{visit.id}"
@@ -1347,9 +1336,7 @@
 													<!-- Elevation Gain -->
 													{#if !activityForm.gpx_file}
 														<div>
-															<label
-																class="field-label text-xs"
-																for="elevation-gain-{visit.id}"
+															<label class="field-label text-xs" for="elevation-gain-{visit.id}"
 																>{$t('adventures.elevation_gain')} (m)</label
 															>
 															<input
@@ -1366,9 +1353,7 @@
 													<!-- Elevation Loss -->
 													{#if !activityForm.gpx_file}
 														<div>
-															<label
-																class="field-label text-xs"
-																for="elevation-loss-{visit.id}"
+															<label class="field-label text-xs" for="elevation-loss-{visit.id}"
 																>{$t('adventures.elevation_loss')} (m)</label
 															>
 															<input
@@ -1400,9 +1385,7 @@
 													<!-- Elevation High -->
 													{#if !activityForm.gpx_file}
 														<div>
-															<label
-																class="field-label text-xs"
-																for="elevation-high-{visit.id}"
+															<label class="field-label text-xs" for="elevation-high-{visit.id}"
 																>{$t('adventures.elevation_high')} (m)</label
 															>
 															<input
@@ -1419,9 +1402,7 @@
 													<!-- Elevation Low -->
 													{#if !activityForm.gpx_file}
 														<div>
-															<label
-																class="field-label text-xs"
-																for="elevation-low-{visit.id}"
+															<label class="field-label text-xs" for="elevation-low-{visit.id}"
 																>{$t('adventures.elevation_low')} (m)</label
 															>
 															<input
@@ -1524,9 +1505,7 @@
 
 													<!-- Average Speed -->
 													<div>
-														<label
-															class="field-label text-xs"
-															for="average-speed-{visit.id}"
+														<label class="field-label text-xs" for="average-speed-{visit.id}"
 															>{$t('adventures.average_speed')} (m/s)</label
 														>
 														<input
@@ -1558,9 +1537,7 @@
 
 													<!-- Average Cadence -->
 													<div>
-														<label
-															class="field-label text-xs"
-															for="average-cadence-{visit.id}"
+														<label class="field-label text-xs" for="average-cadence-{visit.id}"
 															>{$t('adventures.average_cadence')} (rpm)</label
 														>
 														<input
@@ -1577,9 +1554,8 @@
 													<!-- Trail Selection -->
 													{#if trails && trails.length > 0}
 														<div class="md:col-span-2">
-															<label
-																class="field-label text-xs"
-																for="trail-select-{visit.id}">{$t('adventures.trail')}</label
+															<label class="field-label text-xs" for="trail-select-{visit.id}"
+																>{$t('adventures.trail')}</label
 															>
 															<select
 																id="trail-select-{visit.id}"
@@ -1597,9 +1573,8 @@
 													<!-- GPX File (for manual uploads) -->
 													{#if !isStravaImportPending(visit.id)}
 														<div class="md:col-span-2">
-															<label
-																class="field-label text-xs"
-																for="gpx-file-manual-{visit.id}">{$t('adventures.gpx_file')}</label
+															<label class="field-label text-xs" for="gpx-file-manual-{visit.id}"
+																>{$t('adventures.gpx_file')}</label
 															>
 															<input
 																id="gpx-file-manual-{visit.id}"
@@ -1773,20 +1748,19 @@
 				</div>
 			</div>
 		{/if}
-
 	</div>
 
-		<div
-			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
-		>
-			<button class="btn btn-ghost gap-2" onclick={handleBack}>
-				<ArrowLeftIcon class="w-5 h-5" />
-				{$t('adventures.back')}
-			</button>
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button class="btn btn-ghost gap-2" onclick={handleBack}>
+			<ArrowLeftIcon class="w-5 h-5" />
+			{$t('adventures.back')}
+		</button>
 
-			<button class="btn btn-primary gap-2" onclick={handleClose}>
-				<CheckIcon class="w-5 h-5" />
-				{$t('adventures.done')}
-			</button>
-		</div>
+		<button class="btn btn-primary gap-2" onclick={handleClose}>
+			<CheckIcon class="w-5 h-5" />
+			{$t('adventures.done')}
+		</button>
+	</div>
 </div>

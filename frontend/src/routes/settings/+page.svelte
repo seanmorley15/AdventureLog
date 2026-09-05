@@ -135,26 +135,34 @@
 
 	let totalMediaBytes = $derived(mediaUsage?.total_bytes ?? 0);
 	let mediaLimitBytes = $derived(mediaUsage?.limit_bytes ?? null);
-	let totalMediaFiles =
-		$derived((mediaUsage?.images_files ?? 0) +
-		(mediaUsage?.attachments_files ?? 0) +
-		(mediaUsage?.profile_pics_files ?? 0));
-	let overallUsagePercent = $derived(mediaLimitBytes
-		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
-		: 0);
-	let imagesPercent = $derived(mediaLimitBytes
-		? Math.min(100, Math.round((mediaUsage.images_bytes / mediaLimitBytes) * 100))
-		: 0);
-	let attachmentsPercent = $derived(mediaLimitBytes
-		? Math.min(100, Math.round((mediaUsage.attachments_bytes / mediaLimitBytes) * 100))
-		: 0);
-	let profilePicsPercent = $derived(mediaLimitBytes
-		? Math.min(100, Math.round((mediaUsage.profile_pics_bytes / mediaLimitBytes) * 100))
-		: 0);
+	let totalMediaFiles = $derived(
+		(mediaUsage?.images_files ?? 0) +
+			(mediaUsage?.attachments_files ?? 0) +
+			(mediaUsage?.profile_pics_files ?? 0)
+	);
+	let overallUsagePercent = $derived(
+		mediaLimitBytes ? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100)) : 0
+	);
+	let imagesPercent = $derived(
+		mediaLimitBytes
+			? Math.min(100, Math.round((mediaUsage.images_bytes / mediaLimitBytes) * 100))
+			: 0
+	);
+	let attachmentsPercent = $derived(
+		mediaLimitBytes
+			? Math.min(100, Math.round((mediaUsage.attachments_bytes / mediaLimitBytes) * 100))
+			: 0
+	);
+	let profilePicsPercent = $derived(
+		mediaLimitBytes
+			? Math.min(100, Math.round((mediaUsage.profile_pics_bytes / mediaLimitBytes) * 100))
+			: 0
+	);
 	let mediaLimitLabel = $derived(mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited');
 
-	let profileSharingImpact =
-		$derived((user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0));
+	let profileSharingImpact = $derived(
+		(user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0)
+	);
 
 	run(() => {
 		if (browser && $page.form?.deleteAccountError) {
