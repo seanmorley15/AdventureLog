@@ -96,6 +96,7 @@
 
 <div
 	class="dropdown dropdown-bottom dropdown-end z-[999]"
+	role="group"
 	onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 >
 	<div

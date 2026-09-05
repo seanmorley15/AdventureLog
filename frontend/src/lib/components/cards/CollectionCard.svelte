@@ -388,6 +388,7 @@
 						{#if user && user.uuid == collection.user}
 							<div
 								class="dropdown dropdown-end relative z-50"
+								role="group"
 								onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 							>
 								<div
@@ -513,6 +514,7 @@
 							<!-- dropdown with leave button -->
 							<div
 								class="dropdown dropdown-end relative z-50"
+								role="group"
 								onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 							>
 								<div

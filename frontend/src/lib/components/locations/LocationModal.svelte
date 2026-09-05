@@ -163,13 +163,9 @@
 		initialVisitDate = null,
 		itineraryDayLabel = null,
 		skipQuickStart = false,
-		location = $bindable(),
+		location = $bindable(createEmptyLocation()),
 		locationToEdit = null
 	}: Props = $props();
-
-	if (!location) {
-		location = createEmptyLocation();
-	}
 
 	let previousLocationId: string | null | undefined = undefined;
 

@@ -165,6 +165,7 @@
 					</button>
 					<div
 						class="dropdown dropdown-end relative z-50"
+						role="group"
 						onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 					>
 						<div
