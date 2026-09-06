@@ -1346,7 +1346,18 @@
     "reauth_required_disable_desc": "Para segurança, insira a sua palavra passe para desativar a autenticação de multi-factore.",
     "reauth_verify": "Verificar palavra passe",
     "reauth_incorrect_password": "Palavra passe incorreta. Por favor tente outra vez.",
-    "reauth_success": "Palavra passe verificada. A continuar…"
+    "reauth_success": "Palavra passe verificada. A continuar…",
+    "delete_account": "Apagar Conta",
+    "delete_account_title": "Apagar Conta",
+    "delete_account_desc": "Apagar permanentemente a sua conta e todos os dados associados. Esta ação não pode ser revertida.",
+    "delete_account_warning": "Todas as sua localizações, coleções, médias, integrações, e definições vão ser permanentemente removidas.",
+    "delete_account_stripe_warning": "Qualquer subscrição ativa vai ser cancelada imediatamente.",
+    "delete_account_confirmation_label": "Escreva o seu nome de utilizador para confirmar",
+    "delete_account_password_label": "Insira a sua palavra passe",
+    "delete_account_confirm_prompt": "Tem certeza que deseja apagar permanentemente a sua conta? Isto não pode ser desfeito.",
+    "delete_account_success": "A sua conta foi apagada.",
+    "delete_account_error": "Incapaz de apagar a sua conta. Por favor tente outra vez.",
+    "delete_account_staff_blocked": "Contas de pessoal não podem ser apagadas via auto-atendimento."
   },
   "share": {
     "available": "Disponível",
