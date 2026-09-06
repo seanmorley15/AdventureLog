@@ -527,7 +527,7 @@ PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhos
 ADVENTURELOG_RELEASE_VERSION = 'v0.13.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v3.1'
+COUNTRY_REGION_JSON_VERSION = 'v3.2'
 
 # External service keys (do not hardcode secrets)
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
