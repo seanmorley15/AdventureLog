@@ -1,1 +1,30 @@
-{}
+{
+  "navbar": {
+    "collections": "Koleksi",
+    "map": "Peta",
+    "users": "Pengguna",
+    "search": "Pencarian",
+    "profile": "Profil",
+    "greeting": "Hai",
+    "shared_with_me": "Dibagikan kepada saya",
+    "settings": "Pengaturan",
+    "logout": "Log keluar",
+    "about": "Tentang AdventureLog",
+    "documentation": "Dokumentasi",
+    "language_selection": "Bahasa",
+    "support": "Bantuan",
+    "calendar": "Kalender",
+    "theme_selection": "Pilihan Tema",
+    "admin_panel": "Panel Admin",
+    "worldtravel": "Travel Dunia",
+    "themes": {
+      "light": "Terang",
+      "dark": "Gelap",
+      "night": "Malam hari",
+      "forest": "Hutan",
+      "aestheticLight": "Pencahayaan Estetik",
+      "aestheticDark": "Gelap Estetik",
+      "aqua": "Perairan"
+    }
+  }
+}
