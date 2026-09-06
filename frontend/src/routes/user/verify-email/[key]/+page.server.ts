@@ -1,34 +1,44 @@
-import { fetchCSRFToken } from '$lib/index.server';
+import { redirect } from '@sveltejs/kit';
+import { djangoBrowserFetch, requireCsrf, setSessionFromResponse } from '$lib/index.server';
 import type { PageServerLoad } from './$types';
 
 export const load = (async (event) => {
-	// get key from route params
 	const key = event.params.key;
 	if (!key) {
-		return { status: 404 };
+		return { verified: false };
 	}
-	const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-	const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-	const csrfToken = await fetchCSRFToken();
 
-	let verifyFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/email/verify`, {
-		headers: {
-			Cookie: `csrftoken=${csrfToken}`,
-			'X-CSRFToken': csrfToken
-		},
+	let csrfToken: string;
+	try {
+		csrfToken = await requireCsrf();
+	} catch {
+		return { verified: false };
+	}
+
+	const verifyFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/email/verify', {
 		method: 'POST',
-		credentials: 'include',
-
-		body: JSON.stringify({ key: key })
+		csrfToken,
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ key })
 	});
-	if (verifyFetch.ok || verifyFetch.status == 401) {
-		return {
-			verified: true
-		};
-	} else {
-		let error_message = await verifyFetch.json();
-		console.error(error_message);
-		console.error('Failed to verify email');
-		return { status: 404 };
+
+	// 200: verified and authenticated (pending login/signup stage continued).
+	// 401: verified successfully but not logged in (typical when opening the email link).
+	if (verifyFetch.ok) {
+		setSessionFromResponse(event, verifyFetch);
+		throw redirect(302, '/');
 	}
+
+	if (verifyFetch.status === 401) {
+		return { verified: true };
+	}
+
+	try {
+		const errorMessage = await verifyFetch.json();
+		console.error('Failed to verify email', errorMessage);
+	} catch {
+		console.error('Failed to verify email');
+	}
+
+	return { verified: false };
 }) satisfies PageServerLoad;

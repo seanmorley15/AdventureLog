@@ -9,7 +9,11 @@
 	import Magnify from '~icons/mdi/magnify';
 	import { t } from 'svelte-i18n';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 
 	type SearchFilter = {
 		id: string;
@@ -47,25 +51,27 @@
 		{ id: 'users', labelKey: 'search.filters.users', types: ['user'] }
 	];
 
-	let results: SearchHit[] = data.results;
-	let total = data.total;
-	let offset = data.offset;
-	let limit = data.limit;
-	let loadingMore = false;
-	let loadMoreError = '';
+	let results: SearchHit[] = $state<SearchHit[]>([]);
+	let total = $state(0);
+	let offset = $state(0);
+	let limit = $state(0);
+	let loadingMore = $state(false);
+	let loadMoreError = $state('');
 
-	$: query = $page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '';
-	$: activeFilter = $page.url.searchParams.get('filter') || 'all';
-	$: hasQuery = query.trim().length > 0;
-	$: hasResults = results.length > 0;
-	$: canLoadMore = hasQuery && results.length < total;
+	let query = $derived(
+		$page.url.searchParams.get('q') || $page.url.searchParams.get('query') || ''
+	);
+	let activeFilter = $derived($page.url.searchParams.get('filter') || 'all');
+	let hasQuery = $derived(query.trim().length > 0);
+	let hasResults = $derived(results.length > 0);
+	let canLoadMore = $derived(hasQuery && results.length < total);
 
-	$: if (data) {
+	$effect.pre(() => {
 		results = data.results;
 		total = data.total;
 		offset = data.offset;
 		limit = data.limit;
-	}
+	});
 
 	function getFilterTypes(filterId: string): SearchEntityType[] | undefined {
 		return filters.find((filter) => filter.id === filterId)?.types;
@@ -148,7 +154,7 @@
 				<button
 					type="button"
 					class="btn btn-primary btn-sm lg:btn-md"
-					on:click={() => openCommandPalette(query)}
+					onclick={() => openCommandPalette(query)}
 				>
 					{$t('search.open_palette')}
 				</button>
@@ -162,7 +168,7 @@
 							class="btn btn-sm"
 							class:btn-primary={activeFilter === filter.id}
 							class:btn-ghost={activeFilter !== filter.id}
-							on:click={() => applyFilter(filter.id)}
+							onclick={() => applyFilter(filter.id)}
 						>
 							{$t(filter.labelKey)}
 						</button>
@@ -179,7 +185,7 @@
 				<button
 					type="button"
 					class="btn btn-sm"
-					on:click={() => goto($page.url.pathname + $page.url.search)}
+					onclick={() => goto($page.url.pathname + $page.url.search)}
 				>
 					{$t('search.retry')}
 				</button>
@@ -195,7 +201,7 @@
 				<p class="text-base-content/50 max-w-md mb-6">
 					{$t('search.empty_prompt_desc')}
 				</p>
-				<button type="button" class="btn btn-primary" on:click={() => openCommandPalette()}>
+				<button type="button" class="btn btn-primary" onclick={() => openCommandPalette()}>
 					{$t('search.open_palette')}
 				</button>
 			</div>
@@ -213,7 +219,7 @@
 			</div>
 		{:else}
 			<div
-				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-sm divide-y divide-base-300"
+				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-xs divide-y divide-base-300"
 			>
 				{#each results as hit (hit.type + hit.id)}
 					<SearchResultRow {hit} spotlight on:select={() => goto(hit.url)} />
@@ -226,7 +232,7 @@
 
 			{#if canLoadMore}
 				<div class="flex justify-center mt-6">
-					<button type="button" class="btn btn-outline" disabled={loadingMore} on:click={loadMore}>
+					<button type="button" class="btn btn-outline" disabled={loadingMore} onclick={loadMore}>
 						{#if loadingMore}
 							<span class="loading loading-spinner loading-sm"></span>
 						{/if}

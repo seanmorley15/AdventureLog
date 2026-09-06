@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.backends import ModelBackend
 from allauth.socialaccount.models import SocialAccount
 from allauth.account.auth_backends import AuthenticationBackend as AllauthBackend
+from allauth.account.utils import filter_users_by_email, filter_users_by_username
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -29,10 +30,8 @@ class NoPasswordAuthBackend(ModelBackend):
         if username is None or password is None:
             return None
         
-        try:
-            # Get the user first
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
+        user = self._get_user_by_username_or_email(username)
+        if user is None:
             return None
         
         # Check if this user has social accounts and password is disabled
@@ -46,4 +45,17 @@ class NoPasswordAuthBackend(ModelBackend):
         if user.check_password(password) and self.user_can_authenticate(user):
             return user
         
+        return None
+
+    @staticmethod
+    def _get_user_by_username_or_email(identifier):
+        try:
+            return filter_users_by_username(identifier).get()
+        except User.DoesNotExist:
+            pass
+
+        email_matches = list(filter_users_by_email(identifier, prefer_verified=True))
+        if len(email_matches) == 1:
+            return email_matches[0]
+
         return None

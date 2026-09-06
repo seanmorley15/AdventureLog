@@ -14,30 +14,36 @@
 	import EmojiIcon from '~icons/mdi/emoticon-happy-outline';
 
 	const dispatch = createEventDispatcher();
-	let modal: HTMLDialogElement;
+	let modal: HTMLDialogElement | undefined = $state();
 
-	export let categories: Category[] = [];
+	interface Props {
+		categories?: Category[];
+	}
 
-	let categoryToEdit: Category | null = null;
-	let categoryToDelete: Category | null = null;
-	let newCategory = { display_name: '', icon: '' };
-	let isChanged = false;
-	let hasLoaded = false;
-	let warningMessage: string | null = null;
-	let showEmojiPickerAdd = false;
-	let showEmojiPickerEdit = false;
-	let searchTerm = '';
+	let { categories = $bindable([]) }: Props = $props();
 
-	$: filteredCategories = categories
-		.filter((category) => {
-			if (!searchTerm.trim()) return true;
-			return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-		})
-		.sort((a, b) => {
-			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
-			if (usageDiff !== 0) return usageDiff;
-			return a.display_name.localeCompare(b.display_name);
-		});
+	let categoryToEdit: Category | null = $state(null);
+	let categoryToDelete: Category | null = $state(null);
+	let newCategory = $state({ display_name: '', icon: '' });
+	let isChanged = $state(false);
+	let hasLoaded = $state(false);
+	let warningMessage: string | null = $state(null);
+	let showEmojiPickerAdd = $state(false);
+	let showEmojiPickerEdit = $state(false);
+	let searchTerm = $state('');
+
+	let filteredCategories = $derived(
+		categories
+			.filter((category) => {
+				if (!searchTerm.trim()) return true;
+				return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
+			})
+			.sort((a, b) => {
+				const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+				if (usageDiff !== 0) return usageDiff;
+				return a.display_name.localeCompare(b.display_name);
+			})
+	);
 
 	onMount(async () => {
 		await import('emoji-picker-element');
@@ -201,14 +207,14 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <dialog
 	id="category-modal"
 	bind:this={modal}
-	class="modal modal-bottom md:modal-middle backdrop-blur-sm"
-	on:click={handleBackdropClick}
-	on:keydown={handleKeydown}
+	class="modal modal-bottom md:modal-middle backdrop-blur-xs"
+	onclick={handleBackdropClick}
+	onkeydown={handleKeydown}
 >
 	<div
 		class="modal-box category-modal-box w-full max-w-none bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-t-2xl md:rounded-2xl"
@@ -235,7 +241,7 @@
 				</div>
 				<button
 					type="button"
-					on:click={closeModal}
+					onclick={closeModal}
 					class="btn btn-ghost btn-sm md:btn-md btn-square shrink-0"
 					aria-label={$t('about.close')}
 				>
@@ -249,7 +255,7 @@
 			class="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col px-4 md:px-6 py-4 md:py-5"
 		>
 			{#if warningMessage}
-				<div role="alert" class="alert alert-warning shadow-sm mb-4 shrink-0">
+				<div role="alert" class="alert alert-warning shadow-xs mb-4 shrink-0">
 					<InfoIcon class="w-5 h-5 shrink-0" />
 					<span class="text-sm md:text-base">{warningMessage}</span>
 				</div>
@@ -280,9 +286,7 @@
 						</h3>
 
 						{#if hasLoaded && categories.length > 0}
-							<label
-								class="input input-bordered input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0"
-							>
+							<label class="input input-sm flex items-center gap-2 w-full md:w-56 md:shrink-0">
 								<SearchIcon class="w-4 h-4 opacity-50 shrink-0" />
 								<input
 									type="search"
@@ -325,39 +329,39 @@
 												<p class="text-sm font-medium text-primary">
 													{$t('categories.edit_category')}
 												</p>
-												<form on:submit={saveCategory} class="space-y-3 min-w-0">
+												<form onsubmit={saveCategory} class="space-y-3 min-w-0">
 													<div class="space-y-3">
-														<div class="form-control min-w-0">
-															<label class="label py-0" for="edit-category-name">
-																<span class="label-text">{$t('categories.category_name')}</span>
-															</label>
+														<div class="flex flex-col min-w-0">
+															<label class="field-label" for="edit-category-name"
+																>{$t('categories.category_name')}</label
+															>
 															<input
 																id="edit-category-name"
 																type="text"
-																class="input input-bordered w-full min-w-0"
+																class="input w-full min-w-0 bg-base-100"
 																bind:value={categoryToEdit.display_name}
 																required
 															/>
 														</div>
-														<div class="form-control min-w-0">
-															<label class="label py-0" for="edit-category-icon">
-																<span class="label-text">{$t('categories.icon')}</span>
-															</label>
+														<div class="flex flex-col min-w-0">
+															<label class="field-label" for="edit-category-icon"
+																>{$t('categories.icon')}</label
+															>
 															<div class="join w-full min-w-0">
 																<input
 																	id="edit-category-icon"
 																	type="text"
-																	class="input input-bordered join-item flex-1 min-w-0 w-0"
+																	class="input join-item flex-1 min-w-0 w-0 bg-base-100"
 																	bind:value={categoryToEdit.icon}
 																/>
 																<button
 																	type="button"
-																	on:click={() => {
+																	onclick={() => {
 																		showEmojiPickerEdit = !showEmojiPickerEdit;
 																		showEmojiPickerAdd = false;
 																	}}
-																	class="btn join-item btn-square btn-outline shrink-0"
-																	class:btn-active={showEmojiPickerEdit}
+																	class="icon-join-btn btn join-item btn-square shrink-0"
+																	aria-pressed={showEmojiPickerEdit}
 																	aria-label={$t('categories.icon')}
 																>
 																	<EmojiIcon class="w-5 h-5" />
@@ -370,16 +374,12 @@
 														<div
 															class="rounded-xl border border-base-300 bg-base-100 overflow-y-auto max-h-64 max-w-full"
 														>
-															<emoji-picker on:emoji-click={handleEmojiSelectEdit}></emoji-picker>
+															<emoji-picker onemoji-click={handleEmojiSelectEdit}></emoji-picker>
 														</div>
 													{/if}
 
 													<div class="flex flex-wrap justify-end gap-2">
-														<button
-															type="button"
-															class="btn btn-ghost btn-sm"
-															on:click={cancelEdit}
-														>
+														<button type="button" class="btn btn-ghost btn-sm" onclick={cancelEdit}>
 															{$t('adventures.cancel')}
 														</button>
 														<button type="submit" class="btn btn-primary btn-sm gap-2">
@@ -398,17 +398,13 @@
 													<span class="font-semibold">{category.display_name}</span>?
 												</p>
 												<div class="flex flex-wrap gap-2 shrink-0 justify-end">
-													<button
-														type="button"
-														class="btn btn-ghost btn-sm"
-														on:click={cancelDelete}
-													>
+													<button type="button" class="btn btn-ghost btn-sm" onclick={cancelDelete}>
 														{$t('adventures.cancel')}
 													</button>
 													<button
 														type="button"
 														class="btn btn-error btn-sm gap-2"
-														on:click={() => confirmDelete(category)}
+														onclick={() => confirmDelete(category)}
 													>
 														<DeleteIcon class="w-4 h-4" />
 														{$t('adventures.remove')}
@@ -434,7 +430,7 @@
 												<div class="flex gap-1 shrink-0">
 													<button
 														type="button"
-														on:click={() => startEdit(category)}
+														onclick={() => startEdit(category)}
 														class="btn btn-ghost btn-sm btn-square"
 														aria-label={$t('lodging.edit')}
 													>
@@ -443,7 +439,7 @@
 													{#if category.name !== 'general'}
 														<button
 															type="button"
-															on:click={() => requestDelete(category)}
+															onclick={() => requestDelete(category)}
 															class="btn btn-ghost btn-sm btn-square text-error hover:bg-error/10"
 															aria-label={$t('adventures.remove')}
 														>
@@ -477,41 +473,39 @@
 					</div>
 
 					<div class="md:flex-1 md:min-h-0 md:overflow-y-auto md:overscroll-contain">
-						<form on:submit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
-							<div class="form-control min-w-0 w-full">
-								<label class="label py-1" for="new-category-name">
-									<span class="label-text font-medium">{$t('categories.category_name')}</span>
-								</label>
+						<form onsubmit={createCategory} class="p-4 md:p-5 space-y-4 w-full min-w-0 box-border">
+							<div class="flex flex-col min-w-0 w-full">
+								<label class="field-label" for="new-category-name"
+									>{$t('categories.category_name')}</label
+								>
 								<input
 									id="new-category-name"
 									type="text"
-									class="input input-bordered w-full min-w-0"
+									class="input w-full min-w-0 bg-base-100"
 									bind:value={newCategory.display_name}
 									placeholder={$t('categories.category_name')}
 									required
 								/>
 							</div>
 
-							<div class="form-control min-w-0 w-full">
-								<label class="label py-1" for="new-category-icon">
-									<span class="label-text font-medium">{$t('categories.icon')}</span>
-								</label>
+							<div class="flex flex-col min-w-0 w-full">
+								<label class="field-label" for="new-category-icon">{$t('categories.icon')}</label>
 								<div class="join w-full min-w-0">
 									<input
 										id="new-category-icon"
 										type="text"
-										class="input input-bordered join-item flex-1 min-w-0 w-0"
+										class="input join-item flex-1 min-w-0 w-0 bg-base-100"
 										bind:value={newCategory.icon}
 										placeholder="🌍"
 									/>
 									<button
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											showEmojiPickerAdd = !showEmojiPickerAdd;
 											showEmojiPickerEdit = false;
 										}}
-										class="btn join-item btn-square btn-outline shrink-0"
-										class:btn-active={showEmojiPickerAdd}
+										class="icon-join-btn btn join-item btn-square shrink-0"
+										aria-pressed={showEmojiPickerAdd}
 										aria-label={$t('categories.icon')}
 									>
 										<EmojiIcon class="w-5 h-5" />
@@ -523,7 +517,7 @@
 								<div
 									class="emoji-picker-shell rounded-xl border border-base-300 bg-base-200/30 overflow-y-auto overflow-x-hidden w-full"
 								>
-									<emoji-picker on:emoji-click={handleEmojiSelectAdd}></emoji-picker>
+									<emoji-picker onemoji-click={handleEmojiSelectAdd}></emoji-picker>
 								</div>
 							{/if}
 
@@ -558,7 +552,7 @@
 			<button
 				type="button"
 				class="btn btn-neutral w-full md:w-auto gap-2 shrink-0"
-				on:click={closeModal}
+				onclick={closeModal}
 			>
 				<CloseIcon class="w-4 h-4" />
 				{$t('about.close')}
@@ -571,6 +565,16 @@
 	dialog::backdrop {
 		backdrop-filter: blur(8px);
 		background: rgba(0, 0, 0, 0.3);
+	}
+
+	/* DaisyUI .btn fill uses --btn-bg (base-200). bg-base-100 only wins on hover. */
+	.icon-join-btn,
+	.icon-join-btn:hover,
+	.icon-join-btn:active,
+	.icon-join-btn:focus-visible {
+		--btn-bg: var(--color-base-100);
+		--btn-border: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+		--btn-fg: var(--color-base-content);
 	}
 
 	.category-modal-box {

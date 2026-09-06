@@ -26,41 +26,58 @@
 	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 	import WandererCard from '../cards/WandererCard.svelte';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
-	// Props
-	export let images: ContentImage[] = [];
-	export let attachments: Attachment[] = [];
-	export let itemName: string = '';
-	export let trails: Trail[] = [];
-	export let itemId: string = '';
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let userIsOwner: boolean = false;
-	export let pendingGooglePhotoUrls: string[] = [];
+	interface Props {
+		// Props
+		images?: ContentImage[];
+		attachments?: Attachment[];
+		itemName?: string;
+		trails?: Trail[];
+		itemId?: string;
+		measurementSystem?: 'metric' | 'imperial';
+		userIsOwner?: boolean;
+		pendingGooglePhotoUrls?: string[];
+	}
+
+	let {
+		images = $bindable([]),
+		attachments = $bindable([]),
+		itemName = '',
+		trails = $bindable([]),
+		itemId = '',
+		measurementSystem = 'metric',
+		userIsOwner = false,
+		pendingGooglePhotoUrls = $bindable([])
+	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	// Component state
-	let immichIntegration: boolean = false;
-	let copyImmichLocally: boolean = false;
-	let importInProgress: boolean = false;
+	let immichIntegration: boolean = $state(false);
+	let copyImmichLocally: boolean = $state(false);
+	let importInProgress: boolean = $state(false);
 
 	// Trail state
-	let trailName: string = '';
-	let trailLink: string = '';
+	let trailName: string = $state('');
+	let trailLink: string = $state('');
 	let trailWandererId: string = '';
 	let trailWandererAuthorUsername: string = '';
 	let trailWandererAuthorDomain: string = '';
-	let trailError: string = '';
-	let isTrailLoading: boolean = false;
-	let trailToEdit: Trail | null = null;
-	let editingTrailName: string = '';
-	let editingTrailLink: string = '';
-	let editingTrailWandererId: string = '';
-	let showAddTrailForm: boolean = false;
-	let showWandererForm: boolean = false;
-	let isWandererEnabled: boolean = false;
-	let searchQuery: string = '';
-	let isSearching: boolean = false;
+	let trailError: string = $state('');
+	let isTrailLoading: boolean = $state(false);
+	let trailToEdit: Trail | null = $state(null);
+	let editingTrailName: string = $state('');
+	let editingTrailLink: string = $state('');
+	let editingTrailWandererId: string = $state('');
+	let showAddTrailForm: boolean = $state(false);
+	let showWandererForm: boolean = $state(false);
+	let isWandererEnabled: boolean = $state(false);
+	let searchQuery: string = $state('');
+	let isSearching: boolean = $state(false);
 
-	let wandererFetchedTrails: WandererTrail[] = [];
+	let wandererFetchedTrails: WandererTrail[] = $state([]);
 
 	const dispatch = createEventDispatcher();
 
@@ -172,7 +189,8 @@
 	}
 
 	function formatDate(dateString: string | number | Date) {
-		return new Date(dateString).toLocaleDateString();
+		const iso = typeof dateString === 'string' ? dateString : new Date(dateString).toISOString();
+		return formatDisplayDate(iso, dateFormat);
 	}
 
 	async function fetchWandererTrails(filter = '') {
@@ -367,8 +385,8 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
+<div class="h-full min-h-0 flex flex-col">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
@@ -391,7 +409,7 @@
 		/>
 
 		<!-- Trails Management -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center justify-between mb-6">
 					<div class="flex items-center gap-3">
@@ -403,7 +421,7 @@
 					<div class="flex items-center gap-2">
 						<button
 							class="btn btn-accent btn-sm gap-2"
-							on:click={() => {
+							onclick={() => {
 								showAddTrailForm = !showAddTrailForm;
 								if (showAddTrailForm) showWandererForm = false;
 							}}
@@ -414,7 +432,7 @@
 						{#if userIsOwner}
 							<button
 								class="btn btn-accent btn-sm gap-2"
-								on:click={() => {
+								onclick={() => {
 									doShowWandererForm();
 								}}
 							>
@@ -437,14 +455,14 @@
 							<input
 								type="text"
 								bind:value={trailName}
-								class="input input-bordered"
+								class="input"
 								placeholder="Trail name"
 								disabled={isTrailLoading}
 							/>
 							<input
 								type="url"
 								bind:value={trailLink}
-								class="input input-bordered"
+								class="input"
 								placeholder={$t('adventures.external_link') + ' (AllTrails, Trailforks, etc.)'}
 								disabled={isTrailLoading}
 							/>
@@ -457,7 +475,7 @@
 								<button
 									class="btn btn-ghost btn-sm"
 									disabled={isTrailLoading}
-									on:click={resetTrailForm}
+									onclick={resetTrailForm}
 								>
 									{$t('adventures.cancel')}
 								</button>
@@ -465,7 +483,7 @@
 									class="btn btn-accent btn-sm"
 									class:loading={isTrailLoading}
 									disabled={isTrailLoading || !trailName.trim() || !trailLink.trim()}
-									on:click={createTrail}
+									onclick={createTrail}
 								>
 									{$t('adventures.create_trail')}
 								</button>
@@ -489,16 +507,16 @@
 									<input
 										type="text"
 										placeholder={$t('adventures.search_trails_placeholder') + '...'}
-										class="input input-bordered w-full pr-20"
+										class="input w-full pr-20"
 										bind:value={searchQuery}
-										on:input={debouncedSearch}
-										on:keydown={(e) => e.key === 'Enter' && handleSearch()}
+										oninput={debouncedSearch}
+										onkeydown={(e) => e.key === 'Enter' && handleSearch()}
 									/>
 									<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
 										{#if searchQuery}
 											<button
 												class="btn btn-ghost btn-xs btn-circle"
-												on:click={clearSearch}
+												onclick={clearSearch}
 												disabled={isSearching}
 												title="Clear search"
 											>
@@ -508,7 +526,7 @@
 										<button
 											class="btn btn-accent btn-xs"
 											class:loading={isSearching}
-											on:click={handleSearch}
+											onclick={handleSearch}
 											disabled={isSearching}
 											title="Search"
 										>
@@ -556,7 +574,7 @@
 							<div class="flex gap-2 justify-end">
 								<button
 									class="btn btn-accent btn-sm"
-									on:click={() => {
+									onclick={() => {
 										showWandererForm = false;
 										showAddTrailForm = false;
 										searchQuery = ''; // Clear search when closing
@@ -586,13 +604,13 @@
 											<input
 												type="text"
 												bind:value={editingTrailName}
-												class="input input-bordered input-sm"
+												class="input input-sm"
 												placeholder={$t('adventures.trail_name')}
 											/>
 											<input
 												type="url"
 												bind:value={editingTrailLink}
-												class="input input-bordered input-sm"
+												class="input input-sm"
 												placeholder={$t('adventures.external_link')}
 												disabled={editingTrailWandererId.trim() !== ''}
 											/>
@@ -601,12 +619,12 @@
 											<button
 												class="btn btn-success btn-xs flex-1"
 												disabled={!validateEditTrailForm()}
-												on:click={saveTrailEdit}
+												onclick={saveTrailEdit}
 											>
 												<CheckIcon class="w-3 h-3" />
 												{$t('notes.save')}
 											</button>
-											<button class="btn btn-ghost btn-xs flex-1" on:click={cancelEditingTrail}>
+											<button class="btn btn-ghost btn-xs flex-1" onclick={cancelEditingTrail}>
 												<CloseIcon class="w-3 h-3" />
 												{$t('adventures.cancel')}
 											</button>
@@ -615,11 +633,11 @@
 								{:else}
 									<!-- Normal Display -->
 									<div
-										class="bg-base-50 p-4 rounded-lg border border-base-200 hover:border-base-300 transition-colors"
+										class="bg-base-200/40 p-4 rounded-lg border border-base-300 hover:border-base-300 transition-colors"
 									>
 										<!-- Header -->
 										<div class="flex items-center gap-3 mb-3">
-											<div class="p-2 bg-accent/10 rounded">
+											<div class="p-2 bg-accent/10 rounded-sm">
 												{#if trail.wanderer_id}
 													<Star class="w-4 h-4 text-accent" />
 												{:else}
@@ -723,7 +741,7 @@
 												href={trail.link}
 												target="_blank"
 												rel="noopener noreferrer"
-												class="text-xs text-accent hover:text-accent-focus mb-3 break-all block underline"
+												class="text-xs text-accent hover:text-accent mb-3 break-all block underline"
 											>
 												{trail.link}
 											</a>
@@ -740,7 +758,7 @@
 													type="button"
 													class="btn btn-warning btn-xs btn-square tooltip tooltip-top"
 													data-tip="Edit Trail"
-													on:click={() => startEditingTrail(trail)}
+													onclick={() => startEditingTrail(trail)}
 												>
 													<EditIcon class="w-3 h-3" />
 												</button>
@@ -749,7 +767,7 @@
 												type="button"
 												class="btn btn-error btn-xs btn-square tooltip tooltip-top"
 												data-tip="Remove Trail"
-												on:click={() => removeTrail(trail.id)}
+												onclick={() => removeTrail(trail.id)}
 											>
 												<TrashIcon class="w-3 h-3" />
 											</button>
@@ -769,18 +787,20 @@
 				{/if}
 			</div>
 		</div>
+	</div>
 
-		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack} disabled={importInProgress}>
-				<ArrowLeftIcon class="w-5 h-5" />
-				{$t('adventures.back')}
-			</button>
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
+			<ArrowLeftIcon class="w-5 h-5" />
+			{$t('adventures.back')}
+		</button>
 
-			<button class="btn btn-primary gap-2" on:click={handleNext} disabled={importInProgress}>
-				<SaveIcon class="w-5 h-5" />
-				{$t('adventures.continue')}
-			</button>
-		</div>
+		<button class="btn btn-primary gap-2" onclick={handleNext} disabled={importInProgress}>
+			<SaveIcon class="w-5 h-5" />
+			{$t('adventures.continue')}
+		</button>
 	</div>
 </div>

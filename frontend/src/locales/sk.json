@@ -819,7 +819,13 @@
 			"summary_personal_desc": "Prepojené s vaším účtom",
 			"update": "Aktualizovať"
 		},
-		"invalid_code": "Neplatný kód"
+		"invalid_code": "Neplatný kód",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"collection": {
 		"collection_created": "Zbierka bola úspešne vytvorená!",
@@ -1296,7 +1302,6 @@
 		"my_locations": "Moje miesta",
 		"best_happened_at": "Najlepšie sa stalo o"
 	},
-	"settings_download_backup": "Stiahnuť zálohu",
 	"invites": {
 		"accepted": "Pozvánka prijatá",
 		"accept_failed": "Nepodarilo sa prijať pozvánku",

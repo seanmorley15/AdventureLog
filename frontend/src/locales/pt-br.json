@@ -1176,9 +1176,14 @@
 		"public_profile_left_collections": "Seu perfil agora é privado. \nVocê foi removido de {count} coleções compartilhadas.",
 		"public_profile_private_confirm": "Tornar seu perfil privado removerá você de {shared} coleções compartilhadas e cancelará {invites} convite(s) pendente(s). \nContinuar?",
 		"public_profile_revoked_invites": "{count} convites de coleta pendentes cancelados.",
-		"public_profile_sharing_warning": "Atualmente você está compartilhado em {count} coleções. \nTornar seu perfil privado removerá você dessas coleções."
+		"public_profile_sharing_warning": "Atualmente você está compartilhado em {count} coleções. \nTornar seu perfil privado removerá você dessas coleções.",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
-	"settings_download_backup": "Baixar Backup",
 	"share": {
 		"available": "Disponível",
 		"no_users_shared": "Nenhum usuário compartilhado com",

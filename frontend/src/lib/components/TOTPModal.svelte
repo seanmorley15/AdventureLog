@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { addToast } from '$lib/toasts';
 	import { copyToClipboard as clipboardCopy } from '$lib/index';
+	import { isReauthRequired, reauthenticateWithPassword } from '$lib/reauthenticate';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -9,26 +10,34 @@
 	import QRCode from 'qrcode';
 	import { t } from 'svelte-i18n';
 	import type { User } from '$lib/types';
-	export let user: User | null = null;
-	let secret: string | null = null;
-	let qrCodeDataUrl: string | null = null;
+	let secret: string | null = $state(null);
+	let qrCodeDataUrl: string | null = $state(null);
 	let totpUrl: string | null = null;
-	let first_code: string = '';
-	let recovery_codes: string[] = [];
-	export let is_enabled: boolean;
-	let reauthError: boolean = false;
+	let first_code: string = $state('');
+	let recovery_codes: string[] = $state([]);
+	let needsReauth: boolean = $state(false);
+	let reauthPassword: string = $state('');
+	let reauthPasswordError: boolean = $state(false);
+	let isVerifyingPassword: boolean = $state(false);
+	let isSendingTotp: boolean = $state(false);
 
 	// import Account from '~icons/mdi/account';
 	import Clear from '~icons/mdi/close';
 	import Check from '~icons/mdi/check-circle';
 	import Copy from '~icons/mdi/content-copy';
-	import Error from '~icons/mdi/alert-circle';
 	import Key from '~icons/mdi/key';
 	import QrCode from '~icons/mdi/qrcode';
 	import Security from '~icons/mdi/security';
 	import Warning from '~icons/mdi/alert';
 	import Shield from '~icons/mdi/shield-account';
 	import Backup from '~icons/mdi/backup-restore';
+	import Lock from '~icons/mdi/lock';
+	interface Props {
+		user?: User | null;
+		is_enabled: boolean;
+	}
+
+	let { user = null, is_enabled = $bindable() }: Props = $props();
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -36,7 +45,6 @@
 			modal.showModal();
 		}
 		fetchSetupInfo();
-		console.log(secret);
 	});
 
 	async function generateQRCode(secret: string | null) {
@@ -66,31 +74,83 @@
 	}
 
 	async function sendTotp() {
-		const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				code: first_code
-			}),
-			credentials: 'include'
-		});
-		console.log(res);
-		if (res.ok) {
-			addToast('success', $t('settings.mfa_enabled'));
-			is_enabled = true;
-			getRecoveryCodes();
-		} else {
-			if (res.status == 401) {
-				reauthError = true;
+		if (isSendingTotp) return;
+		isSendingTotp = true;
+		try {
+			const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					code: first_code
+				}),
+				credentials: 'include'
+			});
+			if (res.ok) {
+				needsReauth = false;
+				reauthPassword = '';
+				reauthPasswordError = false;
+				addToast('success', $t('settings.mfa_enabled'));
+				is_enabled = true;
+				getRecoveryCodes();
+				return;
+			}
+
+			let data: unknown = null;
+			try {
+				data = await res.json();
+			} catch {
+				/* ignore parse errors */
+			}
+
+			if (isReauthRequired(res, data)) {
+				if (user?.has_password === false) {
+					needsReauth = false;
+					addToast('error', $t('settings.reset_session_error'));
+					return;
+				}
+				needsReauth = true;
+				addToast('info', $t('settings.reauth_required_desc'));
+				return;
+			}
+
+			if (res.status === 400) {
+				addToast('error', $t('settings.invalid_code'));
+				return;
+			}
+
+			addToast('error', $t('settings.generic_error'));
+		} finally {
+			isSendingTotp = false;
+		}
+	}
+
+	async function verifyReauthPassword() {
+		if (!reauthPassword || isVerifyingPassword) return;
+		isVerifyingPassword = true;
+		reauthPasswordError = false;
+		try {
+			const { ok, status } = await reauthenticateWithPassword(reauthPassword);
+			if (ok) {
+				needsReauth = false;
+				reauthPassword = '';
+				reauthPasswordError = false;
+				addToast('success', $t('settings.reauth_success'));
+				await sendTotp();
+				return;
+			}
+			if (status === 400) {
+				reauthPasswordError = true;
+				return;
 			}
 			addToast('error', $t('settings.generic_error'));
+		} finally {
+			isVerifyingPassword = false;
 		}
 	}
 
 	async function getRecoveryCodes() {
-		console.log('getting recovery codes');
 		const res = await fetch('/auth/browser/v1/account/authenticators/recovery-codes', {
 			method: 'GET'
 		});
@@ -124,18 +184,18 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+<dialog id="my_modal_1" class="modal backdrop-blur-xs">
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		class="modal-box w-11/12 max-w-4xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
 		<div
-			class=" top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
 		>
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-3">
@@ -146,7 +206,7 @@
 						<h1 class="text-3xl font-bold text-warning bg-clip-text">
 							{$t('settings.enable_mfa')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{$t('settings.secure_your_account')}
 						</p>
 					</div>
@@ -161,7 +221,7 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button class="btn btn-ghost btn-square" onclick={close}>
 					<Clear class="w-5 h-5" />
 				</button>
 			</div>
@@ -200,11 +260,11 @@
 								<input
 									type="text"
 									value={secret}
-									class="input input-bordered w-full font-mono text-sm bg-base-100/80"
+									class="input w-full font-mono text-sm bg-base-100/80"
 									readonly
 								/>
 							</div>
-							<button class="btn btn-secondary gap-2" on:click={() => copyToClipboard(secret)}>
+							<button class="btn btn-secondary gap-2" onclick={() => copyToClipboard(secret)}>
 								<Copy class="w-4 h-4" />
 								{$t('settings.copy')}
 							</button>
@@ -220,29 +280,63 @@
 						<Shield class="w-5 h-5 text-success" />
 						{$t('settings.verify_setup')}
 					</h3>
-					<div class="form-control">
-						<!-- svelte-ignore a11y-label-has-associated-control -->
-						<label class="label">
-							<span class="label-text font-medium">
-								{$t('settings.authenticator_code')}
-							</span>
-						</label>
+					<div class="flex flex-col">
+						<!-- svelte-ignore a11y_label_has_associated_control -->
+						<label class="field-label">{$t('settings.authenticator_code')}</label>
 						<input
 							type="text"
 							placeholder={$t('settings.enter_6_digit_code')}
-							class="input input-bordered bg-base-100/80 font-mono text-center text-lg tracking-widest"
+							class="input bg-base-100/80 font-mono text-center text-lg tracking-widest"
 							bind:value={first_code}
 							maxlength="6"
 						/>
-						<!-- svelte-ignore a11y-label-has-associated-control -->
-						<label class="label">
-							<span class="label-text-alt text-base-content/60">
-								{$t('settings.enter_code_from_app')}
-							</span>
-						</label>
+						<!-- svelte-ignore a11y_label_has_associated_control -->
+						<label class="field-hint">{$t('settings.enter_code_from_app')}</label>
 					</div>
 				</div>
 			</div>
+
+			<!-- Password reauthentication -->
+			{#if needsReauth}
+				<div class="card bg-base-200/50 border border-warning/40 mb-6">
+					<div class="card-body">
+						<h3 class="card-title text-lg mb-2 flex items-center gap-2">
+							<Lock class="w-5 h-5 text-warning" />
+							{$t('settings.reauth_required_title')}
+						</h3>
+						<p class="text-sm text-base-content/70 mb-4">
+							{$t('settings.reauth_required_desc')}
+						</p>
+						<div class="flex flex-col max-w-md">
+							<!-- svelte-ignore a11y_label_has_associated_control -->
+							<label class="field-label">{$t('settings.current_password')}</label>
+							<input
+								type="password"
+								class="input bg-base-100/80"
+								placeholder={$t('settings.enter_current_password')}
+								autocomplete="current-password"
+								bind:value={reauthPassword}
+								onkeydown={(e) => e.key === 'Enter' && verifyReauthPassword()}
+								disabled={isVerifyingPassword}
+							/>
+							{#if reauthPasswordError}
+								<!-- svelte-ignore a11y_label_has_associated_control -->
+								<p class="text-sm text-error mt-1">{$t('settings.reauth_incorrect_password')}</p>
+							{/if}
+						</div>
+						<div class="mt-4">
+							<button
+								class="btn btn-warning gap-2"
+								onclick={verifyReauthPassword}
+								disabled={!reauthPassword || isVerifyingPassword}
+							>
+								<Lock class="w-4 h-4" />
+								{isVerifyingPassword ? '…' : $t('settings.reauth_verify')}
+							</button>
+						</div>
+					</div>
+				</div>
+			{/if}
 
 			<!-- Recovery Codes Section -->
 			{#if recovery_codes.length > 0}
@@ -255,7 +349,7 @@
 							</h3>
 							<button
 								class="btn btn-info btn-sm gap-2"
-								on:click={() => copyToClipboard(recovery_codes.join(', '))}
+								onclick={() => copyToClipboard(recovery_codes.join(', '))}
 							>
 								<Copy class="w-4 h-4" />
 								{$t('settings.copy_all')}
@@ -271,17 +365,17 @@
 						</div>
 
 						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-							{#each recovery_codes as code, index}
+							{#each recovery_codes as code, index (code)}
 								<div class="relative group">
 									<input
 										type="text"
 										value={code}
-										class="input input-bordered input-sm w-full font-mono text-center bg-base-100/80 pr-10"
+										class="input input-sm w-full font-mono text-center bg-base-100/80 pr-10"
 										readonly
 									/>
 									<button
 										class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity btn btn-ghost btn-xs"
-										on:click={() => copyToClipboard(code)}
+										onclick={() => copyToClipboard(code)}
 									>
 										<Copy class="w-3 h-3" />
 									</button>
@@ -293,17 +387,6 @@
 								</div>
 							{/each}
 						</div>
-					</div>
-				</div>
-			{/if}
-
-			<!-- Error Message -->
-			{#if reauthError}
-				<div class="alert alert-error mb-6">
-					<Error class="w-5 h-5" />
-					<div>
-						<h4 class="font-semibold">{$t('settings.error_occurred')}</h4>
-						<p class="text-sm">{$t('settings.reset_session_error')}</p>
 					</div>
 				</div>
 			{/if}
@@ -320,13 +403,13 @@
 						: $t('settings.complete_setup_to_enable')}
 				</div>
 				<div class="flex items-center gap-3">
-					{#if !is_enabled && first_code.length >= 6}
-						<button class="btn btn-success gap-2" on:click={sendTotp}>
+					{#if !is_enabled && first_code.length >= 6 && !needsReauth}
+						<button class="btn btn-success gap-2" onclick={sendTotp} disabled={isSendingTotp}>
 							<Shield class="w-4 h-4" />
 							{$t('settings.enable_mfa')}
 						</button>
 					{/if}
-					<button class="btn btn-primary gap-2" on:click={close}>
+					<button class="btn btn-primary gap-2" onclick={close}>
 						<Check class="w-4 h-4" />
 						{$t('about.close')}
 					</button>

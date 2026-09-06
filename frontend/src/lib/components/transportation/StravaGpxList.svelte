@@ -6,14 +6,18 @@
 	import LoadingIcon from '~icons/mdi/loading';
 	import RunIcon from '~icons/mdi/run';
 
-	export let start_date: string | null = null;
-	export let end_date: string | null = null;
-	export let user: User | null = null;
+	interface Props {
+		start_date?: string | null;
+		end_date?: string | null;
+		user?: User | null;
+	}
 
-	let activities: StravaActivity[] = [];
-	let isLoading = false;
-	let error: string | null = null;
-	let showActivities = false;
+	let { start_date = null, end_date = null, user = null }: Props = $props();
+
+	let activities: StravaActivity[] = $state([]);
+	let isLoading = $state(false);
+	let error: string | null = $state(null);
+	let showActivities = $state(false);
 
 	async function fetchStravaActivities() {
 		if (!start_date || !end_date) {
@@ -90,7 +94,7 @@
 		<button
 			type="button"
 			class="btn btn-outline btn-sm gap-2"
-			on:click={toggleActivities}
+			onclick={toggleActivities}
 			disabled={isLoading}
 		>
 			<RunIcon class="w-4 h-4" />

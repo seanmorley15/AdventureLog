@@ -21,39 +21,53 @@
 	import ServerIcon from '~icons/mdi/server';
 	import Sparkles from '~icons/mdi/sparkles';
 
-	export let user: User;
-	export let immichIntegration: ImmichIntegration | null = null;
-	export let googleMapsEnabled = false;
-	export let stravaGlobalEnabled = false;
-	export let stravaUserEnabled = false;
-	export let wandererEnabled = false;
-	export let wandererIntegration: WandererIntegration | null = null;
-	export let endurainEnabled = false;
-	export let endurainIntegration: EndurainIntegration | null = null;
+	interface Props {
+		user: User;
+		immichIntegration?: ImmichIntegration | null;
+		googleMapsEnabled?: boolean;
+		stravaGlobalEnabled?: boolean;
+		stravaUserEnabled?: boolean;
+		wandererEnabled?: boolean;
+		wandererIntegration?: WandererIntegration | null;
+		endurainEnabled?: boolean;
+		endurainIntegration?: EndurainIntegration | null;
+	}
 
-	let endurainServerUrl = '';
-	let endurainUsername = '';
-	let endurainPassword = '';
-	let endurainMfaCode = '';
-	let endurainMfaRequired = false;
+	let {
+		user,
+		immichIntegration = $bindable(null),
+		googleMapsEnabled = $bindable(false),
+		stravaGlobalEnabled = $bindable(false),
+		stravaUserEnabled = $bindable(false),
+		wandererEnabled = $bindable(false),
+		wandererIntegration = $bindable(null),
+		endurainEnabled = $bindable(false),
+		endurainIntegration = $bindable(null)
+	}: Props = $props();
+
+	let endurainServerUrl = $state('');
+	let endurainUsername = $state('');
+	let endurainPassword = $state('');
+	let endurainMfaCode = $state('');
+	let endurainMfaRequired = $state(false);
 	let endurainMfaUsername = '';
 	let endurainMfaServerUrl = '';
 	let endurainMfaToken = '';
-	let endurainConnecting = false;
-	let endurainAuthStep = false;
+	let endurainConnecting = $state(false);
+	let endurainAuthStep = $state(false);
 
-	let newImmichIntegration: ImmichIntegration = {
+	let newImmichIntegration: ImmichIntegration = $state({
 		server_url: '',
 		api_key: '',
 		id: '',
 		copy_locally: true
-	};
+	});
 
-	let newWandererIntegration: WandererIntegration = {
+	let newWandererIntegration: WandererIntegration = $state({
 		server_url: '',
 		api_key: '',
 		id: ''
-	};
+	});
 
 	const builtinIcons = {
 		osm: MapIcon,
@@ -350,7 +364,7 @@
 			</div>
 			<div>
 				<h2 class="text-2xl font-bold">{$t('settings.integrations_hub.personal_title')}</h2>
-				<p class="text-base-content/70">{$t('settings.integrations_hub.personal_desc')}</p>
+				<p class="text-base-content/80">{$t('settings.integrations_hub.personal_desc')}</p>
 			</div>
 		</div>
 
@@ -375,7 +389,7 @@
 								</span>
 							{/if}
 						</div>
-						<p class="text-sm text-base-content/70 mt-1">{$t('immich.immich_integration_desc')}</p>
+						<p class="text-sm text-base-content/80 mt-1">{$t('immich.immich_integration_desc')}</p>
 						<a
 							class="inline-block text-sm link link-primary mt-1"
 							href="https://adventurelog.app/docs/configuration/immich_integration.html"
@@ -389,14 +403,14 @@
 
 				{#if immichIntegration && !newImmichIntegration.id}
 					<div class="mt-4 space-y-3">
-						<p class="text-sm text-base-content/70 truncate" title={immichIntegration.server_url}>
+						<p class="text-sm text-base-content/80 truncate" title={immichIntegration.server_url}>
 							{immichIntegration.server_url}
 						</p>
 						<div class="flex flex-wrap gap-2">
 							<button
 								type="button"
 								class="btn btn-sm btn-outline"
-								on:click={() => {
+								onclick={() => {
 									if (immichIntegration)
 										newImmichIntegration = { ...immichIntegration, api_key: '' };
 								}}
@@ -406,7 +420,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-error btn-outline"
-								on:click={disableImmichIntegration}
+								onclick={disableImmichIntegration}
 							>
 								{$t('settings.integrations_hub.disconnect')}
 							</button>
@@ -416,64 +430,56 @@
 
 				{#if !immichIntegration || newImmichIntegration.id}
 					<div class="mt-4 space-y-4">
-						<div class="form-control">
-							<label class="label" for="immich-server-url">
-								<span class="label-text font-medium">{$t('immich.server_url')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="immich-server-url">{$t('immich.server_url')}</label>
 							<input
 								id="immich-server-url"
 								type="url"
 								bind:value={newImmichIntegration.server_url}
-								class="input input-bordered input-primary focus:input-primary w-full"
+								class="input input-primary focus:input-primary w-full"
 								placeholder="https://immich.example.com/api"
 							/>
 							{#if newImmichIntegration.server_url && !newImmichIntegration.server_url.endsWith('api')}
-								<div class="label">
-									<span class="label-text-alt text-warning">{$t('immich.api_note')}</span>
-								</div>
+								<p class="text-sm text-warning mt-1">{$t('immich.api_note')}</p>
 							{/if}
 							{#if newImmichIntegration.server_url && (newImmichIntegration.server_url.includes('localhost') || newImmichIntegration.server_url.includes('127.0.0.1'))}
-								<div class="label">
-									<span class="label-text-alt text-warning">{$t('immich.localhost_note')}</span>
-								</div>
+								<p class="text-sm text-warning mt-1">{$t('immich.localhost_note')}</p>
 							{/if}
 						</div>
 
-						<div class="form-control">
-							<label class="label" for="immich-api-key">
-								<span class="label-text font-medium">{$t('immich.api_key')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="immich-api-key">{$t('immich.api_key')}</label>
 							<input
 								id="immich-api-key"
 								type="password"
 								bind:value={newImmichIntegration.api_key}
-								class="input input-bordered input-primary focus:input-primary w-full"
+								class="input input-primary focus:input-primary w-full"
 								placeholder={$t('immich.api_key_placeholder')}
 							/>
 						</div>
 
-						<div class="form-control">
-							<label class="label cursor-pointer justify-start gap-3 items-start py-0">
+						<div class="flex flex-col">
+							<label class="field-toggle">
 								<input
 									type="checkbox"
 									bind:checked={newImmichIntegration.copy_locally}
-									class="toggle toggle-primary mt-1"
+									class="toggle toggle-primary"
 								/>
-								<div>
-									<span class="label-text font-medium">
+								<span>
+									<span class="font-semibold text-base-content">
 										{$t('immich.copy_locally') || 'Copy Locally'}
 									</span>
-									<p class="text-sm text-base-content/70">
+									<p class="text-sm text-base-content/80">
 										{$t('immich.copy_locally_desc') || 'If enabled, files will be copied locally.'}
 									</p>
-								</div>
+								</span>
 							</label>
 						</div>
 
 						<div class="flex flex-wrap items-center gap-2">
 							<button
 								type="button"
-								on:click={enableImmichIntegration}
+								onclick={enableImmichIntegration}
 								class="btn btn-primary w-full sm:w-auto"
 							>
 								{!immichIntegration?.id
@@ -484,7 +490,7 @@
 								<button
 									type="button"
 									class="btn btn-ghost w-full sm:w-auto"
-									on:click={cancelImmichEdit}
+									onclick={cancelImmichEdit}
 								>
 									{$t('settings.integrations_hub.cancel')}
 								</button>
@@ -514,7 +520,7 @@
 								</span>
 							{/if}
 						</div>
-						<p class="text-sm text-base-content/70 mt-1">
+						<p class="text-sm text-base-content/80 mt-1">
 							{$t('wanderer.wanderer_integration_desc')}
 						</p>
 						<a
@@ -530,14 +536,14 @@
 
 				{#if wandererIntegration && !newWandererIntegration.id}
 					<div class="mt-4 space-y-3">
-						<p class="text-sm text-base-content/70 truncate" title={wandererIntegration.server_url}>
+						<p class="text-sm text-base-content/80 truncate" title={wandererIntegration.server_url}>
 							{wandererIntegration.server_url}
 						</p>
 						<div class="flex flex-wrap gap-2">
 							<button
 								type="button"
 								class="btn btn-sm btn-outline"
-								on:click={() => {
+								onclick={() => {
 									if (wandererIntegration) {
 										newWandererIntegration = { ...wandererIntegration, api_key: '' };
 									}
@@ -548,7 +554,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-error btn-outline"
-								on:click={wandererDisconnect}
+								onclick={wandererDisconnect}
 							>
 								{$t('settings.integrations_hub.disconnect')}
 							</button>
@@ -558,32 +564,28 @@
 
 				{#if !wandererIntegration || newWandererIntegration.id}
 					<div class="mt-4 space-y-4">
-						<div class="form-control">
-							<label class="label" for="wanderer-server-url">
-								<span class="label-text font-medium">{$t('wanderer.server_url')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="wanderer-server-url"
+								>{$t('wanderer.server_url')}</label
+							>
 							<input
 								id="wanderer-server-url"
 								type="url"
-								class="input input-bordered input-primary focus:input-primary w-full"
+								class="input input-primary focus:input-primary w-full"
 								placeholder="https://wanderer.example.com"
 								bind:value={newWandererIntegration.server_url}
 							/>
 							{#if newWandererIntegration.server_url && (newWandererIntegration.server_url.includes('localhost') || newWandererIntegration.server_url.includes('127.0.0.1'))}
-								<div class="label">
-									<span class="label-text-alt text-warning">{$t('wanderer.localhost_note')}</span>
-								</div>
+								<p class="text-sm text-warning mt-1">{$t('wanderer.localhost_note')}</p>
 							{/if}
 						</div>
 
-						<div class="form-control">
-							<label class="label" for="wanderer-api-key">
-								<span class="label-text font-medium">{$t('wanderer.api_key')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="wanderer-api-key">{$t('wanderer.api_key')}</label>
 							<input
 								id="wanderer-api-key"
 								type="password"
-								class="input input-bordered input-primary focus:input-primary w-full"
+								class="input input-primary focus:input-primary w-full"
 								placeholder={$t('wanderer.api_key_placeholder')}
 								bind:value={newWandererIntegration.api_key}
 							/>
@@ -593,7 +595,7 @@
 							<button
 								type="button"
 								class="btn btn-primary w-full sm:w-auto"
-								on:click={enableWandererIntegration}
+								onclick={enableWandererIntegration}
 							>
 								{!wandererIntegration?.id
 									? $t('settings.integrations_hub.connect')
@@ -603,7 +605,7 @@
 								<button
 									type="button"
 									class="btn btn-ghost w-full sm:w-auto"
-									on:click={cancelWandererEdit}
+									onclick={cancelWandererEdit}
 								>
 									{$t('settings.integrations_hub.cancel')}
 								</button>
@@ -633,7 +635,7 @@
 								</span>
 							{/if}
 						</div>
-						<p class="text-sm text-base-content/70 mt-1">
+						<p class="text-sm text-base-content/80 mt-1">
 							{$t('endurain.endurain_integration_desc')}
 						</p>
 						<a
@@ -655,36 +657,34 @@
 									values: { username: endurainIntegration.username || '—' }
 								})}
 							</p>
-							<p class="truncate text-base-content/70" title={endurainIntegration.server_url}>
+							<p class="truncate text-base-content/80" title={endurainIntegration.server_url}>
 								{endurainIntegration.server_url}
 							</p>
 						</div>
 						<button
 							type="button"
 							class="btn btn-sm btn-error btn-outline"
-							on:click={endurainDisconnect}
+							onclick={endurainDisconnect}
 						>
 							{$t('settings.integrations_hub.disconnect')}
 						</button>
 					</div>
 				{:else}
 					<div class="mt-4 space-y-4">
-						<div class="form-control">
-							<label class="label" for="endurain-server-url">
-								<span class="label-text font-medium">{$t('endurain.server_url')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="endurain-server-url"
+								>{$t('endurain.server_url')}</label
+							>
 							<input
 								id="endurain-server-url"
 								type="url"
-								class="input input-bordered input-primary focus:input-primary w-full"
+								class="input input-primary focus:input-primary w-full"
 								placeholder="https://endurain.example.com"
 								bind:value={endurainServerUrl}
 								disabled={endurainAuthStep}
 							/>
 							{#if endurainServerUrl && (endurainServerUrl.includes('localhost') || endurainServerUrl.includes('127.0.0.1'))}
-								<div class="label">
-									<span class="label-text-alt text-warning">{$t('endurain.localhost_note')}</span>
-								</div>
+								<p class="text-sm text-warning mt-1">{$t('endurain.localhost_note')}</p>
 							{/if}
 						</div>
 
@@ -692,7 +692,7 @@
 							<button
 								type="button"
 								class="btn btn-primary w-full sm:w-auto"
-								on:click={confirmEndurainServerUrl}
+								onclick={confirmEndurainServerUrl}
 								disabled={!endurainServerUrl.trim() || endurainConnecting}
 							>
 								{$t('endurain.continue')}
@@ -701,21 +701,21 @@
 							<button
 								type="button"
 								class="btn btn-ghost btn-sm"
-								on:click={backToEndurainUrlStep}
+								onclick={backToEndurainUrlStep}
 								disabled={endurainConnecting}
 							>
 								{$t('endurain.change_server')}
 							</button>
 
 							{#if endurainMfaRequired}
-								<div class="form-control">
-									<label class="label" for="endurain-mfa-code">
-										<span class="label-text font-medium">{$t('endurain.mfa_code')}</span>
-									</label>
+								<div class="flex flex-col">
+									<label class="field-label" for="endurain-mfa-code"
+										>{$t('endurain.mfa_code')}</label
+									>
 									<input
 										id="endurain-mfa-code"
 										type="text"
-										class="input input-bordered input-primary w-full"
+										class="input input-primary w-full"
 										placeholder="123456"
 										bind:value={endurainMfaCode}
 									/>
@@ -723,39 +723,39 @@
 								<button
 									type="button"
 									class="btn btn-primary w-full sm:w-auto"
-									on:click={verifyEndurainMfa}
+									onclick={verifyEndurainMfa}
 									disabled={endurainConnecting}
 								>
 									{$t('endurain.verify_mfa')}
 								</button>
 							{:else}
 								<div class="bg-base-100 rounded-lg p-4 border border-base-300 space-y-4">
-									<div class="form-control">
-										<label class="label" for="endurain-username">
-											<span class="label-text font-medium">{$t('endurain.username')}</span>
-										</label>
+									<div class="flex flex-col">
+										<label class="field-label" for="endurain-username"
+											>{$t('endurain.username')}</label
+										>
 										<input
 											id="endurain-username"
 											type="text"
-											class="input input-bordered input-primary w-full"
+											class="input input-primary w-full"
 											bind:value={endurainUsername}
 										/>
 									</div>
-									<div class="form-control">
-										<label class="label" for="endurain-password">
-											<span class="label-text font-medium">{$t('endurain.password')}</span>
-										</label>
+									<div class="flex flex-col">
+										<label class="field-label" for="endurain-password"
+											>{$t('endurain.password')}</label
+										>
 										<input
 											id="endurain-password"
 											type="password"
-											class="input input-bordered input-primary w-full"
+											class="input input-primary w-full"
 											bind:value={endurainPassword}
 										/>
 									</div>
 									<button
 										type="button"
 										class="btn btn-primary w-full sm:w-auto"
-										on:click={connectEndurainPassword}
+										onclick={connectEndurainPassword}
 										disabled={endurainConnecting}
 									>
 										{$t('settings.integrations_hub.connect')}
@@ -789,7 +789,7 @@
 									</span>
 								{/if}
 							</div>
-							<p class="text-sm text-base-content/70 mt-1">
+							<p class="text-sm text-base-content/80 mt-1">
 								{$t('strava.strava_integration_desc')}
 							</p>
 							<a
@@ -808,7 +808,7 @@
 							<button
 								type="button"
 								class="btn btn-primary w-full sm:w-auto"
-								on:click={stravaAuthorizeRedirect}
+								onclick={stravaAuthorizeRedirect}
 							>
 								{$t('settings.integrations_hub.connect')}
 							</button>
@@ -816,7 +816,7 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-error btn-outline"
-								on:click={stravaDisconnect}
+								onclick={stravaDisconnect}
 							>
 								{$t('settings.integrations_hub.disconnect')}
 							</button>
@@ -835,7 +835,7 @@
 			</div>
 			<div>
 				<h2 class="text-2xl font-bold">{$t('settings.integrations_hub.instance_title')}</h2>
-				<p class="text-base-content/70">{$t('settings.integrations_hub.instance_desc')}</p>
+				<p class="text-base-content/80">{$t('settings.integrations_hub.instance_desc')}</p>
 			</div>
 		</div>
 
@@ -857,7 +857,7 @@
 								<span class="badge badge-warning badge-sm shrink-0">{$t('settings.disabled')}</span>
 							{/if}
 						</div>
-						<p class="text-sm text-base-content/70 mt-1">
+						<p class="text-sm text-base-content/80 mt-1">
 							{$t('google_maps.google_maps_integration_desc')}
 						</p>
 						{#if googleMapsEnabled}
@@ -875,11 +875,11 @@
 
 				<div class="mt-4">
 					{#if googleMapsEnabled}
-						<p class="text-sm text-base-content/70">
+						<p class="text-sm text-base-content/80">
 							{$t('settings.integrations_hub.google_maps_active_hint')}
 						</p>
 					{:else if user.is_staff}
-						<p class="text-sm text-base-content/70">
+						<p class="text-sm text-base-content/80">
 							{$t('immich.need_help')}
 							<a
 								class="link link-primary"
@@ -891,7 +891,7 @@
 							</a>
 						</p>
 					{:else}
-						<p class="text-sm text-base-content/70">
+						<p class="text-sm text-base-content/80">
 							{$t('google_maps.google_maps_integration_desc_no_staff')}
 						</p>
 					{/if}
@@ -912,16 +912,16 @@
 								<h3 class="text-lg font-semibold">Strava</h3>
 								<span class="badge badge-warning badge-sm shrink-0">{$t('settings.disabled')}</span>
 							</div>
-							<p class="text-sm text-base-content/70 mt-1">
+							<p class="text-sm text-base-content/80 mt-1">
 								{$t('strava.strava_integration_desc')}
 							</p>
 						</div>
 					</div>
 
 					<div class="mt-4 space-y-2">
-						<p class="text-sm text-base-content/70">{$t('strava.not_enabled')}</p>
+						<p class="text-sm text-base-content/80">{$t('strava.not_enabled')}</p>
 						{#if user.is_staff}
-							<p class="text-sm text-base-content/70">
+							<p class="text-sm text-base-content/80">
 								{$t('immich.need_help')}
 								<a
 									class="link link-primary"
@@ -933,7 +933,7 @@
 								</a>
 							</p>
 						{:else}
-							<p class="text-sm text-base-content/70">
+							<p class="text-sm text-base-content/80">
 								{$t('google_maps.google_maps_integration_desc_no_staff')}
 							</p>
 						{/if}
@@ -951,7 +951,7 @@
 			</div>
 			<div>
 				<h2 class="text-2xl font-bold">{$t('settings.integrations_hub.builtin_title')}</h2>
-				<p class="text-base-content/70">{$t('settings.integrations_hub.builtin_desc')}</p>
+				<p class="text-base-content/80">{$t('settings.integrations_hub.builtin_desc')}</p>
 			</div>
 		</div>
 
@@ -969,7 +969,7 @@
 								{$t('settings.integrations_hub.included')}
 							</span>
 						</div>
-						<p class="text-sm text-base-content/70 mt-0.5">{$t(integration.descriptionKey)}</p>
+						<p class="text-sm text-base-content/80 mt-0.5">{$t(integration.descriptionKey)}</p>
 					</div>
 				</li>
 			{/each}

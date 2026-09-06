@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { createBubbler, preventDefault } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { isValidUrl } from '$lib';
 	import type { Collection, Note, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
@@ -8,26 +11,37 @@
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	let modal: HTMLDialogElement;
 	import { marked } from 'marked'; // Import the markdown parser
+	import DateInput from './shared/DateInput.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown);
 	};
 
-	export let note: Note | null = null;
-	export let collection: Collection;
-	export let user: User | null = null;
-	export let initialVisitDate: string | null = null;
+	interface Props {
+		note?: Note | null;
+		collection: Collection;
+		user?: User | null;
+		initialVisitDate?: string | null;
+	}
 
-	let constrainDates: boolean = true;
+	let { note = null, collection, user = null, initialVisitDate = null }: Props = $props();
 
-	let isReadOnly =
+	let constrainDates: boolean = $state(true);
+
+	let isReadOnly = $derived(
 		!(note && user?.uuid == note?.user) &&
-		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
-		!!note;
+			!(
+				user &&
+				collection &&
+				collection.shared_with &&
+				collection.shared_with.includes(user.uuid)
+			) &&
+			!!note
+	);
 
-	let warning: string | null = '';
+	let warning: string | null = $state('');
 
-	let newLink: string = '';
+	let newLink: string = $state('');
 
 	function addLink() {
 		// check to make it a valid URL
@@ -52,16 +66,32 @@
 		return null;
 	};
 
-	let newNote = {
-		name: note?.name || '',
-		content: note?.content || '',
-		date: getSeedDate() || undefined || null,
-		links: note?.links || [],
-		collection: collection.id,
-		is_public: collection.is_public
-	};
+	let newNote = $state({
+		name: '',
+		content: '',
+		date: null as string | null | undefined,
+		links: [] as string[],
+		collection: '',
+		is_public: false
+	});
+	let previousNoteId: string | null | undefined = undefined;
 
-	const hasVisitDateSuggestion = !!initialVisitDate && !note?.date;
+	$effect.pre(() => {
+		const sourceId = note?.id ?? null;
+		if (sourceId === previousNoteId) return;
+
+		previousNoteId = sourceId;
+		newNote = {
+			name: note?.name || '',
+			content: note?.content || '',
+			date: getSeedDate() || null,
+			links: note?.links || [],
+			collection: collection.id,
+			is_public: collection.is_public
+		};
+	});
+
+	const hasVisitDateSuggestion = $derived(!!initialVisitDate && !note?.date);
 
 	function useVisitDate() {
 		if (isReadOnly) return;
@@ -70,7 +100,7 @@
 		}
 	}
 
-	let initialName: string = note?.name || '';
+	let initialName = $derived(note?.name || '');
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -134,21 +164,21 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<dialog id="my_modal_1" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box note-modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
 		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="shrink-0 bg-base-100/90 backdrop-blur-lg border-b border-base-300 px-4 md:px-6 py-3 md:py-4"
 		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
 					<div class="p-2 bg-primary/10 rounded-xl">
 						{#if isReadOnly}
 							<svg
@@ -196,7 +226,7 @@
 								{$t('notes.note_viewer')}
 							{/if}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{#if note?.id && !isReadOnly}
 								{$t('notes.update_note_details')} "{initialName}"
 							{:else if !isReadOnly}
@@ -211,10 +241,10 @@
 				<!-- Close Button -->
 				<button
 					type="button"
-					class="btn btn-ghost btn-square"
+					class="btn btn-ghost btn-square shrink-0"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -229,280 +259,286 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="px-2">
-			<form method="post" style="width: 100%;" on:submit|preventDefault>
-				<!-- Basic Information Section -->
-				<div
-					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
-				>
-					<input type="checkbox" checked />
+		<div class="flex-1 min-h-0 overflow-hidden flex flex-col">
+			<form
+				class="h-full min-h-0 flex flex-col"
+				method="post"
+				onsubmit={preventDefault(bubble('submit'))}
+			>
+				<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
+					<!-- Basic Information Section -->
 					<div
-						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
 					>
-						<div class="flex items-center gap-3">
-							<div class="p-2 bg-primary/10 rounded-lg">
-								<svg
-									class="w-5 h-5 text-primary"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-									/>
-								</svg>
+						<input type="checkbox" checked />
+						<div
+							class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-lg">
+									<svg
+										class="w-5 h-5 text-primary"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+								</div>
+								{$t('adventures.basic_information')}
 							</div>
-							{$t('adventures.basic_information')}
 						</div>
-					</div>
-					<div class="collapse-content bg-base-100/50 pt-4 p-6 space-y-3">
-						<!-- Dual Column Layout for Large Screens -->
-						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-							<!-- Left Column -->
-							<div class="space-y-4">
-								<!-- Name Field -->
-								<div class="form-control">
-									<label class="label" for="name">
-										<span class="label-text font-medium"
-											>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
-										>
-									</label>
-									<input
-										type="text"
-										id="name"
-										name="name"
-										readonly={isReadOnly}
-										bind:value={newNote.name}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
-										placeholder={$t('notes.enter_note_title')}
-										required
-									/>
-								</div>
-
-								<!-- Date Field -->
-								<div class="form-control">
-									<label class="label" for="date">
-										<span class="label-text font-medium">{$t('adventures.date')}</span>
-									</label>
-									{#if !isReadOnly && hasVisitDateSuggestion}
-										<div
-											class="flex flex-wrap items-center gap-2 mb-2 text-xs text-base-content/70"
-										>
-											<span class="badge badge-primary badge-soft">Itinerary day</span>
-											<span>Prefilled to match your selected day.</span>
-											<button type="button" class="btn btn-ghost btn-xs" on:click={useVisitDate}>
-												Reapply date
-											</button>
-										</div>
-									{/if}
-									{#if collection && collection.start_date && collection.end_date && !isReadOnly}
-										<div class="flex items-center gap-2 mb-2">
-											<input
-												type="checkbox"
-												class="toggle toggle-primary toggle-sm"
-												id="constrain_dates"
-												name="constrain_dates"
-												bind:checked={constrainDates}
-											/>
-											<span class="text-sm text-base-content/70"
-												>{$t('adventures.date_constrain')}</span
-											>
-										</div>
-									{/if}
-									<input
-										type="date"
-										id="date"
-										name="date"
-										readonly={isReadOnly}
-										min={constrainDates ? collection.start_date : ''}
-										max={constrainDates ? collection.end_date : ''}
-										bind:value={newNote.date}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
-									/>
-								</div>
-							</div>
-
-							<!-- Right Column - Links Section -->
-							<div class="space-y-4">
-								{#if !isReadOnly}
-									<div class="form-control">
-										<label class="label" for="new-link">
-											<span class="label-text font-medium">{$t('adventures.links')}</span>
+						<div class="collapse-content bg-base-100/50 pt-4 p-6 space-y-3">
+							<!-- Dual Column Layout for Large Screens -->
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<!-- Left Column -->
+								<div class="space-y-4">
+									<!-- Name Field -->
+									<div class="flex flex-col">
+										<label class="field-label" for="name">
+											{$t('adventures.name')}<span class="text-error ml-1">*</span>
 										</label>
-										<div class="join w-full">
-											<input
-												type="url"
-												id="new-link"
-												class="input input-bordered join-item flex-1 bg-base-100/80 focus:bg-base-100"
-												placeholder="https://example.com"
-												bind:value={newLink}
-												on:keydown={(e) => {
-													if (e.key === 'Enter') {
-														e.preventDefault();
-														addLink();
-													}
-												}}
-											/>
-											<button
-												type="button"
-												class="btn btn-primary join-item"
-												aria-label={$t('adventures.add')}
-												title={$t('adventures.add')}
-												on:click={addLink}
-											>
-												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-													/>
-												</svg>
-											</button>
-										</div>
+										<input
+											type="text"
+											id="name"
+											name="name"
+											readonly={isReadOnly}
+											bind:value={newNote.name}
+											class="input w-full bg-base-100/80 focus:bg-base-100"
+											placeholder={$t('notes.enter_note_title')}
+											required
+										/>
 									</div>
-								{/if}
 
-								<!-- Links List -->
-								{#if newNote.links.length > 0}
-									<div class="max-h-48 overflow-y-auto space-y-2">
-										{#each newNote.links as link, i}
+									<!-- Date Field -->
+									<div class="flex flex-col">
+										<label class="field-label" for="date">{$t('adventures.date')}</label>
+										{#if !isReadOnly && hasVisitDateSuggestion}
 											<div
-												class="flex items-center gap-2 p-3 bg-base-200/50 rounded-xl border border-base-300/50"
+												class="flex flex-wrap items-center gap-2 mb-2 text-xs text-base-content/70"
 											>
-												<svg
-													class="w-4 h-4 text-primary flex-shrink-0"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-													/>
-												</svg>
-												<a
-													href={link}
-													class="link link-primary text-sm truncate flex-1"
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													{link}
-												</a>
-												{#if !isReadOnly}
-													<button
-														type="button"
-														class="btn btn-ghost btn-xs text-error"
-														aria-label={$t('adventures.remove')}
-														title={$t('adventures.remove')}
-														on:click={() => {
-															newNote.links = newNote.links.filter((_, index) => index !== i);
-														}}
-													>
-														<svg
-															class="w-4 h-4"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-															/>
-														</svg>
-													</button>
-												{/if}
+												<span class="badge badge-primary badge-soft">Itinerary day</span>
+												<span>Prefilled to match your selected day.</span>
+												<button type="button" class="btn btn-ghost btn-xs" onclick={useVisitDate}>
+													Reapply date
+												</button>
 											</div>
-										{/each}
+										{/if}
+										{#if collection && collection.start_date && collection.end_date && !isReadOnly}
+											<div class="flex items-center gap-2 mb-2">
+												<input
+													type="checkbox"
+													class="toggle toggle-primary toggle-sm"
+													id="constrain_dates"
+													name="constrain_dates"
+													bind:checked={constrainDates}
+												/>
+												<span class="text-sm text-base-content/70"
+													>{$t('adventures.date_constrain')}</span
+												>
+											</div>
+										{/if}
+										<DateInput
+											id="date"
+											name="date"
+											readonly={isReadOnly}
+											min={constrainDates ? collection.start_date || undefined : undefined}
+											max={constrainDates ? collection.end_date || undefined : undefined}
+											bind:value={newNote.date}
+											clearable={!isReadOnly}
+										/>
 									</div>
-								{/if}
+								</div>
+
+								<!-- Right Column - Links Section -->
+								<div class="space-y-4">
+									{#if !isReadOnly}
+										<div class="flex flex-col">
+											<label class="field-label" for="new-link">{$t('adventures.links')}</label>
+											<div class="join w-full">
+												<input
+													type="url"
+													id="new-link"
+													class="input join-item flex-1 bg-base-100/80 focus:bg-base-100"
+													placeholder="https://example.com"
+													bind:value={newLink}
+													onkeydown={(e) => {
+														if (e.key === 'Enter') {
+															e.preventDefault();
+															addLink();
+														}
+													}}
+												/>
+												<button
+													type="button"
+													class="btn btn-primary join-item"
+													aria-label={$t('adventures.add')}
+													title={$t('adventures.add')}
+													onclick={addLink}
+												>
+													<svg
+														class="w-4 h-4"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+														/>
+													</svg>
+												</button>
+											</div>
+										</div>
+									{/if}
+
+									<!-- Links List -->
+									{#if newNote.links.length > 0}
+										<div class="max-h-48 overflow-y-auto space-y-2">
+											{#each newNote.links as link, i}
+												<div
+													class="flex items-center gap-2 p-3 bg-base-200/50 rounded-xl border border-base-300/50"
+												>
+													<svg
+														class="w-4 h-4 text-primary shrink-0"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+														/>
+													</svg>
+													<a
+														href={link}
+														class="link link-primary text-sm truncate flex-1"
+														target="_blank"
+														rel="noopener noreferrer"
+													>
+														{link}
+													</a>
+													{#if !isReadOnly}
+														<button
+															type="button"
+															class="btn btn-ghost btn-xs text-error"
+															aria-label={$t('adventures.remove')}
+															title={$t('adventures.remove')}
+															onclick={() => {
+																newNote.links = newNote.links.filter((_, index) => index !== i);
+															}}
+														>
+															<svg
+																class="w-4 h-4"
+																fill="none"
+																stroke="currentColor"
+																viewBox="0 0 24 24"
+															>
+																<path
+																	stroke-linecap="round"
+																	stroke-linejoin="round"
+																	stroke-width="2"
+																	d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+																/>
+															</svg>
+														</button>
+													{/if}
+												</div>
+											{/each}
+										</div>
+									{/if}
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				<!-- Content Section -->
-				<div
-					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
-				>
-					<input type="checkbox" checked />
+					<!-- Content Section -->
 					<div
-						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
 					>
-						<div class="flex items-center gap-3">
-							<div class="p-2 bg-primary/10 rounded-lg">
-								<svg
-									class="w-5 h-5 text-primary"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-									/>
-								</svg>
+						<input type="checkbox" checked />
+						<div
+							class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-lg">
+									<svg
+										class="w-5 h-5 text-primary"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+										/>
+									</svg>
+								</div>
+								{$t('notes.content')}
 							</div>
-							{$t('notes.content')}
+						</div>
+						<div class="collapse-content bg-base-100/50 pt-4 p-6">
+							{#if !isReadOnly}
+								<MarkdownEditor bind:text={newNote.content} editor_height={'h-96'} />
+							{:else if note}
+								<div
+									class="bg-base-100 border border-base-300/50 rounded-xl p-6 max-h-96 overflow-y-auto"
+								>
+									<article class="prose max-w-full">
+										{@html renderMarkdown(note.content || '')}
+									</article>
+								</div>
+							{/if}
 						</div>
 					</div>
-					<div class="collapse-content bg-base-100/50 pt-4 p-6">
-						{#if !isReadOnly}
-							<MarkdownEditor bind:text={newNote.content} editor_height={'h-96'} />
-						{:else if note}
-							<div
-								class="bg-base-100 border border-base-300/50 rounded-xl p-6 max-h-96 overflow-y-auto"
-							>
-								<article class="prose max-w-full">
-									{@html renderMarkdown(note.content || '')}
-								</article>
-							</div>
-						{/if}
-					</div>
+
+					<!-- Warning Messages -->
+					{#if warning}
+						<div role="alert" class="alert alert-error mb-6 rounded-xl border border-error/20">
+							<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span class="font-medium">{warning}</span>
+						</div>
+					{/if}
+
+					<!-- Public Note Alert -->
+					{#if collection.is_public}
+						<div role="alert" class="alert alert-info mb-6 rounded-xl border border-info/20">
+							<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span class="font-medium">{$t('notes.note_public')}</span>
+						</div>
+					{/if}
 				</div>
-
-				<!-- Warning Messages -->
-				{#if warning}
-					<div role="alert" class="alert alert-error mb-6 rounded-xl border border-error/20">
-						<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<span class="font-medium">{warning}</span>
-					</div>
-				{/if}
-
-				<!-- Public Note Alert -->
-				{#if collection.is_public}
-					<div role="alert" class="alert alert-info mb-6 rounded-xl border border-info/20">
-						<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<span class="font-medium">{$t('notes.note_public')}</span>
-					</div>
-				{/if}
 
 				<!-- Action Buttons -->
-				<div class="flex gap-3 justify-end pt-4 border-t border-base-300/50">
-					<button type="button" class="btn btn-neutral-200" on:click={close}>
+				<div
+					class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+				>
+					<button type="button" class="btn btn-ghost" onclick={close}>
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -514,7 +550,7 @@
 						{$t('about.close')}
 					</button>
 					{#if !isReadOnly}
-						<button type="button" class="btn btn-primary" on:click={save}>
+						<button type="button" class="btn btn-primary" onclick={save}>
 							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"
@@ -531,3 +567,21 @@
 		</div>
 	</div>
 </dialog>
+
+<style>
+	.note-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.note-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

@@ -819,7 +819,13 @@
 		"public_profile_left_collections": "உங்கள் சுயவிவரம் இப்போது தனிப்பட்டதாக உள்ளது. \n{count} பகிரப்பட்ட சேகரிப்பில்(களில்) இருந்து நீக்கப்பட்டீர்கள்.",
 		"public_profile_private_confirm": "உங்கள் சுயவிவரத்தைத் தனிப்பட்டதாக்கினால், {பகிரப்பட்ட} பகிர்ந்த சேகரிப்பில்(களில்) இருந்து நீங்கள் அகற்றப்படுவீர்கள் மேலும் {invites} நிலுவையில் உள்ள அழைப்பை(களை) ரத்துசெய்யும். \nதொடரவா?",
 		"public_profile_revoked_invites": "{count} நிலுவையில் உள்ள சேகரிப்பு அழைப்பு(கள்) ரத்துசெய்யப்பட்டது.",
-		"public_profile_sharing_warning": "நீங்கள் தற்போது {count} சேகரிப்பில்(கள்) பகிர்ந்துள்ளீர்கள். \nஉங்கள் சுயவிவரத்தை தனிப்பட்டதாக்குவது, அந்த சேகரிப்புகளிலிருந்து உங்களை நீக்கிவிடும்."
+		"public_profile_sharing_warning": "நீங்கள் தற்போது {count} சேகரிப்பில்(கள்) பகிர்ந்துள்ளீர்கள். \nஉங்கள் சுயவிவரத்தை தனிப்பட்டதாக்குவது, அந்த சேகரிப்புகளிலிருந்து உங்களை நீக்கிவிடும்.",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"collection": {
 		"collection_created": "சேகரிப்பு வெற்றிகரமாக உருவாக்கப்பட்டது!",
@@ -1314,7 +1320,6 @@
 		"my_locations": "எனது இருப்பிடங்கள்",
 		"best_happened_at": "சிறப்பாக நடந்தது"
 	},
-	"settings_download_backup": "பதிவிறக்கம் Backup",
 	"invites": {
 		"accepted": "அழைப்பு ஏற்கப்பட்டது",
 		"accept_failed": "Failed பெறுநர் ஏற்றுக்கொள் invite",

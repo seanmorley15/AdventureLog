@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher } from 'svelte';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
@@ -35,48 +37,68 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let initialSelection: GeoSelection | null = null;
-	export let searchQuery = '';
-	export let displayName = '';
-	export let showDisplayNameInput = true;
-	export let displayNamePosition: 'before' | 'after' = 'before';
-	export let displayNameLabel = '';
-	export let displayNamePlaceholder = '';
-	export let basemapType: string = 'default';
-	export let isReverseGeocoding = false;
-	export let transportationMode = false; // New prop for transportation mode
-	export let airportMode = false; // New prop for airport-specific search
-	// Props for initial transportation locations when editing
-	export let initialStartLocation: {
-		name: string;
-		lat: number;
-		lng: number;
-		location: string;
-	} | null = null;
-	export let initialEndLocation: {
-		name: string;
-		lat: number;
-		lng: number;
-		location: string;
-	} | null = null;
-	export let initialStartCode: string | null = null;
-	export let initialEndCode: string | null = null;
+	interface Props {
+		initialSelection?: GeoSelection | null;
+		searchQuery?: string;
+		displayName?: string;
+		showDisplayNameInput?: boolean;
+		displayNamePosition?: 'before' | 'after';
+		displayNameLabel?: string;
+		displayNamePlaceholder?: string;
+		basemapType?: string;
+		isReverseGeocoding?: boolean;
+		transportationMode?: boolean; // New prop for transportation mode
+		airportMode?: boolean; // New prop for airport-specific search
+		// Props for initial transportation locations when editing
+		initialStartLocation?: {
+			name: string;
+			lat: number;
+			lng: number;
+			location: string;
+		} | null;
+		initialEndLocation?: {
+			name: string;
+			lat: number;
+			lng: number;
+			location: string;
+		} | null;
+		initialStartCode?: string | null;
+		initialEndCode?: string | null;
+	}
 
-	let isSearching = false;
-	let searchResults: GeoSelection[] = [];
-	let selectedLocation: GeoSelection | null = null;
-	let selectedMarker: { lng: number; lat: number } | null = null;
-	let locationData: LocationMeta | null = null;
-	let mapCenter: [number, number] = [-74.5, 40];
-	let mapZoom: number | undefined = 2;
-	let mapBounds: [[number, number], [number, number]] | null = null;
+	let {
+		initialSelection = null,
+		searchQuery = $bindable(''),
+		displayName = $bindable(''),
+		showDisplayNameInput = true,
+		displayNamePosition = 'before',
+		displayNameLabel = '',
+		displayNamePlaceholder = '',
+		basemapType = 'default',
+		isReverseGeocoding = $bindable(false),
+		transportationMode = false,
+		airportMode = $bindable(false),
+		initialStartLocation = null,
+		initialEndLocation = null,
+		initialStartCode = null,
+		initialEndCode = null
+	}: Props = $props();
+
+	let isSearching = $state(false);
+	let searchResults: GeoSelection[] = $state([]);
+	let selectedLocation: GeoSelection | null = $state(null);
+	let selectedMarker: { lng: number; lat: number } | null = $state(null);
+	let locationData: LocationMeta | null = $state(null);
+	let mapCenter: [number, number] = $state([-74.5, 40]);
+	let mapZoom: number | undefined = $state(2);
+	let mapBounds: [[number, number], [number, number]] | null = $state(null);
 	let searchTimeout: ReturnType<typeof setTimeout>;
-	let initialApplied = false;
-	let initialTransportationApplied = false;
+	let initialApplied = $state(false);
+	let initialTransportationApplied = $state(false);
 	let isInitializing = false;
-	let searchProvider: string | null = null;
-	let startSearchProvider: string | null = null;
-	let endSearchProvider: string | null = null;
+	let searchProvider: string | null = $state(null);
+	let startSearchProvider: string | null = $state(null);
+	let endSearchProvider: string | null = $state(null);
 
 	function isFiniteCoordinatePair(lat: unknown, lng: unknown): boolean {
 		return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
@@ -94,59 +116,61 @@
 	}
 
 	// Track any provided codes (airport / station / etc)
-	let startCode: string | null = null;
-	let endCode: string | null = null;
+	let startCode: string | null = $state(null);
+	let endCode: string | null = $state(null);
 
 	// track previous airport mode to detect toggles
-	let prevAirportMode = airportMode;
-	let airportModeInitialized = false;
+	let prevAirportMode = $state(airportMode);
+	let airportModeInitialized = $state(false);
 
 	// Clear inputs/selections when airportMode is toggled (but not during initial setup)
-	$: if (prevAirportMode !== airportMode) {
-		prevAirportMode = airportMode;
+	run(() => {
+		if (prevAirportMode !== airportMode) {
+			prevAirportMode = airportMode;
 
-		// Only clear if this is not the first time airportMode is being set
-		// This prevents wiping out initial location data when editing existing plane transportations
-		if (airportModeInitialized) {
-			// clear single-location search state
-			searchQuery = '';
-			searchResults = [];
-			selectedLocation = null;
-			selectedMarker = null;
-			locationData = null;
+			// Only clear if this is not the first time airportMode is being set
+			// This prevents wiping out initial location data when editing existing plane transportations
+			if (airportModeInitialized) {
+				// clear single-location search state
+				searchQuery = '';
+				searchResults = [];
+				selectedLocation = null;
+				selectedMarker = null;
+				locationData = null;
 
-			// clear transportation-mode search state
-			startSearchQuery = '';
-			endSearchQuery = '';
-			startSearchResults = [];
-			endSearchResults = [];
-			selectedStartLocation = null;
-			selectedEndLocation = null;
-			startMarker = null;
-			endMarker = null;
-			mapBounds = null;
-			startLocationData = null;
-			startCode = null;
-			endCode = null;
-			endLocationData = null;
+				// clear transportation-mode search state
+				startSearchQuery = '';
+				endSearchQuery = '';
+				startSearchResults = [];
+				endSearchResults = [];
+				selectedStartLocation = null;
+				selectedEndLocation = null;
+				startMarker = null;
+				endMarker = null;
+				mapBounds = null;
+				startLocationData = null;
+				startCode = null;
+				endCode = null;
+				endLocationData = null;
+			}
+
+			airportModeInitialized = true;
 		}
-
-		airportModeInitialized = true;
-	}
+	});
 
 	// Transportation mode variables
-	let startSearchQuery = '';
-	let endSearchQuery = '';
-	let startSearchResults: GeoSelection[] = [];
-	let endSearchResults: GeoSelection[] = [];
-	let selectedStartLocation: GeoSelection | null = null;
-	let selectedEndLocation: GeoSelection | null = null;
-	let startMarker: { lng: number; lat: number } | null = null;
-	let endMarker: { lng: number; lat: number } | null = null;
-	let startLocationData: LocationMeta | null = null;
-	let endLocationData: LocationMeta | null = null;
-	let isSearchingStart = false;
-	let isSearchingEnd = false;
+	let startSearchQuery = $state('');
+	let endSearchQuery = $state('');
+	let startSearchResults: GeoSelection[] = $state([]);
+	let endSearchResults: GeoSelection[] = $state([]);
+	let selectedStartLocation: GeoSelection | null = $state(null);
+	let selectedEndLocation: GeoSelection | null = $state(null);
+	let startMarker: { lng: number; lat: number } | null = $state(null);
+	let endMarker: { lng: number; lat: number } | null = $state(null);
+	let startLocationData: LocationMeta | null = $state(null);
+	let endLocationData: LocationMeta | null = $state(null);
+	let isSearchingStart = $state(false);
+	let isSearchingEnd = $state(false);
 	let startSearchTimeout: ReturnType<typeof setTimeout>;
 	let endSearchTimeout: ReturnType<typeof setTimeout>;
 
@@ -699,23 +723,27 @@
 		dispatch('clear');
 	}
 
-	$: if (
-		!initialApplied &&
-		initialSelection &&
-		isFiniteCoordinatePair(initialSelection.lat, initialSelection.lng)
-	) {
-		initialApplied = true;
-		applyInitialSelection(initialSelection);
-	}
+	run(() => {
+		if (
+			!initialApplied &&
+			initialSelection &&
+			isFiniteCoordinatePair(initialSelection.lat, initialSelection.lng)
+		) {
+			initialApplied = true;
+			applyInitialSelection(initialSelection);
+		}
+	});
 
-	$: if (
-		!initialTransportationApplied &&
-		transportationMode &&
-		(initialStartLocation || initialEndLocation)
-	) {
-		initialTransportationApplied = true;
-		applyInitialTransportationLocations();
-	}
+	run(() => {
+		if (
+			!initialTransportationApplied &&
+			transportationMode &&
+			(initialStartLocation || initialEndLocation)
+		) {
+			initialTransportationApplied = true;
+			applyInitialTransportationLocations();
+		}
+	});
 </script>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -725,9 +753,9 @@
 			<div class="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/30">
 				<AirplaneIcon class="w-5 h-5 text-primary" />
 				<div class="flex-1">
-					<label class="label cursor-pointer justify-start gap-3">
+					<label class="field-toggle">
 						<input type="checkbox" class="toggle toggle-primary" bind:checked={airportMode} />
-						<span class="label-text font-medium">
+						<span class="font-semibold text-base-content">
 							{airportMode
 								? $t('adventures.airport_search_mode')
 								: $t('adventures.location_search_mode')}
@@ -738,17 +766,15 @@
 		{/if}
 
 		{#if showDisplayNameInput && displayNamePosition === 'before' && !transportationMode}
-			<div class="form-control">
-				<label class="label" for="location-display">
-					<span class="label-text font-medium">
-						{displayNameLabel || $t('adventures.location_display_name')}
-					</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="location-display"
+					>{displayNameLabel || $t('adventures.location_display_name')}</label
+				>
 				<input
 					type="text"
 					id="location-display"
 					bind:value={displayName}
-					class="input input-bordered bg-base-100/80 focus:bg-base-100"
+					class="input bg-base-100/80 focus:bg-base-100"
 					placeholder={displayNamePlaceholder || $t('adventures.enter_location_display_name')}
 				/>
 			</div>
@@ -756,12 +782,10 @@
 
 		{#if transportationMode}
 			<!-- Start Location Search -->
-			<div class="form-control">
-				<label class="label" for="search-start-location">
-					<span class="label-text font-medium flex items-center gap-2">
-						<PinIcon class="w-4 h-4 text-success" />
-						{airportMode ? $t('adventures.departure_airport') : $t('adventures.start_location')}
-					</span>
+			<div class="flex flex-col">
+				<label class="field-label flex items-center gap-2" for="search-start-location">
+					<PinIcon class="w-4 h-4 text-success" />
+					{airportMode ? $t('adventures.departure_airport') : $t('adventures.start_location')}
 				</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -771,17 +795,17 @@
 						type="text"
 						id="search-start-location"
 						bind:value={startSearchQuery}
-						on:input={handleStartSearchInput}
+						oninput={handleStartSearchInput}
 						placeholder={airportMode
 							? $t('adventures.airport_code_examples')
 							: $t('transportation.enter_from_location')}
-						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
+						class="input w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-success={selectedStartLocation}
 					/>
 					{#if startSearchQuery && !selectedStartLocation}
 						<button
 							class="absolute inset-y-0 right-0 pr-3 flex items-center"
-							on:click={() => {
+							onclick={() => {
 								startSearchQuery = '';
 								startSearchResults = [];
 							}}
@@ -808,10 +832,10 @@
 						{#each startSearchResults as result}
 							<button
 								class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-success/50 transition-colors"
-								on:click={() => selectStartSearchResult(result)}
+								onclick={() => selectStartSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-success mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-success mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -832,12 +856,10 @@
 			{/if}
 
 			<!-- End Location Search -->
-			<div class="form-control">
-				<label class="label" for="search-end-location">
-					<span class="label-text font-medium flex items-center gap-2">
-						<PinIcon class="w-4 h-4 text-error" />
-						{airportMode ? $t('adventures.arrival_airport') : $t('adventures.end_location')}
-					</span>
+			<div class="flex flex-col">
+				<label class="field-label flex items-center gap-2" for="search-end-location">
+					<PinIcon class="w-4 h-4 text-error" />
+					{airportMode ? $t('adventures.arrival_airport') : $t('adventures.end_location')}
 				</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -847,17 +869,17 @@
 						type="text"
 						id="search-end-location"
 						bind:value={endSearchQuery}
-						on:input={handleEndSearchInput}
+						oninput={handleEndSearchInput}
 						placeholder={airportMode
 							? $t('adventures.airport_code_examples')
 							: $t('transportation.enter_to_location')}
-						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
+						class="input w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-error={selectedEndLocation}
 					/>
 					{#if endSearchQuery && !selectedEndLocation}
 						<button
 							class="absolute inset-y-0 right-0 pr-3 flex items-center"
-							on:click={() => {
+							onclick={() => {
 								endSearchQuery = '';
 								endSearchResults = [];
 							}}
@@ -884,10 +906,10 @@
 						{#each endSearchResults as result}
 							<button
 								class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-error/50 transition-colors"
-								on:click={() => selectEndSearchResult(result)}
+								onclick={() => selectEndSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-error mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-error mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -920,7 +942,7 @@
 
 								<!-- Start Location -->
 								<div class="flex items-start gap-2">
-									<PinIcon class="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-success mt-0.5 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<p class="text-sm font-medium text-base-content/80 truncate">
 											{selectedStartLocation.name}
@@ -938,7 +960,7 @@
 
 								<!-- End Location -->
 								<div class="flex items-start gap-2">
-									<PinIcon class="w-4 h-4 text-error mt-0.5 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-error mt-0.5 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<p class="text-sm font-medium text-base-content/80 truncate">
 											{selectedEndLocation.name}
@@ -952,7 +974,7 @@
 									</div>
 								</div>
 							</div>
-							<button class="btn btn-ghost btn-sm" on:click={clearLocationSelection}>
+							<button class="btn btn-ghost btn-sm" onclick={clearLocationSelection}>
 								<ClearIcon class="w-4 h-4" />
 							</button>
 						</div>
@@ -961,10 +983,8 @@
 			{/if}
 		{:else}
 			<!-- Single Location Mode (Original) -->
-			<div class="form-control">
-				<label class="label" for="search-location">
-					<span class="label-text font-medium">{$t('adventures.search_location')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="search-location">{$t('adventures.search_location')}</label>
 				<div class="relative">
 					<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
 						<SearchIcon class="w-4 h-4 text-base-content/40" />
@@ -973,15 +993,15 @@
 						type="text"
 						id="search-location"
 						bind:value={searchQuery}
-						on:input={handleSearchInput}
+						oninput={handleSearchInput}
 						placeholder={$t('adventures.search_placeholder')}
-						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
+						class="input w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-primary={selectedLocation}
 					/>
 					{#if searchQuery && !selectedLocation}
 						<button
 							class="absolute inset-y-0 right-0 pr-3 flex items-center"
-							on:click={clearLocationSelection}
+							onclick={clearLocationSelection}
 						>
 							<ClearIcon class="w-4 h-4 text-base-content/40 hover:text-base-content" />
 						</button>
@@ -996,9 +1016,7 @@
 				</div>
 			{:else if searchResults.length > 0}
 				<div class="space-y-2">
-					<div class="label">
-						<span class="label-text text-sm font-medium">{$t('adventures.search_results')}</span>
-					</div>
+					<p class="field-hint text-sm">{$t('adventures.search_results')}</p>
 					{#if searchProvider}
 						<div class="text-xs text-base-content/60">
 							Source: {formatProviderLabel(searchProvider)}
@@ -1008,10 +1026,10 @@
 						{#each searchResults as result}
 							<button
 								class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-primary/50 transition-colors"
-								on:click={() => selectSearchResult(result)}
+								onclick={() => selectSearchResult(result)}
 							>
 								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+									<PinIcon class="w-4 h-4 text-primary mt-1 shrink-0" />
 									<div class="min-w-0 flex-1">
 										<div class="font-medium text-sm truncate">{result.name}</div>
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
@@ -1035,23 +1053,21 @@
 				<div class="divider divider-horizontal text-xs">{$t('adventures.or')}</div>
 			</div>
 
-			<button class="btn btn-outline gap-2 w-full" on:click={useCurrentLocation}>
+			<button class="btn btn-outline gap-2 w-full" onclick={useCurrentLocation}>
 				<LocationIcon class="w-4 h-4" />
 				{$t('adventures.use_current_location')}
 			</button>
 
 			{#if showDisplayNameInput && displayNamePosition === 'after'}
-				<div class="form-control">
-					<label class="label" for="location-display-after">
-						<span class="label-text font-medium">
-							{displayNameLabel || $t('adventures.location_display_name')}
-						</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="location-display-after"
+						>{displayNameLabel || $t('adventures.location_display_name')}</label
+					>
 					<input
 						type="text"
 						id="location-display-after"
 						bind:value={displayName}
-						class="input input-bordered bg-base-100/80 focus:bg-base-100"
+						class="input bg-base-100/80 focus:bg-base-100"
 						placeholder={displayNamePlaceholder || $t('adventures.enter_location_display_name')}
 					/>
 				</div>
@@ -1102,7 +1118,7 @@
 									</div>
 								{/if}
 							</div>
-							<button class="btn btn-ghost btn-sm" on:click={clearLocationSelection}>
+							<button class="btn btn-ghost btn-sm" onclick={clearLocationSelection}>
 								<ClearIcon class="w-4 h-4" />
 							</button>
 						</div>
@@ -1114,9 +1130,7 @@
 
 	<div class="space-y-4">
 		<div class="flex items-center justify-between">
-			<div class="label">
-				<span class="label-text font-medium">{$t('worldtravel.interactive_map')}</span>
-			</div>
+			<p class="field-hint">{$t('worldtravel.interactive_map')}</p>
 			{#if isReverseGeocoding}
 				<div class="flex items-center gap-2">
 					<span class="loading loading-spinner loading-sm"></span>

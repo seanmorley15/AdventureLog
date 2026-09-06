@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { goto } from '$app/navigation';
-	export let data: any;
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { openCommandPalette } from '$lib/search/palette';
 
@@ -20,17 +21,28 @@
 	import { themes } from '$lib';
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
-
-	let theme = '';
-	let query: string = '';
-	let isAboutModalOpen: boolean = false;
-	let isMac = false;
-
-	$: if ($page.url.pathname === '/search') {
-		query = $page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	interface Props {
+		data: any;
 	}
 
-	$: modifierHint = isMac ? '⌘K' : 'Ctrl+K';
+	let { data }: Props = $props();
+
+	let theme = $state('');
+	let query: string = $state('');
+	let isAboutModalOpen: boolean = $state(false);
+	let isMac = $state(false);
+	let settingsOpen = $state(false);
+	let settingsOpenUpward = $state(false);
+	let settingsMenuEl: HTMLDivElement | undefined = $state();
+
+	run(() => {
+		if ($page.url.pathname === '/search') {
+			query = $page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '';
+		}
+	});
+
+	let modifierHint = $derived(isMac ? '⌘K' : 'Ctrl+K');
 
 	function openSearch(initialQuery = '') {
 		openCommandPalette(initialQuery || query);
@@ -104,11 +116,34 @@
 	};
 
 	const submitUpdateTheme: SubmitFunction = ({ action }) => {
-		const theme = action.searchParams.get('theme');
-		if (theme) {
-			document.documentElement.setAttribute('data-theme', theme);
+		const nextTheme = action.searchParams.get('theme');
+		if (nextTheme) {
+			document.documentElement.setAttribute('data-theme', nextTheme);
 		}
 	};
+
+	function toggleSettingsMenu(event: MouseEvent) {
+		event.stopPropagation();
+		if (!settingsOpen) {
+			settingsOpenUpward = shouldFlipDropdownUp(settingsMenuEl);
+		}
+		settingsOpen = !settingsOpen;
+	}
+
+	function closeSettingsMenu(event: MouseEvent) {
+		if (!settingsOpen) return;
+		if (settingsMenuEl?.contains(event.target as Node)) return;
+		settingsOpen = false;
+	}
+
+	function handleSettingsKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') settingsOpen = false;
+	}
+
+	function openAbout() {
+		settingsOpen = false;
+		isAboutModalOpen = true;
+	}
 	// Navigation items for better organization
 	const navigationItems = [
 		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
@@ -120,20 +155,24 @@
 	];
 
 	const msPerDay = 1000 * 60 * 60 * 24;
-	$: subscription = data?.subscription;
-	$: cloudMode = data?.cloudMode;
-	$: hasAccess = data?.hasAccess ?? true;
-	$: trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
-	$: daysRemaining = trialEndsAt
-		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
-		: null;
-	$: isTrial = subscription?.status === 'trial';
-	$: hasScheduledSubscription = Boolean(subscription?.stripe_subscription_id);
-	$: showTrialCta = isTrial && !hasScheduledSubscription;
-	$: showExpiredCta = !hasAccess;
-	$: showFullNav = data?.user && (!cloudMode || hasAccess);
-	$: pendingInviteCount = data?.pendingInviteCount ?? 0;
+	let subscription = $derived(data?.subscription);
+	let cloudMode = $derived(data?.cloudMode);
+	let hasAccess = $derived(data?.hasAccess ?? true);
+	let trialEndsAt = $derived(
+		subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null
+	);
+	let daysRemaining = $derived(
+		trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay)) : null
+	);
+	let isTrial = $derived(subscription?.status === 'trial');
+	let hasScheduledSubscription = $derived(Boolean(subscription?.stripe_subscription_id));
+	let showTrialCta = $derived(isTrial && !hasScheduledSubscription);
+	let showExpiredCta = $derived(!hasAccess);
+	let showFullNav = $derived(data?.user && (!cloudMode || hasAccess));
+	let pendingInviteCount = $derived(data?.pendingInviteCount ?? 0);
 </script>
+
+<svelte:window onclick={closeSettingsMenu} onkeydown={handleSettingsKeydown} />
 
 {#if isAboutModalOpen}
 	<AboutModal on:close={() => (isAboutModalOpen = false)} />
@@ -146,7 +185,7 @@
 			<div tabindex="0" role="button" class="btn btn-ghost btn-square lg:hidden">
 				<Menu class="h-5 w-5" />
 			</div>
-			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<ul
 				tabindex="-1"
 				class="menu dropdown-content mt-3 z-[999] p-4 shadow-2xl bg-base-100 border border-base-300 rounded-2xl gap-2 w-80 max-h-[80vh] overflow-y-auto"
@@ -170,7 +209,7 @@
 										: undefined}
 								>
 									<span class="relative inline-flex shrink-0">
-										<svelte:component this={item.icon} class="w-5 h-5" />
+										<item.icon class="w-5 h-5" />
 										{#if item.path === '/collections' && pendingInviteCount > 0}
 											<span
 												class="absolute top-0 right-0 h-2 w-2 translate-x-1/3 -translate-y-1/3 rounded-full bg-error ring-2 ring-base-100"
@@ -196,7 +235,7 @@
 						<button
 							type="button"
 							class="btn btn-outline w-full justify-start gap-2"
-							on:click={() => openSearch()}
+							onclick={() => openSearch()}
 						>
 							<Magnify class="h-4 w-4 opacity-70" />
 							{$t('search.open_palette')}
@@ -206,12 +245,12 @@
 					<!-- Auth Buttons -->
 					<div class="space-y-2">
 						<li>
-							<button class="btn btn-primary w-full" on:click={() => goto('/login')}>
+							<button class="btn btn-primary w-full" onclick={() => goto('/login')}>
 								{$t('auth.login')}
 							</button>
 						</li>
 						<li>
-							<button class="btn btn-outline w-full" on:click={() => goto('/signup')}>
+							<button class="btn btn-outline w-full" onclick={() => goto('/signup')}>
 								{$t('auth.signup')}
 							</button>
 						</li>
@@ -245,7 +284,7 @@
 								: undefined}
 						>
 							<span class="relative inline-flex shrink-0">
-								<svelte:component this={item.icon} class="w-4 h-4" />
+								<item.icon class="w-4 h-4" />
 								{#if item.path === '/collections' && pendingInviteCount > 0}
 									<span
 										class="absolute top-0 right-0 h-2 w-2 translate-x-1/3 -translate-y-1/3 rounded-full bg-error ring-2 ring-base-100"
@@ -266,8 +305,8 @@
 		{#if showFullNav}
 			<button
 				type="button"
-				class="hidden lg:flex input input-bordered input-sm items-center gap-2 w-64 hover:w-80 transition-all duration-300 text-left"
-				on:click={() => openSearch()}
+				class="hidden lg:flex input input-sm items-center gap-2 w-64 text-left"
+				onclick={() => openSearch()}
 			>
 				<Magnify class="w-4 h-4 opacity-60 shrink-0" />
 				<span class="grow text-base-content/50 truncate">
@@ -279,10 +318,10 @@
 
 		{#if data.user && cloudMode && subscription}
 			{#if showExpiredCta}
-				<a href="/subscribe" class="btn btn-warning btn-sm">Access paused</a>
+				<a href="/subscribe" class="btn btn-warning btn-sm">{$t('navbar.access_paused')}</a>
 			{:else if showTrialCta}
 				<a href="/subscribe" class="btn btn-primary btn-sm">
-					Trial: {daysRemaining ?? 0}d left
+					{$t('navbar.trial_days_left', { values: { days: daysRemaining ?? 0 } })}
 				</a>
 			{/if}
 		{/if}
@@ -290,10 +329,10 @@
 		<!-- Auth Buttons (Desktop) -->
 		{#if !data.user}
 			<div class="hidden lg:flex gap-2">
-				<button class="btn btn-primary btn-sm" on:click={() => goto('/login')}>
+				<button class="btn btn-primary btn-sm" onclick={() => goto('/login')}>
 					{$t('auth.login')}
 				</button>
-				<button class="btn btn-neutral btn-sm" on:click={() => goto('/signup')}>
+				<button class="btn btn-neutral btn-sm" onclick={() => goto('/signup')}>
 					{$t('auth.signup')}
 				</button>
 			</div>
@@ -304,39 +343,48 @@
 			<Avatar user={data.user} cloudMode={data.cloudMode} />
 		{/if}
 
-		<!-- Settings Dropdown -->
-		<div class="dropdown dropdown-bottom dropdown-end z-[999]">
-			<div tabindex="0" role="button" class="btn btn-neutral-300 btn-sm btn-square">
+		<!-- Settings -->
+		<div
+			bind:this={settingsMenuEl}
+			class="dropdown dropdown-end z-[999]"
+			class:dropdown-open={settingsOpen}
+			class:dropdown-close={!settingsOpen}
+			class:dropdown-top={settingsOpenUpward}
+			class:dropdown-bottom={!settingsOpenUpward}
+		>
+			<button
+				type="button"
+				class="btn btn-neutral-300 btn-sm btn-square"
+				aria-haspopup="menu"
+				aria-expanded={settingsOpen}
+				onclick={toggleSettingsMenu}
+			>
 				<DotsHorizontal class="w-5 h-5" />
-			</div>
-			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+			</button>
 			<ul
-				tabindex="-1"
 				class="dropdown-content bg-base-100 border border-base-300 shadow-2xl z-[999] menu p-4 rounded-2xl w-80"
+				role="menu"
 			>
 				<!-- Quick Actions -->
 				<div class="space-y-2 mb-4">
-					<button
-						class="btn btn-ghost w-full justify-start gap-3"
-						on:click={() => (isAboutModalOpen = true)}
-					>
+					<button class="btn btn-ghost w-full justify-start gap-3" onclick={openAbout}>
 						{$t('navbar.about')}
 					</button>
 					<button
 						class="btn btn-ghost w-full justify-start gap-3"
-						on:click={() => (window.location.href = 'https://adventurelog.app')}
+						onclick={() => (window.location.href = 'https://adventurelog.app')}
 					>
 						{$t('navbar.documentation')}
 					</button>
 					<button
 						class="btn btn-ghost w-full justify-start gap-3"
-						on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}
+						onclick={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}
 					>
 						Discord
 					</button>
 					<button
 						class="btn btn-ghost w-full justify-start gap-3"
-						on:click={() => (window.location.href = 'https://seanmorley.com/sponsor')}
+						onclick={() => (window.location.href = 'https://seanmorley.com/sponsor')}
 					>
 						{$t('navbar.support')} 💖
 					</button>
@@ -352,9 +400,10 @@
 					</h3>
 					<form method="POST" use:enhance>
 						<select
-							class="select select-bordered select-sm w-full bg-base-100"
-							on:change={submitLocaleChange}
+							class="select select-sm w-full bg-base-100"
+							onchange={submitLocaleChange}
 							bind:value={$locale}
+							onmousedown={(e) => e.stopPropagation()}
 						>
 							{#each $locales as loc (loc)}
 								<option value={loc}>{languages[loc]}</option>
@@ -371,9 +420,10 @@
 					</h3>
 					<form method="POST" use:enhance={submitUpdateTheme}>
 						<select
-							class="select select-bordered select-sm w-full bg-base-100"
+							class="select select-sm w-full bg-base-100"
 							bind:value={theme}
-							on:change={submitThemeChange}
+							onchange={submitThemeChange}
+							onmousedown={(e) => e.stopPropagation()}
 						>
 							{#each themes as themeOption}
 								<option value={themeOption.name}>

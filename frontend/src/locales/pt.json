@@ -1277,9 +1277,27 @@
 				"overpass_features": "Usado para recomendações de mapa e como alternativa de recurso quando o Google está indisponível."
 			}
 		},
-		"invalid_code": "Código inválido"
+		"invalid_code": "Código inválido",
+		"download_backup": "Descarregar cópia de segurança",
+		"sessions_title": "Active Sessions",
+		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
+		"sessions_current": "This device",
+		"sessions_unknown_device": "Unknown device",
+		"sessions_signed_in": "Signed in",
+		"sessions_revoke": "Sign out",
+		"sessions_revoke_others": "Sign out other devices",
+		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
+		"sessions_empty": "No other active sessions.",
+		"sessions_revoked": "Session signed out.",
+		"sessions_others_revoked": "Other devices signed out.",
+		"sessions_revoke_error": "Could not sign out that session. Try again.",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
-	"settings_download_backup": "Descarregar cópia de segurança",
 	"share": {
 		"available": "Disponível",
 		"available_users": "Utilizadores disponíveis",

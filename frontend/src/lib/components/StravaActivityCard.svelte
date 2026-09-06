@@ -1,16 +1,31 @@
 <script lang="ts">
 	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import type { StravaActivity } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import { page } from '$app/state';
 
 	const dispatch = createEventDispatcher();
 
-	export let activity: StravaActivity;
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let downloadOnly: boolean = false;
-	export let importing: boolean = false;
-	export let provider: 'strava' | 'endurain' = 'strava';
+	interface Props {
+		activity: StravaActivity;
+		measurementSystem?: 'metric' | 'imperial';
+		downloadOnly?: boolean;
+		importing?: boolean;
+		provider?: 'strava' | 'endurain';
+	}
+
+	let {
+		activity,
+		measurementSystem = 'metric',
+		downloadOnly = false,
+		importing = false,
+		provider = 'strava'
+	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	interface SportConfig {
 		color: string;
@@ -43,16 +58,6 @@
 		return `${minutes}m ${secs}s`;
 	}
 
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
 	function formatPace(seconds: number, system: 'metric' | 'imperial'): string {
 		const minutes = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
@@ -74,22 +79,26 @@
 		dispatch('import', activity);
 	}
 
-	$: typeConfig = getTypeConfig(activity.sport_type);
-	$: distance =
+	let typeConfig = $derived(getTypeConfig(activity.sport_type));
+	let distance = $derived(
 		measurementSystem === 'metric'
 			? { value: activity.distance_km, unit: 'km' }
-			: { value: activity.distance_miles, unit: 'mi' };
-	$: speed =
+			: { value: activity.distance_miles, unit: 'mi' }
+	);
+	let speed = $derived(
 		measurementSystem === 'metric'
 			? { value: activity.average_speed_kmh, unit: 'km/h' }
-			: { value: activity.average_speed_mph, unit: 'mph' };
-	$: maxSpeed =
+			: { value: activity.average_speed_mph, unit: 'mph' }
+	);
+	let maxSpeed = $derived(
 		measurementSystem === 'metric'
 			? { value: activity.max_speed_kmh, unit: 'km/h' }
-			: { value: activity.max_speed_mph, unit: 'mph' };
-	$: elevation = convertElevation(activity.total_elevation_gain, measurementSystem);
-	$: paceSeconds =
-		measurementSystem === 'metric' ? activity.pace_per_km_seconds : activity.pace_per_mile_seconds;
+			: { value: activity.max_speed_mph, unit: 'mph' }
+	);
+	let elevation = $derived(convertElevation(activity.total_elevation_gain, measurementSystem));
+	let paceSeconds = $derived(
+		measurementSystem === 'metric' ? activity.pace_per_km_seconds : activity.pace_per_mile_seconds
+	);
 </script>
 
 <div class="card bg-base-50 border border-base-200 hover:shadow-md transition-shadow">
@@ -106,7 +115,8 @@
 						<span
 							>{formatDateInTimezone(
 								activity.start_date,
-								activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+								activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+								dateFormat
 							)} ({activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone})</span
 						>
 					</div>
@@ -135,7 +145,7 @@
 				{:else}
 					<button
 						type="button"
-						on:click={handleImportActivity}
+						onclick={handleImportActivity}
 						class="btn btn-success btn-sm btn-circle"
 						disabled={importing}
 						aria-label={$t('adventures.import_activity')}
@@ -153,7 +163,11 @@
 							</svg>
 						{/if}
 					</button>
-					<div class="dropdown dropdown-end">
+					<div
+						class="dropdown dropdown-end relative z-50"
+						role="group"
+						onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+					>
 						<div
 							tabindex="0"
 							role="button"
@@ -169,10 +183,10 @@
 								/>
 							</svg>
 						</div>
-						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-sm"
 						>
 							<li>
 								<a href={activity.export_gpx} target="_blank" rel="noopener noreferrer">

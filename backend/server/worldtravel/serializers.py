@@ -54,6 +54,13 @@ class RegionSerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     def get_num_cities(self, obj):
         return City.objects.filter(region=obj).count()
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        lat, lon = instance.resolved_lat_lon()
+        data['latitude'] = lat
+        data['longitude'] = lon
+        return data
+
 class CitySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     region_name = serializers.CharField(source='region.name', read_only=True)
     country_name = serializers.CharField(source='region.country.name', read_only=True
@@ -64,8 +71,8 @@ class CitySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
         read_only_fields = ['id', 'name', 'region', 'longitude', 'latitude', 'region_name', 'country_name']
 
 class VisitedRegionSerializer(CustomModelSerializer):
-    longitude = serializers.FloatField(source='region.longitude', read_only=True)
-    latitude = serializers.FloatField(source='region.latitude', read_only=True)
+    longitude = serializers.FloatField(source='region.longitude', read_only=True, allow_null=True)
+    latitude = serializers.FloatField(source='region.latitude', read_only=True, allow_null=True)
     name = serializers.CharField(source='region.name', read_only=True)
 
     class Meta:
@@ -74,8 +81,8 @@ class VisitedRegionSerializer(CustomModelSerializer):
         read_only_fields = ['user', 'id', 'longitude', 'latitude', 'name']
 
 class VisitedCitySerializer(CustomModelSerializer):
-    longitude = serializers.FloatField(source='city.longitude', read_only=True)
-    latitude = serializers.FloatField(source='city.latitude', read_only=True)
+    longitude = serializers.FloatField(source='city.longitude', read_only=True, allow_null=True)
+    latitude = serializers.FloatField(source='city.latitude', read_only=True, allow_null=True)
     name = serializers.CharField(source='city.name', read_only=True)
 
     class Meta:

@@ -11,35 +11,41 @@
 	import SortIcon from '~icons/mdi/sort';
 	import ShieldAccount from '~icons/mdi/shield-account';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	let users: User[] = data.props.users;
-	let searchQuery = '';
-	let sortBy: 'name' | 'recent' = 'name';
-	let filterStaff: 'all' | 'staff' = 'all';
-	let sidebarOpen = false;
+	let { data }: Props = $props();
 
-	$: filteredUsers = users
-		.filter((user) => {
-			if (filterStaff === 'staff' && !user.is_staff) return false;
-			const q = searchQuery.trim().toLowerCase();
-			if (!q) return true;
-			const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
-			return name.includes(q) || user.username.toLowerCase().includes(q);
-		})
-		.sort((a, b) => {
-			if (sortBy === 'recent') {
-				const aTime = a.date_joined ? new Date(a.date_joined).getTime() : 0;
-				const bTime = b.date_joined ? new Date(b.date_joined).getTime() : 0;
-				return bTime - aTime;
-			}
-			const aName = (a.first_name || a.username).toLowerCase();
-			const bName = (b.first_name || b.username).toLowerCase();
-			return aName.localeCompare(bName);
-		});
+	let users: User[] = $derived(data.props.users);
+	let searchQuery = $state('');
+	let sortBy: 'name' | 'recent' = $state('name');
+	let filterStaff: 'all' | 'staff' = $state('all');
+	let sidebarOpen = $state(false);
 
-	$: staffCount = users.filter((u) => u.is_staff).length;
-	$: hasActiveFilters = searchQuery.trim().length > 0 || filterStaff !== 'all';
+	let filteredUsers = $derived(
+		users
+			.filter((user) => {
+				if (filterStaff === 'staff' && !user.is_staff) return false;
+				const q = searchQuery.trim().toLowerCase();
+				if (!q) return true;
+				const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase();
+				return name.includes(q) || user.username.toLowerCase().includes(q);
+			})
+			.sort((a, b) => {
+				if (sortBy === 'recent') {
+					const aTime = a.date_joined ? new Date(a.date_joined).getTime() : 0;
+					const bTime = b.date_joined ? new Date(b.date_joined).getTime() : 0;
+					return bTime - aTime;
+				}
+				const aName = (a.first_name || a.username).toLowerCase();
+				const bName = (b.first_name || b.username).toLowerCase();
+				return aName.localeCompare(bName);
+			})
+	);
+
+	let staffCount = $derived(users.filter((u) => u.is_staff).length);
+	let hasActiveFilters = $derived(searchQuery.trim().length > 0 || filterStaff !== 'all');
 
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
@@ -67,7 +73,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4 min-w-0">
-							<button class="btn btn-ghost btn-square lg:hidden shrink-0" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden shrink-0" onclick={toggleSidebar}>
 								<FilterIcon class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3 min-w-0">
@@ -112,14 +118,14 @@
 							<input
 								type="text"
 								placeholder={$t('users.search_placeholder')}
-								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+								class="input w-full pl-10 pr-10 bg-base-100/80"
 								bind:value={searchQuery}
 							/>
 							{#if searchQuery.length > 0}
 								<button
 									type="button"
 									class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-									on:click={() => (searchQuery = '')}
+									onclick={() => (searchQuery = '')}
 								>
 									<ClearIcon class="w-4 h-4" />
 								</button>
@@ -132,11 +138,11 @@
 						<span class="text-sm font-medium text-base-content/60"
 							>{$t('worldtravel.filter_by')}:</span
 						>
-						<div class="tabs tabs-boxed bg-base-200">
+						<div class="tabs tabs-box bg-base-200">
 							<button
 								type="button"
 								class="tab tab-sm gap-1.5 {filterStaff === 'all' ? 'tab-active' : ''}"
-								on:click={() => (filterStaff = 'all')}
+								onclick={() => (filterStaff = 'all')}
 							>
 								<AccountGroup class="w-3.5 h-3.5" />
 								{$t('adventures.all')}
@@ -144,14 +150,14 @@
 							<button
 								type="button"
 								class="tab tab-sm gap-1.5 {filterStaff === 'staff' ? 'tab-active' : ''}"
-								on:click={() => (filterStaff = 'staff')}
+								onclick={() => (filterStaff = 'staff')}
 							>
 								<ShieldAccount class="w-3.5 h-3.5" />
 								{$t('settings.admin')}
 							</button>
 						</div>
 						{#if hasActiveFilters}
-							<button type="button" class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+							<button type="button" class="btn btn-ghost btn-xs gap-1" onclick={clearFilters}>
 								<ClearIcon class="w-3 h-3" />
 								{$t('worldtravel.clear_all')}
 							</button>
@@ -183,7 +189,7 @@
 						<p class="text-base-content/50 text-center max-w-md mb-4">
 							{$t('users.no_match_desc')}
 						</p>
-						<button type="button" class="btn btn-ghost btn-sm gap-2" on:click={clearFilters}>
+						<button type="button" class="btn btn-ghost btn-sm gap-2" onclick={clearFilters}>
 							<ClearIcon class="w-4 h-4" />
 							{$t('worldtravel.clear_filters')}
 						</button>
@@ -219,14 +225,14 @@
 							<button
 								type="button"
 								class="btn btn-sm join-item flex-1 {sortBy === 'name' ? 'btn-active' : ''}"
-								on:click={() => (sortBy = 'name')}
+								onclick={() => (sortBy = 'name')}
 							>
 								{$t('users.sort_name')}
 							</button>
 							<button
 								type="button"
 								class="btn btn-sm join-item flex-1 {sortBy === 'recent' ? 'btn-active' : ''}"
-								on:click={() => (sortBy = 'recent')}
+								onclick={() => (sortBy = 'recent')}
 							>
 								{$t('users.sort_recent')}
 							</button>
@@ -259,7 +265,7 @@
 					</p>
 
 					{#if hasActiveFilters}
-						<button type="button" class="btn btn-ghost w-full gap-2 mt-6" on:click={clearFilters}>
+						<button type="button" class="btn btn-ghost w-full gap-2 mt-6" onclick={clearFilters}>
 							<ClearIcon class="w-4 h-4" />
 							{$t('worldtravel.clear_filters')}
 						</button>

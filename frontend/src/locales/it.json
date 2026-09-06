@@ -819,7 +819,13 @@
 		"public_profile_left_collections": "Il tuo profilo ora è privato. \nSei stato rimosso da {count} raccolte condivise.",
 		"public_profile_private_confirm": "Rendere privato il tuo profilo ti rimuoverà da {shared} raccolte condivise e annullerà {invites} inviti in sospeso. \nContinuare?",
 		"public_profile_revoked_invites": "Annullati {count} inviti di ritiro in sospeso.",
-		"public_profile_sharing_warning": "Attualmente sei condiviso su {count} raccolte. \nRendere privato il tuo profilo ti rimuoverà da quelle raccolte."
+		"public_profile_sharing_warning": "Attualmente sei condiviso su {count} raccolte. \nRendere privato il tuo profilo ti rimuoverà da quelle raccolte.",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"checklist": {
 		"checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",
@@ -1296,7 +1302,6 @@
 		"my_locations": "Le mie posizioni",
 		"best_happened_at": "È successo meglio a"
 	},
-	"settings_download_backup": "Scarica il backup",
 	"invites": {
 		"accept": "Accettare",
 		"accept_failed": "Impossibile accettare l'invito",

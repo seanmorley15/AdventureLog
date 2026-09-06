@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
@@ -25,6 +27,7 @@
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
 	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
@@ -38,45 +41,36 @@
 		return marked(markdown) as string;
 	};
 
-	export let data: PageData;
-	console.log(data);
+	interface Props {
+		data: PageData;
+	}
 
-	let transportation: Transportation;
-	let currentSlide = 0;
+	let { data }: Props = $props();
+	const dateFormat = $derived(dateFormatFromUser(data.user));
+	$effect(() => {
+		console.log(data);
+	});
+
+	let transportation = $state<Transportation | undefined>(undefined);
+	let currentSlide = $state(0);
 
 	function goToSlide(index: number) {
 		currentSlide = index;
 	}
 
-	let notFound: boolean = false;
-	let mapCenter: [number, number] | null = null;
-	let attachmentGeojson: any = null;
-	let modalInitialIndex: number = 0;
-	let isImageModalOpen: boolean = false;
-	let isEditModalOpen: boolean = false;
-	let localTravelWindow: string | null = null;
-	let showLocalTripTime: boolean = false;
-	let mapBasemapType = normalizeBasemapType(data.user?.map_style);
-	let showImagePins = true;
-
-	$: imagePinGeoJson = transportation
-		? contentImagesToGeoJson(transportation.images, {
-				parentType: 'transportation',
-				parentId: transportation.id,
-				parentName: transportation.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON;
-	$: hasImagePins = imagePinGeoJson.features.length > 0;
-
-	$: transportationPriceLabel = transportation
-		? formatMoney(
-				toMoneyValue(
-					transportation.price,
-					transportation.price_currency,
-					data.user?.default_currency || DEFAULT_CURRENCY
-				)
-			)
-		: null;
+	let notFound: boolean = $state(false);
+	let mapCenter: [number, number] | null = $state(null);
+	let attachmentGeojson: any = $state(null);
+	let modalInitialIndex: number = $state(0);
+	let isImageModalOpen: boolean = $state(false);
+	let isEditModalOpen: boolean = $state(false);
+	let localTravelWindow: string | null = $state(null);
+	let showLocalTripTime: boolean = $state(false);
+	let mapBasemapType = $state(normalizeBasemapType(undefined));
+	$effect.pre(() => {
+		mapBasemapType = normalizeBasemapType(data.user?.map_style);
+	});
+	let showImagePins = $state(true);
 
 	function getTransportationIcon(type: string) {
 		if (type in TRANSPORTATION_TYPES_ICONS) {
@@ -110,9 +104,6 @@
 		}
 	});
 
-	$: mapCenter = transportation ? getMapCenter(transportation) : null;
-	$: attachmentGeojson = transportation ? collectAttachmentGeojson(transportation) : null;
-
 	function closeImageModal() {
 		isImageModalOpen = false;
 	}
@@ -141,9 +132,9 @@
 		const formatDate = (date: string | null, timezone: string | null) => {
 			if (!date) return '';
 			if (isAllDay(date)) {
-				return formatAllDayDate(date);
+				return formatAllDayDate(date, dateFormat);
 			}
-			return formatDateInTimezone(date, timezone);
+			return formatDateInTimezone(date, timezone, dateFormat);
 		};
 
 		if (start && end) {
@@ -301,22 +292,52 @@
 		return tz !== localTimeZone;
 	}
 
-	$: localTravelWindow = transportation
-		? formatLocalTravelWindow(
-				transportation.date,
-				transportation.end_date,
-				transportation.start_timezone,
-				transportation.end_timezone
-			)
-		: null;
-
-	$: showLocalTripTime = Boolean(
-		localTravelWindow &&
-		primaryTripTimezone(
-			transportation?.start_timezone ?? null,
-			transportation?.end_timezone ?? null
-		) !== localTimeZone
+	let imagePinGeoJson = $derived(
+		transportation
+			? contentImagesToGeoJson(transportation.images, {
+					parentType: 'transportation',
+					parentId: transportation.id,
+					parentName: transportation.name
+				})
+			: EMPTY_IMAGE_PIN_GEOJSON
 	);
+	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
+	let transportationPriceLabel = $derived(
+		transportation
+			? formatMoney(
+					toMoneyValue(
+						transportation.price,
+						transportation.price_currency,
+						data.user?.default_currency || DEFAULT_CURRENCY
+					)
+				)
+			: null
+	);
+	run(() => {
+		mapCenter = transportation ? getMapCenter(transportation) : null;
+	});
+	run(() => {
+		attachmentGeojson = transportation ? collectAttachmentGeojson(transportation) : null;
+	});
+	run(() => {
+		localTravelWindow = transportation
+			? formatLocalTravelWindow(
+					transportation.date,
+					transportation.end_date,
+					transportation.start_timezone,
+					transportation.end_timezone
+				)
+			: null;
+	});
+	run(() => {
+		showLocalTripTime = Boolean(
+			localTravelWindow &&
+			primaryTripTimezone(
+				transportation?.start_timezone ?? null,
+				transportation?.end_timezone ?? null
+			) !== localTimeZone
+		);
+	});
 </script>
 
 {#if notFound}
@@ -326,7 +347,7 @@
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
 				<h1 class="text-5xl font-bold text-primary mb-4">Transportation not found</h1>
 				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
-				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
+				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>
 			</div>
@@ -343,7 +364,7 @@
 	/>
 {/if}
 
-{#if isImageModalOpen}
+{#if isImageModalOpen && transportation}
 	<ImageDisplayModal
 		images={transportation.images}
 		initialIndex={modalInitialIndex}
@@ -365,7 +386,7 @@
 		<div class="fixed bottom-6 right-6 z-50">
 			<button
 				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-				on:click={() => (isEditModalOpen = true)}
+				onclick={() => (isEditModalOpen = true)}
 			>
 				<ClipboardList class="w-8 h-8" />
 			</button>
@@ -389,7 +410,7 @@
 					>
 						<button
 							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => openImageModal(i)}
+							onclick={() => openImageModal(i)}
 							aria-label={`View full image of ${transportation.name}`}
 						>
 							<ImageFrame source={image.source} className="w-full h-full">
@@ -473,9 +494,9 @@
 							<!-- Navigation arrows and current position -->
 							<div class="flex items-center justify-center gap-4 mb-3">
 								<button
-									on:click={() =>
+									onclick={() =>
 										goToSlide(
-											currentSlide > 0 ? currentSlide - 1 : transportation.images.length - 1
+											currentSlide > 0 ? currentSlide - 1 : (transportation?.images.length ?? 1) - 1
 										)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.previous_image')}
@@ -488,9 +509,9 @@
 								</div>
 
 								<button
-									on:click={() =>
+									onclick={() =>
 										goToSlide(
-											currentSlide < transportation.images.length - 1 ? currentSlide + 1 : 0
+											currentSlide < (transportation?.images.length ?? 1) - 1 ? currentSlide + 1 : 0
 										)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.next_image')}
@@ -504,7 +525,7 @@
 								<div class="flex justify-center gap-2 flex-wrap">
 									{#each transportation.images as _, i}
 										<button
-											on:click={() => goToSlide(i)}
+											onclick={() => goToSlide(i)}
 											class="btn btn-circle btn-xs transition-all duration-200"
 											class:btn-primary={i === currentSlide}
 											class:btn-outline={i !== currentSlide}
@@ -560,19 +581,16 @@
 									center={mapCenter}
 									zoom={13}
 								>
-									<div
-										slot="overlayControls"
-										let:map
-										let:fullscreenTarget
-										class="pointer-events-none absolute inset-0 z-20"
-									>
-										<MapTrackLayerControls bind:showImagePins {hasImagePins} />
-										<MapFloatingControls
-											{map}
-											{fullscreenTarget}
-											bind:basemapType={mapBasemapType}
-										/>
-									</div>
+									{#snippet overlayControls({ map, fullscreenTarget })}
+										<div class="pointer-events-none absolute inset-0 z-20">
+											<MapTrackLayerControls bind:showImagePins {hasImagePins} />
+											<MapFloatingControls
+												{map}
+												{fullscreenTarget}
+												bind:basemapType={mapBasemapType}
+											/>
+										</div>
+									{/snippet}
 
 									{#if hasOriginCoordinates(transportation)}
 										<DefaultMarker
@@ -706,7 +724,7 @@
 							<!-- Departure/Arrival -->
 							{#if transportation.date || transportation.end_date}
 								<div class="flex items-start gap-3">
-									<CalendarRange class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CalendarRange class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="w-full space-y-2">
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.dates')}</p>
 										<div class="space-y-2">
@@ -718,11 +736,12 @@
 														</p>
 														<p class="text-base font-semibold">
 															{#if isAllDay(transportation.date)}
-																{formatAllDayDate(transportation.date)}
+																{formatAllDayDate(transportation.date, dateFormat)}
 															{:else}
 																{formatDateInTimezone(
 																	transportation.date,
-																	transportation.start_timezone
+																	transportation.start_timezone,
+																	dateFormat
 																)}
 															{/if}
 														</p>
@@ -751,11 +770,12 @@
 														</p>
 														<p class="text-base font-semibold">
 															{#if isAllDay(transportation.end_date)}
-																{formatAllDayDate(transportation.end_date)}
+																{formatAllDayDate(transportation.end_date, dateFormat)}
 															{:else}
 																{formatDateInTimezone(
 																	transportation.end_date,
-																	transportation.end_timezone ?? transportation.start_timezone
+																	transportation.end_timezone ?? transportation.start_timezone,
+																	dateFormat
 																)}
 															{/if}
 														</p>
@@ -806,7 +826,7 @@
 
 							<!-- Type -->
 							<div class="flex items-start gap-3">
-								<span class="text-xl mt-1 flex-shrink-0"
+								<span class="text-xl mt-1 shrink-0"
 									>{getTransportationIcon(transportation.type)}</span
 								>
 								<div>
@@ -818,7 +838,7 @@
 							<!-- Flight Number -->
 							{#if transportation.flight_number}
 								<div class="flex items-start gap-3">
-									<CardAccountDetails class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CardAccountDetails class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">
 											{$t('transportation.flight_number')}
@@ -831,7 +851,7 @@
 							<!-- Route Codes -->
 							{#if getRouteCodes(transportation)}
 								<div class="flex items-start gap-3">
-									<MapMarker class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<MapMarker class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">
 											{$t('transportation.codes') ?? 'Codes'}
@@ -844,7 +864,7 @@
 							<!-- Distance -->
 							{#if transportation.distance}
 								<div class="flex items-start gap-3">
-									<MapMarkerDistanceIcon class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<MapMarkerDistanceIcon class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">
 											{$t('adventures.distance') ?? 'Distance'}
@@ -857,7 +877,7 @@
 							<!-- Price -->
 							{#if transportationPriceLabel}
 								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.price')}</p>
 										<p class="text-base font-semibold">{transportationPriceLabel}</p>
@@ -868,7 +888,7 @@
 							<!-- Link -->
 							{#if transportation.link}
 								<div class="flex items-start gap-3">
-									<OpenInNew class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<OpenInNew class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="flex-1">
 										<p class="font-semibold text-sm opacity-70 mb-1">{$t('adventures.link')}</p>
 										<a
@@ -895,7 +915,7 @@
 								{#each transportation.images as image, i}
 									<button
 										class="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity w-full"
-										on:click={() => openImageModal(i)}
+										onclick={() => openImageModal(i)}
 									>
 										<ImageFrame source={image.source} className="w-full h-full">
 											<img

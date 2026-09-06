@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
@@ -13,20 +15,27 @@
 	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
 	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
 	import { t } from 'svelte-i18n';
-	import { get as getStore } from 'svelte/store';
 	import type { Collection, Location, User } from '$lib/types';
+	import DateInput from '$lib/components/shared/DateInput.svelte';
 
-	export let collection: Collection;
-	export let user: User | null = null;
-	export let canModify: boolean = false;
-	// Allow disabling/enabling clustering for markers
-	export let clusterEnabled: boolean = false;
-	export let clusterOptions: any = { radius: 300, maxZoom: 8, minPoints: 2 };
-
-	let basemapType = 'default';
-	$: if (user && basemapType === 'default' && user.map_style) {
-		basemapType = normalizeBasemapType(user.map_style);
+	interface Props {
+		collection: Collection;
+		user?: User | null;
+		canModify?: boolean;
+		// Allow disabling/enabling clustering for markers
+		clusterEnabled?: boolean;
+		clusterOptions?: any;
 	}
+
+	let {
+		collection = $bindable(),
+		user = null,
+		canModify = false,
+		clusterEnabled = false,
+		clusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 }
+	}: Props = $props();
+
+	let basemapType = $state('default');
 
 	type MarkerType = 'location' | 'lodging' | 'transportation';
 	type VisitStatus = 'visited' | 'planned';
@@ -54,33 +63,32 @@
 	};
 
 	// Filter state
-	let showFilters = false;
-	let showLocations = true;
-	let showLodging = true;
-	let showTransportation = true;
-	let showVisited = true;
-	let showPlanned = true;
-	let showLines = true;
-	let showTrails = true;
-	let showImagePins = true;
-	let startDateFilter = '';
-	let endDateFilter = '';
-	let selectedCategories: Set<string> = new Set();
-	let searchQuery = '';
+	let showFilters = $state(false);
+	let showLocations = $state(true);
+	let showLodging = $state(true);
+	let showTransportation = $state(true);
+	let showVisited = $state(true);
+	let showPlanned = $state(true);
+	let showLines = $state(true);
+	let showTrails = $state(true);
+	let showImagePins = $state(true);
+	let startDateFilter = $state('');
+	let endDateFilter = $state('');
+	let selectedCategories: Set<string> = $state(new Set());
+	let searchQuery = $state('');
 
 	// Map state for zoom control
-	let mapZoom = 8;
-	let mapCenterCoords: [number, number] = [0, 0];
+	let mapZoom = $state(8);
+	let mapCenterCoords: [number, number] = $state([0, 0]);
 
 	// Creation state
-	let createModalOpen = false;
-	let initialLatLng: { lat: number; lng: number } | null = null;
-	let newMarker: { lngLat: { lng: number; lat: number } } | null = null;
-	let newLatitude: number | null = null;
-	let newLongitude: number | null = null;
+	let createModalOpen = $state(false);
+	let initialLatLng: { lat: number; lng: number } | null = $state(null);
+	let newMarker: { lngLat: { lng: number; lat: number } } | null = $state(null);
+	let newLatitude: number | null = $state(null);
+	let newLongitude: number | null = $state(null);
 
 	const defaultClusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 };
-	$: resolvedClusterOptions = clusterOptions || defaultClusterOptions;
 
 	// Helper functions
 	function parseNumber(value: unknown): number | null {
@@ -101,10 +109,6 @@
 		if (!parsed) return '';
 		return new Date(parsed).toISOString().split('T')[0];
 	}
-
-	// Normalize collection start/end dates to YYYY-MM-DD for cross-browser compatibility (Firefox is strict)
-	$: collectionStartDateISO = formatShortDate(collection?.start_date || null) || undefined;
-	$: collectionEndDateISO = formatShortDate(collection?.end_date || null) || undefined;
 
 	type FilterConfig = {
 		showLocations: boolean;
@@ -414,51 +418,6 @@
 		return { type: 'FeatureCollection', features };
 	}
 
-	// Build features and apply filters
-	$: categoryOptions = Array.from(
-		(collection?.locations || []).reduce((counts, loc: any) => {
-			const name = loc?.category?.display_name;
-			if (name) counts.set(name, (counts.get(name) || 0) + 1);
-			return counts;
-		}, new Map<string, number>())
-	)
-		.sort((a: [string, number], b: [string, number]) => b[1] - a[1] || a[0].localeCompare(b[0]))
-		.map(([name]: [string, number]) => name);
-
-	$: locationFeatures = (collection?.locations || [])
-		.map(locationToFeature)
-		.filter(Boolean) as MarkerFeature[];
-
-	$: lodgingFeatures = (collection?.lodging || [])
-		.map(lodgingToFeature)
-		.filter(Boolean) as MarkerFeature[];
-
-	$: transportationFeatures = (collection?.transportations || [])
-		.flatMap(transportationToFeatures)
-		.filter(Boolean) as MarkerFeature[];
-
-	$: allFeatures = [...locationFeatures, ...lodgingFeatures, ...transportationFeatures];
-	$: linesGeoJson = collectLinesGeojson(collection, {
-		startDate: startDateFilter || collection?.start_date || '',
-		endDate: endDateFilter || collection?.end_date || ''
-	});
-	$: transportationLinesGeoJson = showTransportation
-		? collectTransportationLinesGeojson(
-				(collection?.transportations || []).filter((t) =>
-					transportationMatchesFilters(t, {
-						startDate: startDateFilter,
-						endDate: endDateFilter,
-						search: searchQuery.trim()
-					})
-				)
-			)
-		: null;
-	$: trailsGeoJson = collectTrailGeojson(collection);
-	$: trailCount = (collection?.locations || []).reduce(
-		(count, loc) => count + (loc.trails || []).filter((trail) => trail.geojson).length,
-		0
-	);
-
 	function matchesFilters(
 		feature: MarkerFeature,
 		filters: FilterConfig & { search: string }
@@ -489,57 +448,6 @@
 		if (!isWithinDateRange(props.date ?? null, filters.startDate, filters.endDate)) return false;
 		return true;
 	}
-
-	$: filteredFeatures = allFeatures.filter((feature) =>
-		matchesFilters(feature, {
-			showLocations,
-			showLodging,
-			showTransportation,
-			showVisited,
-			showPlanned,
-			startDate: startDateFilter,
-			endDate: endDateFilter,
-			categories: selectedCategories,
-			search: searchQuery.trim()
-		})
-	);
-
-	// Auto-zoom when search results change
-	$: if (searchQuery.trim() && filteredFeatures.length > 0) {
-		zoomToFilteredFeatures();
-	}
-
-	$: markerGeoJson = {
-		type: 'FeatureCollection',
-		features: filteredFeatures
-	} as MarkerFeatureCollection;
-
-	// Stats
-	$: visiblePinCount = filteredFeatures.length;
-	$: totalPinCount = allFeatures.length;
-	$: totalLocations = locationFeatures.length;
-	$: visitedCount = locationFeatures.filter((f) => f.properties.visitStatus === 'visited').length;
-	$: plannedCount = locationFeatures.filter((f) => f.properties.visitStatus === 'planned').length;
-	$: filteredVisitedCount = filteredFeatures.filter(
-		(f) => f.properties.type === 'location' && f.properties.visitStatus === 'visited'
-	).length;
-	$: filteredPlannedCount = filteredFeatures.filter(
-		(f) => f.properties.type === 'location' && f.properties.visitStatus === 'planned'
-	).length;
-	$: hasActiveCategoryFilter = selectedCategories.size > 0;
-	$: hasActiveDateFilter = Boolean(startDateFilter || endDateFilter);
-	$: hasActiveSearchFilter = Boolean(searchQuery.trim());
-	$: filtersPristine =
-		showLocations &&
-		showLodging &&
-		showTransportation &&
-		showVisited &&
-		showPlanned &&
-		showLines &&
-		showTrails &&
-		!hasActiveCategoryFilter &&
-		!hasActiveDateFilter &&
-		!hasActiveSearchFilter;
 
 	function zoomToFilteredFeatures() {
 		if (filteredFeatures.length === 0) return;
@@ -578,20 +486,6 @@
 			else mapZoom = 10;
 		}
 	}
-	$: imagePinGeoJson = collectCollectionImageGeoJson(collection);
-	$: imagePinCount = imagePinGeoJson.features.length;
-
-	$: mapKey = `${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${Array.from(
-		selectedCategories
-	)
-		.sort()
-		.join('|')}`;
-	$: mapCenter =
-		mapCenterCoords[0] !== 0 || mapCenterCoords[1] !== 0
-			? mapCenterCoords
-			: markerGeoJson.features.length
-				? markerGeoJson.features[0].geometry.coordinates
-				: ([0, 0] as [number, number]);
 
 	function handleMapClick(e: CustomEvent<{ lngLat: { lng: number; lat: number } }>) {
 		newMarker = { lngLat: e.detail.lngLat };
@@ -683,7 +577,6 @@
 	}
 
 	function getTypeLabel(props: MarkerProperties) {
-		const $t = getStore(t);
 		if (props.type === 'lodging') return $t('adventures.lodging');
 		if (props.type === 'transportation') {
 			return props.transportRole === 'origin'
@@ -717,11 +610,148 @@
 			? `btn btn-xs h-7 min-h-7 ${activeClass} gap-1 font-normal px-2.5`
 			: 'btn btn-xs h-7 min-h-7 btn-ghost border border-base-300/80 opacity-70 gap-1 font-normal px-2.5';
 	}
+	run(() => {
+		if (user && basemapType === 'default' && user.map_style) {
+			basemapType = normalizeBasemapType(user.map_style);
+		}
+	});
+	let resolvedClusterOptions = $derived(clusterOptions || defaultClusterOptions);
+	// Normalize collection start/end dates to YYYY-MM-DD for cross-browser compatibility (Firefox is strict)
+	let collectionStartDateISO = $derived(
+		formatShortDate(collection?.start_date || null) || undefined
+	);
+	let collectionEndDateISO = $derived(formatShortDate(collection?.end_date || null) || undefined);
+	// Build features and apply filters
+	let categoryOptions = $derived(
+		Array.from(
+			(collection?.locations || []).reduce((counts, loc: any) => {
+				const name = loc?.category?.display_name;
+				if (name) counts.set(name, (counts.get(name) || 0) + 1);
+				return counts;
+			}, new Map<string, number>())
+		)
+			.sort((a: [string, number], b: [string, number]) => b[1] - a[1] || a[0].localeCompare(b[0]))
+			.map(([name]: [string, number]) => name)
+	);
+	let locationFeatures = $derived(
+		(collection?.locations || []).map(locationToFeature).filter(Boolean) as MarkerFeature[]
+	);
+	let lodgingFeatures = $derived(
+		(collection?.lodging || []).map(lodgingToFeature).filter(Boolean) as MarkerFeature[]
+	);
+	let transportationFeatures = $derived(
+		(collection?.transportations || [])
+			.flatMap(transportationToFeatures)
+			.filter(Boolean) as MarkerFeature[]
+	);
+	let allFeatures = $derived([...locationFeatures, ...lodgingFeatures, ...transportationFeatures]);
+	let linesGeoJson = $derived(
+		collectLinesGeojson(collection, {
+			startDate: startDateFilter || collection?.start_date || '',
+			endDate: endDateFilter || collection?.end_date || ''
+		})
+	);
+	let transportationLinesGeoJson = $derived(
+		showTransportation
+			? collectTransportationLinesGeojson(
+					(collection?.transportations || []).filter((t) =>
+						transportationMatchesFilters(t, {
+							startDate: startDateFilter,
+							endDate: endDateFilter,
+							search: searchQuery.trim()
+						})
+					)
+				)
+			: null
+	);
+	let trailsGeoJson = $derived(collectTrailGeojson(collection));
+	let trailCount = $derived(
+		(collection?.locations || []).reduce(
+			(count, loc) => count + (loc.trails || []).filter((trail) => trail.geojson).length,
+			0
+		)
+	);
+	let filteredFeatures = $derived(
+		allFeatures.filter((feature) =>
+			matchesFilters(feature, {
+				showLocations,
+				showLodging,
+				showTransportation,
+				showVisited,
+				showPlanned,
+				startDate: startDateFilter,
+				endDate: endDateFilter,
+				categories: selectedCategories,
+				search: searchQuery.trim()
+			})
+		)
+	);
+	// Auto-zoom when search results change
+	run(() => {
+		if (searchQuery.trim() && filteredFeatures.length > 0) {
+			zoomToFilteredFeatures();
+		}
+	});
+	let markerGeoJson = $derived({
+		type: 'FeatureCollection',
+		features: filteredFeatures
+	} as MarkerFeatureCollection);
+	// Stats
+	let visiblePinCount = $derived(filteredFeatures.length);
+	let totalPinCount = $derived(allFeatures.length);
+	let totalLocations = $derived(locationFeatures.length);
+	let visitedCount = $derived(
+		locationFeatures.filter((f) => f.properties.visitStatus === 'visited').length
+	);
+	let plannedCount = $derived(
+		locationFeatures.filter((f) => f.properties.visitStatus === 'planned').length
+	);
+	let filteredVisitedCount = $derived(
+		filteredFeatures.filter(
+			(f) => f.properties.type === 'location' && f.properties.visitStatus === 'visited'
+		).length
+	);
+	let filteredPlannedCount = $derived(
+		filteredFeatures.filter(
+			(f) => f.properties.type === 'location' && f.properties.visitStatus === 'planned'
+		).length
+	);
+	let hasActiveCategoryFilter = $derived(selectedCategories.size > 0);
+	let hasActiveDateFilter = $derived(Boolean(startDateFilter || endDateFilter));
+	let hasActiveSearchFilter = $derived(Boolean(searchQuery.trim()));
+	let filtersPristine = $derived(
+		showLocations &&
+			showLodging &&
+			showTransportation &&
+			showVisited &&
+			showPlanned &&
+			showLines &&
+			showTrails &&
+			!hasActiveCategoryFilter &&
+			!hasActiveDateFilter &&
+			!hasActiveSearchFilter
+	);
+	let imagePinGeoJson = $derived(collectCollectionImageGeoJson(collection));
+	let imagePinCount = $derived(imagePinGeoJson.features.length);
+	let mapKey = $derived(
+		`${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${Array.from(
+			selectedCategories
+		)
+			.sort()
+			.join('|')}`
+	);
+	let mapCenter = $derived(
+		mapCenterCoords[0] !== 0 || mapCenterCoords[1] !== 0
+			? mapCenterCoords
+			: markerGeoJson.features.length
+				? markerGeoJson.features[0].geometry.coordinates
+				: ([0, 0] as [number, number])
+	);
 </script>
 
 <!-- Add to Collection CTA (compact) -->
 {#if canModify}
-	<div class="card bg-base-100 shadow-sm mb-3 border border-base-200">
+	<div class="card bg-base-100 shadow-xs mb-3 border border-base-200">
 		<div class="card-body py-3 px-4 gap-2">
 			<div class="flex items-center justify-between gap-3">
 				<div class="flex items-center gap-2 min-w-0">
@@ -740,12 +770,12 @@
 					</div>
 				</div>
 				<div class="flex items-center gap-2">
-					<button type="button" class="btn btn-primary btn-xs" on:click={openCreateModal}>
+					<button type="button" class="btn btn-primary btn-xs" onclick={openCreateModal}>
 						<Plus class="w-4 h-4" />
 						{$t('adventures.add')}
 					</button>
 					{#if newMarker}
-						<button type="button" class="btn btn-ghost btn-xs" on:click={clearNewMarker}>
+						<button type="button" class="btn btn-ghost btn-xs" onclick={clearNewMarker}>
 							<Clear class="w-4 h-4" />
 							{$t('adventures.clear')}
 						</button>
@@ -767,12 +797,12 @@
 						<button
 							type="button"
 							class="btn btn-primary btn-xxs sm:btn-xs"
-							on:click={openCreateModal}
+							onclick={openCreateModal}
 						>
 							<Plus class="w-3 h-3 sm:w-4 sm:h-4" />
 							{$t('adventures.add_here')}
 						</button>
-						<button type="button" class="btn btn-ghost btn-xxs sm:btn-xs" on:click={clearNewMarker}>
+						<button type="button" class="btn btn-ghost btn-xxs sm:btn-xs" onclick={clearNewMarker}>
 							<Clear class="w-3 h-3 sm:w-4 sm:h-4" />
 						</button>
 					</div>
@@ -790,7 +820,7 @@
 			<button
 				type="button"
 				class="btn btn-sm btn-ghost gap-2 min-w-0 flex-1 justify-start px-2"
-				on:click={() => (showFilters = !showFilters)}
+				onclick={() => (showFilters = !showFilters)}
 			>
 				<span
 					class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary shrink-0"
@@ -810,7 +840,7 @@
 					{visiblePinCount}/{totalPinCount}
 				</div>
 				{#if !filtersPristine}
-					<button type="button" class="btn btn-xs btn-ghost" on:click={resetFilters}>
+					<button type="button" class="btn btn-xs btn-ghost" onclick={resetFilters}>
 						{$t('adventures.reset_filters')}
 					</button>
 				{/if}
@@ -821,7 +851,7 @@
 		{#if showFilters}
 			<div class="divider my-1"></div>
 			<div class="space-y-3">
-				<label class="input input-bordered input-xs flex items-center gap-2 h-8 min-h-8">
+				<label class="input input-xs flex items-center gap-2 h-8 min-h-8">
 					<SearchIcon class="h-3.5 w-3.5 opacity-70 shrink-0" />
 					<input
 						type="text"
@@ -833,7 +863,7 @@
 						<button
 							type="button"
 							class="btn btn-ghost btn-xs btn-circle h-5 w-5 min-h-5"
-							on:click={() => (searchQuery = '')}
+							onclick={() => (searchQuery = '')}
 							aria-label={$t('adventures.clear_search')}
 						>
 							✕
@@ -850,7 +880,7 @@
 							<button
 								type="button"
 								class={filterChipClass(showVisited, 'btn-success')}
-								on:click={() => (showVisited = !showVisited)}
+								onclick={() => (showVisited = !showVisited)}
 							>
 								✓ {$t('adventures.visited')}
 								<span class="opacity-80">({filteredVisitedCount})</span>
@@ -858,7 +888,7 @@
 							<button
 								type="button"
 								class={filterChipClass(showPlanned, 'btn-info')}
-								on:click={() => (showPlanned = !showPlanned)}
+								onclick={() => (showPlanned = !showPlanned)}
 							>
 								○ {$t('adventures.planned')}
 								<span class="opacity-80">({filteredPlannedCount})</span>
@@ -874,7 +904,7 @@
 							<button
 								type="button"
 								class={filterChipClass(showLocations, 'btn-primary')}
-								on:click={() => (showLocations = !showLocations)}
+								onclick={() => (showLocations = !showLocations)}
 							>
 								📍 {$t('locations.locations')}
 								<span class="opacity-80">({locationFeatures.length})</span>
@@ -883,7 +913,7 @@
 								<button
 									type="button"
 									class={filterChipClass(showLodging, 'btn-secondary')}
-									on:click={() => (showLodging = !showLodging)}
+									onclick={() => (showLodging = !showLodging)}
 								>
 									🏨 {$t('adventures.lodging')}
 									<span class="opacity-80">({lodgingFeatures.length})</span>
@@ -893,7 +923,7 @@
 								<button
 									type="button"
 									class={filterChipClass(showTransportation, 'btn-accent')}
-									on:click={() => (showTransportation = !showTransportation)}
+									onclick={() => (showTransportation = !showTransportation)}
 								>
 									✈️ {$t('adventures.transportation')}
 									<span class="opacity-80">({transportationFeatures.length / 2})</span>
@@ -913,7 +943,7 @@
 								<button
 									type="button"
 									class="btn btn-ghost btn-xs h-6 min-h-6"
-									on:click={() => (selectedCategories = new Set())}
+									onclick={() => (selectedCategories = new Set())}
 								>
 									{$t('adventures.clear')}
 								</button>
@@ -926,7 +956,7 @@
 									class="badge badge-sm h-6 {selectedCategories.has(category)
 										? 'badge-primary'
 										: 'badge-ghost border border-base-300/80'} cursor-pointer"
-									on:click={() => toggleCategory(category)}
+									onclick={() => toggleCategory(category)}
 								>
 									{category}
 								</button>
@@ -941,21 +971,21 @@
 							{$t('adventures.dates')}
 						</p>
 						<div class="flex gap-2">
-							<input
-								type="date"
+							<DateInput
 								bind:value={startDateFilter}
-								class="input input-xs input-bordered flex-1 min-w-0"
+								size="xs"
 								min={collectionStartDateISO}
 								max={collectionEndDateISO}
-								aria-label={$t('adventures.start_date')}
+								clearable={true}
+								placeholder={$t('adventures.start_date')}
 							/>
-							<input
-								type="date"
+							<DateInput
 								bind:value={endDateFilter}
-								class="input input-xs input-bordered flex-1 min-w-0"
+								size="xs"
 								min={collectionStartDateISO}
 								max={collectionEndDateISO}
-								aria-label={$t('adventures.end_date')}
+								clearable={true}
+								placeholder={$t('adventures.end_date')}
 							/>
 						</div>
 					</div>
@@ -968,7 +998,7 @@
 							<button
 								type="button"
 								class={filterChipClass(showLines, 'btn-neutral')}
-								on:click={() => (showLines = !showLines)}
+								onclick={() => (showLines = !showLines)}
 							>
 								🗺️ {$t('adventures.gpx_routes')}
 							</button>
@@ -979,7 +1009,7 @@
 										showTrails,
 										'bg-[#a855f7] hover:bg-[#9333ea] border-[#a855f7] text-white'
 									)}
-									on:click={() => (showTrails = !showTrails)}
+									onclick={() => (showTrails = !showTrails)}
 								>
 									🥾 {$t('adventures.trails')}
 									<span class="opacity-80">({trailCount})</span>
@@ -992,7 +1022,7 @@
 										showImagePins,
 										'bg-rose-500 hover:bg-rose-600 border-rose-500 text-white'
 									)}
-									on:click={() => (showImagePins = !showImagePins)}
+									onclick={() => (showImagePins = !showImagePins)}
 								>
 									📷 {$t('map.photos')}
 									<span class="opacity-80">({imagePinCount})</span>
@@ -1019,7 +1049,7 @@
 		mapClickEnabled={canModify}
 		on:mapClick={handleMapClick}
 	>
-		<svelte:fragment slot="marker" let:markerProps let:markerLngLat let:isActive let:setActive>
+		{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
 			{#if markerProps && markerLngLat}
 				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
 					<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
@@ -1032,15 +1062,15 @@
 							class:cursor-default={!canNavigate(markerProps)}
 							role="button"
 							tabindex="0"
-							on:mouseenter={() => setActive(true)}
-							on:mouseleave={() => setActive(false)}
-							on:focus={() => setActive(true)}
-							on:blur={() => setActive(false)}
-							on:click={(e) => {
+							onmouseenter={() => setActive(true)}
+							onmouseleave={() => setActive(false)}
+							onfocus={() => setActive(true)}
+							onblur={() => setActive(false)}
+							onclick={(e) => {
 								e.stopPropagation();
 								if (canNavigate(markerProps)) goto(getNavigationUrl(markerProps));
 							}}
-							on:keydown={(e) => {
+							onkeydown={(e) => {
 								if ((e.key === 'Enter' || e.key === ' ') && canNavigate(markerProps)) {
 									e.preventDefault();
 									e.stopPropagation();
@@ -1058,7 +1088,7 @@
 							class:pointer-events-auto={isActive}
 						>
 							<div
-								class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-56 max-w-80"
+								class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-56 max-w-80"
 							>
 								<div class="card-body gap-3">
 									<div class="space-y-2">
@@ -1091,7 +1121,7 @@
 										<div class="card-actions">
 											<button
 												class="btn btn-xs btn-primary"
-												on:click|stopPropagation={() => goto(getNavigationUrl(markerProps))}
+												onclick={stopPropagation(() => goto(getNavigationUrl(markerProps)))}
 											>
 												{$t('adventures.open_details')}
 											</button>
@@ -1103,9 +1133,9 @@
 					</div>
 				</Marker>
 			{/if}
-		</svelte:fragment>
+		{/snippet}
 
-		<svelte:fragment slot="overlays">
+		{#snippet overlays()}
 			{#if showLines && linesGeoJson}
 				<GeoJSON id={`collection-lines-${mapKey}`} data={linesGeoJson} generateId>
 					<LineLayer
@@ -1161,7 +1191,7 @@
 			{/if}
 
 			<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
-		</svelte:fragment>
+		{/snippet}
 	</FullMap>
 </div>
 

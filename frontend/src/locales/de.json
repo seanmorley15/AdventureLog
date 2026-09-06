@@ -819,7 +819,13 @@
 			"summary_personal_desc": "Mit Ihrem Konto verknüpft",
 			"update": "Aktualisieren"
 		},
-		"invalid_code": "Ungültiger Code"
+		"invalid_code": "Ungültiger Code",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"checklist": {
 		"checklist_delete_error": "Fehler beim Löschen der Checkliste",
@@ -1296,7 +1302,6 @@
 		"my_locations": "Meine Standorte",
 		"best_happened_at": "Das Beste ist passiert bei"
 	},
-	"settings_download_backup": "Sicherung herunterladen",
 	"invites": {
 		"accept": "Akzeptieren",
 		"accept_failed": "Fehler beim Akzeptieren der Einladung",

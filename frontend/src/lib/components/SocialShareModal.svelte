@@ -14,28 +14,35 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let type: 'collection' | 'location';
-	export let id: string;
-	export let name: string;
-	export let isPublic: boolean = false;
+	interface Props {
+		type: 'collection' | 'location';
+		id: string;
+		name: string;
+		isPublic?: boolean;
+	}
+
+	let { type, id, name, isPublic = false }: Props = $props();
 
 	type Aspect = 'square' | 'story' | 'landscape';
 
 	const aspects: Aspect[] = ['square', 'story', 'landscape'];
 
 	let modal: HTMLDialogElement;
-	let selectedAspect: Aspect = 'square';
-	let previewLoading = true;
-	let previewError = false;
-	let copiedLink = false;
-	let canNativeShare = false;
+	let selectedAspect: Aspect = $state('square');
+	let previewLoading = $state(true);
+	let previewError = $state(false);
+	let copiedLink = $state(false);
+	let canNativeShare = $state(false);
 
-	$: publicUrl =
+	let publicUrl = $derived(
 		typeof window !== 'undefined'
 			? `${window.location.origin}/${type === 'collection' ? 'collections' : 'locations'}/${id}`
-			: '';
-	$: imageUrl = `/api/${type === 'collection' ? 'collections' : 'locations'}/${id}/share-image/${selectedAspect}/`;
-	$: previewUrl = `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${selectedAspect}`;
+			: ''
+	);
+	let imageUrl = $derived(
+		`/api/${type === 'collection' ? 'collections' : 'locations'}/${id}/share-image/${selectedAspect}/`
+	);
+	let previewUrl = $derived(`${imageUrl}${imageUrl.includes('?') ? '&' : '?'}t=${selectedAspect}`);
 
 	onMount(() => {
 		modal = document.getElementById('social_share_modal') as HTMLDialogElement;
@@ -156,9 +163,9 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
-<dialog id="social_share_modal" class="modal backdrop-blur-sm">
+<dialog id="social_share_modal" class="modal backdrop-blur-xs">
 	<div class="modal-box w-11/12 max-w-3xl p-6 space-y-5">
 		<div class="flex items-center justify-between border-b border-base-300 pb-4">
 			<div class="flex items-center gap-3">
@@ -174,7 +181,7 @@
 			</div>
 			<button
 				class="btn btn-ghost btn-sm btn-square"
-				on:click={close}
+				onclick={close}
 				aria-label={$t('about.close')}
 			>
 				<Clear class="w-5 h-5" />
@@ -193,12 +200,12 @@
 			</div>
 		{/if}
 
-		<div role="tablist" class="tabs tabs-boxed bg-base-200">
+		<div role="tablist" class="tabs tabs-box bg-base-200">
 			{#each aspects as aspect}
 				<button
 					role="tab"
 					class="tab {selectedAspect === aspect ? 'tab-active' : ''}"
-					on:click={() => selectAspect(aspect)}
+					onclick={() => selectAspect(aspect)}
 				>
 					{aspectLabel(aspect)}
 				</button>
@@ -228,22 +235,22 @@
 					? 'hidden'
 					: ''}"
 				style="max-height: {previewMaxHeight(selectedAspect)}"
-				on:load={handlePreviewLoad}
-				on:error={handlePreviewError}
+				onload={handlePreviewLoad}
+				onerror={handlePreviewError}
 			/>
 		</div>
 
 		<div class="flex flex-wrap gap-2">
-			<button class="btn btn-primary gap-2" on:click={downloadImage}>
+			<button class="btn btn-primary gap-2" onclick={downloadImage}>
 				<Download class="w-4 h-4" />
 				{$t('social_share.download_image')}
 			</button>
-			<button class="btn btn-neutral gap-2" on:click={copyImage}>
+			<button class="btn btn-neutral gap-2" onclick={copyImage}>
 				<ContentCopy class="w-4 h-4" />
 				{$t('social_share.copy_image')}
 			</button>
 			{#if isPublic}
-				<button class="btn btn-neutral gap-2" on:click={copyLink}>
+				<button class="btn btn-neutral gap-2" onclick={copyLink}>
 					{#if copiedLink}
 						<Check class="w-4 h-4 text-success" />
 						{$t('adventures.link_copied')}
@@ -254,7 +261,7 @@
 				</button>
 			{/if}
 			{#if canNativeShare}
-				<button class="btn btn-outline gap-2" on:click={nativeShare}>
+				<button class="btn btn-outline gap-2" onclick={nativeShare}>
 					<Share class="w-4 h-4" />
 					{$t('social_share.share_native')}
 				</button>

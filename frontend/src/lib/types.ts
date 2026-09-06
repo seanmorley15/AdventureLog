@@ -20,6 +20,7 @@ export type User = {
 	disable_password: boolean;
 	measurement_system: 'metric' | 'imperial';
 	default_currency: string;
+	date_format?: string;
 	map_style: string;
 	shared_collection_count?: number;
 	pending_collection_invite_count?: number;
@@ -42,6 +43,7 @@ export type SubscriptionStatus = 'trial' | 'active' | 'canceled' | 'past_due';
 
 export type Subscription = {
 	status: SubscriptionStatus;
+	stripe_customer_id: string | null;
 	stripe_subscription_id: string | null;
 	trial_ends_at: string | null;
 	current_period_ends_at: string | null;
@@ -117,8 +119,8 @@ export type Region = {
 	id: string;
 	name: string;
 	country: string;
-	latitude: number;
-	longitude: number;
+	latitude: number | null;
+	longitude: number | null;
 	num_cities: number;
 	country_name: string;
 };
@@ -137,8 +139,8 @@ export type VisitedRegion = {
 	id: number;
 	region: string;
 	user: string;
-	longitude: number;
-	latitude: number;
+	longitude: number | null;
+	latitude: number | null;
 	name: string;
 };
 
@@ -146,8 +148,8 @@ export type VisitedCity = {
 	id: number;
 	city: string;
 	user: string;
-	longitude: number;
-	latitude: number;
+	longitude: number | null;
+	latitude: number | null;
 	name: string;
 };
 
@@ -346,6 +348,15 @@ export type APIKey = {
 	key_prefix: string;
 	created_at: string;
 	last_used_at: string | null;
+};
+
+export type AuthUserSession = {
+	id: number;
+	user_agent: string;
+	ip: string;
+	created_at: number;
+	is_current: boolean;
+	last_seen_at?: number;
 };
 
 export type ImmichAlbum = {
@@ -685,12 +696,18 @@ export type CollectionItineraryDay = {
 	updated_at: string; // ISO 8601 date string
 };
 
+export type CollectionItineraryLinkedItem = {
+	id: string;
+	type: string; // Content type model name (location, lodging, ...)
+};
+
 export type CollectionItineraryItem = {
 	id: string;
 	collection: string; // UUID of the collection
-	content_type: string; // Content type model name
+	content_type: string | number; // Model name, or a numeric ContentType PK from older payloads
 	object_id: string; // UUID of the referenced object
-	item: Visit | Transportation | Lodging | Note | Checklist; // The actual referenced object
+	object_name?: string; // Content type model name
+	item?: CollectionItineraryLinkedItem | null; // Slim reference to the linked object
 	date: string | null; // ISO 8601 date string
 	is_global?: boolean; // Trip-wide item (no specific date)
 	order: number; // Manual order within a day

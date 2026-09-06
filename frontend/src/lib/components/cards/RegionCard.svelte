@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { createBubbler, stopPropagation } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
 	import type { Region } from '$lib/types';
@@ -12,10 +15,14 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let region: Region;
-	export let visited: boolean | undefined;
+	interface Props {
+		region: Region;
+		visited: boolean | undefined;
+	}
 
-	const countryCode = region.id.split('-')[0];
+	let { region, visited = $bindable() }: Props = $props();
+
+	let countryCode = $derived(region.id.split('-')[0]);
 
 	function goToCity(e: MouseEvent) {
 		e.stopPropagation();
@@ -64,16 +71,14 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row {region.num_cities >
 	0
 		? 'cursor-pointer'
 		: ''}"
-	on:click={nav}
-	on:keydown={(e) => e.key === 'Enter' && nav()}
-	role={region.num_cities > 0 ? 'button' : undefined}
-	tabindex={region.num_cities > 0 ? 0 : undefined}
+	onclick={nav}
+	onkeydown={(e) => e.key === 'Enter' && nav()}
 >
 	<button
 		type="button"
@@ -81,7 +86,7 @@
 			? 'text-success'
 			: 'text-base-content/30 hover:text-success'}"
 		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
-		on:click={visited ? removeVisit : markVisited}
+		onclick={visited ? removeVisit : markVisited}
 	>
 		{#if visited}
 			<CheckFilled class="w-5 h-5" />
@@ -93,7 +98,7 @@
 	<a
 		href="/worldtravel/{countryCode}/{region.id}"
 		class="font-semibold truncate group-hover:text-primary transition-colors min-w-0"
-		on:click|stopPropagation
+		onclick={stopPropagation(bubble('click'))}
 	>
 		{region.name}
 	</a>
@@ -111,7 +116,7 @@
 		<button
 			type="button"
 			class="btn btn-ghost btn-sm gap-1 hidden sm:flex justify-end"
-			on:click={goToCity}
+			onclick={goToCity}
 		>
 			{$t('worldtravel.view_cities')}
 			<ChevronRight class="w-4 h-4" />

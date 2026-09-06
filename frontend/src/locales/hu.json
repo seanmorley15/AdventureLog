@@ -819,7 +819,13 @@
 		"public_profile_left_collections": "A profilod mostantól privát. \nEltávolítottuk {count} megosztott gyűjteményből.",
 		"public_profile_private_confirm": "A profil priváttá tételével eltávolítunk {shared} megosztott gyűjteményből, és visszavonunk {invites} függőben lévő meghívót. \nFolytatja?",
 		"public_profile_revoked_invites": "Törölt {count} függőben lévő gyűjteményi meghívó.",
-		"public_profile_sharing_warning": "Jelenleg {count} gyűjteményben vagy megosztva. \nHa priváttá teszi profilját, azzal eltávolítja Önt ezekből a gyűjteményekből."
+		"public_profile_sharing_warning": "Jelenleg {count} gyűjteményben vagy megosztva. \nHa priváttá teszi profilját, azzal eltávolítja Önt ezekből a gyűjteményekből.",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"collection": {
 		"collection_created": "A gyűjtemény sikeresen létrehozva!",
@@ -1296,7 +1302,6 @@
 		"my_locations": "Saját helyek",
 		"best_happened_at": "Legjobb az történt"
 	},
-	"settings_download_backup": "Biztonsági mentés letöltése",
 	"invites": {
 		"accepted": "Meghívó elfogadva",
 		"accept_failed": "Nem sikerült elfogadni a meghívót",

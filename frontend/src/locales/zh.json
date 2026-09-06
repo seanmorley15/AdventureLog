@@ -819,7 +819,13 @@
 		"public_profile_left_collections": "您的个人资料现在是私人的。\n您已从 {count} 个共享集合中删除。",
 		"public_profile_private_confirm": "将您的个人资料设为私有会将您从 {shared} 个共享集合中删除，并取消 {invites} 个待处理的邀请。\n继续？",
 		"public_profile_revoked_invites": "已取消 {count} 个待处理的收集邀请。",
-		"public_profile_sharing_warning": "您目前已在 {count} 个收藏集上被分享。\n将您的个人资料设为私有会将您从这些集合中删除。"
+		"public_profile_sharing_warning": "您目前已在 {count} 个收藏集上被分享。\n将您的个人资料设为私有会将您从这些集合中删除。",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",
@@ -1296,7 +1302,6 @@
 		"my_locations": "我的地点",
 		"best_happened_at": "最好的事情发生在"
 	},
-	"settings_download_backup": "下载备份",
 	"invites": {
 		"accept": "接受",
 		"accept_failed": "未能接受邀请",

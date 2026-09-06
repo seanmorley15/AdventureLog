@@ -10,12 +10,23 @@
 	import ClockOutline from '~icons/mdi/clock-outline';
 	import Tag from '~icons/mdi/tag';
 
-	export let stats: CalendarStats;
-	export let activeTypes: Set<CalendarEventType>;
-	export let filteredCount: number;
-	export let totalCount: number;
-	export let isDownloadingIcs = false;
-	export let timezoneMode: 'event' | 'local' = 'event';
+	interface Props {
+		stats: CalendarStats;
+		activeTypes: Set<CalendarEventType>;
+		filteredCount: number;
+		totalCount: number;
+		isDownloadingIcs?: boolean;
+		timezoneMode?: 'event' | 'local';
+	}
+
+	let {
+		stats,
+		activeTypes,
+		filteredCount,
+		totalCount,
+		isDownloadingIcs = false,
+		timezoneMode = 'event'
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		toggleType: CalendarEventType;
@@ -95,14 +106,14 @@
 			<button
 				type="button"
 				class="btn btn-sm join-item flex-1 {timezoneMode === 'event' ? 'btn-active' : ''}"
-				on:click={() => dispatch('timezoneChange', 'event')}
+				onclick={() => dispatch('timezoneChange', 'event')}
 			>
 				{$t('calendar.event timezone')}
 			</button>
 			<button
 				type="button"
 				class="btn btn-sm join-item flex-1 {timezoneMode === 'local' ? 'btn-active' : ''}"
-				on:click={() => dispatch('timezoneChange', 'local')}
+				onclick={() => dispatch('timezoneChange', 'local')}
 			>
 				{$t('calendar.your timezone')}
 			</button>
@@ -124,7 +135,7 @@
 					style={activeTypes.has(type)
 						? `background-color: ${CALENDAR_EVENT_COLORS[type]}20; border-color: ${CALENDAR_EVENT_COLORS[type]}; color: inherit;`
 						: ''}
-					on:click={() => toggleType(type)}
+					onclick={() => toggleType(type)}
 				>
 					<span
 						class="h-2 w-2 rounded-full"
@@ -141,7 +152,7 @@
 		<button
 			type="button"
 			class="btn btn-primary w-full gap-2"
-			on:click={() => dispatch('downloadIcs')}
+			onclick={() => dispatch('downloadIcs')}
 			disabled={isDownloadingIcs}
 		>
 			{#if isDownloadingIcs}
@@ -156,7 +167,7 @@
 			<button
 				type="button"
 				class="btn btn-ghost w-full gap-2"
-				on:click={() => dispatch('clearFilters')}
+				onclick={() => dispatch('clearFilters')}
 			>
 				<ClearIcon class="w-4 h-4" />
 				{$t('worldtravel.clear_filters')}

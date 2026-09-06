@@ -10,25 +10,20 @@
 	import MediaStep from '../shared/MediaStep.svelte';
 	import { inferLodgingTypeFromPlace } from '$lib/utils/lodgingType';
 
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
-	export let itineraryDayLabel: string | null = null;
-
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
-	let storedInitialVisitDate: string | null = initialVisitDate;
+	let storedInitialVisitDate: string | null = $state(null);
 
 	let modal: HTMLDialogElement;
-	let googleMapsEnabled = false;
-	let isEditMode = false;
-	let pendingGooglePhotoUrls: string[] = [];
+	let googleMapsEnabled = $state(false);
+	let isEditMode = $state(false);
+	let pendingGooglePhotoUrls: string[] = $state([]);
 
 	// Whether a save/create occurred during this modal session
-	let didSave = false;
+	let didSave = $state(false);
 
-	let steps = [
+	let steps = $state([
 		{
 			name: $t('adventures.quick_start'),
 			selected: true,
@@ -44,7 +39,7 @@
 			selected: false,
 			requires_id: true
 		}
-	];
+	]);
 
 	function setStep(stepIndex: number) {
 		steps = steps.map((step, index) => ({
@@ -141,17 +136,37 @@
 		};
 	}
 
-	export let lodging: Lodging | null = null;
+	interface Props {
+		user?: User | null;
+		collection?: Collection | null;
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+		itineraryDayLabel?: string | null;
+		lodging?: Lodging | null;
+		lodgingToEdit?: Lodging | null;
+	}
 
-	export let lodgingToEdit: Lodging | null = null;
+	let {
+		user = null,
+		collection = null,
+		initialVisitDate = null,
+		itineraryDayLabel = null,
+		lodging = $bindable(null),
+		lodgingToEdit = null
+	}: Props = $props();
+
+	$effect.pre(() => {
+		if (initialVisitDate && !storedInitialVisitDate) {
+			storedInitialVisitDate = initialVisitDate;
+		}
+	});
 
 	// Track which lodging we're currently editing to prevent unnecessary overwrites
-	let previousLodgingId: string | null = null;
+	let previousLodgingId: string | null = $state(null);
 
 	// Reactively update internal state when switching between edit/new.
 	// This prevents stale values when the parent reuses `bind:lodging`.
 	// Only runs when actually switching to a different lodging, not on every reactive update.
-	$: {
+	$effect.pre(() => {
 		const currentLodgingId = lodgingToEdit?.id ?? null;
 
 		if (currentLodgingId !== previousLodgingId) {
@@ -194,7 +209,7 @@
 				];
 			}
 		}
-	}
+	});
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -278,22 +293,22 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<dialog id="my_modal_1" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box lodging-modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following adventurelog pattern -->
 		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="shrink-0 bg-base-100/90 backdrop-blur-lg border-b border-base-300 px-4 md:px-6 py-3 md:py-4"
 		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
 					<div class="p-2 bg-primary/10 rounded-xl">
 						<Bed class="w-6 h-6 text-primary" />
 					</div>
@@ -301,7 +316,7 @@
 						<h1 class="text-3xl font-bold text-primary bg-clip-text">
 							{lodgingToEdit ? $t('lodging.edit_lodging') : $t('lodging.new_lodging')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{lodgingToEdit
 								? $t('lodging.update_lodging_details')
 								: $t('lodging.create_new_lodging')}
@@ -324,7 +339,7 @@
 									fill="currentColor"
 									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
 										? 'text-primary'
-										: 'text-base-content/40'}"
+										: 'text-base-content/70'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -341,7 +356,7 @@
 									: ''} {index === 0 && isEditMode
 									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => handleStepSelect(index)}
+								onclick={() => handleStepSelect(index)}
 								disabled={(step.requires_id && !lodging?.id) || (index === 0 && isEditMode)}
 							>
 								<span class="hidden sm:inline">{step.name}</span>
@@ -359,10 +374,10 @@
 				<!-- Close Button -->
 				<button
 					type="button"
-					class="btn btn-ghost btn-square"
+					class="btn btn-ghost btn-square shrink-0"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -376,70 +391,90 @@
 			</div>
 		</div>
 
-		{#if steps[0].selected && !isEditMode}
-			<LodgingQuickStart
-				googleEnabled={googleMapsEnabled}
-				collectionId={collection?.id || null}
-				itineraryDate={storedInitialVisitDate}
-				itineraryLabel={itineraryDayLabel}
-				basemapType={normalizeBasemapType(user?.map_style)}
-				on:addDetails={(e) => {
-					applyQuickStartPrefill(e.detail.prefill);
-					setStep(1);
-				}}
-				on:manual={() => {
-					setStep(1);
-				}}
-				on:quickAdded={(e) => {
-					lodging = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					dispatch('quickAddCreated', {
-						location: e.detail.location,
-						itineraryItem: e.detail.itineraryItem || null,
-						itineraryDate: e.detail.itineraryDate || null
-					});
-					close();
-				}}
-				on:quickAddedEdit={(e) => {
-					lodging = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					setStep(1);
-				}}
-				on:quickAddedDone={(e) => {
-					lodging = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					close();
-				}}
-				on:cancel={() => close()}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<LodgingDetails
-				currentUser={user}
-				initialLodging={lodging}
-				{collection}
-				bind:editingLodging={lodging}
-				on:back={handleDetailsBack}
-				on:save={handleDetailsSave}
-				initialVisitDate={storedInitialVisitDate}
-			/>
-		{/if}
-		{#if steps[2].selected && lodging}
-			<MediaStep
-				bind:images={lodging.images}
-				bind:attachments={lodging.attachments}
-				bind:pendingGooglePhotoUrls
-				itemName={lodging.name}
-				on:back={() => {
-					setStep(1);
-				}}
-				on:close={() => close()}
-				itemId={lodging.id}
-				contentType="lodging"
-			/>
-		{/if}
+		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
+			{#if steps[0].selected && !isEditMode}
+				<LodgingQuickStart
+					googleEnabled={googleMapsEnabled}
+					collectionId={collection?.id || null}
+					itineraryDate={storedInitialVisitDate}
+					itineraryLabel={itineraryDayLabel}
+					basemapType={normalizeBasemapType(user?.map_style)}
+					on:addDetails={(e) => {
+						applyQuickStartPrefill(e.detail.prefill);
+						setStep(1);
+					}}
+					on:manual={() => {
+						setStep(1);
+					}}
+					on:quickAdded={(e) => {
+						lodging = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						dispatch('quickAddCreated', {
+							location: e.detail.location,
+							itineraryItem: e.detail.itineraryItem || null,
+							itineraryDate: e.detail.itineraryDate || null
+						});
+						close();
+					}}
+					on:quickAddedEdit={(e) => {
+						lodging = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						setStep(1);
+					}}
+					on:quickAddedDone={(e) => {
+						lodging = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						close();
+					}}
+					on:cancel={() => close()}
+				/>
+			{/if}
+			{#if steps[1].selected}
+				<LodgingDetails
+					currentUser={user}
+					initialLodging={lodging}
+					{collection}
+					bind:editingLodging={lodging}
+					on:back={handleDetailsBack}
+					on:save={handleDetailsSave}
+					initialVisitDate={storedInitialVisitDate}
+				/>
+			{/if}
+			{#if steps[2].selected && lodging}
+				<MediaStep
+					bind:images={lodging.images}
+					bind:attachments={lodging.attachments}
+					bind:pendingGooglePhotoUrls
+					itemName={lodging.name}
+					on:back={() => {
+						setStep(1);
+					}}
+					on:close={() => close()}
+					itemId={lodging.id}
+					contentType="lodging"
+				/>
+			{/if}
+		</div>
 	</div>
 </dialog>
+
+<style>
+	.lodging-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.lodging-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

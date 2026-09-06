@@ -46,7 +46,11 @@ def emailaddress_post_delete(sender, instance, **kwargs):
 
 # Prevent deleting the last email address for a user
 @receiver(pre_delete, sender=EmailAddress)
-def prevent_deleting_last_email(sender, instance, using, **kwargs):
+def prevent_deleting_last_email(sender, instance, using, origin=None, **kwargs):
+    # Allow cascade when the parent user account is being deleted.
+    if origin is not None and isinstance(origin, User) and origin.pk == instance.user_id:
+        return
+
     user = instance.user
     email_count = EmailAddress.objects.filter(user=user).count()
     if email_count <= 1:

@@ -7,21 +7,17 @@
 	import MediaStep from '../shared/MediaStep.svelte';
 	import TransportationDetails from './TransportationDetails.svelte';
 
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
-
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
-	let storedInitialVisitDate: string | null = initialVisitDate;
+	let storedInitialVisitDate: string | null = $state(null);
 
 	let modal: HTMLDialogElement;
 
 	// Whether a save/create occurred during this modal session
-	let didSave = false;
+	let didSave = $state(false);
 
-	let steps = [
+	let steps = $state([
 		{
 			name: $t('adventures.details'),
 			selected: true,
@@ -32,7 +28,7 @@
 			selected: false,
 			requires_id: true
 		}
-	];
+	]);
 
 	function createEmptyTransportation(): Transportation {
 		return {
@@ -68,17 +64,35 @@
 		};
 	}
 
-	export let transportation: Transportation = createEmptyTransportation();
+	interface Props {
+		user?: User | null;
+		collection?: Collection | null;
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+		transportation?: Transportation;
+		transportationToEdit?: Transportation | null;
+	}
 
-	export let transportationToEdit: Transportation | null = null;
+	let {
+		user = null,
+		collection = null,
+		initialVisitDate = null,
+		transportation = $bindable(createEmptyTransportation()),
+		transportationToEdit = null
+	}: Props = $props();
+
+	$effect.pre(() => {
+		if (initialVisitDate && !storedInitialVisitDate) {
+			storedInitialVisitDate = initialVisitDate;
+		}
+	});
 
 	// Track which transportation we're currently editing to prevent unnecessary overwrites
-	let previousTransportationId: string | null = null;
+	let previousTransportationId: string | null = $state(null);
 
 	// Reactively update internal state when switching between edit/new.
 	// This prevents stale values when the parent reuses `bind:transportation`.
 	// Only runs when actually switching to a different transportation, not on every reactive update.
-	$: {
+	$effect.pre(() => {
 		const currentTransportationId = transportationToEdit?.id || null;
 
 		if (currentTransportationId !== previousTransportationId) {
@@ -127,7 +141,7 @@
 				];
 			}
 		}
-	}
+	});
 
 	onMount(async () => {
 		modal = document.getElementById('transportation_modal') as HTMLDialogElement;
@@ -154,22 +168,22 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<dialog id="transportation_modal" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<dialog id="transportation_modal" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box transportation-modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following adventurelog pattern -->
 		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="shrink-0 bg-base-100/90 backdrop-blur-lg border-b border-base-300 px-4 md:px-6 py-3 md:py-4"
 		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
 					<div class="p-2 bg-primary/10 rounded-xl">
 						<Plane class="w-6 h-6 text-primary" />
 					</div>
@@ -179,7 +193,7 @@
 								? $t('transportation.edit_transportation')
 								: $t('transportation.new_transportation')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{transportationToEdit
 								? $t('transportation.update_transportation_details')
 								: $t('transportation.create_new_transportation')}
@@ -202,7 +216,7 @@
 									fill="currentColor"
 									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
 										? 'text-primary'
-										: 'text-base-content/40'}"
+										: 'text-base-content/70'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -217,7 +231,7 @@
 									: 'bg-base-200'} {step.requires_id && !transportation?.id
 									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => {
+								onclick={() => {
 									// Reset all steps
 									steps.forEach((s) => (s.selected = false));
 									// Select clicked step
@@ -240,10 +254,10 @@
 				<!-- Close Button -->
 				<button
 					type="button"
-					class="btn btn-ghost btn-square"
+					class="btn btn-ghost btn-square shrink-0"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -257,53 +271,73 @@
 			</div>
 		</div>
 
-		{#if steps[0].selected}
-			<TransportationDetails
-				currentUser={user}
-				initialTransportation={transportation}
-				{collection}
-				bind:editingTransportation={transportation}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:save={(e) => {
-					// Update the entire transportation object with all saved data
-					transportation = { ...transportation, ...e.detail };
-
-					// Mark that a save occurred so close() will notify parent
-					didSave = true;
-
-					// Only allow moving to Media once we have a persisted id.
-					if (!transportation?.id) {
-						addToast('error', $t('adventures.lodging_save_error'));
+		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
+			{#if steps[0].selected}
+				<TransportationDetails
+					currentUser={user}
+					initialTransportation={transportation}
+					{collection}
+					bind:editingTransportation={transportation}
+					on:back={() => {
 						steps[1].selected = false;
 						steps[0].selected = true;
-						return;
-					}
+					}}
+					on:save={(e) => {
+						// Update the entire transportation object with all saved data
+						transportation = { ...transportation, ...e.detail };
 
-					steps[0].selected = false;
-					steps[1].selected = true;
-				}}
-				initialVisitDate={storedInitialVisitDate}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<MediaStep
-				bind:images={transportation.images}
-				bind:attachments={transportation.attachments}
-				itemName={transportation.name}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:close={() => close()}
-				itemId={transportation.id}
-				contentType="transportation"
-				start_date={transportation.date}
-				end_date={transportation.end_date}
-				{user}
-			/>
-		{/if}
+						// Mark that a save occurred so close() will notify parent
+						didSave = true;
+
+						// Only allow moving to Media once we have a persisted id.
+						if (!transportation?.id) {
+							addToast('error', $t('adventures.lodging_save_error'));
+							steps[1].selected = false;
+							steps[0].selected = true;
+							return;
+						}
+
+						steps[0].selected = false;
+						steps[1].selected = true;
+					}}
+					initialVisitDate={storedInitialVisitDate}
+				/>
+			{/if}
+			{#if steps[1].selected}
+				<MediaStep
+					bind:images={transportation.images}
+					bind:attachments={transportation.attachments}
+					itemName={transportation.name}
+					on:back={() => {
+						steps[1].selected = false;
+						steps[0].selected = true;
+					}}
+					on:close={() => close()}
+					itemId={transportation.id}
+					contentType="transportation"
+					start_date={transportation.date}
+					end_date={transportation.end_date}
+					{user}
+				/>
+			{/if}
+		</div>
 	</div>
 </dialog>
+
+<style>
+	.transportation-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.transportation-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '$lib/types';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -13,6 +15,7 @@
 	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
 	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
 	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import ImageFrame from '$lib/components/ImageFrame.svelte';
@@ -41,12 +44,19 @@
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import LocationModal from '$lib/components/locations/LocationModal.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
 	};
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(data.user));
 
 	function getCollectionFromPageData(pageData: PageData): Collection | null | undefined {
 		return (
@@ -55,25 +65,25 @@
 		);
 	}
 
-	let collection: Collection | undefined;
-	let currentSlide = 0;
-	let notFound: boolean = false;
-	let isLocationModalOpen: boolean = false;
-	let isLodgingModalOpen: boolean = false;
-	let isTransportationModalOpen: boolean = false;
-	let isChecklistModalOpen: boolean = false;
-	let isNoteModalOpen: boolean = false;
+	let collection: Collection | undefined = $state();
+	let currentSlide = $state(0);
+	let notFound: boolean = $state(false);
+	let isLocationModalOpen: boolean = $state(false);
+	let isLodgingModalOpen: boolean = $state(false);
+	let isTransportationModalOpen: boolean = $state(false);
+	let isChecklistModalOpen: boolean = $state(false);
+	let isNoteModalOpen: boolean = $state(false);
 	// Edit placeholders used when creating new items from FAB dropdown
-	let adventureToEdit: any = null;
-	let transportationToEdit: any = null;
-	let noteToEdit: any = null;
-	let checklistToEdit: any = null;
-	let lodgingToEdit: any = null;
-	let heroImages: ContentImage[] = [];
-	let modalInitialIndex: number = 0;
-	let isImageModalOpen: boolean = false;
-	let isLocationLinkModalOpen: boolean = false;
-	let showCalendarModal = false;
+	let adventureToEdit: any = $state(null);
+	let transportationToEdit: any = $state(null);
+	let noteToEdit: any = $state(null);
+	let checklistToEdit: any = $state(null);
+	let lodgingToEdit: any = $state(null);
+	let heroImages: ContentImage[] = $state([]);
+	let modalInitialIndex: number = $state(0);
+	let isImageModalOpen: boolean = $state(false);
+	let isLocationLinkModalOpen: boolean = $state(false);
+	let showCalendarModal = $state(false);
 
 	// Shared helpers for keeping collection sub-items in sync after modal actions
 	type CollectionArrayKey = 'locations' | 'transportations' | 'lodging' | 'notes' | 'checklists';
@@ -180,92 +190,13 @@
 
 	// View state from URL params
 	type ViewType = 'all' | 'itinerary' | 'map' | 'calendar' | 'recommendations' | 'stats';
-	let currentView: ViewType = 'itinerary';
-
-	// Determine if this is a folder view (no dates) or itinerary view (has dates)
-	$: isFolderView = !collection?.start_date && !collection?.end_date;
-
-	// Gather hero images with collection primary image first when available
-	$: heroImages = (() => {
-		const primary = collection?.primary_image ? [collection.primary_image] : [];
-		const locationImages = collection?.locations?.flatMap((loc) => loc.images || []) || [];
-		const seen = new Set<string>();
-
-		return [...primary, ...locationImages].filter((img) => {
-			if (!img || !img.image) return false;
-			const key = String(img.id ?? img.image);
-			if (seen.has(key)) return false;
-			seen.add(key);
-			return true;
-		});
-	})();
-
-	// Determine whether current user can modify the collection (owner or shared user)
-	$: canModifyCollection = (() => {
-		const u = data.user as any;
-		if (!u || !collection) return false;
-
-		const userUuid = u.uuid || null;
-		const username = u.username || null;
-		const pk = u.pk !== undefined && u.pk !== null ? String(u.pk) : null;
-		const owner = collection.user;
-
-		// Direct matches: UUID (primary), username, or numeric pk (stringified)
-		if (userUuid && owner === userUuid) return true;
-		if (username && owner === username) return true;
-		if (pk && owner === pk) return true;
-
-		// Shared with may contain UUIDs or other identifiers
-		if (collection.shared_with && Array.isArray(collection.shared_with)) {
-			if (userUuid && collection.shared_with.includes(userUuid)) return true;
-			if (username && collection.shared_with.includes(username)) return true;
-			if (pk && collection.shared_with.includes(pk)) return true;
-		}
-
-		return false;
-	})();
-
-	// Public collections: anyone can export/share; private: owner or shared users only
-	$: canExportCollection = !!collection?.is_public || canModifyCollection;
-
-	// Define available views based on collection type
-	$: availableViews = {
-		all: true, // Always available
-		itinerary: !isFolderView, // Only for collections with dates
-		map:
-			collection?.locations?.some((l) => l.latitude && l.longitude) ||
-			collection?.lodging?.some((l) => l.latitude && l.longitude) ||
-			collection?.transportations?.some(
-				(t) =>
-					(t.origin_latitude && t.origin_longitude) ||
-					(t.destination_latitude && t.destination_longitude)
-			) ||
-			false,
-		calendar: !isFolderView,
-		recommendations: canModifyCollection,
-		stats: true
-	};
+	let currentView: ViewType = $state('itinerary');
 
 	// Get default view based on available views
-	let defaultView: ViewType;
-	$: defaultView = (availableViews.itinerary ? 'itinerary' : 'all') as ViewType;
+	let defaultView: ViewType = $state('itinerary');
 
-	// Read view from URL params and validate it's available
-	$: {
-		const view = $page.url.searchParams.get('view') as ViewType;
-		if (
-			view &&
-			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
-			availableViews[view]
-		) {
-			currentView = view;
-		} else {
-			currentView = defaultView;
-		}
-	}
-
-	let isExportingPdf = false;
-	let isSocialShareModalOpen = false;
+	let isExportingPdf = $state(false);
+	let isSocialShareModalOpen = $state(false);
 
 	async function exportCollectionPdf() {
 		if (!collection || isExportingPdf) return;
@@ -296,27 +227,11 @@
 	}
 
 	// Calendar events from collection data
-	let timezoneMode: CalendarTimezoneMode = 'event';
-	let calendarInitialDate: string | null = null;
-	let selectedCalendarEvent: CalendarDisplayEvent | null = null;
+	let timezoneMode: CalendarTimezoneMode = $state('event');
+	let selectedCalendarEvent: CalendarDisplayEvent | null = $state(null);
 
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const numberLocale = Intl.DateTimeFormat().resolvedOptions().locale;
-
-	$: calendarTimezoneLabels = {
-		eventTimezone: $t('collections.event_timezone'),
-		localTimezone: $t('collections.local_timezone')
-	};
-
-	$: collectionEvents = collection
-		? buildCollectionCalendarEvents(
-				collection,
-				timezoneMode,
-				userTimezone,
-				calendarTimezoneLabels,
-				(key) => $t(key)
-			)
-		: [];
 
 	type CostCategory = 'lodging' | 'transportation' | 'location';
 
@@ -339,46 +254,11 @@
 		}>;
 	};
 
-	// Localized category labels - computed reactively from i18n
-	$: costCategoryLabels = {
-		lodging: $t('adventures.lodging') || 'Lodging',
-		transportation: $t('adventures.transportation') || 'Transportation',
-		location: $t('locations.locations') || 'Locations'
-	};
-
-	let preferredCurrency: string = DEFAULT_CURRENCY;
-	let costEntries: CostEntry[] = [];
-	let costSummary: CurrencyBreakdown[] = [];
-	let pricedItemCount = 0;
-	let currencyCount = 0;
-
-	$: preferredCurrency = (data.user as any)?.default_currency || DEFAULT_CURRENCY;
-	$: costEntries = buildCostEntries(collection ?? null, preferredCurrency);
-	$: costSummary = summarizeCostEntries(costEntries, numberLocale, costCategoryLabels);
-	$: pricedItemCount = costEntries.length;
-	$: currencyCount = costSummary.length;
-
-	$: if (!calendarInitialDate && collectionEvents.length) {
-		const collectionRangeStart = collection?.start_date
-			? DateTime.fromISO(collection.start_date)
-			: null;
-		const collectionRangeEnd = collection?.end_date ? DateTime.fromISO(collection.end_date) : null;
-
-		const validEvents = collectionEvents
-			.map((ev) => ({ date: DateTime.fromISO(ev.start), event: ev }))
-			.filter(({ date }) => date.isValid)
-			.sort((a, b) => a.date.toMillis() - b.date.toMillis());
-
-		const inCollectionRange = validEvents.filter(({ date }) => {
-			if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day')) return false;
-			if (collectionRangeEnd?.isValid && date > collectionRangeEnd.endOf('day')) return false;
-			return true;
-		});
-
-		const chosenDate = (inCollectionRange[0] || validEvents[0])?.date;
-
-		calendarInitialDate = chosenDate?.toISODate() || calendarInitialDate;
-	}
+	let preferredCurrency: string = $state(DEFAULT_CURRENCY);
+	let costEntries: CostEntry[] = $state([]);
+	let costSummary: CurrencyBreakdown[] = $state([]);
+	let pricedItemCount = $state(0);
+	let currencyCount = $state(0);
 
 	function buildCostEntries(current: Collection | null, fallbackCurrency: string): CostEntry[] {
 		if (!current) return [];
@@ -498,7 +378,6 @@
 		showCalendarModal = false;
 		selectedCalendarEvent = null;
 		isSocialShareModalOpen = false;
-		calendarInitialDate = null;
 	}
 
 	function applyCollectionPageData(collectionData: Collection | null | undefined) {
@@ -513,8 +392,6 @@
 		collection = collectionData;
 		resetCollectionPageUiState();
 	}
-
-	$: applyCollectionPageData(getCollectionFromPageData(data));
 
 	function goToSlide(index: number) {
 		currentSlide = index;
@@ -531,23 +408,13 @@
 
 	function formatDate(dateString: string | null) {
 		if (!dateString) return '';
-		return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
+		return formatDisplayDate(dateString, dateFormat);
 	}
 
 	function collaboratorDisplayName(person: Collaborator | null | undefined): string {
 		if (!person) return '';
 		const fullName = [person.first_name, person.last_name].filter(Boolean).join(' ').trim();
 		return fullName || person.username;
-	}
-
-	function collaboratorInitials(person: Collaborator | null | undefined): string {
-		const name = collaboratorDisplayName(person) || person?.username || '';
-		const parts = name.split(/\s+/).filter(Boolean);
-		const initials = parts
-			.slice(0, 2)
-			.map((part) => part[0]?.toUpperCase() || '')
-			.join('');
-		return initials || (person?.username ? person.username.slice(0, 2).toUpperCase() : '');
 	}
 
 	function switchView(view: ViewType) {
@@ -639,7 +506,160 @@
 			);
 		}
 	}
+	// Determine if this is a folder view (no dates) or itinerary view (has dates)
+	let isFolderView = $derived(!collection?.start_date && !collection?.end_date);
+	// Gather hero images with collection primary image first when available
+	run(() => {
+		heroImages = (() => {
+			const primary = collection?.primary_image ? [collection.primary_image] : [];
+			const locationImages = collection?.locations?.flatMap((loc) => loc.images || []) || [];
+			const seen = new Set<string>();
+
+			return [...primary, ...locationImages].filter((img) => {
+				if (!img || !img.image) return false;
+				const key = String(img.id ?? img.image);
+				if (seen.has(key)) return false;
+				seen.add(key);
+				return true;
+			});
+		})();
+	});
+	// Determine whether current user can modify the collection (owner or shared user)
+	let canModifyCollection = $derived(
+		(() => {
+			const u = data.user as any;
+			if (!u || !collection) return false;
+
+			const userUuid = u.uuid || null;
+			const username = u.username || null;
+			const pk = u.pk !== undefined && u.pk !== null ? String(u.pk) : null;
+			const owner = collection.user;
+
+			// Direct matches: UUID (primary), username, or numeric pk (stringified)
+			if (userUuid && owner === userUuid) return true;
+			if (username && owner === username) return true;
+			if (pk && owner === pk) return true;
+
+			// Shared with may contain UUIDs or other identifiers
+			if (collection.shared_with && Array.isArray(collection.shared_with)) {
+				if (userUuid && collection.shared_with.includes(userUuid)) return true;
+				if (username && collection.shared_with.includes(username)) return true;
+				if (pk && collection.shared_with.includes(pk)) return true;
+			}
+
+			return false;
+		})()
+	);
+	// Public collections: anyone can export/share; private: owner or shared users only
+	let canExportCollection = $derived(!!collection?.is_public || canModifyCollection);
+	// Define available views based on collection type
+	let availableViews = $derived({
+		all: true, // Always available
+		itinerary: !isFolderView, // Only for collections with dates
+		map:
+			collection?.locations?.some((l) => l.latitude && l.longitude) ||
+			collection?.lodging?.some((l) => l.latitude && l.longitude) ||
+			collection?.transportations?.some(
+				(t) =>
+					(t.origin_latitude && t.origin_longitude) ||
+					(t.destination_latitude && t.destination_longitude)
+			) ||
+			false,
+		calendar: !isFolderView,
+		recommendations: canModifyCollection,
+		stats: true
+	});
+	run(() => {
+		defaultView = (availableViews.itinerary ? 'itinerary' : 'all') as ViewType;
+	});
+	// Read view from URL params and validate it's available
+	run(() => {
+		const view = $page.url.searchParams.get('view') as ViewType;
+		if (
+			view &&
+			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
+			availableViews[view]
+		) {
+			currentView = view;
+		} else {
+			currentView = defaultView;
+		}
+	});
+	let calendarTimezoneLabels = $derived({
+		eventTimezone: $t('collections.event_timezone'),
+		localTimezone: $t('collections.local_timezone')
+	});
+	let collectionEvents = $derived(
+		collection
+			? buildCollectionCalendarEvents(
+					collection,
+					timezoneMode,
+					userTimezone,
+					calendarTimezoneLabels,
+					(key) => $t(key),
+					dateFormat
+				)
+			: []
+	);
+	// Localized category labels - computed reactively from i18n
+	let costCategoryLabels = $derived({
+		lodging: $t('adventures.lodging') || 'Lodging',
+		transportation: $t('adventures.transportation') || 'Transportation',
+		location: $t('locations.locations') || 'Locations'
+	});
+	run(() => {
+		preferredCurrency = (data.user as any)?.default_currency || DEFAULT_CURRENCY;
+	});
+	run(() => {
+		costEntries = buildCostEntries(collection ?? null, preferredCurrency);
+	});
+	run(() => {
+		costSummary = summarizeCostEntries(costEntries, numberLocale, costCategoryLabels);
+	});
+	run(() => {
+		pricedItemCount = costEntries.length;
+	});
+	run(() => {
+		currencyCount = costSummary.length;
+	});
+	let calendarInitialDate = $derived.by(() => {
+		if (!collectionEvents.length) return null;
+
+		const collectionRangeStart = collection?.start_date
+			? DateTime.fromISO(collection.start_date)
+			: null;
+		const collectionRangeEnd = collection?.end_date ? DateTime.fromISO(collection.end_date) : null;
+
+		const validEvents = collectionEvents
+			.map((ev) => ({ date: DateTime.fromISO(ev.start), event: ev }))
+			.filter(({ date }) => date.isValid)
+			.sort((a, b) => a.date.toMillis() - b.date.toMillis());
+
+		const inCollectionRange = validEvents.filter(({ date }) => {
+			if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day')) return false;
+			if (collectionRangeEnd?.isValid && date > collectionRangeEnd.endOf('day')) return false;
+			return true;
+		});
+
+		return (inCollectionRange[0] || validEvents[0])?.date?.toISODate() || null;
+	});
+	$effect.pre(() => {
+		applyCollectionPageData(getCollectionFromPageData(data));
+	});
 </script>
+
+{#snippet collaboratorAvatar(person: Collaborator)}
+	<div
+		class="w-9 h-9 rounded-full ring-3 ring-base-200 ring-offset-base-100 ring-offset-2 overflow-hidden"
+	>
+		<UserAvatar
+			user={person}
+			alt={collaboratorDisplayName(person)}
+			className="w-9 h-9 rounded-full"
+			textClass="text-xs"
+		/>
+	</div>
+{/snippet}
 
 {#if notFound}
 	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
@@ -647,7 +667,7 @@
 			<div class="max-w-md">
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
 				<h1 class="text-5xl font-bold text-primary mb-4">{$t('collections.not_found')}</h1>
-				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
+				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>
 			</div>
@@ -827,7 +847,7 @@
 					>
 						<button
 							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => openImageModal(i)}
+							onclick={() => openImageModal(i)}
 							aria-label={`View full image of ${collection.name}`}
 						>
 							<ImageFrame source={image.source} className="w-full h-full">
@@ -894,7 +914,7 @@
 							<!-- Navigation arrows and current position -->
 							<div class="flex items-center justify-center gap-4 mb-3">
 								<button
-									on:click={() =>
+									onclick={() =>
 										goToSlide(currentSlide > 0 ? currentSlide - 1 : heroImages.length - 1)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.previous_image')}
@@ -907,7 +927,7 @@
 								</div>
 
 								<button
-									on:click={() =>
+									onclick={() =>
 										goToSlide(currentSlide < heroImages.length - 1 ? currentSlide + 1 : 0)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.next_image')}
@@ -921,7 +941,7 @@
 								<div class="flex justify-center gap-2 flex-wrap">
 									{#each heroImages as _, i}
 										<button
-											on:click={() => goToSlide(i)}
+											onclick={() => goToSlide(i)}
 											class="btn btn-circle btn-xs transition-all duration-200"
 											class:btn-primary={i === currentSlide}
 											class:btn-outline={i !== currentSlide}
@@ -948,7 +968,7 @@
 					<button
 						class="btn join-item"
 						class:btn-active={currentView === 'all'}
-						on:click={() => switchView('all')}
+						onclick={() => switchView('all')}
 					>
 						<FormatListBulleted class="w-5 h-5 sm:mr-2" aria-hidden="true" />
 						<span class="hidden sm:inline">{$t('collections.all_items')}</span>
@@ -958,7 +978,7 @@
 					<button
 						class="btn join-item"
 						class:btn-active={currentView === 'itinerary'}
-						on:click={() => switchView('itinerary')}
+						onclick={() => switchView('itinerary')}
 					>
 						<Timeline class="w-5 h-5 sm:mr-2" aria-hidden="true" />
 						<span class="hidden sm:inline">{$t('adventures.itinerary')}</span>
@@ -968,7 +988,7 @@
 					<button
 						class="btn join-item"
 						class:btn-active={currentView === 'map'}
-						on:click={() => switchView('map')}
+						onclick={() => switchView('map')}
 					>
 						<Map class="w-5 h-5 sm:mr-2" aria-hidden="true" />
 						<span class="hidden sm:inline">{$t('navbar.map')}</span>
@@ -978,7 +998,7 @@
 					<button
 						class="btn join-item"
 						class:btn-active={currentView === 'calendar'}
-						on:click={() => switchView('calendar')}
+						onclick={() => switchView('calendar')}
 					>
 						<Calendar class="w-5 h-5 sm:mr-2" aria-hidden="true" />
 						<span class="hidden sm:inline">{$t('navbar.calendar')}</span>
@@ -988,7 +1008,7 @@
 					<button
 						class="btn join-item"
 						class:btn-active={currentView === 'recommendations'}
-						on:click={() => switchView('recommendations')}
+						onclick={() => switchView('recommendations')}
 					>
 						<Lightbulb class="w-5 h-5 sm:mr-2" aria-hidden="true" />
 						<span class="hidden sm:inline">{$t('recomendations.recommendations')}</span>
@@ -998,7 +1018,7 @@
 					<button
 						class="btn join-item"
 						class:btn-active={currentView === 'stats'}
-						on:click={() => switchView('stats')}
+						onclick={() => switchView('stats')}
 					>
 						<ChartBar class="w-5 h-5 sm:mr-2" aria-hidden="true" />
 						<span class="hidden sm:inline">{$t('collections.statistics')}</span>
@@ -1009,14 +1029,14 @@
 				<div class="flex flex-wrap gap-2">
 					<button
 						class="btn btn-outline btn-primary gap-2"
-						on:click={() => (isSocialShareModalOpen = true)}
+						onclick={() => (isSocialShareModalOpen = true)}
 					>
 						<ImageOutline class="w-5 h-5" aria-hidden="true" />
 						<span>{$t('social_share.share_externally')}</span>
 					</button>
 					<button
 						class="btn btn-outline btn-primary gap-2"
-						on:click={exportCollectionPdf}
+						onclick={exportCollectionPdf}
 						disabled={isExportingPdf}
 						aria-busy={isExportingPdf}
 					>
@@ -1105,14 +1125,14 @@
 											<button
 												class="btn btn-xs sm:btn-sm join-item"
 												class:btn-active={timezoneMode === 'event'}
-												on:click={() => (timezoneMode = 'event')}
+												onclick={() => (timezoneMode = 'event')}
 											>
 												{$t('collections.event_timezone')}
 											</button>
 											<button
 												class="btn btn-xs sm:btn-sm join-item"
 												class:btn-active={timezoneMode === 'local'}
-												on:click={() => (timezoneMode = 'local')}
+												onclick={() => (timezoneMode = 'local')}
 											>
 												{$t('collections.local_timezone')}
 											</button>
@@ -1234,35 +1254,11 @@
 													title={collaboratorDisplayName(person)}
 													tabindex="0"
 												>
-													<div
-														class="w-9 h-9 rounded-full ring ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
-													>
-														{#if person.profile_pic}
-															<img src={person.profile_pic} alt={collaboratorDisplayName(person)} />
-														{:else}
-															<span
-																class="text-xs font-semibold text-base-content/80 flex items-center justify-center w-full h-full bg-primary/10"
-															>
-																{collaboratorInitials(person)}
-															</span>
-														{/if}
-													</div>
+													{@render collaboratorAvatar(person)}
 												</a>
 											{:else}
 												<div class="avatar tooltip" data-tip={collaboratorDisplayName(person)}>
-													<div
-														class="w-9 h-9 rounded-full ring ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
-													>
-														{#if person.profile_pic}
-															<img src={person.profile_pic} alt={collaboratorDisplayName(person)} />
-														{:else}
-															<span
-																class="text-xs font-semibold text-base-content/80 flex items-center justify-center w-full h-full bg-primary/10"
-															>
-																{collaboratorInitials(person)}
-															</span>
-														{/if}
-													</div>
+													{@render collaboratorAvatar(person)}
 												</div>
 											{/if}
 										{/each}
@@ -1329,7 +1325,7 @@
 				<div class="card bg-base-200 shadow-xl">
 					<div class="card-body">
 						<h3 class="card-title text-lg mb-4">📊 {$t('collections.statistics')}</h3>
-						<div class="stats stats-vertical shadow">
+						<div class="stats stats-vertical bg-base-100 shadow-sm">
 							{#if collection.locations}
 								<div class="stat">
 									<div class="stat-title">{$t('locations.locations')}</div>
@@ -1375,18 +1371,22 @@
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
-											on:click={() => openImageModal(index)}
-											on:keydown={(e) => e.key === 'Enter' && openImageModal(index)}
+											onclick={() => openImageModal(index)}
+											onkeydown={(e) => e.key === 'Enter' && openImageModal(index)}
 											role="button"
 											tabindex="0"
 										></div>
-										<div slot="overlays">
-											{#if image.is_primary}
-												<div class="absolute top-1 right-1">
-													<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
-												</div>
-											{/if}
-										</div>
+										{#snippet overlays()}
+											<div>
+												{#if image.is_primary}
+													<div class="absolute top-1 right-1">
+														<span class="badge badge-primary badge-xs"
+															>{$t('settings.primary')}</span
+														>
+													</div>
+												{/if}
+											</div>
+										{/snippet}
 									</ImageFrame>
 								{/each}
 							</div>
@@ -1416,13 +1416,13 @@
 			</div>
 			<ul
 				tabindex="-1"
-				class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
+				class="dropdown-content z-[1] menu p-4 shadow-sm bg-base-300 text-base-content rounded-box w-52 gap-4"
 			>
 				<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 				<!-- Link existing location to collection -->
 				<button
 					class="btn btn-primary"
-					on:click={() => {
+					onclick={() => {
 						isLocationLinkModalOpen = true;
 					}}
 				>
@@ -1432,7 +1432,7 @@
 				<p class="text-center font-bold text-lg">{$t('adventures.add_new')}</p>
 				<button
 					class="btn btn-primary"
-					on:click={() => {
+					onclick={() => {
 						isLocationModalOpen = true;
 						adventureToEdit = null;
 					}}
@@ -1442,7 +1442,7 @@
 
 				<button
 					class="btn btn-primary"
-					on:click={() => {
+					onclick={() => {
 						transportationToEdit = null;
 						isTransportationModalOpen = true;
 					}}
@@ -1452,7 +1452,7 @@
 
 				<button
 					class="btn btn-primary"
-					on:click={() => {
+					onclick={() => {
 						isNoteModalOpen = true;
 						noteToEdit = null;
 					}}
@@ -1462,7 +1462,7 @@
 
 				<button
 					class="btn btn-primary"
-					on:click={() => {
+					onclick={() => {
 						checklistToEdit = null;
 						isChecklistModalOpen = true;
 					}}
@@ -1472,7 +1472,7 @@
 
 				<button
 					class="btn btn-primary"
-					on:click={() => {
+					onclick={() => {
 						lodgingToEdit = null;
 						isLodgingModalOpen = true;
 					}}

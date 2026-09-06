@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { DefaultMarker, Popup, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import MapNearbyRadiusLayer from '$lib/components/map/MapNearbyRadiusLayer.svelte';
 	import { onDestroy, onMount } from 'svelte';
@@ -23,6 +25,7 @@
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
 	import { bindMapViewportCenterSync, getMapViewportCenter } from '$lib/map/viewportCenter';
+	import { safeMapResize } from '$lib/map/renderGuard';
 	import {
 		enrichPlace,
 		fetchRecommendations,
@@ -60,73 +63,132 @@
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import Compass from '~icons/mdi/compass';
 	import Tag from '~icons/mdi/tag';
+	import ChevronLeft from '~icons/mdi/chevron-left';
+	import ChevronRight from '~icons/mdi/chevron-right';
 
-	export let data;
+	interface Props {
+		data: any;
+		initialLatLng?: { lat: number; lng: number } | null;
+	}
 
-	let createModalOpen = false;
-	let lodgingModalOpen = false;
-	let showRegions = false;
-	let showActivities = false;
-	let showImagePins = false;
-	let showCities = false;
-	let sidebarOpen = false;
-	let sidebarMode: 'controls' | 'preview' = 'controls';
+	let { data, initialLatLng = $bindable(null) }: Props = $props();
 
-	let basemapType: string = normalizeBasemapType(data.user?.map_style);
+	let createModalOpen = $state(false);
+	let lodgingModalOpen = $state(false);
+	let showRegions = $state(false);
+	let showActivities = $state(false);
+	let showImagePins = $state(false);
+	let showCities = $state(false);
+	let sidebarOpen = $state(false);
+	let sidebarCollapsed = $state(false);
+	let sidebarMode: 'controls' | 'preview' = $state('controls');
 
-	let mapZoom: number = 2;
-	let mapCenter: [number, number] = [0, 0];
-	/** When true, center/zoom props drive FullMap. Disabled after load so pan/zoom is not fought by easeTo. */
-	let syncViewportFromProps = true;
-	let mapInstance: maplibregl.Map | undefined = undefined;
-	let mapViewportEl: HTMLElement | null = null;
-	let updateUrlTimeout: NodeJS.Timeout | null = null;
+	let basemapType: string = $state(normalizeBasemapType(undefined));
+	$effect.pre(() => {
+		basemapType = normalizeBasemapType(data.user?.map_style);
+	});
+
 	const MAP_VIEW_STORAGE_KEY = 'adventurelog.map.view';
 
-	export let initialLatLng: { lat: number; lng: number } | null = null;
+	function viewFromSearchParams(
+		params: URLSearchParams
+	): { center: [number, number]; zoom: number } | null {
+		const lat = params.get('lat');
+		const lng = params.get('lng');
+		const zoom = params.get('zoom');
+		if (!lat || !lng || zoom === null) return null;
+		const parsedLat = parseFloat(lat);
+		const parsedLng = parseFloat(lng);
+		const parsedZoom = parseFloat(zoom);
+		if (
+			!Number.isFinite(parsedLat) ||
+			!Number.isFinite(parsedLng) ||
+			!Number.isFinite(parsedZoom)
+		) {
+			return null;
+		}
+		return { center: [parsedLng, parsedLat], zoom: parsedZoom };
+	}
 
-	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
-	let visitedCities: VisitedCity[] = [];
-	let pins: Pin[] = data.props.pins;
-	let activities: Activity[] = [];
-	let imageMapPins: ImageMapPin[] = [];
-	let imagePinsLoaded = false;
+	function readStoredMapView(): { center: [number, number]; zoom: number } | null {
+		if (typeof window === 'undefined') return null;
+		try {
+			const storedValue = window.localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+			if (!storedValue) return null;
+			const parsed = JSON.parse(storedValue) as { center?: [number, number]; zoom?: number };
+			if (
+				!Array.isArray(parsed.center) ||
+				parsed.center.length < 2 ||
+				typeof parsed.zoom !== 'number'
+			) {
+				return null;
+			}
+			return { center: [parsed.center[0], parsed.center[1]], zoom: parsed.zoom };
+		} catch {
+			return null;
+		}
+	}
+
+	function getInitialMapView(): { center: [number, number]; zoom: number } | null {
+		if (!browser) return null;
+		return viewFromSearchParams($page.url.searchParams) ?? readStoredMapView();
+	}
+
+	const initialView = getInitialMapView();
+	let mapZoom: number = $state(initialView?.zoom ?? 2);
+	let mapCenter: [number, number] = $state(initialView?.center ?? [0, 0]);
+	/** When true, center/zoom props drive FullMap. Disabled after load so pan/zoom is not fought by easeTo. */
+	let syncViewportFromProps = $state(true);
+	let mapInstance: maplibregl.Map | undefined = $state(undefined);
+	let mapViewportEl: HTMLElement | null = $state(null);
+	let mapPageEl: HTMLElement | null = $state(null);
+	let updateUrlTimeout: NodeJS.Timeout | null = null;
+
+	let visitedRegions: VisitedRegion[] = $derived(data.props.visitedRegions ?? []);
+	let visitedCities: VisitedCity[] = $state([]);
+	let pins: Pin[] = $state<Pin[]>([]);
+	$effect.pre(() => {
+		pins = data.props.pins;
+	});
+	let activities: Activity[] = $state([]);
+	let imageMapPins: ImageMapPin[] = $state([]);
+	let imagePinsLoaded = $state(false);
 	let imagePinsLoading = false;
-	let filteredPins = pins;
+	let filteredPins = $state<Pin[]>([]);
 
-	let showVisited = true;
-	let showPlanned = true;
-	let typeString = '';
-	let searchMode: MapSearchMode = 'my';
-	let searchQuery = '';
-	let selected: MapSelection | null = null;
-	let selectedPlace: PlaceSearchResult | null = null;
-	let recommendations: Recommendation[] = [];
-	let recCategory: 'tourism' | 'food' | 'lodging' = 'tourism';
-	let recRadius = 5000;
-	let recLoading = false;
-	let recError: string | null = null;
-	let showSearchThisArea = false;
+	let showVisited = $state(true);
+	let showPlanned = $state(true);
+	let typeString = $state('');
+	let searchMode: MapSearchMode = $state('my');
+	let searchQuery = $state('');
+	let selected = $state<MapSelection | null>(null);
+	let selectedPlace: PlaceSearchResult | null = $state(null);
+	let recommendations: Recommendation[] = $state([]);
+	let recCategory = $state<'tourism' | 'food' | 'lodging'>('tourism');
+	let recRadius = $state(5000);
+	let recLoading = $state(false);
+	let recError: string | null = $state(null);
+	let showSearchThisArea = $state(false);
 	let lastRecSearchCenter: [number, number] | null = null;
-	let viewportCenter: { lng: number; lat: number } = { lng: 0, lat: 0 };
+	let viewportCenter: { lng: number; lat: number } = $state({ lng: 0, lat: 0 });
 	let unbindViewportCenter: (() => void) | null = null;
 
-	let newMarker: { lngLat: { lng: number; lat: number } } | null = null;
-	let newLongitude: number | null = null;
-	let newLatitude: number | null = null;
+	let newMarker: { lngLat: { lng: number; lat: number } } | null = $state(null);
+	let newLongitude: number | null = $state(null);
+	let newLatitude: number | null = $state(null);
 
 	let locationCache: Map<string, Location> = new Map();
 	let locationRequests: Map<string, Promise<Location | null>> = new Map();
-	let previewLocation: Location | null = null;
-	let previewLoading = false;
-	let previewError: string | null = null;
+	let previewLocation: Location | null = $state(null);
+	let previewLoading = $state(false);
+	let previewError: string | null = $state(null);
 	let previewRequestSeq = 0;
 
-	let isQuickAdding = false;
-	let locationBeingUpdated: Location | undefined = undefined;
-	let modalLocationPrefill: Location | null = null;
-	let modalLodgingPrefill: Lodging | null = null;
-	let modalSkipQuickStart = false;
+	let isQuickAdding = $state(false);
+	let locationBeingUpdated: Location | undefined = $state(undefined);
+	let modalLocationPrefill: Location | null = $state(null);
+	let modalLodgingPrefill: Lodging | null = $state(null);
+	let modalSkipQuickStart = $state(false);
 
 	const PIN_SOURCE_ID = 'map-pins';
 	const pinClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 };
@@ -146,6 +208,23 @@
 		const numeric = typeof value === 'number' ? value : Number(value);
 		return Number.isFinite(numeric) ? numeric : null;
 	}
+
+	let mappableVisitedRegions = $derived(
+		visitedRegions.flatMap((region) => {
+			const lat = parseCoordinate(region.latitude);
+			const lon = parseCoordinate(region.longitude);
+			if (lat === null || lon === null || (lat === 0 && lon === 0)) return [];
+			return [{ ...region, latitude: lat, longitude: lon }];
+		})
+	);
+	let mappableVisitedCities = $derived(
+		visitedCities.flatMap((city) => {
+			const lat = parseCoordinate(city.latitude);
+			const lon = parseCoordinate(city.longitude);
+			if (lat === null || lon === null || (lat === 0 && lon === 0)) return [];
+			return [{ ...city, latitude: lat, longitude: lon }];
+		})
+	);
 
 	function pinToFeature(pin: Pin) {
 		const lat = parseCoordinate(pin.latitude);
@@ -204,9 +283,6 @@
 		return status === 'visited' ? $t('adventures.visited') : $t('adventures.planned');
 	}
 
-	$: imagePinGeoJson = imageMapPinsToGeoJson(imageMapPins);
-	$: imagePinCount = imagePinGeoJson.features.length;
-
 	async function ensureImageMapPinsLoaded() {
 		if (!browser || imagePinsLoaded || imagePinsLoading) return;
 		imagePinsLoading = true;
@@ -219,104 +295,6 @@
 			imagePinsLoading = false;
 		}
 	}
-
-	$: if (browser && showImagePins) {
-		void ensureImageMapPinsLoaded();
-	}
-
-	$: totalAdventures = pins.length;
-	$: visitedAdventures = pins.filter((pin) => pin.is_visited).length;
-	$: plannedAdventures = pins.filter((pin) => !pin.is_visited).length;
-	$: totalRegions = visitedRegions.length;
-	$: categoryFilterNames = typeString ? typeString.split(',').filter((item) => item !== '') : [];
-
-	$: isMetric = data.user?.measurement_system !== 'imperial';
-	$: recRadiusOptions = isMetric
-		? [
-				{ value: 1000, label: '1 km' },
-				{ value: 2000, label: '2 km' },
-				{ value: 5000, label: '5 km' },
-				{ value: 10000, label: '10 km' },
-				{ value: 20000, label: '20 km' },
-				{ value: 50000, label: '50 km' }
-			]
-		: [
-				{ value: 1609, label: '1 mi' },
-				{ value: 3219, label: '2 mi' },
-				{ value: 8047, label: '5 mi' },
-				{ value: 16093, label: '10 mi' },
-				{ value: 32187, label: '20 mi' },
-				{ value: 80467, label: '50 mi' }
-			];
-
-	$: {
-		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
-		filteredPins = pins.filter((pin) => {
-			const statusMatch =
-				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
-			if (!statusMatch) return false;
-			if (categoryFilterNames.length > 0) {
-				const categoryName = pin.category?.name;
-				if (!categoryName || !categoryFilterNames.includes(categoryName)) return false;
-			}
-			if (!query) return true;
-			return (
-				pin.name?.toLowerCase().includes(query) ||
-				pin.category?.display_name?.toLowerCase().includes(query)
-			);
-		});
-		if (query && filteredPins.length > 0 && typeof window !== 'undefined') {
-			zoomToFilteredPins();
-		}
-	}
-
-	$: {
-		if (!newMarker) {
-			newLongitude = null;
-			newLatitude = null;
-		}
-	}
-
-	$: {
-		if (locationBeingUpdated?.id) {
-			const index = pins.findIndex((pin) => pin.id === locationBeingUpdated?.id);
-			const pinData = {
-				id: locationBeingUpdated.id,
-				name: locationBeingUpdated.name,
-				latitude: locationBeingUpdated.latitude?.toString() || '',
-				longitude: locationBeingUpdated.longitude?.toString() || '',
-				is_visited: locationBeingUpdated.is_visited,
-				category: locationBeingUpdated.category
-			};
-			if (index !== -1) {
-				pins[index] = pinData;
-				pins = pins;
-			} else {
-				pins = [pinData, ...pins];
-			}
-			locationCache.set(locationBeingUpdated.id, locationBeingUpdated);
-		}
-	}
-
-	$: {
-		if (showActivities && activities.length === 0) fetchAllActivities();
-	}
-	$: {
-		if (showCities && visitedCities.length === 0) fetchVisitedCities();
-	}
-
-	$: selectedPinId = selected?.kind === 'pin' ? selected.pinId : null;
-	$: selectedRecId = selected?.kind === 'recommendation' ? selected.item.id : null;
-	$: selectedImagePinId = selected?.kind === 'image' ? selected.imageId : null;
-	$: previewImagePin = selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null;
-	$: selectedPin = selectedPinId ? pins.find((p) => p.id === selectedPinId) : null;
-	$: randomEligiblePins = filteredPins.filter((pin) => {
-		const lat = parseCoordinate(pin.latitude);
-		const lng = parseCoordinate(pin.longitude);
-		return lat !== null && lng !== null;
-	});
-
-	$: showLodgingAdd = selected?.kind === 'recommendation' && recCategory === 'lodging';
 
 	async function fetchAllActivities() {
 		const response = await fetch('/api/activities');
@@ -354,13 +332,16 @@
 		return request;
 	}
 
+	function revealSidebar() {
+		sidebarOpen = true;
+		sidebarCollapsed = false;
+	}
+
 	async function loadPreviewForPin(pinId: string) {
 		selected = { kind: 'pin', pinId };
 		selectedPlace = null;
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 
 		const cached = locationCache.get(pinId) ?? null;
 		previewLocation = cached;
@@ -409,9 +390,7 @@
 		previewError = null;
 		previewLoading = false;
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 	}
 
 	function handleViewImageParent(event: CustomEvent<{ href: string }>) {
@@ -431,14 +410,19 @@
 	}
 
 	function refreshMapLayout() {
-		if (!mapInstance) return;
-		mapInstance.resize?.();
-		viewportCenter = getMapViewportCenter(mapInstance, mapViewportEl);
+		safeMapResize(mapInstance);
 	}
 
 	function handleMapLoad() {
+		const intended = getInitialMapView() ?? { center: mapCenter, zoom: mapZoom };
+		mapCenter = intended.center;
+		mapZoom = intended.zoom;
+		if (mapInstance && syncViewportFromProps) {
+			mapInstance.jumpTo({ center: intended.center, zoom: intended.zoom });
+		}
 		syncViewportFromProps = false;
 		attachViewportCenterSync();
+		queueMicrotask(refreshMapLayout);
 	}
 
 	function flyTo(lat: number, lng: number, zoom = 14) {
@@ -470,7 +454,7 @@
 		const lat = parseCoordinate(pin.latitude);
 		const lng = parseCoordinate(pin.longitude);
 		if (lat === null || lng === null) return;
-		sidebarOpen = true;
+		revealSidebar();
 		flyTo(lat, lng);
 		await loadPreviewForPin(pin.id);
 	}
@@ -480,9 +464,7 @@
 		selectedPlace = place;
 		selected = { kind: 'place', place };
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 		flyTo(place.lat, place.lng);
 		if (place.place_id) {
 			place = await enrichPlace(place);
@@ -494,9 +476,7 @@
 	function selectRecommendation(item: Recommendation) {
 		selected = { kind: 'recommendation', item };
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 		flyTo(item.latitude, item.longitude, 15);
 	}
 
@@ -752,25 +732,6 @@
 		}, 500);
 	}
 
-	function readStoredMapView(): { center: [number, number]; zoom: number } | null {
-		if (typeof window === 'undefined') return null;
-		try {
-			const storedValue = window.localStorage.getItem(MAP_VIEW_STORAGE_KEY);
-			if (!storedValue) return null;
-			const parsed = JSON.parse(storedValue) as { center?: [number, number]; zoom?: number };
-			if (
-				!Array.isArray(parsed.center) ||
-				parsed.center.length < 2 ||
-				typeof parsed.zoom !== 'number'
-			) {
-				return null;
-			}
-			return { center: [parsed.center[0], parsed.center[1]], zoom: parsed.zoom };
-		} catch {
-			return null;
-		}
-	}
-
 	function persistMapView(lat: number, lng: number, zoom: number) {
 		if (typeof window === 'undefined') return;
 		try {
@@ -796,40 +757,11 @@
 		}
 	}
 
-	$: if (mapInstance) {
-		sidebarOpen;
-		queueMicrotask(refreshMapLayout);
-	}
-
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') clearSelection();
 	}
 
 	onMount(() => {
-		const params = $page.url.searchParams;
-		const lat = params.get('lat');
-		const lng = params.get('lng');
-		const zoom = params.get('zoom');
-
-		if (lat && lng && zoom) {
-			const parsedLat = parseFloat(lat);
-			const parsedLng = parseFloat(lng);
-			const parsedZoom = parseFloat(zoom);
-			if (Number.isFinite(parsedLat) && Number.isFinite(parsedLng) && Number.isFinite(parsedZoom)) {
-				mapCenter = [parsedLng, parsedLat];
-				mapZoom = parsedZoom;
-				return () => {
-					if (updateUrlTimeout) clearTimeout(updateUrlTimeout);
-				};
-			}
-		}
-
-		const storedView = readStoredMapView();
-		if (storedView) {
-			mapCenter = storedView.center;
-			mapZoom = storedView.zoom;
-		}
-
 		return () => {
 			if (updateUrlTimeout) clearTimeout(updateUrlTimeout);
 		};
@@ -838,6 +770,113 @@
 	onDestroy(() => {
 		unbindViewportCenter?.();
 	});
+	let imagePinGeoJson = $derived(imageMapPinsToGeoJson(imageMapPins));
+	let imagePinCount = $derived(imagePinGeoJson.features.length);
+	run(() => {
+		if (browser && showImagePins) {
+			void ensureImageMapPinsLoaded();
+		}
+	});
+	run(() => {
+		if (locationBeingUpdated?.id) {
+			const index = pins.findIndex((pin) => pin.id === locationBeingUpdated?.id);
+			const pinData = {
+				id: locationBeingUpdated.id,
+				name: locationBeingUpdated.name,
+				latitude: locationBeingUpdated.latitude?.toString() || '',
+				longitude: locationBeingUpdated.longitude?.toString() || '',
+				is_visited: locationBeingUpdated.is_visited,
+				category: locationBeingUpdated.category
+			};
+			if (index !== -1) {
+				pins[index] = pinData;
+				pins = pins;
+			} else {
+				pins = [pinData, ...pins];
+			}
+			locationCache.set(locationBeingUpdated.id, locationBeingUpdated);
+		}
+	});
+	let totalAdventures = $derived(pins.length);
+	let visitedAdventures = $derived(pins.filter((pin) => pin.is_visited).length);
+	let plannedAdventures = $derived(pins.filter((pin) => !pin.is_visited).length);
+	let totalRegions = $derived(visitedRegions.length);
+	let categoryFilterNames = $derived(
+		typeString ? typeString.split(',').filter((item) => item !== '') : []
+	);
+	let isMetric = $derived(data.user?.measurement_system !== 'imperial');
+	let recRadiusOptions = $derived(
+		isMetric
+			? [
+					{ value: 1000, label: '1 km' },
+					{ value: 2000, label: '2 km' },
+					{ value: 5000, label: '5 km' },
+					{ value: 10000, label: '10 km' },
+					{ value: 20000, label: '20 km' },
+					{ value: 50000, label: '50 km' }
+				]
+			: [
+					{ value: 1609, label: '1 mi' },
+					{ value: 3219, label: '2 mi' },
+					{ value: 8047, label: '5 mi' },
+					{ value: 16093, label: '10 mi' },
+					{ value: 32187, label: '20 mi' },
+					{ value: 80467, label: '50 mi' }
+				]
+	);
+	run(() => {
+		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
+		filteredPins = pins.filter((pin) => {
+			const statusMatch =
+				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
+			if (!statusMatch) return false;
+			if (categoryFilterNames.length > 0) {
+				const categoryName = pin.category?.name;
+				if (!categoryName || !categoryFilterNames.includes(categoryName)) return false;
+			}
+			if (!query) return true;
+			return (
+				pin.name?.toLowerCase().includes(query) ||
+				pin.category?.display_name?.toLowerCase().includes(query)
+			);
+		});
+		if (query && filteredPins.length > 0 && typeof window !== 'undefined') {
+			zoomToFilteredPins();
+		}
+	});
+	run(() => {
+		if (!newMarker) {
+			newLongitude = null;
+			newLatitude = null;
+		}
+	});
+	run(() => {
+		if (showActivities && activities.length === 0) fetchAllActivities();
+	});
+	run(() => {
+		if (showCities && visitedCities.length === 0) fetchVisitedCities();
+	});
+	let selectedPinId = $derived(selected?.kind === 'pin' ? selected.pinId : null);
+	let selectedRecId = $derived(selected?.kind === 'recommendation' ? selected.item.id : null);
+	let selectedImagePinId = $derived(selected?.kind === 'image' ? selected.imageId : null);
+	let previewImagePin = $derived(
+		selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null
+	);
+	let selectedPin = $derived(selectedPinId ? pins.find((p) => p.id === selectedPinId) : null);
+	let randomEligiblePins = $derived(
+		filteredPins.filter((pin) => {
+			const lat = parseCoordinate(pin.latitude);
+			const lng = parseCoordinate(pin.longitude);
+			return lat !== null && lng !== null;
+		})
+	);
+	let showLodgingAdd = $derived(selected?.kind === 'recommendation' && recCategory === 'lodging');
+	$effect(() => {
+		void sidebarOpen;
+		void sidebarCollapsed;
+		if (syncViewportFromProps || !mapInstance) return;
+		queueMicrotask(refreshMapLayout);
+	});
 </script>
 
 <svelte:head>
@@ -845,10 +884,16 @@
 	<meta name="description" content="View your travels on a map." />
 </svelte:head>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
-<div class="w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden">
-	<div class="drawer lg:drawer-open h-full w-full">
+<div
+	bind:this={mapPageEl}
+	class={[
+		'map-page w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden',
+		sidebarCollapsed && 'sidebar-collapsed'
+	]}
+>
+	<div class="drawer map-page-drawer h-full w-full">
 		<input id="map-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 
 		<div
@@ -874,13 +919,7 @@
 					on:mapClick={addMarker}
 					on:mapMove={handleMapMove}
 				>
-					<svelte:fragment
-						slot="marker"
-						let:markerProps
-						let:markerLngLat
-						let:isActive
-						let:setActive
-					>
+					{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
 						{#if markerProps && markerLngLat}
 							{@const isSelected = selectedPinId === markerProps.id}
 							<Marker
@@ -898,19 +937,19 @@
 										tabindex="0"
 										aria-label={markerProps.name}
 										aria-pressed={isSelected}
-										on:mouseenter={() => setActive(true)}
-										on:mouseleave={() => {
+										onmouseenter={() => setActive(true)}
+										onmouseleave={() => {
 											if (!isSelected) setActive(false);
 										}}
-										on:focus={() => setActive(true)}
-										on:blur={() => {
+										onfocus={() => setActive(true)}
+										onblur={() => {
 											if (!isSelected) setActive(false);
 										}}
-										on:click={(e) => {
+										onclick={(e) => {
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
 										}}
-										on:keydown={(e) => {
+										onkeydown={(e) => {
 											if (e.key !== 'Enter') return;
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
@@ -924,7 +963,7 @@
 										class:opacity-100={isActive || isSelected}
 									>
 										<div
-											class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+											class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
 										>
 											<div class="card-body gap-2 p-3">
 												<h3 class="font-semibold text-sm leading-tight truncate">
@@ -951,9 +990,9 @@
 								</div>
 							</Marker>
 						{/if}
-					</svelte:fragment>
+					{/snippet}
 
-					<svelte:fragment slot="overlays">
+					{#snippet overlays()}
 						{#if newMarker}
 							<DefaultMarker lngLat={newMarker.lngLat} />
 						{/if}
@@ -976,8 +1015,8 @@
 							on:select={handleSelectRecommendation}
 						/>
 
-						{#each visitedRegions as region}
-							{#if showRegions}
+						{#if showRegions}
+							{#each mappableVisitedRegions as region (region.id)}
 								<Marker
 									lngLat={[region.longitude, region.latitude]}
 									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
@@ -990,11 +1029,11 @@
 										</div>
 									</Popup>
 								</Marker>
-							{/if}
-						{/each}
+							{/each}
+						{/if}
 
 						{#if showCities}
-							{#each visitedCities as city}
+							{#each mappableVisitedCities as city (city.id)}
 								<Marker
 									lngLat={[city.longitude, city.latitude]}
 									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"
@@ -1032,13 +1071,13 @@
 							selectedId={selectedImagePinId}
 							on:select={handleImagePinSelect}
 						/>
-					</svelte:fragment>
+					{/snippet}
 				</FullMap>
 			</div>
 
 			{#if searchMode === 'nearby'}
 				<div
-					class="absolute top-[8.75rem] sm:top-[7.5rem] lg:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
+					class="map-ui-center absolute top-[8.75rem] sm:top-[7.5rem] lg:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
 				>
 					{#if recLoading}
 						<div
@@ -1052,7 +1091,7 @@
 						<button
 							type="button"
 							class="btn btn-primary btn-sm shadow-lg pointer-events-auto gap-2"
-							on:click={searchThisArea}
+							onclick={searchThisArea}
 						>
 							<Compass class="w-4 h-4" />
 							{$t('map.search_this_area')}
@@ -1063,7 +1102,7 @@
 
 			<!-- Floating map toolbar -->
 			<div
-				class="absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-start pointer-events-none min-w-0"
+				class="map-ui-left absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-start pointer-events-none min-w-0"
 			>
 				<div
 					class="flex items-start gap-1.5 lg:gap-2 min-w-0 w-full lg:flex-1 lg:max-w-xl pointer-events-none"
@@ -1071,7 +1110,7 @@
 					<button
 						type="button"
 						class="btn btn-ghost btn-square btn-sm bg-base-100/90 shadow-md pointer-events-auto lg:hidden shrink-0 mt-0 relative"
-						on:click={() => (sidebarOpen = !sidebarOpen)}
+						onclick={() => (sidebarOpen = !sidebarOpen)}
 						aria-label={$t('map.map_controls')}
 					>
 						<Filter class="w-5 h-5" />
@@ -1102,11 +1141,11 @@
 				>
 					{#if newMarker}
 						<div class="flex items-center gap-2 pointer-events-auto shrink-0">
-							<button type="button" class="btn btn-primary btn-sm gap-1" on:click={newAdventure}>
+							<button type="button" class="btn btn-primary btn-sm gap-1" onclick={newAdventure}>
 								<Plus class="w-4 h-4" />
 								<span class="hidden sm:inline">{$t('map.add_location_at_marker')}</span>
 							</button>
-							<button type="button" class="btn btn-ghost btn-sm btn-square" on:click={clearMarker}>
+							<button type="button" class="btn btn-ghost btn-sm btn-square" onclick={clearMarker}>
 								<Clear class="w-4 h-4" />
 							</button>
 						</div>
@@ -1117,26 +1156,14 @@
 							embedded
 							map={mapInstance}
 							bind:basemapType
-							fullscreenTarget={mapViewportEl}
+							fullscreenTarget={mapPageEl}
 						/>
 					</div>
 				</div>
 			</div>
-
-			<!-- Compact title badge -->
-			<div
-				class="absolute bottom-3 left-3 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-base-100/80 backdrop-blur rounded-lg px-3 py-1.5 border border-base-300 shadow-sm"
-			>
-				<MapIcon class="w-5 h-5 text-primary" />
-				<span class="text-sm font-semibold text-primary">{$t('map.location_map')}</span>
-				<span class="text-xs text-base-content/60">
-					{filteredPins.length}
-					{$t('map.locations_shown')}
-				</span>
-			</div>
 		</div>
 
-		<!-- Sidebar -->
+		<!-- Sidebar: overlay drawer on mobile, floating panel on desktop -->
 		<div class="drawer-side z-40">
 			<label
 				for="map-drawer"
@@ -1145,9 +1172,26 @@
 				aria-hidden={!sidebarOpen}
 			></label>
 			<div
-				class="w-80 h-full max-h-[calc(100dvh-4rem)] bg-base-100 shadow-2xl flex flex-col overflow-hidden"
+				class="map-controls-panel w-80 h-full max-h-[calc(100dvh-4rem)] bg-base-100/95 backdrop-blur-xl flex flex-col overflow-hidden lg:overflow-visible border-base-300/80 lg:border"
 			>
-				<div class="p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
+				<button
+					type="button"
+					class="map-controls-toggle hidden lg:grid place-items-center h-10 w-8 bg-base-100/95 backdrop-blur-xl border border-base-300/80 border-l-0 rounded-r-xl text-base-content/70 hover:text-base-content hover:bg-base-200/80"
+					onclick={() => (sidebarCollapsed = !sidebarCollapsed)}
+					aria-expanded={!sidebarCollapsed}
+					aria-controls="map-controls-panel-body"
+					aria-label={sidebarCollapsed ? $t('map.show_controls') : $t('map.hide_controls')}
+				>
+					{#if sidebarCollapsed}
+						<ChevronRight class="w-5 h-5" />
+					{:else}
+						<ChevronLeft class="w-5 h-5" />
+					{/if}
+				</button>
+				<div
+					id="map-controls-panel-body"
+					class="p-6 flex-1 min-h-0 h-full flex flex-col overflow-hidden lg:rounded-[inherit]"
+				>
 					{#if sidebarMode === 'preview'}
 						<div class="flex items-center gap-2 mb-4 shrink-0">
 							<div class="p-2 bg-primary/10 rounded-lg">
@@ -1230,13 +1274,13 @@
 										{$t('map.nearby_controls')}
 									</h3>
 									<div class="space-y-3">
-										<div class="form-control">
-											<label class="label py-0" for="rec-category">
-												<span class="label-text text-xs">{$t('map.recommendation_category')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label text-xs" for="rec-category"
+												>{$t('map.recommendation_category')}</label
+											>
 											<select
 												id="rec-category"
-												class="select select-bordered select-sm w-full"
+												class="select select-sm w-full"
 												bind:value={recCategory}
 											>
 												<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
@@ -1244,13 +1288,13 @@
 												<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
 											</select>
 										</div>
-										<div class="form-control">
-											<label class="label py-0" for="rec-radius">
-												<span class="label-text text-xs">{$t('map.recommendation_radius')}</span>
-											</label>
+										<div class="flex flex-col">
+											<label class="field-label text-xs" for="rec-radius"
+												>{$t('map.recommendation_radius')}</label
+											>
 											<select
 												id="rec-radius"
-												class="select select-bordered select-sm w-full"
+												class="select select-sm w-full"
 												bind:value={recRadius}
 											>
 												{#each recRadiusOptions as opt}
@@ -1262,7 +1306,7 @@
 											type="button"
 											class="btn btn-primary btn-sm w-full"
 											disabled={recLoading}
-											on:click={searchThisArea}
+											onclick={searchThisArea}
 										>
 											{$t('map.search_this_area')}
 										</button>
@@ -1280,7 +1324,7 @@
 														<button
 															type="button"
 															class={selectedRecId === rec.id ? 'active' : ''}
-															on:click={() => selectRecommendation(rec)}
+															onclick={() => selectRecommendation(rec)}
 														>
 															<span class="truncate">{rec.name}</span>
 														</button>
@@ -1305,57 +1349,64 @@
 									<Eye class="w-5 h-5" />
 									{$t('map.display_options')}
 								</h3>
-								<div class="space-y-3">
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+								<div class="flex flex-col">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showVisited}
-											class="checkbox checkbox-success checkbox-sm"
+											class="checkbox checkbox-success"
 										/>
-										<span class="label-text">{$t('adventures.visited')} ({visitedAdventures})</span>
+										<span class="text-sm leading-snug min-w-0"
+											>{$t('adventures.visited')} ({visitedAdventures})</span
+										>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showPlanned}
-											class="checkbox checkbox-info checkbox-sm"
+											class="checkbox checkbox-info"
 										/>
-										<span class="label-text">{$t('adventures.planned')} ({plannedAdventures})</span>
+										<span class="text-sm leading-snug min-w-0"
+											>{$t('adventures.planned')} ({plannedAdventures})</span
+										>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showRegions}
-											class="checkbox checkbox-accent checkbox-sm"
+											class="checkbox checkbox-accent"
 										/>
-										<span class="label-text">{$t('profile.visited_regions')} ({totalRegions})</span>
+										<span class="text-sm leading-snug min-w-0"
+											>{$t('profile.visited_regions')} ({totalRegions})</span
+										>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showCities}
-											class="checkbox checkbox-warning checkbox-sm"
+											class="checkbox checkbox-warning"
 										/>
-										<span class="label-text">{$t('map.show_visited_cities')}</span>
+										<span class="text-sm leading-snug min-w-0">{$t('map.show_visited_cities')}</span
+										>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showImagePins}
-											class="checkbox checkbox-secondary checkbox-sm"
+											class="checkbox checkbox-secondary"
 										/>
-										<span class="label-text">
+										<span class="text-sm leading-snug min-w-0">
 											{$t('map.photos')}{#if imagePinsLoaded}
 												{' '}({imagePinCount}){/if}
 										</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3 py-1">
+									<label class="filter-option">
 										<input
 											type="checkbox"
 											bind:checked={showActivities}
-											class="checkbox checkbox-error checkbox-sm"
+											class="checkbox checkbox-error"
 										/>
-										<span class="label-text">{$t('settings.activities')}</span>
+										<span class="text-sm leading-snug min-w-0">{$t('settings.activities')}</span>
 									</label>
 								</div>
 							</div>
@@ -1400,6 +1451,106 @@
 {/if}
 
 <style>
+	.map-page {
+		--map-float-inset: 0.75rem;
+		--map-float-width: 20rem;
+		--map-float-gutter: calc(var(--map-float-inset) + var(--map-float-width) + 0.75rem);
+	}
+
+	.map-page:fullscreen,
+	.map-page:-webkit-full-screen {
+		width: 100%;
+		height: 100%;
+		max-height: none;
+		min-height: 100%;
+		background-color: var(--color-base-200);
+	}
+
+	.map-page:fullscreen .map-page-drawer,
+	.map-page:-webkit-full-screen .map-page-drawer,
+	.map-page:fullscreen .drawer-content,
+	.map-page:-webkit-full-screen .drawer-content {
+		width: 100%;
+		height: 100%;
+	}
+
+	@media (min-width: 1024px) {
+		.map-page-drawer {
+			display: block;
+			position: relative;
+		}
+
+		.drawer-content {
+			width: 100%;
+			height: 100%;
+		}
+
+		.drawer-side {
+			pointer-events: none;
+			visibility: visible;
+			opacity: 1;
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			overflow: visible;
+			background: transparent;
+			z-index: 30;
+		}
+
+		.drawer-overlay {
+			display: none;
+		}
+
+		.drawer-side > .map-controls-panel {
+			pointer-events: auto;
+			translate: 0;
+			will-change: transform;
+			width: var(--map-float-width);
+			height: calc(100% - (var(--map-float-inset) * 2));
+			max-height: none;
+			margin: var(--map-float-inset);
+			border-radius: 1rem;
+			overflow: visible;
+			transition: translate 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		.map-controls-toggle {
+			position: absolute;
+			top: 50%;
+			right: 0;
+			translate: 100% -50%;
+			z-index: 2;
+		}
+
+		.map-ui-left,
+		.map-ui-center {
+			transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		.map-ui-left {
+			left: var(--map-float-gutter);
+		}
+
+		.map-ui-center {
+			left: calc(50% + (var(--map-float-gutter) / 2));
+		}
+
+		.sidebar-collapsed {
+			--map-float-gutter: var(--map-float-inset);
+		}
+
+		.sidebar-collapsed .drawer-side > .map-controls-panel {
+			translate: calc(-1 * (var(--map-float-width) + var(--map-float-inset)));
+		}
+
+		.sidebar-collapsed .map-controls-toggle {
+			border-left-width: 1px;
+			border-top-left-radius: 0.75rem;
+			border-bottom-left-radius: 0.75rem;
+		}
+	}
+
 	:global(.maplibregl-marker.map-pin),
 	:global(.mapboxgl-marker.map-pin) {
 		pointer-events: none;

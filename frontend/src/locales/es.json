@@ -819,7 +819,13 @@
 			"summary_personal_desc": "Vinculado a tu cuenta",
 			"update": "Actualizar"
 		},
-		"invalid_code": "código no válido"
+		"invalid_code": "código no válido",
+		"preferred_date_format": "Preferred date format",
+		"preferred_date_format_desc": "Controls how dates are shown across AdventureLog. Browser default follows your device settings.",
+		"date_format_locale": "Browser default",
+		"date_format_mdy": "MM/DD/YYYY",
+		"date_format_dmy": "DD/MM/YYYY",
+		"date_format_ymd": "YYYY-MM-DD"
 	},
 	"checklist": {
 		"checklist_delete_error": "Error al eliminar la lista de tareas",
@@ -1296,7 +1302,6 @@
 		"my_locations": "Mis ubicaciones",
 		"best_happened_at": "Lo mejor sucedió en"
 	},
-	"settings_download_backup": "Descargar copia de seguridad",
 	"invites": {
 		"accept": "Aceptar",
 		"accept_failed": "No se pudo aceptar la invitación",
