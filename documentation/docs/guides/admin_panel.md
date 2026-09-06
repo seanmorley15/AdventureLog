@@ -1,3 +1,4 @@
+
 # Admin Panel
 
 The AdventureLog admin panel is powered by Django and is available at `/admin` on your backend URL. In Standard Deployment installs, that is the same domain as the frontend (for example `https://adventurelog.example.com/admin`).
