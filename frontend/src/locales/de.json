@@ -460,10 +460,10 @@
 		"endurain_import_success": "Von Endurain importierte Aktivität",
 		"hide_endurain_activities": "Endurain-Aktivitäten ausblenden",
 		"importing_endurain_activity": "Aktivität aus Endurain importieren...",
-		"loading_sunrise_sunset": "Sonnenaufgang wird geladen",
+		"loading_sunrise_sunset": "Sonnenauf-/untergang laden...",
 		"no_endurain_activities": "Während dieses Besuchs wurden keine Endurain-Aktivitäten gefunden",
 		"show_endurain_activities": "Endurain-Aktivitäten anzeigen",
-		"show_sunrise_sunset": "Sonnenaufgang anzeigen",
+		"show_sunrise_sunset": "Sonnenauf- / untergang anzeigen",
 		"sunrise_sunset_load_error": "Sonnenauf- und -untergangszeiten konnten nicht geladen werden",
 		"view_endurain_activities": "Endurain-Aktivitäten ansehen"
 	},
@@ -500,7 +500,7 @@
 		"themes": {
 			"aestheticDark": "Ästhetisch Dunkel",
 			"aestheticLight": "Ästhetisch Hell",
-			"aqua": "Aqua",
+			"aqua": "Wasser",
 			"dark": "Dunkel",
 			"dim": "Gedämpft",
 			"forest": "Wald",
@@ -540,7 +540,7 @@
 		"enter_password": "Gib dein Passwort ein",
 		"enter_username": "Gib deinen Benutzernamen ein",
 		"logging_in": "Anmelden",
-		"totp": "Zwei-Faktor-Code",
+		"totp": "Zwei-Faktor oder Wiederherstellungs-Code",
 		"user_email_verification_required": "E-Mail-Bestätigung erforderlich. Bitte überprüfe deine E-Mail auf einen Bestätigungslink.",
 		"totp_hint": "Geben Sie einen 6-stelligen Authentifizierungscode oder einen 8-stelligen Wiederherstellungscode ein.",
 		"totp_placeholder": "000000 oder 12345678"
@@ -797,13 +797,13 @@
 				"wikipedia_name": "Wikipedia",
 				"nominatim_desc": "Ersatz-Geokodierung und Ortssuche, wenn Google Maps nicht verfügbar ist."
 			},
-			"builtin_desc": "Diese Datenquellen unterstützen AdventureLog sofort. \nEs ist keine Einrichtung erforderlich.",
+			"builtin_desc": "Diese Datenquellen unterstützen AdventureLog sofort. Es ist keine Einrichtung erforderlich.",
 			"builtin_title": "Integrierte Dienste",
 			"cancel": "Stornieren",
 			"connect": "Verbinden",
 			"disconnect": "Trennen",
 			"edit": "Bearbeiten",
-			"google_maps_active_hint": "Google Maps ist auf dieser Instanz aktiv. \nOrtssuche und -anreicherung verwenden, sofern verfügbar.",
+			"google_maps_active_hint": "Google Maps ist auf dieser Instanz aktiv. Ortssuche und -anreicherung verwenden, sofern verfügbar.",
 			"google_maps_features": "Ortssuche, Kartendetails, Quick-Add-Anreicherung und Empfehlungen in der Nähe.",
 			"included": "Im Lieferumfang enthalten",
 			"instance_desc": "Optionale Dienste, die von Ihrem AdventureLog-Administrator konfiguriert werden.",
@@ -825,7 +825,8 @@
 		"date_format_locale": "Browser default",
 		"date_format_mdy": "MM/DD/YYYY",
 		"date_format_dmy": "DD/MM/YYYY",
-		"date_format_ymd": "YYYY-MM-DD"
+		"date_format_ymd": "YYYY-MM-DD",
+		"download_backup": "Sicherung herunterladen"
 	},
 	"checklist": {
 		"checklist_delete_error": "Fehler beim Löschen der Checkliste",

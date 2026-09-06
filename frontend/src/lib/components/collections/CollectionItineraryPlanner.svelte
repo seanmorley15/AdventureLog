@@ -93,7 +93,8 @@
 	function getItemType(item: CollectionItineraryItem): string {
 		// API historically returned ContentType PK in `content_type` and the model
 		// name in `object_name` / `item.type`. Prefer a real model name.
-		const raw = [item.content_type, item.object_name, item.item?.type].find(isContentTypeName) || '';
+		const raw =
+			[item.content_type, item.object_name, item.item?.type].find(isContentTypeName) || '';
 		return CONTENT_TYPE_ALIASES[raw] || raw;
 	}
 

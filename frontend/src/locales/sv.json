@@ -605,7 +605,7 @@
 		"enter_password": "Ange ditt lösenord",
 		"enter_username": "Ange ditt användarnamn",
 		"logging_in": "Inloggning",
-		"totp": "Tvåfaktorkod",
+		"totp": "Tvåfaktors eller återställningskod",
 		"user_email_verification_required": "E-postverifiering krävs. Kontrollera din e-post för en verifieringslänk.",
 		"totp_hint": "Ange en 6-siffrig autentiseringskod eller en 8-siffrig återställningskod.",
 		"totp_placeholder": "000000 eller 12345678"
@@ -825,7 +825,8 @@
 		"date_format_locale": "Browser default",
 		"date_format_mdy": "MM/DD/YYYY",
 		"date_format_dmy": "DD/MM/YYYY",
-		"date_format_ymd": "YYYY-MM-DD"
+		"date_format_ymd": "YYYY-MM-DD",
+		"download_backup": "Ladda ner säkerhetskopiering"
 	},
 	"checklist": {
 		"checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",

@@ -368,7 +368,7 @@
 		"view_on": "查看",
 		"view_strava_activities": "查看Strava活动",
 		"view_trail": "查看路径",
-		"wanderer_integration_error": "流浪者集成未启用或已过期。",
+		"wanderer_integration_error": "流浪者集成未启用。请在设置 → 集成中连接。",
 		"wikipedia_error": "无法从Wikipedia产生描述",
 		"high": "高的",
 		"low": "低的",
@@ -540,7 +540,7 @@
 		"enter_password": "输入您的密码",
 		"enter_username": "输入您的用户名",
 		"logging_in": "登录",
-		"totp": "二步验证代码",
+		"totp": "二步验证或恢复代码",
 		"user_email_verification_required": "需要电子邮件验证。\n请检查您的电子邮件以获取验证链接。",
 		"totp_hint": "输入 6 位验证码或 8 位恢复码。",
 		"totp_placeholder": "000000 或 12345678"
@@ -825,7 +825,8 @@
 		"date_format_locale": "Browser default",
 		"date_format_mdy": "MM/DD/YYYY",
 		"date_format_dmy": "DD/MM/YYYY",
-		"date_format_ymd": "YYYY-MM-DD"
+		"date_format_ymd": "YYYY-MM-DD",
+		"download_backup": "下载备份"
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",
@@ -942,7 +943,7 @@
 		"found": "成立",
 		"result": "结果",
 		"results": "结果",
-		"try_searching_desc": "尝试搜索冒险，收藏，国家，地区，城市或用户。",
+		"try_searching_desc": "尝试搜索地点，收藏，笔记，交通，国家，地区，城市或用户。",
 		"actions": {
 			"calendar": "前往日历",
 			"calendar_desc": "查看您的旅行日历",
@@ -1016,7 +1017,7 @@
 		"locations_shown": "显示的地点",
 		"place_marker_desc_location": "单击地图以放置标记。",
 		"show_visited_cities": "参观城市",
-		"search_locations": "搜索地点...",
+		"search_locations": "搜索你的地点...",
 		"add_as_lodging": "添加为住宿",
 		"add_with_details": "添加更多详细信息",
 		"back_to_controls": "返回地图控件",
@@ -1329,7 +1330,7 @@
 	"wanderer": {
 		"connected": "已成功连接 Wanderer",
 		"connection_error": "连接 Wanderer 时出错",
-		"wanderer_integration_desc": "连接 Wanderer，可便捷导入轨迹并在地点页面查看",
+		"wanderer_integration_desc": "通过API key连接 Wanderer，可导入轨迹并在地点页面查看",
 		"api_key": "API密钥",
 		"api_key_placeholder": "流浪者钥匙_...",
 		"disconnect_error": "断开漫游者连接时出错",

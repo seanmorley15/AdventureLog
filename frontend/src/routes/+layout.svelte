@@ -27,6 +27,12 @@
 	register('hu', () => import('../locales/hu.json'));
 	register('ca', () => import('../locales/ca.json'));
 	register('cs', () => import('../locales/cs.json'));
+	register('pt', () => import('../locales/pt.json'));
+	register('sq', () => import('../locales/sq.json'));
+	register('ta', () => import('../locales/ta.json'));
+	register('id', () => import('../locales/id.json'));
+	register('gsw', () => import('../locales/gsw.json'));
+	register('lb', () => import('../locales/lb.json'));
 
 	let { data, children } = $props();
 
@@ -54,7 +60,11 @@
 		'hu',
 		'ca',
 		'cs',
-		'ta'
+		'ta',
+		'sq',
+		'id',
+		'gsw',
+		'lb'
 	];
 
 	if (browser) {

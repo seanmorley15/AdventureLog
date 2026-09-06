@@ -95,7 +95,11 @@
 		hu: 'Magyar',
 		ca: 'Català',
 		cs: 'Čeština',
-		ta: 'தமிழ்'
+		ta: 'தமிழ்',
+		sq: 'Shqip',
+		id: 'Bahasa Indonesia',
+		gsw: 'Alemannisch',
+		lb: 'Lëtzebuergesch'
 	};
 
 	const submitLocaleChange = (event: Event) => {

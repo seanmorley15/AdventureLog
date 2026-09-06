@@ -1259,7 +1259,8 @@
 		"date_format_locale": "Browser default",
 		"date_format_mdy": "MM/DD/YYYY",
 		"date_format_dmy": "DD/MM/YYYY",
-		"date_format_ymd": "YYYY-MM-DD"
+		"date_format_ymd": "YYYY-MM-DD",
+		"download_backup": "Descărcați Backup"
 	},
 	"share": {
 		"available": "Disponibil",
