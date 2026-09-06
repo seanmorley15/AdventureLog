@@ -547,7 +547,7 @@
     "usage_prefix": "Use esta chave no"
   },
   "auth": {
-    "confirm_password": "Confirme a sua palavra passe",
+    "confirm_password": "Confirme a Palavra Passe",
     "email": "E-mail",
     "enter_password": "Insira a sua palavra passe",
     "enter_username": "Digite seu nome de utilizador",
@@ -601,7 +601,15 @@
     "reset_request_failed": "Incapaz de enviar instruções para reiniciar a palavra passe. Por favor tente outra vez.",
     "reset_failed": "Incapaz de reiniciar a sua palavra passe. O link pode ter expirado.",
     "both_passwords_required": "Ambos os campos de palavra passe são obrigatórios.",
-    "social_login_error_title": "Iniciar de sessão social falhou"
+    "social_login_error_title": "Iniciar de sessão social falhou",
+    "social_login_error_desc": "Não pudemos completar o iniciar de sessão com o seu provedor. Por favor tente outra vez ou use a sua palavra passe.",
+    "invite_signup_title": "Aceitar o seu convite",
+    "invite_signup_desc": "Criar a sua conta usando o endereço de email convidado em baixo.",
+    "invite_invalid_title": "Convite não disponível",
+    "invite_invalid_desc": "Este link de convite é inválido ou já foi usado.",
+    "invite_expired_desc": "Este convite expirou. Peça ao administrador do servidor para enviar um novo convite.",
+    "invite_accepted_desc": "Este convite já foi aceite. Inicie sessão com a sua conta existente.",
+    "invite_registered_desc": "Já existe uma conta para este email de convite. Inicie sessão em vez disto."
   },
   "calendar": {
     "all_day_event": "Evento o dia todo",
@@ -1330,7 +1338,15 @@
     "date_format_locale": "Browser default",
     "date_format_mdy": "MM/DD/YYYY",
     "date_format_dmy": "DD/MM/YYYY",
-    "date_format_ymd": "YYYY-MM-DD"
+    "date_format_ymd": "YYYY-MM-DD",
+    "error_change_password": "Incapaz de mudar a palavra passe. Por favor verifique a sua palavra passe atual e tente outra vez.",
+    "password_change_logout_warning": "A sua sessão vai ser terminada após mudar a sua palavra passe.",
+    "reauth_required_title": "Confirme a sua palavra passe",
+    "reauth_required_desc": "Para segurança, insira a sua palavra passe para continuar a ativar a autenticação de multi-factore.",
+    "reauth_required_disable_desc": "Para segurança, insira a sua palavra passe para desativar a autenticação de multi-factore.",
+    "reauth_verify": "Verificar palavra passe",
+    "reauth_incorrect_password": "Palavra passe incorreta. Por favor tente outra vez.",
+    "reauth_success": "Palavra passe verificada. A continuar…"
   },
   "share": {
     "available": "Disponível",
