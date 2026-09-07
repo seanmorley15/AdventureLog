@@ -1600,6 +1600,17 @@
   "billing": {
     "page_title": "Abrechnung & Abonnement",
     "page_description": "Verwalten Sie Ihr AdventureLog Cloud-Abonnement, Ihre Zahlungsmethode und Ihren Teststatus.",
-    "cloud_badge": "AdventureLog Cloud"
+    "cloud_badge": "AdventureLog Cloud",
+    "self_hosted_title": "Cloud-Abrechnung ist nicht aktiviert",
+    "self_hosted_description": "Diese Instanz läuft im selbst gehosteten Modus. Alle Funktionen sind ohne Abonnement freigeschaltet.",
+    "alert_trial_ended_title": "Ihre Testphase ist abgelaufen",
+    "alert_trial_ended_description": "Abonnieren Sie den Dienst, um den Zugriff wiederherzustellen und Ihre Abenteuer geräteübergreifend zu synchronisieren.",
+    "alert_past_due_title": "Zahlung fehlgeschlagen",
+    "alert_past_due_description": "Ihre letzte Zahlung konnte nicht verarbeitet werden. Aktualisieren Sie Ihre Zahlungsmethode, um den Zugriff wiederherzustellen.",
+    "alert_canceled_title": "Abonnement gekündigt",
+    "alert_canceled_description": "Ihr Abonnement ist nicht mehr aktiv. Verlängern Sie Ihr Abonnement, um AdventureLog Cloud weiterhin nutzen zu können.",
+    "alert_scheduled_title": "Abonnement geplant",
+    "alert_scheduled_description": "Die kostenpflichtige Abrechnung beginnt am {Datum}. Bis dahin bleibt Ihr Testzugang bestehen.",
+    "alert_scheduled_description_fallback": "Die kostenpflichtige Abrechnung beginnt automatisch, sobald Ihre Testphase endet."
   }
 }
