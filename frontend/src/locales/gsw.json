@@ -29,7 +29,10 @@
       "dim": "Abdunkled"
     },
     "navigation": "Navigation",
-    "mobile_login": "Handy Login"
+    "mobile_login": "Handy Login",
+    "billing": "Rechnung",
+    "access_paused": "Zugriff pausiert",
+    "trial_days_left": "Testzeitraum: {days} Tage übrig"
   },
   "about": {
     "about": "Über",
@@ -515,7 +518,9 @@
     "collection_duplicate_success": "Sammlig erfolgriich dupliziert! Wiiterleite...",
     "collection_duplicate_error": "Duplizierig vode Sammlig fehlgschlage.",
     "add_details": "Details hinzuefüege",
-    "sun_times": "Sunnestunde"
+    "sun_times": "Sunnestunde",
+    "google_maps": "Google Maps",
+    "google_maps_error": "Fehler bim uslese vode Beschriibig us Google Maps"
   },
   "worldtravel": {
     "country_list": "Länderliste",
@@ -609,7 +614,42 @@
     "totp_placeholder": "000000 oder 12345678",
     "totp_hint": "Gib en 6-Stelle Authentifizierigscode Code oder en 8-Stelle Wiederherstelligscode ih.",
     "logging_in": "Am amelde",
-    "invite_accepted_desc": "Die Iladig isch bereits akzeptiert wurde. Meld dich mit dim bestehende Konto ah."
+    "invite_accepted_desc": "Die Iladig isch bereits akzeptiert wurde. Meld dich mit dim bestehende Konto ah.",
+    "password_with_min": "Passwort ({min}+ Zeichen)",
+    "password_min_length_placeholder": "Mindestens {min} Zeiche",
+    "new_password_with_min": "Neus Passwort ({min}+ Zeiche)",
+    "password_too_short": "Passwort muess mindestens {min} Zeiche ha",
+    "password_too_common": "Das Passwort isch z'eifach. Wähl es schwierigers.",
+    "password_entirely_numeric": "Passwort cha nöd nur nummerisch si.",
+    "password_too_similar": "Passwort enthaltet Informatione us dim Profil.",
+    "wrong_current_password": "Aktuelle Passwort isch falsch.",
+    "signup_error": "Ha dis Konto nöd chöne erstelle. Bitte überprüef dini Details und versuechs namal.",
+    "password_requirements_title": "Passwort Aforderige",
+    "password_requirement_min_length": "Mindestens {min} Zeiche",
+    "password_requirement_not_numeric": "Nöd nur nummerisch",
+    "password_requirement_not_similar": "Nöd z'ähnlich zu dine Profilinfos",
+    "password_requirement_match": "Passwörter passed",
+    "username_or_email": "Benutzername oder Email",
+    "enter_username_or_email": "Gib din Benutzername oder dis email ih",
+    "enter_email": "Gib dis Email ih",
+    "enter_first_name": "Vorname",
+    "enter_last_name": "Nachname",
+    "terms_of_service": "Bedinige",
+    "privacy_policy": "Dateschutz",
+    "agree_to_prefix": "Ich bestätige",
+    "and": "und",
+    "terms_acceptance_required": "Du muesch Bedinige akzeptiere zum es Konto mache.",
+    "email_required": "Email wird benötigt.",
+    "reset_request_failed": "Ha keis Zruggsetzmail chöne schicke. Bitte probiers namal.",
+    "reset_failed": "Ha dis Passwort nöd chene zruggsetze. The Link isch eventuell veraltet.",
+    "both_passwords_required": "Bedi Passwort Felder sind Pflicht.",
+    "social_login_error_title": "Login mit Sozialkonto nöd möglich",
+    "social_login_error_desc": "Mir hend dich mit dim Provider nöd chöne ilogge. Bitte versuechs später namal.",
+    "invite_signup_title": "Akzeptier dini iladig",
+    "invite_signup_desc": "Erstell dis Konto mit de igladnige Email unedrane.",
+    "invite_invalid_title": "Iladig nöd verfüegbar",
+    "invite_invalid_desc": "De Iladigslink isch ungültig oder isch bereits brucht worde.",
+    "invite_expired_desc": "Die Iladig isch abgloffe. Fräg de Admin eb en neue chasch ha."
   },
   "users": {
     "no_users_found": "Kei Benutze gfunde mit öffentliche Profil.",
