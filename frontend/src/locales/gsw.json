@@ -649,11 +649,48 @@
     "invite_signup_desc": "Erstell dis Konto mit de igladnige Email unedrane.",
     "invite_invalid_title": "Iladig nöd verfüegbar",
     "invite_invalid_desc": "De Iladigslink isch ungültig oder isch bereits brucht worde.",
-    "invite_expired_desc": "Die Iladig isch abgloffe. Fräg de Admin eb en neue chasch ha."
+    "invite_expired_desc": "Die Iladig isch abgloffe. Fräg de Admin eb en neue chasch ha.",
+    "invite_registered_desc": "Es existiert bereits es Konto für die igladeni Email. Meld dich stattdesse ah."
   },
   "users": {
     "no_users_found": "Kei Benutze gfunde mit öffentliche Profil.",
     "no_users_desc": "Sobald anderi Reisendi ihres Profil öffentlich mached, erschiineds da.",
-    "no_match": "Kei Benutzer passend zu dinre suechi"
+    "no_match": "Kei Benutzer passend zu dinre suechi",
+    "no_match_desc": "Versuech en andere Name oder lösch dini Filter.",
+    "search_placeholder": "Suech nach Name oder Benutzername...",
+    "public_profiles": "Öffentlichi Profil",
+    "public_profile": "Öffentlichs Profil",
+    "browse_options": "Optione durchsueche",
+    "overview": "Übersicht",
+    "sort_name": "Name",
+    "sort_recent": "Neusti"
+  },
+  "settings": {
+    "update_error": "Fehler bim Aktualisiere vo de Istellige",
+    "update_success": "Istellige erfolgrich aktualisiert!",
+    "settings_page": "Istellige",
+    "account_settings": "Benutzerkontoistellige",
+    "update": "Aktualisiere",
+    "invalid_code": "Ungültige Code",
+    "password_auth": "Passwortauthentifizierig",
+    "password_login_enabled": "Passwort-Ameldig aktiviert",
+    "password_login_disabled": "Passwort-Ameldig deaktiviert",
+    "password_change": "Passwort ändere",
+    "new_password": "Neus Passwort",
+    "confirm_new_password": "Bestätige s'neue Passwort",
+    "email_change": "E-Mail ändere",
+    "no_email_set": "Kei E-Mail-Adresse gsetzt",
+    "email_management": "E-Mail Verwaltig",
+    "add_new_email": "Neui E-Mail hinzuefüege",
+    "add_new_email_address": "Neui E-Mail hinzuefüege",
+    "enter_new_email": "Gib en neui E-Mail ih",
+    "new_email": "Neui E-Mail",
+    "change_password": "Passwort ändere",
+    "reset_password": "Passwort zrugsetze",
+    "about_this_background": "Über de Hintergrund",
+    "photo_by": "Foti ufgnoh vo",
+    "join_discord": "Tritt am Discord bi",
+    "current_password": "Aktuells Passwort",
+    "sessions_title": "Aktivi Sitzige"
   }
 }
