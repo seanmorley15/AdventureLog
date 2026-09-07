@@ -1611,6 +1611,15 @@
     "alert_canceled_description": "Ihr Abonnement ist nicht mehr aktiv. Verlängern Sie Ihr Abonnement, um AdventureLog Cloud weiterhin nutzen zu können.",
     "alert_scheduled_title": "Abonnement geplant",
     "alert_scheduled_description": "Die kostenpflichtige Abrechnung beginnt am {Datum}. Bis dahin bleibt Ihr Testzugang bestehen.",
-    "alert_scheduled_description_fallback": "Die kostenpflichtige Abrechnung beginnt automatisch, sobald Ihre Testphase endet."
+    "alert_scheduled_description_fallback": "Die kostenpflichtige Abrechnung beginnt automatisch, sobald Ihre Testphase endet.",
+    "alert_trial_active_title": "Testversion aktiv",
+    "alert_trial_active_description_one": "Du hast noch {days} verbleibende Tage in deiner Testphase.",
+    "alert_trial_active_description_other": "Du hast noch {days} verbleibende Tage in deiner Testphase.",
+    "alert_cancel_scheduled_title": "Stornierung geplant",
+    "alert_cancel_scheduled_description": "Ihr Abonnement läuft am {date} aus. Sie können es jederzeit vor diesem Datum verlängern.",
+    "alert_cancel_scheduled_description_fallback": "Ihr Abonnement endet mit Ablauf des aktuellen Abrechnungszeitraums.",
+    "banner_access_paused_title": "Dein AdventureLog Cloud Zugriff ist pausiert",
+    "banner_access_paused_description": "Abonniere um wieder vollen Zugriff zu erhalten und deine Daten synchron zu halten.",
+    "banner_scheduled_title": "Abonnement geplant"
   }
 }
