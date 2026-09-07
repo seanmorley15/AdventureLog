@@ -179,7 +179,7 @@
     "generate_desc": "Buscar Descrição",
     "public_location": "Localização Pública",
     "link": "Ligação",
-    "links": "Ligações",
+    "links": "Links",
     "description": "Descrição",
     "sources": "Fontes",
     "collection_locations": "Incluir Locais da Coleção",
@@ -758,7 +758,8 @@
     "ZAR": "Rand da África do Sul",
     "no_matches": "Nenhuma correspondência",
     "search": "Pesquisar moeda",
-    "select_currency": "Selecione a moeda"
+    "select_currency": "Selecione a moeda",
+    "default": "Predefinição"
   },
   "dashboard": {
     "countries_visited": "Países visitados",
@@ -999,7 +1000,9 @@
     "recommendations_empty": "Não há recomendações nesta área. Tente um raio maior.",
     "show_photos": "Mostrar fotos",
     "hide_photos": "Esconder fotos",
-    "photos": "Fotos"
+    "photos": "Fotos",
+    "hide_controls": "Esconder controles de mapa",
+    "show_controls": "Mostrar controles de mapa"
   },
   "notes": {
     "content": "Contente",
@@ -1357,7 +1360,37 @@
     "delete_account_confirm_prompt": "Tem certeza que deseja apagar permanentemente a sua conta? Isto não pode ser desfeito.",
     "delete_account_success": "A sua conta foi apagada.",
     "delete_account_error": "Incapaz de apagar a sua conta. Por favor tente outra vez.",
-    "delete_account_staff_blocked": "Contas de pessoal não podem ser apagadas via auto-atendimento."
+    "delete_account_staff_blocked": "Contas de pessoal não podem ser apagadas via auto-atendimento.",
+    "delete_account_staff_blocked_desc": "Primeiro remova o estado de pessoal no painel de administração, ou peça a outro administrador para apagar a conta.",
+    "nav_account": "Conta",
+    "nav_security": "Segurança",
+    "nav_connections": "Ligações",
+    "nav_data": "Dados",
+    "nav_account_closure": "Fecho de Conta",
+    "nav_system": "Sistema",
+    "personal_info": "Informação Pessoal",
+    "personal_info_desc": "A sua visibilidade de nome, nome de utilizador, e perfil",
+    "preferences": "Preferências",
+    "preferences_desc": "Unidades, moeda, formato de data, e predefinições do mapa",
+    "preferred_currency": "Moeda de preferência",
+    "default_map_style": "Estilo de mapa predefinido",
+    "sign_in_methods": "Métodos de Iniciar Sessão",
+    "data_and_storage": "Dados & Armazenamento",
+    "data_and_storage_desc": "Utilização de média, salvaguardas, e restauro de dados",
+    "media_usage_summary": "A usar {used} de {limit} ({percent}%)",
+    "media_usage_unlimited": "A usar {used} sem nenhum limite configurado",
+    "total_used": "Total usado",
+    "about": "Acerca de",
+    "about_desc": "Informação da aplicação e os seus detalhes de conta",
+    "about_app_desc": "Licença, links, e informação do projeto",
+    "account_details": "Detalhes da Conta",
+    "account_details_desc": "Informação técnica acerca da sua conta",
+    "profile_visibility": "Visibilidade do perfil",
+    "danger_zone": "Zona de Perigo",
+    "danger_zone_desc": "Ações irreversíveis que removem permanentemente a sua conta",
+    "danger_zone_instructions": "Confirme o seu nome de utilizador e palavra passe em baixo para apagar de forma permanente a sua conta e todos os dados associados.",
+    "password_too_short": "A palavra passe tem de ter pelo menos {min} caracteres",
+    "password_does_not_match": "A palavras passe não correspondem"
   },
   "share": {
     "available": "Disponível",
@@ -1563,5 +1596,29 @@
     "change_server": "Mudar de servidor",
     "not_connected": "Endurain não está ligado",
     "connected_as": "Ligado como {username}"
+  },
+  "billing": {
+    "page_title": "Faturação & Subscrição",
+    "page_description": "Gerir a sua subscrição da AdventureLog Cloud, método de pagamento, e estado de tempo de avaliação.",
+    "cloud_badge": "AdventureLog Cloud",
+    "self_hosted_title": "Faturação da Cloud não está ativa",
+    "self_hosted_description": "Esta instância está a correr em modo de auto-hospedado. Todas as funcionalidades estão desbloqueadas sem uma subscrição.",
+    "alert_trial_ended_title": "O seu tempo de avaliação acabou",
+    "alert_trial_ended_description": "Subscreva para restaurar o acesso e manter as suas aventuras sincronizadas entre dispositivos.",
+    "alert_past_due_title": "Pagamento falhou",
+    "alert_past_due_description": "O seu último pagamento não pôde ser processado. Atualize o seu método de pagamento para restaurar acesso.",
+    "alert_canceled_title": "Subscrição cancelada",
+    "alert_canceled_description": "A sua subscrição não está mais ativa. Re-subscreva para continuar a usar o AdventureLog Cloud.",
+    "alert_scheduled_title": "Subscrição agendada",
+    "alert_scheduled_description": "A faturação paga começa em {date}. O seu acesso de avaliação continua até lá.",
+    "alert_scheduled_description_fallback": "A faturação paga vai começar automaticamente quando o seu período de avaliação terminar.",
+    "alert_trial_active_title": "Tempo de avaliação ativo",
+    "alert_trial_active_description_one": "Você tem {days} dia restantes na sua avaliação.",
+    "alert_trial_active_description_other": "Você tem {days} dias restantes na sua avaliação.",
+    "alert_cancel_scheduled_title": "Cancelamento agendado",
+    "alert_cancel_scheduled_description": "A sua subscrição vai terminar em {date}. Pode retomar a qualquer altura antes disso.",
+    "alert_cancel_scheduled_description_fallback": "A sua subscrição vai terminar no fecho do período de faturação atual.",
+    "banner_access_paused_title": "O seu acesso ao AdventureLog Cloud está em pausa",
+    "banner_access_paused_description": "Subscreva para restaurar o acesso total e manter os seus dados em sincronismo."
   }
 }
