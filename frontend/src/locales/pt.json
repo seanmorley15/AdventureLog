@@ -1619,6 +1619,7 @@
     "alert_cancel_scheduled_description": "A sua subscrição vai terminar em {date}. Pode retomar a qualquer altura antes disso.",
     "alert_cancel_scheduled_description_fallback": "A sua subscrição vai terminar no fecho do período de faturação atual.",
     "banner_access_paused_title": "O seu acesso ao AdventureLog Cloud está em pausa",
-    "banner_access_paused_description": "Subscreva para restaurar o acesso total e manter os seus dados em sincronismo."
+    "banner_access_paused_description": "Subscreva para restaurar o acesso total e manter os seus dados em sincronismo.",
+    "banner_scheduled_title": "Subscrição agendada"
   }
 }
