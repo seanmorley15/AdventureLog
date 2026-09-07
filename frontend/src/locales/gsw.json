@@ -175,7 +175,7 @@
     "attachment": "Ahang",
     "images": "Bilder",
     "image_modal_navigate": "Nimm Pfiiltaste or klick zum navigiere",
-    "generate_desc": "Beschribig generiere",
+    "generate_desc": "Beschribig hole",
     "public_location": "Öffentliche Ort",
     "link": "Link",
     "links": "Links",
@@ -608,7 +608,8 @@
     "totp": "Zwei-Faktor oder Wiederherstelligscode",
     "totp_placeholder": "000000 oder 12345678",
     "totp_hint": "Gib en 6-Stelle Authentifizierigscode Code oder en 8-Stelle Wiederherstelligscode ih.",
-    "logging_in": "Am amelde"
+    "logging_in": "Am amelde",
+    "invite_accepted_desc": "Die Iladig isch bereits akzeptiert wurde. Meld dich mit dim bestehende Konto ah."
   },
   "users": {
     "no_users_found": "Kei Benutze gfunde mit öffentliche Profil.",
