@@ -172,26 +172,47 @@
 		basemapType = next;
 	}
 
-	// Theme-aware cluster styling (defaults to semantic daisyUI tokens)
-	let clusterBaseContent = $state('#111827');
-	let clusterInfo = $state('#38bdf8');
-	let clusterWarning = $state('#f59e0b');
-	let clusterError = $state('#f87171');
-	let clusterInfoContent = $state('#082f49');
-	let clusterWarningContent = $state('#111827');
-	let clusterErrorContent = $state('#450a0a');
+	// Saturated cluster fills that stay readable on light and dark basemaps.
+	// Theme tokens (especially `--color-info`) are often too pale at map scale.
+	const CLUSTER_SMALL_FALLBACK = '#2563eb';
+	const CLUSTER_MEDIUM_FALLBACK = '#d97706';
+	const CLUSTER_LARGE_FALLBACK = '#dc2626';
+
+	let clusterSmall = $state(CLUSTER_SMALL_FALLBACK);
+	let clusterMedium = $state(CLUSTER_MEDIUM_FALLBACK);
+	let clusterLarge = $state(CLUSTER_LARGE_FALLBACK);
+
+	function relativeLuminance(color: string): number | null {
+		const rgbMatch = color.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i);
+		if (!rgbMatch) return null;
+		const r = Number(rgbMatch[1]) / 255;
+		const g = Number(rgbMatch[2]) / 255;
+		const b = Number(rgbMatch[3]) / 255;
+		return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+	}
+
+	function pickVisibleClusterColor(color: string, fallback: string): string {
+		const luminance = relativeLuminance(color);
+		if (luminance === null || luminance > 0.62) return fallback;
+		return color;
+	}
 
 	onMount(() => {
 		const syncTheme = () => {
 			isDarkUi = getIsDarkMode();
 			themeEpoch += 1;
-			clusterBaseContent = resolveThemeColor('--color-base-content', clusterBaseContent);
-			clusterInfo = resolveThemeColor('--color-info', clusterInfo);
-			clusterWarning = resolveThemeColor('--color-warning', clusterWarning);
-			clusterError = resolveThemeColor('--color-error', clusterError);
-			clusterInfoContent = resolveThemeColor('--color-info-content', clusterInfoContent);
-			clusterWarningContent = resolveThemeColor('--color-warning-content', clusterWarningContent);
-			clusterErrorContent = resolveThemeColor('--color-error-content', clusterErrorContent);
+			clusterSmall = pickVisibleClusterColor(
+				resolveThemeColor('--color-primary', CLUSTER_SMALL_FALLBACK),
+				CLUSTER_SMALL_FALLBACK
+			);
+			clusterMedium = pickVisibleClusterColor(
+				resolveThemeColor('--color-warning', CLUSTER_MEDIUM_FALLBACK),
+				CLUSTER_MEDIUM_FALLBACK
+			);
+			clusterLarge = pickVisibleClusterColor(
+				resolveThemeColor('--color-error', CLUSTER_LARGE_FALLBACK),
+				CLUSTER_LARGE_FALLBACK
+			);
 		};
 
 		syncTheme();
@@ -220,6 +241,23 @@
 			callback: (error: unknown, zoom: number) => void
 		) => void;
 	};
+
+	function clusterPointCount(clusterProps: Record<string, unknown> | null): number {
+		const value = Number(clusterProps && clusterProps['point_count']);
+		return Number.isFinite(value) ? value : 0;
+	}
+
+	function clusterBadgeDiameterPx(pointCount: number): number {
+		if (pointCount >= 60) return 88;
+		if (pointCount >= 20) return 64;
+		return 44;
+	}
+
+	function clusterBadgeColor(pointCount: number): string {
+		if (pointCount >= 80) return clusterLarge;
+		if (pointCount >= 25) return clusterMedium;
+		return clusterSmall;
+	}
 
 	function handleClusterClick(e: CustomEvent<LayerClickInfo>) {
 		dispatch('clusterClick', e.detail);
@@ -303,21 +341,14 @@
 		resolvedStyle = mapStyle ?? getBasemapUrl(basemapType);
 	});
 	run(() => {
-		resolvedClusterCirclePaint = clusterCirclePaint ?? {
-			'circle-color': [
-				'step',
-				['get', 'point_count'],
-				withAlpha(clusterInfo, 0.7),
-				25,
-				withAlpha(clusterWarning, 0.7),
-				80,
-				withAlpha(clusterError, 0.65)
-			],
-			'circle-radius': ['step', ['get', 'point_count'], 22, 20, 32, 60, 44],
-			'circle-opacity': 1,
-			'circle-stroke-color': withAlpha(clusterBaseContent, 0.25),
-			'circle-stroke-width': 2,
-			'circle-blur': 0
+		resolvedClusterCirclePaint = {
+			'circle-color': '#000000',
+			'circle-radius':
+				clusterCirclePaint?.['circle-radius'] ??
+				(['step', ['get', 'point_count'], 22, 20, 32, 60, 44] as const),
+			'circle-opacity': 0.01,
+			'circle-stroke-width': 0,
+			'circle-stroke-opacity': 0
 		};
 	});
 	run(() => {
@@ -329,17 +360,9 @@
 	});
 	run(() => {
 		resolvedClusterSymbolPaint = clusterSymbolPaint ?? {
-			'text-color': [
-				'step',
-				['get', 'point_count'],
-				clusterInfoContent,
-				25,
-				clusterWarningContent,
-				80,
-				clusterErrorContent
-			],
-			'text-halo-color': withAlpha(clusterBaseContent, 0.12),
-			'text-halo-width': 0.75,
+			'text-color': '#ffffff',
+			'text-halo-color': 'rgba(0, 0, 0, 0.45)',
+			'text-halo-width': 1.25,
 			'text-halo-blur': 0
 		};
 	});
@@ -374,9 +397,13 @@
 								{@const clusterProps = getMarkerProps(clusterFeature)}
 								{@const abbreviated = clusterProps && clusterProps['point_count_abbreviated']}
 								{@const count = abbreviated ?? (clusterProps && clusterProps['point_count'])}
+								{@const pointCount = clusterPointCount(clusterProps)}
 								{#if typeof count !== 'undefined' && count !== null}
 									<div
-										class="pointer-events-none select-none font-sans text-xs font-bold text-base-content drop-shadow-xs"
+										class="pointer-events-none grid place-items-center rounded-full border-2 border-white font-sans text-xs font-bold text-white shadow-md"
+										style:width="{clusterBadgeDiameterPx(pointCount)}px"
+										style:height="{clusterBadgeDiameterPx(pointCount)}px"
+										style:background-color={clusterBadgeColor(pointCount)}
 									>
 										{count}
 									</div>

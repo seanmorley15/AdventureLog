@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { normalizeBasemapType } from '$lib';
 	import CityCard from '$lib/components/cards/CityCard.svelte';
 	import { addToast } from '$lib/toasts';
@@ -28,7 +26,6 @@
 
 	let { data }: Props = $props();
 
-	let filteredCities: City[] = $state([]);
 	let searchQuery: string = $state('');
 	let showGeo: boolean = true;
 	let showMap: boolean = $state(false);
@@ -36,23 +33,33 @@
 	let filterOption: string = $state('all');
 
 	const allCities: City[] = $derived(data.props?.cities || []);
-	let visitedCities: VisitedCity[] = $state<VisitedCity[]>([]);
 	const region = $derived(data.props?.region || null);
-	let description: string = $derived(data.props?.description || '');
+	let description = $state('');
+
+	let visitedCities = $derived(
+		(data.props?.visitedCities || []).filter(
+			(visitedCity, index, self) => index === self.findIndex((t) => t.city === visitedCity.city)
+		)
+	);
 
 	$effect(() => {
-		console.log(data);
-	});
+		const name = region?.name;
+		description = '';
+		if (!name) return;
 
-	// Statistics
-	let numCities: number = $derived(allCities.length);
-	let numVisitedCities: number = $state(0);
+		let cancelled = false;
+		fetch(`/api/generate/desc/?name=${encodeURIComponent(name)}`)
+			.then((res) => (res.ok ? res.json() : null))
+			.then((json) => {
+				if (!cancelled && json && typeof json.extract === 'string') {
+					description = json.extract;
+				}
+			})
+			.catch(() => {});
 
-	$effect.pre(() => {
-		visitedCities = (data.props?.visitedCities || []).filter(
-			(visitedCity, index, self) => index === self.findIndex((t) => t.city === visitedCity.city)
-		);
-		numVisitedCities = visitedCities.length;
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	let visitedCount = $derived(visitedCities.length);
@@ -61,25 +68,23 @@
 		allCities.length > 0 ? Math.round((visitedCount / allCities.length) * 100) : 0
 	);
 
-	// Filter cities based on search and filter options
-	run(() => {
-		if (searchQuery === '') {
-			filteredCities = allCities;
-		} else {
-			filteredCities = allCities.filter((city) =>
-				city.name.toLowerCase().includes(searchQuery.toLowerCase())
-			);
-		}
+	let filteredCities = $derived.by(() => {
+		let cities =
+			searchQuery === ''
+				? allCities
+				: allCities.filter((city) => city.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
 		if (filterOption === 'visited') {
-			filteredCities = filteredCities.filter((city) =>
+			cities = cities.filter((city) =>
 				visitedCities.some((visitedCity) => visitedCity.city === city.id)
 			);
 		} else if (filterOption === 'not-visited') {
-			filteredCities = filteredCities.filter(
+			cities = cities.filter(
 				(city) => !visitedCities.some((visitedCity) => visitedCity.city === city.id)
 			);
 		}
+
+		return cities;
 	});
 
 	function toggleSidebar() {
@@ -193,13 +198,9 @@
 	const CITY_SOURCE_ID = 'worldtravel-cities';
 	const cityClusterOptions: ClusterOptions = { radius: 300, maxZoom: 12, minPoints: 2 };
 
-	let citiesGeoJson: CityFeatureCollection = $state({ type: 'FeatureCollection', features: [] });
-	run(() => {
-		visitedCities;
-		citiesGeoJson = {
-			type: 'FeatureCollection',
-			features: allCities.map((c) => cityToFeature(c)).filter((f): f is CityFeature => f !== null)
-		};
+	let citiesGeoJson: CityFeatureCollection = $derived({
+		type: 'FeatureCollection',
+		features: allCities.map((c) => cityToFeature(c)).filter((f): f is CityFeature => f !== null)
 	});
 
 	function getMarkerProps(feature: any): CityFeatureProperties | null {
@@ -452,13 +453,11 @@
 									visited={visitedCities.some((visitedCity) => visitedCity.city === city.id)}
 									on:visit={(e) => {
 										visitedCities = [...visitedCities, e.detail];
-										numVisitedCities++;
 									}}
 									on:remove={() => {
 										visitedCities = visitedCities.filter(
 											(visitedCity) => visitedCity.city !== city.id
 										);
-										numVisitedCities--;
 									}}
 								/>
 							{/each}

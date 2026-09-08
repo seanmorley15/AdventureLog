@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { DefaultMarker, Popup, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import { DefaultMarker, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import MapNearbyRadiusLayer from '$lib/components/map/MapNearbyRadiusLayer.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -43,17 +43,18 @@
 	import Clear from '~icons/mdi/close';
 	import Eye from '~icons/mdi/eye';
 	import PinIcon from '~icons/mdi/map-marker';
-	import LocationIcon from '~icons/mdi/crosshairs-gps';
+	import FlagIcon from '~icons/mdi/flag';
+	import CityIcon from '~icons/mdi/city';
+	import CameraIcon from '~icons/mdi/camera';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import MapSearchBar from '$lib/components/map/MapSearchBar.svelte';
 	import MapDetailPanel from '$lib/components/map/MapDetailPanel.svelte';
 	import MapRecommendationsLayer from '$lib/components/map/MapRecommendationsLayer.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
+	import ImageMapPinPopup from '$lib/components/map/ImageMapPinPopup.svelte';
 	import {
 		fetchImageMapPins,
-		imageMapPinsToGeoJson,
 		imagePinPropsToSelection,
 		mapImagePinSelectionToProps,
 		type ImageMapPin,
@@ -194,13 +195,28 @@
 	const pinClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 };
 
 	type VisitStatus = 'visited' | 'planned';
+	type ClusteredPinKind = 'location' | 'region' | 'city' | 'image';
 
 	type PinFeatureProperties = {
 		id: string;
 		name: string;
+		kind: ClusteredPinKind;
 		visitStatus: VisitStatus;
 		categoryIcon?: string;
 		categoryName?: string;
+		subtitle?: string;
+		href?: string;
+		imageUrl?: string;
+		imageId?: string;
+		parentType?: string;
+		parentId?: string;
+		isPrimary?: boolean;
+		source?: ImagePinProperties['source'];
+	};
+
+	type ClusteredMapPin = PinFeatureProperties & {
+		latitude: number;
+		longitude: number;
 	};
 
 	function parseCoordinate(value: number | string | null | undefined): number | null {
@@ -226,30 +242,163 @@
 		})
 	);
 
-	function pinToFeature(pin: Pin) {
-		const lat = parseCoordinate(pin.latitude);
-		const lon = parseCoordinate(pin.longitude);
-		if (lat === null || lon === null) return null;
-		return {
-			type: 'Feature' as const,
-			geometry: { type: 'Point' as const, coordinates: [lon, lat] as [number, number] },
-			properties: {
+	let clusteredMapPins = $derived.by((): ClusteredMapPin[] => {
+		const items: ClusteredMapPin[] = [];
+		for (const pin of filteredPins) {
+			const lat = parseCoordinate(pin.latitude);
+			const lon = parseCoordinate(pin.longitude);
+			if (lat === null || lon === null) continue;
+			items.push({
 				id: pin.id,
 				name: pin.name,
-				visitStatus: pin.is_visited ? ('visited' as VisitStatus) : ('planned' as VisitStatus),
+				latitude: lat,
+				longitude: lon,
+				kind: 'location',
+				visitStatus: pin.is_visited ? 'visited' : 'planned',
 				categoryIcon: pin.category?.icon || '📍',
 				categoryName: pin.category?.display_name || pin.category?.name || ''
+			});
+		}
+		if (showRegions) {
+			for (const region of mappableVisitedRegions) {
+				const regionId = String(region.region);
+				items.push({
+					id: `region:${region.id}`,
+					name: region.name,
+					latitude: region.latitude,
+					longitude: region.longitude,
+					kind: 'region',
+					visitStatus: 'visited',
+					categoryName: $t('profile.visited_regions'),
+					subtitle: regionId,
+					href: regionWorldtravelHref(regionId)
+				});
+			}
+		}
+		if (showCities) {
+			for (const city of mappableVisitedCities) {
+				const cityId = String(city.city);
+				items.push({
+					id: `city:${city.id}`,
+					name: city.name,
+					latitude: city.latitude,
+					longitude: city.longitude,
+					kind: 'city',
+					visitStatus: 'visited',
+					categoryName: $t('map.show_visited_cities'),
+					subtitle: cityId,
+					href: cityWorldtravelHref(cityId)
+				});
+			}
+		}
+		if (showImagePins) {
+			for (const pin of imageMapPins) {
+				const lat = parseCoordinate(pin.latitude);
+				const lon = parseCoordinate(pin.longitude);
+				if (lat === null || lon === null) continue;
+				items.push({
+					id: `image:${pin.id}`,
+					name: pin.parent_name || $t('images.map_pin_title'),
+					latitude: lat,
+					longitude: lon,
+					kind: 'image',
+					visitStatus: 'visited',
+					categoryName: $t('map.photos'),
+					imageUrl: pin.image,
+					imageId: pin.id,
+					parentType: pin.parent_type,
+					parentId: pin.parent_id,
+					isPrimary: pin.is_primary,
+					source: pin.source
+				});
+			}
+		}
+		return items;
+	});
+
+	function countryCodeFromGeoId(id: string): string {
+		return id.split('-')[0] ?? '';
+	}
+
+	function regionWorldtravelHref(regionId: string): string {
+		const countryCode = countryCodeFromGeoId(regionId);
+		if (!countryCode || !regionId) return '/worldtravel';
+		return `/worldtravel/${countryCode}/${regionId}`;
+	}
+
+	function cityWorldtravelHref(cityId: string): string {
+		const parts = cityId.split('-');
+		const countryCode = parts[0] ?? '';
+		const regionId = parts.length >= 2 ? parts.slice(0, -1).join('-') : cityId;
+		if (!countryCode || !regionId) return '/worldtravel';
+		return `/worldtravel/${countryCode}/${regionId}`;
+	}
+
+	function pinToFeature(item: ClusteredMapPin) {
+		return {
+			type: 'Feature' as const,
+			geometry: {
+				type: 'Point' as const,
+				coordinates: [item.longitude, item.latitude] as [number, number]
+			},
+			properties: {
+				id: item.id,
+				name: item.name,
+				kind: item.kind,
+				visitStatus: item.visitStatus,
+				categoryIcon: item.categoryIcon,
+				categoryName: item.categoryName,
+				subtitle: item.subtitle,
+				href: item.href,
+				imageUrl: item.imageUrl,
+				imageId: item.imageId,
+				parentType: item.parentType,
+				parentId: item.parentId,
+				isPrimary: item.isPrimary,
+				source: item.source
 			}
 		};
 	}
 
 	function pinToFeatureUnknown(item: unknown) {
-		return pinToFeature(item as Pin);
+		return pinToFeature(item as ClusteredMapPin);
 	}
 
 	function getMarkerProps(feature: unknown) {
 		const f = feature as { properties?: PinFeatureProperties } | null;
 		return f?.properties ?? null;
+	}
+
+	function getMarkerId(markerProps: Record<string, unknown> | null): string | null {
+		if (!markerProps || markerProps.id == null) return null;
+		return String(markerProps.id);
+	}
+
+	function clusteredPinKind(props: { kind?: unknown } | null): ClusteredPinKind {
+		if (props?.kind === 'region' || props?.kind === 'city' || props?.kind === 'image') {
+			return props.kind;
+		}
+		return 'location';
+	}
+
+	function clusteredToImagePinProps(
+		props: PinFeatureProperties | Record<string, unknown> | null
+	): ImagePinProperties | null {
+		if (!props || clusteredPinKind(props) !== 'image') return null;
+		const imageId =
+			props.imageId != null
+				? String(props.imageId)
+				: String(props.id ?? '').replace(/^image:/, '');
+		if (!imageId) return null;
+		return {
+			imageId,
+			imageUrl: String(props.imageUrl ?? ''),
+			source: (props.source as ImagePinProperties['source']) ?? 'upload',
+			isPrimary: Boolean(props.isPrimary),
+			parentType: String(props.parentType ?? 'location'),
+			parentId: String(props.parentId ?? ''),
+			parentName: String(props.name ?? '')
+		};
 	}
 
 	function getVisitStatusClass(status: VisitStatus): string {
@@ -264,22 +413,27 @@
 	}
 
 	function markerClassResolver(
-		props: { visitStatus?: string; id?: string } | null,
+		props: { visitStatus?: string; kind?: string } | null,
 		isSelected: boolean
 	): string {
-		if (isSelected)
-			return (
-				'ring-2 ring-primary ring-offset-2 ' +
-				getVisitStatusClass((props?.visitStatus as VisitStatus) || 'planned')
-			);
-		return getVisitStatusClass((props?.visitStatus as VisitStatus) || 'planned');
+		const kind = clusteredPinKind(props);
+		const fill =
+			kind === 'region'
+				? 'bg-gradient-to-br from-teal-400 to-teal-600'
+				: kind === 'city'
+					? 'bg-gradient-to-br from-amber-400 to-amber-600'
+					: kind === 'image'
+						? 'bg-gradient-to-br from-rose-400 to-rose-600'
+						: getVisitStatusClass((props?.visitStatus as VisitStatus) || 'planned');
+		if (isSelected) return 'ring-2 ring-primary ring-offset-2 ' + fill;
+		return fill;
 	}
 
 	function markerLabelResolver(props: { categoryIcon?: string } | null): string {
 		return props?.categoryIcon || '📍';
 	}
 
-	function getVisitStatusLabel(status: VisitStatus | undefined): string {
+	function getVisitStatusLabel(status: unknown): string {
 		return status === 'visited' ? $t('adventures.visited') : $t('adventures.planned');
 	}
 
@@ -377,14 +531,33 @@
 		loadPreviewForPin(pinId);
 	}
 
-	function handleImagePinSelect(event: CustomEvent<{ props: ImagePinProperties }>) {
-		const props = event.detail.props;
-		if (props.parentType === 'location' && props.parentId) {
-			loadPreviewForPin(props.parentId);
+	function handleClusteredPinClick(
+		props: PinFeatureProperties | Record<string, unknown> | null,
+		setActive: (v: boolean) => void
+	) {
+		if (!props || props.id == null) return;
+		const kind = clusteredPinKind(props);
+		if (kind === 'region' || kind === 'city') {
+			setActive(true);
+			if (typeof props.href === 'string' && props.href) goto(props.href);
+			return;
+		}
+		if (kind === 'image') {
+			setActive(true);
+			const imageProps = clusteredToImagePinProps(props);
+			if (imageProps) selectImagePin(imageProps);
+			return;
+		}
+		handlePinClick(String(props.id), setActive);
+	}
+
+	function selectImagePin(imageProps: ImagePinProperties) {
+		if (imageProps.parentType === 'location' && imageProps.parentId) {
+			loadPreviewForPin(imageProps.parentId);
 			return;
 		}
 
-		selected = imagePinPropsToSelection(props);
+		selected = imagePinPropsToSelection(imageProps);
 		selectedPlace = null;
 		previewLocation = null;
 		previewError = null;
@@ -770,8 +943,7 @@
 	onDestroy(() => {
 		unbindViewportCenter?.();
 	});
-	let imagePinGeoJson = $derived(imageMapPinsToGeoJson(imageMapPins));
-	let imagePinCount = $derived(imagePinGeoJson.features.length);
+	let imagePinCount = $derived(imageMapPins.length);
 	run(() => {
 		if (browser && showImagePins) {
 			void ensureImageMapPinsLoaded();
@@ -906,11 +1078,12 @@
 					bind:map={mapInstance}
 					bind:basemapType
 					sourceId={PIN_SOURCE_ID}
-					items={filteredPins}
+					items={clusteredMapPins}
 					toFeature={pinToFeatureUnknown}
 					clusterEnabled={true}
 					clusterOptions={pinClusterOptions}
 					{getMarkerProps}
+					{getMarkerId}
 					mapClass="w-full h-full"
 					showMapControls={false}
 					zoom={syncViewportFromProps ? mapZoom : undefined}
@@ -921,21 +1094,25 @@
 				>
 					{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
 						{#if markerProps && markerLngLat}
-							{@const isSelected = selectedPinId === markerProps.id}
+							{@const pinKind = clusteredPinKind(markerProps)}
+							{@const imagePinProps = clusteredToImagePinProps(markerProps)}
+							{@const isSelected =
+								(pinKind === 'location' && selectedPinId === markerProps.id) ||
+								(pinKind === 'image' && selectedImagePinId === imagePinProps?.imageId)}
 							<Marker
 								lngLat={markerLngLat}
 								class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
 							>
 								<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
 									<div
-										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
+										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base text-white cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
 											markerProps,
 											isSelected
 										)}"
 										class:scale-110={isActive || isSelected}
 										role="button"
 										tabindex="0"
-										aria-label={markerProps.name}
+										aria-label={String(markerProps.name ?? '')}
 										aria-pressed={isSelected}
 										onmouseenter={() => setActive(true)}
 										onmouseleave={() => {
@@ -947,46 +1124,77 @@
 										}}
 										onclick={(e) => {
 											e.stopPropagation();
-											handlePinClick(markerProps.id, setActive);
+											handleClusteredPinClick(markerProps, setActive);
 										}}
 										onkeydown={(e) => {
 											if (e.key !== 'Enter') return;
 											e.stopPropagation();
-											handlePinClick(markerProps.id, setActive);
+											handleClusteredPinClick(markerProps, setActive);
 										}}
 									>
-										{markerLabelResolver(markerProps)}
+										{#if pinKind === 'region'}
+											<FlagIcon class="h-4 w-4" />
+										{:else if pinKind === 'city'}
+											<CityIcon class="h-4 w-4" />
+										{:else if pinKind === 'image'}
+											<CameraIcon class="h-4 w-4" />
+										{:else}
+											{markerLabelResolver(markerProps)}
+										{/if}
 									</div>
 
-									<div
-										class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
-										class:opacity-100={isActive || isSelected}
-									>
+									{#if pinKind === 'image' && imagePinProps}
+										<ImageMapPinPopup props={imagePinProps} visible={isActive || isSelected} />
+									{:else}
 										<div
-											class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+											class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
+											class:opacity-100={isActive || isSelected}
 										>
-											<div class="card-body gap-2 p-3">
-												<h3 class="font-semibold text-sm leading-tight truncate">
-													{markerProps.name}
-												</h3>
-												<div class="flex flex-wrap items-center gap-1.5">
-													<span
-														class="badge badge-sm {markerProps.visitStatus === 'visited'
-															? 'badge-success'
-															: 'badge-info'}"
-													>
-														{getVisitStatusLabel(markerProps.visitStatus)}
-													</span>
-													{#if markerProps.categoryName}
-														<span class="badge badge-ghost badge-sm">
-															{markerProps.categoryName}
-														</span>
-													{/if}
+											<div
+												class="card card-sm bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+											>
+												<div class="card-body gap-2 p-3">
+													<h3 class="font-semibold text-sm leading-tight truncate">
+														{markerProps.name}
+													</h3>
+													<div class="flex flex-wrap items-center gap-1.5">
+														{#if pinKind === 'region'}
+															<span class="badge badge-sm badge-accent">
+																{$t('profile.visited_regions')}
+															</span>
+														{:else if pinKind === 'city'}
+															<span class="badge badge-sm badge-warning">
+																{$t('map.show_visited_cities')}
+															</span>
+														{:else}
+															<span
+																class="badge badge-sm {markerProps.visitStatus === 'visited'
+																	? 'badge-success'
+																	: 'badge-info'}"
+															>
+																{getVisitStatusLabel(markerProps.visitStatus)}
+															</span>
+														{/if}
+														{#if markerProps.categoryName && pinKind === 'location'}
+															<span class="badge badge-ghost badge-sm">
+																{markerProps.categoryName}
+															</span>
+														{/if}
+														{#if markerProps.subtitle}
+															<span class="badge badge-ghost badge-sm">
+																{markerProps.subtitle}
+															</span>
+														{/if}
+													</div>
+													<p class="text-xs text-base-content/60">
+														{pinKind === 'location'
+															? $t('map.view_details')
+															: $t('navbar.worldtravel')}
+													</p>
 												</div>
-												<p class="text-xs text-base-content/60">{$t('map.view_details')}</p>
 											</div>
 										</div>
-									</div>
+									{/if}
 								</div>
 							</Marker>
 						{/if}
@@ -1015,39 +1223,6 @@
 							on:select={handleSelectRecommendation}
 						/>
 
-						{#if showRegions}
-							{#each mappableVisitedRegions as region (region.id)}
-								<Marker
-									lngLat={[region.longitude, region.latitude]}
-									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer"
-								>
-									<LocationIcon class="w-5 h-5 text-green-700" />
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="space-y-2 text-black">
-											<div class="text-lg font-bold">{region.name}</div>
-											<div class="badge badge-success badge-sm">{region.region}</div>
-										</div>
-									</Popup>
-								</Marker>
-							{/each}
-						{/if}
-
-						{#if showCities}
-							{#each mappableVisitedCities as city (city.id)}
-								<Marker
-									lngLat={[city.longitude, city.latitude]}
-									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-lg"
-								>
-									<LocationIcon class="w-5 h-5 text-blue-700" />
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="space-y-2 text-black">
-											<div class="text-lg font-bold">{city.name}</div>
-										</div>
-									</Popup>
-								</Marker>
-							{/each}
-						{/if}
-
 						{#if showActivities}
 							{#each activities as activity}
 								{#if activity.geojson}
@@ -1063,14 +1238,6 @@
 								{/if}
 							{/each}
 						{/if}
-
-						<MapImagePinLayer
-							geoJson={imagePinGeoJson}
-							visible={showImagePins}
-							navigateOnSelect={false}
-							selectedId={selectedImagePinId}
-							on:select={handleImagePinSelect}
-						/>
 					{/snippet}
 				</FullMap>
 			</div>

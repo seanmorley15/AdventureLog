@@ -288,3 +288,23 @@ class ImageMapPinSerializerTests(TestCase):
         self.assertEqual(data['parent_name'], 'GPS Place')
         self.assertAlmostEqual(data['latitude'], 37.7749, places=4)
         self.assertAlmostEqual(data['longitude'], -122.4194, places=4)
+
+    def test_map_pin_serializer_skips_images_without_a_url(self):
+        location = Location.objects.create(
+            user=self.user,
+            name='Immich Place',
+            coordinates=make_point(2.0, 48.0),
+        )
+        image = ContentImage.objects.create(
+            user=self.user,
+            content_type=ContentType.objects.get_for_model(Location),
+            object_id=str(location.id),
+            immich_id='missing-integration-id',
+            coordinates=make_point(-122.4194, 37.7749),
+            source=ContentImage.Source.IMMICH,
+        )
+
+        from adventures.serializers import ImageMapPinSerializer
+
+        data = ImageMapPinSerializer(image).data
+        self.assertEqual(dict(data), {})

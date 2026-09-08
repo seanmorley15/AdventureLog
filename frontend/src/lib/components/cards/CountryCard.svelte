@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import type { Country } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
@@ -24,16 +23,11 @@
 	let progressPct = $derived(
 		country.num_regions > 0 ? Math.round((country.num_visits / country.num_regions) * 100) : 0
 	);
-
-	function nav() {
-		goto(`/worldtravel/${country.country_code}`);
-	}
 </script>
 
-<button
-	type="button"
-	class="w-full grid items-center gap-4 px-4 py-3 text-left hover:bg-base-200/60 active:bg-base-200 transition-colors group country-row"
-	onclick={nav}
+<a
+	href="/worldtravel/{country.country_code}"
+	class="w-full grid items-center gap-4 px-4 py-3 text-left text-inherit no-underline hover:bg-base-200/60 active:bg-base-200 transition-colors group country-row"
 >
 	<img
 		src={country.flag_url}
@@ -90,7 +84,7 @@
 	</div>
 
 	<ChevronRight class="w-5 h-5 text-base-content/30 group-hover:text-primary" />
-</button>
+</a>
 
 <style>
 	.country-row {

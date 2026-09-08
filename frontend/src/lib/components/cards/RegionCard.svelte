@@ -1,8 +1,4 @@
 <script lang="ts">
-	import { createBubbler, stopPropagation } from 'svelte/legacy';
-
-	const bubble = createBubbler();
-	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
 	import type { Region } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
@@ -20,22 +16,15 @@
 		visited: boolean | undefined;
 	}
 
-	let { region, visited = $bindable() }: Props = $props();
+	let { region, visited = false }: Props = $props();
+	let optimisticVisited = $state<boolean | null>(null);
+	let isVisited = $derived(optimisticVisited ?? visited);
 
 	let countryCode = $derived(region.id.split('-')[0]);
-
-	function goToCity(e: MouseEvent) {
-		e.stopPropagation();
-		goto(`/worldtravel/${countryCode}/${region.id}`);
-	}
-
-	function nav() {
-		if (region.num_cities > 0) {
-			goto(`/worldtravel/${countryCode}/${region.id}`);
-		}
-	}
+	let cityHref = $derived(`/worldtravel/${countryCode}/${region.id}`);
 
 	async function markVisited(e: MouseEvent) {
+		e.preventDefault();
 		e.stopPropagation();
 		const res = await fetch(`/api/visitedregion/`, {
 			headers: { 'Content-Type': 'application/json' },
@@ -43,7 +32,7 @@
 			body: JSON.stringify({ region: region.id })
 		});
 		if (res.ok) {
-			visited = true;
+			optimisticVisited = true;
 			const data = await res.json();
 			addToast(
 				'success',
@@ -56,13 +45,14 @@
 	}
 
 	async function removeVisit(e: MouseEvent) {
+		e.preventDefault();
 		e.stopPropagation();
 		const res = await fetch(`/api/visitedregion/${region.id}`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			visited = false;
+			optimisticVisited = false;
 			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
 			dispatch('remove', region);
 		} else {
@@ -71,69 +61,69 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-	class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row {region.num_cities >
-	0
-		? 'cursor-pointer'
-		: ''}"
-	onclick={nav}
-	onkeydown={(e) => e.key === 'Enter' && nav()}
->
+<div class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row">
 	<button
 		type="button"
-		class="btn btn-ghost btn-sm btn-square {visited
+		class="btn btn-ghost btn-sm btn-square {isVisited
 			? 'text-success'
 			: 'text-base-content/30 hover:text-success'}"
-		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
-		onclick={visited ? removeVisit : markVisited}
+		title={isVisited ? $t('adventures.remove') : $t('adventures.mark_visited')}
+		onclick={isVisited ? removeVisit : markVisited}
 	>
-		{#if visited}
+		{#if isVisited}
 			<CheckFilled class="w-5 h-5" />
 		{:else}
 			<Check class="w-5 h-5" />
 		{/if}
 	</button>
 
-	<a
-		href="/worldtravel/{countryCode}/{region.id}"
-		class="font-semibold truncate group-hover:text-primary transition-colors min-w-0"
-		onclick={stopPropagation(bubble('click'))}
-	>
-		{region.name}
-	</a>
-
-	<span class="hidden sm:block text-sm text-base-content/60 truncate">
-		{region.country_name}
-	</span>
-
-	<span class="inline-flex items-center gap-1.5 text-sm text-base-content/60 tabular-nums">
-		<City class="w-4 h-4" />
-		{region.num_cities}
-	</span>
-
 	{#if region.num_cities > 0}
-		<button
-			type="button"
-			class="btn btn-ghost btn-sm gap-1 hidden sm:flex justify-end"
-			onclick={goToCity}
-		>
-			{$t('worldtravel.view_cities')}
-			<ChevronRight class="w-4 h-4" />
-		</button>
+		<a href={cityHref} class="region-main text-inherit no-underline min-w-0">
+			<span class="font-semibold truncate group-hover:text-primary transition-colors min-w-0">
+				{region.name}
+			</span>
+			<span class="hidden sm:block text-sm text-base-content/60 truncate">
+				{region.country_name}
+			</span>
+			<span class="inline-flex items-center gap-1.5 text-sm text-base-content/60 tabular-nums">
+				<City class="w-4 h-4" />
+				{region.num_cities}
+			</span>
+			<span class="btn btn-ghost btn-sm gap-1 hidden sm:flex justify-end pointer-events-none">
+				{$t('worldtravel.view_cities')}
+				<ChevronRight class="w-4 h-4" />
+			</span>
+		</a>
 	{:else}
-		<span></span>
+		<div class="region-main min-w-0">
+			<span class="font-semibold truncate min-w-0">{region.name}</span>
+			<span class="hidden sm:block text-sm text-base-content/60 truncate">
+				{region.country_name}
+			</span>
+			<span class="inline-flex items-center gap-1.5 text-sm text-base-content/60 tabular-nums">
+				<City class="w-4 h-4" />
+				{region.num_cities}
+			</span>
+			<span></span>
+		</div>
 	{/if}
 </div>
 
 <style>
 	.region-row {
-		grid-template-columns: 2.5rem 1fr 7rem 5rem 8rem;
+		grid-template-columns: 2.5rem 1fr;
+	}
+
+	.region-main {
+		display: grid;
+		grid-template-columns: 1fr 7rem 5rem 8rem;
+		align-items: center;
+		gap: 0.75rem;
 	}
 
 	@media (max-width: 640px) {
-		.region-row {
-			grid-template-columns: 2.5rem 1fr 4rem;
+		.region-main {
+			grid-template-columns: 1fr 4rem;
 		}
 	}
 </style>

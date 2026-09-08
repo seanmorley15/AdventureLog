@@ -14,7 +14,9 @@
 		visited: boolean;
 	}
 
-	let { city, visited = $bindable() }: Props = $props();
+	let { city, visited = false }: Props = $props();
+	let optimisticVisited = $state<boolean | null>(null);
+	let isVisited = $derived(optimisticVisited ?? visited);
 
 	async function markVisited(e: MouseEvent) {
 		e.stopPropagation();
@@ -24,7 +26,7 @@
 			body: JSON.stringify({ city: city.id })
 		});
 		if (res.ok) {
-			visited = true;
+			optimisticVisited = true;
 			const data = await res.json();
 			addToast(
 				'success',
@@ -42,7 +44,7 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			visited = false;
+			optimisticVisited = false;
 			addToast('info', `${$t('worldtravel.visit_to')} ${city.name} ${$t('worldtravel.removed')}`);
 			dispatch('remove', city);
 		} else {
@@ -54,13 +56,13 @@
 <div class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors city-row">
 	<button
 		type="button"
-		class="btn btn-ghost btn-sm btn-square {visited
+		class="btn btn-ghost btn-sm btn-square {isVisited
 			? 'text-success'
 			: 'text-base-content/30 hover:text-success'}"
-		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
-		onclick={visited ? removeVisit : markVisited}
+		title={isVisited ? $t('adventures.remove') : $t('adventures.mark_visited')}
+		onclick={isVisited ? removeVisit : markVisited}
 	>
-		{#if visited}
+		{#if isVisited}
 			<CheckFilled class="w-5 h-5" />
 		{:else}
 			<Check class="w-5 h-5" />

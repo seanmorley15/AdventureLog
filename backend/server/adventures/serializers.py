@@ -144,9 +144,9 @@ class ImageMapPinSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if representation.get('image') is None:
-            return None
+            return {}
         if representation.get('latitude') is None or representation.get('longitude') is None:
-            return None
+            return {}
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):

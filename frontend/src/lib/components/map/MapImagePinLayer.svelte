@@ -40,33 +40,22 @@
 	let rose400 = $state('#fb7185');
 	let rose500 = $state('#f43f5e');
 	let rose600 = $state('#e11d48');
-	let baseContent = $state('#111827');
 
 	onMount(() => {
 		rose400 = resolveThemeColor('--color-error', rose400);
 		rose500 = resolveThemeColor('--color-error', rose500);
 		rose600 = resolveThemeColor('--color-error', rose600);
-		baseContent = resolveThemeColor('--color-base-content', baseContent);
 	});
 
 	let clusterCirclePaint: Record<string, unknown> = $state({});
 
 	run(() => {
 		clusterCirclePaint = {
-			'circle-color': [
-				'step',
-				['get', 'point_count'],
-				withAlpha(rose400, 0.78),
-				25,
-				withAlpha(rose500, 0.84),
-				80,
-				withAlpha(rose600, 0.9)
-			],
+			'circle-color': '#000000',
 			'circle-radius': ['step', ['get', 'point_count'], 22, 20, 32, 60, 44],
-			'circle-opacity': 1,
-			'circle-stroke-color': withAlpha(baseContent, 0.22),
-			'circle-stroke-width': 2,
-			'circle-blur': 0
+			'circle-opacity': 0.01,
+			'circle-stroke-width': 0,
+			'circle-stroke-opacity': 0
 		};
 	});
 
@@ -143,6 +132,19 @@
 		return (abbreviated ?? count) as number | string | null | undefined;
 	}
 
+	function clusterPointCount(feature: unknown): number {
+		if (!feature || typeof feature !== 'object' || !('properties' in feature)) return 0;
+		const props = (feature as { properties?: Record<string, unknown> }).properties;
+		const value = Number(props?.['point_count']);
+		return Number.isFinite(value) ? value : 0;
+	}
+
+	function clusterBadgeDiameterPx(pointCount: number): number {
+		if (pointCount >= 60) return 88;
+		if (pointCount >= 20) return 64;
+		return 44;
+	}
+
 	type ClusterSource = {
 		getClusterExpansionZoom: (
 			clusterId: number,
@@ -183,9 +185,13 @@
 			<MarkerLayer applyToClusters>
 				{#snippet children({ feature: clusterFeature }: { feature: unknown })}
 					{@const count = getClusterCount(clusterFeature)}
+					{@const pointCount = clusterPointCount(clusterFeature)}
 					{#if count !== undefined && count !== null}
 						<div
-							class="pointer-events-none grid h-8 w-8 place-items-center select-none font-sans text-xs font-bold text-white drop-shadow-xs"
+							class="pointer-events-none grid place-items-center rounded-full border-2 border-white font-sans text-xs font-bold text-white shadow-md"
+							style:width="{clusterBadgeDiameterPx(pointCount)}px"
+							style:height="{clusterBadgeDiameterPx(pointCount)}px"
+							style:background-color={rose600}
 						>
 							{count}
 						</div>
