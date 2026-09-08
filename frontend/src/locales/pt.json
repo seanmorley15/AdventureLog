@@ -1668,6 +1668,18 @@
     "access_until": "Acesso até",
     "renews_on": "Renova em",
     "period_ends": "Período atual termina a",
-    "active_description": "A sua subscrição está ativa. Todas a funcionalidades da Cloud estão disponíveis."
+    "active_description": "A sua subscrição está ativa. Todas a funcionalidades da Cloud estão disponíveis.",
+    "help_title": "Ajuda & Perguntas Frequentes",
+    "faq_trial_question": "O que acontece quando o meu período de avaliação termina?",
+    "faq_trial_answer": "Quando o seu período experimental acabar, vai precisar duma subscrição ativa para continuar a usar o AdventureLog Cloud. Os seus dados são preservados — subscreva a qualquer altura para continuar de onde ficou.",
+    "faq_cancel_question": "Posso cancelar a qualquer altura?",
+    "faq_cancel_answer": "Sim. Use o botão Gerir faturação para abrir o portal Stripe, aqui pode cancelar a sua subscrição. Vai manter o acesso até ao final do seu período faturado atual.",
+    "faq_payment_question": "Como atualizo o meu método de pagamento?",
+    "faq_payment_answer": "Clique em Gerir faturação para abrir o portal de cliente Stripe. A partir daqui pode atualizar o seu cartão, ver faturas, e gerir a sua subscrição.",
+    "learn_more": "Saiba mais sobre o AdventureLog Cloud",
+    "checkout_success": "Subscrição atualizada com sucesso!",
+    "checkout_canceled": "A finalização foi cancelada. Nenhumas alterações foram feitas.",
+    "checkout_error_title": "A finalização falhou",
+    "portal_error_title": "Incapaz de abrir o portal de faturação"
   }
 }
