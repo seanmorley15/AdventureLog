@@ -663,7 +663,8 @@
     "browse_options": "Optione durchsueche",
     "overview": "Übersicht",
     "sort_name": "Name",
-    "sort_recent": "Neusti"
+    "sort_recent": "Neusti",
+    "page_description": "Dursuech öffentlichi AdventureLog Profil und find anderi Reisendi."
   },
   "settings": {
     "update_error": "Fehler bim Aktualisiere vo de Istellige",
@@ -691,6 +692,29 @@
     "photo_by": "Foti ufgnoh vo",
     "join_discord": "Tritt am Discord bi",
     "current_password": "Aktuells Passwort",
-    "sessions_title": "Aktivi Sitzige"
+    "sessions_title": "Aktivi Sitzige",
+    "no_verified_email_warning": "Du muesch e verifizierti Email Adresse ha zum 2FA aktiviere.",
+    "social_auth": "Soziali Profil Authentifizierig",
+    "social_auth_desc_1": "Verwalt dini Soziale Login Optione und Passwort istellige",
+    "email_management_desc": "Verwalt dini Email Adressene und Verfizierigsstatus",
+    "error_change_password": "Has Passwort nöd chöne ändere. Bitte überprüef dis aktuelle Passwort und probiers namal.",
+    "possible_reset": "Wenn die Email Adresse wo du ageh hesch, zunerem Konto ghört, wirsch du es Email becho ha zum Passwort zruggsetze!",
+    "join_discord_desc": "zum dini Fotis teile. Post die Fotis in #travel-share Kanal.",
+    "password_change_logout_warning": "Du wirsch usgloggt nachem ändere vom Passwort.",
+    "password_change_lopout_warning": "Du wirsch ufsgloggt nachem ändere vom Passwort.",
+    "sessions_desc": "Gseh wo du igloggt bisch und duen Grät uslogge wo du nöd kennsch.",
+    "sessions_current": "Das Grät",
+    "sessions_unknown_device": "Unbekannts Grät",
+    "sessions_signed_in": "Igloggt",
+    "sessions_revoke": "Uslogge",
+    "sessions_revoke_others": "Anderi Grät uslogge",
+    "sessions_revoke_others_confirm": "Uslogge vo allne andere Grät? Uf dem Grät bliibsch igloggt.",
+    "sessions_empty": "Kei anderi aktivi Sitzige.",
+    "sessions_revoked": "Sitzig usgloggt.",
+    "sessions_others_revoked": "Anderi Grät usgloggt.",
+    "sessions_revoke_error": "Ha die Sitzig nöd chöne beende. Versuechs namal.",
+    "generic_error": "En Fehler isch passiert bim bearbeite vo dinre Afrag.",
+    "email_removed": "Email erfolgriich glöscht!",
+    "email_removed_error": "Fehler bim Email lösche"
   }
 }
