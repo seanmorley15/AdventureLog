@@ -199,9 +199,25 @@
 
 	let locationToEdit: Location | null = $state(null);
 	let isLocationModalOpen: boolean = $state(false);
-	function handleEditLocation(event: CustomEvent<Location>) {
-		locationToEdit = event.detail;
+	let locationModalInitialStep: 'visits' | null = $state(null);
+	async function handleEditLocation(event: CustomEvent<Location>, initialStep: 'visits' | null = null) {
+		locationModalInitialStep = initialStep;
+		const locationId = event.detail?.id;
+		if (initialStep === 'visits' && locationId) {
+			try {
+				const res = await fetch(`/api/locations/${locationId}/`);
+				locationToEdit = res.ok ? await res.json() : event.detail;
+			} catch {
+				locationToEdit = event.detail;
+			}
+		} else {
+			locationToEdit = event.detail;
+		}
 		isLocationModalOpen = true;
+	}
+
+	function handleEditVisits(event: CustomEvent<Location>) {
+		void handleEditLocation(event, 'visits');
 	}
 
 	function handleDuplicateLocation(event: CustomEvent<Location>) {
@@ -1713,6 +1729,7 @@
 			isLocationModalOpen = false;
 			locationToEdit = null;
 			locationBeingUpdated = undefined;
+			locationModalInitialStep = null;
 			pendingAddDate = null;
 			addedToItinerary.clear();
 			addedToItinerary = addedToItinerary;
@@ -1723,6 +1740,7 @@
 		bind:location={locationBeingUpdated}
 		{collection}
 		initialVisitDate={pendingAddDate}
+		initialStep={locationModalInitialStep}
 	/>
 {/if}
 
@@ -1955,6 +1973,7 @@
 											<LocationCard
 												adventure={resolvedObj as Location}
 												on:edit={handleEditLocation}
+												on:editVisits={handleEditVisits}
 												on:delete={handleItemDelete}
 												on:duplicate={handleDuplicateLocation}
 												itineraryItem={item as CollectionItineraryItem}
@@ -2199,6 +2218,7 @@
 													pendingAddDate = day.date;
 													locationToEdit = null;
 													locationBeingUpdated = undefined;
+													locationModalInitialStep = null;
 													isLocationModalOpen = true;
 												}}
 											>
@@ -2349,6 +2369,7 @@
 													<LocationCard
 														adventure={resolvedObj as Location}
 														on:edit={handleEditLocation}
+														on:editVisits={handleEditVisits}
 														on:delete={handleItemDelete}
 														on:duplicate={handleDuplicateLocation}
 														itineraryItem={item as CollectionItineraryItem}
@@ -2651,6 +2672,7 @@
 									<LocationCard
 										adventure={item}
 										on:edit={handleEditLocation}
+										on:editVisits={handleEditVisits}
 										on:delete={handleItemDelete}
 										on:duplicate={handleDuplicateLocation}
 										{user}

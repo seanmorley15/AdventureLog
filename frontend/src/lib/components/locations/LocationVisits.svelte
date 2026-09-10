@@ -24,7 +24,7 @@
 	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { isAllDay, isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
+	import { isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
 
@@ -37,7 +37,6 @@
 	import TrashIcon from '~icons/mdi/delete';
 	import AlertIcon from '~icons/mdi/alert';
 	import CheckIcon from '~icons/mdi/check';
-	import SettingsIcon from '~icons/mdi/cog';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import RunFastIcon from '~icons/mdi/run-fast';
 	import LoadingIcon from '~icons/mdi/loading';
@@ -48,6 +47,8 @@
 	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
 	import DateInput from '../shared/DateInput.svelte';
+	import { addToast } from '$lib/toasts';
+	import CalendarTodayIcon from '~icons/mdi/calendar-today';
 
 	interface Props {
 		// Props
@@ -135,14 +136,26 @@
 		timezone: undefined as string | undefined
 	});
 
-	function getTypeConfig() {
-		return {
-			startLabel: 'Start Date',
-			endLabel: 'End Date',
-			icon: CalendarIcon,
-			color: 'primary'
-		};
+	function visitCoversDate(visit: Visit, targetDate: string): boolean {
+		if (!visit?.start_date) return false;
+		const visitStart = visit.start_date.split('T')[0];
+		const visitEnd = (visit.end_date || visit.start_date).split('T')[0];
+		return targetDate >= visitStart && targetDate <= visitEnd;
 	}
+
+	function getTodayDate(): string {
+		const now = new Date();
+		const y = now.getFullYear();
+		const m = String(now.getMonth() + 1).padStart(2, '0');
+		const d = String(now.getDate()).padStart(2, '0');
+		return `${y}-${m}-${d}`;
+	}
+
+	let todayCovered = $derived(
+		Boolean(visits?.some((visit) => visitCoversDate(visit, getTodayDate())))
+	);
+
+	let isSavingVisit = $state(false);
 
 	// Reactive constraints
 	let constraintStartDate = $derived(
@@ -266,65 +279,109 @@
 		}
 	}
 
-	async function addVisit(isAuto: boolean = false) {
-		// If editing an existing visit, patch instead of creating new
-		if (visitIdEditing) {
-			const response = await fetch(`/api/visits/${visitIdEditing}/`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					start_date: utcStartDate,
-					end_date: utcEndDate,
-					notes: note,
-					timezone: selectedStartTimezone
-				})
-			});
+	async function addVisit(isAuto: boolean = false): Promise<boolean> {
+		isSavingVisit = true;
+		try {
+			// If editing an existing visit, patch instead of creating new
+			if (visitIdEditing) {
+				const editingId = visitIdEditing;
+				const response = await fetch(`/api/visits/${editingId}/`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						start_date: utcStartDate,
+						end_date: utcEndDate,
+						notes: note,
+						timezone: selectedStartTimezone
+					})
+				});
 
-			if (response.ok) {
-				const updatedVisit: Visit = await response.json();
-				visits = visits ? [...visits, updatedVisit] : [updatedVisit];
-				dispatch('visitAdded', updatedVisit);
-				visitIdEditing = null;
+				if (response.ok) {
+					const updatedVisit: Visit = await response.json();
+					visits = visits
+						? visits.map((v) => (v.id === editingId ? updatedVisit : v))
+						: [updatedVisit];
+					// If editVisit removed it from the list, ensure it's present
+					if (!visits.some((v) => v.id === updatedVisit.id)) {
+						visits = [...visits, updatedVisit];
+					}
+					dispatch('visitAdded', updatedVisit);
+					addToast('success', $t('adventures.visit_updated'));
+					visitIdEditing = null;
+				} else {
+					const errorText = await response.text();
+					addToast('error', $t('adventures.visit_update_failed') || errorText);
+					return false;
+				}
 			} else {
-				const errorText = await response.text();
-			}
-		} else {
-			// post to /api/visits for new visit
-			const response = await fetch('/api/visits/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					object_id: objectId,
-					start_date: utcStartDate,
-					end_date: utcEndDate,
-					notes: note,
-					timezone: selectedStartTimezone,
-					location: objectId
-				})
-			});
+				// post to /api/visits for new visit
+				const response = await fetch('/api/visits/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						object_id: objectId,
+						start_date: utcStartDate,
+						end_date: utcEndDate,
+						notes: note,
+						timezone: selectedStartTimezone,
+						location: objectId
+					})
+				});
 
-			if (response.ok) {
-				const newVisit: Visit = await response.json();
-				visits = visits ? [...visits, newVisit] : [newVisit];
-				dispatch('visitAdded', newVisit);
-			} else {
-				const errorText = await response.text();
-				alert(`Failed to add visit: ${errorText}`);
+				if (response.ok) {
+					const newVisit: Visit = await response.json();
+					visits = visits ? [...visits, newVisit] : [newVisit];
+					dispatch('visitAdded', newVisit);
+					if (!isAuto) {
+						addToast('success', $t('adventures.visit_added'));
+					}
+				} else {
+					const errorText = await response.text();
+					addToast('error', $t('adventures.visit_add_failed') || errorText);
+					return false;
+				}
 			}
-		}
 
-		// Reset form fields. If this call was an auto-generated visit, allow clearing even if initialVisitDate is set
-		if (!initialVisitDate || isAuto) {
-			note = '';
-			localStartDate = '';
-			localEndDate = '';
-			utcStartDate = null;
-			utcEndDate = null;
+			// Reset form fields. If this call was an auto-generated visit, allow clearing even if initialVisitDate is set
+			if (!initialVisitDate || isAuto) {
+				note = '';
+				localStartDate = '';
+				localEndDate = '';
+				utcStartDate = null;
+				utcEndDate = null;
+			}
+			return true;
+		} finally {
+			isSavingVisit = false;
 		}
+	}
+
+	async function addTodayVisit() {
+		if (todayCovered || isSavingVisit || visitIdEditing) return;
+
+		const today = getTodayDate();
+		allDay = true;
+		localStartDate = today;
+		localEndDate = today;
+		note = '';
+
+		utcStartDate = updateUTCDate({
+			localDate: localStartDate,
+			timezone: selectedStartTimezone,
+			allDay: true
+		}).utcDate;
+
+		utcEndDate = updateUTCDate({
+			localDate: localEndDate,
+			timezone: selectedStartTimezone,
+			allDay: true
+		}).utcDate;
+
+		await addVisit(false);
 	}
 
 	// Activity management functions
@@ -765,19 +822,8 @@
 			}).localDate;
 		}
 
-		// Remove the visit from the array temporarily for editing
-		if (visits) {
-			visits = visits.filter((v) => v.id !== visit.id);
-		}
-
-		// Clean up activities for this visit
-		delete visitActivities[visit.id];
-		delete expandedVisits[visit.id];
-		delete loadingActivities[visit.id];
-		delete showActivityUpload[visit.id];
-
 		note = visit.notes;
-		constrainDates = true;
+		constrainDates = Boolean(collection?.start_date && collection?.end_date);
 		utcStartDate = visit.start_date;
 		utcEndDate = visit.end_date;
 
@@ -786,7 +832,17 @@
 		}, 0);
 	}
 
+	function cancelEditVisit() {
+		visitIdEditing = null;
+		note = '';
+		localStartDate = '';
+		localEndDate = '';
+		utcStartDate = null;
+		utcEndDate = null;
+	}
+
 	function removeVisit(visitId: string) {
+		const previousVisits = visits ? [...visits] : [];
 		if (visits) {
 			visits = visits.filter((v) => v.id !== visitId);
 		}
@@ -797,15 +853,20 @@
 		delete loadingActivities[visitId];
 		delete showActivityUpload[visitId];
 
+		if (visitIdEditing === visitId) {
+			cancelEditVisit();
+		}
+
 		// make the DELETE request
 		fetch(`/api/visits/${visitId}/`, {
 			method: 'DELETE'
 		}).then((response) => {
 			if (!response.ok) {
 				console.error('Error deleting visit:', response.statusText);
+				visits = previousVisits;
+				addToast('error', $t('adventures.visit_add_failed'));
 			} else {
-				// remove the visit from the local state
-				visits = visits?.filter((v) => v.id !== visitId) ?? null;
+				dispatch('visitRemoved', visitId);
 			}
 		});
 	}
@@ -865,11 +926,7 @@
 			const targetDate = initialVisitDate.split('T')[0]; // Ensure we have just YYYY-MM-DD
 
 			// Check if any visit already exists for this date
-			const visitExists = visits?.some((visit) => {
-				const visitStart = visit.start_date.split('T')[0];
-				const visitEnd = visit.end_date.split('T')[0];
-				return targetDate >= visitStart && targetDate <= visitEnd;
-			});
+			const visitExists = visits?.some((visit) => visitCoversDate(visit, targetDate));
 
 			if (!visitExists) {
 				// Set up an all-day visit for this date
@@ -899,206 +956,234 @@
 	});
 
 	let isDateValid = $derived(validateDateRange(utcStartDate ?? '', utcEndDate ?? '').valid);
-	let typeConfig = $derived(getTypeConfig());
 </script>
 
-<div class="h-full min-h-0 flex flex-col">
-	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
-		<div class="card bg-base-100 border border-base-300">
-			<div class="card-body p-6">
-				<!-- Header -->
-				<div class="flex items-center justify-between mb-6">
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-{typeConfig.color}/10 rounded-lg">
-							<typeConfig.icon class="w-5 h-5 text-{typeConfig.color}" />
+<div
+	class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5"
+>
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
+		<div class="max-w-full mx-auto space-y-6">
+			<!-- Add Visit Section -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+						<div class="flex items-center gap-3">
+							<div class="p-2 bg-primary/10 rounded-lg">
+								<CalendarIcon class="w-5 h-5 text-primary" />
+							</div>
+							<h2 class="text-xl font-bold">
+								{visitIdEditing ? $t('adventures.edit_visit') : $t('adventures.add_visit')}
+							</h2>
 						</div>
-						<h2 class="text-xl font-bold">{$t('adventures.date_information')}</h2>
-					</div>
-				</div>
-
-				<!-- Settings Section -->
-				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300 mb-6">
-					<div class="flex items-center gap-2 mb-4">
-						<SettingsIcon class="w-4 h-4 text-base-content/70" />
-						<h3 class="font-medium text-base-content/80">{$t('navbar.settings')}</h3>
+						<button
+							type="button"
+							class="btn btn-primary btn-sm gap-2"
+							disabled={todayCovered || isSavingVisit || Boolean(visitIdEditing)}
+							title={todayCovered ? $t('adventures.visited_today') : $t('adventures.add_today_visit')}
+							onclick={() => addTodayVisit()}
+						>
+							{#if isSavingVisit && !visitIdEditing && localStartDate === getTodayDate()}
+								<span class="loading loading-spinner loading-xs"></span>
+							{:else}
+								<CalendarTodayIcon class="w-4 h-4" />
+							{/if}
+							{$t('adventures.add_today_visit')}
+						</button>
 					</div>
 
 					<div class="space-y-4">
-						<!-- Timezone Selection -->
-
-						<div>
-							<label class="field-label" for="timezone-selector">{$t('adventures.timezone')}</label>
-							<div class="mt-1">
-								<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
-							</div>
-						</div>
-
-						<!-- Toggles -->
-						<div class="flex flex-wrap gap-6">
-							<div class="flex items-center gap-3">
-								<ClockIcon class="w-4 h-4 text-base-content/70" />
-								<label class="font-semibold text-sm text-base-content" for="all-day-toggle"
-									>{$t('adventures.all_day')}</label
-								>
+						<div class="flex flex-wrap gap-4">
+							<label class="flex items-center gap-2 cursor-pointer" for="all-day-toggle">
 								<input
 									id="all-day-toggle"
 									type="checkbox"
-									class="toggle toggle-{typeConfig.color} toggle-sm"
+									class="toggle toggle-primary"
 									checked={allDay}
 									onchange={handleAllDayToggle}
 								/>
-							</div>
+								<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span>
+							</label>
 
 							{#if collection?.start_date && collection?.end_date}
-								<div class="flex items-center gap-3">
-									<CalendarIcon class="w-4 h-4 text-base-content/70" />
-									<label class="font-semibold text-sm text-base-content" for="constrain-dates"
-										>{$t('adventures.date_constrain')}</label
-									>
+								<label class="flex items-center gap-2 cursor-pointer" for="constrain-dates">
 									<input
 										id="constrain-dates"
 										type="checkbox"
-										class="toggle toggle-{typeConfig.color} toggle-sm"
+										class="toggle toggle-secondary"
 										bind:checked={constrainDates}
 									/>
-								</div>
+									<span class="font-semibold text-sm text-base-content"
+										>{$t('adventures.date_constrain')}</span
+									>
+								</label>
 							{/if}
 						</div>
-					</div>
-				</div>
 
-				<!-- Date Selection Section -->
-				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300 mb-6">
-					<h3 class="font-medium text-base-content/80 mb-4">{$t('adventures.date_selection')}</h3>
+						{#if !isDateValid}
+							<div class="alert alert-error bg-error/10 border border-error/30 text-error">
+								<AlertIcon class="w-4 h-4" />
+								<span class="text-sm">{$t('adventures.invalid_date_range')}</span>
+							</div>
+						{/if}
 
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<!-- Start Date -->
-						<div>
-							<label class="field-label" for="start-date-input">
-								{typeConfig.startLabel}
-							</label>
-							<DateInput
-								id="start-date-input"
-								bind:value={localStartDate}
-								onchange={handleLocalDateChange}
-								showTime={!allDay}
-								min={constrainDates ? constraintStartDate : undefined}
-								max={constrainDates ? constraintEndDate : undefined}
-								clearable={false}
-							/>
-						</div>
-
-						<!-- End Date -->
-						{#if localStartDate}
-							<div>
-								<label class="field-label" for="end-date-input">
-									{typeConfig.endLabel}
-								</label>
+						<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+							<div class="flex flex-col">
+								<label class="field-label" for="start-date-input">{$t('adventures.start_date')}</label>
 								<DateInput
-									id="end-date-input"
-									bind:value={localEndDate}
+									id="start-date-input"
+									bind:value={localStartDate}
 									onchange={handleLocalDateChange}
 									showTime={!allDay}
-									min={constrainDates ? localStartDate : undefined}
+									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
 									clearable={false}
 								/>
 							</div>
-						{/if}
-					</div>
 
-					<!-- Notes (Location only) -->
+							{#if localStartDate}
+								<div class="flex flex-col">
+									<label class="field-label" for="end-date-input">{$t('adventures.end_date')}</label>
+									<DateInput
+										id="end-date-input"
+										bind:value={localEndDate}
+										onchange={handleLocalDateChange}
+										showTime={!allDay}
+										min={constrainDates ? localStartDate : undefined}
+										max={constrainDates ? constraintEndDate : undefined}
+										clearable={false}
+									/>
+								</div>
+							{/if}
 
-					<div class="mt-4">
-						<label class="field-label" for="visit-notes">{$t('adventures.notes')}</label>
-						<textarea
-							id="visit-notes"
-							class="textarea w-full mt-1"
-							rows="3"
-							placeholder={$t('adventures.notes_placeholder') + '...'}
-							bind:value={note}
-						></textarea>
-					</div>
+							{#if !allDay}
+								<div class="flex flex-col">
+									<label class="field-label" for="timezone-selector">{$t('adventures.timezone')}</label>
+									<div class="mt-1">
+										<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
+									</div>
+								</div>
+							{/if}
+						</div>
 
-					<!-- Add Visit Button -->
-					<div class="flex justify-end mt-4">
-						<button
-							class="btn btn-{typeConfig.color} btn-sm gap-2"
-							type="button"
-							disabled={!localStartDate || !isDateValid}
-							onclick={() => addVisit(false)}
-						>
-							<PlusIcon class="w-4 h-4" />
-							{visitIdEditing ? $t('adventures.update_visit') : $t('adventures.add_visit')}
-						</button>
+						<div>
+							<label class="field-label" for="visit-notes">{$t('adventures.notes')}</label>
+							<textarea
+								id="visit-notes"
+								class="textarea textarea-bordered w-full mt-1 bg-base-100/80 focus:bg-base-100"
+								rows="3"
+								placeholder={$t('adventures.notes_placeholder') + '...'}
+								bind:value={note}
+							></textarea>
+						</div>
+
+						<div class="flex flex-wrap justify-end gap-2">
+							{#if visitIdEditing}
+								<button
+									class="btn btn-ghost btn-sm"
+									type="button"
+									onclick={cancelEditVisit}
+									disabled={isSavingVisit}
+								>
+									{$t('about.close')}
+								</button>
+							{/if}
+							<button
+								class="btn btn-primary btn-sm gap-2"
+								type="button"
+								disabled={!localStartDate || !isDateValid || isSavingVisit}
+								onclick={() => addVisit(false)}
+							>
+								{#if isSavingVisit}
+									<span class="loading loading-spinner loading-xs"></span>
+								{:else}
+									<PlusIcon class="w-4 h-4" />
+								{/if}
+								{visitIdEditing ? $t('adventures.update_visit') : $t('adventures.add_visit')}
+							</button>
+						</div>
 					</div>
 				</div>
+			</div>
 
-				<!-- Validation Error -->
-				{#if !isDateValid}
-					<div class="alert alert-error mb-6">
-						<AlertIcon class="w-5 h-5" />
-						<span class="text-sm">{$t('adventures.invalid_date_range')}</span>
+			<!-- Visits List -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-info/10 rounded-lg">
+							<MapMarkerIcon class="w-5 h-5 text-info" />
+						</div>
+						<h2 class="text-xl font-bold">
+							{$t('adventures.visits')}
+							<span class="text-base font-normal text-base-content/60">({visits?.length || 0})</span>
+						</h2>
 					</div>
-				{/if}
-
-				<!-- Visits List (Location only) -->
-
-				<div class="bg-base-200/40 p-4 rounded-lg border border-base-300">
-					<h3 class="font-medium text-base-content/80 mb-4">
-						{$t('adventures.visits')} ({visits?.length || 0})
-					</h3>
 
 					{#if !visits || visits.length === 0}
-						<div class="text-center py-8 text-base-content/60">
-							<CalendarIcon class="w-8 h-8 mx-auto mb-2 opacity-50" />
-							<p class="text-sm">{$t('adventures.no_visits')}</p>
-							<p class="text-xs text-base-content/40 mt-1">
+						<div class="text-center py-10 text-base-content/60">
+							<CalendarIcon class="w-10 h-10 mx-auto mb-3 opacity-40" />
+							<p class="text-sm font-medium">{$t('adventures.no_visits')}</p>
+							<p class="text-xs text-base-content/40 mt-1 mb-4">
 								{$t('adventures.no_visits_description')}
 							</p>
+							<button
+								type="button"
+								class="btn btn-primary btn-sm gap-2"
+								disabled={todayCovered || isSavingVisit}
+								onclick={() => addTodayVisit()}
+							>
+								<CalendarTodayIcon class="w-4 h-4" />
+								{$t('adventures.add_today_visit')}
+							</button>
 						</div>
 					{:else}
 						<div class="space-y-3">
 							{#each visits as visit (visit.id)}
 								<div
-									class="bg-base-100 p-4 rounded-lg border border-base-300 hover:border-base-400 transition-colors"
+									class="bg-base-200/50 p-4 rounded-xl border border-base-300 hover:border-primary/30 transition-colors"
+									class:ring-2={visitIdEditing === visit.id}
+									class:ring-primary={visitIdEditing === visit.id}
 								>
-									<div class="flex items-start justify-between">
+									<div class="flex items-start justify-between gap-3">
 										<div class="flex-1 min-w-0">
-											<div class="flex items-center gap-2 mb-2">
+											<div class="flex flex-wrap items-center gap-2 mb-1">
 												{#if isVisitAllDay(visit.start_date, visit.end_date)}
 													<span class="badge badge-outline badge-sm"
 														>{$t('adventures.all_day')}</span
 													>
 												{:else}
-													<ClockIcon class="w-3 h-3 text-base-content/50" />
+													<span class="badge badge-outline badge-sm gap-1">
+														<ClockIcon class="w-3 h-3" />
+														{$t('adventures.timed')}
+													</span>
 												{/if}
 												{#if visit.timezone && !isVisitAllDay(visit.start_date, visit.end_date)}
-													<span class="badge badge-outline badge-sm">{visit.timezone}</span>
+													<span class="badge badge-ghost badge-sm">{visit.timezone}</span>
 												{/if}
-												<div class="text-sm font-medium truncate">
-													{#if isVisitAllDay(visit.start_date, visit.end_date)}
-														{formatAllDayDate(visit.start_date, dateFormat)}
-														– {formatAllDayDate(visit.end_date, dateFormat)}
-													{:else if visit.timezone}
-														{formatDateInTimezone(visit.start_date, visit.timezone, dateFormat)}
-														– {formatDateInTimezone(visit.end_date, visit.timezone, dateFormat)}
-													{:else}
-														{formatDateInTimezone(visit.start_date, null, dateFormat)}
-														– {formatDateInTimezone(visit.end_date, null, dateFormat)}
-													{/if}
-												</div>
+											</div>
+											<div class="text-base font-semibold truncate">
+												{#if isVisitAllDay(visit.start_date, visit.end_date)}
+													{formatAllDayDate(visit.start_date, dateFormat)}
+													– {formatAllDayDate(visit.end_date, dateFormat)}
+												{:else if visit.timezone}
+													{formatDateInTimezone(visit.start_date, visit.timezone, dateFormat)}
+													– {formatDateInTimezone(visit.end_date, visit.timezone, dateFormat)}
+												{:else}
+													{formatDateInTimezone(visit.start_date, null, dateFormat)}
+													– {formatDateInTimezone(visit.end_date, null, dateFormat)}
+												{/if}
 											</div>
 
 											{#if visit.notes}
-												<p class="text-xs text-base-content/70 bg-base-200/50 p-2 rounded-sm">
-													"{visit.notes}"
+												<p
+													class="text-sm text-base-content/70 bg-base-100/80 p-2 rounded-lg mt-2 border border-base-300"
+												>
+													{visit.notes}
 												</p>
 											{/if}
 
 											{#if visit.activities && visit.activities.length > 0}
 												<div class="flex items-center gap-2 mt-2">
-													<RunFastIcon class="w-3 h-3 text-success" />
+													<RunFastIcon class="w-3.5 h-3.5 text-success" />
 													<span class="text-xs text-success font-medium">
 														{visit.activities.length}
 														{$t('adventures.saved_activities')}
@@ -1107,58 +1192,61 @@
 											{/if}
 										</div>
 
-										<!-- Visit Actions -->
-										<div class="flex gap-1 ml-4">
-											<!-- Activities Button (only show if Strava is enabled) -->
-											{#if stravaEnabled}
+										<div class="flex flex-col items-end gap-2 shrink-0">
+											<div class="flex gap-1">
 												<button
-													class="btn btn-info btn-xs tooltip tooltip-top gap-1"
-													data-tip={$t('adventures.view_strava_activities')}
-													onclick={() => toggleVisitActivities(visit)}
+													class="btn btn-ghost btn-sm btn-square"
+													title={$t('adventures.edit_visit')}
+													onclick={() => editVisit(visit)}
 												>
-													<RunFastIcon class="w-3 h-3" />
-													{#if visitActivities[visit.id]}
-														({visitActivities[visit.id].length})
-													{/if}
+													<EditIcon class="w-4 h-4" />
 												</button>
-											{/if}
-
-											{#if endurainEnabled}
 												<button
-													class="btn btn-secondary btn-xs tooltip tooltip-top gap-1"
-													data-tip={$t('adventures.view_endurain_activities')}
-													onclick={() => toggleEndurainVisitActivities(visit)}
+													class="btn btn-ghost btn-sm btn-square text-error"
+													title={$t('adventures.remove_visit')}
+													onclick={() => removeVisit(visit.id)}
 												>
-													<RunFastIcon class="w-3 h-3" />
-													{#if endurainVisitActivities[visit.id]}
-														({endurainVisitActivities[visit.id].length})
-													{/if}
+													<TrashIcon class="w-4 h-4" />
 												</button>
-											{/if}
+											</div>
+											<div class="flex flex-wrap justify-end gap-1">
+												{#if stravaEnabled}
+													<button
+														class="btn btn-outline btn-info btn-xs gap-1"
+														title={$t('adventures.view_strava_activities')}
+														onclick={() => toggleVisitActivities(visit)}
+													>
+														<RunFastIcon class="w-3 h-3" />
+														Strava
+														{#if visitActivities[visit.id]}
+															({visitActivities[visit.id].length})
+														{/if}
+													</button>
+												{/if}
 
-											<!-- Upload Activity Button -->
-											<button
-												class="btn btn-success btn-xs tooltip tooltip-top gap-1"
-												data-tip={$t('adventures.add_activity')}
-												onclick={() => showActivityUploadForm(visit.id)}
-											>
-												<UploadIcon class="w-3 h-3" />
-											</button>
+												{#if endurainEnabled}
+													<button
+														class="btn btn-outline btn-secondary btn-xs gap-1"
+														title={$t('adventures.view_endurain_activities')}
+														onclick={() => toggleEndurainVisitActivities(visit)}
+													>
+														<RunFastIcon class="w-3 h-3" />
+														Endurain
+														{#if endurainVisitActivities[visit.id]}
+															({endurainVisitActivities[visit.id].length})
+														{/if}
+													</button>
+												{/if}
 
-											<button
-												class="btn btn-warning btn-xs tooltip tooltip-top"
-												data-tip={$t('adventures.edit_visit')}
-												onclick={() => editVisit(visit)}
-											>
-												<EditIcon class="w-3 h-3" />
-											</button>
-											<button
-												class="btn btn-error btn-xs tooltip tooltip-top"
-												data-tip={$t('adventures.remove_visit')}
-												onclick={() => removeVisit(visit.id)}
-											>
-												<TrashIcon class="w-3 h-3" />
-											</button>
+												<button
+													class="btn btn-outline btn-success btn-xs gap-1"
+													title={$t('adventures.add_activity')}
+													onclick={() => showActivityUploadForm(visit.id)}
+												>
+													<UploadIcon class="w-3 h-3" />
+													{$t('adventures.add_activity')}
+												</button>
+											</div>
 										</div>
 									</div>
 
@@ -1264,7 +1352,7 @@
 															bind:value={activityForm.sport_type}
 															disabled={isStravaImportPending(visit.id)}
 														>
-															{#each SPORT_TYPE_CHOICES as sportType}
+															{#each SPORT_TYPE_CHOICES as sportType (sportType.key)}
 																<option value={sportType.key}
 																	>{sportType.icon} {sportType.label}</option
 																>
@@ -1736,18 +1824,17 @@
 					{/if}
 				</div>
 			</div>
-		</div>
 
-		<!-- if localStartDate and localEndDate are set, show a callout saying its not saved yet -->
-		{#if localStartDate || localEndDate}
-			<div class="alert alert-neutral">
-				<InfoIcon class="w-5 h-5" />
-				<div>
-					<div class="font-medium text-sm">{$t('adventures.dates_not_saved')}</div>
-					<div class="text-xs opacity-75">{$t('adventures.dates_not_saved_description')}</div>
+			{#if (localStartDate || localEndDate) && !visitIdEditing}
+				<div class="alert alert-neutral shadow-sm">
+					<InfoIcon class="w-5 h-5" />
+					<div>
+						<div class="font-medium text-sm">{$t('adventures.dates_not_saved')}</div>
+						<div class="text-xs opacity-75">{$t('adventures.dates_not_saved_description')}</div>
+					</div>
 				</div>
-			</div>
-		{/if}
+			{/if}
+		</div>
 	</div>
 
 	<div

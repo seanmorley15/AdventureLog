@@ -77,6 +77,7 @@
 	let is_category_modal_open: boolean = $state(false);
 	let adventureToEdit: Location | null = $state(null);
 	let isLocationModalOpen: boolean = $state(false);
+	let locationModalInitialStep: 'visits' | null = $state(null);
 	let editingLocationId: string | null = $state(null);
 	let sidebarOpen = $state(false);
 
@@ -151,26 +152,36 @@
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	async function editAdventure(event: CustomEvent<Location>) {
+	async function editAdventure(event: CustomEvent<Location>, initialStep: 'visits' | null = null) {
 		const locationId = event.detail?.id;
+		locationModalInitialStep = initialStep;
+		locationBeingUpdated = undefined;
+
 		if (!locationId) {
 			adventureToEdit = event.detail;
 			isLocationModalOpen = true;
 			return;
 		}
 
-		// List endpoint returns a slim payload; fetch full location for the edit modal
+		// Open immediately with list payload so the modal isn't stuck behind the card spinner,
+		// then upgrade to the full location (includes visits).
+		adventureToEdit = event.detail;
+		isLocationModalOpen = true;
 		editingLocationId = locationId;
 		try {
 			const res = await fetch(`/api/locations/${locationId}/`);
-			adventureToEdit = res.ok ? await res.json() : event.detail;
-			isLocationModalOpen = true;
+			if (res.ok) {
+				adventureToEdit = await res.json();
+			}
 		} catch {
-			adventureToEdit = event.detail;
-			isLocationModalOpen = true;
+			// Keep the slim payload already shown in the modal
 		} finally {
 			editingLocationId = null;
 		}
+	}
+
+	function editVisits(event: CustomEvent<Location>) {
+		void editAdventure(event, 'visits');
 	}
 
 	function toggleSidebar() {
@@ -193,10 +204,14 @@
 
 {#if isLocationModalOpen}
 	<NewLocationModal
-		on:close={() => (isLocationModalOpen = false)}
+		on:close={() => {
+			isLocationModalOpen = false;
+			locationModalInitialStep = null;
+		}}
 		user={data.user}
 		locationToEdit={adventureToEdit}
 		bind:location={locationBeingUpdated}
+		initialStep={locationModalInitialStep}
 	/>
 {/if}
 
@@ -275,6 +290,7 @@
 							class="btn btn-primary btn-wide mt-6 gap-2"
 							onclick={() => {
 								adventureToEdit = null;
+								locationModalInitialStep = null;
 								isLocationModalOpen = true;
 							}}
 						>
@@ -294,6 +310,7 @@
 								isEditLoading={editingLocationId === adventure.id}
 								on:delete={deleteAdventure}
 								on:edit={editAdventure}
+								on:editVisits={editVisits}
 								on:duplicate={(e) => {
 									// Add the new location to the beginning of the list
 									adventures = [e.detail, ...adventures];
@@ -516,6 +533,7 @@
 				<button
 					class="btn btn-primary gap-2 w-full"
 					onclick={() => {
+						locationModalInitialStep = null;
 						isLocationModalOpen = true;
 						adventureToEdit = null;
 					}}

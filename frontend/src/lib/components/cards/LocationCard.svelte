@@ -246,6 +246,10 @@
 		dispatch('edit', adventure);
 	}
 
+	function editVisits() {
+		dispatch('editVisits', adventure);
+	}
+
 	function link() {
 		dispatch('link', adventure);
 	}
@@ -465,6 +469,23 @@
 											<FileDocumentEdit class="w-4 h-4" />
 										{/if}
 										{$t('adventures.edit_location')}
+									</button>
+								</li>
+								<li>
+									<button
+										type="button"
+										onclick={() => {
+											editVisits();
+										}}
+										class="flex items-center gap-2"
+										disabled={isEditLoading}
+									>
+										{#if isEditLoading}
+											<span class="loading loading-spinner loading-xs"></span>
+										{:else}
+											<Calendar class="w-4 h-4" />
+										{/if}
+										{$t('adventures.manage_visits')}
 									</button>
 								</li>
 								{#if user?.uuid == adventure.user?.uuid}

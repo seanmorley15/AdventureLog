@@ -58,7 +58,7 @@
 		};
 	}
 
-	function handleItemEdit(type: string, detail: any) {
+	function handleItemEdit(type: string, detail: any, initialStep: 'visits' | null = null) {
 		const updated = detail;
 		if (!updated || !updated.id) return;
 
@@ -71,7 +71,11 @@
 		};
 
 		// Bubble up so parent can open edit modals
-		dispatch('openEdit', { type, item: updated });
+		dispatch('openEdit', { type, item: updated, initialStep });
+	}
+
+	function handleLocationEditVisits(detail: any) {
+		handleItemEdit('locations', detail, 'visits');
 	}
 
 	function handleLocationDuplicate(detail: any) {
@@ -216,6 +220,7 @@
 							{collection}
 							on:delete={(e) => handleItemDelete('locations', e.detail)}
 							on:edit={(e) => handleItemEdit('locations', e.detail)}
+							on:editVisits={(e) => handleLocationEditVisits(e.detail)}
 							on:duplicate={(e) => handleLocationDuplicate(e.detail)}
 						/>
 					{/each}

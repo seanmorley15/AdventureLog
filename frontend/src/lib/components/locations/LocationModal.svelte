@@ -16,31 +16,111 @@
 
 	let modal: HTMLDialogElement;
 	let googleMapsEnabled = $state(false);
-	let isEditMode = $state(false);
 	let pendingGooglePhotoUrls: string[] = $state([]);
 
 	// Whether a save/create occurred during this modal session
 	let didSave = $state(false);
 
+	interface Props {
+		user?: User | null;
+		collection?: Collection | null;
+		initialLatLng?: { lat: number; lng: number } | null;
+		initialVisitDate?: string | null;
+		itineraryDayLabel?: string | null;
+		/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
+		skipQuickStart?: boolean;
+		/** Open a specific step when editing an existing location (e.g. visits from card shortcut). */
+		initialStep?: 'visits' | null;
+		location?: Location;
+		locationToEdit?: Location | null;
+	}
+
+	function createEmptyLocation(): Location {
+		return {
+			id: '',
+			name: '',
+			visits: [],
+			link: null,
+			description: null,
+			tags: [],
+			rating: NaN,
+			price: null,
+			price_currency: null,
+			is_public: false,
+			latitude: NaN,
+			longitude: NaN,
+			location: null,
+			images: [],
+			user: null,
+			category: {
+				id: '',
+				name: '',
+				display_name: '',
+				icon: '',
+				user: ''
+			},
+			attachments: [],
+			trails: []
+		};
+	}
+
+	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
+		if (!loc) return false;
+		const lat = loc.latitude;
+		const lng = loc.longitude;
+		return (
+			typeof lat === 'number' &&
+			typeof lng === 'number' &&
+			Number.isFinite(lat) &&
+			Number.isFinite(lng) &&
+			Boolean(loc.name?.trim())
+		);
+	}
+
+	let {
+		user = null,
+		collection = null,
+		initialLatLng = null,
+		initialVisitDate = null,
+		itineraryDayLabel = null,
+		skipQuickStart = false,
+		initialStep = null,
+		location = $bindable(createEmptyLocation()),
+		locationToEdit = null
+	}: Props = $props();
+
+	// Derive edit mode immediately so the first paint never mounts Quick Start when editing
+	let isEditMode = $derived(Boolean(locationToEdit?.id));
+
+	function resolveInitialStepIndex(): number {
+		if (locationToEdit?.id && initialStep === 'visits') return 3;
+		if (locationToEdit?.id) return 1;
+		if (skipQuickStart || hasPrefilledCoordinates(locationToEdit)) return 1;
+		if (initialLatLng) return 1;
+		return 0;
+	}
+
+	const initialStepIndex = resolveInitialStepIndex();
+
 	let steps = $state([
 		{
 			name: $t('adventures.quick_start'),
-			selected: true,
+			selected: initialStepIndex === 0,
 			requires_id: false
 		},
 		{
 			name: $t('adventures.details'),
-			selected: false,
+			selected: initialStepIndex === 1,
 			requires_id: false
 		},
 		{
 			name: $t('settings.media'),
-			selected: false,
+			selected: initialStepIndex === 2,
 			requires_id: true
 		},
 		{
 			name: $t('adventures.visits'),
-			selected: false,
+			selected: initialStepIndex === 3,
 			requires_id: true
 		}
 	]);
@@ -115,59 +195,7 @@
 		}
 	}
 
-	function createEmptyLocation(): Location {
-		return {
-			id: '',
-			name: '',
-			visits: [],
-			link: null,
-			description: null,
-			tags: [],
-			rating: NaN,
-			price: null,
-			price_currency: null,
-			is_public: false,
-			latitude: NaN,
-			longitude: NaN,
-			location: null,
-			images: [],
-			user: null,
-			category: {
-				id: '',
-				name: '',
-				display_name: '',
-				icon: '',
-				user: ''
-			},
-			attachments: [],
-			trails: []
-		};
-	}
-
-	interface Props {
-		user?: User | null;
-		collection?: Collection | null;
-		initialLatLng?: { lat: number; lng: number } | null; // Used to pass the location from the map selection to the modal
-		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
-		itineraryDayLabel?: string | null;
-		/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
-		skipQuickStart?: boolean;
-		location?: Location;
-		locationToEdit?: Location | null;
-	}
-
-	let {
-		user = null,
-		collection = null,
-		initialLatLng = null,
-		initialVisitDate = null,
-		itineraryDayLabel = null,
-		skipQuickStart = false,
-		location = $bindable(createEmptyLocation()),
-		locationToEdit = null
-	}: Props = $props();
-
-	let previousLocationId: string | null | undefined = undefined;
+	let previousLocationToEdit: Location | null | undefined = undefined;
 
 	$effect.pre(() => {
 		if (initialVisitDate && !storedInitialVisitDate) {
@@ -176,10 +204,10 @@
 	});
 
 	$effect.pre(() => {
-		const currentId = locationToEdit?.id ?? null;
-		if (currentId === previousLocationId) return;
+		// Re-sync whenever the parent replaces locationToEdit (including same-id full fetch)
+		if (locationToEdit === previousLocationToEdit) return;
+		previousLocationToEdit = locationToEdit;
 
-		previousLocationId = currentId;
 		location = {
 			id: locationToEdit?.id || '',
 			name: locationToEdit?.name || '',
@@ -210,37 +238,17 @@
 		};
 	});
 
-	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
-		if (!loc) return false;
-		const lat = loc.latitude;
-		const lng = loc.longitude;
-		return (
-			typeof lat === 'number' &&
-			typeof lng === 'number' &&
-			Number.isFinite(lat) &&
-			Number.isFinite(lng) &&
-			Boolean(loc.name?.trim())
-		);
-	}
-
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		modal.showModal();
-		isEditMode = Boolean(locationToEdit?.id);
+		modal?.showModal();
 
-		const prefilledNew = !isEditMode && (skipQuickStart || hasPrefilledCoordinates(locationToEdit));
-
-		// Skip the quick start step if editing an existing location or prefilled create
-		if (!isEditMode && !prefilledNew) {
-			setStep(0);
-		} else {
-			setStep(1);
-		}
-
+		// Ensure step is correct after mount (covers initialLatLng assigned below)
 		if (initialLatLng) {
 			location.latitude = initialLatLng.lat;
 			location.longitude = initialLatLng.lng;
-			setStep(1);
+			if (!isEditMode) {
+				setStep(1);
+			}
 		}
 
 		if (!isEditMode && locationToEdit) {
@@ -474,6 +482,12 @@
 					objectId={location.id}
 					on:back={() => setStep(2)}
 					on:close={() => close()}
+					on:visitAdded={() => {
+						didSave = true;
+					}}
+					on:visitRemoved={() => {
+						didSave = true;
+					}}
 					measurementSystem={user?.measurement_system || 'metric'}
 					{collection}
 					initialVisitDate={storedInitialVisitDate}

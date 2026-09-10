@@ -69,6 +69,7 @@
 	let currentSlide = $state(0);
 	let notFound: boolean = $state(false);
 	let isLocationModalOpen: boolean = $state(false);
+	let locationModalInitialStep: 'visits' | null = $state(null);
 	let isLodgingModalOpen: boolean = $state(false);
 	let isTransportationModalOpen: boolean = $state(false);
 	let isChecklistModalOpen: boolean = $state(false);
@@ -427,14 +428,25 @@
 		isLocationLinkModalOpen = false;
 	}
 
-	function handleOpenEdit(event: CustomEvent<{ type: CollectionArrayKey; item: any }>) {
-		const { type, item } = event.detail;
+	async function handleOpenEdit(event: CustomEvent<{ type: CollectionArrayKey; item: any; initialStep?: 'visits' | null }>) {
+		const { type, item, initialStep = null } = event.detail;
 
 		switch (type) {
-			case 'locations':
-				adventureToEdit = item;
+			case 'locations': {
+				locationModalInitialStep = initialStep;
+				if (initialStep === 'visits' && item?.id) {
+					try {
+						const res = await fetch(`/api/locations/${item.id}/`);
+						adventureToEdit = res.ok ? await res.json() : item;
+					} catch {
+						adventureToEdit = item;
+					}
+				} else {
+					adventureToEdit = item;
+				}
 				isLocationModalOpen = true;
 				break;
+			}
 			case 'transportations':
 				transportationToEdit = item;
 				isTransportationModalOpen = true;
@@ -729,19 +741,23 @@
 	<LocationModal
 		on:close={() => {
 			adventureToEdit = null;
+			locationModalInitialStep = null;
 			isLocationModalOpen = false;
 		}}
 		user={data.user}
 		{collection}
 		locationToEdit={adventureToEdit}
+		initialStep={locationModalInitialStep}
 		on:save={(e) => {
 			upsertCollectionItem('locations', e.detail);
 			adventureToEdit = null;
+			locationModalInitialStep = null;
 			isLocationModalOpen = false;
 		}}
 		on:create={(e) => {
 			upsertCollectionItem('locations', e.detail);
 			adventureToEdit = null;
+			locationModalInitialStep = null;
 			isLocationModalOpen = false;
 		}}
 	/>
@@ -1433,6 +1449,7 @@
 				<button
 					class="btn btn-primary"
 					onclick={() => {
+						locationModalInitialStep = null;
 						isLocationModalOpen = true;
 						adventureToEdit = null;
 					}}
