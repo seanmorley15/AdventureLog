@@ -9,6 +9,8 @@
 
 Easypanel provisions the required PostGIS database automatically and runs the frontend and backend containers for you, exposing them through a domain.
 
+![AdventureLog deployed on Easypanel](/easypanel_deployed.png)
+
 Set `SITE_URL` to your public HTTPS URL so Django CSRF and SvelteKit origins stay correct. See [Environment Variables](../configuration/environment_variables.md#url-and-networking).
 
 See the [official AdventureLog template on Easypanel](https://easypanel.io/templates/adventurelog) for more details.
