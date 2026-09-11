@@ -519,6 +519,7 @@
 			<div
 				tabindex="0"
 				role="button"
+				aria-label={$t('adventures.create_new')}
 				class="btn btn-primary btn-circle w-16 h-16 shadow-2xl hover:shadow-primary/25 transition-all duration-200"
 			>
 				<Plus class="w-8 h-8" />
