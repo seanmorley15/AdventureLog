@@ -29,7 +29,8 @@
     "admin_panel": "Panel de administración",
     "navigation": "Navegación",
     "worldtravel": "Viajes por el mundo",
-    "mobile_login": "Inicio de sesión móvil"
+    "mobile_login": "Inicio de sesión móvil",
+    "billing": "Facturación"
   },
   "about": {
     "about": "Acerca de",
@@ -515,7 +516,9 @@
     "show_endurain_activities": "Mostrar actividades de Endurain",
     "show_sunrise_sunset": "Mostrar amanecer",
     "sunrise_sunset_load_error": "No se pudieron cargar las horas de salida y puesta del sol",
-    "view_endurain_activities": "Ver actividades de Endurain"
+    "view_endurain_activities": "Ver actividades de Endurain",
+    "google_maps": "Google Maps",
+    "google_maps_error": "No se ha podido obtener una descripción de Google Maps"
   },
   "worldtravel": {
     "no_countries_found": "No se encontraron países",
@@ -608,7 +611,25 @@
     "totp": "Código de dos factores",
     "user_email_verification_required": "Se requiere verificación por correo electrónico. Revise su correo electrónico para obtener un enlace de verificación.",
     "totp_hint": "Ingrese un código de autenticación de 6 dígitos o un código de recuperación de 8 dígitos.",
-    "totp_placeholder": "000000 o 12345678"
+    "totp_placeholder": "000000 o 12345678",
+    "password_too_common": "Esta contraseña es demasiado común. Elige una contraseña menos predecible.",
+    "password_too_similar": "Esta contraseña es demasiado similar a la información de tu perfil.",
+    "wrong_current_password": "La contraseña actual es incorrecta.",
+    "signup_error": "No se ha podido crear tu cuenta. Por favor, comprueba tus datos e inténtalo de nuevo.",
+    "username_or_email": "Nombre de usuario o Email",
+    "enter_username_or_email": "Ingrese su nombre de usuario o email",
+    "enter_email": "Ingrese su email",
+    "enter_first_name": "Nombre",
+    "enter_last_name": "Apellido",
+    "terms_of_service": "Términos de Servicio",
+    "privacy_policy": "Política de Privacidad",
+    "terms_acceptance_required": "Debe aceptar las condiciones para crear una cuenta.",
+    "invite_signup_title": "Acepta tu invitación",
+    "invite_invalid_title": "Invitación no disponible",
+    "invite_invalid_desc": "Esta invitación es inválida o ya ha sido utilizada.",
+    "invite_expired_desc": "Esta invitación ha caducado. Pida al administrador del servidor que le envíe una invitación nueva.",
+    "invite_accepted_desc": "Esta invitación ya ha sido aceptada. Inicie sesión con su cuenta.",
+    "invite_registered_desc": "Ya existe una cuenta para esta dirección de email. Inicie sesión con su cuenta."
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos.",
@@ -826,7 +847,46 @@
     "date_format_mdy": "MM/DD/YYYY",
     "date_format_dmy": "DD/MM/YYYY",
     "date_format_ymd": "YYYY-MM-DD",
-    "download_backup": "Descargar copia de seguridad"
+    "download_backup": "Descargar copia de seguridad",
+    "error_change_password": "No se ha podido cambiar la contraseña. Por favor, compruebe su contraseña actual e inténtelo de nuevo.",
+    "sessions_title": "Sesiones Activas",
+    "sessions_current": "Este dispositivo",
+    "sessions_unknown_device": "Dispositivo desconocido",
+    "sessions_revoke": "Cerrar sesión",
+    "sessions_revoke_others": "Cerrar sesión en otros dispositivos",
+    "sessions_empty": "No hay otras sesiones activas.",
+    "sessions_revoke_error": "No se ha podido cerrar esa sesión. Inténtelo de nuevo.",
+    "reauth_required_title": "Confirme su contraseña",
+    "reauth_incorrect_password": "Contraseña incorrecta. Por favor, inténtelo de nuevo.",
+    "delete_account": "Borrar Cuenta",
+    "delete_account_title": "Borrar Cuenta",
+    "delete_account_desc": "Borre su cuenta y todos los datos asociados a ella. Esta acción es irreversible.",
+    "delete_account_confirmation_label": "Ingrese tu nombre de usuario para confirmar",
+    "delete_account_password_label": "Ingrese su contraseña",
+    "delete_account_confirm_prompt": "¿Desea borrar su cuenta de forma permanente? Esta acción es irreversible.",
+    "delete_account_success": "Su cuenta ha sido borrada.",
+    "delete_account_error": "No se ha podido borrar su cuenta. Por favor, inténtelo de nuevo.",
+    "nav_account": "Cuenta",
+    "nav_security": "Seguridad",
+    "nav_data": "Datos",
+    "nav_system": "Sistema",
+    "personal_info": "Datos Personales",
+    "personal_info_desc": "Su nombre, nombre de usuario, y visibilidad de perfil",
+    "preferences": "Preferencias",
+    "preferences_desc": "Configuración predeterminada de unidades, moneda, formato de fecha, y mapas",
+    "preferred_currency": "Moneda preferida",
+    "default_map_style": "Estilo de mapa por defecto",
+    "sign_in_methods": "Métodos de Inicio de Sesión",
+    "data_and_storage": "Datos y Almacenamiento",
+    "about": "Acerca de",
+    "about_desc": "Información sobre la app y sus datos de cuenta",
+    "about_app_desc": "Licencia, enlaces, e información de proyecto",
+    "account_details": "Datos de Cuenta",
+    "account_details_desc": "Información técnica sobre su cuenta",
+    "profile_visibility": "Visibilidad de perfil",
+    "danger_zone": "Zona de Peligro",
+    "danger_zone_desc": "Acciones irreversibles que eliminan su cuenta de forma permanente",
+    "danger_zone_instructions": "Confirme su nombre de usuario y contraseña para borrar su cuenta y todos los datos asociados de forma permanente."
   },
   "checklist": {
     "checklist_delete_error": "Error al eliminar la lista de tareas",
@@ -1072,7 +1132,9 @@
     "zoom_out": "alejar",
     "show_photos": "Mostrar fotos",
     "hide_photos": "Ocultar fotos",
-    "photos": "Fotos"
+    "photos": "Fotos",
+    "hide_controls": "Esconder controles de mapa",
+    "show_controls": "Enseñar controles de mapa"
   },
   "share": {
     "no_users_shared": "Ningún usuario compartió con",
@@ -1490,5 +1552,22 @@
     "server_url_required": "Se requiere la URL del servidor",
     "username": "Nombre de usuario",
     "verify_mfa": "Verificar MFA"
+  },
+  "billing": {
+    "page_description": "Gestiona tu suscripción de AdventureLog Cloud, método de pago, y periodo de prueba.",
+    "alert_trial_ended_title": "Tu periodo de prueba ha terminado",
+    "alert_trial_ended_description": "Suscríbete para restaurar acceso y sincronizar tus aventuras entre dispositivos.",
+    "alert_scheduled_description_fallback": "La facturación empezará automáticamente cuando termine tu periodo de prueba.",
+    "alert_trial_active_title": "Periodo de prueba activo",
+    "banner_scheduled_description_fallback": "La facturación empezará cuando termine tu periodo de prueba.",
+    "banner_trial_active_title": "Periodo de prueba de AdventureLog Cloud activo",
+    "trial_badge": "Prueba de 30 días",
+    "status_trial": "Prueba",
+    "faq_trial_question": "¿Qué sucede cuando termina mi periodo de prueba?",
+    "faq_trial_answer": "Cuando tu periodo de prueba termine, necesitarás una suscripción activa para seguir utilizando AdventureLog Cloud. Tus datos se preservarán — suscríbete en cualquier momento para continuar donde lo hayas dejado.",
+    "page_title": "Facturación y Suscripción",
+    "alert_canceled_title": "Suscripción cancelada",
+    "unlimited_usage": "Uso ilimitado",
+    "unlimited": "Ilimitado"
   }
 }
