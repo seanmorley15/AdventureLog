@@ -17,9 +17,7 @@
 </script>
 
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import { CircleLayer, GeoJSON, MapEvents, MapLibre, MarkerLayer } from 'svelte-maplibre';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
 	import { getBasemapUrl, getIsDarkMode } from '$lib';
@@ -45,9 +43,6 @@
 		if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
 		return [lon, lat];
 	}
-
-	// Effective GeoJSON (either derived from items or passed directly)
-	let effectiveGeoJson: FeatureCollection = $state({ type: 'FeatureCollection', features: [] });
 
 	interface Props {
 		// Generic item input (optional). If you provide `items` + `toFeature`, FullMap builds the GeoJSON.
@@ -133,9 +128,22 @@
 	let lastStyleKey: string | null = $state(null);
 	let isDarkUi = $state(false);
 	let themeEpoch = $state(0);
-	let styleKey = $state(basemapType);
 
-	let resolvedStyle = $state(getBasemapUrl(basemapType));
+	let effectiveGeoJson: FeatureCollection = $derived(
+		toFeature && Array.isArray(items)
+			? {
+					type: 'FeatureCollection',
+					features: items
+						.map((i) => toFeature(i))
+						.filter((f): f is Feature => f !== null) as Feature[]
+				}
+			: geoJson
+	);
+	let styleKey = $derived(mapStyle ?? `${basemapType}:${isDarkUi ? 'dark' : 'light'}`);
+	let resolvedStyle = $derived.by(() => {
+		themeEpoch;
+		return mapStyle ?? getBasemapUrl(basemapType);
+	});
 
 	// Active marker tracking (used for map-level z-index + slot convenience)
 	let activeMarkerId: string | null = $state(null);
@@ -231,9 +239,30 @@
 		};
 	});
 
-	let resolvedClusterCirclePaint: Record<string, any> = $state({});
-	let resolvedClusterSymbolLayout: Record<string, any> = $state({});
-	let resolvedClusterSymbolPaint: Record<string, any> = $state({});
+	let resolvedClusterCirclePaint: Record<string, any> = $derived({
+		'circle-color': '#000000',
+		'circle-radius':
+			clusterCirclePaint?.['circle-radius'] ??
+			(['step', ['get', 'point_count'], 22, 20, 32, 60, 44] as const),
+		'circle-opacity': 0.01,
+		'circle-stroke-width': 0,
+		'circle-stroke-opacity': 0
+	});
+	let resolvedClusterSymbolLayout: Record<string, any> = $derived(
+		clusterSymbolLayout ?? {
+			'text-field': '{point_count_abbreviated}',
+			'text-font': ['Open Sans Semibold', 'Open Sans Regular', 'Arial Unicode MS Regular'],
+			'text-size': 13
+		}
+	);
+	let resolvedClusterSymbolPaint: Record<string, any> = $derived(
+		clusterSymbolPaint ?? {
+			'text-color': '#ffffff',
+			'text-halo-color': 'rgba(0, 0, 0, 0.45)',
+			'text-halo-width': 1.25,
+			'text-halo-blur': 0
+		}
+	);
 
 	type ClusterSource = {
 		getClusterExpansionZoom: (
@@ -299,72 +328,29 @@
 	function makeSetActive(markerProps: Record<string, unknown> | null) {
 		return (active: boolean) => setMarkerActiveByProps(markerProps, active);
 	}
-	run(() => {
-		effectiveGeoJson =
-			toFeature && Array.isArray(items)
-				? {
-						type: 'FeatureCollection',
-						features: items
-							.map((i) => toFeature(i))
-							.filter((f): f is Feature => f !== null) as Feature[]
-					}
-				: geoJson;
-	});
-	run(() => {
-		styleKey = mapStyle ?? `${basemapType}:${isDarkUi ? 'dark' : 'light'}`;
-	});
-	run(() => {
-		if (map && lastStyleKey !== styleKey) {
-			lastStyleKey = styleKey;
 
-			const m = map as any;
-			const bump = () => {
-				styleNonce += 1;
-			};
+	$effect(() => {
+		if (!map) return;
+		const key = styleKey;
+		if (untrack(() => lastStyleKey) === key) return;
+		lastStyleKey = key;
 
-			if (typeof m?.once === 'function') {
-				m.once('style.load', bump);
-			} else if (typeof m?.on === 'function' && typeof m?.off === 'function') {
-				const handler = () => {
-					m.off('style.load', handler);
-					bump();
-				};
-				m.on('style.load', handler);
-			} else {
-				// Fallback: at least trigger a remount.
+		const m = map as any;
+		const bump = () => {
+			styleNonce += 1;
+		};
+
+		if (typeof m?.once === 'function') {
+			m.once('style.load', bump);
+		} else if (typeof m?.on === 'function' && typeof m?.off === 'function') {
+			const handler = () => {
+				m.off('style.load', handler);
 				bump();
-			}
+			};
+			m.on('style.load', handler);
+		} else {
+			bump();
 		}
-	});
-	run(() => {
-		themeEpoch;
-		resolvedStyle = mapStyle ?? getBasemapUrl(basemapType);
-	});
-	run(() => {
-		resolvedClusterCirclePaint = {
-			'circle-color': '#000000',
-			'circle-radius':
-				clusterCirclePaint?.['circle-radius'] ??
-				(['step', ['get', 'point_count'], 22, 20, 32, 60, 44] as const),
-			'circle-opacity': 0.01,
-			'circle-stroke-width': 0,
-			'circle-stroke-opacity': 0
-		};
-	});
-	run(() => {
-		resolvedClusterSymbolLayout = clusterSymbolLayout ?? {
-			'text-field': '{point_count_abbreviated}',
-			'text-font': ['Open Sans Semibold', 'Open Sans Regular', 'Arial Unicode MS Regular'],
-			'text-size': 13
-		};
-	});
-	run(() => {
-		resolvedClusterSymbolPaint = clusterSymbolPaint ?? {
-			'text-color': '#ffffff',
-			'text-halo-color': 'rgba(0, 0, 0, 0.45)',
-			'text-halo-width': 1.25,
-			'text-halo-blur': 0
-		};
 	});
 </script>
 

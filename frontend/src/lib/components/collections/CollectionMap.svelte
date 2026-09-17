@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { run, stopPropagation } from 'svelte/legacy';
+	import { untrack } from 'svelte';
+	import { stopPropagation } from 'svelte/legacy';
 
 	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
@@ -95,6 +96,77 @@
 		if (value === null || value === undefined) return null;
 		const num = typeof value === 'number' ? value : Number(value);
 		return Number.isFinite(num) ? num : null;
+	}
+
+	function sanitizePosition(value: unknown): [number, number] | null {
+		if (!Array.isArray(value) || value.length < 2) return null;
+		const lon = parseNumber(value[0]);
+		const lat = parseNumber(value[1]);
+		if (lon === null || lat === null) return null;
+		return [lon, lat];
+	}
+
+	function sanitizeGeometry(geometry: any): any | null {
+		if (!geometry || typeof geometry !== 'object') return null;
+		const type = geometry.type;
+		const coordinates = geometry.coordinates;
+
+		if (type === 'Point') {
+			const position = sanitizePosition(coordinates);
+			return position ? { type, coordinates: position } : null;
+		}
+
+		if (type === 'LineString' || type === 'MultiPoint') {
+			const positions = Array.isArray(coordinates)
+				? coordinates
+						.map(sanitizePosition)
+						.filter((position): position is [number, number] => position !== null)
+				: [];
+			if (type === 'LineString' && positions.length < 2) return null;
+			if (type === 'MultiPoint' && positions.length === 0) return null;
+			return { type, coordinates: positions };
+		}
+
+		if (type === 'MultiLineString' || type === 'Polygon') {
+			const rings = Array.isArray(coordinates)
+				? coordinates
+						.map((ring: unknown) =>
+							Array.isArray(ring)
+								? ring
+										.map(sanitizePosition)
+										.filter((position): position is [number, number] => position !== null)
+								: []
+						)
+						.filter((ring: [number, number][]) => ring.length >= 2)
+				: [];
+			if (rings.length === 0) return null;
+			return { type, coordinates: rings };
+		}
+
+		if (type === 'GeometryCollection' && Array.isArray(geometry.geometries)) {
+			const geometries = geometry.geometries
+				.map(sanitizeGeometry)
+				.filter((value: unknown) => value !== null);
+			return geometries.length ? { type, geometries } : null;
+		}
+
+		if (coordinates == null) return null;
+		return { type, coordinates };
+	}
+
+	// Never mutate collection $state inside $derived — Svelte 5 throws state_unsafe_mutation
+	// in production, which aborts the map template and hides every pin.
+	function cloneFeature(feature: any, extraProps?: Record<string, unknown>): any | null {
+		if (!feature || typeof feature !== 'object') return null;
+		const geometry = sanitizeGeometry(feature.geometry);
+		if (!geometry) return null;
+		const cloned: Record<string, unknown> = {
+			type: feature.type || 'Feature',
+			geometry,
+			properties: { ...(feature.properties ?? {}), ...extraProps }
+		};
+		if (feature.id !== undefined) cloned.id = feature.id;
+		return cloned;
 	}
 
 	function parseDate(value: string | null | undefined): number | null {
@@ -317,16 +389,26 @@
 		if (!coll) return null;
 		const features: any[] = [];
 
+		const pushFeature = (feature: any, extraProps?: Record<string, unknown>) => {
+			const cloned = cloneFeature(feature, extraProps);
+			if (cloned) features.push(cloned);
+		};
+
+		const pushGeoJson = (geojson: any, extraProps?: Record<string, unknown>) => {
+			if (!geojson) return;
+			if (geojson.type === 'FeatureCollection' && Array.isArray(geojson.features)) {
+				for (const feature of geojson.features) pushFeature(feature, extraProps);
+			} else if (geojson.type === 'Feature') {
+				pushFeature(geojson, extraProps);
+			}
+		};
+
 		// Locations: attachments and visits -> activities
 		for (const loc of coll.locations || []) {
 			if (Array.isArray(loc.attachments)) {
 				for (const a of loc.attachments) {
 					if (!a || !a.geojson) continue;
-					if (a.geojson.type === 'FeatureCollection' && Array.isArray(a.geojson.features)) {
-						features.push(...a.geojson.features);
-					} else if (a.geojson.type === 'Feature') {
-						features.push(a.geojson);
-					}
+					pushGeoJson(a.geojson);
 				}
 			}
 
@@ -337,28 +419,11 @@
 						const activityDate = getActivityDate(activity, visit);
 						if (!isWithinDateRange(activityDate, filters.startDate, filters.endDate)) continue;
 						if (activity && activity.geojson) {
-							// normalize features and inject activity-type color
 							const color = getActivityColor(activity.sport_type || (activity as any).type || '');
-							if (
-								activity.geojson.type === 'FeatureCollection' &&
-								Array.isArray(activity.geojson.features)
-							) {
-								for (const f of activity.geojson.features) {
-									if (f && typeof f === 'object') {
-										f.properties = f.properties || {};
-										f.properties._color = color;
-										f.properties.activity_type =
-											activity.sport_type || (activity as any).type || null;
-										features.push(f);
-									}
-								}
-							} else if (activity.geojson.type === 'Feature') {
-								const f = activity.geojson as any;
-								f.properties = f.properties || {};
-								f.properties._color = color;
-								f.properties.activity_type = activity.sport_type || (activity as any).type || null;
-								features.push(f);
-							}
+							pushGeoJson(activity.geojson, {
+								_color: color,
+								activity_type: activity.sport_type || (activity as any).type || null
+							});
 						}
 					}
 				}
@@ -370,21 +435,7 @@
 			if (!t || !Array.isArray(t.attachments)) continue;
 			for (const a of t.attachments) {
 				if (!a || !a.geojson) continue;
-				if (a.geojson.type === 'FeatureCollection' && Array.isArray(a.geojson.features)) {
-					for (const f of a.geojson.features) {
-						if (f && typeof f === 'object') {
-							f.properties = f.properties || {};
-							// default transport attachments to a neutral blue color
-							f.properties._color = f.properties._color || '#60a5fa';
-							features.push(f);
-						}
-					}
-				} else if (a.geojson.type === 'Feature') {
-					const f = a.geojson as any;
-					f.properties = f.properties || {};
-					f.properties._color = f.properties._color || '#60a5fa';
-					features.push(f);
-				}
+				pushGeoJson(a.geojson, { _color: '#60a5fa' });
 			}
 		}
 
@@ -404,12 +455,12 @@
 				if (!trail?.geojson) continue;
 				if (trail.geojson.type === 'FeatureCollection' && Array.isArray(trail.geojson.features)) {
 					for (const f of trail.geojson.features) {
-						if (f && typeof f === 'object') {
-							features.push(f);
-						}
+						const cloned = cloneFeature(f);
+						if (cloned) features.push(cloned);
 					}
 				} else if (trail.geojson.type === 'Feature') {
-					features.push(trail.geojson);
+					const cloned = cloneFeature(trail.geojson);
+					if (cloned) features.push(cloned);
 				}
 			}
 		}
@@ -610,10 +661,12 @@
 			? `btn btn-xs h-7 min-h-7 ${activeClass} gap-1 font-normal px-2.5`
 			: 'btn btn-xs h-7 min-h-7 btn-ghost border border-base-300/80 opacity-70 gap-1 font-normal px-2.5';
 	}
-	run(() => {
-		if (user && basemapType === 'default' && user.map_style) {
-			basemapType = normalizeBasemapType(user.map_style);
-		}
+
+	$effect(() => {
+		const style = user?.map_style;
+		if (!style) return;
+		if (untrack(() => basemapType) !== 'default') return;
+		basemapType = normalizeBasemapType(style);
 	});
 	let resolvedClusterOptions = $derived(clusterOptions || defaultClusterOptions);
 	// Normalize collection start/end dates to YYYY-MM-DD for cross-browser compatibility (Firefox is strict)
@@ -687,10 +740,11 @@
 		)
 	);
 	// Auto-zoom when search results change
-	run(() => {
-		if (searchQuery.trim() && filteredFeatures.length > 0) {
-			zoomToFilteredFeatures();
-		}
+	$effect(() => {
+		const query = searchQuery.trim();
+		const matches = filteredFeatures;
+		if (!query || matches.length === 0) return;
+		untrack(() => zoomToFilteredFeatures());
 	});
 	let markerGeoJson = $derived({
 		type: 'FeatureCollection',
