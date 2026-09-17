@@ -428,7 +428,9 @@
 		isLocationLinkModalOpen = false;
 	}
 
-	async function handleOpenEdit(event: CustomEvent<{ type: CollectionArrayKey; item: any; initialStep?: 'visits' | null }>) {
+	async function handleOpenEdit(
+		event: CustomEvent<{ type: CollectionArrayKey; item: any; initialStep?: 'visits' | null }>
+	) {
 		const { type, item, initialStep = null } = event.detail;
 
 		switch (type) {

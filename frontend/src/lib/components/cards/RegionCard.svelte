@@ -61,7 +61,9 @@
 	}
 </script>
 
-<div class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row">
+<div
+	class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row"
+>
 	<button
 		type="button"
 		class="btn btn-ghost btn-sm btn-square {isVisited

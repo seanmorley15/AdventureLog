@@ -386,9 +386,7 @@
 	): ImagePinProperties | null {
 		if (!props || clusteredPinKind(props) !== 'image') return null;
 		const imageId =
-			props.imageId != null
-				? String(props.imageId)
-				: String(props.id ?? '').replace(/^image:/, '');
+			props.imageId != null ? String(props.imageId) : String(props.id ?? '').replace(/^image:/, '');
 		if (!imageId) return null;
 		return {
 			imageId,

@@ -200,7 +200,10 @@
 	let locationToEdit: Location | null = $state(null);
 	let isLocationModalOpen: boolean = $state(false);
 	let locationModalInitialStep: 'visits' | null = $state(null);
-	async function handleEditLocation(event: CustomEvent<Location>, initialStep: 'visits' | null = null) {
+	async function handleEditLocation(
+		event: CustomEvent<Location>,
+		initialStep: 'visits' | null = null
+	) {
 		locationModalInitialStep = initialStep;
 		const locationId = event.detail?.id;
 		if (initialStep === 'visits' && locationId) {

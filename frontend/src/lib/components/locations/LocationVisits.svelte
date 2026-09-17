@@ -979,7 +979,9 @@
 							type="button"
 							class="btn btn-primary btn-sm gap-2"
 							disabled={todayCovered || isSavingVisit || Boolean(visitIdEditing)}
-							title={todayCovered ? $t('adventures.visited_today') : $t('adventures.add_today_visit')}
+							title={todayCovered
+								? $t('adventures.visited_today')
+								: $t('adventures.add_today_visit')}
 							onclick={() => addTodayVisit()}
 						>
 							{#if isSavingVisit && !visitIdEditing && localStartDate === getTodayDate()}
@@ -1001,7 +1003,9 @@
 									checked={allDay}
 									onchange={handleAllDayToggle}
 								/>
-								<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span>
+								<span class="font-semibold text-sm text-base-content"
+									>{$t('adventures.all_day')}</span
+								>
 							</label>
 
 							{#if collection?.start_date && collection?.end_date}
@@ -1028,7 +1032,9 @@
 
 						<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 							<div class="flex flex-col">
-								<label class="field-label" for="start-date-input">{$t('adventures.start_date')}</label>
+								<label class="field-label" for="start-date-input"
+									>{$t('adventures.start_date')}</label
+								>
 								<DateInput
 									id="start-date-input"
 									bind:value={localStartDate}
@@ -1042,7 +1048,8 @@
 
 							{#if localStartDate}
 								<div class="flex flex-col">
-									<label class="field-label" for="end-date-input">{$t('adventures.end_date')}</label>
+									<label class="field-label" for="end-date-input">{$t('adventures.end_date')}</label
+									>
 									<DateInput
 										id="end-date-input"
 										bind:value={localEndDate}
@@ -1057,7 +1064,9 @@
 
 							{#if !allDay}
 								<div class="flex flex-col">
-									<label class="field-label" for="timezone-selector">{$t('adventures.timezone')}</label>
+									<label class="field-label" for="timezone-selector"
+										>{$t('adventures.timezone')}</label
+									>
 									<div class="mt-1">
 										<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 									</div>
@@ -1114,7 +1123,8 @@
 						</div>
 						<h2 class="text-xl font-bold">
 							{$t('adventures.visits')}
-							<span class="text-base font-normal text-base-content/60">({visits?.length || 0})</span>
+							<span class="text-base font-normal text-base-content/60">({visits?.length || 0})</span
+							>
 						</h2>
 					</div>
 
