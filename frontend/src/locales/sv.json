@@ -926,7 +926,10 @@
     "account_details_desc": "Teknisk information om kontot",
     "profile_visibility": "Profilsynlighet",
     "danger_zone": "Riskområde",
-    "danger_zone_desc": "Oåterkalleliga åtgärder som permanent tar bort kontot"
+    "danger_zone_desc": "Oåterkalleliga åtgärder som permanent tar bort kontot",
+    "danger_zone_instructions": "Bekräfta användarnamnet och lösenordet nedan för att permanent ta bort kontot och alla tillhörande data.",
+    "password_too_short": "Lösenordet måste innehålla minst {min} tecken",
+    "password_does_not_match": "Lösenorden matchar inte"
   },
   "checklist": {
     "checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",
@@ -1172,7 +1175,9 @@
     "stats": "Statistik",
     "hide_photos": "Göm foton",
     "photos": "Foton",
-    "show_photos": "Visa foton"
+    "show_photos": "Visa foton",
+    "hide_controls": "Dölj kartreglage",
+    "show_controls": "Visa kartreglage"
   },
   "share": {
     "no_users_shared": "Inga användare delas med",
@@ -1482,7 +1487,8 @@
     "ZAR": "Sydafrikansk rand",
     "no_matches": "Inga matchningar",
     "search": "Sök valuta",
-    "select_currency": "Välj valuta"
+    "select_currency": "Välj valuta",
+    "default": "Standard"
   },
   "itinerary": {
     "add_description": "Lägg till beskrivning",
@@ -1590,5 +1596,37 @@
       "url": "Foto från extern URL",
       "wikipedia": "Foto från Wikipedia"
     }
+  },
+  "billing": {
+    "page_title": "Fakturering och prenumeration",
+    "page_description": "Hantera AdventureLog Cloud-prenumerationen, betalningsmetoden och provperiodens status.",
+    "cloud_badge": "AdventureLog Cloud",
+    "self_hosted_title": "Molnfakturering är inte aktiverad",
+    "self_hosted_description": "Instansen körs i självhostat läge. Alla funktioner är upplåsta utan prenumeration.",
+    "alert_trial_ended_title": "Provperioden har avslutats",
+    "alert_trial_ended_description": "Prenumerera för att återställa åtkomst och hålla äventyren synkroniserade mellan enheter.",
+    "alert_past_due_title": "Betalningen misslyckades",
+    "alert_past_due_description": "Den senaste betalningen kunde inte behandlas. Uppdatera betalningsmetoden för att återställa åtkomst.",
+    "alert_canceled_title": "Prenumerationen har avslutats",
+    "alert_canceled_description": "Prenumerationen är inte längre aktiv. Prenumerera igen för att fortsätta använda AdventureLog Cloud.",
+    "alert_scheduled_title": "Prenumeration schemalagd",
+    "alert_scheduled_description": "Betald fakturering börjar den {date}. Provåtkomsten fortsätter fram till dess.",
+    "alert_scheduled_description_fallback": "Betald fakturering startar automatiskt när provperioden avslutas.",
+    "alert_trial_active_title": "Provperiod aktiv",
+    "alert_trial_active_description_one": "Du har {days} dag kvar av provperioden.",
+    "alert_trial_active_description_other": "Du har {days} dagar kvar av provperioden.",
+    "alert_cancel_scheduled_title": "Uppsägning schemalagd",
+    "alert_cancel_scheduled_description": "Prenumerationen avslutas den {date}. Du kan återuppta den när som helst före dess.",
+    "alert_cancel_scheduled_description_fallback": "Prenumerationen avslutas när den aktuella faktureringsperioden löper ut.",
+    "banner_access_paused_title": "Din åtkomst till AdventureLog Cloud är pausad",
+    "banner_access_paused_description": "Prenumerera för att återställa full åtkomst och hålla data synkroniserade.",
+    "banner_scheduled_title": "Prenumeration schemalagd",
+    "banner_scheduled_description": "Betald fakturering börjar den {date}.",
+    "banner_scheduled_description_fallback": "Betald fakturering startar när provperioden avslutas.",
+    "banner_trial_active_title": "AdventureLog Cloud-provperiod aktiv",
+    "banner_trial_active_description_one": "Du har {days} dag kvar av provperioden.",
+    "banner_trial_active_description_other": "Du har {days} dagar kvar av provperioden.",
+    "banner_subscribe": "Prenumerera",
+    "banner_manage_billing": "Hantera fakturering"
   }
 }
