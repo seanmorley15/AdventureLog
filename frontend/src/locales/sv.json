@@ -265,7 +265,7 @@
     "no_trails_added": "Inga spår tillagda än",
     "no_trails_available": "Inga spår tillgängliga",
     "no_trails_found_matching": "Inga spår hittades matchande",
-    "no_visits_description": "Skapa ditt första besök genom att välja datum ovan",
+    "no_visits_description": "Lägg till dagens besök med ett klick eller välj anpassade datum ovan",
     "notes_placeholder": "Lägg till anteckningar om detta besök",
     "or": "ELLER",
     "pace": "Takt",
@@ -467,7 +467,14 @@
     "sunrise_sunset_load_error": "Det gick inte att ladda tiderna för soluppgång och solnedgång",
     "view_endurain_activities": "Se Endurain-aktiviteter",
     "google_maps": "Google Maps",
-    "google_maps_error": "Kunde inte hämta beskrivning från Google Maps"
+    "google_maps_error": "Kunde inte hämta beskrivning från Google Maps",
+    "add_today_visit": "Lägg till idag",
+    "manage_visits": "Hantera besök",
+    "visited_today": "Redan besökt idag",
+    "visit_added": "Besök lades till",
+    "visit_updated": "Besök uppdaterades",
+    "visit_add_failed": "Misslyckades med att lägga till besök",
+    "visit_update_failed": "Misslyckades med att uppdatera besök"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
