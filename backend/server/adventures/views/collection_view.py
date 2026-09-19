@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from django.db.models import Q, Prefetch
 from django.db.models.functions import Lower
 from django.db import transaction
@@ -36,6 +37,62 @@ from adventures.services.share_image import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _iso(value):
+    return value.isoformat() if value else None
+
+
+def _export_lat_lon(point):
+    lat, lon = point_to_lat_lon(point)
+    return (
+        float(lat) if lat is not None else None,
+        float(lon) if lon is not None else None,
+    )
+
+
+def _money_amount(money):
+    return str(money.amount) if money else None
+
+
+def _money_currency(money):
+    return str(money.currency) if money else None
+
+
+def _parse_date(value):
+    if not value:
+        return None
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    try:
+        return date.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
+
+
+def _parse_datetime(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    text = str(value).strip()
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _parse_money(amount, currency=None, default_currency='USD'):
+    if amount in (None, ''):
+        return None, default_currency
+    normalized = currency or default_currency
+    if isinstance(normalized, str):
+        normalized = normalized.strip().upper() or default_currency
+    else:
+        normalized = default_currency
+    return amount, normalized
 
 
 class CollectionViewSet(viewsets.ModelViewSet):
@@ -547,13 +604,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         export_data = {
             'version': getattr(settings, 'ADVENTURELOG_RELEASE_VERSION', 'unknown'),
-            # Omit export_date to keep template-friendly exports (no dates)
             'collection': {
                 'id': str(collection.id),
                 'name': collection.name,
                 'description': collection.description,
                 'is_public': collection.is_public,
-                # Omit start/end dates
+                'is_archived': collection.is_archived,
+                'start_date': _iso(collection.start_date),
+                'end_date': _iso(collection.end_date),
                 'link': collection.link,
             },
             'locations': [],
@@ -569,7 +627,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         image_export_map = {}
 
-        for loc in collection.locations.all().select_related('city', 'region', 'country'):
+        for loc in collection.locations.all().select_related('city', 'region', 'country', 'category'):
+            loc_lat, loc_lon = _export_lat_lon(loc.coordinates)
             loc_entry = {
                 'id': str(loc.id),
                 'name': loc.name,
@@ -579,12 +638,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 'rating': loc.rating,
                 'link': loc.link,
                 'is_public': loc.is_public,
-                'longitude': (
-                    float(lon) if (lon := point_to_lat_lon(loc.coordinates)[1]) is not None else None
-                ),
-                'latitude': (
-                    float(lat) if (lat := point_to_lat_lon(loc.coordinates)[0]) is not None else None
-                ),
+                'longitude': loc_lon,
+                'latitude': loc_lat,
+                'category': loc.category.name if loc.category else None,
                 'city': loc.city.name if loc.city else None,
                 'region': loc.region.name if loc.region else None,
                 'country': loc.country.name if loc.country else None,
@@ -619,41 +675,75 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         # Related content (if models have FK to collection)
         for t in Transportation.objects.filter(collection=collection):
+            origin_lat, origin_lon = _export_lat_lon(t.origin)
+            dest_lat, dest_lon = _export_lat_lon(t.destination)
             export_data['transportation'].append({
                 'id': str(t.id),
-                'type': getattr(t, 'transportation_type', None),
-                'name': getattr(t, 'name', None),
-                # Omit date
-                'notes': getattr(t, 'notes', None),
+                'type': t.type,
+                'name': t.name,
+                'description': t.description,
+                'rating': t.rating,
+                'price': _money_amount(t.price),
+                'price_currency': _money_currency(t.price),
+                'link': t.link,
+                'date': _iso(t.date),
+                'end_date': _iso(t.end_date),
+                'start_timezone': t.start_timezone,
+                'end_timezone': t.end_timezone,
+                'flight_number': t.flight_number,
+                'from_location': t.from_location,
+                'to_location': t.to_location,
+                'origin_latitude': origin_lat,
+                'origin_longitude': origin_lon,
+                'destination_latitude': dest_lat,
+                'destination_longitude': dest_lon,
+                'start_code': t.start_code,
+                'end_code': t.end_code,
+                'is_public': t.is_public,
             })
         for n in Note.objects.filter(collection=collection):
             export_data['notes'].append({
                 'id': str(n.id),
-                'title': getattr(n, 'title', None),
-                'content': getattr(n, 'content', ''),
-                # Omit created_at
+                'name': n.name,
+                'content': n.content or '',
+                'links': n.links or [],
+                'date': _iso(n.date),
+                'is_public': n.is_public,
             })
         for c in Checklist.objects.filter(collection=collection):
-            items = []
-            if hasattr(c, 'items'):
-                items = [
-                    {
-                        'name': getattr(item, 'name', None),
-                        'completed': getattr(item, 'completed', False),
-                    } for item in c.items.all()
-                ]
+            items = [
+                {
+                    'name': item.name,
+                    'is_checked': item.is_checked,
+                }
+                for item in c.checklistitem_set.all()
+            ]
             export_data['checklists'].append({
                 'id': str(c.id),
-                'name': getattr(c, 'name', None),
+                'name': c.name,
+                'date': _iso(c.date),
+                'is_public': c.is_public,
                 'items': items,
             })
-        for l in Lodging.objects.filter(collection=collection):
+        for lodging in Lodging.objects.filter(collection=collection):
+            lodging_lat, lodging_lon = _export_lat_lon(lodging.coordinates)
             export_data['lodging'].append({
-                'id': str(l.id),
-                'type': getattr(l, 'lodging_type', None),
-                'name': getattr(l, 'name', None),
-                # Omit start_date/end_date
-                'notes': getattr(l, 'notes', None),
+                'id': str(lodging.id),
+                'type': lodging.type,
+                'name': lodging.name,
+                'description': lodging.description,
+                'rating': lodging.rating,
+                'link': lodging.link,
+                'check_in': _iso(lodging.check_in),
+                'check_out': _iso(lodging.check_out),
+                'timezone': lodging.timezone,
+                'reservation_number': lodging.reservation_number,
+                'price': _money_amount(lodging.price),
+                'price_currency': _money_currency(lodging.price),
+                'latitude': lodging_lat,
+                'longitude': lodging_lon,
+                'location': lodging.location,
+                'is_public': lodging.is_public,
             })
         # Intentionally omit itinerary_items from export
 
@@ -733,14 +823,16 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         break
                     i += 1
 
+            collection_meta = metadata.get('collection') or {}
             new_collection = Collection.objects.create(
                 user=request.user,
                 name=unique_name,
-                description=(metadata.get('collection') or {}).get('description'),
-                is_public=(metadata.get('collection') or {}).get('is_public', False),
-                start_date=__import__('datetime').date.fromisoformat((metadata.get('collection') or {}).get('start_date')) if (metadata.get('collection') or {}).get('start_date') else None,
-                end_date=__import__('datetime').date.fromisoformat((metadata.get('collection') or {}).get('end_date')) if (metadata.get('collection') or {}).get('end_date') else None,
-                link=(metadata.get('collection') or {}).get('link'),
+                description=collection_meta.get('description'),
+                is_public=collection_meta.get('is_public', False),
+                is_archived=collection_meta.get('is_archived', False),
+                start_date=_parse_date(collection_meta.get('start_date')),
+                end_date=_parse_date(collection_meta.get('end_date')),
+                link=collection_meta.get('link'),
             )
 
             image_export_map = {img['export_id']: img for img in metadata.get('images', [])}
@@ -750,7 +842,11 @@ class CollectionViewSet(viewsets.ModelViewSet):
             for loc_data in metadata.get('locations', []):
                 cat_obj = None
                 if loc_data.get('category'):
-                    cat_obj, _ = Category.objects.get_or_create(user=request.user, name=loc_data['category'])
+                    cat_obj, _ = Category.objects.get_or_create(
+                        user=request.user,
+                        name=loc_data['category'],
+                        defaults={'display_name': loc_data['category'], 'icon': '🌍'},
+                    )
                 # Attempt to find a very similar existing location for this user
                 from difflib import SequenceMatcher
 
@@ -798,7 +894,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     created_new_loc = False
                 else:
                     # Create a brand-new location
-                    loc = Location.objects.create(
+                    loc = Location(
                         user=request.user,
                         name=incoming_name,
                         description=loc_data.get('description'),
@@ -810,6 +906,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         coordinates=make_point(incoming_lon, incoming_lat),
                         category=cat_obj,
                     )
+                    loc.save(_skip_geocode=True)
                     loc.collections.add(new_collection)
                     created_new_loc = True
 
@@ -857,6 +954,94 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         # Assign to the generic relation for Location
                         attachment_obj.content_object = loc
                         attachment_obj.save()
+
+            for trans_data in metadata.get('transportation', []):
+                origin = make_point(
+                    trans_data.get('origin_longitude'),
+                    trans_data.get('origin_latitude'),
+                )
+                destination = make_point(
+                    trans_data.get('destination_longitude'),
+                    trans_data.get('destination_latitude'),
+                )
+                transport_price, transport_currency = _parse_money(
+                    trans_data.get('price'),
+                    trans_data.get('price_currency'),
+                )
+                Transportation.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    type=trans_data.get('type') or trans_data.get('transportation_type') or 'other',
+                    name=trans_data.get('name') or 'Untitled Transportation',
+                    description=trans_data.get('description') or trans_data.get('notes'),
+                    rating=trans_data.get('rating'),
+                    price=transport_price,
+                    price_currency=transport_currency,
+                    link=trans_data.get('link'),
+                    date=_parse_datetime(trans_data.get('date')),
+                    end_date=_parse_datetime(trans_data.get('end_date')),
+                    start_timezone=trans_data.get('start_timezone'),
+                    end_timezone=trans_data.get('end_timezone'),
+                    flight_number=trans_data.get('flight_number'),
+                    from_location=trans_data.get('from_location'),
+                    to_location=trans_data.get('to_location'),
+                    origin=origin,
+                    destination=destination,
+                    start_code=trans_data.get('start_code'),
+                    end_code=trans_data.get('end_code'),
+                    is_public=bool(trans_data.get('is_public', False)),
+                )
+
+            for note_data in metadata.get('notes', []):
+                Note.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    name=note_data.get('name') or note_data.get('title') or 'Untitled Note',
+                    content=note_data.get('content') or '',
+                    links=note_data.get('links') or [],
+                    date=_parse_date(note_data.get('date')),
+                    is_public=bool(note_data.get('is_public', False)),
+                )
+
+            for check_data in metadata.get('checklists', []):
+                checklist = Checklist.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    name=check_data.get('name') or 'Untitled Checklist',
+                    date=_parse_date(check_data.get('date')),
+                    is_public=bool(check_data.get('is_public', False)),
+                )
+                for item_data in check_data.get('items', []):
+                    ChecklistItem.objects.create(
+                        user=request.user,
+                        checklist=checklist,
+                        name=item_data.get('name') or 'Untitled Item',
+                        is_checked=item_data.get('is_checked', item_data.get('completed', False)),
+                    )
+
+            for lodg_data in metadata.get('lodging', []):
+                lodging_price, lodging_currency = _parse_money(
+                    lodg_data.get('price'),
+                    lodg_data.get('price_currency'),
+                )
+                Lodging.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    name=lodg_data.get('name') or 'Untitled Lodging',
+                    type=lodg_data.get('type') or lodg_data.get('lodging_type') or 'other',
+                    description=lodg_data.get('description') or lodg_data.get('notes'),
+                    rating=lodg_data.get('rating'),
+                    link=lodg_data.get('link'),
+                    check_in=_parse_datetime(lodg_data.get('check_in')),
+                    check_out=_parse_datetime(lodg_data.get('check_out')),
+                    timezone=lodg_data.get('timezone'),
+                    reservation_number=lodg_data.get('reservation_number'),
+                    price=lodging_price,
+                    price_currency=lodging_currency,
+                    coordinates=make_point(lodg_data.get('longitude'), lodg_data.get('latitude')),
+                    location=lodg_data.get('location'),
+                    is_public=bool(lodg_data.get('is_public', False)),
+                )
 
             serializer = self.get_serializer(new_collection)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
