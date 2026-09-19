@@ -1,27 +1,25 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+
+	const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	interface Props {
 		selectedTimezone?: string;
 		label?: string | null;
 	}
 
-	let {
-		selectedTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone),
-		label = null
-	}: Props = $props();
-	// Generate a unique ID for this component instance
+	let { selectedTimezone = $bindable(), label = null }: Props = $props();
+
+	if (!selectedTimezone) {
+		selectedTimezone = browserTimezone;
+	}
+
 	const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2);
 	const instanceId = `tz-selector-${uniqueId}`;
 
-	let labelText: string = $state('');
-	run(() => {
-		labelText = label ?? ($t('adventures.timezone') as string);
-	});
+	let labelText = $derived(label ?? ($t('adventures.timezone') as string));
 
 	let dropdownOpen = $state(false);
 	let openUpward = $state(false);
@@ -43,12 +41,11 @@
 		searchQuery = '';
 	}
 
-	// Focus search input when dropdown opens - with proper null check
-	run(() => {
+	$effect(() => {
 		if (dropdownOpen && searchInput) {
-			// Use setTimeout to delay focus until after the element is rendered
+			const input = searchInput;
 			setTimeout(() => {
-				if (searchInput) searchInput.focus();
+				input.focus();
 			}, 0);
 		}
 	});
@@ -150,7 +147,7 @@
 			<!-- Timezone list -->
 			{#if filteredTimezones.length > 0}
 				<ul class="menu p-2 space-y-1">
-					{#each filteredTimezones as tz}
+					{#each filteredTimezones as tz (tz)}
 						<li>
 							<button
 								type="button"

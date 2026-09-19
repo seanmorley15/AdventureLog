@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
+	import { untrack } from 'svelte';
 	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
@@ -22,22 +21,16 @@
 		data: any;
 	}
 
-	let { data = $bindable() }: Props = $props();
+	let { data }: Props = $props();
 
 	const resultsPerPage = 25;
 
 	let adventures: Location[] = $state([]);
-	let count = $state(0);
-	let totalPages = $state(1);
+	let count = $derived(data?.props?.count ?? 0);
+	let totalPages = $derived(Math.max(1, Math.ceil(count / resultsPerPage)));
 
-	run(() => {
-		adventures = data?.props?.adventures ?? [];
-	});
-	run(() => {
-		count = data?.props?.count ?? 0;
-	});
-	run(() => {
-		totalPages = Math.max(1, Math.ceil(count / resultsPerPage));
+	$effect.pre(() => {
+		adventures = [...(data?.props?.adventures ?? [])];
 	});
 	let categoryTypes = $derived($page.url.searchParams.get('types') ?? '');
 	let orderBy = $derived($page.url.searchParams.get('order_by') || 'updated_at');
@@ -58,20 +51,19 @@
 		};
 	}
 
-	// Sync the locationBeingUpdated with the adventures array
-	run(() => {
-		if (locationBeingUpdated && locationBeingUpdated.id) {
-			const listItem = toListLocation(locationBeingUpdated);
-			const index = adventures.findIndex((adventure) => adventure.id === listItem.id);
+	$effect(() => {
+		const updated = locationBeingUpdated;
+		if (!updated?.id) return;
+		const listItem = toListLocation(updated);
 
+		untrack(() => {
+			const index = adventures.findIndex((adventure) => adventure.id === listItem.id);
 			if (index !== -1) {
 				adventures[index] = listItem;
-				adventures = adventures; // Trigger reactivity
 			} else {
 				adventures = [listItem, ...adventures];
-				data.props.adventures = adventures; // Update data.props.adventures as well
 			}
-		}
+		});
 	});
 
 	let is_category_modal_open: boolean = $state(false);
@@ -303,7 +295,7 @@
 					<div
 						class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
 					>
-						{#each adventures as adventure}
+						{#each adventures as adventure (adventure.id)}
 							<LocationCard
 								user={data.user}
 								{adventure}

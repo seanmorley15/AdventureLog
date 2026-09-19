@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run, stopPropagation } from 'svelte/legacy';
-
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Location, Collection, User, CollectionItineraryItem } from '$lib/types';
@@ -50,7 +48,7 @@
 		isActionsMenuOpen = false;
 	};
 
-	let wasEditLoading = $state(false);
+	let wasEditLoading = false;
 
 	function handleDocumentClick(event: MouseEvent) {
 		if (!isActionsMenuOpen || isEditLoading) return;
@@ -105,8 +103,10 @@
 		isEditLoading = false,
 		adventure = $bindable()
 	}: Props = $props();
-	let displayActivityTypes: string[] = $state([]);
-	let remainingCount = $state(0);
+	let displayActivityTypes = $derived((adventure.tags ?? []).slice(0, 3));
+	let remainingCount = $derived(
+		(adventure.tags?.length ?? 0) > 3 ? (adventure.tags?.length ?? 0) - 3 : 0
+	);
 
 	// Helper functions for display
 
@@ -253,7 +253,7 @@
 	function link() {
 		dispatch('link', adventure);
 	}
-	run(() => {
+	$effect(() => {
 		if (isEditLoading) {
 			isActionsMenuOpen = true;
 			wasEditLoading = true;
@@ -262,22 +262,9 @@
 			wasEditLoading = false;
 		}
 	});
-	// Price formatting
 	let adventurePriceLabel = $derived(
 		formatMoney(toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY))
 	);
-	// Process activity types for display
-	run(() => {
-		if (adventure.tags) {
-			if (adventure.tags.length <= 3) {
-				displayActivityTypes = adventure.tags;
-				remainingCount = 0;
-			} else {
-				displayActivityTypes = adventure.tags.slice(0, 3);
-				remainingCount = adventure.tags.length - 3;
-			}
-		}
-	});
 	// Creator avatar helpers
 	let creatorDisplayName = $derived(
 		adventure.user?.first_name
@@ -438,7 +425,8 @@
 								class="btn btn-square btn-sm p-1 text-base-content"
 								aria-haspopup="menu"
 								aria-label={$t('adventures.location_actions') || 'Location actions'}
-								onclick={stopPropagation(() => {
+								onclick={(e) => {
+									e.stopPropagation();
 									if (isEditLoading) return;
 									if (isActionsMenuOpen) {
 										isActionsMenuOpen = false;
@@ -447,7 +435,7 @@
 									closeAllLocationMenus();
 									openUpward = shouldFlipDropdownUp(actionsMenuRef);
 									isActionsMenuOpen = true;
-								})}
+								}}
 							>
 								<DotsHorizontal class="w-5 h-5" />
 							</button>
