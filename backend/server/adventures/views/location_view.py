@@ -33,6 +33,7 @@ from adventures.services.share_image import (
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
 from adventures.services.images.metadata import create_content_image
+from adventures.services.locations.duplicates import find_duplicate_locations
 from .quick_add_utils import (
     build_quick_add_description,
     clean_url,
@@ -314,6 +315,33 @@ class LocationViewSet(viewsets.ModelViewSet):
             }
 
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='check-duplicates')
+    def check_duplicates(self, request):
+        """Return likely existing locations that match a place being added."""
+        if not request.user or not request.user.is_authenticated:
+            return Response(
+                {"error": "Authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        payload = request.data if isinstance(request.data, dict) else {}
+        name = str(payload.get('name') or '').strip()
+        if not name and payload.get('latitude') in (None, '') and payload.get('longitude') in (None, ''):
+            return Response(
+                {"error": "name or coordinates are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        matches = find_duplicate_locations(
+            request.user,
+            name=name,
+            latitude=payload.get('latitude'),
+            longitude=payload.get('longitude'),
+            location=payload.get('location'),
+            exclude_id=payload.get('exclude_id') or None,
+        )
+        return Response({"matches": [match.to_dict() for match in matches]})
 
     @action(detail=False, methods=['get'])
     def filtered(self, request):

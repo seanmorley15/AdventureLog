@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
@@ -11,6 +11,8 @@
 	import { DEFAULT_CURRENCY, toMoneyValue } from '$lib/money';
 	import { normalizeBasemapType } from '$lib';
 	import { saveLocation } from '$lib/location-save';
+	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
+	import DuplicateLocationPrompt from './DuplicateLocationPrompt.svelte';
 	import { addToast } from '$lib/toasts';
 	import type { Category, Collection, Location, MoneyValue, User } from '$lib/types';
 	import MapIcon from '~icons/mdi/map';
@@ -67,6 +69,8 @@
 	let user: User | null = $state(null);
 	let locationToEdit: Location | null = $state(null);
 	let ownerUser: User | null = $state(null);
+	let isSaving = $state(false);
+	const duplicates = new LocationDuplicateChecker();
 
 	function toFiniteNumber(value: unknown): number | null {
 		if (value === null || value === undefined) {
@@ -140,12 +144,29 @@
 		location.location = '';
 	}
 
+	$effect(() => {
+		if (locationToEdit?.id) {
+			duplicates.reset();
+			return;
+		}
+
+		duplicates.schedule({
+			name: location.name,
+			latitude: location.latitude,
+			longitude: location.longitude,
+			location: location.location
+		});
+	});
+
+	onDestroy(() => duplicates.destroy());
+
 	async function handleSave() {
 		if (!location.name || !location.category) {
 			addToast('warning', 'Name and category are required');
 			return;
 		}
 
+		isSaving = true;
 		try {
 			const savedLocation = await saveLocation({
 				location,
@@ -169,6 +190,8 @@
 		} catch (error) {
 			addToast('error', error instanceof Error ? error.message : 'Failed to save location');
 			return;
+		} finally {
+			isSaving = false;
 		}
 
 		dispatch('save', {
@@ -447,24 +470,29 @@
 
 	<!-- Action Buttons -->
 	<div
-		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 space-y-2"
 	>
-		<button class="btn btn-ghost gap-2" onclick={handleBack}>
-			<ArrowLeftIcon class="w-5 h-5" />
-			{$t('adventures.back')}
-		</button>
-		<button
-			class="btn btn-primary gap-2"
-			disabled={!location.name || !location.category || isReverseGeocoding}
-			onclick={handleSave}
-		>
-			{#if isReverseGeocoding}
-				<span class="loading loading-spinner loading-sm"></span>
-				{$t('adventures.processing')}...
-			{:else}
-				<SaveIcon class="w-5 h-5" />
-				{$t('adventures.continue')}
-			{/if}
-		</button>
+		{#if !locationToEdit?.id && duplicates.visible}
+			<DuplicateLocationPrompt matches={duplicates.matches} checking={duplicates.checking} />
+		{/if}
+		<div class="flex gap-3 justify-end">
+			<button class="btn btn-ghost gap-2" onclick={handleBack}>
+				<ArrowLeftIcon class="w-5 h-5" />
+				{$t('adventures.back')}
+			</button>
+			<button
+				class="btn btn-primary gap-2"
+				disabled={!location.name || !location.category || isReverseGeocoding || isSaving}
+				onclick={handleSave}
+			>
+				{#if isReverseGeocoding || isSaving}
+					<span class="loading loading-spinner loading-sm"></span>
+					{$t('adventures.processing')}...
+				{:else}
+					<SaveIcon class="w-5 h-5" />
+					{$t('adventures.continue')}
+				{/if}
+			</button>
+		</div>
 	</div>
 </div>

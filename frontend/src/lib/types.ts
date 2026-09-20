@@ -102,6 +102,22 @@ export type Location = {
 	trails: Trail[];
 };
 
+export type DuplicateLocationReason = 'similar_name' | 'nearby_coordinates' | 'similar_address';
+
+export type DuplicateLocationMatch = {
+	id: string;
+	name: string;
+	location?: string | null;
+	latitude: number | null;
+	longitude: number | null;
+	category: Category | null;
+	is_visited: boolean;
+	visit_count: number;
+	score: number;
+	distance_meters: number | null;
+	reasons: Array<DuplicateLocationReason | string>;
+};
+
 export type Country = {
 	id: number;
 	name: string;

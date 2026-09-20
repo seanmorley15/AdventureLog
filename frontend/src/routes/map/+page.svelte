@@ -19,6 +19,7 @@
 		Recommendation,
 		Lodging
 	} from '$lib/types.js';
+	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
 	import { getActivityColor, normalizeBasemapType } from '$lib';
@@ -186,6 +187,7 @@
 	let previewRequestSeq = 0;
 
 	let isQuickAdding = $state(false);
+	const duplicates = new LocationDuplicateChecker();
 	let locationBeingUpdated: Location | undefined = $state(undefined);
 	let modalLocationPrefill: Location | null = $state(null);
 	let modalLodgingPrefill: Lodging | null = $state(null);
@@ -726,6 +728,35 @@
 		createModalOpen = true;
 	}
 
+	function duplicateCheckInputFromSelection(sel: MapSelection | null) {
+		if (sel?.kind === 'place') {
+			return {
+				name: sel.place.name,
+				latitude: sel.place.lat,
+				longitude: sel.place.lng,
+				location: sel.place.location
+			};
+		}
+		if (sel?.kind === 'recommendation') {
+			return {
+				name: sel.item.name,
+				latitude: sel.item.latitude,
+				longitude: sel.item.longitude,
+				location: sel.item.address || sel.item.description || null
+			};
+		}
+		return null;
+	}
+
+	$effect(() => {
+		const input = duplicateCheckInputFromSelection(selected);
+		if (!input) {
+			duplicates.reset();
+			return;
+		}
+		duplicates.schedule(input, 80);
+	});
+
 	async function openModalFromSelection() {
 		initialLatLng = null;
 		if (selected?.kind === 'place') {
@@ -940,6 +971,7 @@
 
 	onDestroy(() => {
 		unbindViewportCenter?.();
+		duplicates.destroy();
 	});
 	let imagePinCount = $derived(imageMapPins.length);
 	run(() => {
@@ -1379,6 +1411,9 @@
 								{isQuickAdding}
 								{showLodgingAdd}
 								{isMetric}
+								duplicateMatches={duplicates.matches}
+								isCheckingDuplicates={duplicates.checking}
+								showDuplicatePrompt={duplicates.visible}
 								on:back={backToControls}
 								on:viewFull={handleViewFull}
 								on:viewImageParent={handleViewImageParent}

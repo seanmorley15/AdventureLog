@@ -5,7 +5,14 @@
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import type { Location, PlaceSearchResult, Recommendation, ContentImage } from '$lib/types';
+	import type {
+		Location,
+		PlaceSearchResult,
+		Recommendation,
+		ContentImage,
+		DuplicateLocationMatch
+	} from '$lib/types';
+	import DuplicateLocationPrompt from '$lib/components/locations/DuplicateLocationPrompt.svelte';
 	import type { ImagePinProperties } from '$lib/map/imagePins';
 	import { getImagePinNavigationUrl, getImagePinParentTypeKey } from '$lib/map/imagePins';
 	import { formatProviderLabel } from '$lib/map/places';
@@ -42,6 +49,9 @@
 		isQuickAdding?: boolean;
 		showLodgingAdd?: boolean;
 		isMetric?: boolean;
+		duplicateMatches?: DuplicateLocationMatch[];
+		isCheckingDuplicates?: boolean;
+		showDuplicatePrompt?: boolean;
 	}
 
 	let {
@@ -57,7 +67,10 @@
 		error = null,
 		isQuickAdding = false,
 		showLodgingAdd = false,
-		isMetric = true
+		isMetric = true,
+		duplicateMatches = [],
+		isCheckingDuplicates = false,
+		showDuplicatePrompt = false
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
@@ -610,6 +623,12 @@
 			{/if}
 
 			{#if selectionKind === 'place' || selectionKind === 'recommendation'}
+				{#if showDuplicatePrompt}
+					<DuplicateLocationPrompt
+						matches={duplicateMatches}
+						checking={isCheckingDuplicates}
+					/>
+				{/if}
 				<button
 					type="button"
 					class="btn btn-primary w-full gap-2"

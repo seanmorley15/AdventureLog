@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
@@ -7,6 +7,8 @@
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Category } from '$lib/types';
 	import { fetchFormattedLocation } from '$lib/map/places';
+	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
+	import DuplicateLocationPrompt from '$lib/components/locations/DuplicateLocationPrompt.svelte';
 	import { page } from '$app/state';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
@@ -88,6 +90,7 @@
 	let selectedQuickAddCategory: Category | null = $state(null);
 	const placeDetailsCache = new Map<string, any>();
 	let searchProvider: string | null = $state(null);
+	const duplicates = new LocationDuplicateChecker();
 
 	function formatProviderLabel(provider?: string | null): string | null {
 		const normalized = (provider || '').trim().toLowerCase();
@@ -428,6 +431,7 @@
 		searchQuery = '';
 		searchResults = [];
 		searchProvider = null;
+		duplicates.reset();
 		quickAddedLocation = null;
 		selectedQuickAddCategory = null;
 		mapCenter = [-74.5, 40];
@@ -551,6 +555,7 @@
 				'success',
 				`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} created successfully`
 			);
+			duplicates.reset();
 			dispatch('quickAdded', {
 				location: quickAddedLocation,
 				prefill,
@@ -564,11 +569,30 @@
 		}
 	}
 
+	$effect(() => {
+		if (mode !== 'location' || !selectedLocation || quickAddedLocation) {
+			duplicates.reset();
+			return;
+		}
+
+		duplicates.schedule(
+			{
+				name: selectedLocation.name,
+				latitude: selectedLocation.lat,
+				longitude: selectedLocation.lng,
+				location: locationData?.display_name || selectedLocation.location
+			},
+			120
+		);
+	});
+
 	onMount(() => {
 		return () => {
 			clearTimeout(searchTimeout);
 		};
 	});
+
+	onDestroy(() => duplicates.destroy());
 	let supportsCategory = $derived(mode === 'location');
 	let itemLabel = $derived(mode === 'lodging' ? 'lodging' : 'location');
 	let quickAddEndpoint = $derived(
@@ -845,39 +869,47 @@
 	</div>
 
 	<div
-		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row gap-3"
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 space-y-2"
 	>
-		<button class="btn btn-ghost sm:flex-1" onclick={() => dispatch('cancel')}>
-			{$t('adventures.cancel') || 'Cancel'}
-		</button>
-
-		{#if selectedLocation && selectedMarker && googleEnabled}
-			<button class="btn btn-outline sm:flex-1" onclick={continueWithDetails}>
-				<PencilIcon class="w-4 h-4" />
-				{$t('adventures.add_details') || 'Add Details'}
-			</button>
-			<button class="btn btn-primary sm:flex-1" onclick={quickAdd} disabled={isQuickAdding}>
-				{#if isQuickAdding}
-					<span class="loading loading-spinner loading-xs"></span>
-					{$t('adventures.processing') || 'Processing'}...
-				{:else}
-					<LightningIcon class="w-4 h-4" />
-					Quick Add
-				{/if}
-			</button>
-		{:else}
-			<button
-				class="btn btn-primary sm:flex-1"
-				onclick={continueWithDetails}
-				disabled={isReverseGeocoding}
-			>
-				{#if isReverseGeocoding}
-					<span class="loading loading-spinner loading-xs"></span>
-					{$t('adventures.getting_location_details') || 'Getting details...'}
-				{:else}
-					{$t('adventures.continue')}
-				{/if}
-			</button>
+		{#if mode === 'location' && !quickAddedLocation && duplicates.visible}
+			<DuplicateLocationPrompt
+				matches={duplicates.matches}
+				checking={duplicates.checking}
+			/>
 		{/if}
+		<div class="flex flex-col sm:flex-row gap-3">
+			<button class="btn btn-ghost sm:flex-1" onclick={() => dispatch('cancel')}>
+				{$t('adventures.cancel') || 'Cancel'}
+			</button>
+
+			{#if selectedLocation && selectedMarker && googleEnabled}
+				<button class="btn btn-outline sm:flex-1" onclick={continueWithDetails}>
+					<PencilIcon class="w-4 h-4" />
+					{$t('adventures.add_details') || 'Add Details'}
+				</button>
+				<button class="btn btn-primary sm:flex-1" onclick={quickAdd} disabled={isQuickAdding}>
+					{#if isQuickAdding}
+						<span class="loading loading-spinner loading-xs"></span>
+						{$t('adventures.processing') || 'Processing'}...
+					{:else}
+						<LightningIcon class="w-4 h-4" />
+						Quick Add
+					{/if}
+				</button>
+			{:else}
+				<button
+					class="btn btn-primary sm:flex-1"
+					onclick={continueWithDetails}
+					disabled={isReverseGeocoding}
+				>
+					{#if isReverseGeocoding}
+						<span class="loading loading-spinner loading-xs"></span>
+						{$t('adventures.getting_location_details') || 'Getting details...'}
+					{:else}
+						{$t('adventures.continue')}
+					{/if}
+				</button>
+			{/if}
+		</div>
 	</div>
 </div>

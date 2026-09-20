@@ -22,6 +22,7 @@ from adventures.serializers import CollectionSerializer, CollectionInviteSeriali
 from users.models import CustomUser as User
 from adventures.utils import pagination
 from adventures.utils.geo import make_point, point_to_lat_lon
+from adventures.services.locations.duplicates import find_best_duplicate_location
 from users.serializers import CustomUserDetailsSerializer as UserSerializer
 from adventures.services.collection_pdf import (
     build_collection_pdf,
@@ -847,45 +848,18 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         name=loc_data['category'],
                         defaults={'display_name': loc_data['category'], 'icon': '🌍'},
                     )
-                # Attempt to find a very similar existing location for this user
-                from difflib import SequenceMatcher
-
-                def _ratio(a, b):
-                    a = (a or '').strip().lower()
-                    b = (b or '').strip().lower()
-                    if not a and not b:
-                        return 1.0
-                    return SequenceMatcher(None, a, b).ratio()
-
-                def _coords_close(lat1, lon1, lat2, lon2, threshold=0.02):
-                    try:
-                        if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
-                            return False
-                        return abs(float(lat1) - float(lat2)) <= threshold and abs(float(lon1) - float(lon2)) <= threshold
-                    except Exception:
-                        return False
-
                 incoming_name = loc_data.get('name') or 'Untitled'
                 incoming_location_text = loc_data.get('location')
                 incoming_lat = loc_data.get('latitude')
                 incoming_lon = loc_data.get('longitude')
 
-                existing_loc = None
-                best_score = 0.0
-                for cand in Location.objects.filter(user=request.user):
-                    name_score = _ratio(incoming_name, cand.name)
-                    loc_text_score = _ratio(incoming_location_text, getattr(cand, 'location', None))
-                    cand_lat, cand_lon = point_to_lat_lon(cand.coordinates)
-                    close_coords = _coords_close(incoming_lat, incoming_lon, cand_lat, cand_lon)
-                    # Define "very similar": strong name match OR decent name with location/coords match
-                    combined_score = max(name_score, (name_score + loc_text_score) / 2.0)
-                    if close_coords:
-                        combined_score = max(combined_score, name_score + 0.1)  # small boost for coord proximity
-                    if combined_score > best_score and (
-                        name_score >= 0.92 or (name_score >= 0.85 and (loc_text_score >= 0.85 or close_coords))
-                    ):
-                        best_score = combined_score
-                        existing_loc = cand
+                existing_loc = find_best_duplicate_location(
+                    request.user,
+                    name=incoming_name,
+                    latitude=incoming_lat,
+                    longitude=incoming_lon,
+                    location=incoming_location_text,
+                )
 
                 if existing_loc:
                     # Link existing location to the new collection, skip creating a duplicate
