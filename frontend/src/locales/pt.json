@@ -422,7 +422,7 @@
     "no_trails_added": "Nenhum trilho adicionado ainda",
     "no_trails_available": "Nenhum Trilho Disponível",
     "no_trails_found_matching": "Nenhum trilho encontrado correspondente",
-    "no_visits_description": "Crie sua primeira visita selecionando as datas acima",
+    "no_visits_description": "Adicione a visita de hoje com um clique, ou escolha datas personalizadas de cima",
     "notes_placeholder": "Adicione notas sobre esta visita",
     "or": "OU",
     "overnight": "Pernoite",
@@ -520,7 +520,14 @@
     "hide_endurain_activities": "Esconder Atividades Endurain",
     "no_endurain_activities": "Nenhumas atividades Endurain encontradas durante esta visita",
     "google_maps": "Google Maps",
-    "google_maps_error": "Falhou ao buscar a descrição a partir do Google Maps"
+    "google_maps_error": "Falhou ao buscar a descrição a partir do Google Maps",
+    "add_today_visit": "Adicionar Hoje",
+    "manage_visits": "Gerir Visitas",
+    "visited_today": "Já visitado hoje",
+    "visit_added": "Visita adicionada",
+    "visit_updated": "Visita atualizada",
+    "visit_add_failed": "Falhou ao adicionar visita",
+    "visit_update_failed": "Falhou ao atualizar visita"
   },
   "api_keys": {
     "copied": "Copiado!",

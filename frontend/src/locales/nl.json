@@ -265,7 +265,7 @@
     "no_trails_added": "Nog geen paden toegevoegd",
     "no_trails_available": "Geen paden beschikbaar",
     "no_trails_found_matching": "Geen paden gevonden bij matching",
-    "no_visits_description": "Maak uw eerste bezoek door datums hierboven te selecteren",
+    "no_visits_description": "Voeg uw bezoek van vandaag in één klik toe of kies hierboven aangepaste datums",
     "notes_placeholder": "Notities toevoegen over dit bezoek",
     "or": "OF",
     "pace": "Tempo",
@@ -467,7 +467,14 @@
     "hide_endurain_activities": "Verberg Endurain Activiteiten",
     "no_endurain_activities": "Geen Endurain activiteiten gevonden voor dit bezoek",
     "google_maps": "Google Maps",
-    "google_maps_error": "Ophalen van beschrijving vanuit Google Maps mislukt"
+    "google_maps_error": "Ophalen van beschrijving vanuit Google Maps mislukt",
+    "add_today_visit": "Voeg vandaag toe",
+    "manage_visits": "Beheer bezoeken",
+    "visited_today": "Vandaag al bezocht",
+    "visit_added": "Bezoek toegevoegd",
+    "visit_updated": "Bezoek bijgewerkt",
+    "visit_add_failed": "Bezoek toevoegen mislukt",
+    "visit_update_failed": "Bezoek bijwerken mislukt"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
