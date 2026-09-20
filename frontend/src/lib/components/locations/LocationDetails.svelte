@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
@@ -27,14 +25,6 @@
 	let isReverseGeocoding = $state(false);
 	let defaultCurrency = $state(DEFAULT_CURRENCY);
 	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
-
-	let initialSelection: {
-		name: string;
-		lat: number;
-		lng: number;
-		location: string;
-		category?: any;
-	} | null = $state(null);
 
 	let location: {
 		name: string;
@@ -94,38 +84,46 @@
 		collection = null
 	}: Props = $props();
 
-	run(() => {
+	$effect(() => {
 		user = currentUser;
-	});
-	run(() => {
 		locationToEdit = editingLocation;
 	});
-	run(() => {
+
+	$effect(() => {
 		defaultCurrency = (user && user.default_currency) || DEFAULT_CURRENCY;
 	});
-	run(() => {
+
+	$effect(() => {
 		moneyValue =
 			location.price === null
 				? { amount: null, currency: location.price_currency || defaultCurrency }
 				: toMoneyValue(location.price, location.price_currency, defaultCurrency);
 	});
-	run(() => {
+
+	$effect(() => {
 		if (location.price !== null && !location.price_currency) {
 			location.price_currency = defaultCurrency;
 		}
 	});
-	run(() => {
+
+	// Use $derived for initialSelection to prevent reactive loops
+	let initialSelection: {
+		name: string;
+		lat: number;
+		lng: number;
+		location: string;
+		category?: any;
+	} | null = $derived.by(() => {
 		const lat = toFiniteNumber(initialLocation?.latitude);
 		const lng = toFiniteNumber(initialLocation?.longitude);
-		initialSelection =
-			initialLocation && lat !== null && lng !== null
-				? {
-						name: initialLocation.name || '',
-						lat,
-						lng,
-						location: initialLocation.location || ''
-					}
-				: null;
+		return initialLocation && lat !== null && lng !== null
+			? {
+					name: initialLocation.name || '',
+					lat,
+					lng,
+					location: initialLocation.location || ''
+				}
+			: null;
 	});
 
 	function handleLocationUpdate(

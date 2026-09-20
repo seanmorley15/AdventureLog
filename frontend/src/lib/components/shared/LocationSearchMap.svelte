@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { createEventDispatcher } from 'svelte';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
@@ -124,7 +122,7 @@
 	let airportModeInitialized = $state(false);
 
 	// Clear inputs/selections when airportMode is toggled (but not during initial setup)
-	run(() => {
+	$effect(() => {
 		if (prevAirportMode !== airportMode) {
 			prevAirportMode = airportMode;
 
@@ -723,7 +721,7 @@
 		dispatch('clear');
 	}
 
-	run(() => {
+	$effect(() => {
 		if (
 			!initialApplied &&
 			initialSelection &&
@@ -734,7 +732,7 @@
 		}
 	});
 
-	run(() => {
+	$effect(() => {
 		if (
 			!initialTransportationApplied &&
 			transportationMode &&
@@ -1150,31 +1148,31 @@
 				bounds={mapBounds ?? undefined}
 				on:mapClick={handleMapClick}
 			>
-				{#if transportationMode}
-					{#if startMarker}
-						<Marker
-							lngLat={[startMarker.lng, startMarker.lat]}
-							class="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-success shadow-lg cursor-pointer"
-						>
-							<PinIcon class="w-5 h-5 text-success-content" />
-						</Marker>
-					{/if}
-					{#if endMarker}
-						<Marker
-							lngLat={[endMarker.lng, endMarker.lat]}
-							class="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-error shadow-lg cursor-pointer"
-						>
-							<PinIcon class="w-5 h-5 text-error-content" />
-						</Marker>
-					{/if}
-				{:else if selectedMarker}
+			{#if transportationMode}
+				{#if startMarker && Number.isFinite(startMarker.lng) && Number.isFinite(startMarker.lat)}
 					<Marker
-						lngLat={[selectedMarker.lng, selectedMarker.lat]}
-						class="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-primary shadow-lg cursor-pointer"
+						lngLat={[startMarker.lng, startMarker.lat]}
+						class="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-success shadow-lg cursor-pointer"
 					>
-						<PinIcon class="w-5 h-5 text-primary-content" />
+						<PinIcon class="w-5 h-5 text-success-content" />
 					</Marker>
 				{/if}
+				{#if endMarker && Number.isFinite(endMarker.lng) && Number.isFinite(endMarker.lat)}
+					<Marker
+						lngLat={[endMarker.lng, endMarker.lat]}
+						class="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-error shadow-lg cursor-pointer"
+					>
+						<PinIcon class="w-5 h-5 text-error-content" />
+					</Marker>
+				{/if}
+			{:else if selectedMarker && Number.isFinite(selectedMarker.lng) && Number.isFinite(selectedMarker.lat)}
+				<Marker
+					lngLat={[selectedMarker.lng, selectedMarker.lat]}
+					class="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-primary shadow-lg cursor-pointer"
+				>
+					<PinIcon class="w-5 h-5 text-primary-content" />
+				</Marker>
+			{/if}
 			</FullMap>
 		</div>
 
