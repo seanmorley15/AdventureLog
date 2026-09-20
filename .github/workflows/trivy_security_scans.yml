@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Scan source code (Filesystem) with Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -53,7 +53,7 @@ jobs:
           docker build -f docker/Dockerfile --target aio -t adventurelog .
 
       - name: Scan backend image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: adventurelog-backend
           format: table
@@ -63,7 +63,7 @@ jobs:
           trivyignores: .trivyignore
 
       - name: Scan frontend image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: adventurelog-frontend
           format: table
@@ -73,7 +73,7 @@ jobs:
           trivyignores: .trivyignore
 
       - name: Scan Standard Deployment image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: adventurelog
           format: table

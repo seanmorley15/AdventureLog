@@ -36,3 +36,4 @@ legacy-cgi==2.6.3
 requests>=2.31.0
 stripe==11.3.0
 reportlab>=4.2.0,<5
+piexif>=1.1.3,<2

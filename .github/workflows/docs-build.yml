@@ -1,0 +1,45 @@
+name: Build Documentation
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - "documentation/**"
+      - ".github/workflows/docs-build.yml"
+  push:
+    paths:
+      - "documentation/**"
+      - ".github/workflows/docs-build.yml"
+
+concurrency:
+  group: docs-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: VitePress Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: documentation/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: documentation
+        run: pnpm install --frozen-lockfile
+
+      - name: Build documentation
+        working-directory: documentation
+        run: pnpm run docs:build

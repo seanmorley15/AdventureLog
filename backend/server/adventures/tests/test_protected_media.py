@@ -9,6 +9,13 @@ from adventures.models import Activity, Location, Visit
 User = get_user_model()
 
 
+def _response_body(response):
+    """Read body from a normal or streaming Django response."""
+    if hasattr(response, 'streaming_content'):
+        return b''.join(response.streaming_content)
+    return response.content
+
+
 @override_settings(DEBUG=True)
 class ProtectedMediaTestCase(TestCase):
     def setUp(self):
@@ -56,7 +63,7 @@ class ProtectedMediaTestCase(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(f'/media/{self.gpx_path}')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'SECRET_GPX_TRACK_DATA')
+        self.assertEqual(_response_body(response), b'SECRET_GPX_TRACK_DATA')
 
     def test_unknown_media_subtree_is_denied(self):
         self._write_media_file('secret-stash/leak.txt', b'leaked')
@@ -67,7 +74,7 @@ class ProtectedMediaTestCase(TestCase):
         self._write_media_file('flags/us.png', b'flag-bytes')
         response = self.client.get('/media/flags/us.png')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'flag-bytes')
+        self.assertEqual(_response_body(response), b'flag-bytes')
 
     def test_path_traversal_cannot_bypass_gpx_protection(self):
         response = self.client.get(f'/media/profile-pics/../{self.gpx_path}')
@@ -91,4 +98,4 @@ class ProtectedMediaTestCase(TestCase):
 
         response = self.client.get(f'/media/{public_gpx_path}')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'PUBLIC_GPX_DATA')
+        self.assertEqual(_response_body(response), b'PUBLIC_GPX_DATA')

@@ -1,0 +1,4 @@
+# Dev/CI extras — install on top of requirements.txt
+-r requirements.txt
+coverage>=7.6.0,<8
+piexif>=1.1.3,<2

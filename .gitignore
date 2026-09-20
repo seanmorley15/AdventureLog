@@ -1,8 +1,16 @@
 # Ignore everything in the .venv folder
 .venv/
+.venv-*/
 .vscode/settings.json
 .pnpm-store/
 .env
+
+# Test / coverage artifacts
+.coverage
+coverage.xml
+htmlcov/
+backend/server/.coverage
+backend/server/coverage.xml
 
 # Cursor IDE configuration
 .cursor/

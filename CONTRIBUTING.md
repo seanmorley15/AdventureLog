@@ -150,6 +150,50 @@ When contributing, please try to match the **style and patterns already used in 
 
 ---
 
+# Testing
+
+CI runs automated checks on every relevant pull request. Run the same checks locally before opening a PR.
+
+### Backend (Django)
+
+The full test suite needs PostGIS. From the repository root:
+
+```bash
+./scripts/test-backend.sh
+```
+
+This starts [`docker/docker-compose.database.yml`](docker/docker-compose.database.yml) if needed, then runs `manage.py test` with coverage using `main.settings_test` (same as GitHub Actions).
+
+You can pass extra Django test arguments:
+
+```bash
+./scripts/test-backend.sh adventures.tests.test_dashboard
+```
+
+### Frontend (SvelteKit)
+
+From `frontend/`:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm run lint    # Prettier check
+pnpm run check   # svelte-check / TypeScript
+pnpm run build   # production build
+```
+
+### Other CI checks
+
+| Workflow | When it runs |
+|----------|--------------|
+| Backend tests | Changes under `backend/` |
+| Frontend quality | Changes under `frontend/` |
+| Compose smoke | Docker / frontend / backend stack changes |
+| Docs build | Changes under `documentation/` |
+| Installer smoke | Installer / env validation script changes |
+| Trivy | Security scans on `main` / `development` |
+
+---
+
 # Documentation Changes
 
 If your changes affect:

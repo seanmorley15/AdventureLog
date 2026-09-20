@@ -51,7 +51,7 @@ class GlobalSearchAPITestCase(APITestCase):
         )
         self.lodging = Lodging.objects.create(
             user=self.owner,
-            name='Left Bank Hotel',
+            name='Paris Left Bank Hotel',
             description='Near the Seine',
             collection=self.collection,
         )

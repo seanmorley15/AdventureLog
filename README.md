@@ -207,7 +207,7 @@ Track what's coming next on the [public roadmap →](https://github.com/users/se
 
 ## Contributing
 
-Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started.
+Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow and how to run tests locally (`./scripts/test-backend.sh` for Django; `pnpm run lint` / `check` / `build` in `frontend/`).
 
 <a href="https://github.com/seanmorley15/AdventureLog/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=seanmorley15/AdventureLog" alt="Contributors" />

@@ -142,6 +142,7 @@ class EndurainServicesTest(TestCase):
     def test_login_with_password_mfa_required(self, mock_post):
         mock_response = MagicMock()
         mock_response.status_code = 202
+        mock_response.is_redirect = False
         mock_response.json.return_value = {
             'mfa_required': True,
             'username': 'runner',
@@ -164,6 +165,7 @@ class EndurainServicesTest(TestCase):
         access = f'h.{payload}.s'
         mock_response = MagicMock()
         mock_response.status_code = 200
+        mock_response.is_redirect = False
         mock_response.json.return_value = {
             'access_token': access,
             'refresh_token': 'refresh-token',
@@ -187,6 +189,7 @@ class EndurainServicesTest(TestCase):
         access = f'h.{payload}.s'
         mock_response = MagicMock()
         mock_response.status_code = 200
+        mock_response.is_redirect = False
         mock_response.json.return_value = {
             'access_token': access,
             'refresh_token': 'refresh-token',

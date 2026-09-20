@@ -1,5 +1,5 @@
 from rest_framework.test import APITestCase
-from .models import CustomUser
+from users.models import CustomUser
 from uuid import UUID
 
 from allauth.account.models import EmailAddress

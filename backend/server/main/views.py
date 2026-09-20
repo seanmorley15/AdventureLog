@@ -3,6 +3,7 @@ from django.middleware.csrf import get_token
 from os import getenv
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.views.generic import RedirectView
 from django.views.static import serve
 from django.core.files.storage import default_storage
 from adventures.utils.file_permissions import (
@@ -26,6 +27,25 @@ def health_check(request):
         return JsonResponse({'ok': True, 'db': 'connected'})
     except Exception:
         return JsonResponse({'ok': False, 'db': 'disconnected'}, status=503)
+
+
+class FrontendSignupRedirectView(RedirectView):
+    """Redirect Django signup URLs to the SvelteKit frontend.
+
+    Reads FRONTEND_URL at request time so tests and runtime config overrides work.
+    """
+
+    permanent = False
+    # Append query string ourselves in get_redirect_url so it is reliable
+    # across Django versions when the target URL is computed dynamically.
+    query_string = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        url = f'{settings.FRONTEND_URL.rstrip("/")}/signup'
+        query = self.request.META.get('QUERY_STRING', '')
+        if query:
+            url = f'{url}?{query}'
+        return url
 
 def _redirect_storage(path):
     storage_url = default_storage.url(path)

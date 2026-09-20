@@ -5,7 +5,7 @@ from django.conf import settings
 from users.views import IsRegistrationDisabled, PasswordPolicyView, SignupLegalLinksView, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, UserMediaUsageView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView, DeleteAccountView
 from users.invitation_views import AcceptInviteView, InviteSignupStatusView
 from cloud.views import CurrentUserView
-from .views import get_csrf_token, get_public_url, health_check, serve_protected_media
+from .views import get_csrf_token, get_public_url, health_check, serve_protected_media, FrontendSignupRedirectView
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -65,10 +65,7 @@ urlpatterns = [
     # Signup happens in the SvelteKit frontend via the headless API.
     path(
         'accounts/signup/',
-        RedirectView.as_view(
-            url=f'{settings.FRONTEND_URL.rstrip("/")}/signup',
-            query_string=True,
-        ),
+        FrontendSignupRedirectView.as_view(),
         name='server_signup_redirect',
     ),
     path("accounts/", include("allauth.urls")),
