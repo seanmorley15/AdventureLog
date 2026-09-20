@@ -527,7 +527,10 @@
     "visit_added": "Visita adicionada",
     "visit_updated": "Visita atualizada",
     "visit_add_failed": "Falhou ao adicionar visita",
-    "visit_update_failed": "Falhou ao atualizar visita"
+    "visit_update_failed": "Falhou ao atualizar visita",
+    "required_fields_hint": "Os campos obrigatórios estão marcados com *",
+    "activity_gpx_optional_hint": "Opcional — um ficheiro GPX pode preencher detalhes de elevação e rota automaticamente.",
+    "hide_details": "Esconder detalhes"
   },
   "api_keys": {
     "copied": "Copiado!",
