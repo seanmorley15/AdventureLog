@@ -518,7 +518,12 @@
     "sunrise_sunset_load_error": "No se pudieron cargar las horas de salida y puesta del sol",
     "view_endurain_activities": "Ver actividades de Endurain",
     "google_maps": "Google Maps",
-    "google_maps_error": "No se ha podido obtener una descripción de Google Maps"
+    "google_maps_error": "No se ha podido obtener una descripción de Google Maps",
+    "hide_details": "Ocultar detalles",
+    "manage_visits": "Gestionar visitas",
+    "visit_updated": "Visita actualizada",
+    "required_fields_hint": "Campos requeridos son marcados por *",
+    "visit_added": "Visita añadida"
   },
   "worldtravel": {
     "no_countries_found": "No se encontraron países",
@@ -629,7 +634,9 @@
     "invite_invalid_desc": "Esta invitación es inválida o ya ha sido utilizada.",
     "invite_expired_desc": "Esta invitación ha caducado. Pida al administrador del servidor que le envíe una invitación nueva.",
     "invite_accepted_desc": "Esta invitación ya ha sido aceptada. Inicie sesión con su cuenta.",
-    "invite_registered_desc": "Ya existe una cuenta para esta dirección de email. Inicie sesión con su cuenta."
+    "invite_registered_desc": "Ya existe una cuenta para esta dirección de email. Inicie sesión con su cuenta.",
+    "password_entirely_numeric": "La contraseña no puede ser completamente numérica.",
+    "password_requirements_title": "Requerimientos de contraseña"
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos.",
