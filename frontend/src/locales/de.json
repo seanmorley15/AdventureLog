@@ -266,7 +266,7 @@
     "no_trails_added": "Noch keine Wege hinzugefügt",
     "no_trails_available": "Keine Wanderwege verfügbar",
     "no_trails_found_matching": "Keine passenden Pfade gefunden",
-    "no_visits_description": "Erstelle deinen ersten Besuch, indem du die obigen Daten auswählst",
+    "no_visits_description": "Füge deinen heutigen Besuch mit einem Klick hinzu, oder wähle oben ein eigenes Datum aus",
     "notes_placeholder": "Füge Notizen zu diesem Besuch hinzu",
     "or": "ODER",
     "pace": "Tempo",
@@ -467,7 +467,17 @@
     "sunrise_sunset_load_error": "Sonnenauf- und -untergangszeiten konnten nicht geladen werden",
     "view_endurain_activities": "Endurain-Aktivitäten ansehen",
     "google_maps": "Google Maps",
-    "google_maps_error": "Fehler beim Laden der Beschreibung von Google Maps"
+    "google_maps_error": "Fehler beim Laden der Beschreibung von Google Maps",
+    "hide_details": "Details verstecken",
+    "required_fields_hint": "Erforderliche Felder sind mit einem * markiert",
+    "activity_gpx_optional_hint": "Optional — eine GPX-Datei kann Höhe und Routendetails automatisch ausfüllen.",
+    "add_today_visit": "Heute hinzufügen",
+    "manage_visits": "Besuche verwalten",
+    "visited_today": "Heute bereits besucht",
+    "visit_added": "Besuch hinzugefügt",
+    "visit_updated": "Besuch aktualisiert",
+    "visit_add_failed": "Fehler beim Hinzufügen des Besuchs",
+    "visit_update_failed": "Fehler beim Aktualisieren des Besuchs"
   },
   "home": {
     "desc_1": "Entdecke, plane und erkunde mühelos",
