@@ -474,7 +474,10 @@
     "visit_added": "Bezoek toegevoegd",
     "visit_updated": "Bezoek bijgewerkt",
     "visit_add_failed": "Bezoek toevoegen mislukt",
-    "visit_update_failed": "Bezoek bijwerken mislukt"
+    "visit_update_failed": "Bezoek bijwerken mislukt",
+    "required_fields_hint": "Verplichte velden zijn met * gemarkeerd",
+    "activity_gpx_optional_hint": "Optioneel — een GPX-bestand kan hoogte en routedetails automatisch invullen.",
+    "hide_details": "Verberg details"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
