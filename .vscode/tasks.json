@@ -1,0 +1,268 @@
+{
+	// Three groups of tasks:
+	//  1. "Dev:", "Backend:", "Frontend:", "Run:" run wherever VS Code runs: on the host or
+	//     inside the dev container (Dev Containers: Reopen in Container).
+	//  2. "Devcontainer:" run from the host and drive the dev container via `docker compose`
+	//     (VS Code does not need to be attached to it). Host-only: the container has no docker CLI.
+	//  3. "Host:" helpers for running everything directly on the host.
+	// On Windows, use a VS Code WSL window so these run under bash in your WSL distro.
+	"version": "2.0.0",
+	"tasks": [
+		// ── Run anywhere (host or attached container) ───────────────────────────
+		{
+			"label": "Backend: bootstrap",
+			"detail": "Start memcached, apply migrations, create the first-boot admin user",
+			"type": "process",
+			"command": "bash",
+			"args": [".devcontainer/bootstrap.sh"],
+			"options": { "cwd": "${workspaceFolder}" },
+			"problemMatcher": []
+		},
+		{
+			"label": "Frontend: install",
+			"type": "process",
+			"command": "pnpm",
+			"args": ["install", "--frozen-lockfile"],
+			"options": { "cwd": "${workspaceFolder}/frontend", "env": { "CI": "true" } },
+			"problemMatcher": []
+		},
+		{
+			"label": "Dev: prepare",
+			"detail": "Everything F5 needs before the servers start",
+			"dependsOn": ["Backend: bootstrap", "Frontend: install"],
+			"dependsOrder": "parallel",
+			"problemMatcher": []
+		},
+		{
+			"label": "Backend: runserver",
+			"type": "process",
+			"command": "python",
+			"args": ["manage.py", "runserver", "0.0.0.0:8000"],
+			"options": { "cwd": "${workspaceFolder}/backend/server" },
+			"isBackground": true,
+			"presentation": { "group": "servers", "panel": "dedicated" },
+			"problemMatcher": {
+				"owner": "django-runserver",
+				"pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "Watching for file changes",
+					"endsPattern": "Starting development server at"
+				}
+			}
+		},
+		{
+			"label": "Frontend: vite dev",
+			"type": "process",
+			"command": "pnpm",
+			"args": ["exec", "vite", "dev", "--host", "0.0.0.0", "--port", "3000", "--strictPort"],
+			"options": { "cwd": "${workspaceFolder}/frontend" },
+			"isBackground": true,
+			"presentation": { "group": "servers", "panel": "dedicated" },
+			"problemMatcher": {
+				"owner": "vite-dev",
+				"pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "VITE v",
+					"endsPattern": "Local:"
+				}
+			}
+		},
+		{
+			"label": "Run: servers",
+			"dependsOn": ["Backend: runserver", "Frontend: vite dev"],
+			"dependsOrder": "parallel",
+			"problemMatcher": []
+		},
+		{
+			"label": "Run: full stack",
+			"detail": "Prepare, then run Django (:8000) and SvelteKit (:3000) without a debugger",
+			"dependsOn": ["Dev: prepare", "Run: servers"],
+			"dependsOrder": "sequence",
+			"group": { "kind": "build", "isDefault": true },
+			"problemMatcher": []
+		},
+		{
+			"label": "Backend: migrate",
+			"type": "process",
+			"command": "python",
+			"args": ["manage.py", "migrate"],
+			"options": { "cwd": "${workspaceFolder}/backend/server" },
+			"problemMatcher": []
+		},
+		{
+			"label": "Backend: test",
+			"type": "process",
+			"command": "python",
+			"args": ["manage.py", "test"],
+			"options": { "cwd": "${workspaceFolder}/backend/server" },
+			"group": "test",
+			"problemMatcher": []
+		},
+		{
+			"label": "Backend: download world data",
+			"detail": "Import countries/regions. Takes several minutes and ~2GB RAM; only needed once",
+			"type": "process",
+			"command": "python",
+			"args": ["manage.py", "download-countries"],
+			"options": { "cwd": "${workspaceFolder}/backend/server" },
+			"problemMatcher": []
+		},
+		{
+			"label": "Frontend: check",
+			"type": "process",
+			"command": "pnpm",
+			"args": ["run", "check"],
+			"options": { "cwd": "${workspaceFolder}/frontend" },
+			"group": "test",
+			"problemMatcher": []
+		},
+
+		// ── Drive the dev container from the host ───────────────────────────────
+		{
+			"label": "Devcontainer: up",
+			"detail": "Build and start the dev container + PostGIS (ports 3000/8000 published on localhost)",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"up", "-d", "--build"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: setup",
+			"detail": "Install backend + frontend dependencies inside the container",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"exec", "-T", "dev", "bash", ".devcontainer/post-create.sh"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: bootstrap",
+			"detail": "memcached + migrations + admin user inside the container",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"exec", "-T", "dev", "bash", ".devcontainer/bootstrap.sh"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: runserver",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"exec", "-T", "-w", "/workspaces/adventurelog/backend/server",
+				"dev", "python", "manage.py", "runserver", "0.0.0.0:8000"
+			],
+			"isBackground": true,
+			"presentation": { "group": "devcontainer", "panel": "dedicated" },
+			"problemMatcher": {
+				"owner": "django-runserver",
+				"pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "Watching for file changes",
+					"endsPattern": "Starting development server at"
+				}
+			}
+		},
+		{
+			"label": "Devcontainer: vite dev",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"exec", "-T", "-w", "/workspaces/adventurelog/frontend",
+				"dev", "pnpm", "exec", "vite", "dev", "--host", "0.0.0.0", "--port", "3000", "--strictPort"
+			],
+			"isBackground": true,
+			"presentation": { "group": "devcontainer", "panel": "dedicated" },
+			"problemMatcher": {
+				"owner": "vite-dev",
+				"pattern": [{ "regexp": ".", "file": 1, "location": 2, "message": 3 }],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "VITE v",
+					"endsPattern": "Local:"
+				}
+			}
+		},
+		{
+			"label": "Devcontainer: servers",
+			"dependsOn": ["Devcontainer: runserver", "Devcontainer: vite dev"],
+			"dependsOrder": "parallel",
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: run full stack",
+			"detail": "Start the container, install deps, bootstrap, then run Django and SvelteKit inside it",
+			"dependsOn": [
+				"Devcontainer: up",
+				"Devcontainer: setup",
+				"Devcontainer: bootstrap",
+				"Devcontainer: servers"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: logs",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"logs", "-f", "--tail", "200"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: rebuild",
+			"detail": "Rebuild the image and recreate the containers (keeps the database volume)",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"up", "-d", "--build", "--force-recreate"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Devcontainer: down",
+			"detail": "Stop and remove the containers (keeps volumes)",
+			"type": "process",
+			"command": "docker",
+			"args": [
+				"compose", "-f", "${workspaceFolder}/.devcontainer/docker-compose.yml",
+				"-f", "${workspaceFolder}/.devcontainer/docker-compose.ports.yml",
+				"down"
+			],
+			"problemMatcher": []
+		},
+
+		// ── Host-mode helper ────────────────────────────────────────────────────
+		{
+			"label": "Host: start database",
+			"detail": "PostGIS on 127.0.0.1:5432 for running Django directly on the host (docker/docker-compose.database.yml)",
+			"type": "process",
+			"command": "docker",
+			"args": ["compose", "-f", "${workspaceFolder}/docker/docker-compose.database.yml", "up", "-d"],
+			"problemMatcher": []
+		}
+	]
+}
