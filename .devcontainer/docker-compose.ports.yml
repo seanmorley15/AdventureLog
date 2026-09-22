@@ -1,0 +1,9 @@
+# Publishes the app ports on the host. Only needed when driving the container from the
+# host with the "Devcontainer: ..." VS Code tasks (docker compose up/exec). When VS Code is
+# attached to the container, devcontainer.json forwardPorts handles this instead, so this
+# file is intentionally not part of the default compose stack.
+services:
+  dev:
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:8000:8000"
