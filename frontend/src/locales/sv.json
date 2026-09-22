@@ -474,7 +474,10 @@
     "visit_added": "Besök lades till",
     "visit_updated": "Besök uppdaterades",
     "visit_add_failed": "Misslyckades med att lägga till besök",
-    "visit_update_failed": "Misslyckades med att uppdatera besök"
+    "visit_update_failed": "Misslyckades med att uppdatera besök",
+    "required_fields_hint": "Obligatoriska fält är markerade med *",
+    "activity_gpx_optional_hint": "Valfritt – en GPX-fil kan automatiskt fylla i uppgifter om höjd och rutt.",
+    "hide_details": "Dölj detaljer"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
