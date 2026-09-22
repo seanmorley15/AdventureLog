@@ -520,7 +520,9 @@
     "add_details": "Details hinzuefüege",
     "sun_times": "Sunnestunde",
     "google_maps": "Google Maps",
-    "google_maps_error": "Fehler bim uslese vode Beschriibig us Google Maps"
+    "google_maps_error": "Fehler bim uslese vode Beschriibig us Google Maps",
+    "required_fields_hint": "Pflichtfelder sind miterem * markiert",
+    "activity_gpx_optional_hint": "Optional - e GPX Datei chan automatisch Pfad Details hinzuefüege."
   },
   "worldtravel": {
     "country_list": "Länderliste",
