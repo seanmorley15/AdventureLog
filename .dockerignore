@@ -40,3 +40,9 @@ backend/server/.venv/
 
 # Root node_modules if present
 node_modules
+
+# Playwright suite: run from a checkout, never from inside the image
+frontend/tests
+frontend/playwright.config.ts
+frontend/test-results
+frontend/playwright-report

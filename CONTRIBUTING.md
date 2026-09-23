@@ -150,6 +150,12 @@ When contributing, please try to match the **style and patterns already used in 
 
 ---
 
+# Testing
+
+Frontend changes that add or change a user flow should come with a Playwright spec under `frontend/tests/e2e`. The [testing guide](documentation/docs/install/testing.md) covers running the suite locally; it also runs in CI on every pull request.
+
+---
+
 # Documentation Changes
 
 If your changes affect:

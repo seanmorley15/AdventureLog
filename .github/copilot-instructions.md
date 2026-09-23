@@ -21,6 +21,7 @@ Run these commands in order:
 - `cd frontend && npm run format` - **6 seconds** - Fix code formatting (ALWAYS run before committing)
 - `cd frontend && npm run lint` - **6 seconds** - Check code formatting
 - `cd frontend && npm run check` - **12 seconds** - Run Svelte type checking (3 errors, 19 warnings expected)
+- `cd frontend && pnpm e2e:up && pnpm test:e2e` - Playwright end-to-end tests against a Docker stack on http://localhost:8017 (see `documentation/docs/install/testing.md`)
 
 **Backend (Django with Python):**
 - Backend development requires Docker - local Python pip install fails due to network timeouts
