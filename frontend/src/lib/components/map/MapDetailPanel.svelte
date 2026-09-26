@@ -624,10 +624,7 @@
 
 			{#if selectionKind === 'place' || selectionKind === 'recommendation'}
 				{#if showDuplicatePrompt}
-					<DuplicateLocationPrompt
-						matches={duplicateMatches}
-						checking={isCheckingDuplicates}
-					/>
+					<DuplicateLocationPrompt matches={duplicateMatches} checking={isCheckingDuplicates} />
 				{/if}
 				<button
 					type="button"

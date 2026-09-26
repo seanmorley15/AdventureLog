@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount, untrack } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
@@ -56,10 +56,9 @@
 		collections: []
 	});
 
-	let user: User | null = $state(null);
-	let locationToEdit: Location | null = $state(null);
 	let ownerUser: User | null = $state(null);
 	let isSaving = $state(false);
+	let isInitializing = $state(true);
 	const duplicates = new LocationDuplicateChecker();
 
 	function toFiniteNumber(value: unknown): number | null {
@@ -84,15 +83,15 @@
 		collection = null
 	}: Props = $props();
 
-	$effect(() => {
-		user = currentUser;
-		locationToEdit = editingLocation;
-	});
+	// Sync props to local state without triggering reactive loops
+	let user = $derived(currentUser);
+	let locationToEdit = $derived(editingLocation);
 
 	$effect(() => {
 		defaultCurrency = (user && user.default_currency) || DEFAULT_CURRENCY;
 	});
 
+	// Derive moneyValue instead of using an effect to prevent loops
 	$effect(() => {
 		moneyValue =
 			location.price === null
@@ -100,7 +99,8 @@
 				: toMoneyValue(location.price, location.price_currency, defaultCurrency);
 	});
 
-	$effect(() => {
+	// Use $effect.pre to ensure this runs before other effects
+	$effect.pre(() => {
 		if (location.price !== null && !location.price_currency) {
 			location.price_currency = defaultCurrency;
 		}
@@ -143,6 +143,9 @@
 	}
 
 	$effect(() => {
+		// Skip during initial setup to prevent loops
+		if (isInitializing) return;
+
 		if (locationToEdit?.id) {
 			duplicates.reset();
 			return;
@@ -202,22 +205,25 @@
 	}
 
 	onMount(() => {
-		const lat = toFiniteNumber(initialLocation?.latitude);
-		const lng = toFiniteNumber(initialLocation?.longitude);
-		if (initialLocation && lat !== null && lng !== null) {
-			location.latitude = lat;
-			location.longitude = lng;
-			if (!location.name) location.name = initialLocation.name || '';
-			if (initialLocation.location) location.location = initialLocation.location;
-		}
-	});
-
-	onMount(() => {
+		// Consolidate all initialization logic in one place
+		// Use a flag to prevent effect triggers during initialization
 		if (initialLocation && typeof initialLocation === 'object') {
+			const lat = toFiniteNumber(initialLocation?.latitude);
+			const lng = toFiniteNumber(initialLocation?.longitude);
+
+			// Set coordinates if valid
+			if (lat !== null && lng !== null) {
+				location.latitude = lat;
+				location.longitude = lng;
+			}
+
+			// Set basic fields
 			if (!location.name) location.name = initialLocation.name || '';
 			if (!location.link) location.link = initialLocation.link || '';
 			if (!location.description) location.description = initialLocation.description || '';
 			if (Number.isNaN(location.rating)) location.rating = initialLocation.rating || NaN;
+
+			// Set price if not already set
 			if (location.price === null || location.price === undefined) {
 				const money = toMoneyValue(
 					initialLocation.price,
@@ -227,18 +233,22 @@
 				location.price = money.amount;
 				location.price_currency = money.currency;
 			}
+
 			if (location.is_public === false) location.is_public = initialLocation.is_public || false;
 
+			// Set category
 			if (!location.category || !location.category.id) {
 				if (initialLocation.category && initialLocation.category.id) {
 					location.category = initialLocation.category;
 				}
 			}
 
+			// Set tags
 			if (initialLocation.tags && Array.isArray(initialLocation.tags)) {
 				location.tags = initialLocation.tags;
 			}
 
+			// Set collections
 			if (initialLocation.collections && Array.isArray(initialLocation.collections)) {
 				location.collections = initialLocation.collections.map((c: any) =>
 					typeof c === 'string' ? c : c.id
@@ -253,18 +263,21 @@
 				);
 			}
 
+			// Set location display name
 			if (initialLocation.location) {
 				location.location = initialLocation.location;
 			}
 
+			// Set owner user
 			if (initialLocation.user) {
 				ownerUser = initialLocation.user;
 			}
 		}
 
-		return () => {
-			// no-op
-		};
+		// Mark initialization complete after a small delay to let effects settle
+		setTimeout(() => {
+			isInitializing = false;
+		}, 0);
 	});
 </script>
 

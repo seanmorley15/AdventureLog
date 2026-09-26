@@ -1034,7 +1034,8 @@
 								checked={allDay}
 								onchange={handleAllDayToggle}
 							/>
-							<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span>
+							<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span
+							>
 						</label>
 
 						{#if collection?.start_date && collection?.end_date}
@@ -1061,7 +1062,8 @@
 
 					<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 						<div class="flex flex-col">
-							<label class="field-label" for="start-date-input">{$t('adventures.start_date')}</label>
+							<label class="field-label" for="start-date-input">{$t('adventures.start_date')}</label
+							>
 							<DateInput
 								id="start-date-input"
 								bind:value={localStartDate}
@@ -1090,7 +1092,9 @@
 
 						{#if !allDay}
 							<div class="flex flex-col">
-								<label class="field-label" for="timezone-selector">{$t('adventures.timezone')}</label>
+								<label class="field-label" for="timezone-selector"
+									>{$t('adventures.timezone')}</label
+								>
 								<div class="mt-1">
 									<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 								</div>

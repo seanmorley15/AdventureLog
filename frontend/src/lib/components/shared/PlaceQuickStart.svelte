@@ -872,10 +872,7 @@
 		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 space-y-2"
 	>
 		{#if mode === 'location' && !quickAddedLocation && duplicates.visible}
-			<DuplicateLocationPrompt
-				matches={duplicates.matches}
-				checking={duplicates.checking}
-			/>
+			<DuplicateLocationPrompt matches={duplicates.matches} checking={duplicates.checking} />
 		{/if}
 		<div class="flex flex-col sm:flex-row gap-3">
 			<button class="btn btn-ghost sm:flex-1" onclick={() => dispatch('cancel')}>
