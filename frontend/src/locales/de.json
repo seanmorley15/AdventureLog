@@ -477,7 +477,21 @@
     "visit_added": "Besuch hinzugefügt",
     "visit_updated": "Besuch aktualisiert",
     "visit_add_failed": "Fehler beim Hinzufügen des Besuchs",
-    "visit_update_failed": "Fehler beim Aktualisieren des Besuchs"
+    "visit_update_failed": "Fehler beim Aktualisieren des Besuchs",
+    "n_visits_other": "{count} Besuche",
+    "possible_duplicate": "Mögliches Duplikat",
+    "possible_duplicates": "Mögliche Duplikate",
+    "did_you_mean": "Meintest du {name}?",
+    "duplicate_check_hint": "Du hast bereits einen ähnlichen Ort. Öffne ihn oder erstelle trotzdem einen neuen Ort.",
+    "create_anyway": "Trotzdem erstellen",
+    "meters_away": "{distance} m entfernt",
+    "kilometers_away": "{distance} km entfernt",
+    "feet_away": "{distance} ft entfernt",
+    "miles_away": "{distance} mi entfernt",
+    "similar_name": "Ähnlicher Name",
+    "nearby_coordinates": "Koordinaten in der Nähe",
+    "similar_address": "Ähnliche Adresse",
+    "n_visits_one": "{count} Besuch"
   },
   "home": {
     "desc_1": "Entdecke, plane und erkunde mühelos",
