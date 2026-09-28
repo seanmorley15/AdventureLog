@@ -491,7 +491,10 @@
     "similar_name": "Ähnlicher Name",
     "nearby_coordinates": "Koordinaten in der Nähe",
     "similar_address": "Ähnliche Adresse",
-    "n_visits_one": "{count} Besuch"
+    "n_visits_one": "{count} Besuch",
+    "add_visit_instead": "Stattdessen einen Besuch hinzufügen",
+    "open_existing_location": "Öffne vorhandenen",
+    "checking_duplicates": "Prüfe auf Standorte die du bereits hinzugefügt hast…"
   },
   "home": {
     "desc_1": "Entdecke, plane und erkunde mühelos",
