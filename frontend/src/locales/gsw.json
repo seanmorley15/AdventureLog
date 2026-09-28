@@ -522,7 +522,11 @@
     "google_maps": "Google Maps",
     "google_maps_error": "Fehler bim uslese vode Beschriibig us Google Maps",
     "required_fields_hint": "Pflichtfelder sind miterem * markiert",
-    "activity_gpx_optional_hint": "Optional - e GPX Datei chan automatisch Pfad Details hinzuefüege."
+    "activity_gpx_optional_hint": "Optional - e GPX Datei chan automatisch Pfad Details hinzuefüege.",
+    "possible_duplicate": "Möglichs Duplikat",
+    "possible_duplicates": "Möglichi Duplikat",
+    "did_you_mean": "Hesch du {name} gmeint?",
+    "duplicate_check_hint": "Du hesch bereits sonen Ort. Mach ihn uf oder erstell en neue Ort."
   },
   "worldtravel": {
     "country_list": "Länderliste",
