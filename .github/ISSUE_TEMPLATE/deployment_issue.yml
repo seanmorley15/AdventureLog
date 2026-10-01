@@ -1,19 +1,50 @@
-name: Deployment Issue
-description: Request help deploying AdventureLog.
+name: Deployment / installer bug
+description: The installer, Docker setup, or deployment path is failing. For setup help, use Discord.
 labels:
   - deployment
+  - bug
+  - backlog
 body:
   - type: markdown
     attributes:
       value: |
-        GitHub issues are primarily for tracking bugs and feature requests.
-        For general deployment troubleshooting and faster community support, visit Discord: https://discord.gg/wRbQ9Egr8C
+        Use this form when the installer, Docker Compose stack, or documented deployment path is broken.
+
+        For “help me get it running” and general troubleshooting, join [Discord](https://discord.gg/wRbQ9Egr8C) instead — you will get faster community support there.
+
+        A fix pull request can be opened immediately and linked with `Closes #N`.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which install or deploy path failed?
+      options:
+        - Frontend
+        - Backend
+        - Auth
+        - Docker / Install
+        - Docs
+        - Security
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: deployment-description
     attributes:
-      label: Describe Your Issue
-      description: A clear and concise description of the deployment problem.
+      label: What Failed
+      description: A clear description of the deployment or installer failure.
       placeholder: Explain what is failing and when it happens.
+    validations:
+      required: true
+  - type: textarea
+    id: failing-command
+    attributes:
+      label: Failing Command or Step
+      description: The exact command, installer step, or Compose action that failed.
+      placeholder: |
+        curl -sSL https://get.adventurelog.app | bash
+        # or
+        docker compose up -d
     validations:
       required: true
   - type: textarea
@@ -29,15 +60,15 @@ body:
     id: logs
     attributes:
       label: Logs / Error Output
-      description: Include relevant service logs or command output.
+      description: Include relevant service logs or command output. Remove secrets.
       placeholder: Paste key logs here.
     validations:
-      required: false
+      required: true
   - type: input
     id: version
     attributes:
       label: AdventureLog Version
-      description: "To find the version, open the web app, click the 3-dot menu in the navbar, and select 'About'."
+      description: "Open the web app, click the 3-dot menu in the navbar, and select About — or the image tag you pulled."
       placeholder: v0.0.0
     validations:
       required: false
@@ -49,9 +80,18 @@ body:
     validations:
       required: false
   - type: checkboxes
+    id: can-pr
+    attributes:
+      label: Pull request
+      options:
+        - label: I can open a pull request for this fix.
+          required: false
+  - type: checkboxes
     id: terms
     attributes:
       label: Confirmation
       options:
         - label: I removed or obfuscated all sensitive data from this issue.
+          required: true
+        - label: This is a broken installer or deployment path, not a general setup question.
           required: true

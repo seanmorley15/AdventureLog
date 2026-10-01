@@ -1,8 +1,17 @@
+# AdventureLog Bot — contribution policy
+#
+# Publishes a required-friendly check named `contribution-policy`.
+# Maintainer action: add that check to the `development` branch ruleset
+# (or branch protection) so feature-lane failures block merge.
+# See CONTRIBUTING.md § Maintainer note: required status check.
+
 name: AdventureLog Bot
 
 on:
   pull_request_target:
-    types: [opened, edited, synchronize]
+    types: [opened, edited, synchronize, reopened]
+  issues:
+    types: [labeled, unlabeled, closed, reopened]
 
 jobs:
   enforce-ready:
@@ -10,104 +19,514 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
+      checks: write
     runs-on: ubuntu-latest
 
     steps:
-      - name: Validate linked issue
+      - name: Enforce contribution policy
         uses: actions/github-script@v7
         with:
           script: |
-            const pr = context.payload.pull_request;
-            const repoFullName = `${context.repo.owner}/${context.repo.repo}`;
+            const COMMENT_MARKER = "<!-- adventurelog-bot:policy -->";
+            const CHECK_NAME = "contribution-policy";
+            const EXEMPT_ACTORS = new Set(["seanmorley15", "dependabot[bot]", "dependabot"]);
+            const ALLOWED_ISSUE_LABELS = new Set(["ready", "in progress"]);
+            const STATUS_LABELS = new Set([
+              "backlog",
+              "needs discussion",
+              "approved",
+              "ready",
+              "in progress",
+              "in review",
+              "done"
+            ]);
+            const OWNER = context.repo.owner;
+            const REPO = context.repo.repo;
 
-            async function safeCreateComment(body) {
-              try {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  body
-                });
-                return true;
-              } catch (error) {
-                if (error.status === 403) {
-                  core.warning(`Unable to comment on PR #${pr.number}: ${error.message}`);
-                  return false;
+            function isFastLaneBody(body) {
+              const text = body || "";
+              const hasBug = /-\s*\[x\]\s*Bug fix/i.test(text);
+              const hasDocs = /-\s*\[x\]\s*Documentation update/i.test(text);
+              const hasFeature = /-\s*\[x\]\s*New feature/i.test(text);
+              return (hasBug || hasDocs) && !hasFeature;
+            }
+
+            function isDocsOrLocalePath(filename) {
+              if (!filename) return false;
+              if (filename.startsWith("documentation/")) return true;
+              if (filename.startsWith("frontend/src/locales/")) return true;
+              if (filename.endsWith(".md")) return true;
+              return false;
+            }
+
+            async function listChangedFiles(pullNumber) {
+              const files = await github.paginate(github.rest.pulls.listFiles, {
+                owner: OWNER,
+                repo: REPO,
+                pull_number: pullNumber,
+                per_page: 100
+              });
+              return files.map((file) => file.filename);
+            }
+
+            async function isDocsOnlyPr(pullNumber) {
+              const filenames = await listChangedFiles(pullNumber);
+              if (filenames.length === 0) return false;
+              return filenames.every(isDocsOrLocalePath);
+            }
+
+            function extractIssueNumbersFromBody(body) {
+              const text = body || "";
+              const numbers = new Set();
+              const keyword = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/gi;
+              let match;
+              while ((match = keyword.exec(text)) !== null) {
+                numbers.add(Number(match[1]));
+              }
+              return [...numbers];
+            }
+
+            async function getClosingIssueNumbers(pullNumber) {
+              const result = await github.graphql(`
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    pullRequest(number: $number) {
+                      closingIssuesReferences(first: 20) {
+                        nodes {
+                          number
+                        }
+                      }
+                    }
+                  }
                 }
-                throw error;
+              `, {
+                owner: OWNER,
+                repo: REPO,
+                number: pullNumber
+              });
+
+              return (result.repository?.pullRequest?.closingIssuesReferences?.nodes || [])
+                .map((node) => node.number)
+                .filter(Boolean);
+            }
+
+            async function collectLinkedIssueNumbers(pr) {
+              const fromBody = extractIssueNumbersFromBody(pr.body);
+              const fromGraph = await getClosingIssueNumbers(pr.number);
+              return [...new Set([...fromBody, ...fromGraph])];
+            }
+
+            async function ensureLabel(name, color, description) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: OWNER,
+                  repo: REPO,
+                  name
+                });
+              } catch (error) {
+                if (error.status !== 404) throw error;
+                await github.rest.issues.createLabel({
+                  owner: OWNER,
+                  repo: REPO,
+                  name,
+                  color,
+                  description
+                });
               }
             }
 
-            async function safeClosePr() {
-              try {
-                await github.rest.pulls.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: pr.number,
-                  state: "closed"
-                });
-                return true;
-              } catch (error) {
-                if (error.status === 403) {
-                  core.warning(`Unable to close PR #${pr.number}: ${error.message}`);
-                  return false;
+            async function setPrLabels(prNumber, currentLabels, { needsIssue, needsDiscussion }) {
+              const names = currentLabels.map((label) =>
+                typeof label === "string" ? label : label.name
+              );
+
+              await ensureLabel("needs-issue", "D93F0B", "PR needs a linked Ready issue");
+              await ensureLabel("needs-discussion", "FBCA04", "Linked issue is not Ready yet");
+
+              const desired = new Set(names);
+              desired.delete("needs-issue");
+              desired.delete("needs-discussion");
+              if (needsIssue) desired.add("needs-issue");
+              if (needsDiscussion) desired.add("needs-discussion");
+
+              const next = [...desired];
+              const same =
+                next.length === names.length &&
+                next.every((name) => names.includes(name));
+              if (same) return;
+
+              await github.rest.issues.setLabels({
+                owner: OWNER,
+                repo: REPO,
+                issue_number: prNumber,
+                labels: next
+              });
+            }
+
+            async function addInProgressToIssues(issueNumbers) {
+              for (const issueNumber of issueNumbers) {
+                try {
+                  const { data: issue } = await github.rest.issues.get({
+                    owner: OWNER,
+                    repo: REPO,
+                    issue_number: issueNumber
+                  });
+                  if (issue.pull_request) continue;
+                  const labels = issue.labels.map((label) => label.name);
+                  if (labels.includes("in progress")) continue;
+                  await github.rest.issues.addLabels({
+                    owner: OWNER,
+                    repo: REPO,
+                    issue_number: issueNumber,
+                    labels: ["in progress"]
+                  });
+                } catch (error) {
+                  core.warning(`Unable to label issue #${issueNumber}: ${error.message}`);
                 }
-                throw error;
               }
             }
 
-            async function safeCommentAndClose(message) {
-              await safeCreateComment(message);
-              await safeClosePr();
+            async function findPolicyComment(prNumber) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner: OWNER,
+                repo: REPO,
+                issue_number: prNumber,
+                per_page: 100
+              });
+              return comments.find((comment) =>
+                (comment.body || "").includes(COMMENT_MARKER)
+              );
             }
 
-            // Ignore PRs created by the maintainer to avoid blocking their work, as well as dependabot
-            if (context.actor === "seanmorley15" || context.actor === "dependabot") {
-              console.log("Skipping maintainer or dependabot PR");
-              return;
+            async function upsertPolicyComment(prNumber, body) {
+              const fullBody = `${COMMENT_MARKER}\n${body}`;
+              const existing = await findPolicyComment(prNumber);
+              if (existing) {
+                if (existing.body === fullBody) return;
+                await github.rest.issues.updateComment({
+                  owner: OWNER,
+                  repo: REPO,
+                  comment_id: existing.id,
+                  body: fullBody
+                });
+                return;
+              }
+              await github.rest.issues.createComment({
+                owner: OWNER,
+                repo: REPO,
+                issue_number: prNumber,
+                body: fullBody
+              });
             }
 
-            // Ignore PRs created before enforcement date
-            const cutoff = new Date("2026-03-16T00:00:00Z");
-            const created = new Date(pr.created_at);
-
-            if (created < cutoff) {
-              console.log("Skipping PR created before enforcement date");
-              return;
+            async function clearPolicyCommentOnPass(prNumber) {
+              const existing = await findPolicyComment(prNumber);
+              if (!existing) return;
+              const allClear =
+                "This pull request now meets the contribution check. Thanks for updating it — a maintainer can review it as usual.";
+              const fullBody = `${COMMENT_MARKER}\n${allClear}`;
+              if (existing.body === fullBody) return;
+              await github.rest.issues.updateComment({
+                owner: OWNER,
+                repo: REPO,
+                comment_id: existing.id,
+                body: fullBody
+              });
             }
 
-            const body = pr.body || "";
-            const match = body.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i);
-
-            if (!match) {
-              await safeCommentAndClose("🤖 **AdventureLog Bot**\n\n🚫 This PR was automatically closed because it does not reference an issue.\n\nPlease link an issue using `Closes #issue-number`.");
-
-              return;
+            async function publishCheck(headSha, conclusion, title, summary) {
+              try {
+                await github.rest.checks.create({
+                  owner: OWNER,
+                  repo: REPO,
+                  name: CHECK_NAME,
+                  head_sha: headSha,
+                  status: "completed",
+                  conclusion,
+                  output: {
+                    title,
+                    summary
+                  }
+                });
+              } catch (error) {
+                core.warning(`Unable to publish check: ${error.message}`);
+              }
             }
 
-            const issueNumber = Number(match[1]);
+            function statusLabelNames(labels) {
+              return labels
+                .map((label) => label.name)
+                .filter((name) => STATUS_LABELS.has(name.toLowerCase()));
+            }
 
-            let issue;
+            const contributingUrl = `https://github.com/${OWNER}/${REPO}/blob/HEAD/CONTRIBUTING.md#how-contributions-work`;
+            const contributingFooter =
+              `If this is a bug fix or a documentation change, check **Bug fix** or **Documentation update** in the pull request template. Those do not need a Ready issue. Details are in [CONTRIBUTING.md](${contributingUrl}).`;
 
-            try {
-              ({ data: issue } = await github.rest.issues.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber
-              }));
-            } catch (error) {
-              if (error.status === 404) {
-                await safeCommentAndClose(`🤖 **AdventureLog Bot**\n\n🚫 This PR was automatically closed because the referenced issue #${issueNumber} was not found.\n\nPlease link a valid issue in this repository using \`Closes #issue-number\`.`);
+            function buildNoIssueComment() {
+              return [
+                "Thanks for opening this pull request. It is still open, and this note is the only thing in the way of merge.",
+                "",
+                "**What is blocking merge:** this looks like a feature or other behavior change, and the description does not link an issue yet.",
+                "",
+                "**What to do:** add `Closes #123` for an open issue in this repository. Merge stays blocked until that issue is labeled `ready` or `in progress`. Keeping the pull request as a draft is fine while that discussion happens.",
+                "",
+                contributingFooter
+              ].join("\n");
+            }
 
+            function buildInvalidIssueComment(details) {
+              return [
+                "Thanks for opening this pull request. It is still open, and this note is the only thing in the way of merge.",
+                "",
+                `**What is blocking merge:** ${details}`,
+                "",
+                "**What to do:** replace the link with `Closes #123` for an open issue in this repository. Merge stays blocked until that issue is labeled `ready` or `in progress`.",
+                "",
+                contributingFooter
+              ].join("\n");
+            }
+
+            function buildUnapprovedComment(details) {
+              return [
+                "Thanks for opening this pull request. It is still open, and you do not need to open a new one.",
+                "",
+                `**What is blocking merge:** ${details} Feature work can be discussed on this pull request now. It merges once that issue is labeled \`ready\` or \`in progress\`. (\`approved\` means it will be done later, not open for contributors yet.)`,
+                "",
+                "**What to do:** nothing, unless you want to add context on the issue. A maintainer adds the label when the direction fits the project. A draft pull request is a good way to hold the work until then.",
+                "",
+                contributingFooter
+              ].join("\n");
+            }
+
+            async function evaluateLinkedIssues(issueNumbers) {
+              if (issueNumbers.length === 0) {
+                return {
+                  ok: false,
+                  needsIssue: true,
+                  needsDiscussion: false,
+                  comment: buildNoIssueComment(),
+                  checkTitle: "Link a Ready issue",
+                  checkSummary:
+                    "Feature and behavior-change pull requests need `Closes #123` on an open issue labeled ready or in progress. Bug fixes and documentation updates do not."
+                };
+              }
+
+              const invalidParts = [];
+              const unapprovedParts = [];
+              const validNumbers = [];
+
+              for (const issueNumber of issueNumbers) {
+                let issue;
+                try {
+                  ({ data: issue } = await github.rest.issues.get({
+                    owner: OWNER,
+                    repo: REPO,
+                    issue_number: issueNumber
+                  }));
+                } catch (error) {
+                  if (error.status === 404) {
+                    invalidParts.push(`#${issueNumber} was not found in this repository`);
+                    continue;
+                  }
+                  throw error;
+                }
+
+                if (issue.pull_request) {
+                  invalidParts.push(`#${issueNumber} is a pull request, not an issue`);
+                  continue;
+                }
+
+                if (issue.state !== "open") {
+                  invalidParts.push(`#${issueNumber} is already closed`);
+                  continue;
+                }
+
+                const labels = issue.labels.map((label) => label.name);
+                const allowed = labels.some((name) =>
+                  ALLOWED_ISSUE_LABELS.has(name.toLowerCase())
+                );
+                if (!allowed) {
+                  const status = statusLabelNames(issue.labels);
+                  const statusText =
+                    status.length > 0
+                      ? status.map((name) => `\`${name}\``).join(", ")
+                      : "no status label";
+                  unapprovedParts.push(`#${issueNumber} is open and labeled ${statusText}`);
+                  continue;
+                }
+
+                validNumbers.push(issueNumber);
+              }
+
+              if (invalidParts.length > 0) {
+                return {
+                  ok: false,
+                  needsIssue: true,
+                  needsDiscussion: false,
+                  comment: buildInvalidIssueComment(`${invalidParts.join("; ")}.`),
+                  checkTitle: "Fix the linked issue",
+                  checkSummary: `${invalidParts.join("; ")}. Use Closes #123 for an open issue labeled ready or in progress.`
+                };
+              }
+
+              if (unapprovedParts.length > 0) {
+                return {
+                  ok: false,
+                  needsIssue: false,
+                  needsDiscussion: true,
+                  comment: buildUnapprovedComment(`${unapprovedParts.join("; ")}.`),
+                  checkTitle: "Waiting for issue approval",
+                  checkSummary: `${unapprovedParts.join("; ")}. Merge opens once a maintainer adds ready or in progress.`
+                };
+              }
+
+              return {
+                ok: true,
+                needsIssue: false,
+                needsDiscussion: false,
+                validNumbers,
+                checkTitle: "Contribution policy passed",
+                checkSummary:
+                  "Linked issue is ready or in progress. A maintainer can review this pull request."
+              };
+            }
+
+            async function evaluatePullRequest(pr) {
+              const actor = pr.user?.login || context.actor;
+              if (EXEMPT_ACTORS.has(actor) || EXEMPT_ACTORS.has(context.actor)) {
+                await publishCheck(
+                  pr.head.sha,
+                  "success",
+                  "Contribution policy skipped",
+                  "Maintainer and Dependabot pull requests are exempt from the contribution check."
+                );
+                await setPrLabels(pr.number, pr.labels || [], {
+                  needsIssue: false,
+                  needsDiscussion: false
+                });
                 return;
               }
 
-              throw error;
+              const docsOnly = await isDocsOnlyPr(pr.number);
+              const fastLaneBody = isFastLaneBody(pr.body);
+
+              if (docsOnly || fastLaneBody) {
+                await publishCheck(
+                  pr.head.sha,
+                  "success",
+                  "Contribution policy passed",
+                  docsOnly
+                    ? "Documentation, locale, or markdown-only changes do not need a Ready issue."
+                    : "Bug fix and documentation pull requests do not need a Ready issue."
+                );
+                await setPrLabels(pr.number, pr.labels || [], {
+                  needsIssue: false,
+                  needsDiscussion: false
+                });
+                await clearPolicyCommentOnPass(pr.number);
+                return;
+              }
+
+              const linked = await collectLinkedIssueNumbers(pr);
+              const result = await evaluateLinkedIssues(linked);
+
+              await publishCheck(
+                pr.head.sha,
+                result.ok ? "success" : "failure",
+                result.checkTitle,
+                result.checkSummary
+              );
+
+              await setPrLabels(pr.number, pr.labels || [], {
+                needsIssue: !!result.needsIssue,
+                needsDiscussion: !!result.needsDiscussion
+              });
+
+              if (result.ok) {
+                await clearPolicyCommentOnPass(pr.number);
+                if (result.validNumbers?.length) {
+                  await addInProgressToIssues(result.validNumbers);
+                }
+                return;
+              }
+
+              await upsertPolicyComment(pr.number, result.comment);
             }
 
-            const labels = issue.labels.map(l => l.name);
+            async function findPullRequestsForIssue(issueNumber) {
+              const q = `repo:${OWNER}/${REPO} is:pr is:open ${issueNumber} in:body`;
+              const { data } = await github.rest.search.issuesAndPullRequests({
+                q,
+                per_page: 30
+              });
 
-            if (!labels.includes("ready") && !labels.includes("in progress")) {
-              await safeCommentAndClose("🤖 **AdventureLog Bot**\n\n🚫 This PR was automatically closed.\n\nPull requests may only be opened for issues labeled **ready**.");
+              const numbers = new Set(
+                (data.items || [])
+                  .filter((item) => item.pull_request)
+                  .map((item) => item.number)
+              );
 
+              // Also include PRs that link via GraphQL closing references.
+              const linked = await github.graphql(`
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    issue(number: $number) {
+                      timelineItems(itemTypes: [CROSS_REFERENCED_EVENT], last: 50) {
+                        nodes {
+                          ... on CrossReferencedEvent {
+                            source {
+                              ... on PullRequest {
+                                number
+                                state
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `, {
+                owner: OWNER,
+                repo: REPO,
+                number: issueNumber
+              });
+
+              for (const node of linked.repository?.issue?.timelineItems?.nodes || []) {
+                const source = node.source;
+                if (source?.number && source.state === "OPEN") {
+                  numbers.add(source.number);
+                }
+              }
+
+              const pullRequests = [];
+              for (const number of numbers) {
+                const { data: pr } = await github.rest.pulls.get({
+                  owner: OWNER,
+                  repo: REPO,
+                  pull_number: number
+                });
+                if (pr.state === "open") pullRequests.push(pr);
+              }
+              return pullRequests;
+            }
+
+            if (context.eventName === "pull_request_target") {
+              await evaluatePullRequest(context.payload.pull_request);
+              return;
+            }
+
+            if (context.eventName === "issues") {
+              const issue = context.payload.issue;
+              if (issue.pull_request) {
+                console.log("Skipping pull request issue event");
+                return;
+              }
+
+              const pullRequests = await findPullRequestsForIssue(issue.number);
+              console.log(`Re-evaluating ${pullRequests.length} open PR(s) for issue #${issue.number}`);
+              for (const pr of pullRequests) {
+                await evaluatePullRequest(pr);
+              }
             }

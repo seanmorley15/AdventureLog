@@ -7,21 +7,27 @@ Our goal is to keep the project **open, welcoming, and organized** so that contr
 
 This document explains how to contribute and the workflow we use.
 
+Please also read our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ---
 
 # How Contributions Work
 
-AdventureLog uses a structured workflow to keep development organized and to make it easier for contributors to collaborate.
-
-All development follows this process:
+AdventureLog uses two contribution lanes so small fixes land quickly while larger changes stay aligned with the roadmap.
 
 ```
-Issue → Discussion → Approved → Ready → Development → Review → Merge
+Bug fix / docs / translations  →  Pull request  →  Review  →  Merge
+
+Feature / behavior change  →  Issue  →  Ready  →  Pull request  →  Review  →  Merge
 ```
+
+You can open a feature pull request early (including as a draft). Merge waits until the linked issue is labeled `ready` or `in progress`.
 
 ### 1. Open or Find an Issue
 
-Before starting work, **please open an issue or find an existing one**.
+**Bug fixes, documentation, and translations** do not require an issue. Opening one is still useful for tracking, and you can link it with `Closes #N`.
+
+**Features and other behavior changes** should have an issue so maintainers can discuss scope before merge. Feel free to open the issue and a draft pull request together.
 
 Issues allow us to:
 
@@ -30,11 +36,9 @@ Issues allow us to:
 - prevent duplicate efforts
 - maintain a clear roadmap for the project
 
-If you have an idea for a new feature or improvement, feel free to open an issue describing it.
-
 ---
 
-### 2. Wait for Approval / Ready Status
+### 2. Issue Status Labels
 
 Issues move through several stages:
 
@@ -45,46 +49,45 @@ An idea or request that has not yet been reviewed.
 The idea requires maintainer feedback or design discussion.
 
 **Approved**
-The concept has been accepted but may require planning.
+The direction has been accepted and will be done, but not right now. Contributors should not start work yet.
 
 **Ready**
-The issue is ready for contributors to begin working on it.
+The issue is open for contributors. A feature pull request linked to this issue can merge.
 
-⚠️ **Pull Requests should only be opened for issues marked `Ready`.**
-
-This helps ensure contributors work on changes that are aligned with the project’s roadmap.
+**In progress**
+Someone is actively working on it (often set automatically when a qualifying pull request opens).
 
 ---
 
-### 3. Start Working on the Issue
+### 3. Start Working
 
-Once an issue is marked **Ready**, you can begin working on it.
+Comment on larger issues to let others know you are taking them.
 
-If you plan to work on a larger issue, feel free to comment on the issue to let others know.
-
-This helps prevent duplicate work.
+For features, you can start coding before the issue is ready. Keep the pull request as a draft until a maintainer adds `ready`.
 
 ---
 
 ### 4. Create a Pull Request
 
-When your changes are ready, open a pull request targeting the **`development` branch**.
+Open pull requests against the **`development`** branch.
 
-Your pull request must include a reference to the issue it resolves:
+**Fast lane** — check **Bug fix** or **Documentation update** in the pull request template. These do not need a Ready issue. Documentation-only and locale-only changes are also detected automatically.
+
+**Feature lane** — check **New feature**, **Refactor**, **Performance**, or **Other**, and link an issue:
 
 ```
-Closes #issue-number
+Closes #123
 ```
 
-This allows the project automation to track progress and update the project board.
-
-Example PR description:
+Example:
 
 ```
 Closes #123
 
 Adds support for exporting trips as GPX files.
 ```
+
+The contribution check (`contribution-policy`) stays on the pull request. It does not close the PR. When the linked issue is labeled `ready` or `in progress`, the check updates automatically.
 
 ---
 
@@ -105,7 +108,7 @@ Please be open to feedback — reviews are intended to **improve the project and
 
 ### 6. Merge
 
-After approval, your pull request will be merged into the **`development` branch**.
+After approval, your pull request will be merged into the **`development`** branch.
 
 From there, it will eventually be included in the next release.
 
@@ -163,12 +166,12 @@ If your changes affect:
 please update the documentation in the:
 
 ```
-/docs
+documentation/
 ```
 
 folder accordingly.
 
-Keeping documentation accurate is extremely important.
+Keeping documentation accurate is extremely important. Documentation-only pull requests do not need a Ready issue.
 
 ---
 
@@ -187,72 +190,12 @@ These are great starting points for new contributors.
 
 # Code of Conduct
 
-## Our Pledge
+Everyone participating in AdventureLog is expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-At AdventureLog, we are committed to creating a community that fosters adventure, exploration, and innovation.
-
-We welcome contributors of all experience levels and backgrounds. Everyone should feel comfortable participating and sharing ideas.
+Reports can be sent confidentially to `contact@adventurelog.app`.
 
 ---
 
-## Our Standards
+# Maintainer note: required status check
 
-To maintain a positive environment, we encourage the following behaviors:
-
-- **Inclusivity** — Use welcoming and inclusive language.
-- **Respect** — Respect differing viewpoints and experiences.
-- **Constructive Feedback** — Provide helpful and actionable feedback.
-- **Collaboration** — Work together to improve the project.
-
-Examples of unacceptable behavior include:
-
-- Personal attacks or harassment
-- Discriminatory language
-- Spamming or promotional misuse of project spaces
-- Sharing private information without consent
-
----
-
-## Maintainer Responsibilities
-
-The AdventureLog maintainers are responsible for enforcing this Code of Conduct and maintaining a respectful community.
-
-If necessary, maintainers may:
-
-- moderate comments
-- close pull requests
-- remove contributions
-- restrict participation
-
-These actions will only be taken when necessary to protect the community and the project.
-
----
-
-## Scope
-
-This Code of Conduct applies to all spaces related to AdventureLog, including:
-
-- GitHub repositories
-- GitHub Discussions
-- documentation
-- social media
-- community spaces
-
----
-
-## Reporting Issues
-
-If you experience or witness unacceptable behavior, please contact the maintainers at:
-
-```
-contact@adventurelog.app
-```
-
-All reports will be handled confidentially.
-
----
-
-## Attribution
-
-This Code of Conduct is inspired by the
-Contributor Covenant (v1.4) and adapted for the AdventureLog community.
+To enforce the feature lane on merge, the GitHub ruleset (or branch protection) for **`development`** must require the status check named **`contribution-policy`**. Without that setting, a failing check is visible on the pull request but does not block merge. Maintainer and Dependabot pull requests remain exempt in the workflow.

@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Documentation
+    url: https://adventurelog.app
+    about: Install guides, configuration, and usage docs for AdventureLog.
   - name: Discord Community
     url: https://discord.gg/wRbQ9Egr8C
-    about: For general deployment troubleshooting and community support.
+    about: Setup help, deployment questions, and community support.
+  - name: Security Policy
+    url: https://github.com/seanmorley15/AdventureLog/blob/HEAD/SECURITY.md
+    about: Report vulnerabilities privately via GitHub or email. Do not open a public issue.
