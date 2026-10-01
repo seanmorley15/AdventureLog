@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import type { Collection, Location, User } from '$lib/types';
 	import { t } from 'svelte-i18n';
 	import { normalizeBasemapType } from '$lib';
@@ -211,6 +211,11 @@
 		// Re-sync whenever the parent replaces locationToEdit (including same-id full fetch)
 		if (locationToEdit === previousLocationToEdit) return;
 		previousLocationToEdit = locationToEdit;
+
+		// The location details page binds `location` and `locationToEdit` to the same
+		// object. Copying it would replace that object, change this prop, and run this
+		// effect again until Svelte throws effect_update_depth_exceeded.
+		if (untrack(() => location) === locationToEdit) return;
 
 		location = {
 			id: locationToEdit?.id || '',

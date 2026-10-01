@@ -77,6 +77,7 @@
 
 	let notFound: boolean = $state(false);
 	let isEditModalOpen: boolean = $state(false);
+	let locationDraft: Location | undefined = $state();
 	let isSocialShareModalOpen: boolean = $state(false);
 	let adventure_images: { image: string; adventure: Location | null }[] = [];
 	let modalInitialIndex: number = $state(0);
@@ -250,6 +251,31 @@
 		}
 	}
 
+	function closeEditModal() {
+		if (adventure && locationDraft?.id === adventure.id) {
+			adventure = {
+				...adventure,
+				...locationDraft,
+				city: adventure.city,
+				region: adventure.region,
+				country: adventure.country,
+				created_at: adventure.created_at,
+				updated_at: adventure.updated_at,
+				rating:
+					typeof locationDraft.rating === 'number' && Number.isFinite(locationDraft.rating)
+						? locationDraft.rating
+						: adventure.rating,
+				latitude: Number.isFinite(locationDraft.latitude)
+					? locationDraft.latitude
+					: adventure.latitude,
+				longitude: Number.isFinite(locationDraft.longitude)
+					? locationDraft.longitude
+					: adventure.longitude
+			};
+		}
+		isEditModalOpen = false;
+	}
+
 	function closeImageModal() {
 		isImageModalOpen = false;
 	}
@@ -327,10 +353,10 @@
 
 {#if isEditModalOpen}
 	<NewLocationModal
-		on:close={() => (isEditModalOpen = false)}
+		on:close={closeEditModal}
 		user={data.user}
 		locationToEdit={adventure}
-		bind:location={adventure}
+		bind:location={locationDraft}
 	/>
 {/if}
 
