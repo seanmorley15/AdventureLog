@@ -52,7 +52,8 @@ class GlobalSearchAPITestCase(APITestCase):
         self.lodging = Lodging.objects.create(
             user=self.owner,
             name='Left Bank Hotel',
-            description='Near the Seine',
+            description='Near the Seine in Paris',
+            location='Paris, France',
             collection=self.collection,
         )
         self.checklist = Checklist.objects.create(

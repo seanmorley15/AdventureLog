@@ -1,5 +1,6 @@
 import os
 import uuid
+from django.conf import settings
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.utils.deconstruct import deconstructible
@@ -232,8 +233,8 @@ class Location(models.Model):
                 # For now, we'll re-raise the error
                 raise e
 
-        # ⛔ Skip threading if called from geocode background thread
-        if _skip_geocode:
+        # Skip threading when called from the geocode worker, and during tests.
+        if _skip_geocode or getattr(settings, 'DISABLE_BACKGROUND_GEOCODE', False):
             return result
 
         if has_coordinates(self.coordinates):

@@ -12,15 +12,23 @@
 	import CaloriesIcon from '~icons/mdi/fire';
 	import LocationIcon from '~icons/mdi/map-marker';
 	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { getDistance, getElevation } from '$lib';
+	import { page } from '$app/state';
 
-	export let activity: Activity;
-	export let trails: Trail[];
-	export let visit: Visit | TransportationVisit;
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let readOnly: boolean = false;
+	interface Props {
+		activity: Activity;
+		trails: Trail[];
+		visit: Visit | TransportationVisit;
+		measurementSystem?: 'metric' | 'imperial';
+		readOnly?: boolean;
+	}
 
-	$: trail = activity.trail ? trails.find((t) => t.id === activity.trail) : null;
+	let { activity, trails, visit, measurementSystem = 'metric', readOnly = false }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
+
+	let trail = $derived(activity.trail ? trails.find((t) => t.id === activity.trail) : null);
 
 	function deleteActivity(visitId: string, activityId: string) {
 		dispatch('delete', { visitId, activityId });
@@ -56,7 +64,7 @@
 	<div class="flex items-start justify-between mb-3">
 		<div class="flex-1 min-w-0">
 			<div class="flex items-center gap-2 mb-2">
-				<RunFastIcon class="w-4 h-4 text-success flex-shrink-0" />
+				<RunFastIcon class="w-4 h-4 text-success shrink-0" />
 				<h5 class="font-semibold text-base truncate">{activity.name}</h5>
 				<div class="flex gap-1">
 					{#if activity.sport_type}
@@ -70,7 +78,7 @@
 			<button
 				class="btn btn-error btn-xs tooltip tooltip-top ml-2"
 				data-tip="Delete Activity"
-				on:click={() => deleteActivity(visit.id, activity.id)}
+				onclick={() => deleteActivity(visit.id, activity.id)}
 			>
 				<TrashIcon class="w-3 h-3" />
 			</button>
@@ -80,7 +88,7 @@
 	<!-- Main Stats Grid -->
 	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
 		{#if activity.distance}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-primary">
 					{getDistance(measurementSystem, activity.distance)}
 				</div>
@@ -91,7 +99,7 @@
 		{/if}
 
 		{#if activity.moving_time}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-secondary">
 					{formatDuration(activity.moving_time)}
 				</div>
@@ -100,7 +108,7 @@
 		{/if}
 
 		{#if activity.elevation_gain}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-success">
 					{getElevation(measurementSystem, activity.elevation_gain)}
 				</div>
@@ -111,7 +119,7 @@
 		{/if}
 
 		{#if activity.average_speed}
-			<div class="bg-base-100/50 p-2 rounded text-center">
+			<div class="bg-base-100/50 p-2 rounded-sm text-center">
 				<div class="text-lg font-bold text-accent">
 					{formatSpeed(activity.average_speed)}
 				</div>
@@ -208,7 +216,8 @@
 				<div>
 					Started: {formatDateInTimezone(
 						activity.start_date,
-						activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+						activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+						dateFormat
 					)}
 				</div>
 				{#if activity.timezone}

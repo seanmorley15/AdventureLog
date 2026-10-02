@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public';
 import inspirationalQuotes from './json/quotes.json';
 import randomBackgrounds from './json/backgrounds.json';
 
@@ -646,24 +647,31 @@ export function debounce(func: Function, timeout: number) {
 	};
 }
 
-export function getIsDarkMode() {
-	const theme = document.documentElement.getAttribute('data-theme');
+const DARK_THEME_NAMES = new Set([
+	'dark',
+	'night',
+	'aestheticDark',
+	'northernLights',
+	'forest',
+	'dim'
+]);
 
-	if (theme) {
-		const isDark =
-			theme === 'dark' ||
-			theme === 'night' ||
-			theme === 'aestheticDark' ||
-			theme === 'northernLights' ||
-			theme === 'forest' ||
-			theme === 'dim';
-		return isDark;
+export function getIsDarkMode() {
+	if (typeof document === 'undefined') return false;
+
+	try {
+		const scheme = getComputedStyle(document.documentElement).colorScheme.trim();
+		if (scheme === 'dark') return true;
+		if (scheme === 'light') return false;
+	} catch {
+		// ignore missing computed styles during early boot
 	}
 
-	// Fallback to browser preference if no theme cookie is set
+	const theme = document.documentElement.getAttribute('data-theme');
+	if (theme) return DARK_THEME_NAMES.has(theme);
+
 	if (typeof window !== 'undefined' && window.matchMedia) {
-		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-		return prefersDark;
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
 	}
 
 	return false;
@@ -680,7 +688,9 @@ export function getBasemapUrl(type = 'default'): any {
 				sources: {
 					'raster-tiles': {
 						type: 'raster',
-						tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'],
+						tiles: [
+							cartoUrl('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png')
+						],
 						tileSize: 256,
 						attribution: '© OpenStreetMap contributors, © CARTO'
 					},
@@ -890,32 +900,32 @@ export function getBasemapUrl(type = 'default'): any {
 
 		case 'carto-light':
 			return getXYZStyle(
-				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+				cartoUrl('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png'),
 				'© OpenStreetMap contributors, © CartoDB'
 			);
 
 		case 'carto-dark':
 			return getXYZStyle(
-				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+				cartoUrl('https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png'),
 				'© OpenStreetMap contributors, © CartoDB'
 			);
 
 		case 'carto-positron':
 			return getXYZStyle(
-				'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+				cartoUrl('https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'),
 				'© OpenStreetMap contributors, © CARTO'
 			);
 
 		case 'carto-positron-labels':
 			return getXYZStyle(
-				'https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+				cartoUrl('https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'),
 				'© OpenStreetMap contributors, © CARTO',
-				'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
+				cartoUrl('https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png')
 			);
 
 		case 'carto-voyager':
 			return getXYZStyle(
-				'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+				cartoUrl('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'),
 				'© OpenStreetMap contributors, © CARTO'
 			);
 
@@ -970,9 +980,14 @@ export function getBasemapUrl(type = 'default'): any {
 
 		default:
 			return getIsDarkMode()
-				? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
-				: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+				? cartoUrl('https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json')
+				: cartoUrl('https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json');
 	}
+}
+
+function cartoUrl(url: string): string {
+	const key = env.PUBLIC_CARTO_BASEMAP_API_KEY;
+	return key ? `${url}?key=${encodeURIComponent(key)}` : url;
 }
 
 // Helper function for XYZ tile styles (updated to handle arrays and remove {s} placeholders)

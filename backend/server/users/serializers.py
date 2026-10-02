@@ -1,38 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-
+from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from adventures.models import Collection, CollectionInvite
+from main.utils import build_media_url
+from .models import CustomUser, APIKey
 
 User = get_user_model()
-
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
-
-
-class ChangeEmailSerializer(serializers.Serializer):
-    new_email = serializers.EmailField(required=True)
-
-    def validate_new_email(self, value):
-        user = self.context['request'].user
-        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
-            raise serializers.ValidationError("This email is already in use.")
-        return value
-    
-
-
-
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
 UserModel = get_user_model()
-# from dj_rest_auth.serializers import UserDetailsSerializer
-from .models import CustomUser
 
-from rest_framework import serializers
-from django.conf import settings
-from main.utils import build_media_url
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
@@ -70,6 +46,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('measurement_system')
         if hasattr(UserModel, 'default_currency'):
             extra_fields.append('default_currency')
+        if hasattr(UserModel, 'date_format'):
+            extra_fields.append('date_format')
         if hasattr(UserModel, 'map_style'):
             extra_fields.append('map_style')
 
@@ -170,9 +148,6 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         return representation
 
 
-from .models import APIKey
-
-
 class APIKeySerializer(serializers.ModelSerializer):
     """
     Read serializer for APIKey – never exposes the key_hash or the raw token.
@@ -190,3 +165,30 @@ class APIKeyCreateSerializer(serializers.Serializer):
     """Write serializer – only accepts a ``name`` for the new key."""
 
     name = serializers.CharField(max_length=100, required=True)
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    """Validates account-deletion confirmation and optional password re-auth."""
+
+    confirmation = serializers.CharField(required=True)
+    password = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        confirmation = attrs.get("confirmation", "").strip()
+
+        if confirmation != user.username:
+            raise serializers.ValidationError(
+                {"confirmation": "Type your username exactly to confirm account deletion."}
+            )
+
+        if user.has_usable_password() and not user.disable_password:
+            password = attrs.get("password", "")
+            if not password:
+                raise serializers.ValidationError(
+                    {"password": "Password is required to delete your account."}
+                )
+            if not user.check_password(password):
+                raise serializers.ValidationError({"password": "Incorrect password."})
+
+        return attrs

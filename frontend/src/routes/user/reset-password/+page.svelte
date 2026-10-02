@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
 </script>
 
@@ -9,33 +9,31 @@
 
 	<div class="w-full max-w-md p-6 shadow-lg rounded-lg bg-base-200">
 		<form method="post" action="?/forgotPassword" class="flex flex-col space-y-4" use:enhance>
-			<div class="form-control">
-				<label for="email" class="label">
-					<span class="label-text">{$t('auth.email')}</span>
-				</label>
+			<div class="flex flex-col">
+				<label class="field-label" for="email">{$t('auth.email')}</label>
 				<input
 					name="email"
 					type="email"
 					id="email"
 					placeholder="Enter your email"
-					class="input input-bordered w-full"
+					class="input w-full"
 					required
 				/>
 			</div>
 
-			<div class="form-control mt-4">
+			<div class="flex flex-col mt-4">
 				<button type="submit" class="btn btn-primary w-full">
 					{$t('settings.reset_password')}
 				</button>
 			</div>
 
-			{#if $page.form?.message}
+			{#if page.form?.message}
 				<div class="mt-4 text-center text-error">
-					{$t(`settings.${$page.form?.message}`)}
+					{$t(page.form.message)}
 				</div>
 			{/if}
 
-			{#if $page.form?.success}
+			{#if page.form?.success}
 				<div class="mt-4 text-center text-success">
 					{$t('settings.possible_reset')}
 				</div>

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -20,43 +22,62 @@
 	import CloseIcon from '~icons/mdi/close';
 	import { addToast } from '$lib/toasts';
 	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
-	export let data: any;
-	console.log('Collections page data:', data);
+	interface Props {
+		data: any;
+	}
 
-	let collections: SlimCollection[] = data.props.adventures || [];
-	let sharedCollections: SlimCollection[] = data.props.sharedCollections || [];
-	let archivedCollections: SlimCollection[] = data.props.archivedCollections || [];
+	let { data }: Props = $props();
 
-	let newType: string = '';
+	const dateFormat = $derived(dateFormatFromUser(data.user));
+
+	let collections: SlimCollection[] = $state<SlimCollection[]>([]);
+	let sharedCollections: SlimCollection[] = $state<SlimCollection[]>([]);
+	let archivedCollections: SlimCollection[] = $state<SlimCollection[]>([]);
+
+	let newType: string = $state('');
 	let resultsPerPage: number = 25;
-	let isShowingCollectionModal: boolean = false;
-	let activeView: 'owned' | 'shared' | 'archived' | 'invites' = 'owned';
+	let isShowingCollectionModal: boolean = $state(false);
+	let activeView: 'owned' | 'shared' | 'archived' | 'invites' = $state('owned');
 
-	let next: string | null = data.props.next || null;
-	let previous: string | null = data.props.previous || null;
-	let count = data.props.count || 0;
-	let totalPages = Math.ceil(count / resultsPerPage);
-	let currentPage: number = data.props.currentPage || 1;
-	let orderBy = data.props.order_by || 'updated_at';
-	let orderDirection = data.props.order_direction || 'asc';
-	let statusFilter = data.props.status || '';
+	let next: string | null = $derived(data.props.next || null);
+	let previous: string | null = $derived(data.props.previous || null);
+	let count = $state(0);
+	let totalPages = $derived(Math.ceil(count / resultsPerPage));
+	let currentPage: number = $state(1);
+	let orderBy = $state('updated_at');
+	let orderDirection = $state('asc');
+	let statusFilter = $state('');
 
-	let invites: CollectionInvite[] = data.props.invites || [];
+	let invites: CollectionInvite[] = $state<CollectionInvite[]>([]);
 
-	let sidebarOpen = false;
-	let collectionToEdit: Collection | null = null;
+	$effect.pre(() => {
+		collections = data.props.adventures || [];
+		sharedCollections = data.props.sharedCollections || [];
+		archivedCollections = data.props.archivedCollections || [];
+		count = data.props.count || 0;
+		currentPage = data.props.currentPage || 1;
+		orderBy = data.props.order_by || 'updated_at';
+		orderDirection = data.props.order_direction || 'asc';
+		statusFilter = data.props.status || '';
+		invites = data.props.invites || [];
+	});
 
-	$: currentCollections =
+	let sidebarOpen = $state(false);
+	let collectionToEdit: Collection | null = $state(null);
+
+	let currentCollections = $derived(
 		activeView === 'owned'
 			? collections
 			: activeView === 'shared'
 				? sharedCollections
 				: activeView === 'archived'
 					? archivedCollections
-					: [];
+					: []
+	);
 
-	$: currentCount =
+	let currentCount = $derived(
 		activeView === 'owned'
 			? collections.length
 			: activeView === 'shared'
@@ -65,14 +86,15 @@
 					? archivedCollections.length
 					: activeView === 'invites'
 						? invites.length
-						: 0;
+						: 0
+	);
 
 	// Optionally, keep count in sync with collections only for owned view
-	$: {
+	run(() => {
 		if (activeView === 'owned' && count !== collections.length) {
 			count = collections.length;
 		}
-	}
+	});
 
 	async function goToPage(pageNum: number) {
 		const url = new URL($page.url);
@@ -120,9 +142,9 @@
 		}
 	}
 
-	let importInputEl: HTMLInputElement | null = null;
-	let importFormEl: HTMLFormElement | null = null;
-	let isImporting: boolean = false;
+	let importInputEl: HTMLInputElement | null = $state(null);
+	let importFormEl: HTMLFormElement | null = $state(null);
+	let isImporting: boolean = $state(false);
 
 	function triggerImport() {
 		importInputEl?.click();
@@ -221,8 +243,8 @@
 		isShowingCollectionModal = true;
 	}
 
-	let isShowingConfirmLeaveModal: boolean = false;
-	let collectionIdToLeave: string | null = null;
+	let isShowingConfirmLeaveModal: boolean = $state(false);
+	let collectionIdToLeave: string | null = $state(null);
 
 	async function leaveCollection() {
 		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave`, {
@@ -333,7 +355,7 @@
 	}
 
 	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString();
+		return formatDisplayDate(dateString, dateFormat);
 	}
 </script>
 
@@ -387,7 +409,7 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex flex-wrap gap-2 items-center justify-between">
 						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+							<button class="btn btn-ghost btn-square lg:hidden" onclick={toggleSidebar}>
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
@@ -415,10 +437,10 @@
 						</div>
 
 						<!-- View Toggle -->
-						<div class="tabs tabs-boxed bg-base-200">
+						<div class="tabs tabs-box bg-base-200">
 							<button
 								class="tab gap-2 {activeView === 'owned' ? 'tab-active' : ''}"
-								on:click={() => switchView('owned')}
+								onclick={() => switchView('owned')}
 							>
 								<CollectionIcon class="w-4 h-4" />
 								<span class="hidden sm:inline">{$t('adventures.my_collections')}</span>
@@ -430,7 +452,7 @@
 							</button>
 							<button
 								class="tab gap-2 {activeView === 'shared' ? 'tab-active' : ''}"
-								on:click={() => switchView('shared')}
+								onclick={() => switchView('shared')}
 							>
 								<Share class="w-4 h-4" />
 								<span class="hidden sm:inline">{$t('share.shared')}</span>
@@ -442,7 +464,7 @@
 							</button>
 							<button
 								class="tab gap-2 {activeView === 'archived' ? 'tab-active' : ''}"
-								on:click={() => switchView('archived')}
+								onclick={() => switchView('archived')}
 							>
 								<Archive class="w-4 h-4" />
 								<span class="hidden sm:inline">{$t('adventures.archived')}</span>
@@ -456,7 +478,7 @@
 							</button>
 							<button
 								class="tab gap-2 {activeView === 'invites' ? 'tab-active' : ''}"
-								on:click={() => switchView('invites')}
+								onclick={() => switchView('invites')}
 							>
 								<div class="indicator">
 									<MailIcon class="w-4 h-4" />
@@ -527,14 +549,14 @@
 											<div class="flex gap-2 ml-4">
 												<button
 													class="btn btn-success btn-sm gap-2"
-													on:click={() => acceptInvite(invite)}
+													onclick={() => acceptInvite(invite)}
 												>
 													<CheckIcon class="w-4 h-4" />
 													{$t('invites.accept')}
 												</button>
 												<button
 													class="btn btn-error btn-sm btn-outline gap-2"
-													on:click={() => declineInvite(invite)}
+													onclick={() => declineInvite(invite)}
 												>
 													<CloseIcon class="w-4 h-4" />
 													{$t('invites.decline')}
@@ -575,7 +597,7 @@
 						{#if activeView === 'owned'}
 							<button
 								class="btn btn-primary btn-wide mt-6 gap-2"
-								on:click={() => {
+								onclick={() => {
 									collectionToEdit = null;
 									isShowingCollectionModal = true;
 									newType = 'visited';
@@ -618,7 +640,7 @@
 										class="join-item btn btn-sm {currentPage === page
 											? 'btn-primary'
 											: 'btn-ghost'}"
-										on:click={() => goToPage(page)}
+										onclick={() => goToPage(page)}
 									>
 										{page}
 									</button>
@@ -652,56 +674,57 @@
 								{$t('adventures.status_filter')}
 							</h3>
 
-							<div class="space-y-2">
-								<label class="label cursor-pointer justify-start gap-3">
+							<div class="flex flex-col">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === ''}
-										on:change={() => updateStatusFilter('')}
+										onchange={() => updateStatusFilter('')}
 									/>
-									<span class="label-text">{$t('adventures.all')}</span>
+									<span class="text-sm leading-snug min-w-0">{$t('adventures.all')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'folder'}
-										on:change={() => updateStatusFilter('folder')}
+										onchange={() => updateStatusFilter('folder')}
 									/>
-									<span class="label-text">📁 {$t('adventures.folder')}</span>
+									<span class="text-sm leading-snug min-w-0">📁 {$t('adventures.folder')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'upcoming'}
-										on:change={() => updateStatusFilter('upcoming')}
+										onchange={() => updateStatusFilter('upcoming')}
 									/>
-									<span class="label-text">🚀 {$t('adventures.upcoming')}</span>
+									<span class="text-sm leading-snug min-w-0">🚀 {$t('adventures.upcoming')}</span>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'in_progress'}
-										on:change={() => updateStatusFilter('in_progress')}
+										onchange={() => updateStatusFilter('in_progress')}
 									/>
-									<span class="label-text">🎯 {$t('adventures.in_progress')}</span>
+									<span class="text-sm leading-snug min-w-0">🎯 {$t('adventures.in_progress')}</span
+									>
 								</label>
-								<label class="label cursor-pointer justify-start gap-3">
+								<label class="filter-option">
 									<input
 										type="radio"
 										name="status_filter"
-										class="radio radio-primary radio-sm"
+										class="radio radio-primary"
 										checked={statusFilter === 'completed'}
-										on:change={() => updateStatusFilter('completed')}
+										onchange={() => updateStatusFilter('completed')}
 									/>
-									<span class="label-text">✓ {$t('adventures.completed')}</span>
+									<span class="text-sm leading-snug min-w-0">✓ {$t('adventures.completed')}</span>
 								</label>
 							</div>
 						</div>
@@ -715,16 +738,13 @@
 
 							<div class="space-y-4">
 								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
-									</label>
+									<p class="text-sm font-medium mb-2">{$t(`adventures.order_direction`)}</p>
 									<div class="join w-full">
 										<button
 											class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
 												? 'btn-active'
 												: ''}"
-											on:click={() => updateSort(orderBy, 'asc')}
+											onclick={() => updateSort(orderBy, 'asc')}
 										>
 											{$t(`adventures.ascending`)}
 										</button>
@@ -732,7 +752,7 @@
 											class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
 												? 'btn-active'
 												: ''}"
-											on:click={() => updateSort(orderBy, 'desc')}
+											onclick={() => updateSort(orderBy, 'desc')}
 										>
 											{$t(`adventures.descending`)}
 										</button>
@@ -740,40 +760,38 @@
 								</div>
 
 								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
-									</label>
-									<div class="space-y-2">
-										<label class="label cursor-pointer justify-start gap-3">
+									<p class="text-sm font-medium mb-2">{$t('adventures.order_by')}</p>
+									<div class="flex flex-col">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by_radio"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'updated_at'}
-												on:change={() => updateSort('updated_at', orderDirection)}
+												onchange={() => updateSort('updated_at', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.updated')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.updated')}</span>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by_radio"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'start_date'}
-												on:change={() => updateSort('start_date', orderDirection)}
+												onchange={() => updateSort('start_date', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.start_date')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.start_date')}</span
+											>
 										</label>
-										<label class="label cursor-pointer justify-start gap-3">
+										<label class="filter-option">
 											<input
 												type="radio"
 												name="order_by_radio"
-												class="radio radio-primary radio-sm"
+												class="radio radio-primary"
 												checked={orderBy === 'name'}
-												on:change={() => updateSort('name', orderDirection)}
+												onchange={() => updateSort('name', orderDirection)}
 											/>
-											<span class="label-text">{$t('adventures.name')}</span>
+											<span class="text-sm leading-snug min-w-0">{$t('adventures.name')}</span>
 										</label>
 									</div>
 								</div>
@@ -805,7 +823,7 @@
 					</div>
 					<button
 						class="btn btn-primary gap-2 w-full"
-						on:click={() => {
+						onclick={() => {
 							collectionToEdit = null;
 							isShowingCollectionModal = true;
 							newType = 'visited';
@@ -815,7 +833,7 @@
 						{$t(`adventures.collection`)}
 					</button>
 					<div class="divider my-2"></div>
-					<button class="btn btn-neutral gap-2 w-full" on:click={triggerImport}>
+					<button class="btn btn-neutral gap-2 w-full" onclick={triggerImport}>
 						<Archive class="w-5 h-5" />
 						{$t('adventures.import_from_file')}
 					</button>
@@ -845,7 +863,7 @@
 							name="file"
 							accept=".zip"
 							class="hidden"
-							on:change={handleImportFileChange}
+							onchange={handleImportFileChange}
 						/>
 					</form>
 				</ul>

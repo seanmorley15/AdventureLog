@@ -1,26 +1,39 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	export let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	export let label: string | null = null;
-	// Generate a unique ID for this component instance
+	const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+	interface Props {
+		selectedTimezone?: string;
+		label?: string | null;
+	}
+
+	let { selectedTimezone = $bindable(), label = null }: Props = $props();
+
+	if (!selectedTimezone) {
+		selectedTimezone = browserTimezone;
+	}
+
 	const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2);
 	const instanceId = `tz-selector-${uniqueId}`;
 
-	let labelText: string = '';
-	$: labelText = label ?? ($t('adventures.timezone') as string);
+	let labelText = $derived(label ?? ($t('adventures.timezone') as string));
 
-	let dropdownOpen = false;
-	let searchQuery = '';
-	let searchInput: HTMLInputElement | null = null;
-	let rootRef: HTMLElement | null = null;
+	let dropdownOpen = $state(false);
+	let openUpward = $state(false);
+	let searchQuery = $state('');
+	let searchInput: HTMLInputElement | null = $state(null);
+	let rootRef: HTMLElement | null = $state(null);
 	const timezones = Intl.supportedValuesOf('timeZone');
 
 	// Filter timezones based on search query
-	$: filteredTimezones = searchQuery
-		? timezones.filter((tz) => tz.toLowerCase().includes(searchQuery.toLowerCase()))
-		: timezones;
+	let filteredTimezones = $derived(
+		searchQuery
+			? timezones.filter((tz) => tz.toLowerCase().includes(searchQuery.toLowerCase()))
+			: timezones
+	);
 
 	function selectTimezone(tz: string) {
 		selectedTimezone = tz;
@@ -28,13 +41,14 @@
 		searchQuery = '';
 	}
 
-	// Focus search input when dropdown opens - with proper null check
-	$: if (dropdownOpen && searchInput) {
-		// Use setTimeout to delay focus until after the element is rendered
-		setTimeout(() => {
-			if (searchInput) searchInput.focus();
-		}, 0);
-	}
+	$effect(() => {
+		if (dropdownOpen && searchInput) {
+			const input = searchInput;
+			setTimeout(() => {
+				input.focus();
+			}, 0);
+		}
+	});
 
 	function handleKeydown(event: KeyboardEvent, tz?: string) {
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -70,10 +84,8 @@
 	});
 </script>
 
-<div class="form-control w-full max-w-xs relative" bind:this={rootRef} id={instanceId}>
-	<label class="label" for={`timezone-display-${instanceId}`}>
-		<span class="label-text">{labelText}</span>
-	</label>
+<div class="flex flex-col w-full max-w-xs relative" bind:this={rootRef} id={instanceId}>
+	<label class="field-label" for={`timezone-display-${instanceId}`}>{labelText}</label>
 
 	<!-- Trigger -->
 	<div
@@ -82,14 +94,22 @@
 		role="button"
 		aria-haspopup="listbox"
 		aria-expanded={dropdownOpen}
-		class="input input-bordered flex justify-between items-center cursor-pointer"
-		on:pointerdown={(e) => {
+		class="input flex justify-between items-center cursor-pointer"
+		onpointerdown={(e) => {
 			e.preventDefault();
 			e.stopPropagation();
+			if (!dropdownOpen) {
+				openUpward = shouldFlipDropdownUp(rootRef);
+			}
 			dropdownOpen = !dropdownOpen;
 		}}
-		on:click={() => (dropdownOpen = !dropdownOpen)}
-		on:keydown={handleKeydown}
+		onclick={() => {
+			if (!dropdownOpen) {
+				openUpward = shouldFlipDropdownUp(rootRef);
+			}
+			dropdownOpen = !dropdownOpen;
+		}}
+		onkeydown={handleKeydown}
 	>
 		<span class="truncate">{selectedTimezone}</span>
 		<svg
@@ -107,7 +127,9 @@
 	<!-- Dropdown -->
 	{#if dropdownOpen}
 		<div
-			class="absolute mt-1 z-10 bg-base-100 shadow-lg rounded-box w-full max-h-60 overflow-y-auto"
+			class="absolute {openUpward
+				? 'bottom-full mb-1'
+				: 'top-full mt-1'} z-10 bg-base-100 shadow-lg rounded-box w-full max-h-60 overflow-y-auto"
 			role="listbox"
 			aria-labelledby={`timezone-display-${instanceId}`}
 		>
@@ -116,7 +138,7 @@
 				<input
 					type="text"
 					placeholder="Search timezone"
-					class="input input-sm input-bordered w-full"
+					class="input input-sm w-full"
 					bind:value={searchQuery}
 					bind:this={searchInput}
 				/>
@@ -125,18 +147,18 @@
 			<!-- Timezone list -->
 			{#if filteredTimezones.length > 0}
 				<ul class="menu p-2 space-y-1">
-					{#each filteredTimezones as tz}
+					{#each filteredTimezones as tz (tz)}
 						<li>
 							<button
 								type="button"
 								class={`w-full text-left truncate ${tz === selectedTimezone ? 'active font-bold' : ''}`}
-								on:pointerdown={(e) => {
+								onpointerdown={(e) => {
 									e.preventDefault();
 									e.stopPropagation();
 									selectTimezone(tz);
 								}}
-								on:click={() => selectTimezone(tz)}
-								on:keydown={(e) => handleKeydown(e, tz)}
+								onclick={() => selectTimezone(tz)}
+								onkeydown={(e) => handleKeydown(e, tz)}
 								role="option"
 								aria-selected={tz === selectedTimezone}
 							>

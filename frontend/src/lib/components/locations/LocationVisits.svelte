@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type {
 		Collection,
 		StravaActivity,
@@ -15,10 +17,14 @@
 		validateDateRange,
 		formatUTCDate,
 		toDateOnlyLocal,
-		toTimedLocalDefault
+		toTimedLocalDefault,
+		formatDateInTimezone,
+		formatAllDayDate
 	} from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
+	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { isAllDay, isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
+	import { isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
 
@@ -31,7 +37,6 @@
 	import TrashIcon from '~icons/mdi/delete';
 	import AlertIcon from '~icons/mdi/alert';
 	import CheckIcon from '~icons/mdi/check';
-	import SettingsIcon from '~icons/mdi/cog';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import RunFastIcon from '~icons/mdi/run-fast';
 	import LoadingIcon from '~icons/mdi/loading';
@@ -41,51 +46,128 @@
 	import CloseIcon from '~icons/mdi/close';
 	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
+	import DateInput from '../shared/DateInput.svelte';
+	import { addToast } from '$lib/toasts';
+	import CalendarTodayIcon from '~icons/mdi/calendar-today';
 
-	// Props
-	export let collection: Collection | null = null;
-	export let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	export let utcStartDate: string | null = null;
-	export let utcEndDate: string | null = null;
-	export let note: string | null = null;
-	export let visits: Visit[] | null = null;
-	export let objectId: string;
-	export let trails: Trail[] = [];
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	interface Props {
+		// Props
+		collection?: Collection | null;
+		selectedStartTimezone?: string;
+		utcStartDate?: string | null;
+		utcEndDate?: string | null;
+		note?: string | null;
+		visits?: Visit[] | null;
+		objectId: string;
+		trails?: Trail[];
+		measurementSystem?: 'metric' | 'imperial';
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+	}
+
+	let {
+		collection = null,
+		selectedStartTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone),
+		utcStartDate = $bindable(null),
+		utcEndDate = $bindable(null),
+		note = $bindable(null),
+		visits = $bindable(null),
+		objectId,
+		trails = $bindable([]),
+		measurementSystem = 'metric',
+		initialVisitDate = $bindable(null)
+	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	const dispatch = createEventDispatcher();
 
 	// Types
 
 	// Component state
-	let allDay: boolean = true;
-	let localStartDate: string = '';
-	let localEndDate: string = '';
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
-	let constrainDates: boolean = false;
-	let isEditing = false;
-	let visitIdEditing: string | null = null;
+	let allDay: boolean = $state(true);
+	let localStartDate: string = $state('');
+	let localEndDate: string = $state('');
+	let fullStartDate: string = $state('');
+	let fullEndDate: string = $state('');
+	let constrainDates: boolean = $state(false);
+	let isEditing = $state(false);
+	let visitIdEditing: string | null = $state(null);
 
 	// Activity management state
-	let stravaEnabled: boolean = false;
-	let endurainEnabled: boolean = false;
-	let visitActivities: { [visitId: string]: StravaActivity[] } = {};
-	let endurainVisitActivities: { [visitId: string]: StravaActivity[] } = {};
-	let loadingActivities: { [visitId: string]: boolean } = {};
-	let loadingEndurainActivities: { [visitId: string]: boolean } = {};
-	let expandedVisits: { [visitId: string]: boolean } = {};
-	let expandedEndurainVisits: { [visitId: string]: boolean } = {};
-	let uploadingActivity: { [visitId: string]: boolean } = {};
-	let showActivityUpload: { [visitId: string]: boolean } = {};
+	let stravaEnabled: boolean = $state(false);
+	let endurainEnabled: boolean = $state(false);
+	let visitActivities: { [visitId: string]: StravaActivity[] } = $state({});
+	let endurainVisitActivities: { [visitId: string]: StravaActivity[] } = $state({});
+	let loadingActivities: { [visitId: string]: boolean } = $state({});
+	let loadingEndurainActivities: { [visitId: string]: boolean } = $state({});
+	let expandedVisits: { [visitId: string]: boolean } = $state({});
+	let expandedEndurainVisits: { [visitId: string]: boolean } = $state({});
+	let uploadingActivity: { [visitId: string]: boolean } = $state({});
+	let showActivityUpload: { [visitId: string]: boolean } = $state({});
 	let pendingActivityImport: {
 		[visitId: string]: { activity: StravaActivity; provider: 'strava' | 'endurain' } | null;
-	} = {};
-	let importingEndurainActivity: { [visitId: string]: boolean } = {};
+	} = $state({});
+	let importingEndurainActivity: { [visitId: string]: boolean } = $state({});
+	let showActivityExtras = $state(false);
+
+	const isImperial = $derived(measurementSystem === 'imperial');
+	const distanceUnit = $derived(isImperial ? 'mi' : 'km');
+	const elevationUnit = $derived(isImperial ? 'ft' : 'm');
+	const speedUnit = $derived(isImperial ? 'mph' : 'km/h');
+	const distancePlaceholder = $derived(isImperial ? '3.1' : '5.0');
+	const elevationPlaceholder = $derived(isImperial ? '500' : '150');
+	const speedPlaceholder = $derived(isImperial ? '6.2' : '10.0');
+
+	function roundTo(value: number, digits: number): number {
+		const factor = 10 ** digits;
+		return Math.round(value * factor) / factor;
+	}
+
+	function optionalNumber(value: number | string | null | undefined): number | null {
+		if (value === null || value === undefined || value === '') return null;
+		const parsed = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+
+	function distanceToMeters(value: number | string | null | undefined): number | null {
+		const amount = optionalNumber(value);
+		if (amount == null) return null;
+		return measurementSystem === 'imperial' ? amount * 1609.34 : amount * 1000;
+	}
+
+	function metersToDistance(meters: number | null | undefined): number | null {
+		if (meters == null) return null;
+		const amount = measurementSystem === 'imperial' ? meters / 1609.34 : meters / 1000;
+		return roundTo(amount, 2);
+	}
+
+	function elevationToMeters(value: number | string | null | undefined): number | null {
+		const amount = optionalNumber(value);
+		if (amount == null) return null;
+		return measurementSystem === 'imperial' ? amount / 3.28084 : amount;
+	}
+
+	function metersToElevation(meters: number | null | undefined): number | null {
+		if (meters == null) return null;
+		const amount = measurementSystem === 'imperial' ? meters * 3.28084 : meters;
+		return roundTo(amount, 0);
+	}
+
+	function speedToMetersPerSecond(value: number | string | null | undefined): number | null {
+		const amount = optionalNumber(value);
+		if (amount == null) return null;
+		return measurementSystem === 'imperial' ? amount / 2.236936 : amount / 3.6;
+	}
+
+	function metersPerSecondToSpeed(metersPerSecond: number | null | undefined): number | null {
+		if (metersPerSecond == null) return null;
+		const amount =
+			measurementSystem === 'imperial' ? metersPerSecond * 2.236936 : metersPerSecond * 3.6;
+		return roundTo(amount, 1);
+	}
 
 	// Activity form state
-	let activityForm = {
+	let activityForm = $state({
 		name: '',
 		sport_type: 'Run',
 		distance: null as number | null,
@@ -108,74 +190,78 @@
 		start_lng: null as number | null,
 		end_lat: null as number | null,
 		end_lng: null as number | null,
-		timezone: undefined as string | undefined
-	};
+		timezone: selectedStartTimezone
+	});
 
-	function getTypeConfig() {
-		return {
-			startLabel: 'Start Date',
-			endLabel: 'End Date',
-			icon: CalendarIcon,
-			color: 'primary'
-		};
+	function visitCoversDate(visit: Visit, targetDate: string): boolean {
+		if (!visit?.start_date) return false;
+		const visitStart = visit.start_date.split('T')[0];
+		const visitEnd = (visit.end_date || visit.start_date).split('T')[0];
+		return targetDate >= visitStart && targetDate <= visitEnd;
 	}
+
+	function getTodayDate(): string {
+		const now = new Date();
+		const y = now.getFullYear();
+		const m = String(now.getMonth() + 1).padStart(2, '0');
+		const d = String(now.getDate()).padStart(2, '0');
+		return `${y}-${m}-${d}`;
+	}
+
+	let todayCovered = $derived(
+		Boolean(visits?.some((visit) => visitCoversDate(visit, getTodayDate())))
+	);
+
+	let isSavingVisit = $state(false);
 
 	// Reactive constraints
-	$: constraintStartDate = allDay
-		? fullStartDate && fullStartDate.includes('T')
-			? fullStartDate.split('T')[0]
-			: ''
-		: fullStartDate || '';
-	$: constraintEndDate = allDay
-		? fullEndDate && fullEndDate.includes('T')
-			? fullEndDate.split('T')[0]
-			: ''
-		: fullEndDate || '';
+	let constraintStartDate = $derived(
+		allDay
+			? fullStartDate && fullStartDate.includes('T')
+				? fullStartDate.split('T')[0]
+				: ''
+			: fullStartDate || ''
+	);
+	let constraintEndDate = $derived(
+		allDay
+			? fullEndDate && fullEndDate.includes('T')
+				? fullEndDate.split('T')[0]
+				: ''
+			: fullEndDate || ''
+	);
 
 	// Set the full date range for constraining purposes
-	$: if (collection && collection.start_date && collection.end_date) {
-		fullStartDate = `${collection.start_date}T00:00`;
-		fullEndDate = `${collection.end_date}T23:59`;
-	}
+	run(() => {
+		if (collection && collection.start_date && collection.end_date) {
+			fullStartDate = `${collection.start_date}T00:00`;
+			fullEndDate = `${collection.end_date}T23:59`;
+		}
+	});
 
 	// Update local display dates whenever timezone or UTC dates change
-	$: if (!isEditing) {
-		if (allDay) {
-			localStartDate = utcStartDate?.substring(0, 10) ?? '';
-			localEndDate = utcEndDate?.substring(0, 10) ?? '';
-		} else {
-			const start = updateLocalDate({
-				utcDate: utcStartDate,
-				timezone: selectedStartTimezone
-			}).localDate;
+	run(() => {
+		if (!isEditing) {
+			if (allDay) {
+				localStartDate = utcStartDate?.substring(0, 10) ?? '';
+				localEndDate = utcEndDate?.substring(0, 10) ?? '';
+			} else {
+				const start = updateLocalDate({
+					utcDate: utcStartDate,
+					timezone: selectedStartTimezone
+				}).localDate;
 
-			const end = updateLocalDate({
-				utcDate: utcEndDate,
-				timezone: selectedStartTimezone
-			}).localDate;
+				const end = updateLocalDate({
+					utcDate: utcEndDate,
+					timezone: selectedStartTimezone
+				}).localDate;
 
-			localStartDate = start;
-			localEndDate = end;
+				localStartDate = start;
+				localEndDate = end;
+			}
 		}
-	}
+	});
 
 	// Helper functions
-	function formatDateInTimezone(utcDate: string, timezone: string): string {
-		try {
-			return new Intl.DateTimeFormat(undefined, {
-				timeZone: timezone,
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: true
-			}).format(new Date(utcDate));
-		} catch {
-			return new Date(utcDate).toLocaleString();
-		}
-	}
-
 	function formatDuration(seconds: number): string {
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
@@ -250,65 +336,109 @@
 		}
 	}
 
-	async function addVisit(isAuto: boolean = false) {
-		// If editing an existing visit, patch instead of creating new
-		if (visitIdEditing) {
-			const response = await fetch(`/api/visits/${visitIdEditing}/`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					start_date: utcStartDate,
-					end_date: utcEndDate,
-					notes: note,
-					timezone: selectedStartTimezone
-				})
-			});
+	async function addVisit(isAuto: boolean = false): Promise<boolean> {
+		isSavingVisit = true;
+		try {
+			// If editing an existing visit, patch instead of creating new
+			if (visitIdEditing) {
+				const editingId = visitIdEditing;
+				const response = await fetch(`/api/visits/${editingId}/`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						start_date: utcStartDate,
+						end_date: utcEndDate,
+						notes: note,
+						timezone: selectedStartTimezone
+					})
+				});
 
-			if (response.ok) {
-				const updatedVisit: Visit = await response.json();
-				visits = visits ? [...visits, updatedVisit] : [updatedVisit];
-				dispatch('visitAdded', updatedVisit);
-				visitIdEditing = null;
+				if (response.ok) {
+					const updatedVisit: Visit = await response.json();
+					visits = visits
+						? visits.map((v) => (v.id === editingId ? updatedVisit : v))
+						: [updatedVisit];
+					// If editVisit removed it from the list, ensure it's present
+					if (!visits.some((v) => v.id === updatedVisit.id)) {
+						visits = [...visits, updatedVisit];
+					}
+					dispatch('visitAdded', updatedVisit);
+					addToast('success', $t('adventures.visit_updated'));
+					visitIdEditing = null;
+				} else {
+					const errorText = await response.text();
+					addToast('error', $t('adventures.visit_update_failed') || errorText);
+					return false;
+				}
 			} else {
-				const errorText = await response.text();
-			}
-		} else {
-			// post to /api/visits for new visit
-			const response = await fetch('/api/visits/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					object_id: objectId,
-					start_date: utcStartDate,
-					end_date: utcEndDate,
-					notes: note,
-					timezone: selectedStartTimezone,
-					location: objectId
-				})
-			});
+				// post to /api/visits for new visit
+				const response = await fetch('/api/visits/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						object_id: objectId,
+						start_date: utcStartDate,
+						end_date: utcEndDate,
+						notes: note,
+						timezone: selectedStartTimezone,
+						location: objectId
+					})
+				});
 
-			if (response.ok) {
-				const newVisit: Visit = await response.json();
-				visits = visits ? [...visits, newVisit] : [newVisit];
-				dispatch('visitAdded', newVisit);
-			} else {
-				const errorText = await response.text();
-				alert(`Failed to add visit: ${errorText}`);
+				if (response.ok) {
+					const newVisit: Visit = await response.json();
+					visits = visits ? [...visits, newVisit] : [newVisit];
+					dispatch('visitAdded', newVisit);
+					if (!isAuto) {
+						addToast('success', $t('adventures.visit_added'));
+					}
+				} else {
+					const errorText = await response.text();
+					addToast('error', $t('adventures.visit_add_failed') || errorText);
+					return false;
+				}
 			}
-		}
 
-		// Reset form fields. If this call was an auto-generated visit, allow clearing even if initialVisitDate is set
-		if (!initialVisitDate || isAuto) {
-			note = '';
-			localStartDate = '';
-			localEndDate = '';
-			utcStartDate = null;
-			utcEndDate = null;
+			// Reset form fields. If this call was an auto-generated visit, allow clearing even if initialVisitDate is set
+			if (!initialVisitDate || isAuto) {
+				note = '';
+				localStartDate = '';
+				localEndDate = '';
+				utcStartDate = null;
+				utcEndDate = null;
+			}
+			return true;
+		} finally {
+			isSavingVisit = false;
 		}
+	}
+
+	async function addTodayVisit() {
+		if (todayCovered || isSavingVisit || visitIdEditing) return;
+
+		const today = getTodayDate();
+		allDay = true;
+		localStartDate = today;
+		localEndDate = today;
+		note = '';
+
+		utcStartDate = updateUTCDate({
+			localDate: localStartDate,
+			timezone: selectedStartTimezone,
+			allDay: true
+		}).utcDate;
+
+		utcEndDate = updateUTCDate({
+			localDate: localEndDate,
+			timezone: selectedStartTimezone,
+			allDay: true
+		}).utcDate;
+
+		await addVisit(false);
 	}
 
 	// Activity management functions
@@ -447,6 +577,7 @@
 	function showActivityUploadForm(visitId: string) {
 		showActivityUpload[visitId] = true;
 		showActivityUpload = { ...showActivityUpload };
+		showActivityExtras = false;
 
 		// Reset form
 		activityForm = {
@@ -472,7 +603,7 @@
 			start_lng: null,
 			end_lat: null,
 			end_lng: null,
-			timezone: undefined
+			timezone: selectedStartTimezone
 		};
 	}
 
@@ -493,27 +624,27 @@
 		return {
 			name: activity.name,
 			sport_type: activity.sport_type || activity.type,
-			distance: activity.distance ?? null,
+			distance: metersToDistance(activity.distance ?? null),
 			moving_time: activity.moving_time ? formatDuration(activity.moving_time) : '',
 			elapsed_time: activity.elapsed_time ? formatDuration(activity.elapsed_time) : '',
-			elevation_gain: activity.total_elevation_gain ?? null,
-			elevation_loss: activity.estimated_elevation_loss ?? null,
+			elevation_gain: metersToElevation(activity.total_elevation_gain ?? null),
+			elevation_loss: metersToElevation(activity.estimated_elevation_loss ?? null),
 			start_date: activity.start_date ? activity.start_date.substring(0, 16) : '',
 			start_date_local: activity.start_date_local ? activity.start_date_local.substring(0, 16) : '',
 			calories: activity.calories ?? null,
 			gpx_file: null as File | null,
 			trail: null,
-			elev_high: activity.elev_high ?? null,
-			elev_low: activity.elev_low ?? null,
+			elev_high: metersToElevation(activity.elev_high ?? null),
+			elev_low: metersToElevation(activity.elev_low ?? null),
 			rest_time: activity.rest_time ?? null,
-			average_speed: activity.average_speed ?? null,
-			max_speed: activity.max_speed ?? null,
+			average_speed: metersPerSecondToSpeed(activity.average_speed ?? null),
+			max_speed: metersPerSecondToSpeed(activity.max_speed ?? null),
 			average_cadence: activity.average_cadence ?? null,
 			start_lat: activity.start_latlng ? activity.start_latlng[0] : null,
 			start_lng: activity.start_latlng ? activity.start_latlng[1] : null,
 			end_lat: activity.end_latlng ? activity.end_latlng[0] : null,
 			end_lng: activity.end_latlng ? activity.end_latlng[1] : null,
-			timezone: activity.timezone || undefined
+			timezone: activity.timezone || selectedStartTimezone
 		};
 	}
 
@@ -546,8 +677,8 @@
 			formData.append('visit', visitId);
 			formData.append('name', activityForm.name);
 			if (activityForm.sport_type) formData.append('sport_type', activityForm.sport_type);
-			if (activityForm.distance != null)
-				formData.append('distance', activityForm.distance.toString());
+			const distanceMeters = distanceToMeters(activityForm.distance);
+			if (distanceMeters != null) formData.append('distance', distanceMeters.toString());
 			if (activityForm.moving_time) {
 				const seconds = parseDuration(activityForm.moving_time);
 				formData.append('moving_time', `PT${seconds}S`);
@@ -556,10 +687,12 @@
 				const seconds = parseDuration(activityForm.elapsed_time);
 				formData.append('elapsed_time', `PT${seconds}S`);
 			}
-			if (activityForm.elevation_gain != null)
-				formData.append('elevation_gain', activityForm.elevation_gain.toString());
-			if (activityForm.elevation_loss != null)
-				formData.append('elevation_loss', activityForm.elevation_loss.toString());
+			const elevationGainMeters = elevationToMeters(activityForm.elevation_gain);
+			if (elevationGainMeters != null)
+				formData.append('elevation_gain', elevationGainMeters.toString());
+			const elevationLossMeters = elevationToMeters(activityForm.elevation_loss);
+			if (elevationLossMeters != null)
+				formData.append('elevation_loss', elevationLossMeters.toString());
 			if (activityForm.start_date)
 				formData.append('start_date', formatUTCDate(activityForm.start_date));
 			if (activityForm.start_date_local)
@@ -573,16 +706,16 @@
 			if (activityForm.calories != null)
 				formData.append('calories', activityForm.calories.toString());
 			if (activityForm.trail) formData.append('trail', activityForm.trail);
-			if (activityForm.elev_high != null)
-				formData.append('elev_high', activityForm.elev_high.toString());
-			if (activityForm.elev_low != null)
-				formData.append('elev_low', activityForm.elev_low.toString());
+			const elevHighMeters = elevationToMeters(activityForm.elev_high);
+			if (elevHighMeters != null) formData.append('elev_high', elevHighMeters.toString());
+			const elevLowMeters = elevationToMeters(activityForm.elev_low);
+			if (elevLowMeters != null) formData.append('elev_low', elevLowMeters.toString());
 			if (activityForm.rest_time != null)
 				formData.append('rest_time', `PT${activityForm.rest_time}S`);
-			if (activityForm.average_speed != null)
-				formData.append('average_speed', activityForm.average_speed.toString());
-			if (activityForm.max_speed != null)
-				formData.append('max_speed', activityForm.max_speed.toString());
+			const averageSpeedMs = speedToMetersPerSecond(activityForm.average_speed);
+			if (averageSpeedMs != null) formData.append('average_speed', averageSpeedMs.toString());
+			const maxSpeedMs = speedToMetersPerSecond(activityForm.max_speed);
+			if (maxSpeedMs != null) formData.append('max_speed', maxSpeedMs.toString());
 			if (activityForm.average_cadence != null)
 				formData.append('average_cadence', activityForm.average_cadence.toString());
 			if (activityForm.start_lat !== null)
@@ -749,19 +882,8 @@
 			}).localDate;
 		}
 
-		// Remove the visit from the array temporarily for editing
-		if (visits) {
-			visits = visits.filter((v) => v.id !== visit.id);
-		}
-
-		// Clean up activities for this visit
-		delete visitActivities[visit.id];
-		delete expandedVisits[visit.id];
-		delete loadingActivities[visit.id];
-		delete showActivityUpload[visit.id];
-
 		note = visit.notes;
-		constrainDates = true;
+		constrainDates = Boolean(collection?.start_date && collection?.end_date);
 		utcStartDate = visit.start_date;
 		utcEndDate = visit.end_date;
 
@@ -770,7 +892,17 @@
 		}, 0);
 	}
 
+	function cancelEditVisit() {
+		visitIdEditing = null;
+		note = '';
+		localStartDate = '';
+		localEndDate = '';
+		utcStartDate = null;
+		utcEndDate = null;
+	}
+
 	function removeVisit(visitId: string) {
+		const previousVisits = visits ? [...visits] : [];
 		if (visits) {
 			visits = visits.filter((v) => v.id !== visitId);
 		}
@@ -781,15 +913,20 @@
 		delete loadingActivities[visitId];
 		delete showActivityUpload[visitId];
 
+		if (visitIdEditing === visitId) {
+			cancelEditVisit();
+		}
+
 		// make the DELETE request
 		fetch(`/api/visits/${visitId}/`, {
 			method: 'DELETE'
 		}).then((response) => {
 			if (!response.ok) {
 				console.error('Error deleting visit:', response.statusText);
+				visits = previousVisits;
+				addToast('error', $t('adventures.visit_add_failed'));
 			} else {
-				// remove the visit from the local state
-				visits = visits?.filter((v) => v.id !== visitId) ?? null;
+				dispatch('visitRemoved', visitId);
 			}
 		});
 	}
@@ -849,11 +986,7 @@
 			const targetDate = initialVisitDate.split('T')[0]; // Ensure we have just YYYY-MM-DD
 
 			// Check if any visit already exists for this date
-			const visitExists = visits?.some((visit) => {
-				const visitStart = visit.start_date.split('T')[0];
-				const visitEnd = visit.end_date.split('T')[0];
-				return targetDate >= visitStart && targetDate <= visitEnd;
-			});
+			const visitExists = visits?.some((visit) => visitCoversDate(visit, targetDate));
 
 			if (!visitExists) {
 				// Set up an all-day visit for this date
@@ -882,304 +1015,326 @@
 		}
 	});
 
-	$: isDateValid = validateDateRange(utcStartDate ?? '', utcEndDate ?? '').valid;
-	$: typeConfig = getTypeConfig();
+	let isDateValid = $derived(validateDateRange(utcStartDate ?? '', utcEndDate ?? '').valid);
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<!-- Header -->
-				<div class="flex items-center justify-between mb-6">
-					<div class="flex items-center gap-3">
-						<div class="p-2 bg-{typeConfig.color}/10 rounded-lg">
-							<svelte:component this={typeConfig.icon} class="w-5 h-5 text-{typeConfig.color}" />
-						</div>
-						<h2 class="text-xl font-bold">{$t('adventures.date_information')}</h2>
-					</div>
-				</div>
-
-				<!-- Settings Section -->
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6">
-					<div class="flex items-center gap-2 mb-4">
-						<SettingsIcon class="w-4 h-4 text-base-content/70" />
-						<h3 class="font-medium text-base-content/80">{$t('navbar.settings')}</h3>
-					</div>
-
-					<div class="space-y-4">
-						<!-- Timezone Selection -->
-
-						<div>
-							<label class="label-text text-sm font-medium" for="timezone-selector"
-								>{$t('adventures.timezone')}</label
+<div
+	class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5"
+>
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
+		<div class="max-w-full mx-auto space-y-6">
+			{#snippet visitEditor()}
+				<div class="space-y-4">
+					<div class="flex flex-wrap gap-4">
+						<label class="flex items-center gap-2 cursor-pointer" for="all-day-toggle">
+							<input
+								id="all-day-toggle"
+								type="checkbox"
+								class="toggle toggle-primary"
+								checked={allDay}
+								onchange={handleAllDayToggle}
+							/>
+							<span class="font-semibold text-sm text-base-content">{$t('adventures.all_day')}</span
 							>
-							<div class="mt-1">
-								<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
-							</div>
-						</div>
+						</label>
 
-						<!-- Toggles -->
-						<div class="flex flex-wrap gap-6">
-							<div class="flex items-center gap-3">
-								<ClockIcon class="w-4 h-4 text-base-content/70" />
-								<label class="label-text text-sm font-medium" for="all-day-toggle"
-									>{$t('adventures.all_day')}</label
-								>
+						{#if collection?.start_date && collection?.end_date}
+							<label class="flex items-center gap-2 cursor-pointer" for="constrain-dates">
 								<input
-									id="all-day-toggle"
+									id="constrain-dates"
 									type="checkbox"
-									class="toggle toggle-{typeConfig.color} toggle-sm"
-									checked={allDay}
-									on:change={handleAllDayToggle}
+									class="toggle toggle-secondary"
+									bind:checked={constrainDates}
+								/>
+								<span class="font-semibold text-sm text-base-content"
+									>{$t('adventures.date_constrain')}</span
+								>
+							</label>
+						{/if}
+					</div>
+
+					{#if !isDateValid}
+						<div class="alert alert-error bg-error/10 border border-error/30 text-error">
+							<AlertIcon class="w-4 h-4" />
+							<span class="text-sm">{$t('adventures.invalid_date_range')}</span>
+						</div>
+					{/if}
+
+					<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+						<div class="flex flex-col">
+							<label class="field-label" for="start-date-input">{$t('adventures.start_date')}</label
+							>
+							<DateInput
+								id="start-date-input"
+								bind:value={localStartDate}
+								onchange={handleLocalDateChange}
+								showTime={!allDay}
+								min={constrainDates ? constraintStartDate : undefined}
+								max={constrainDates ? constraintEndDate : undefined}
+								clearable={false}
+							/>
+						</div>
+
+						{#if localStartDate}
+							<div class="flex flex-col">
+								<label class="field-label" for="end-date-input">{$t('adventures.end_date')}</label>
+								<DateInput
+									id="end-date-input"
+									bind:value={localEndDate}
+									onchange={handleLocalDateChange}
+									showTime={!allDay}
+									min={constrainDates ? localStartDate : undefined}
+									max={constrainDates ? constraintEndDate : undefined}
+									clearable={false}
 								/>
 							</div>
+						{/if}
 
-							{#if collection?.start_date && collection?.end_date}
-								<div class="flex items-center gap-3">
-									<CalendarIcon class="w-4 h-4 text-base-content/70" />
-									<label class="label-text text-sm font-medium" for="constrain-dates"
-										>{$t('adventures.date_constrain')}</label
-									>
-									<input
-										id="constrain-dates"
-										type="checkbox"
-										class="toggle toggle-{typeConfig.color} toggle-sm"
-										bind:checked={constrainDates}
-									/>
+						{#if !allDay}
+							<div class="flex flex-col">
+								<label class="field-label" for="timezone-selector"
+									>{$t('adventures.timezone')}</label
+								>
+								<div class="mt-1">
+									<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 								</div>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				<!-- Date Selection Section -->
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6">
-					<h3 class="font-medium text-base-content/80 mb-4">{$t('adventures.date_selection')}</h3>
-
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<!-- Start Date -->
-						<div>
-							<label class="label-text text-sm font-medium" for="start-date-input">
-								{typeConfig.startLabel}
-							</label>
-							{#if allDay}
-								<input
-									id="start-date-input"
-									type="date"
-									class="input input-bordered w-full mt-1"
-									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : ''}
-									max={constrainDates ? constraintEndDate : ''}
-								/>
-							{:else}
-								<input
-									id="start-date-input"
-									type="datetime-local"
-									class="input input-bordered w-full mt-1"
-									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : ''}
-									max={constrainDates ? constraintEndDate : ''}
-								/>
-							{/if}
-						</div>
-
-						<!-- End Date -->
-						{#if localStartDate}
-							<div>
-								<label class="label-text text-sm font-medium" for="end-date-input">
-									{typeConfig.endLabel}
-								</label>
-								{#if allDay}
-									<input
-										id="end-date-input"
-										type="date"
-										class="input input-bordered w-full mt-1"
-										bind:value={localEndDate}
-										on:change={handleLocalDateChange}
-										min={constrainDates ? localStartDate : ''}
-										max={constrainDates ? constraintEndDate : ''}
-									/>
-								{:else}
-									<input
-										id="end-date-input"
-										type="datetime-local"
-										class="input input-bordered w-full mt-1"
-										bind:value={localEndDate}
-										on:change={handleLocalDateChange}
-										min={constrainDates ? localStartDate : ''}
-										max={constrainDates ? constraintEndDate : ''}
-									/>
-								{/if}
 							</div>
 						{/if}
 					</div>
 
-					<!-- Notes (Location only) -->
-
-					<div class="mt-4">
-						<label class="label-text text-sm font-medium" for="visit-notes"
-							>{$t('adventures.notes')}</label
-						>
+					<div>
+						<label class="field-label" for="visit-notes">{$t('adventures.notes')}</label>
 						<textarea
 							id="visit-notes"
-							class="textarea textarea-bordered w-full mt-1"
+							class="textarea textarea-bordered w-full mt-1 bg-base-100/80 focus:bg-base-100"
 							rows="3"
 							placeholder={$t('adventures.notes_placeholder') + '...'}
 							bind:value={note}
 						></textarea>
 					</div>
 
-					<!-- Add Visit Button -->
-					<div class="flex justify-end mt-4">
+					<div class="flex flex-wrap justify-end gap-2">
+						{#if visitIdEditing}
+							<button
+								class="btn btn-ghost btn-sm"
+								type="button"
+								onclick={cancelEditVisit}
+								disabled={isSavingVisit}
+							>
+								{$t('about.close')}
+							</button>
+						{/if}
 						<button
-							class="btn btn-{typeConfig.color} btn-sm gap-2"
+							class="btn btn-primary btn-sm gap-2"
 							type="button"
-							disabled={!localStartDate || !isDateValid}
-							on:click={() => addVisit(false)}
+							disabled={!localStartDate || !isDateValid || isSavingVisit}
+							onclick={() => addVisit(false)}
 						>
-							<PlusIcon class="w-4 h-4" />
+							{#if isSavingVisit}
+								<span class="loading loading-spinner loading-xs"></span>
+							{:else if visitIdEditing}
+								<CheckIcon class="w-4 h-4" />
+							{:else}
+								<PlusIcon class="w-4 h-4" />
+							{/if}
 							{visitIdEditing ? $t('adventures.update_visit') : $t('adventures.add_visit')}
 						</button>
 					</div>
 				</div>
+			{/snippet}
 
-				<!-- Validation Error -->
-				{#if !isDateValid}
-					<div class="alert alert-error mb-6">
-						<AlertIcon class="w-5 h-5" />
-						<span class="text-sm">{$t('adventures.invalid_date_range')}</span>
-					</div>
+			{#snippet visitActivityActions(visit: Visit)}
+				{#if stravaEnabled}
+					<button
+						class="btn btn-outline btn-info btn-xs gap-1"
+						title={$t('adventures.view_strava_activities')}
+						onclick={() => toggleVisitActivities(visit)}
+					>
+						<RunFastIcon class="w-3 h-3" />
+						Strava
+						{#if visitActivities[visit.id]}
+							({visitActivities[visit.id].length})
+						{/if}
+					</button>
 				{/if}
 
-				<!-- Visits List (Location only) -->
+				{#if endurainEnabled}
+					<button
+						class="btn btn-outline btn-secondary btn-xs gap-1"
+						title={$t('adventures.view_endurain_activities')}
+						onclick={() => toggleEndurainVisitActivities(visit)}
+					>
+						<RunFastIcon class="w-3 h-3" />
+						Endurain
+						{#if endurainVisitActivities[visit.id]}
+							({endurainVisitActivities[visit.id].length})
+						{/if}
+					</button>
+				{/if}
 
-				<div class="bg-base-50 p-4 rounded-lg border border-base-200">
-					<h3 class="font-medium text-base-content/80 mb-4">
-						{$t('adventures.visits')} ({visits?.length || 0})
-					</h3>
+				<button
+					class="btn btn-outline btn-success btn-xs gap-1"
+					title={$t('adventures.add_activity')}
+					onclick={() => showActivityUploadForm(visit.id)}
+				>
+					<UploadIcon class="w-3 h-3" />
+					{$t('adventures.add_activity')}
+				</button>
+			{/snippet}
+
+			<!-- Add Visit Section -->
+			{#if !visitIdEditing}
+				<div class="card bg-base-100 border border-base-300 shadow-lg">
+					<div class="card-body p-6">
+						<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-lg">
+									<CalendarIcon class="w-5 h-5 text-primary" />
+								</div>
+								<h2 class="text-xl font-bold">
+									{$t('adventures.add_visit')}
+								</h2>
+							</div>
+							<button
+								type="button"
+								class="btn btn-primary btn-sm gap-2"
+								disabled={todayCovered || isSavingVisit}
+								title={todayCovered
+									? $t('adventures.visited_today')
+									: $t('adventures.add_today_visit')}
+								onclick={() => addTodayVisit()}
+							>
+								{#if isSavingVisit && localStartDate === getTodayDate()}
+									<span class="loading loading-spinner loading-xs"></span>
+								{:else}
+									<CalendarTodayIcon class="w-4 h-4" />
+								{/if}
+								{$t('adventures.add_today_visit')}
+							</button>
+						</div>
+
+						{@render visitEditor()}
+					</div>
+				</div>
+			{/if}
+
+			<!-- Visits List -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-info/10 rounded-lg">
+							<MapMarkerIcon class="w-5 h-5 text-info" />
+						</div>
+						<h2 class="text-xl font-bold">
+							{$t('adventures.visits')}
+							<span class="text-base font-normal text-base-content/60">({visits?.length || 0})</span
+							>
+						</h2>
+					</div>
 
 					{#if !visits || visits.length === 0}
-						<div class="text-center py-8 text-base-content/60">
-							<CalendarIcon class="w-8 h-8 mx-auto mb-2 opacity-50" />
-							<p class="text-sm">{$t('adventures.no_visits')}</p>
-							<p class="text-xs text-base-content/40 mt-1">
+						<div class="text-center py-10 text-base-content/60">
+							<CalendarIcon class="w-10 h-10 mx-auto mb-3 opacity-40" />
+							<p class="text-sm font-medium">{$t('adventures.no_visits')}</p>
+							<p class="text-xs text-base-content/40 mt-1 mb-4">
 								{$t('adventures.no_visits_description')}
 							</p>
+							<button
+								type="button"
+								class="btn btn-primary btn-sm gap-2"
+								disabled={todayCovered || isSavingVisit}
+								onclick={() => addTodayVisit()}
+							>
+								<CalendarTodayIcon class="w-4 h-4" />
+								{$t('adventures.add_today_visit')}
+							</button>
 						</div>
 					{:else}
 						<div class="space-y-3">
 							{#each visits as visit (visit.id)}
 								<div
-									class="bg-base-100 p-4 rounded-lg border border-base-300 hover:border-base-400 transition-colors"
+									class="bg-base-200/50 p-4 rounded-xl border border-base-300 hover:border-primary/30 transition-colors"
+									class:ring-2={visitIdEditing === visit.id}
+									class:ring-primary={visitIdEditing === visit.id}
 								>
-									<div class="flex items-start justify-between">
-										<div class="flex-1 min-w-0">
-											<div class="flex items-center gap-2 mb-2">
-												{#if isVisitAllDay(visit.start_date, visit.end_date)}
-													<span class="badge badge-outline badge-sm"
-														>{$t('adventures.all_day')}</span
-													>
-												{:else}
-													<ClockIcon class="w-3 h-3 text-base-content/50" />
-												{/if}
-												{#if visit.timezone && !isVisitAllDay(visit.start_date, visit.end_date)}
-													<span class="badge badge-outline badge-sm">{visit.timezone}</span>
-												{/if}
-												<div class="text-sm font-medium truncate">
+									{#if visitIdEditing === visit.id}
+										{@render visitEditor()}
+										<div class="flex flex-wrap justify-end gap-1 mt-3">
+											{@render visitActivityActions(visit)}
+										</div>
+									{:else}
+										<div class="flex items-start justify-between gap-3">
+											<div class="flex-1 min-w-0">
+												<div class="flex flex-wrap items-center gap-2 mb-1">
 													{#if isVisitAllDay(visit.start_date, visit.end_date)}
-														{visit.start_date && typeof visit.start_date === 'string'
-															? visit.start_date.split('T')[0]
-															: ''}
-														– {visit.end_date && typeof visit.end_date === 'string'
-															? visit.end_date.split('T')[0]
-															: ''}
-													{:else if 'start_timezone' in visit && visit.timezone}
-														{formatDateInTimezone(visit.start_date, visit.timezone)}
-														– {formatDateInTimezone(visit.end_date, visit.timezone)}
-													{:else if visit.timezone}
-														{formatDateInTimezone(visit.start_date, visit.timezone)}
-														– {formatDateInTimezone(visit.end_date, visit.timezone)}
+														<span class="badge badge-outline badge-sm"
+															>{$t('adventures.all_day')}</span
+														>
 													{:else}
-														{new Date(visit.start_date).toLocaleString()}
-														– {new Date(visit.end_date).toLocaleString()}
+														<span class="badge badge-outline badge-sm gap-1">
+															<ClockIcon class="w-3 h-3" />
+															{$t('adventures.timed')}
+														</span>
+													{/if}
+													{#if visit.timezone && !isVisitAllDay(visit.start_date, visit.end_date)}
+														<span class="badge badge-ghost badge-sm">{visit.timezone}</span>
 													{/if}
 												</div>
+												<div class="text-base font-semibold truncate">
+													{#if isVisitAllDay(visit.start_date, visit.end_date)}
+														{formatAllDayDate(visit.start_date, dateFormat)}
+														– {formatAllDayDate(visit.end_date, dateFormat)}
+													{:else if visit.timezone}
+														{formatDateInTimezone(visit.start_date, visit.timezone, dateFormat)}
+														– {formatDateInTimezone(visit.end_date, visit.timezone, dateFormat)}
+													{:else}
+														{formatDateInTimezone(visit.start_date, null, dateFormat)}
+														– {formatDateInTimezone(visit.end_date, null, dateFormat)}
+													{/if}
+												</div>
+
+												{#if visit.notes}
+													<p
+														class="text-sm text-base-content/70 bg-base-100/80 p-2 rounded-lg mt-2 border border-base-300"
+													>
+														{visit.notes}
+													</p>
+												{/if}
+
+												{#if visit.activities && visit.activities.length > 0}
+													<div class="flex items-center gap-2 mt-2">
+														<RunFastIcon class="w-3.5 h-3.5 text-success" />
+														<span class="text-xs text-success font-medium">
+															{visit.activities.length}
+															{$t('adventures.saved_activities')}
+														</span>
+													</div>
+												{/if}
 											</div>
 
-											{#if visit.notes}
-												<p class="text-xs text-base-content/70 bg-base-200/50 p-2 rounded">
-													"{visit.notes}"
-												</p>
-											{/if}
-
-											{#if visit.activities && visit.activities.length > 0}
-												<div class="flex items-center gap-2 mt-2">
-													<RunFastIcon class="w-3 h-3 text-success" />
-													<span class="text-xs text-success font-medium">
-														{visit.activities.length}
-														{$t('adventures.saved_activities')}
-													</span>
+											<div class="flex flex-col items-end gap-2 shrink-0">
+												<div class="flex gap-1">
+													<button
+														class="btn btn-ghost btn-sm btn-square"
+														title={$t('adventures.edit_visit')}
+														onclick={() => editVisit(visit)}
+													>
+														<EditIcon class="w-4 h-4" />
+													</button>
+													<button
+														class="btn btn-ghost btn-sm btn-square text-error"
+														title={$t('adventures.remove_visit')}
+														onclick={() => removeVisit(visit.id)}
+													>
+														<TrashIcon class="w-4 h-4" />
+													</button>
 												</div>
-											{/if}
+												<div class="flex flex-wrap justify-end gap-1">
+													{@render visitActivityActions(visit)}
+												</div>
+											</div>
 										</div>
-
-										<!-- Visit Actions -->
-										<div class="flex gap-1 ml-4">
-											<!-- Activities Button (only show if Strava is enabled) -->
-											{#if stravaEnabled}
-												<button
-													class="btn btn-info btn-xs tooltip tooltip-top gap-1"
-													data-tip={$t('adventures.view_strava_activities')}
-													on:click={() => toggleVisitActivities(visit)}
-												>
-													<RunFastIcon class="w-3 h-3" />
-													{#if visitActivities[visit.id]}
-														({visitActivities[visit.id].length})
-													{/if}
-												</button>
-											{/if}
-
-											{#if endurainEnabled}
-												<button
-													class="btn btn-secondary btn-xs tooltip tooltip-top gap-1"
-													data-tip={$t('adventures.view_endurain_activities')}
-													on:click={() => toggleEndurainVisitActivities(visit)}
-												>
-													<RunFastIcon class="w-3 h-3" />
-													{#if endurainVisitActivities[visit.id]}
-														({endurainVisitActivities[visit.id].length})
-													{/if}
-												</button>
-											{/if}
-
-											<!-- Upload Activity Button -->
-											<button
-												class="btn btn-success btn-xs tooltip tooltip-top gap-1"
-												data-tip={$t('adventures.add_activity')}
-												on:click={() => showActivityUploadForm(visit.id)}
-											>
-												<UploadIcon class="w-3 h-3" />
-											</button>
-
-											<button
-												class="btn btn-warning btn-xs tooltip tooltip-top"
-												data-tip={$t('adventures.edit_visit')}
-												on:click={() => editVisit(visit)}
-											>
-												<EditIcon class="w-3 h-3" />
-											</button>
-											<button
-												class="btn btn-error btn-xs tooltip tooltip-top"
-												data-tip={$t('adventures.remove_visit')}
-												on:click={() => removeVisit(visit.id)}
-											>
-												<TrashIcon class="w-3 h-3" />
-											</button>
-										</div>
-									</div>
+									{/if}
 
 									<!-- Activity Upload Form -->
 									{#if showActivityUpload[visit.id]}
@@ -1197,7 +1352,7 @@
 												</div>
 												<button
 													class="btn btn-ghost btn-xs"
-													on:click={() => hideActivityUploadForm(visit.id)}
+													onclick={() => hideActivityUploadForm(visit.id)}
 												>
 													<CloseIcon class="w-3 h-3" />
 												</button>
@@ -1225,9 +1380,7 @@
 													<div class="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-lg">
 														<div class="flex items-center gap-2 mb-2">
 															<FileIcon class="w-4 h-4 text-warning" />
-															<label
-																class="label-text font-medium text-warning"
-																for="gpx-file-{visit.id}"
+															<label class="field-label text-warning mb-0" for="gpx-file-{visit.id}"
 																>{$t('adventures.gpx_file_required')} *</label
 															>
 														</div>
@@ -1236,13 +1389,13 @@
 																id="gpx-file-{visit.id}"
 																type="file"
 																accept=".gpx"
-																class="file-input file-input-bordered file-input-warning flex-1"
-																on:change={handleGpxFileChange}
+																class="file-input file-input-warning flex-1"
+																onchange={handleGpxFileChange}
 															/>
 															<button
 																type="button"
 																class="btn btn-warning btn-sm gap-1"
-																on:click={() => {
+																onclick={() => {
 																	const stravaActivity = pendingActivityImport[visit.id]?.activity;
 																	if (stravaActivity && stravaActivity.export_gpx) {
 																		window.open(stravaActivity.export_gpx, '_blank');
@@ -1259,36 +1412,39 @@
 													</div>
 												{/if}
 
+												<p class="text-xs text-base-content/60 mb-3">
+													{$t('adventures.required_fields_hint')}
+												</p>
+
 												<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-													<!-- Activity Name -->
 													<div class="md:col-span-2">
-														<label
-															class="label-text text-xs font-medium"
-															for="activity-name-{visit.id}"
-															>{$t('adventures.activity_name')} *</label
-														>
+														<label class="field-label text-xs" for="activity-name-{visit.id}">
+															{$t('adventures.activity_name')}
+															<span class="text-error">*</span>
+														</label>
 														<input
 															id="activity-name-{visit.id}"
 															type="text"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder={$t('adventures.activity_name_placeholder')}
 															bind:value={activityForm.name}
+															required
 														/>
 													</div>
 
-													<!-- Sport Type -->
 													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="sport-type-{visit.id}">{$t('adventures.sport_type')}</label
-														>
+														<label class="field-label text-xs" for="sport-type-{visit.id}">
+															{$t('adventures.sport_type')}
+															<span class="text-error">*</span>
+														</label>
 														<select
 															id="sport-type-{visit.id}"
-															class="select select-bordered select-sm w-full mt-1"
+															class="select select-sm w-full mt-1"
 															bind:value={activityForm.sport_type}
 															disabled={isStravaImportPending(visit.id)}
+															required
 														>
-															{#each SPORT_TYPE_CHOICES as sportType}
+															{#each SPORT_TYPE_CHOICES as sportType (sportType.key)}
 																<option value={sportType.key}
 																	>{sportType.icon} {sportType.label}</option
 																>
@@ -1296,314 +1452,110 @@
 														</select>
 													</div>
 
-													<!-- Distance -->
 													<div>
-														<label class="label-text text-xs font-medium" for="distance-{visit.id}"
-															>{$t('adventures.distance')} (km)</label
+														<label class="field-label text-xs" for="start-date-{visit.id}"
+															>{$t('adventures.start_date')}</label
+														>
+														<DateInput
+															id="start-date-{visit.id}"
+															bind:value={activityForm.start_date}
+															showTime={true}
+															size="sm"
+															clearable={false}
+															readonly={isStravaImportPending(visit.id)}
+														/>
+													</div>
+
+													<div>
+														<TimezoneSelector bind:selectedTimezone={activityForm.timezone} />
+													</div>
+
+													<div>
+														<label class="field-label text-xs" for="distance-{visit.id}"
+															>{$t('adventures.distance')} ({distanceUnit})</label
 														>
 														<input
 															id="distance-{visit.id}"
 															type="number"
 															step="0.01"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="5.2"
+															min="0"
+															class="input input-sm w-full mt-1"
+															placeholder={distancePlaceholder}
 															bind:value={activityForm.distance}
 															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
-													<!-- Moving Time -->
 													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="moving-time-{visit.id}"
+														<label class="field-label text-xs" for="moving-time-{visit.id}"
 															>{$t('adventures.moving_time')} (HH:MM:SS)</label
 														>
 														<input
 															id="moving-time-{visit.id}"
 															type="text"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="0:25:30"
 															bind:value={activityForm.moving_time}
 															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
-													<!-- Elapsed Time -->
 													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="elapsed-time-{visit.id}"
+														<label class="field-label text-xs" for="elapsed-time-{visit.id}"
 															>{$t('adventures.elapsed_time')} (HH:MM:SS)</label
 														>
 														<input
 															id="elapsed-time-{visit.id}"
 															type="text"
-															class="input input-bordered input-sm w-full mt-1"
+															class="input input-sm w-full mt-1"
 															placeholder="0:30:00"
 															bind:value={activityForm.elapsed_time}
 															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
-													<!-- Start Date -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="start-date-{visit.id}">{$t('adventures.start_date')}</label
-														>
-														<input
-															id="start-date-{visit.id}"
-															type="datetime-local"
-															class="input input-bordered input-sm w-full mt-1"
-															bind:value={activityForm.start_date}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Elevation Gain -->
 													{#if !activityForm.gpx_file}
 														<div>
-															<label
-																class="label-text text-xs font-medium"
-																for="elevation-gain-{visit.id}"
-																>{$t('adventures.elevation_gain')} (m)</label
+															<label class="field-label text-xs" for="elevation-gain-{visit.id}"
+																>{$t('adventures.elevation_gain')} ({elevationUnit})</label
 															>
 															<input
 																id="elevation-gain-{visit.id}"
 																type="number"
-																class="input input-bordered input-sm w-full mt-1"
-																placeholder="150"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder={elevationPlaceholder}
 																bind:value={activityForm.elevation_gain}
 																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
-													{/if}
-
-													<!-- Elevation Loss -->
-													{#if !activityForm.gpx_file}
 														<div>
-															<label
-																class="label-text text-xs font-medium"
-																for="elevation-loss-{visit.id}"
-																>{$t('adventures.elevation_loss')} (m)</label
+															<label class="field-label text-xs" for="elevation-loss-{visit.id}"
+																>{$t('adventures.elevation_loss')} ({elevationUnit})</label
 															>
 															<input
 																id="elevation-loss-{visit.id}"
 																type="number"
-																class="input input-bordered input-sm w-full mt-1"
-																placeholder="150"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder={elevationPlaceholder}
 																bind:value={activityForm.elevation_loss}
 																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
 													{/if}
 
-													<!-- Calories -->
-													<div>
-														<label class="label-text text-xs font-medium" for="calories-{visit.id}"
-															>{$t('adventures.calories')}</label
-														>
-														<input
-															id="calories-{visit.id}"
-															type="number"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="300"
-															bind:value={activityForm.calories}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Elevation High -->
-													{#if !activityForm.gpx_file}
-														<div>
-															<label
-																class="label-text text-xs font-medium"
-																for="elevation-high-{visit.id}"
-																>{$t('adventures.elevation_high')} (m)</label
-															>
-															<input
-																id="elevation-high-{visit.id}"
-																type="number"
-																class="input input-bordered input-sm w-full mt-1"
-																placeholder="2000"
-																bind:value={activityForm.elev_high}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-													{/if}
-
-													<!-- Elevation Low -->
-													{#if !activityForm.gpx_file}
-														<div>
-															<label
-																class="label-text text-xs font-medium"
-																for="elevation-low-{visit.id}"
-																>{$t('adventures.elevation_low')} (m)</label
-															>
-															<input
-																id="elevation-low-{visit.id}"
-																type="number"
-																class="input input-bordered input-sm w-full mt-1"
-																placeholder="1000"
-																bind:value={activityForm.elev_low}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-													{/if}
-
-													<!-- Rest Time -->
-													<div>
-														<label class="label-text text-xs font-medium" for="rest-time-{visit.id}"
-															>{$t('adventures.rest_time')} (s)</label
-														>
-														<input
-															id="rest-time-{visit.id}"
-															type="number"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="60"
-															bind:value={activityForm.rest_time}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Start Latitude -->
-													<div>
-														<label class="label-text text-xs font-medium" for="start-lat-{visit.id}"
-															>{$t('adventures.start_lat')} (°)</label
-														>
-														<input
-															id="start-lat-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="37.7749"
-															bind:value={activityForm.start_lat}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Start Longitude -->
-													<div>
-														<label class="label-text text-xs font-medium" for="start-lng-{visit.id}"
-															>{$t('adventures.start_lng')} (°)</label
-														>
-														<input
-															id="start-lng-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="-122.4194"
-															bind:value={activityForm.start_lng}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- End Latitude -->
-													<div>
-														<label class="label-text text-xs font-medium" for="end-lat-{visit.id}"
-															>{$t('adventures.end_lat')} (°)</label
-														>
-														<input
-															id="end-lat-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="37.7749"
-															bind:value={activityForm.end_lat}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- End Longitude -->
-													<div>
-														<label class="label-text text-xs font-medium" for="end-lng-{visit.id}"
-															>{$t('adventures.end_lng')} (°)</label
-														>
-														<input
-															id="end-lng-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="-122.4194"
-															bind:value={activityForm.end_lng}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Timezone -->
-													<div>
-														<label class="label-text text-xs font-medium" for="timezone-{visit.id}"
-															>{$t('adventures.timezone')}</label
-														>
-														<TimezoneSelector bind:selectedTimezone={activityForm.timezone} />
-													</div>
-
-													<!-- Average Speed -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="average-speed-{visit.id}"
-															>{$t('adventures.average_speed')} (m/s)</label
-														>
-														<input
-															id="average-speed-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="3.5"
-															bind:value={activityForm.average_speed}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Max Speed -->
-													<div>
-														<label class="label-text text-xs font-medium" for="max-speed-{visit.id}"
-															>{$t('adventures.max_speed')} (m/s)</label
-														>
-														<input
-															id="max-speed-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="5.0"
-															bind:value={activityForm.max_speed}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Average Cadence -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="average-cadence-{visit.id}"
-															>{$t('adventures.average_cadence')} (rpm)</label
-														>
-														<input
-															id="average-cadence-{visit.id}"
-															type="number"
-															step="any"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="80"
-															bind:value={activityForm.average_cadence}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<!-- Trail Selection -->
 													{#if trails && trails.length > 0}
 														<div class="md:col-span-2">
-															<label
-																class="label-text text-xs font-medium"
-																for="trail-select-{visit.id}">{$t('adventures.trail')}</label
+															<label class="field-label text-xs" for="trail-select-{visit.id}"
+																>{$t('adventures.trail')}</label
 															>
 															<select
 																id="trail-select-{visit.id}"
-																class="select select-bordered select-sm w-full mt-1"
+																class="select select-sm w-full mt-1"
 																bind:value={activityForm.trail}
 															>
-																<option value="">Select a trail</option>
+																<option value="">—</option>
 																{#each trails as trail (trail.id)}
 																	<option value={trail.id}>{trail.name}</option>
 																{/each}
@@ -1611,19 +1563,192 @@
 														</div>
 													{/if}
 
-													<!-- GPX File (for manual uploads) -->
 													{#if !isStravaImportPending(visit.id)}
 														<div class="md:col-span-2">
-															<label
-																class="label-text text-xs font-medium"
-																for="gpx-file-manual-{visit.id}">{$t('adventures.gpx_file')}</label
+															<label class="field-label text-xs" for="gpx-file-manual-{visit.id}"
+																>{$t('adventures.gpx_file')}</label
 															>
 															<input
 																id="gpx-file-manual-{visit.id}"
 																type="file"
 																accept=".gpx"
-																class="file-input file-input-bordered file-input-sm w-full mt-1"
-																on:change={handleGpxFileChange}
+																class="file-input file-input-sm w-full mt-1"
+																onchange={handleGpxFileChange}
+															/>
+															<p class="text-xs text-base-content/60 mt-1">
+																{$t('adventures.activity_gpx_optional_hint')}
+															</p>
+														</div>
+													{/if}
+
+													<div class="md:col-span-2">
+														<button
+															type="button"
+															class="btn btn-ghost btn-sm px-0"
+															onclick={() => (showActivityExtras = !showActivityExtras)}
+														>
+															{showActivityExtras
+																? $t('adventures.hide_details')
+																: $t('adventures.more_details')}
+														</button>
+													</div>
+
+													{#if showActivityExtras}
+														<div>
+															<label class="field-label text-xs" for="calories-{visit.id}"
+																>{$t('adventures.calories')}</label
+															>
+															<input
+																id="calories-{visit.id}"
+																type="number"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder="300"
+																bind:value={activityForm.calories}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="rest-time-{visit.id}"
+																>{$t('adventures.rest_time')} (s)</label
+															>
+															<input
+																id="rest-time-{visit.id}"
+																type="number"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder="60"
+																bind:value={activityForm.rest_time}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														{#if !activityForm.gpx_file}
+															<div>
+																<label class="field-label text-xs" for="elevation-high-{visit.id}"
+																	>{$t('adventures.elevation_high')} ({elevationUnit})</label
+																>
+																<input
+																	id="elevation-high-{visit.id}"
+																	type="number"
+																	class="input input-sm w-full mt-1"
+																	placeholder={elevationPlaceholder}
+																	bind:value={activityForm.elev_high}
+																	readonly={isStravaImportPending(visit.id)}
+																/>
+															</div>
+															<div>
+																<label class="field-label text-xs" for="elevation-low-{visit.id}"
+																	>{$t('adventures.elevation_low')} ({elevationUnit})</label
+																>
+																<input
+																	id="elevation-low-{visit.id}"
+																	type="number"
+																	class="input input-sm w-full mt-1"
+																	placeholder={elevationPlaceholder}
+																	bind:value={activityForm.elev_low}
+																	readonly={isStravaImportPending(visit.id)}
+																/>
+															</div>
+														{/if}
+														<div>
+															<label class="field-label text-xs" for="average-speed-{visit.id}"
+																>{$t('adventures.average_speed')} ({speedUnit})</label
+															>
+															<input
+																id="average-speed-{visit.id}"
+																type="number"
+																step="0.1"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder={speedPlaceholder}
+																bind:value={activityForm.average_speed}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="max-speed-{visit.id}"
+																>{$t('adventures.max_speed')} ({speedUnit})</label
+															>
+															<input
+																id="max-speed-{visit.id}"
+																type="number"
+																step="0.1"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder={speedPlaceholder}
+																bind:value={activityForm.max_speed}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="average-cadence-{visit.id}"
+																>{$t('adventures.average_cadence')} (rpm)</label
+															>
+															<input
+																id="average-cadence-{visit.id}"
+																type="number"
+																step="any"
+																min="0"
+																class="input input-sm w-full mt-1"
+																placeholder="80"
+																bind:value={activityForm.average_cadence}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="start-lat-{visit.id}"
+																>{$t('adventures.start_lat')} (°)</label
+															>
+															<input
+																id="start-lat-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-sm w-full mt-1"
+																placeholder="37.7749"
+																bind:value={activityForm.start_lat}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="start-lng-{visit.id}"
+																>{$t('adventures.start_lng')} (°)</label
+															>
+															<input
+																id="start-lng-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-sm w-full mt-1"
+																placeholder="-122.4194"
+																bind:value={activityForm.start_lng}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="end-lat-{visit.id}"
+																>{$t('adventures.end_lat')} (°)</label
+															>
+															<input
+																id="end-lat-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-sm w-full mt-1"
+																placeholder="37.7749"
+																bind:value={activityForm.end_lat}
+																readonly={isStravaImportPending(visit.id)}
+															/>
+														</div>
+														<div>
+															<label class="field-label text-xs" for="end-lng-{visit.id}"
+																>{$t('adventures.end_lng')} (°)</label
+															>
+															<input
+																id="end-lng-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-sm w-full mt-1"
+																placeholder="-122.4194"
+																bind:value={activityForm.end_lng}
+																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
 													{/if}
@@ -1632,14 +1757,14 @@
 												<div class="flex justify-end gap-2 mt-4">
 													<button
 														class="btn btn-ghost btn-sm"
-														on:click={() => hideActivityUploadForm(visit.id)}
+														onclick={() => hideActivityUploadForm(visit.id)}
 														disabled={uploadingActivity[visit.id]}
 													>
 														Cancel
 													</button>
 													<button
 														class="btn btn-success btn-sm gap-2"
-														on:click={() => uploadActivity(visit.id)}
+														onclick={() => uploadActivity(visit.id)}
 														disabled={uploadingActivity[visit.id] ||
 															!activityForm.name.trim() ||
 															(isStravaImportPending(visit.id) && !activityForm.gpx_file)}
@@ -1778,29 +1903,30 @@
 					{/if}
 				</div>
 			</div>
-		</div>
 
-		<!-- if localStartDate and localEndDate are set, show a callout saying its not saved yet -->
-		{#if localStartDate || localEndDate}
-			<div class="alert alert-neutral">
-				<InfoIcon class="w-5 h-5" />
-				<div>
-					<div class="font-medium text-sm">{$t('adventures.dates_not_saved')}</div>
-					<div class="text-xs opacity-75">{$t('adventures.dates_not_saved_description')}</div>
+			{#if (localStartDate || localEndDate) && !visitIdEditing}
+				<div class="alert alert-neutral shadow-sm">
+					<InfoIcon class="w-5 h-5" />
+					<div>
+						<div class="font-medium text-sm">{$t('adventures.dates_not_saved')}</div>
+						<div class="text-xs opacity-75">{$t('adventures.dates_not_saved_description')}</div>
+					</div>
 				</div>
-			</div>
-		{/if}
-
-		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
-				<ArrowLeftIcon class="w-5 h-5" />
-				{$t('adventures.back')}
-			</button>
-
-			<button class="btn btn-primary gap-2" on:click={handleClose}>
-				<CheckIcon class="w-5 h-5" />
-				{$t('adventures.done')}
-			</button>
+			{/if}
 		</div>
+	</div>
+
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button class="btn btn-ghost gap-2" onclick={handleBack}>
+			<ArrowLeftIcon class="w-5 h-5" />
+			{$t('adventures.back')}
+		</button>
+
+		<button class="btn btn-primary gap-2" onclick={handleClose}>
+			<CheckIcon class="w-5 h-5" />
+			{$t('adventures.done')}
+		</button>
 	</div>
 </div>

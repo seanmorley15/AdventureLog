@@ -3,17 +3,29 @@
 	import ImageSourceBadge from './ImageSourceBadge.svelte';
 	import { defaultImageSource } from '$lib/images';
 
-	export let source: ImageSource | null | undefined = 'upload';
-	export let className = '';
-	export let showSourceBadge = false;
+	interface Props {
+		source?: ImageSource | null | undefined;
+		className?: string;
+		showSourceBadge?: boolean;
+		children?: import('svelte').Snippet;
+		overlays?: import('svelte').Snippet;
+	}
 
-	$: resolvedSource = defaultImageSource(source);
+	let {
+		source = 'upload',
+		className = '',
+		showSourceBadge = false,
+		children,
+		overlays
+	}: Props = $props();
+
+	let resolvedSource = $derived(defaultImageSource(source));
 </script>
 
 <div class={`relative ${className}`}>
-	<slot />
+	{@render children?.()}
 	{#if showSourceBadge}
 		<ImageSourceBadge source={resolvedSource} />
 	{/if}
-	<slot name="overlays" />
+	{@render overlays?.()}
 </div>

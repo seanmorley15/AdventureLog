@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { createBubbler, preventDefault } from 'svelte/legacy';
+
+	const bubble = createBubbler();
 	import type { Collection, Checklist, User, ChecklistItem } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -7,28 +10,37 @@
 	import { t } from 'svelte-i18n';
 
 	import CheckboxIcon from '~icons/mdi/checkbox-multiple-marked-outline';
+	import DateInput from './shared/DateInput.svelte';
 
-	export let checklist: Checklist | null = null;
-	export let collection: Collection;
-	export let user: User | null = null;
-	export let initialVisitDate: string | null = null;
+	interface Props {
+		checklist?: Checklist | null;
+		collection: Collection;
+		user?: User | null;
+		initialVisitDate?: string | null;
+	}
 
-	let items: ChecklistItem[] = [];
+	let { checklist = null, collection, user = null, initialVisitDate = null }: Props = $props();
 
-	let constrainDates: boolean = true;
+	let items: ChecklistItem[] = $state([]);
 
-	items = checklist?.items || [];
+	let constrainDates: boolean = $state(true);
 
-	let warning: string | null = '';
+	let warning: string | null = $state('');
 
-	let isReadOnly =
+	let isReadOnly = $derived(
 		!(checklist && user?.uuid == checklist?.user) &&
-		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
-		!!checklist;
-	let newStatus: boolean = false;
-	let newItem: string = '';
+			!(
+				user &&
+				collection &&
+				collection.shared_with &&
+				collection.shared_with.includes(user.uuid)
+			) &&
+			!!checklist
+	);
+	let newStatus: boolean = $state(false);
+	let newItem: string = $state('');
 
-	let initialName: string = checklist?.name || '';
+	let initialName = $derived(checklist?.name || '');
 
 	function addItem() {
 		if (newItem.trim() == '') {
@@ -65,15 +77,31 @@
 		return null;
 	};
 
-	let newChecklist = {
-		name: checklist?.name || '',
-		date: getSeedDate() || undefined || null,
-		items: checklist?.items || [],
-		collection: collection.id,
-		is_public: collection.is_public
-	};
+	let newChecklist = $state({
+		name: '',
+		date: null as string | null | undefined,
+		items: [] as ChecklistItem[],
+		collection: '',
+		is_public: false
+	});
+	let previousChecklistId: string | null | undefined = undefined;
 
-	const hasVisitDateSuggestion = !!initialVisitDate && !checklist?.date;
+	$effect.pre(() => {
+		const sourceId = checklist?.id ?? null;
+		if (sourceId === previousChecklistId) return;
+
+		previousChecklistId = sourceId;
+		items = checklist?.items || [];
+		newChecklist = {
+			name: checklist?.name || '',
+			date: getSeedDate() || null,
+			items: checklist?.items || [],
+			collection: collection.id,
+			is_public: collection.is_public
+		};
+	});
+
+	const hasVisitDateSuggestion = $derived(!!initialVisitDate && !checklist?.date);
 
 	function useVisitDate() {
 		if (isReadOnly) return;
@@ -149,21 +177,21 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<dialog id="my_modal_1" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box checklist-modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section -->
 		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="shrink-0 bg-base-100/90 backdrop-blur-lg border-b border-base-300 px-4 md:px-6 py-3 md:py-4"
 		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
 					<div class="p-2 bg-primary/10 rounded-xl">
 						<CheckboxIcon class="w-8 h-8 text-primary" />
 					</div>
@@ -177,7 +205,7 @@
 								{$t('checklist.checklist_viewer')}
 							{/if}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80">
 							{#if checklist?.id && !isReadOnly}
 								{$t('checklist.update_checklist_details')} "{initialName}"
 							{:else if !isReadOnly}
@@ -192,10 +220,10 @@
 				<!-- Close Button -->
 				<button
 					type="button"
-					class="btn btn-ghost btn-square"
+					class="btn btn-ghost btn-square shrink-0"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
-					on:click={close}
+					onclick={close}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -210,288 +238,289 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="px-2">
-			<form method="post" style="width: 100%;" on:submit|preventDefault>
-				<!-- Basic Information Section -->
-				<div
-					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
-				>
-					<input type="checkbox" checked />
+		<div class="flex-1 min-h-0 overflow-hidden flex flex-col">
+			<form
+				class="h-full min-h-0 flex flex-col"
+				method="post"
+				onsubmit={preventDefault(bubble('submit'))}
+			>
+				<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
+					<!-- Basic Information Section -->
 					<div
-						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
 					>
-						<div class="flex items-center gap-3">
-							<div class="p-2 bg-primary/10 rounded-lg">
-								<svg
-									class="w-5 h-5 text-primary"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-									/>
-								</svg>
+						<input type="checkbox" checked />
+						<div
+							class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-lg">
+									<svg
+										class="w-5 h-5 text-primary"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+								</div>
+								{$t('adventures.basic_information')}
 							</div>
-							{$t('adventures.basic_information')}
 						</div>
-					</div>
-					<div class="collapse-content bg-base-100/50 pt-4 p-6 space-y-4">
-						<!-- Dual Column Layout for Large Screens -->
-						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-							<!-- Left Column -->
-							<div class="space-y-4">
-								<!-- Name Field -->
-								<div class="form-control">
-									<label class="label" for="name">
-										<span class="label-text font-medium"
-											>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
-										>
-									</label>
-									<input
-										type="text"
-										id="name"
-										name="name"
-										readonly={isReadOnly}
-										bind:value={newChecklist.name}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
-										placeholder={$t('checklist.enter_checklist_title')}
-										required
-									/>
+						<div class="collapse-content bg-base-100/50 pt-4 p-6 space-y-4">
+							<!-- Dual Column Layout for Large Screens -->
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<!-- Left Column -->
+								<div class="space-y-4">
+									<!-- Name Field -->
+									<div class="flex flex-col">
+										<label class="field-label" for="name">
+											{$t('adventures.name')}<span class="text-error ml-1">*</span>
+										</label>
+										<input
+											type="text"
+											id="name"
+											name="name"
+											readonly={isReadOnly}
+											bind:value={newChecklist.name}
+											class="input w-full bg-base-100/80 focus:bg-base-100"
+											placeholder={$t('checklist.enter_checklist_title')}
+											required
+										/>
+									</div>
+								</div>
+
+								<!-- Right Column -->
+								<div class="space-y-4">
+									<!-- Date Field -->
+									<div class="flex flex-col">
+										<label class="field-label" for="date">{$t('adventures.date')}</label>
+										{#if !isReadOnly && hasVisitDateSuggestion}
+											<div
+												class="flex flex-wrap items-center gap-2 mb-2 text-xs text-base-content/70"
+											>
+												<span class="badge badge-primary badge-soft">Itinerary day</span>
+												<span>Prefilled to match your selected day.</span>
+												<button type="button" class="btn btn-ghost btn-xs" onclick={useVisitDate}>
+													Reapply date
+												</button>
+											</div>
+										{/if}
+										{#if collection && collection.start_date && collection.end_date && !isReadOnly}
+											<div class="flex items-center gap-2 mb-2">
+												<input
+													type="checkbox"
+													class="toggle toggle-primary toggle-sm"
+													id="constrain_dates"
+													name="constrain_dates"
+													bind:checked={constrainDates}
+												/>
+												<span class="text-sm text-base-content/70"
+													>{$t('adventures.date_constrain')}</span
+												>
+											</div>
+										{/if}
+										<DateInput
+											id="date"
+											name="date"
+											readonly={isReadOnly}
+											min={constrainDates ? collection.start_date || undefined : undefined}
+											max={constrainDates ? collection.end_date || undefined : undefined}
+											bind:value={newChecklist.date}
+											clearable={!isReadOnly}
+										/>
+									</div>
 								</div>
 							</div>
+						</div>
+					</div>
 
-							<!-- Right Column -->
-							<div class="space-y-4">
-								<!-- Date Field -->
-								<div class="form-control">
-									<label class="label" for="date">
-										<span class="label-text font-medium">{$t('adventures.date')}</span>
-									</label>
-									{#if !isReadOnly && hasVisitDateSuggestion}
-										<div
-											class="flex flex-wrap items-center gap-2 mb-2 text-xs text-base-content/70"
-										>
-											<span class="badge badge-primary badge-soft">Itinerary day</span>
-											<span>Prefilled to match your selected day.</span>
-											<button type="button" class="btn btn-ghost btn-xs" on:click={useVisitDate}>
-												Reapply date
+					<!-- Items Section -->
+					<div
+						class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+					>
+						<input type="checkbox" checked />
+						<div
+							class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-lg">
+									<CheckboxIcon class="w-5 h-5 text-primary" />
+								</div>
+								{$t('checklist.items')}
+								{#if items.length > 0}
+									<div class="badge badge-primary badge-sm ml-2">{items.length}</div>
+								{/if}
+							</div>
+						</div>
+						<div class="collapse-content bg-base-100/50 pt-4 p-6">
+							<!-- Add New Item Section -->
+							{#if !isReadOnly}
+								<div class="flex flex-col mb-6">
+									<label class="field-label" for="new-item">{$t('checklist.add_new_item')}</label>
+									<div class="flex gap-3 items-center">
+										<input
+											type="checkbox"
+											bind:checked={newStatus}
+											class="checkbox checkbox-primary"
+										/>
+										<div class="join flex-1">
+											<input
+												type="text"
+												id="new-item"
+												placeholder={$t('checklist.new_item')}
+												bind:value={newItem}
+												class="input join-item flex-1 bg-base-100/80 focus:bg-base-100"
+												onkeydown={(e) => {
+													if (e.key === 'Enter') {
+														e.preventDefault();
+														addItem();
+													}
+												}}
+											/>
+											<button type="button" class="btn btn-primary join-item" onclick={addItem}>
+												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+													/>
+												</svg>
+												{$t('adventures.add')}
 											</button>
 										</div>
-									{/if}
-									{#if collection && collection.start_date && collection.end_date && !isReadOnly}
-										<div class="flex items-center gap-2 mb-2">
-											<input
-												type="checkbox"
-												class="toggle toggle-primary toggle-sm"
-												id="constrain_dates"
-												name="constrain_dates"
-												bind:checked={constrainDates}
-											/>
-											<span class="text-sm text-base-content/70"
-												>{$t('adventures.date_constrain')}</span
-											>
-										</div>
-									{/if}
-									<input
-										type="date"
-										id="date"
-										name="date"
-										readonly={isReadOnly}
-										min={constrainDates ? collection.start_date : ''}
-										max={constrainDates ? collection.end_date : ''}
-										bind:value={newChecklist.date}
-										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
-									/>
+									</div>
 								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+							{/if}
 
-				<!-- Items Section -->
-				<div
-					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
-				>
-					<input type="checkbox" checked />
-					<div
-						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
-					>
-						<div class="flex items-center gap-3">
-							<div class="p-2 bg-primary/10 rounded-lg">
-								<CheckboxIcon class="w-5 h-5 text-primary" />
-							</div>
-							{$t('checklist.items')}
+							<!-- Items List -->
 							{#if items.length > 0}
-								<div class="badge badge-primary badge-sm ml-2">{items.length}</div>
+								<div class="space-y-3">
+									<div class="flex items-center justify-between">
+										<h3 class="text-lg font-semibold text-base-content/80">
+											{$t('checklist.current_items')}
+										</h3>
+										<div class="text-sm text-base-content/60">
+											{items.filter((item) => item.is_checked).length} / {items.length}
+											{$t('checklist.completed')}
+										</div>
+									</div>
+									<div class="max-h-64 overflow-y-auto space-y-2">
+										{#each items as item, i}
+											<div
+												class="flex items-center gap-3 p-4 bg-base-200/50 rounded-xl border border-base-300/50 group hover:bg-base-200/70 transition-colors"
+											>
+												<input
+													type="checkbox"
+													bind:checked={item.is_checked}
+													class="checkbox checkbox-primary"
+													readonly={isReadOnly}
+												/>
+												<input
+													type="text"
+													bind:value={item.name}
+													class="input input-ghost flex-1 bg-transparent focus:bg-base-100/80 {item.is_checked
+														? 'line-through text-base-content/50'
+														: ''}"
+													readonly={isReadOnly}
+												/>
+												{#if !isReadOnly}
+													<button
+														type="button"
+														class="btn btn-ghost btn-sm text-error opacity-0 group-hover:opacity-100 transition-opacity"
+														aria-label={$t('adventures.remove')}
+														title={$t('adventures.remove')}
+														onclick={() => removeItem(i)}
+													>
+														<svg
+															class="w-4 h-4"
+															fill="none"
+															stroke="currentColor"
+															viewBox="0 0 24 24"
+														>
+															<path
+																stroke-linecap="round"
+																stroke-linejoin="round"
+																stroke-width="2"
+																d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+															/>
+														</svg>
+													</button>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								</div>
+							{:else if !isReadOnly}
+								<div class="text-center py-12 text-base-content/50">
+									<svg
+										class="w-16 h-16 mx-auto mb-4 opacity-50"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z"
+										/>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 9l2 2 4-4"
+										/>
+									</svg>
+									<p class="text-lg font-medium">{$t('checklist.no_items_yet')}</p>
+									<p class="text-sm">{$t('checklist.add_your_first_item')}</p>
+								</div>
 							{/if}
 						</div>
 					</div>
-					<div class="collapse-content bg-base-100/50 pt-4 p-6">
-						<!-- Add New Item Section -->
-						{#if !isReadOnly}
-							<div class="form-control mb-6">
-								<label class="label" for="new-item">
-									<span class="label-text font-medium">{$t('checklist.add_new_item')}</span>
-								</label>
-								<div class="flex gap-3 items-center">
-									<input
-										type="checkbox"
-										bind:checked={newStatus}
-										class="checkbox checkbox-primary"
-									/>
-									<div class="join flex-1">
-										<input
-											type="text"
-											id="new-item"
-											placeholder={$t('checklist.new_item')}
-											bind:value={newItem}
-											class="input input-bordered join-item flex-1 bg-base-100/80 focus:bg-base-100"
-											on:keydown={(e) => {
-												if (e.key === 'Enter') {
-													e.preventDefault();
-													addItem();
-												}
-											}}
-										/>
-										<button type="button" class="btn btn-primary join-item" on:click={addItem}>
-											<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-												/>
-											</svg>
-											{$t('adventures.add')}
-										</button>
-									</div>
-								</div>
-							</div>
-						{/if}
 
-						<!-- Items List -->
-						{#if items.length > 0}
-							<div class="space-y-3">
-								<div class="flex items-center justify-between">
-									<h3 class="text-lg font-semibold text-base-content/80">
-										{$t('checklist.current_items')}
-									</h3>
-									<div class="text-sm text-base-content/60">
-										{items.filter((item) => item.is_checked).length} / {items.length}
-										{$t('checklist.completed')}
-									</div>
-								</div>
-								<div class="max-h-64 overflow-y-auto space-y-2">
-									{#each items as item, i}
-										<div
-											class="flex items-center gap-3 p-4 bg-base-200/50 rounded-xl border border-base-300/50 group hover:bg-base-200/70 transition-colors"
-										>
-											<input
-												type="checkbox"
-												bind:checked={item.is_checked}
-												class="checkbox checkbox-primary"
-												readonly={isReadOnly}
-											/>
-											<input
-												type="text"
-												bind:value={item.name}
-												class="input input-ghost flex-1 bg-transparent focus:bg-base-100/80 {item.is_checked
-													? 'line-through text-base-content/50'
-													: ''}"
-												readonly={isReadOnly}
-											/>
-											{#if !isReadOnly}
-												<button
-													type="button"
-													class="btn btn-ghost btn-sm text-error opacity-0 group-hover:opacity-100 transition-opacity"
-													aria-label={$t('adventures.remove')}
-													title={$t('adventures.remove')}
-													on:click={() => removeItem(i)}
-												>
-													<svg
-														class="w-4 h-4"
-														fill="none"
-														stroke="currentColor"
-														viewBox="0 0 24 24"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															stroke-width="2"
-															d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-														/>
-													</svg>
-												</button>
-											{/if}
-										</div>
-									{/each}
-								</div>
-							</div>
-						{:else if !isReadOnly}
-							<div class="text-center py-12 text-base-content/50">
-								<svg
-									class="w-16 h-16 mx-auto mb-4 opacity-50"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z"
-									/>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M9 9l2 2 4-4"
-									/>
-								</svg>
-								<p class="text-lg font-medium">{$t('checklist.no_items_yet')}</p>
-								<p class="text-sm">{$t('checklist.add_your_first_item')}</p>
-							</div>
-						{/if}
-					</div>
+					<!-- Warning Messages -->
+					{#if warning}
+						<div role="alert" class="alert alert-error mb-6 rounded-xl border border-error/20">
+							<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span class="font-medium">{warning}</span>
+						</div>
+					{/if}
+
+					<!-- Public Checklist Alert -->
+					{#if collection.is_public}
+						<div role="alert" class="alert alert-info mb-6 rounded-xl border border-info/20">
+							<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<span class="font-medium">{$t('checklist.checklist_public')}</span>
+						</div>
+					{/if}
 				</div>
 
-				<!-- Warning Messages -->
-				{#if warning}
-					<div role="alert" class="alert alert-error mb-6 rounded-xl border border-error/20">
-						<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<span class="font-medium">{warning}</span>
-					</div>
-				{/if}
-
-				<!-- Public Checklist Alert -->
-				{#if collection.is_public}
-					<div role="alert" class="alert alert-info mb-6 rounded-xl border border-info/20">
-						<svg class="h-6 w-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<span class="font-medium">{$t('checklist.checklist_public')}</span>
-					</div>
-				{/if}
-
 				<!-- Action Buttons -->
-				<div class="flex gap-3 justify-end pt-4 border-t border-base-300/50">
-					<button type="button" class="btn btn-neutral-200" on:click={close}>
+				<div
+					class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+				>
+					<button type="button" class="btn btn-ghost" onclick={close}>
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -503,7 +532,7 @@
 						{$t('about.close')}
 					</button>
 					{#if !isReadOnly}
-						<button type="button" class="btn btn-primary" on:click={save}>
+						<button type="button" class="btn btn-primary" onclick={save}>
 							<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"
@@ -520,3 +549,21 @@
 		</div>
 	</div>
 </dialog>
+
+<style>
+	.checklist-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.checklist-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

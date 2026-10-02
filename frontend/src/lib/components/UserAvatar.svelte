@@ -1,16 +1,27 @@
 <script lang="ts">
 	import { getAvatarGradient, getAvatarSeed, getUserInitials, type AvatarUser } from '$lib/avatar';
 
-	export let user: AvatarUser & { profile_pic?: string | null } = {};
-	export let profilePic: string | null | undefined = undefined;
-	export let alt = '';
-	export let className = 'w-10 h-10 rounded-full';
-	export let imgClass = 'w-full h-full object-cover';
-	export let textClass = 'text-sm';
+	interface Props {
+		user?: AvatarUser & { profile_pic?: string | null };
+		profilePic?: string | null | undefined;
+		alt?: string;
+		className?: string;
+		imgClass?: string;
+		textClass?: string;
+	}
 
-	$: pic = profilePic ?? user.profile_pic ?? null;
-	$: initials = getUserInitials(user);
-	$: gradient = getAvatarGradient(getAvatarSeed(user));
+	let {
+		user = {},
+		profilePic = undefined,
+		alt = '',
+		className = 'w-10 h-10 rounded-full',
+		imgClass = 'w-full h-full object-cover',
+		textClass = 'text-sm'
+	}: Props = $props();
+
+	let pic = $derived(profilePic ?? user.profile_pic ?? null);
+	let initials = $derived(getUserInitials(user));
+	let gradient = $derived(getAvatarGradient(getAvatarSeed(user)));
 </script>
 
 {#if pic}

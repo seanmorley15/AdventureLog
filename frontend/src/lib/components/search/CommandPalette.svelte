@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { debounce } from '$lib';
@@ -19,17 +21,17 @@
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 
-	let inputElement: HTMLInputElement | null = null;
-	let query = '';
-	let activeTab: SearchTab = 'adventures';
-	let selectedIndex = 0;
-	let loading = false;
-	let error = '';
-	let appResults: SearchHit[] = [];
-	let placeItems: Extract<PaletteItem, { kind: 'place' }>[] = [];
-	let recentSearches: string[] = [];
+	let inputElement: HTMLInputElement | null = $state(null);
+	let query = $state('');
+	let activeTab: SearchTab = $state('adventures');
+	let selectedIndex = $state(0);
+	let loading = $state(false);
+	let error = $state('');
+	let appResults: SearchHit[] = $state([]);
+	let placeItems: Extract<PaletteItem, { kind: 'place' }>[] = $state([]);
+	let recentSearches: string[] = $state([]);
 	let searchAbort: AbortController | null = null;
-	let scrollContainer: HTMLDivElement | null = null;
+	let scrollContainer: HTMLDivElement | null = $state(null);
 
 	const paletteEntryClass =
 		'w-full text-left flex items-center gap-3 mx-1 px-3 py-2.5 rounded-xl transition-colors mb-1.5 last:mb-0';
@@ -38,18 +40,6 @@
 	function entryStateClass(selected: boolean): string {
 		return selected ? 'bg-primary text-primary-content' : paletteEntryIdleClass;
 	}
-
-	$: isMac = browser && /Mac|iPhone|iPad/.test(navigator.platform);
-	$: modifierHint = isMac ? '⌘K' : 'Ctrl+K';
-	$: showActions = !query.trim() || query.trim().startsWith('>');
-	$: filteredActions = filterQuickNavActions(query);
-	$: paletteItems = buildPaletteItems(
-		activeTab,
-		appResults,
-		placeItems,
-		showActions,
-		filteredActions
-	);
 
 	function buildPaletteItems(
 		tab: SearchTab,
@@ -183,27 +173,6 @@
 		}
 	}, 300);
 
-	$: if ($commandPaletteOpen) {
-		recentSearches = getRecentSearches();
-		if ($commandPaletteInitialQuery) {
-			query = $commandPaletteInitialQuery;
-			commandPaletteInitialQuery.set('');
-		}
-		focusInput();
-	}
-
-	$: if ($commandPaletteOpen) {
-		query;
-		activeTab;
-		runSearch();
-		selectedIndex = 0;
-	}
-
-	$: if ($commandPaletteOpen && paletteItems.length > 0) {
-		selectedIndex;
-		scrollSelectedIntoView();
-	}
-
 	function handleKeydown(event: KeyboardEvent) {
 		if (!$commandPaletteOpen) return;
 
@@ -257,9 +226,40 @@
 		document.addEventListener('keydown', globalShortcut);
 		return () => document.removeEventListener('keydown', globalShortcut);
 	});
+	let isMac = $derived(browser && /Mac|iPhone|iPad/.test(navigator.platform));
+	let modifierHint = $derived(isMac ? '⌘K' : 'Ctrl+K');
+	run(() => {
+		if ($commandPaletteOpen) {
+			recentSearches = getRecentSearches();
+			if ($commandPaletteInitialQuery) {
+				query = $commandPaletteInitialQuery;
+				commandPaletteInitialQuery.set('');
+			}
+			focusInput();
+		}
+	});
+	let showActions = $derived(!query.trim() || query.trim().startsWith('>'));
+	let filteredActions = $derived(filterQuickNavActions(query));
+	let paletteItems = $derived(
+		buildPaletteItems(activeTab, appResults, placeItems, showActions, filteredActions)
+	);
+	run(() => {
+		if ($commandPaletteOpen) {
+			query;
+			activeTab;
+			runSearch();
+			selectedIndex = 0;
+		}
+	});
+	run(() => {
+		if ($commandPaletteOpen && paletteItems.length > 0) {
+			selectedIndex;
+			scrollSelectedIntoView();
+		}
+	});
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if $commandPaletteOpen}
 	<dialog class="modal modal-open backdrop-blur-md" aria-modal="true">
@@ -273,19 +273,19 @@
 						bind:this={inputElement}
 						bind:value={query}
 						type="text"
-						class="input input-ghost w-full focus:outline-none pl-2 pr-0 text-lg h-12 min-h-0 bg-transparent"
+						class="input input-ghost w-full focus:outline-hidden pl-2 pr-0 text-lg h-12 min-h-0 bg-transparent"
 						placeholder={$t('navbar.search')}
 						autocomplete="off"
 						spellcheck="false"
 					/>
 					<kbd class="kbd kbd-sm hidden sm:inline-flex opacity-70">{modifierHint}</kbd>
 				</div>
-				<div class="tabs tabs-boxed mt-4 bg-base-200/80 p-1 rounded-xl">
+				<div class="tabs tabs-box mt-4 bg-base-200/80 p-1 rounded-xl">
 					<button
 						type="button"
 						class="tab flex-1"
 						class:tab-active={activeTab === 'adventures'}
-						on:click={() => (activeTab = 'adventures')}
+						onclick={() => (activeTab = 'adventures')}
 					>
 						{$t('search.tab_adventures')}
 					</button>
@@ -293,7 +293,7 @@
 						type="button"
 						class="tab flex-1"
 						class:tab-active={activeTab === 'places'}
-						on:click={() => (activeTab = 'places')}
+						onclick={() => (activeTab = 'places')}
 					>
 						{$t('search.tab_places')}
 					</button>
@@ -320,7 +320,7 @@
 								type="button"
 								data-palette-index={index}
 								class={`${paletteEntryClass} ${entryStateClass(selectedIndex === index)}`}
-								on:click={() => navigateTo(action.url)}
+								onclick={() => navigateTo(action.url)}
 							>
 								<div
 									class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
@@ -328,7 +328,7 @@
 									class:text-primary={selectedIndex === index}
 									class:bg-base-200={selectedIndex !== index}
 								>
-									<svelte:component this={action.icon} class="w-5 h-5" />
+									<action.icon class="w-5 h-5" />
 								</div>
 								<div class="min-w-0 flex-1">
 									<div class="font-medium leading-snug">{$t(action.titleKey)}</div>
@@ -347,7 +347,7 @@
 								<button
 									type="button"
 									class="w-full text-left mx-1 px-3 py-2 rounded-lg hover:bg-base-200 truncate text-sm"
-									on:click={() => {
+									onclick={() => {
 										query = recentQuery;
 									}}
 								>
@@ -380,7 +380,7 @@
 								type="button"
 								data-palette-index={index}
 								class={`${paletteEntryClass} ${entryStateClass(selectedIndex === index)}`}
-								on:click={() => handleSelectItem(item)}
+								onclick={() => handleSelectItem(item)}
 							>
 								<div
 									class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
@@ -388,7 +388,7 @@
 									class:text-primary={selectedIndex === index}
 									class:bg-base-200={selectedIndex !== index}
 								>
-									<svelte:component this={item.action.icon} class="w-5 h-5" />
+									<item.action.icon class="w-5 h-5" />
 								</div>
 								<div class="min-w-0 flex-1">
 									<div class="font-medium leading-snug">{$t(item.action.titleKey)}</div>
@@ -437,7 +437,7 @@
 								type="button"
 								data-palette-index={index}
 								class={`${paletteEntryClass} ${entryStateClass(selectedIndex === index)}`}
-								on:click={() => handleSelectItem(item)}
+								onclick={() => handleSelectItem(item)}
 							>
 								<div
 									class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
@@ -465,7 +465,7 @@
 							<button
 								type="button"
 								class="w-full text-left px-4 py-2 rounded-lg hover:bg-base-200 truncate"
-								on:click={() => {
+								onclick={() => {
 									query = recentQuery;
 								}}
 							>
@@ -477,7 +477,7 @@
 			</div>
 
 			<div
-				class="border-t border-base-content/10 px-5 py-3.5 flex items-center justify-between gap-3 bg-base-100/35 backdrop-blur-sm"
+				class="border-t border-base-content/10 px-5 py-3.5 flex items-center justify-between gap-3 bg-base-100/35 backdrop-blur-xs"
 			>
 				<div class="text-xs text-base-content/60 hidden sm:flex gap-3">
 					<span>↑↓ {$t('search.navigate')}</span>
@@ -490,7 +490,7 @@
 					<button
 						type="button"
 						class="btn btn-primary btn-sm ml-auto"
-						on:click={handleSeeAllResults}
+						onclick={handleSeeAllResults}
 					>
 						{$t('search.see_all_results')}
 					</button>
@@ -501,7 +501,7 @@
 			type="button"
 			class="modal-backdrop bg-black/30 backdrop-blur-[2px]"
 			aria-label={$t('search.close')}
-			on:click={closeDialog}
+			onclick={closeDialog}
 		></button>
 	</dialog>
 {/if}

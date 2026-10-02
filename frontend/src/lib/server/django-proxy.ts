@@ -130,8 +130,11 @@ export async function proxyToDjango(
 				'X-CSRFToken': csrfToken,
 				Cookie: cookieHeader
 			},
+			// Bytes, not text: request.text() UTF-8-decodes and corrupts binary uploads.
 			body:
-				request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
+				request.method !== 'GET' && request.method !== 'HEAD'
+					? await request.arrayBuffer()
+					: undefined,
 			credentials: 'include',
 			signal: request.signal
 		});

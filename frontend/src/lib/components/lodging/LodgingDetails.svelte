@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import {
@@ -15,13 +17,13 @@
 	import MapIcon from '~icons/mdi/map';
 	import ClearIcon from '~icons/mdi/close';
 	import InfoIcon from '~icons/mdi/information';
-	import GenerateIcon from '~icons/mdi/lightning-bolt';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import SaveIcon from '~icons/mdi/content-save';
 	import type { Category, User } from '$lib/types';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import MoneyInput from '../shared/MoneyInput.svelte';
+	import DateInput from '../shared/DateInput.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '$lib/money';
 	import { normalizeBasemapType } from '$lib';
 	// @ts-ignore
@@ -31,8 +33,8 @@
 
 	const dispatch = createEventDispatcher();
 
-	let isSaving = false;
-	let isReverseGeocoding = false;
+	let isSaving = $state(false);
+	let isReverseGeocoding = $state(false);
 
 	let initialSelection: {
 		name: string;
@@ -40,14 +42,24 @@
 		lng: number;
 		location: string;
 		category?: any;
-	} | null = null;
+	} | null = $state(null);
 
-	// Props (would be passed in from parent component)
-	export let initialLodging: any = null;
-	export let currentUser: any = null;
-	export let editingLodging: any = null;
-	export let collection: Collection | null = null;
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	interface Props {
+		// Props (would be passed in from parent component)
+		initialLodging?: any;
+		currentUser?: any;
+		editingLodging?: any;
+		collection?: Collection | null;
+		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+	}
+
+	let {
+		initialLodging = null,
+		currentUser = null,
+		editingLodging = $bindable(null),
+		collection = null,
+		initialVisitDate = null
+	}: Props = $props();
 
 	// Form data properties
 	let lodging: {
@@ -68,7 +80,7 @@
 		category?: Category | null;
 		collection?: string;
 		is_public?: boolean;
-	} = {
+	} = $state({
 		name: '',
 		type: '',
 		description: '',
@@ -84,70 +96,88 @@
 		longitude: null,
 		location: '',
 		category: null,
-		collection: collection?.id,
+		collection: undefined,
 		is_public: true
-	};
+	});
 
-	let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	let localStartDate: string = '';
-	let localEndDate: string = '';
-	let allDay: boolean = true;
-	let constrainDates: boolean = true;
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
+	let collectionId = $derived(collection?.id);
 
-	let user: User | null = null;
-	let lodgingToEdit: Lodging | null = null;
-	let wikiError = '';
-	let isGeneratingDesc = false;
+	let selectedTimezone: string = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	let localStartDate: string = $state('');
+	let localEndDate: string = $state('');
+	let allDay: boolean = $state(true);
+	let constrainDates: boolean = $state(true);
+	let fullStartDate: string = $state('');
+	let fullEndDate: string = $state('');
+
+	let user: User | null = $state(null);
+	let lodgingToEdit: Lodging | null = $state(null);
 	let ownerUser: User | null = null;
-	let dateError = '';
-	let moneyValue: MoneyValue = { amount: null, currency: DEFAULT_CURRENCY };
-	let preferredCurrency: string = DEFAULT_CURRENCY;
+	let dateError = $state('');
+	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
+	let preferredCurrency: string = $state(DEFAULT_CURRENCY);
 
-	$: user = currentUser;
-	$: lodgingToEdit = editingLodging;
+	run(() => {
+		user = currentUser;
+	});
+	run(() => {
+		lodgingToEdit = editingLodging;
+	});
 	// Only assign a timezone when this is a timed stay. Keep timezone null for all-day entries.
-	$: lodging.timezone = allDay ? null : selectedTimezone;
-	$: preferredCurrency = user?.default_currency || DEFAULT_CURRENCY;
-	$: {
+	run(() => {
+		lodging.timezone = allDay ? null : selectedTimezone;
+	});
+	run(() => {
+		preferredCurrency = user?.default_currency || DEFAULT_CURRENCY;
+	});
+	run(() => {
 		const isNewLodging = !(initialLodging && initialLodging.id);
 		const isEditing = Boolean(editingLodging && editingLodging.id);
 		if (isNewLodging && !isEditing && lodging.price_currency === DEFAULT_CURRENCY) {
 			lodging.price_currency = preferredCurrency;
 		}
-	}
-	$: moneyValue =
-		lodging.price === null
-			? { amount: null, currency: lodging.price_currency || null }
-			: toMoneyValue(lodging.price, lodging.price_currency, preferredCurrency);
-	$: initialSelection =
-		initialLodging && initialLodging.latitude && initialLodging.longitude
-			? {
-					name: initialLodging.name || '',
-					lat: Number(initialLodging.latitude),
-					lng: Number(initialLodging.longitude),
-					location: initialLodging.location || ''
-				}
-			: null;
+	});
+	run(() => {
+		moneyValue =
+			lodging.price === null
+				? { amount: null, currency: lodging.price_currency || preferredCurrency }
+				: toMoneyValue(lodging.price, lodging.price_currency, preferredCurrency);
+	});
+	run(() => {
+		initialSelection =
+			initialLodging && initialLodging.latitude && initialLodging.longitude
+				? {
+						name: initialLodging.name || '',
+						lat: Number(initialLodging.latitude),
+						lng: Number(initialLodging.longitude),
+						location: initialLodging.location || ''
+					}
+				: null;
+	});
 
 	// Set the full date range for constraining purposes
-	$: if (collection && collection.start_date && collection.end_date) {
-		fullStartDate = `${collection.start_date}T00:00`;
-		fullEndDate = `${collection.end_date}T23:59`;
-	}
+	run(() => {
+		if (collection && collection.start_date && collection.end_date) {
+			fullStartDate = `${collection.start_date}T00:00`;
+			fullEndDate = `${collection.end_date}T23:59`;
+		}
+	});
 
 	// Reactive constraints
-	$: constraintStartDate = allDay
-		? fullStartDate && fullStartDate.includes('T')
-			? fullStartDate.split('T')[0]
-			: ''
-		: fullStartDate || '';
-	$: constraintEndDate = allDay
-		? fullEndDate && fullEndDate.includes('T')
-			? fullEndDate.split('T')[0]
-			: ''
-		: fullEndDate || '';
+	let constraintStartDate = $derived(
+		allDay
+			? fullStartDate && fullStartDate.includes('T')
+				? fullStartDate.split('T')[0]
+				: ''
+			: fullStartDate || ''
+	);
+	let constraintEndDate = $derived(
+		allDay
+			? fullEndDate && fullEndDate.includes('T')
+				? fullEndDate.split('T')[0]
+				: ''
+			: fullEndDate || ''
+	);
 
 	function handleLocationUpdate(
 		event: CustomEvent<{ name?: string; lat: number; lng: number; location: string }>
@@ -251,30 +281,6 @@
 		return true;
 	}
 
-	async function generateDesc() {
-		if (!lodging.name) return;
-
-		isGeneratingDesc = true;
-		wikiError = '';
-
-		try {
-			// Mock Wikipedia API call - replace with actual implementation
-			const response = await fetch(
-				`/api/generate/desc/?name=${encodeURIComponent(lodging.name)}&lang=${$locale || 'en'}`
-			);
-			if (response.ok) {
-				const data = await response.json();
-				lodging.description = data.extract || '';
-			} else {
-				wikiError = `${$t('adventures.wikipedia_error') || 'Error fetching description from Wikipedia'}`;
-			}
-		} catch (error) {
-			wikiError = `${$t('adventures.wikipedia_error') || ''}`;
-		} finally {
-			isGeneratingDesc = false;
-		}
-	}
-
 	async function handleSave() {
 		if (!lodging.name || !lodging.type) {
 			return;
@@ -297,8 +303,8 @@
 		if (lodging.longitude !== null && typeof lodging.longitude === 'number') {
 			lodging.longitude = parseFloat(lodging.longitude.toFixed(6));
 		}
-		if (collection && collection.id) {
-			lodging.collection = collection.id;
+		if (collectionId) {
+			lodging.collection = collectionId;
 		}
 
 		// Build payload and avoid sending an empty `collection` array when editing
@@ -490,338 +496,303 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
-		<!-- Location Search & Map Section - FIRST! -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-secondary/10 rounded-lg">
-						<MapIcon class="w-5 h-5 text-secondary" />
+<div
+	class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5"
+>
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
+		<div class="max-w-full mx-auto space-y-6">
+			<!-- Location Search & Map Section - FIRST! -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-secondary/10 rounded-lg">
+							<MapIcon class="w-5 h-5 text-secondary" />
+						</div>
+						<div>
+							<h2 class="text-xl font-bold">{$t('adventures.location_map')}</h2>
+						</div>
 					</div>
-					<div>
-						<h2 class="text-xl font-bold">{$t('adventures.location_map')}</h2>
-					</div>
-				</div>
 
-				<LocationSearchMap
-					{initialSelection}
-					bind:isReverseGeocoding
-					bind:displayName={lodging.location}
-					basemapType={normalizeBasemapType(user?.map_style)}
-					displayNamePosition="after"
-					on:update={handleLocationUpdate}
-					on:clear={handleLocationClear}
-				/>
+					<LocationSearchMap
+						{initialSelection}
+						bind:isReverseGeocoding
+						bind:displayName={lodging.location}
+						basemapType={normalizeBasemapType(user?.map_style)}
+						displayNamePosition="after"
+						on:update={handleLocationUpdate}
+						on:clear={handleLocationClear}
+					/>
+				</div>
 			</div>
-		</div>
 
-		<!-- Basic Information Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-primary/10 rounded-lg">
-						<InfoIcon class="w-5 h-5 text-primary" />
+			<!-- Basic Information Section -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-primary/10 rounded-lg">
+							<InfoIcon class="w-5 h-5 text-primary" />
+						</div>
+						<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
 					</div>
-					<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
-				</div>
 
-				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					<!-- Left Column -->
-					<div class="space-y-4">
-						<!-- Name Field -->
-						<div class="form-control">
-							<label class="label" for="name">
-								<span class="label-text font-medium">
-									{$t('adventures.name')} <span class="text-error">*</span>
-								</span>
-							</label>
-							<input
-								type="text"
-								id="name"
-								bind:value={lodging.name}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
-								placeholder={$t('lodging.enter_lodging_name')}
-								required
-							/>
-						</div>
-
-						<!-- Type Field -->
-						<div class="form-control">
-							<label class="label" for="type">
-								<span class="label-text font-medium"
-									>{$t('transportation.type')} <span class="text-error">*</span></span
+					<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+						<!-- Left Column -->
+						<div class="space-y-4">
+							<!-- Name Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="name"
+									>{$t('adventures.name')} <span class="text-error">*</span></label
 								>
-							</label>
-							<select
-								class="select select-bordered w-full bg-base-100/80 focus:bg-base-100"
-								name="type"
-								id="type"
-								required
-								bind:value={lodging.type}
-							>
-								<option disabled value="">{$t('transportation.select_type')}</option>
-								<option value="hotel">{$t('lodging.hotel')}</option>
-								<option value="hostel">{$t('lodging.hostel')}</option>
-								<option value="resort">{$t('lodging.resort')}</option>
-								<option value="bnb">{$t('lodging.bnb')}</option>
-								<option value="campground">{$t('lodging.campground')}</option>
-								<option value="cabin">{$t('lodging.cabin')}</option>
-								<option value="apartment">{$t('lodging.apartment')}</option>
-								<option value="house">{$t('lodging.house')}</option>
-								<option value="villa">{$t('lodging.villa')}</option>
-								<option value="motel">{$t('lodging.motel')}</option>
-								<option value="other">{$t('lodging.other')}</option>
-							</select>
-						</div>
+								<input
+									type="text"
+									id="name"
+									bind:value={lodging.name}
+									class="input bg-base-100/80 focus:bg-base-100"
+									placeholder={$t('lodging.enter_lodging_name')}
+									required
+								/>
+							</div>
 
-						<!-- Rating Field -->
-						<div class="form-control">
-							<label class="label" for="rating">
-								<span class="label-text font-medium">{$t('adventures.rating')}</span>
-							</label>
-							<div
-								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
-							>
-								<div class="rating">
-									<input
-										type="radio"
-										name="rating"
-										id="rating"
-										class="rating-hidden"
-										checked={Number.isNaN(lodging.rating)}
-									/>
-									{#each [1, 2, 3, 4, 5] as star}
+							<!-- Type Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="type">
+									{$t('transportation.type')} <span class="text-error">*</span>
+								</label>
+								<select
+									class="select w-full bg-base-100 text-base-content"
+									name="type"
+									id="type"
+									required
+									bind:value={lodging.type}
+								>
+									<option disabled value="">{$t('transportation.select_type')}</option>
+									<option value="hotel">{$t('lodging.hotel')}</option>
+									<option value="hostel">{$t('lodging.hostel')}</option>
+									<option value="resort">{$t('lodging.resort')}</option>
+									<option value="bnb">{$t('lodging.bnb')}</option>
+									<option value="campground">{$t('lodging.campground')}</option>
+									<option value="cabin">{$t('lodging.cabin')}</option>
+									<option value="apartment">{$t('lodging.apartment')}</option>
+									<option value="house">{$t('lodging.house')}</option>
+									<option value="villa">{$t('lodging.villa')}</option>
+									<option value="motel">{$t('lodging.motel')}</option>
+									<option value="other">{$t('lodging.other')}</option>
+								</select>
+							</div>
+
+							<!-- Rating Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="rating">{$t('adventures.rating')}</label>
+								<div
+									class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
+								>
+									<div class="rating">
 										<input
 											type="radio"
 											name="rating"
-											class="mask mask-star-2 bg-warning"
-											on:click={() => (lodging.rating = star)}
-											checked={lodging.rating === star}
+											id="rating"
+											class="rating-hidden"
+											checked={Number.isNaN(lodging.rating)}
 										/>
-									{/each}
+										{#each [1, 2, 3, 4, 5] as star}
+											<input
+												type="radio"
+												name="rating"
+												class="mask mask-star-2 bg-warning"
+												onclick={() => (lodging.rating = star)}
+												checked={lodging.rating === star}
+											/>
+										{/each}
+									</div>
+									{#if !Number.isNaN(lodging.rating)}
+										<button
+											type="button"
+											class="btn btn-sm btn-error btn-outline gap-2"
+											onclick={() => (lodging.rating = NaN)}
+										>
+											<ClearIcon class="w-4 h-4" />
+											{$t('adventures.remove')}
+										</button>
+									{/if}
 								</div>
-								{#if !Number.isNaN(lodging.rating)}
-									<button
-										type="button"
-										class="btn btn-sm btn-error btn-outline gap-2"
-										on:click={() => (lodging.rating = NaN)}
-									>
-										<ClearIcon class="w-4 h-4" />
-										{$t('adventures.remove')}
-									</button>
-								{/if}
+							</div>
+
+							<!-- Reservation Number -->
+							<div class="flex flex-col">
+								<label class="field-label" for="reservation"
+									>{$t('lodging.reservation_number')}</label
+								>
+								<input
+									type="text"
+									id="reservation"
+									bind:value={lodging.reservation_number}
+									class="input bg-base-100/80 focus:bg-base-100"
+									placeholder={$t('lodging.enter_reservation_number')}
+								/>
 							</div>
 						</div>
 
-						<!-- Reservation Number -->
-						<div class="form-control">
-							<label class="label" for="reservation">
-								<span class="label-text font-medium">{$t('lodging.reservation_number')}</span>
-							</label>
-							<input
-								type="text"
-								id="reservation"
-								bind:value={lodging.reservation_number}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
-								placeholder={$t('lodging.enter_reservation_number')}
+						<!-- Right Column -->
+						<div class="space-y-4">
+							<!-- Link Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="link">{$t('adventures.link')}</label>
+								<input
+									type="url"
+									id="link"
+									bind:value={lodging.link}
+									class="input bg-base-100/80 focus:bg-base-100"
+									placeholder={$t('transportation.enter_link')}
+								/>
+							</div>
+
+							<MoneyInput
+								label={$t('adventures.price')}
+								value={moneyValue}
+								defaultCurrency={preferredCurrency}
+								on:change={(event) => {
+									lodging.price = event.detail.amount;
+									lodging.price_currency = event.detail.currency || preferredCurrency;
+								}}
 							/>
-						</div>
-					</div>
 
-					<!-- Right Column -->
-					<div class="space-y-4">
-						<!-- Link Field -->
-						<div class="form-control">
-							<label class="label" for="link">
-								<span class="label-text font-medium">{$t('adventures.link')}</span>
-							</label>
-							<input
-								type="url"
-								id="link"
-								bind:value={lodging.link}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
-								placeholder={$t('transportation.enter_link')}
-							/>
-						</div>
-
-						<MoneyInput
-							label={$t('adventures.price')}
-							value={moneyValue}
-							on:change={(event) => {
-								lodging.price = event.detail.amount;
-								lodging.price_currency =
-									event.detail.amount === null ? null : event.detail.currency || preferredCurrency;
-							}}
-						/>
-
-						<!-- Description Field -->
-						<div class="form-control">
-							<label class="label" for="description">
-								<span class="label-text font-medium">{$t('adventures.description')}</span>
-							</label>
-							<MarkdownEditor bind:text={lodging.description} editor_height="h-32" />
-
-							<div class="flex items-center gap-4 mt-3">
-								<button
-									type="button"
-									class="btn btn-neutral btn-sm gap-2"
-									on:click={generateDesc}
-									disabled={!lodging.name || isGeneratingDesc || !lodging.type}
-								>
-									{#if isGeneratingDesc}
-										<span class="loading loading-spinner loading-xs"></span>
-									{:else}
-										<GenerateIcon class="w-4 h-4" />
-									{/if}
-									{$t('adventures.generate_desc')}
-								</button>
-								{#if wikiError}
-									<div class="alert alert-error alert-sm">
-										<InfoIcon class="w-4 h-4" />
-										<span class="text-sm">{wikiError}</span>
-									</div>
-								{/if}
+							<!-- Description Field -->
+							<div class="flex flex-col">
+								<label class="field-label" for="description">{$t('adventures.description')}</label>
+								<MarkdownEditor
+									id="description"
+									bind:text={lodging.description}
+									editor_height="h-32"
+									enableFetch
+									fetchName={lodging.name}
+									fetchLang={$locale || 'en'}
+									fetchDisabled={!lodging.name || !lodging.type}
+								/>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Check-in/Check-out Dates & Timezone Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-info/10 rounded-lg">
-						<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-							/>
-						</svg>
+			<!-- Check-in/Check-out Dates & Timezone Section -->
+			<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card-body p-6">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-info/10 rounded-lg">
+							<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
+							</svg>
+						</div>
+						<h2 class="text-xl font-bold">{$t('adventures.dates')}</h2>
 					</div>
-					<h2 class="text-xl font-bold">{$t('adventures.dates')}</h2>
-				</div>
 
-				<div class="space-y-4">
-					<!-- All Day and Constrain Dates Toggles -->
-					<div class="flex flex-wrap gap-4">
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input
-								type="checkbox"
-								class="toggle toggle-primary"
-								checked={allDay}
-								on:change={handleAllDayToggle}
-							/>
-							<span class="label-text">{$t('adventures.all_day')}</span>
-						</label>
-
-						{#if collection}
+					<div class="space-y-4">
+						<!-- All Day and Constrain Dates Toggles -->
+						<div class="flex flex-wrap gap-4">
 							<label class="flex items-center gap-2 cursor-pointer">
 								<input
 									type="checkbox"
-									class="toggle toggle-secondary"
-									bind:checked={constrainDates}
+									class="toggle toggle-primary"
+									checked={allDay}
+									onchange={handleAllDayToggle}
 								/>
-								<span class="label-text">{$t('adventures.date_constrain')}</span>
+								<span class="font-semibold text-sm text-base-content"
+									>{$t('adventures.all_day')}</span
+								>
 							</label>
-						{/if}
-					</div>
 
-					{#if dateError}
-						<div class="alert alert-error bg-error/10 border border-error/30 text-error">
-							<InfoIcon class="w-4 h-4" />
-							<span class="text-sm">{dateError}</span>
-						</div>
-					{/if}
-
-					<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-						<!-- Check-in Date -->
-						<div class="form-control">
-							<label class="label" for="check-in">
-								<span class="label-text font-medium">{$t('adventures.check_in')}</span>
-							</label>
-							{#if allDay}
-								<input
-									id="check-in"
-									type="date"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
-									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : undefined}
-									max={constrainDates ? constraintEndDate : undefined}
-								/>
-							{:else}
-								<input
-									id="check-in"
-									type="datetime-local"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
-									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : undefined}
-									max={constrainDates ? constraintEndDate : undefined}
-								/>
+							{#if collection}
+								<label class="flex items-center gap-2 cursor-pointer">
+									<input
+										type="checkbox"
+										class="toggle toggle-secondary"
+										bind:checked={constrainDates}
+									/>
+									<span class="font-semibold text-sm text-base-content"
+										>{$t('adventures.date_constrain')}</span
+									>
+								</label>
 							{/if}
 						</div>
 
-						<!-- Check-out Date -->
-						<div class="form-control">
-							<label class="label" for="check-out">
-								<span class="label-text font-medium">{$t('adventures.check_out')}</span>
-							</label>
-							{#if allDay}
-								<input
-									id="check-out"
-									type="date"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
-									bind:value={localEndDate}
-									on:change={handleLocalDateChange}
+						{#if dateError}
+							<div class="alert alert-error bg-error/10 border border-error/30 text-error">
+								<InfoIcon class="w-4 h-4" />
+								<span class="text-sm">{dateError}</span>
+							</div>
+						{/if}
+
+						<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+							<!-- Check-in Date -->
+							<div class="flex flex-col">
+								<label class="field-label" for="check-in">{$t('adventures.check_in')}</label>
+								<DateInput
+									id="check-in"
+									bind:value={localStartDate}
+									onchange={handleLocalDateChange}
+									showTime={!allDay}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
+									clearable={false}
 								/>
-							{:else}
-								<input
+							</div>
+
+							<!-- Check-out Date -->
+							<div class="flex flex-col">
+								<label class="field-label" for="check-out">{$t('adventures.check_out')}</label>
+								<DateInput
 									id="check-out"
-									type="datetime-local"
-									class="input input-bordered bg-base-100/80 focus:bg-base-100"
 									bind:value={localEndDate}
-									on:change={handleLocalDateChange}
+									onchange={handleLocalDateChange}
+									showTime={!allDay}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
+									clearable={false}
 								/>
+							</div>
+
+							<!-- Timezone Selector (only for timed stays) -->
+							{#if !allDay}
+								<TimezoneSelector bind:selectedTimezone />
 							{/if}
 						</div>
-
-						<!-- Timezone Selector (only for timed stays) -->
-						{#if !allDay}
-							<TimezoneSelector bind:selectedTimezone />
-						{/if}
 					</div>
 				</div>
 			</div>
 		</div>
+	</div>
 
-		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
-			<button
-				class="btn btn-primary gap-2"
-				disabled={!lodging.name || !lodging.type || isReverseGeocoding || isSaving}
-				on:click={handleSave}
-			>
-				{#if isSaving}
-					<span class="loading loading-spinner loading-sm"></span>
-					{$t('adventures.saving') || 'Saving...'}
-				{:else if isReverseGeocoding}
-					<span class="loading loading-spinner loading-sm"></span>
-					{$t('adventures.processing')}...
-				{:else}
-					<SaveIcon class="w-5 h-5" />
-					{$t('adventures.continue')}
-				{/if}
-			</button>
-		</div>
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+	>
+		<button
+			class="btn btn-primary gap-2"
+			disabled={!lodging.name || !lodging.type || isReverseGeocoding || isSaving}
+			onclick={handleSave}
+		>
+			{#if isSaving}
+				<span class="loading loading-spinner loading-sm"></span>
+				{$t('adventures.saving') || 'Saving...'}
+			{:else if isReverseGeocoding}
+				<span class="loading loading-spinner loading-sm"></span>
+				{$t('adventures.processing')}...
+			{:else}
+				<SaveIcon class="w-5 h-5" />
+				{$t('adventures.continue')}
+			{/if}
+		</button>
 	</div>
 </div>
+
+<style>
+	select option {
+		background-color: var(--color-base-100);
+		color: var(--color-base-content);
+	}
+</style>

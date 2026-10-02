@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher } from 'svelte';
 
 	import Launch from '~icons/mdi/launch';
@@ -13,6 +15,7 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import { copyToClipboard } from '$lib/index';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
 	import Plus from '~icons/mdi/plus';
 	import Minus from '~icons/mdi/minus';
@@ -32,16 +35,13 @@
 	import FilePdfBox from '~icons/mdi/file-pdf-box';
 	import ContentCopy from '~icons/mdi/content-copy';
 	import ImageOutline from '~icons/mdi/image-outline';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	const dispatch = createEventDispatcher();
 
-	export let type: String | undefined | null;
-	export let linkedCollectionList: string[] | null = null;
-	export let user: User | null;
-	export let readOnly: boolean = false;
-	let isShareModalOpen: boolean = false;
-	let isSocialShareModalOpen: boolean = false;
-	let copied: boolean = false;
+	let isShareModalOpen: boolean = $state(false);
+	let isSocialShareModalOpen: boolean = $state(false);
+	let copied: boolean = $state(false);
 
 	async function copyLink() {
 		try {
@@ -54,7 +54,7 @@
 		}
 	}
 
-	let isDuplicating = false;
+	let isDuplicating = $state(false);
 
 	async function duplicateCollection() {
 		if (isDuplicating) return;
@@ -151,10 +151,24 @@
 		}
 	}
 
-	export let collection: Collection | SlimCollection;
+	interface Props {
+		type: String | undefined | null;
+		linkedCollectionList?: string[] | null;
+		user: User | null;
+		readOnly?: boolean;
+		collection: Collection | SlimCollection;
+	}
 
-	let location_images: ContentImage[] = [];
-	$: {
+	let {
+		type,
+		linkedCollectionList = $bindable(null),
+		user,
+		readOnly = false,
+		collection
+	}: Props = $props();
+
+	let location_images: ContentImage[] = $state([]);
+	run(() => {
 		let images: ContentImage[] = [];
 		if ('location_images' in collection) {
 			images = collection.location_images;
@@ -172,11 +186,13 @@
 		} else {
 			location_images = images;
 		}
-	}
+	});
 
-	let locationLength: number = 0;
-	$: locationLength =
-		'location_count' in collection ? collection.location_count : collection.locations.length;
+	let locationLength: number = $state(0);
+	run(() => {
+		locationLength =
+			'location_count' in collection ? collection.location_count : collection.locations.length;
+	});
 
 	async function deleteCollection() {
 		let res = await fetch(`/api/collections/${collection.id}`, {
@@ -190,7 +206,9 @@
 		}
 	}
 
-	let isWarningModalOpen: boolean = false;
+	let isWarningModalOpen: boolean = $state(false);
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 </script>
 
 {#if isWarningModalOpen}
@@ -219,7 +237,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
@@ -228,31 +246,31 @@
 		<!-- Status Badge Overlay -->
 		<div class="absolute top-2 left-4 flex items-center gap-2">
 			{#if collection.status === 'folder'}
-				<div class="badge badge-sm badge-neutral shadow-sm">
+				<div class="badge badge-sm badge-neutral shadow-xs">
 					📁 {$t('adventures.folder')}
 				</div>
 			{:else if collection.status === 'upcoming'}
-				<div class="badge badge-sm badge-info shadow-sm">
+				<div class="badge badge-sm badge-info shadow-xs">
 					🚀 {$t('adventures.upcoming')}
 				</div>
 				{#if collection.days_until_start !== null}
-					<div class="badge badge-sm badge-accent shadow-sm">
+					<div class="badge badge-sm badge-accent shadow-xs">
 						⏳ {collection.days_until_start}
 						{collection.days_until_start === 1 ? $t('adventures.day') : $t('adventures.days')}
 					</div>
 				{/if}
 			{:else if collection.status === 'in_progress'}
-				<div class="badge badge-sm badge-success shadow-sm">
+				<div class="badge badge-sm badge-success shadow-xs">
 					🎯 {$t('adventures.in_progress')}
 				</div>
 			{:else if collection.status === 'completed'}
-				<div class="badge badge-sm badge-primary shadow-sm">
+				<div class="badge badge-sm badge-primary shadow-xs">
 					<Check class="w-4 h-4" />
 					{$t('adventures.completed')}
 				</div>
 			{/if}
 			{#if collection.is_archived}
-				<div class="badge badge-sm badge-warning shadow-sm">
+				<div class="badge badge-sm badge-warning shadow-xs">
 					{$t('adventures.archived')}
 				</div>
 			{/if}
@@ -327,17 +345,11 @@
 		<!-- Date Range (if exists) -->
 		{#if collection.start_date && collection.end_date}
 			<div class="text-xs text-base-content/60">
-				{new Date(collection.start_date).toLocaleDateString(undefined, {
-					timeZone: 'UTC',
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})} – {new Date(collection.end_date).toLocaleDateString(undefined, {
-					timeZone: 'UTC',
-					month: 'short',
-					day: 'numeric',
-					year: 'numeric'
-				})}
+				{formatDisplayDate(collection.start_date, dateFormat, { timeZone: 'UTC' })} – {formatDisplayDate(
+					collection.end_date,
+					dateFormat,
+					{ timeZone: 'UTC' }
+				)}
 			</div>
 		{/if}
 
@@ -350,7 +362,7 @@
 							.includes(String(collection.id))}
 						<button
 							class="btn btn-error btn-block"
-							on:click={() => dispatch('unlink', collection.id)}
+							onclick={() => dispatch('unlink', collection.id)}
 						>
 							<Minus class="w-4 h-4" />
 							{$t('adventures.remove_from_collection')}
@@ -358,7 +370,7 @@
 					{:else}
 						<button
 							class="btn btn-primary btn-block"
-							on:click={() => dispatch('link', collection.id)}
+							onclick={() => dispatch('link', collection.id)}
 						>
 							<Plus class="w-4 h-4" />
 							{$t('adventures.add_to_collection')}
@@ -368,13 +380,17 @@
 					<div class="flex justify-between items-center">
 						<button
 							class="btn btn-neutral btn-sm flex-1 mr-2"
-							on:click={() => goto(`/collections/${collection.id}`)}
+							onclick={() => goto(`/collections/${collection.id}`)}
 						>
 							<Launch class="w-4 h-4" />
 							{$t('adventures.open_details')}
 						</button>
 						{#if user && user.uuid == collection.user}
-							<div class="dropdown dropdown-end">
+							<div
+								class="dropdown dropdown-end relative z-50"
+								role="group"
+								onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+							>
 								<div
 									tabindex="0"
 									role="button"
@@ -385,11 +401,11 @@
 								</div>
 								<ul
 									tabindex="-1"
-									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+									class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-64 p-2 shadow-xl border border-base-300"
 								>
 									{#if type != 'viewonly'}
 										<li>
-											<button class="flex items-center gap-2" on:click={editAdventure}>
+											<button class="flex items-center gap-2" onclick={editAdventure}>
 												<FileDocumentEdit class="w-4 h-4" />
 												{$t('adventures.edit_collection')}
 											</button>
@@ -397,7 +413,7 @@
 										<li>
 											<button
 												class="flex items-center gap-2"
-												on:click={() => (isShareModalOpen = true)}
+												onclick={() => (isShareModalOpen = true)}
 											>
 												<ShareVariant class="w-4 h-4" />
 												{$t('adventures.share')}
@@ -406,7 +422,7 @@
 										<li>
 											<button
 												class="flex items-center gap-2"
-												on:click={() => (isSocialShareModalOpen = true)}
+												onclick={() => (isSocialShareModalOpen = true)}
 											>
 												<ImageOutline class="w-4 h-4" />
 												{$t('social_share.share_externally')}
@@ -414,7 +430,7 @@
 										</li>
 										{#if collection.is_public}
 											<li>
-												<button on:click={copyLink} class="flex items-center gap-2">
+												<button onclick={copyLink} class="flex items-center gap-2">
 													{#if copied}
 														<Check class="w-4 h-4 text-success" />
 														<span>{$t('adventures.link_copied')}</span>
@@ -429,7 +445,7 @@
 											<li>
 												<button
 													class="flex items-center gap-2"
-													on:click={() => archiveCollection(false)}
+													onclick={() => archiveCollection(false)}
 												>
 													<ArchiveArrowUp class="w-4 h-4" />
 													{$t('adventures.unarchive')}
@@ -439,7 +455,7 @@
 											<li>
 												<button
 													class="flex items-center gap-2"
-													on:click={() => archiveCollection(true)}
+													onclick={() => archiveCollection(true)}
 												>
 													<ArchiveArrowDown class="w-4 h-4" />
 													{$t('adventures.archive')}
@@ -447,13 +463,13 @@
 											</li>
 										{/if}
 										<li>
-											<button class="flex items-center gap-2" on:click={exportCollectionPdf}>
+											<button class="flex items-center gap-2" onclick={exportCollectionPdf}>
 												<FilePdfBox class="w-4 h-4" />
 												{$t('adventures.export_pdf')}
 											</button>
 										</li>
 										<li>
-											<button class="flex items-center gap-2" on:click={exportCollectionZip}>
+											<button class="flex items-center gap-2" onclick={exportCollectionZip}>
 												<DownloadIcon class="w-4 h-4" />
 												{$t('adventures.export_zip')}
 											</button>
@@ -461,7 +477,7 @@
 										<li>
 											<button
 												class="flex items-center gap-2"
-												on:click={duplicateCollection}
+												onclick={duplicateCollection}
 												disabled={isDuplicating}
 											>
 												<ContentCopy class="w-4 h-4" />
@@ -474,7 +490,7 @@
 												id="delete_collection"
 												data-umami-event="Delete Collection"
 												class="text-error flex items-center gap-2"
-												on:click={() => (isWarningModalOpen = true)}
+												onclick={() => (isWarningModalOpen = true)}
 											>
 												<TrashCan class="w-4 h-4" />
 												{$t('adventures.delete')}
@@ -485,7 +501,7 @@
 										<li>
 											<button
 												class="flex items-center gap-2"
-												on:click={() => goto(`/collections/${collection.id}`)}
+												onclick={() => goto(`/collections/${collection.id}`)}
 											>
 												<Launch class="w-4 h-4" />
 												{$t('adventures.open_details')}
@@ -496,7 +512,11 @@
 							</div>
 						{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
 							<!-- dropdown with leave button -->
-							<div class="dropdown dropdown-end">
+							<div
+								class="dropdown dropdown-end relative z-50"
+								role="group"
+								onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+							>
 								<div
 									tabindex="0"
 									role="button"
@@ -507,12 +527,12 @@
 								</div>
 								<ul
 									tabindex="-1"
-									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+									class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-64 p-2 shadow-xl border border-base-300"
 								>
 									<li>
 										<button
 											class="flex items-center gap-2"
-											on:click={() => (isSocialShareModalOpen = true)}
+											onclick={() => (isSocialShareModalOpen = true)}
 										>
 											<ImageOutline class="w-4 h-4" />
 											{$t('social_share.share_externally')}
@@ -521,7 +541,7 @@
 									<li>
 										<button
 											class="text-error flex items-center gap-2"
-											on:click={() => dispatch('leave', collection.id)}
+											onclick={() => dispatch('leave', collection.id)}
 										>
 											<ExitRun class="w-4 h-4" />
 											{$t('adventures.leave_collection')}
