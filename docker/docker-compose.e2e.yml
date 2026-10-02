@@ -1,0 +1,32 @@
+# Overrides for the Playwright end-to-end stack. Layer it on the Standard
+# Deployment compose file:
+#
+#   POSTGRES_PASSWORD=e2e docker compose -p adventurelog-e2e \
+#     -f docker-compose.yml -f docker/docker-compose.e2e.yml up -d --build --wait
+#
+# The image is built from the working tree rather than pulled, world data is
+# skipped so the stack boots in seconds, and the port, container names and
+# project name are distinct so it can run beside a normal local instance.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: aio
+    image: adventurelog-e2e:local
+    container_name: adventurelog-e2e
+    restart: "no"
+    env_file: !reset []
+    environment:
+      SITE_URL: http://localhost:8017
+      SKIP_WORLD_DATA: "1"
+      ENABLE_RATE_LIMITS: "false"
+      DJANGO_ADMIN_USERNAME: admin
+      DJANGO_ADMIN_PASSWORD: admin
+      DJANGO_ADMIN_EMAIL: admin@example.com
+    ports: !override
+      - "8017:80"
+
+  db:
+    container_name: adventurelog-e2e-db
+    restart: "no"
