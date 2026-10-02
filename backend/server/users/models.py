@@ -66,7 +66,9 @@ BASEMAP_CHOICES = (
 )
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)  # Override the email field with unique constraint
+    # NULL (not '') so more than one user can exist without an email.
+    # PostgreSQL unique constraints treat NULL as distinct.
+    email = models.EmailField(unique=True, null=True, blank=True)
     profile_pic = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='profile-pics/')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     public_profile = models.BooleanField(default=False)
@@ -76,6 +78,11 @@ class CustomUser(AbstractUser):
     date_format = models.CharField(max_length=10, choices=DATE_FORMAT_CHOICES, default='locale')
     map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
     legal_consent = models.JSONField(null=True, blank=True, editable=False)
+
+    def save(self, *args, **kwargs):
+        if isinstance(self.email, str) and not self.email.strip():
+            self.email = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.username

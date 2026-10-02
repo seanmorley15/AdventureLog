@@ -60,6 +60,7 @@ class LocationSerializerGeoTests(TestCase):
                 'latitude': 48.8566,
                 'longitude': 2.3522,
                 'is_public': False,
+                'user': self.user,
             }
         )
         location.refresh_from_db()

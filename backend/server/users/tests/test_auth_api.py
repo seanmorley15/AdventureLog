@@ -1,9 +1,9 @@
 from rest_framework.test import APITestCase
-from .models import CustomUser
+from users.models import CustomUser
 from uuid import UUID
 
 from allauth.account.models import EmailAddress
-from django.test import override_settings
+from django.test import TestCase, override_settings
 
 
 class SignupLegalLinksTestCase(APITestCase):
@@ -230,3 +230,13 @@ class ServerSignupRedirectTestCase(APITestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], 'http://localhost:3000/signup')
         self.assertFalse(CustomUser.objects.filter(username='serveruser').exists())
+
+
+class BlankEmailTests(TestCase):
+    def test_multiple_users_can_omit_email(self):
+        first = CustomUser.objects.create_user(username='noemail1', password='testpassword123')
+        second = CustomUser.objects.create_user(username='noemail2', password='testpassword123')
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertIsNone(first.email)
+        self.assertIsNone(second.email)
