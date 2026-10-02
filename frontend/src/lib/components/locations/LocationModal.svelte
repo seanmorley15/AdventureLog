@@ -3,6 +3,7 @@
 	import type { Collection, Location, User } from '$lib/types';
 	import { t } from 'svelte-i18n';
 	import { normalizeBasemapType } from '$lib';
+	import { createEmptyLocation } from '$lib/location-draft';
 	import { extractGooglePhotoUrls } from '$lib/map/places';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
@@ -33,35 +34,6 @@
 		initialStep?: 'visits' | null;
 		location?: Location;
 		locationToEdit?: Location | null;
-	}
-
-	function createEmptyLocation(): Location {
-		return {
-			id: '',
-			name: '',
-			visits: [],
-			link: null,
-			description: null,
-			tags: [],
-			rating: NaN,
-			price: null,
-			price_currency: null,
-			is_public: false,
-			latitude: NaN,
-			longitude: NaN,
-			location: null,
-			images: [],
-			user: null,
-			category: {
-				id: '',
-				name: '',
-				display_name: '',
-				icon: '',
-				user: ''
-			},
-			attachments: [],
-			trails: []
-		};
 	}
 
 	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {

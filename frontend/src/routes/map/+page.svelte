@@ -20,6 +20,7 @@
 		Lodging
 	} from '$lib/types.js';
 	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
+	import { createEmptyLocation } from '$lib/location-draft';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
 	import { getActivityColor, normalizeBasemapType } from '$lib';
@@ -188,7 +189,7 @@
 
 	let isQuickAdding = $state(false);
 	const duplicates = new LocationDuplicateChecker();
-	let locationBeingUpdated: Location | undefined = $state(undefined);
+	let locationBeingUpdated = $state(createEmptyLocation());
 	let modalLocationPrefill: Location | null = $state(null);
 	let modalLodgingPrefill: Lodging | null = $state(null);
 	let modalSkipQuickStart = $state(false);

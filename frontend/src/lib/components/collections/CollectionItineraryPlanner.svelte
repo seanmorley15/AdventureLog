@@ -25,6 +25,7 @@
 	import LodgingCard from '$lib/components/cards/LodgingCard.svelte';
 	import NoteCard from '$lib/components/cards/NoteCard.svelte';
 	import ChecklistCard from '$lib/components/cards/ChecklistCard.svelte';
+	import { createEmptyLocation } from '$lib/location-draft';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import LodgingModal from '../lodging/LodgingModal.svelte';
 	import TransportationModal from '../transportation/TransportationModal.svelte';
@@ -452,7 +453,7 @@
 		days = groupItemsByDay(collection);
 	}
 
-	let locationBeingUpdated: Location | undefined = $state(undefined);
+	let locationBeingUpdated = $state(createEmptyLocation());
 	let lodgingBeingUpdated: Lodging | null = $state(null);
 	let transportationBeingUpdated: Transportation | undefined = $state(undefined);
 
@@ -1731,7 +1732,7 @@
 		on:close={() => {
 			isLocationModalOpen = false;
 			locationToEdit = null;
-			locationBeingUpdated = undefined;
+			locationBeingUpdated = createEmptyLocation();
 			locationModalInitialStep = null;
 			pendingAddDate = null;
 			addedToItinerary.clear();
@@ -2220,7 +2221,7 @@
 												onclick={() => {
 													pendingAddDate = day.date;
 													locationToEdit = null;
-													locationBeingUpdated = undefined;
+													locationBeingUpdated = createEmptyLocation();
 													locationModalInitialStep = null;
 													isLocationModalOpen = true;
 												}}

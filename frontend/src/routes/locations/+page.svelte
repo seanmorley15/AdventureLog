@@ -5,6 +5,7 @@
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
+	import { createEmptyLocation } from '$lib/location-draft';
 	import type { Location } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
@@ -39,7 +40,7 @@
 	let includeCollections = $derived($page.url.searchParams.get('include_collections') !== 'false');
 	let currentPage = $derived(parseInt($page.url.searchParams.get('page') || '1', 10));
 
-	let locationBeingUpdated: Location | undefined = $state(undefined);
+	let locationBeingUpdated = $state(createEmptyLocation());
 
 	function toListLocation(loc: Location): Location {
 		// Keep the in-memory list aligned with the slim list API payload
@@ -147,7 +148,7 @@
 	async function editAdventure(event: CustomEvent<Location>, initialStep: 'visits' | null = null) {
 		const locationId = event.detail?.id;
 		locationModalInitialStep = initialStep;
-		locationBeingUpdated = undefined;
+		locationBeingUpdated = createEmptyLocation();
 
 		if (!locationId) {
 			adventureToEdit = event.detail;

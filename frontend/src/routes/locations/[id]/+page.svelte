@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 
+	import { createEmptyLocation } from '$lib/location-draft';
 	import type { Location } from '$lib/types';
 	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '$lib/sunriseSunset';
 	import type { PageData } from './$types';
@@ -77,7 +78,7 @@
 
 	let notFound: boolean = $state(false);
 	let isEditModalOpen: boolean = $state(false);
-	let locationDraft: Location | undefined = $state();
+	let locationDraft = $state(createEmptyLocation());
 	let isSocialShareModalOpen: boolean = $state(false);
 	let adventure_images: { image: string; adventure: Location | null }[] = [];
 	let modalInitialIndex: number = $state(0);
