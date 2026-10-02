@@ -1,6 +1,10 @@
+import re
+from urllib.parse import urlparse
+
 from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from invitations.adapters import get_invitations_adapter
 from invitations.app_settings import app_settings
 from invitations.views import AcceptInvite as BaseAcceptInvite
@@ -9,14 +13,40 @@ from rest_framework.views import APIView
 
 from users.invitation_signup import inspect_invite_key, invitation_is_expired, stash_invite_email
 
+# django-invitations keys are lowercase alphanumeric tokens.
+_INVITE_KEY_PATTERN = re.compile(r'[a-z0-9]+')
+
 
 class AcceptInviteView(BaseAcceptInvite):
     """Redirect invited users to the frontend signup page with the invite key."""
 
-    def get_signup_redirect(self):
-        key = self.kwargs.get('key', '')
+    def _is_allowed_signup_redirect(self, url):
+        parsed = urlparse(settings.FRONTEND_URL)
+        # Compare the full netloc, including a non-default port such as :5173.
+        if not parsed.netloc:
+            return False
+        return url_has_allowed_host_and_scheme(
+            url,
+            allowed_hosts={parsed.netloc},
+            require_https=parsed.scheme == 'https',
+        )
+
+    def get_signup_redirect(self, invite_key=''):
+        """Return the frontend signup URL, including a stored invite key when it is safe."""
         base = settings.INVITATIONS_SIGNUP_REDIRECT_URL.rstrip('/')
-        return f'{base}?invite_key={key}'
+        if not isinstance(invite_key, str) or not _INVITE_KEY_PATTERN.fullmatch(invite_key):
+            return base
+
+        candidate = f'{base}?{urlencode({"invite_key": invite_key})}'
+        if self._is_allowed_signup_redirect(candidate):
+            return candidate
+        return base
+
+    def _redirect_to_signup(self, invite_key):
+        target = self.get_signup_redirect(invite_key)
+        if self._is_allowed_signup_redirect(target):
+            return redirect(target)
+        return redirect(settings.INVITATIONS_SIGNUP_REDIRECT_URL.rstrip('/'))
 
     def post(self, *args, **kwargs):
         self.object = invitation = self.get_object()
@@ -53,7 +83,7 @@ class AcceptInviteView(BaseAcceptInvite):
                 'invitations/messages/invite_expired.txt',
                 {'email': invitation.email},
             )
-            return redirect(self.get_signup_redirect())
+            return self._redirect_to_signup(invitation.key)
 
         if not app_settings.ACCEPT_INVITE_AFTER_SIGNUP:
             from invitations.views import accept_invitation
@@ -65,7 +95,7 @@ class AcceptInviteView(BaseAcceptInvite):
             )
 
         get_invitations_adapter().stash_verified_email(self.request, invitation.email)
-        return redirect(self.get_signup_redirect())
+        return self._redirect_to_signup(invitation.key)
 
 
 class InviteSignupStatusView(APIView):

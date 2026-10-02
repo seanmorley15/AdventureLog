@@ -116,6 +116,11 @@ class DeleteAccountTestCase(APITestCase):
 
         response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 502)
+        self.assertEqual(
+            response.json()["detail"],
+            "Unable to delete your account because billing cleanup failed. "
+            "Please try again or contact support.",
+        )
         self.assertTrue(User.objects.filter(username="deleteuser").exists())
 
     def test_staff_account_cannot_self_delete(self):

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
+from users.invitation_views import AcceptInviteView
 from users.models import CustomUser
 
 
@@ -23,6 +24,12 @@ class InviteSignupTestCase(APITestCase):
             response['Location'],
             f'{settings.FRONTEND_URL.rstrip("/")}/signup?invite_key={invitation.key}',
         )
+
+    def test_signup_redirect_drops_unsafe_invite_key(self):
+        view = AcceptInviteView()
+        target = view.get_signup_redirect('abc&next=https://evil.example')
+        self.assertEqual(target, f'{settings.FRONTEND_URL.rstrip("/")}/signup')
+        self.assertNotIn('evil.example', target)
 
     @override_settings(DISABLE_REGISTRATION=True)
     def test_invite_signup_status_stashes_session_email(self):

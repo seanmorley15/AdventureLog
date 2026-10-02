@@ -523,8 +523,16 @@ class DeleteAccountView(APIView):
 
         try:
             delete_user_account(user)
-        except AccountDeletionError as exc:
-            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except AccountDeletionError:
+            return Response(
+                {
+                    "detail": (
+                        "Unable to delete your account because billing cleanup failed. "
+                        "Please try again or contact support."
+                    )
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
 
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)

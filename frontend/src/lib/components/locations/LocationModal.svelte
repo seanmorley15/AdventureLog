@@ -85,13 +85,9 @@
 		itineraryDayLabel = null,
 		skipQuickStart = false,
 		initialStep = null,
-		location = $bindable(),
+		location = $bindable(createEmptyLocation()),
 		locationToEdit = null
 	}: Props = $props();
-
-	if (!location) {
-		location = createEmptyLocation();
-	}
 
 	// Derive edit mode immediately so the first paint never mounts Quick Start when editing
 	let isEditMode = $derived(Boolean(locationToEdit?.id));
