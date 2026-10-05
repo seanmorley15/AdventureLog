@@ -254,7 +254,9 @@
 }
 
 :where(.field-label)
-	+ :where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
+	+ :where(.input, .select):not([type='time']):not(.input-sm):not(.input-xs):not(.select-sm):not(
+		.select-xs
+	) {
 	height: 3rem;
 	min-height: 3rem;
 	font-size: 1rem;
@@ -262,8 +264,10 @@
 }
 
 :where(.field-label)
-	+ :where(.flex, .relative, .join, .grid, .mt-1, .dropdown)
-	:where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
+	+ :where(.flex, .relative, .join, .grid, .mt-1, .dropdown, .date-field)
+	:where(.input, .select):not([type='time']):not(.input-sm):not(.input-xs):not(.select-sm):not(
+		.select-xs
+	) {
 	height: 3rem;
 	min-height: 3rem;
 	font-size: 1rem;
@@ -284,4 +288,9 @@
 	> :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs) {
 	height: 3rem;
 	min-height: 3rem;
+}
+
+/* Flip date/time/timezone popovers above the trigger when they would overflow. */
+.dropdown[popover] {
+	position-try-fallbacks: flip-block;
 }

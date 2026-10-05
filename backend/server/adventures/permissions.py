@@ -139,13 +139,13 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
 
         
         if type(obj).__name__ == 'Visit':
-            print("Checking permissions for Visit object", obj)
+            # print("Checking permissions for Visit object", obj)
             # If the object is a Visit, get its location
             if hasattr(obj, 'location'):
                 obj = obj.location
 
         if type(obj).__name__ == 'CollectionItineraryItem':
-            print("Checking permissions for CollectionItineraryItem object", obj)
+            # print("Checking permissions for CollectionItineraryItem object", obj)
             if hasattr(obj, 'object_id') and hasattr(obj, 'content_type'):
                 content_object = obj.content_type.get_object_for_this_type(id=obj.object_id)
                 obj = content_object

@@ -1060,7 +1060,7 @@
 						</div>
 					{/if}
 
-					<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+					<div class="grid grid-cols-1 items-start lg:grid-cols-3 gap-4">
 						<div class="flex flex-col">
 							<label class="field-label" for="start-date-input">{$t('adventures.start_date')}</label
 							>
@@ -1071,7 +1071,6 @@
 								showTime={!allDay}
 								min={constrainDates ? constraintStartDate : undefined}
 								max={constrainDates ? constraintEndDate : undefined}
-								clearable={false}
 							/>
 						</div>
 
@@ -1085,20 +1084,12 @@
 									showTime={!allDay}
 									min={constrainDates ? localStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
-									clearable={false}
 								/>
 							</div>
 						{/if}
 
 						{#if !allDay}
-							<div class="flex flex-col">
-								<label class="field-label" for="timezone-selector"
-									>{$t('adventures.timezone')}</label
-								>
-								<div class="mt-1">
-									<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
-								</div>
-							</div>
+							<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 						{/if}
 					</div>
 
@@ -1467,7 +1458,10 @@
 													</div>
 
 													<div>
-														<TimezoneSelector bind:selectedTimezone={activityForm.timezone} />
+														<TimezoneSelector
+															bind:selectedTimezone={activityForm.timezone}
+															size="sm"
+														/>
 													</div>
 
 													<div>
