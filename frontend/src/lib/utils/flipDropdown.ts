@@ -105,3 +105,54 @@ export function applyDropdownFlip(
 	if (!anchor) return;
 	anchor.classList.toggle('dropdown-top', shouldFlipDropdownUp(anchor, fallbackHeight));
 }
+
+function popoverBounds(trigger: HTMLElement): { top: number; bottom: number } {
+	const viewportTop = 0;
+	const viewportBottom = viewportHeight();
+	const clip = trigger.closest('.modal-box, dialog.modal') as HTMLElement | null;
+	if (!clip) return { top: viewportTop, bottom: viewportBottom };
+
+	const rect = clip.getBoundingClientRect();
+	return {
+		top: Math.max(viewportTop, rect.top),
+		bottom: Math.min(viewportBottom, rect.bottom)
+	};
+}
+
+/** Flip a popover above its trigger when it would clip the viewport or modal. */
+export function shouldFlipPopoverUp(
+	trigger: HTMLElement | null | undefined,
+	popover?: HTMLElement | null,
+	fallbackHeight = DEFAULT_MENU_HEIGHT
+): boolean {
+	if (!trigger || typeof window === 'undefined') return false;
+
+	const triggerRect = trigger.getBoundingClientRect();
+	const needed = Math.max(popover?.offsetHeight || 0, fallbackHeight);
+	const bounds = popoverBounds(trigger);
+	const spaceBelow = bounds.bottom - triggerRect.bottom - VIEWPORT_PADDING;
+	const spaceAbove = triggerRect.top - bounds.top - VIEWPORT_PADDING;
+
+	if (spaceBelow >= needed) return false;
+	return spaceAbove > spaceBelow;
+}
+
+export function attachPopoverFlip(
+	popover: HTMLElement,
+	getTrigger: () => HTMLElement | null | undefined,
+	fallbackHeight = DEFAULT_MENU_HEIGHT
+): () => void {
+	const apply = () => {
+		popover.classList.toggle(
+			'dropdown-top',
+			shouldFlipPopoverUp(getTrigger(), popover, fallbackHeight)
+		);
+	};
+	const onToggle = (event: Event) => {
+		if ((event as ToggleEvent).newState !== 'open') return;
+		apply();
+		requestAnimationFrame(apply);
+	};
+	popover.addEventListener('toggle', onToggle);
+	return () => popover.removeEventListener('toggle', onToggle);
+}

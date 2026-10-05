@@ -38,8 +38,32 @@ export function resolveDateFormatLocale(
 	return PREFERENCE_LOCALES[preference];
 }
 
-function usesHour12(preference: DateFormatPreference): boolean {
+export function prefersHour12(preference: DateFormatPreference = DEFAULT_DATE_FORMAT): boolean {
 	return preference === 'locale' || preference === 'mdy';
+}
+
+/** Format an HH:MM clock time using the user's date preference (12h or 24h). */
+export function formatDisplayTime(
+	time: string | null | undefined,
+	preference: DateFormatPreference = DEFAULT_DATE_FORMAT
+): string {
+	if (!time) return '';
+	const match = /^(\d{1,2}):(\d{2})/.exec(time);
+	if (!match) return time;
+	const hours = Number(match[1]);
+	const minutes = Number(match[2]);
+	if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return time;
+
+	const date = new Date(2000, 0, 1, hours, minutes);
+	try {
+		return new Intl.DateTimeFormat(resolveDateFormatLocale(preference), {
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: prefersHour12(preference)
+		}).format(date);
+	} catch {
+		return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+	}
 }
 
 function parseDateOnly(iso: string): Date | null {
@@ -97,7 +121,7 @@ export function formatDisplayDateTime(
 			day: preference === 'ymd' ? '2-digit' : 'numeric',
 			hour: '2-digit',
 			minute: '2-digit',
-			hour12: usesHour12(preference)
+			hour12: prefersHour12(preference)
 		}).format(new Date(iso));
 	} catch {
 		return new Date(iso).toLocaleString();

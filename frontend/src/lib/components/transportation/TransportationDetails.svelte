@@ -848,7 +848,7 @@
 							</div>
 						{/if}
 
-						<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
+						<div class="grid grid-cols-1 items-start lg:grid-cols-2 xl:grid-cols-4 gap-4">
 							<!-- Departure Date -->
 							<div class="flex flex-col">
 								<label class="field-label" for="departure-date"
@@ -861,7 +861,6 @@
 									showTime={!allDay}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
-									clearable={false}
 								/>
 							</div>
 
@@ -877,7 +876,6 @@
 									showTime={!allDay}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}
-									clearable={false}
 								/>
 							</div>
 
