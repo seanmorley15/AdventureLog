@@ -29,11 +29,21 @@ jobs:
         run: |
           docker compose -f docker/docker-compose.database.yml up -d
 
+      - name: wait for database
+        run: |
+          for _ in $(seq 1 30); do
+            if docker compose -f docker/docker-compose.database.yml exec -T db pg_isready -U adventure; then
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+
       - name: install python libraries
         working-directory: backend/server
         run: pip install -r requirements.txt
 
-      - name: run server
+      - name: run tests
         working-directory: backend/server
         env:
           PGHOST: "127.0.0.1"
@@ -48,11 +58,5 @@ jobs:
           CSRF_TRUSTED_ORIGINS: "http://localhost:5173,http://localhost:8000"
           DEBUG: "True"
           FRONTEND_URL: "http://localhost:5173"
-        run: |
-          python manage.py migrate
-          python manage.py runserver &
-
-      - name: wait for backend to boot
-        run: >
-          curl -fisS --retry 60 --retry-delay 1 --retry-all-errors
-          http://localhost:8000/
+          DJANGO_SETTINGS_MODULE: "main.test_settings"
+        run: python manage.py test --verbosity=1

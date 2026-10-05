@@ -1,13 +1,23 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { fetchCSRFToken } from '$lib/index.server';
+import {
+	csrfFail,
+	djangoBrowserFetch,
+	fetchPasswordPolicy,
+	isPasswordLongEnough,
+	isPasswordResetSuccess,
+	mapAllauthPasswordError,
+	requireCsrf
+} from '$lib/index.server';
 import type { PageServerLoad, Actions } from './$types';
+import { getServerEndpoint } from '$lib/server/django-proxy';
 
-export const load = (async ({ params }) => {
+export const load = (async ({ params, fetch }) => {
 	const key = params.key;
 	if (!key) {
 		throw redirect(302, '/');
 	}
-	return { key };
+	const passwordPolicy = await fetchPasswordPolicy(fetch, getServerEndpoint());
+	return { key, passwordPolicy };
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
@@ -25,29 +35,45 @@ export const actions: Actions = {
 			return fail(400, { message: 'settings.password_does_not_match' });
 		}
 
-		const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-		const csrfToken = await fetchCSRFToken();
-
-		const response = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/password/reset`, {
-			headers: {
-				'Content-Type': 'application/json',
-				Cookie: `csrftoken=${csrfToken}`,
-				'X-CSRFToken': csrfToken,
-				Referer: event.url.origin // Include Referer header
-			},
-			method: 'POST',
-			credentials: 'include',
-			body: JSON.stringify({ key: key, password: password })
-		});
-
-		if (response.status !== 401) {
-			const error_message = await response.json();
-			console.error(error_message);
-			console.log(response);
-			return fail(response.status, { message: 'auth.reset_failed' });
+		const passwordPolicy = await fetchPasswordPolicy(event.fetch, getServerEndpoint());
+		if (!isPasswordLongEnough(password.toString(), passwordPolicy)) {
+			return fail(400, {
+				message: 'auth.password_too_short',
+				values: { min: passwordPolicy.min_length }
+			});
 		}
 
-		return redirect(302, '/login');
+		let csrfToken: string;
+		try {
+			csrfToken = await requireCsrf();
+		} catch {
+			return csrfFail();
+		}
+
+		const response = await djangoBrowserFetch(event, '/auth/browser/v1/auth/password/reset', {
+			method: 'POST',
+			csrfToken,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ key, password })
+		});
+
+		let body: unknown = null;
+		try {
+			body = await response.json();
+		} catch {
+			body = null;
+		}
+
+		if (isPasswordResetSuccess(response, body)) {
+			return redirect(302, '/login');
+		}
+
+		return fail(
+			response.status,
+			mapAllauthPasswordError(body as Parameters<typeof mapAllauthPasswordError>[0], {
+				minLength: passwordPolicy.min_length,
+				fallbackKey: 'auth.reset_failed'
+			})
+		);
 	}
 };

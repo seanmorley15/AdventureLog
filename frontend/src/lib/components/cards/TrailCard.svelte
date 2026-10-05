@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Trail } from '$lib/types';
 	import { t } from 'svelte-i18n';
+	import { page } from '$app/state';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	// Icons (only those used)
 	import Calendar from '~icons/mdi/calendar';
@@ -10,8 +12,14 @@
 	import TrendingUp from '~icons/mdi/trending-up';
 	import Users from '~icons/mdi/account-supervisor';
 
-	export let trail: Trail;
-	export let measurementSystem: 'metric' | 'imperial' = 'metric';
+	interface Props {
+		trail: Trail;
+		measurementSystem?: 'metric' | 'imperial';
+	}
+
+	let { trail, measurementSystem = 'metric' }: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	function getDistance(meters: number) {
 		return measurementSystem === 'imperial'
@@ -32,11 +40,12 @@
 	}
 
 	function formatDate(date: string | number | Date) {
-		return new Date(date).toLocaleDateString();
+		const iso = typeof date === 'string' ? date : new Date(date).toISOString();
+		return formatDisplayDate(iso, dateFormat);
 	}
 </script>
 
-<div class="card bg-base-100 shadow">
+<div class="card bg-base-100 shadow-sm">
 	<div class="card-body p-4">
 		<div class="flex items-start justify-between">
 			<div class="flex-1">

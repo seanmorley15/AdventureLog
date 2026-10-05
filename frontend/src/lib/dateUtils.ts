@@ -2,6 +2,12 @@
 import { DateTime } from 'luxon';
 import type { Checklist, Collection, Lodging, Note, Transportation, Visit } from './types';
 import { isAllDay, isVisitAllDay, allDayDatePart } from '$lib';
+import {
+	DEFAULT_DATE_FORMAT,
+	formatDisplayDate,
+	formatDisplayDateTime,
+	type DateFormatPreference
+} from '$lib/dateFormat';
 
 /**
  * Convert a UTC ISO date to a datetime-local value in the specified timezone
@@ -102,21 +108,12 @@ export function validateDateRange(
 	return { valid: true };
 }
 
-export function formatDateInTimezone(utcDate: string, timezone: string | null): string {
-	if (!utcDate) return '';
-	try {
-		return new Intl.DateTimeFormat(undefined, {
-			timeZone: timezone || undefined,
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: true
-		}).format(new Date(utcDate));
-	} catch {
-		return new Date(utcDate).toLocaleString();
-	}
+export function formatDateInTimezone(
+	utcDate: string,
+	timezone: string | null,
+	preference: DateFormatPreference = DEFAULT_DATE_FORMAT
+): string {
+	return formatDisplayDateTime(utcDate, preference, timezone);
 }
 
 export function formatUTCDate(utcDate: string | null): string {
@@ -126,15 +123,11 @@ export function formatUTCDate(utcDate: string | null): string {
 	return dateTime.toISO()?.slice(0, 16).replace('T', ' ') || '';
 }
 
-export function formatAllDayDate(dateString: string): string {
-	if (!dateString) return '';
-	const datePart = dateString.split('T')[0];
-	const dateWithMidday = `${datePart}T12:00:00`;
-	return new Intl.DateTimeFormat('en-US', {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric'
-	}).format(new Date(dateWithMidday));
+export function formatAllDayDate(
+	dateString: string,
+	preference: DateFormatPreference = DEFAULT_DATE_FORMAT
+): string {
+	return formatDisplayDate(dateString, preference);
 }
 
 // ==== FIXED TIMEZONE-AWARE DATE RANGE LOGIC ====

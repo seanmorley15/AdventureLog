@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
@@ -8,6 +10,7 @@
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
 	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { isAllDay } from '$lib';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -24,9 +27,11 @@
 	import Globe from '~icons/mdi/globe';
 	import { goto } from '$app/navigation';
 	import type { CollectionItineraryItem } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	let isActionsMenuOpen = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -81,11 +86,23 @@
 				}: ${localTimeZone}.`;
 	};
 
-	export let transportation: Transportation;
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
+	interface Props {
+		transportation: Transportation;
+		user?: User | null;
+		collection?: Collection | null;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+	}
+
+	let {
+		transportation,
+		user = null,
+		collection = null,
+		readOnly = false,
+		itineraryItem = null
+	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	const toMiles = (km: any) => (Number(km) * 0.621371).toFixed(1);
 
@@ -104,28 +121,37 @@
 		dispatch('changeDay', { type: 'transportation', item: transportation, forcePicker: true });
 	}
 
-	let travelDurationLabel: string | null = null;
-	$: travelDurationLabel = formatTravelDuration(transportation?.travel_duration_minutes ?? null);
+	let travelDurationLabel: string | null = $state(null);
+	run(() => {
+		travelDurationLabel = formatTravelDuration(transportation?.travel_duration_minutes ?? null);
+	});
 
-	let showMoreDetails = false;
+	let showMoreDetails = $state(false);
 
-	$: hasCodePair = Boolean(transportation?.start_code && transportation?.end_code);
-	$: routeFromLabel = hasCodePair
-		? transportation.start_code
-		: (transportation.from_location ?? transportation.start_code ?? null);
-	$: routeToLabel = hasCodePair
-		? transportation.end_code
-		: (transportation.to_location ?? transportation.end_code ?? null);
-	$: hasExpandableDetails = Boolean(transportation?.end_date || travelDurationLabel);
-	$: if (!hasExpandableDetails) showMoreDetails = false;
-	$: transportationPriceLabel = formatMoney(
-		toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY)
+	let hasCodePair = $derived(Boolean(transportation?.start_code && transportation?.end_code));
+	let routeFromLabel = $derived(
+		hasCodePair
+			? transportation.start_code
+			: (transportation.from_location ?? transportation.start_code ?? null)
+	);
+	let routeToLabel = $derived(
+		hasCodePair
+			? transportation.end_code
+			: (transportation.to_location ?? transportation.end_code ?? null)
+	);
+	let hasExpandableDetails = $derived(Boolean(transportation?.end_date || travelDurationLabel));
+	run(() => {
+		if (!hasExpandableDetails) showMoreDetails = false;
+	});
+	let transportationPriceLabel = $derived(
+		formatMoney(toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY))
 	);
 
-	$: routeGeojson =
-		transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null;
+	let routeGeojson = $derived(
+		transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null
+	);
 
-	let isWarningModalOpen: boolean = false;
+	let isWarningModalOpen: boolean = $state(false);
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -173,7 +199,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="transportation-card"
 >
 	<!-- Image Section with Overlay -->
@@ -199,7 +225,7 @@
 				data-tip={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
 			>
 				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-sm"
+					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
 					role="img"
 					aria-label={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
@@ -235,41 +261,43 @@
 
 			<div class="flex items-center gap-2">
 				<button
-					class="btn btn-sm p-1 text-base-content"
+					class="btn btn-square btn-sm p-1 text-base-content"
 					aria-label="open-details"
-					on:click={() => goto(`/transportations/${transportation.id}`)}
+					onclick={() => goto(`/transportations/${transportation.id}`)}
 				>
-					<Launch class="w-4 h-4" />
+					<Launch class="w-5 h-5" />
 				</button>
 
 				{#if !readOnly && (transportation.user === user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid)))}
 					<div
 						class="dropdown dropdown-end relative z-50"
 						class:dropdown-open={isActionsMenuOpen}
+						class:dropdown-top={openUpward}
 						bind:this={actionsMenuRef}
 					>
 						<button
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
 								}
 								closeAllTransportationMenus();
+								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
-							<DotsHorizontal class="w-5 h-5" />
+							<DotsHorizontal class="w-4 h-4" />
 						</button>
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editTransportation();
 									}}
@@ -284,23 +312,23 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'transportation', id: transportation.id });
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4 " />
+											<Globe class="w-4 h-4" />
 											{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
 										</button>
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<Calendar class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}
@@ -309,7 +337,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -328,7 +356,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}
@@ -375,12 +403,12 @@
 					<!-- All-day event -->
 					<div class="flex items-center gap-2 text-sm">
 						<span class="font-medium text-base-content"
-							>{formatAllDayDate(transportation.date)}</span
+							>{formatAllDayDate(transportation.date, dateFormat)}</span
 						>
 						{#if transportation.end_date && transportation.end_date !== transportation.date}
 							<span class="text-base-content/40">→</span>
 							<span class="font-medium text-base-content"
-								>{formatAllDayDate(transportation.end_date)}</span
+								>{formatAllDayDate(transportation.end_date, dateFormat)}</span
 							>
 						{/if}
 					</div>
@@ -391,7 +419,11 @@
 							<div class="flex flex-col gap-0.5 min-w-0">
 								<span class="text-xs text-base-content/60">Departure</span>
 								<span class="text-sm font-semibold text-base-content">
-									{formatDateInTimezone(transportation.date, transportation.start_timezone)}
+									{formatDateInTimezone(
+										transportation.date,
+										transportation.start_timezone,
+										dateFormat
+									)}
 								</span>
 							</div>
 							{#if hasCodePair}
@@ -416,9 +448,9 @@
 					{#if hasExpandableDetails}
 						<div class="flex justify-end">
 							<button
-								class="btn btn-neutral-200 btn-xs"
+								class="btn btn-ghost btn-xs"
 								aria-expanded={showMoreDetails}
-								on:click={() => (showMoreDetails = !showMoreDetails)}
+								onclick={() => (showMoreDetails = !showMoreDetails)}
 								type="button"
 							>
 								{showMoreDetails
@@ -438,7 +470,8 @@
 											<span class="text-sm font-semibold text-base-content">
 												{formatDateInTimezone(
 													transportation.end_date,
-													transportation.end_timezone ?? transportation.start_timezone
+													transportation.end_timezone ?? transportation.start_timezone,
+													dateFormat
 												)}
 											</span>
 										</div>

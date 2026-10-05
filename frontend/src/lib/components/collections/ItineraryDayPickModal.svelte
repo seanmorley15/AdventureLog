@@ -5,10 +5,21 @@
 	import CalendarBlank from '~icons/mdi/calendar-blank';
 	import { t } from 'svelte-i18n';
 
-	export let isOpen: boolean = false;
-	export let days: Array<{ date: string; displayDate: string; items: any[] }> = [];
-	export let itemName: string = 'Item';
-	export let scheduledDates: string[] = [];
+	interface Props {
+		isOpen?: boolean;
+		days?: Array<{ date: string; displayDate: string; items: any[] }>;
+		itemName?: string;
+		scheduledDates?: string[];
+		sourceVisitDate?: string | null;
+	}
+
+	let {
+		isOpen = $bindable(false),
+		days = [],
+		itemName = 'Item',
+		scheduledDates = [],
+		sourceVisitDate = null
+	}: Props = $props();
 	// Optional: source visit info when moving a dated location
 
 	const dispatch = createEventDispatcher();
@@ -27,7 +38,7 @@
 </script>
 
 {#if isOpen}
-	<dialog class="modal modal-open backdrop-blur-sm">
+	<dialog class="modal modal-open backdrop-blur-xs">
 		<div
 			class="modal-box w-11/12 max-w-4xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		>
@@ -49,7 +60,7 @@
 							</p>
 						</div>
 					</div>
-					<button class="btn btn-ghost btn-square" on:click={handleClose}>
+					<button class="btn btn-ghost btn-square" onclick={handleClose}>
 						<span class="text-lg">✕</span>
 					</button>
 				</div>
@@ -75,7 +86,7 @@
 					{@const isScheduled = scheduledDates?.includes(day.date)}
 
 					<div
-						class="card bg-base-100 border border-base-300 shadow-sm hover:border-primary/60 hover:shadow-md transition-all"
+						class="card bg-base-100 border border-base-300 shadow-xs hover:border-primary/60 hover:shadow-md transition-all"
 					>
 						<div class="card-body p-4">
 							<div class="flex flex-row items-center gap-4 mb-3">
@@ -111,7 +122,7 @@
 									type="button"
 									class="btn btn-primary btn-sm flex-1"
 									disabled={isScheduled}
-									on:click={() => handleDaySelect(day.date, true)}
+									onclick={() => handleDaySelect(day.date, true)}
 								>
 									{isScheduled ? 'Already scheduled' : 'Move to this day'}
 								</button>
@@ -128,11 +139,11 @@
 					{days.length}
 					{days.length === 1 ? 'day available' : 'days available'}
 				</div>
-				<button type="button" class="btn" on:click={handleClose}>Cancel</button>
+				<button type="button" class="btn" onclick={handleClose}>Cancel</button>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
-			<button type="button" on:click={handleClose}>close</button>
+			<button type="button" onclick={handleClose}>close</button>
 		</form>
 	</dialog>
 {/if}

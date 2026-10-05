@@ -146,8 +146,9 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         )
 
         pins = []
+        context = {'request': request}
         for image in images.iterator(chunk_size=200):
-            data = ImageMapPinSerializer(image, context={'request': request}).data
+            data = ImageMapPinSerializer(image, context=context).to_representation(image)
             if data:
                 pins.append(data)
 

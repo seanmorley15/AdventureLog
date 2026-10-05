@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Lodging } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
@@ -28,6 +30,7 @@
 	import CardAccountDetails from '~icons/mdi/card-account-details';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
@@ -40,44 +43,58 @@
 		return marked(markdown) as string;
 	};
 
-	export let data: PageData;
-	console.log(data);
+	interface Props {
+		data: PageData;
+	}
 
-	let lodging: Lodging;
-	let currentSlide = 0;
+	let { data }: Props = $props();
+	const dateFormat = $derived(dateFormatFromUser(data.user));
+	$effect(() => {
+		console.log(data);
+	});
+
+	let lodging = $state<Lodging | null>(null);
+	let currentSlide = $state(0);
 
 	function goToSlide(index: number) {
 		currentSlide = index;
 	}
 
-	let notFound: boolean = false;
+	let notFound: boolean = $state(false);
 	let lodging_images: { image: string; lodging: Lodging | null }[] = [];
-	let modalInitialIndex: number = 0;
-	let isImageModalOpen: boolean = false;
-	let isEditModalOpen: boolean = false;
-	let localStayWindow: string | null = null;
-	let showLocalStayTime: boolean = false;
-	let mapBasemapType = normalizeBasemapType(data.user?.map_style);
-	let showImagePins = true;
+	let modalInitialIndex: number = $state(0);
+	let isImageModalOpen: boolean = $state(false);
+	let isEditModalOpen: boolean = $state(false);
+	let localStayWindow: string | null = $state(null);
+	let showLocalStayTime: boolean = $state(false);
+	let mapBasemapType = $state(normalizeBasemapType(undefined));
+	$effect.pre(() => {
+		mapBasemapType = normalizeBasemapType(data.user?.map_style);
+	});
+	let showImagePins = $state(true);
 
-	$: imagePinGeoJson = lodging
-		? contentImagesToGeoJson(lodging.images, {
-				parentType: 'lodging',
-				parentId: lodging.id,
-				parentName: lodging.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON;
-	$: hasImagePins = imagePinGeoJson.features.length > 0;
+	let imagePinGeoJson = $derived(
+		lodging
+			? contentImagesToGeoJson(lodging.images, {
+					parentType: 'lodging',
+					parentId: lodging.id,
+					parentName: lodging.name
+				})
+			: EMPTY_IMAGE_PIN_GEOJSON
+	);
+	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
 
-	$: lodgingPriceLabel = lodging
-		? formatMoney(
-				toMoneyValue(
-					lodging.price,
-					lodging.price_currency,
-					data.user?.default_currency || DEFAULT_CURRENCY
+	let lodgingPriceLabel = $derived(
+		lodging
+			? formatMoney(
+					toMoneyValue(
+						lodging.price,
+						lodging.price_currency,
+						data.user?.default_currency || DEFAULT_CURRENCY
+					)
 				)
-			)
-		: null;
+			: null
+	);
 
 	function getLodgingIcon(type: string) {
 		if (type in LODGING_TYPES_ICONS) {
@@ -154,9 +171,10 @@
 	}
 
 	function openImageModal(imageIndex: number) {
+		if (!lodging) return;
 		lodging_images = lodging.images.map((img) => ({
 			image: img.image,
-			lodging: lodging
+			lodging
 		}));
 		modalInitialIndex = imageIndex;
 		isImageModalOpen = true;
@@ -173,13 +191,17 @@
 		return Math.ceil(end.diff(start, 'days').days);
 	}
 
-	$: localStayWindow = lodging
-		? formatLocalStayWindow(lodging.check_in, lodging.check_out, lodging.timezone)
-		: null;
+	run(() => {
+		localStayWindow = lodging
+			? formatLocalStayWindow(lodging.check_in, lodging.check_out, lodging.timezone)
+			: null;
+	});
 
-	$: showLocalStayTime = Boolean(
-		localStayWindow && primaryStayTimezone(lodging?.timezone ?? null) !== localTimeZone
-	);
+	run(() => {
+		showLocalStayTime = Boolean(
+			localStayWindow && primaryStayTimezone(lodging?.timezone ?? null) !== localTimeZone
+		);
+	});
 </script>
 
 {#if notFound}
@@ -189,7 +211,7 @@
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
 				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.lodging_not_found')}</h1>
 				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
-				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
+				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>
 			</div>
@@ -206,7 +228,7 @@
 	/>
 {/if}
 
-{#if isImageModalOpen}
+{#if isImageModalOpen && lodging}
 	<ImageDisplayModal
 		images={lodging.images}
 		initialIndex={modalInitialIndex}
@@ -228,7 +250,7 @@
 		<div class="fixed bottom-6 right-6 z-50">
 			<button
 				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-				on:click={() => (isEditModalOpen = true)}
+				onclick={() => (isEditModalOpen = true)}
 			>
 				<ClipboardList class="w-8 h-8" />
 			</button>
@@ -252,7 +274,7 @@
 					>
 						<button
 							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => openImageModal(i)}
+							onclick={() => openImageModal(i)}
 							aria-label={`View full image of ${lodging.name}`}
 						>
 							<ImageFrame source={image.source} className="w-full h-full">
@@ -322,8 +344,10 @@
 							<!-- Navigation arrows and current position -->
 							<div class="flex items-center justify-center gap-4 mb-3">
 								<button
-									on:click={() =>
-										goToSlide(currentSlide > 0 ? currentSlide - 1 : lodging.images.length - 1)}
+									onclick={() =>
+										goToSlide(
+											currentSlide > 0 ? currentSlide - 1 : (lodging?.images.length ?? 1) - 1
+										)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.previous_image')}
 								>
@@ -335,8 +359,10 @@
 								</div>
 
 								<button
-									on:click={() =>
-										goToSlide(currentSlide < lodging.images.length - 1 ? currentSlide + 1 : 0)}
+									onclick={() =>
+										goToSlide(
+											currentSlide < (lodging?.images.length ?? 1) - 1 ? currentSlide + 1 : 0
+										)}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.next_image')}
 								>
@@ -349,7 +375,7 @@
 								<div class="flex justify-center gap-2 flex-wrap">
 									{#each lodging.images as _, i}
 										<button
-											on:click={() => goToSlide(i)}
+											onclick={() => goToSlide(i)}
 											class="btn btn-circle btn-xs transition-all duration-200"
 											class:btn-primary={i === currentSlide}
 											class:btn-outline={i !== currentSlide}
@@ -405,19 +431,16 @@
 									center={[lodging.longitude, lodging.latitude]}
 									zoom={13}
 								>
-									<div
-										slot="overlayControls"
-										let:map
-										let:fullscreenTarget
-										class="pointer-events-none absolute inset-0 z-20"
-									>
-										<MapTrackLayerControls bind:showImagePins {hasImagePins} />
-										<MapFloatingControls
-											{map}
-											{fullscreenTarget}
-											bind:basemapType={mapBasemapType}
-										/>
-									</div>
+									{#snippet overlayControls({ map, fullscreenTarget })}
+										<div class="pointer-events-none absolute inset-0 z-20">
+											<MapTrackLayerControls bind:showImagePins {hasImagePins} />
+											<MapFloatingControls
+												{map}
+												{fullscreenTarget}
+												bind:basemapType={mapBasemapType}
+											/>
+										</div>
+									{/snippet}
 
 									<DefaultMarker lngLat={[lodging.longitude, lodging.latitude]}>
 										<Popup openOn="click" offset={[0, -10]}>
@@ -474,7 +497,7 @@
 							<!-- Check-in/Check-out -->
 							{#if lodging.check_in || lodging.check_out}
 								<div class="flex items-start gap-3">
-									<CalendarRange class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CalendarRange class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="w-full space-y-3">
 										{#if lodging.check_in}
 											<div class="flex items-start justify-between gap-3 text-sm">
@@ -484,9 +507,9 @@
 													</p>
 													<p class="text-base font-semibold">
 														{#if isAllDay(lodging.check_in)}
-															{formatAllDayDate(lodging.check_in)}
+															{formatAllDayDate(lodging.check_in, dateFormat)}
 														{:else}
-															{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+															{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
 														{/if}
 													</p>
 												</div>
@@ -514,9 +537,13 @@
 													</p>
 													<p class="text-base font-semibold">
 														{#if isAllDay(lodging.check_out)}
-															{formatAllDayDate(lodging.check_out)}
+															{formatAllDayDate(lodging.check_out, dateFormat)}
 														{:else}
-															{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+															{formatDateInTimezone(
+																lodging.check_out,
+																lodging.timezone,
+																dateFormat
+															)}
 														{/if}
 													</p>
 												</div>
@@ -554,7 +581,7 @@
 
 							<!-- Type -->
 							<div class="flex items-start gap-3">
-								<span class="text-xl mt-1 flex-shrink-0">{getLodgingIcon(lodging.type)}</span>
+								<span class="text-xl mt-1 shrink-0">{getLodgingIcon(lodging.type)}</span>
 								<div>
 									<p class="font-semibold text-sm opacity-70">{$t('transportation.type')}</p>
 									<p class="text-base">{$t(`lodging.${lodging.type}`)}</p>
@@ -564,7 +591,7 @@
 							<!-- Reservation Number -->
 							{#if lodging.reservation_number}
 								<div class="flex items-start gap-3">
-									<CardAccountDetails class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CardAccountDetails class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.reservation')}</p>
 										<p class="text-base font-mono">{lodging.reservation_number}</p>
@@ -575,7 +602,7 @@
 							<!-- Price -->
 							{#if lodgingPriceLabel}
 								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<p class="font-semibold text-sm opacity-70">{$t('adventures.price')}</p>
 										<p class="text-base font-semibold">{lodgingPriceLabel}</p>
@@ -586,7 +613,7 @@
 							<!-- Link -->
 							{#if lodging.link}
 								<div class="flex items-start gap-3">
-									<OpenInNew class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<OpenInNew class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div class="flex-1">
 										<p class="font-semibold text-sm opacity-70 mb-1">{$t('adventures.link')}</p>
 										<a
@@ -613,7 +640,7 @@
 								{#each lodging.images as image, i}
 									<button
 										class="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity w-full"
-										on:click={() => openImageModal(i)}
+										onclick={() => openImageModal(i)}
 									>
 										<ImageFrame source={image.source} className="w-full h-full">
 											<img

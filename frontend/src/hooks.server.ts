@@ -1,8 +1,8 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { themes } from '$lib';
+import { clearSessionCookie, getServerEndpoint, setSessionFromResponse } from '$lib/index.server';
 
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const ALLOWED_THEME_NAMES = new Set(themes.map((theme) => theme.name));
 
 export const authHook: Handle = async ({ event, resolve }) => {
@@ -10,81 +10,50 @@ export const authHook: Handle = async ({ event, resolve }) => {
 	event.locals.subscription = null;
 	event.locals.hasAccess = true;
 	event.locals.cloudMode = false;
+
 	try {
-		// Image proxy requests can be very high-volume and do not need locals.user.
 		if (event.url.pathname.startsWith('/immich/')) {
 			return await resolve(event);
 		}
 
-		let sessionid = event.cookies.get('sessionid');
+		const sessionid = event.cookies.get('sessionid');
 
 		if (!sessionid) {
 			event.locals.user = null;
 			return await resolve(event);
 		}
 
-		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-
+		const serverEndpoint = getServerEndpoint();
 		const cookie = event.request.headers.get('cookie') || '';
 
-		let userFetch = await event.fetch(`${serverEndpoint}/auth/current-user/`, {
-			headers: {
-				cookie
-			}
+		const userFetch = await event.fetch(`${serverEndpoint}/auth/current-user/`, {
+			headers: { cookie }
 		});
 
 		if (!userFetch.ok) {
-			// Preserve the session on transient backend failures (e.g. 429 throttling)
-			// to avoid forcing users into a logout loop.
 			if (userFetch.status === 429 || userFetch.status >= 500) {
 				event.locals.user = null;
 				return await resolve(event);
 			}
 
 			event.locals.user = null;
-			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
+			clearSessionCookie(event);
 			return await resolve(event);
 		}
 
-		if (userFetch.ok) {
-			const payload = await userFetch.json();
-			event.locals.user = payload.user || null;
-			event.locals.subscription = payload.subscription || null;
-			event.locals.hasAccess = payload.has_access ?? true;
-			event.locals.cloudMode = payload.cloud_mode ?? false;
-			const setCookieHeader = userFetch.headers.get('Set-Cookie');
-
-			if (setCookieHeader) {
-				// Regular expression to match sessionid cookie and its expiry
-				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
-				const match = setCookieHeader.match(sessionIdRegex);
-
-				if (match) {
-					const sessionId = match[1];
-					const expiryString = match[2];
-					const expiryDate = new Date(expiryString);
-
-					// Set the sessionid cookie
-					event.cookies.set('sessionid', sessionId, {
-						path: '/',
-						httpOnly: true,
-						sameSite: 'lax',
-						secure: event.url.protocol === 'https:',
-						expires: expiryDate
-					});
-				}
-			}
-		} else {
-			event.locals.user = null;
-			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
-		}
+		const payload = await userFetch.json();
+		event.locals.user = payload.user || null;
+		event.locals.subscription = payload.subscription || null;
+		event.locals.hasAccess = payload.has_access ?? true;
+		event.locals.cloudMode = payload.cloud_mode ?? false;
+		setSessionFromResponse(event, userFetch);
 	} catch (error) {
 		console.error('Error in authHook:', error);
 		event.locals.user = null;
 		event.locals.subscription = null;
 		event.locals.hasAccess = true;
 		event.locals.cloudMode = false;
-		event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
+		// Preserve session on transient network errors — do not force logout.
 	}
 
 	return await resolve(event);
@@ -103,13 +72,12 @@ export const themeHook: Handle = async ({ event, resolve }) => {
 	return await resolve(event);
 };
 
-// hook to get the langauge cookie and set the locale
 export const i18nHook: Handle = async ({ event, resolve }) => {
 	let locale = event.cookies.get('locale');
 	if (!locale) {
 		return await resolve(event);
 	}
-	event.locals.locale = locale; // Store the locale in locals
+	event.locals.locale = locale;
 	return await resolve(event);
 };
 

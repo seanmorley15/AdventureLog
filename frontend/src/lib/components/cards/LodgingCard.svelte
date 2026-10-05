@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
@@ -9,6 +11,7 @@
 	import { LODGING_TYPES_ICONS } from '$lib';
 	import { formatDateInTimezone } from '$lib/dateUtils';
 	import { formatAllDayDate } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 	import { isAllDay } from '$lib';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -24,9 +27,11 @@
 	import { goto } from '$app/navigation';
 	import Calendar from '~icons/mdi/calendar';
 	import type { CollectionItineraryItem } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	let isActionsMenuOpen = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -85,23 +90,30 @@
 	};
 	const hasTimePortion = (date: string | null) => !!date && !isAllDay(date);
 	const isTimedStay = (date: string | null) => hasTimePortion(date);
-	$: lodgingPriceLabel = formatMoney(
-		toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY)
-	);
 
-	let showMoreDetails = false;
-	$: hasExpandableDetails = Boolean(
-		lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in))
-	);
-	$: if (!hasExpandableDetails) showMoreDetails = false;
+	let showMoreDetails = $state(false);
 
-	export let lodging: Lodging;
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
+	interface Props {
+		lodging: Lodging;
+		user?: User | null;
+		collection?: Collection | null;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+		isMultiDay?: boolean;
+	}
 
-	let isWarningModalOpen: boolean = false;
+	let {
+		lodging,
+		user = null,
+		collection = null,
+		readOnly = false,
+		itineraryItem = null,
+		isMultiDay = false
+	}: Props = $props();
+
+	const dateFormat = $derived(dateFormatFromUser(user));
+
+	let isWarningModalOpen: boolean = $state(false);
 
 	function editTransportation() {
 		dispatch('edit', lodging);
@@ -139,6 +151,15 @@
 			addToast('error', $t('itinerary.item_remove_error'));
 		}
 	}
+	let lodgingPriceLabel = $derived(
+		formatMoney(toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY))
+	);
+	let hasExpandableDetails = $derived(
+		Boolean(lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in)))
+	);
+	run(() => {
+		if (!hasExpandableDetails) showMoreDetails = false;
+	});
 </script>
 
 {#if isWarningModalOpen}
@@ -153,7 +174,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="lodging-card"
 >
 	<!-- Image Section with Overlay -->
@@ -167,7 +188,7 @@
 				data-tip={lodging.is_public ? $t('adventures.public') : $t('adventures.private')}
 			>
 				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-sm"
+					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
 					role="img"
 					aria-label={lodging.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
@@ -202,41 +223,43 @@
 
 			<div class="flex items-center gap-2">
 				<button
-					class="btn btn-sm p-1 text-base-content"
+					class="btn btn-square btn-sm p-1 text-base-content"
 					aria-label="open-details"
-					on:click={() => goto(`/lodging/${lodging.id}`)}
+					onclick={() => goto(`/lodging/${lodging.id}`)}
 				>
-					<Launch class="w-4 h-4" />
+					<Launch class="w-5 h-5" />
 				</button>
 
 				{#if !readOnly && (lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid)))}
 					<div
 						class="dropdown dropdown-end relative z-50"
 						class:dropdown-open={isActionsMenuOpen}
+						class:dropdown-top={openUpward}
 						bind:this={actionsMenuRef}
 					>
 						<button
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
 								}
 								closeAllLodgingMenus();
+								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
-							<DotsHorizontal class="w-5 h-5" />
+							<DotsHorizontal class="w-4 h-4" />
 						</button>
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editTransportation();
 									}}
@@ -251,7 +274,7 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'lodging', id: lodging.id });
 											}}
@@ -263,11 +286,11 @@
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<Calendar class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}
@@ -276,7 +299,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -295,7 +318,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}
@@ -313,7 +336,7 @@
 		<!-- Location -->
 		{#if lodging.location}
 			<div class="flex items-center gap-2 text-sm text-base-content/70 min-w-0">
-				<MapMarker class="w-4 h-4 text-primary flex-shrink-0" />
+				<MapMarker class="w-4 h-4 text-primary shrink-0" />
 				<span class="truncate">{lodging.location}</span>
 			</div>
 		{/if}
@@ -326,11 +349,12 @@
 					{#if isAllDay(lodging.check_in) && isAllDay(lodging.check_out)}
 						<!-- All-day dates -->
 						<div class="flex items-center gap-2 text-sm">
-							<span class="font-medium text-base-content">{formatAllDayDate(lodging.check_in)}</span
+							<span class="font-medium text-base-content"
+								>{formatAllDayDate(lodging.check_in, dateFormat)}</span
 							>
 							<span class="text-primary">→</span>
 							<span class="font-medium text-base-content"
-								>{formatAllDayDate(lodging.check_out)}</span
+								>{formatAllDayDate(lodging.check_out, dateFormat)}</span
 							>
 						</div>
 					{:else}
@@ -343,9 +367,9 @@
 										<span class="text-xs text-base-content/60">Check-in</span>
 										<span class="text-sm font-semibold text-base-content">
 											{#if isAllDay(lodging.check_in)}
-												{formatAllDayDate(lodging.check_in)}
+												{formatAllDayDate(lodging.check_in, dateFormat)}
 											{:else}
-												{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+												{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
 											{/if}
 										</span>
 									</div>
@@ -365,9 +389,9 @@
 							{#if hasExpandableDetails}
 								<div class="flex justify-end">
 									<button
-										class="btn btn-neutral-200 btn-xs"
+										class="btn btn-ghost btn-xs"
 										aria-expanded={showMoreDetails}
-										on:click={() => (showMoreDetails = !showMoreDetails)}
+										onclick={() => (showMoreDetails = !showMoreDetails)}
 										type="button"
 									>
 										{showMoreDetails
@@ -385,9 +409,9 @@
 											<span class="text-xs text-base-content/60">Check-out</span>
 											<span class="text-sm font-semibold text-base-content">
 												{#if isAllDay(lodging.check_out)}
-													{formatAllDayDate(lodging.check_out)}
+													{formatAllDayDate(lodging.check_out, dateFormat)}
 												{:else}
-													{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+													{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
 												{/if}
 											</span>
 										</div>
@@ -414,9 +438,9 @@
 								<span class="text-xs text-base-content/60">Check-in</span>
 								<span class="text-sm font-semibold text-base-content">
 									{#if isAllDay(lodging.check_in)}
-										{formatAllDayDate(lodging.check_in)}
+										{formatAllDayDate(lodging.check_in, dateFormat)}
 									{:else}
-										{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+										{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
 									{/if}
 								</span>
 							</div>
@@ -440,9 +464,9 @@
 								<span class="text-xs text-base-content/60">Check-out</span>
 								<span class="text-sm font-semibold text-base-content">
 									{#if isAllDay(lodging.check_out)}
-										{formatAllDayDate(lodging.check_out)}
+										{formatAllDayDate(lodging.check_out, dateFormat)}
 									{:else}
-										{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+										{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
 									{/if}
 								</span>
 							</div>
@@ -464,6 +488,26 @@
 
 		<!-- Rating & Info Badges -->
 		<div class="flex flex-wrap items-center gap-2 text-sm">
+			{#if isMultiDay}
+				<span class="badge badge-info badge-sm gap-1">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-3 w-3"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+						/>
+					</svg>
+					{$t('itinerary.multi_day')}
+				</span>
+			{/if}
+
 			{#if lodging.rating}
 				<div class="flex items-center gap-1">
 					<div class="flex -ml-1">

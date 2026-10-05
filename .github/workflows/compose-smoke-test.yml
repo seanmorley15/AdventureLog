@@ -45,7 +45,28 @@ jobs:
       - name: Start Standard Deployment stack
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env
-          docker compose --env-file .env up -d --wait
+          # The stock compose file pulls :latest. This job must run the image built above.
+          # /health only checks the database, so skip the first-boot geography import.
+          cat > docker-compose.smoke.override.yml << 'EOF'
+          services:
+            app:
+              image: adventurelog-smoke
+              pull_policy: never
+              environment:
+                SKIP_WORLD_DATA: "1"
+          EOF
+          compose() {
+            docker compose --env-file .env \
+              -f docker-compose.yml \
+              -f docker-compose.smoke.override.yml \
+              "$@"
+          }
+          if ! compose up -d --wait; then
+            echo "Compose stack failed to become healthy"
+            compose ps || true
+            compose logs || true
+            exit 1
+          fi
 
       - name: Wait for health endpoint
         run: |
@@ -56,12 +77,22 @@ jobs:
             sleep 5
           done
           echo "Health check failed"
-          docker compose --env-file .env ps
-          docker compose --env-file .env logs
+          docker compose --env-file .env \
+            -f docker-compose.yml \
+            -f docker-compose.smoke.override.yml \
+            ps
+          docker compose --env-file .env \
+            -f docker-compose.yml \
+            -f docker-compose.smoke.override.yml \
+            logs
           exit 1
 
       - name: Tear down
         if: always()
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env
-          docker compose --env-file .env down -v
+          files=(-f docker-compose.yml)
+          if [[ -f docker-compose.smoke.override.yml ]]; then
+            files+=(-f docker-compose.smoke.override.yml)
+          fi
+          docker compose --env-file .env "${files[@]}" down -v

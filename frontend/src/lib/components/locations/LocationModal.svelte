@@ -1,57 +1,101 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import type { Collection, Location, User } from '$lib/types';
 	import { t } from 'svelte-i18n';
 	import { normalizeBasemapType } from '$lib';
+	import { createEmptyLocation } from '$lib/location-draft';
 	import { extractGooglePhotoUrls } from '$lib/map/places';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
 	import LocationVisits from './LocationVisits.svelte';
 
-	export let user: User | null = null;
-	export let collection: Collection | null = null;
-	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
-	export let itineraryDayLabel: string | null = null;
-	/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
-	export let skipQuickStart = false;
-
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
-	let storedInitialVisitDate: string | null = initialVisitDate;
+	let storedInitialVisitDate: string | null = $state(null);
 
 	let modal: HTMLDialogElement;
-	let googleMapsEnabled = false;
-	let isEditMode = false;
-	let pendingGooglePhotoUrls: string[] = [];
+	let googleMapsEnabled = $state(false);
+	let pendingGooglePhotoUrls: string[] = $state([]);
 
 	// Whether a save/create occurred during this modal session
-	let didSave = false;
+	let didSave = $state(false);
 
-	let steps = [
+	interface Props {
+		user?: User | null;
+		collection?: Collection | null;
+		initialLatLng?: { lat: number; lng: number } | null;
+		initialVisitDate?: string | null;
+		itineraryDayLabel?: string | null;
+		/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
+		skipQuickStart?: boolean;
+		/** Open a specific step when editing an existing location (e.g. visits from card shortcut). */
+		initialStep?: 'visits' | null;
+		location?: Location;
+		locationToEdit?: Location | null;
+	}
+
+	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
+		if (!loc) return false;
+		const lat = loc.latitude;
+		const lng = loc.longitude;
+		return (
+			typeof lat === 'number' &&
+			typeof lng === 'number' &&
+			Number.isFinite(lat) &&
+			Number.isFinite(lng) &&
+			Boolean(loc.name?.trim())
+		);
+	}
+
+	let {
+		user = null,
+		collection = null,
+		initialLatLng = null,
+		initialVisitDate = null,
+		itineraryDayLabel = null,
+		skipQuickStart = false,
+		initialStep = null,
+		location = $bindable(createEmptyLocation()),
+		locationToEdit = null
+	}: Props = $props();
+
+	// Derive edit mode immediately so the first paint never mounts Quick Start when editing
+	let isEditMode = $derived(Boolean(locationToEdit?.id));
+
+	function resolveInitialStepIndex(): number {
+		if (locationToEdit?.id && initialStep === 'visits') return 3;
+		if (locationToEdit?.id) return 1;
+		if (skipQuickStart || hasPrefilledCoordinates(locationToEdit)) return 1;
+		if (initialLatLng) return 1;
+		return 0;
+	}
+
+	const initialStepIndex = resolveInitialStepIndex();
+
+	let steps = $state([
 		{
 			name: $t('adventures.quick_start'),
-			selected: true,
+			selected: initialStepIndex === 0,
 			requires_id: false
 		},
 		{
 			name: $t('adventures.details'),
-			selected: false,
+			selected: initialStepIndex === 1,
 			requires_id: false
 		},
 		{
 			name: $t('settings.media'),
-			selected: false,
+			selected: initialStepIndex === 2,
 			requires_id: true
 		},
 		{
 			name: $t('adventures.visits'),
-			selected: false,
+			selected: initialStepIndex === 3,
 			requires_id: true
 		}
-	];
+	]);
 
 	function setStep(stepIndex: number) {
 		steps = steps.map((step, index) => ({
@@ -123,95 +167,65 @@
 		}
 	}
 
-	export let location: Location = {
-		id: '',
-		name: '',
-		visits: [],
-		link: null,
-		description: null,
-		tags: [],
-		rating: NaN,
-		price: null,
-		price_currency: null,
-		is_public: false,
-		latitude: NaN,
-		longitude: NaN,
-		location: null,
-		images: [],
-		user: null,
-		category: {
-			id: '',
-			name: '',
-			display_name: '',
-			icon: '',
-			user: ''
-		},
-		attachments: [],
-		trails: []
-	};
+	let previousLocationToEdit: Location | null | undefined = undefined;
 
-	export let locationToEdit: Location | null = null;
+	$effect.pre(() => {
+		if (initialVisitDate && !storedInitialVisitDate) {
+			storedInitialVisitDate = initialVisitDate;
+		}
+	});
 
-	location = {
-		id: locationToEdit?.id || '',
-		name: locationToEdit?.name || '',
-		link: locationToEdit?.link || null,
-		description: locationToEdit?.description || null,
-		tags: locationToEdit?.tags || [],
-		rating: locationToEdit?.rating ?? NaN,
-		price: locationToEdit?.price ?? null,
-		price_currency: locationToEdit?.price_currency ?? null,
-		is_public: locationToEdit?.is_public ?? false,
-		latitude: locationToEdit?.latitude ?? NaN,
-		longitude: locationToEdit?.longitude ?? NaN,
-		location: locationToEdit?.location || null,
-		images: locationToEdit?.images || [],
-		user: locationToEdit?.user || null,
-		visits: locationToEdit?.visits || [],
-		is_visited: locationToEdit?.is_visited ?? false,
-		collections: locationToEdit?.collections || [],
-		category: locationToEdit?.category || {
-			id: '',
-			name: '',
-			display_name: '',
-			icon: '',
-			user: ''
-		},
-		trails: locationToEdit?.trails || [],
-		attachments: locationToEdit?.attachments || []
-	};
+	$effect.pre(() => {
+		// Re-sync whenever the parent replaces locationToEdit (including same-id full fetch)
+		if (locationToEdit === previousLocationToEdit) return;
+		previousLocationToEdit = locationToEdit;
 
-	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
-		if (!loc) return false;
-		const lat = loc.latitude;
-		const lng = loc.longitude;
-		return (
-			typeof lat === 'number' &&
-			typeof lng === 'number' &&
-			Number.isFinite(lat) &&
-			Number.isFinite(lng) &&
-			Boolean(loc.name?.trim())
-		);
-	}
+		// The location details page binds `location` and `locationToEdit` to the same
+		// object. Copying it would replace that object, change this prop, and run this
+		// effect again until Svelte throws effect_update_depth_exceeded.
+		if (untrack(() => location) === locationToEdit) return;
+
+		location = {
+			id: locationToEdit?.id || '',
+			name: locationToEdit?.name || '',
+			link: locationToEdit?.link || null,
+			description: locationToEdit?.description || null,
+			tags: locationToEdit?.tags || [],
+			rating: locationToEdit?.rating ?? NaN,
+			price: locationToEdit?.price ?? null,
+			price_currency: locationToEdit?.price_currency ?? null,
+			is_public: locationToEdit?.is_public ?? false,
+			latitude: locationToEdit?.latitude ?? NaN,
+			longitude: locationToEdit?.longitude ?? NaN,
+			location: locationToEdit?.location || null,
+			images: locationToEdit?.images || [],
+			user: locationToEdit?.user || null,
+			visits: locationToEdit?.visits || [],
+			is_visited: locationToEdit?.is_visited ?? false,
+			collections: locationToEdit?.collections || [],
+			category: locationToEdit?.category || {
+				id: '',
+				name: '',
+				display_name: '',
+				icon: '',
+				user: ''
+			},
+			trails: locationToEdit?.trails || [],
+			attachments: locationToEdit?.attachments || []
+		};
+	});
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		modal.showModal();
-		isEditMode = Boolean(locationToEdit?.id);
+		modal?.showModal();
 
-		const prefilledNew = !isEditMode && (skipQuickStart || hasPrefilledCoordinates(locationToEdit));
-
-		// Skip the quick start step if editing an existing location or prefilled create
-		if (!isEditMode && !prefilledNew) {
-			setStep(0);
-		} else {
-			setStep(1);
-		}
-
+		// Ensure step is correct after mount (covers initialLatLng assigned below)
 		if (initialLatLng) {
 			location.latitude = initialLatLng.lat;
 			location.longitude = initialLatLng.lng;
-			setStep(1);
+			if (!isEditMode) {
+				setStep(1);
+			}
 		}
 
 		if (!isEditMode && locationToEdit) {
@@ -241,23 +255,21 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<dialog id="my_modal_1" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box location-modal-box w-11/12 max-w-6xl bg-base-100 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
-		on:keydown={handleKeydown}
+		aria-labelledby="location-modal-title"
+		onkeydown={handleKeydown}
 		tabindex="0"
 	>
-		<!-- Header Section - Following adventurelog pattern -->
-		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
-		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<div class="p-2 bg-primary/10 rounded-xl">
+		<div class="shrink-0 bg-base-100 border-b border-base-300 px-4 md:px-6 py-3 md:py-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
+					<div class="p-2 bg-primary/10 rounded-xl shrink-0">
 						<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -273,11 +285,14 @@
 							/>
 						</svg>
 					</div>
-					<div>
-						<h1 class="text-3xl font-bold text-primary bg-clip-text">
+					<div class="min-w-0">
+						<h1
+							id="location-modal-title"
+							class="text-2xl md:text-3xl font-bold text-primary truncate"
+						>
 							{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
 						</h1>
-						<p class="text-sm text-base-content/60">
+						<p class="text-sm text-base-content/80 truncate">
 							{locationToEdit
 								? $t('adventures.update_location_details')
 								: $t('adventures.create_new_location')}
@@ -300,7 +315,7 @@
 									fill="currentColor"
 									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
 										? 'text-primary'
-										: 'text-base-content/40'}"
+										: 'text-base-content/70'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -317,7 +332,7 @@
 									: ''} {index === 0 && isEditMode
 									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => handleStepSelect(index)}
+								onclick={() => handleStepSelect(index)}
 								disabled={(step.requires_id && !location.id) || (index === 0 && isEditMode)}
 							>
 								<span class="hidden sm:inline">{step.name}</span>
@@ -332,141 +347,147 @@
 					{/each}
 				</ul>
 
-				<!-- Close Button -->
-				{#if !location.id}
-					<button
-						type="button"
-						class="btn btn-ghost btn-square"
-						aria-label={$t('about.close')}
-						title={$t('about.close')}
-						on:click={close}
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				{:else}
-					<button
-						type="button"
-						class="btn btn-ghost btn-square"
-						aria-label={$t('about.close')}
-						title={$t('about.close')}
-						on:click={close}
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				{/if}
+				<button
+					type="button"
+					class="btn btn-ghost btn-square shrink-0"
+					aria-label={$t('about.close')}
+					title={$t('about.close')}
+					onclick={close}
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
 			</div>
 		</div>
 
-		{#if steps[0].selected && !isEditMode}
-			<!-- Main Content -->
-			<LocationQuickStart
-				googleEnabled={googleMapsEnabled}
-				collectionId={collection?.id || null}
-				itineraryDate={storedInitialVisitDate}
-				itineraryLabel={itineraryDayLabel}
-				basemapType={normalizeBasemapType(user?.map_style)}
-				on:addDetails={(e) => {
-					applyQuickStartPrefill(e.detail.prefill);
-					setStep(1);
-				}}
-				on:manual={() => {
-					setStep(1);
-				}}
-				on:quickAdded={(e) => {
-					location = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					dispatch('quickAddCreated', {
-						location: e.detail.location,
-						itineraryItem: e.detail.itineraryItem || null,
-						itineraryDate: e.detail.itineraryDate || null
-					});
-					close();
-				}}
-				on:quickAddedEdit={(e) => {
-					location = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					setStep(1);
-				}}
-				on:quickAddedDone={(e) => {
-					location = e.detail.location;
-					pendingGooglePhotoUrls = [];
-					didSave = true;
-					close();
-				}}
-				on:cancel={() => close()}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<LocationDetails
-				currentUser={user}
-				initialLocation={location}
-				{collection}
-				bind:editingLocation={location}
-				on:back={handleDetailsBack}
-				on:save={async (e) => {
-					location = {
-						...location,
-						...e.detail,
-						tags: e.detail.tags || location.tags || [],
-						images: e.detail.images || location.images || [],
-						attachments: e.detail.attachments || location.attachments || [],
-						trails: e.detail.trails || location.trails || [],
-						visits: e.detail.visits || location.visits || []
-					};
-
-					// Mark that a save occurred so close() will notify parent
-					didSave = true;
-
-					if (location.id) {
-						setStep(2);
-					} else {
-						// Stay on details if save failed (no ID returned)
+		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
+			{#if steps[0].selected && !isEditMode}
+				<!-- Main Content -->
+				<LocationQuickStart
+					googleEnabled={googleMapsEnabled}
+					collectionId={collection?.id || null}
+					itineraryDate={storedInitialVisitDate}
+					itineraryLabel={itineraryDayLabel}
+					basemapType={normalizeBasemapType(user?.map_style)}
+					on:addDetails={(e) => {
+						applyQuickStartPrefill(e.detail.prefill);
 						setStep(1);
-					}
-				}}
-			/>
-		{/if}
-		{#if steps[2].selected}
-			<LocationMedia
-				bind:images={location.images}
-				bind:attachments={location.attachments}
-				bind:trails={location.trails}
-				bind:pendingGooglePhotoUrls
-				itemName={location.name}
-				userIsOwner={user?.uuid === location.user?.uuid}
-				on:back={() => setStep(1)}
-				itemId={location.id}
-				on:next={() => setStep(3)}
-				measurementSystem={user?.measurement_system || 'metric'}
-			/>
-		{/if}
-		{#if steps[3].selected}
-			<LocationVisits
-				bind:visits={location.visits}
-				bind:trails={location.trails}
-				objectId={location.id}
-				on:back={() => setStep(2)}
-				on:close={() => close()}
-				measurementSystem={user?.measurement_system || 'metric'}
-				{collection}
-				initialVisitDate={storedInitialVisitDate}
-			/>
-		{/if}
+					}}
+					on:manual={() => {
+						setStep(1);
+					}}
+					on:quickAdded={(e) => {
+						location = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						dispatch('quickAddCreated', {
+							location: e.detail.location,
+							itineraryItem: e.detail.itineraryItem || null,
+							itineraryDate: e.detail.itineraryDate || null
+						});
+						close();
+					}}
+					on:quickAddedEdit={(e) => {
+						location = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						setStep(1);
+					}}
+					on:quickAddedDone={(e) => {
+						location = e.detail.location;
+						pendingGooglePhotoUrls = [];
+						didSave = true;
+						close();
+					}}
+					on:cancel={() => close()}
+				/>
+			{/if}
+			{#if steps[1].selected}
+				<LocationDetails
+					currentUser={user}
+					initialLocation={location}
+					{collection}
+					bind:editingLocation={location}
+					on:back={handleDetailsBack}
+					on:save={async (e) => {
+						location = {
+							...location,
+							...e.detail,
+							tags: e.detail.tags || location.tags || [],
+							images: e.detail.images || location.images || [],
+							attachments: e.detail.attachments || location.attachments || [],
+							trails: e.detail.trails || location.trails || [],
+							visits: e.detail.visits || location.visits || []
+						};
+
+						// Mark that a save occurred so close() will notify parent
+						didSave = true;
+
+						if (location.id) {
+							setStep(2);
+						} else {
+							// Stay on details if save failed (no ID returned)
+							setStep(1);
+						}
+					}}
+				/>
+			{/if}
+			{#if steps[2].selected}
+				<LocationMedia
+					bind:images={location.images}
+					bind:attachments={location.attachments}
+					bind:trails={location.trails}
+					bind:pendingGooglePhotoUrls
+					itemName={location.name}
+					userIsOwner={user?.uuid === location.user?.uuid}
+					on:back={() => setStep(1)}
+					itemId={location.id}
+					on:next={() => setStep(3)}
+					measurementSystem={user?.measurement_system || 'metric'}
+				/>
+			{/if}
+			{#if steps[3].selected}
+				<LocationVisits
+					bind:visits={location.visits}
+					bind:trails={location.trails}
+					objectId={location.id}
+					on:back={() => setStep(2)}
+					on:close={() => close()}
+					on:visitAdded={() => {
+						didSave = true;
+					}}
+					on:visitRemoved={() => {
+						didSave = true;
+					}}
+					measurementSystem={user?.measurement_system || 'metric'}
+					{collection}
+					initialVisitDate={storedInitialVisitDate}
+				/>
+			{/if}
+		</div>
 	</div>
 </dialog>
+
+<style>
+	.location-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.location-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

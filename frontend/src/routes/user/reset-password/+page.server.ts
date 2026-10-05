@@ -1,38 +1,33 @@
-import { fetchCSRFToken } from '$lib/index.server';
+import { csrfFail, djangoBrowserFetch, requireCsrf } from '$lib/index.server';
 import { fail, type Actions } from '@sveltejs/kit';
-
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const actions: Actions = {
 	forgotPassword: async (event) => {
 		const formData = await event.request.formData();
-
 		const email = formData.get('email') as string | null | undefined;
 
-		if (!email) {
-			return fail(400, { message: 'missing_email' });
+		if (!email?.trim()) {
+			return fail(400, { message: 'auth.email_required' });
 		}
 
-		let csrfToken = await fetchCSRFToken();
+		let csrfToken: string;
+		try {
+			csrfToken = await requireCsrf();
+		} catch {
+			return csrfFail();
+		}
 
-		let res = await fetch(`${endpoint}/auth/browser/v1/auth/password/request`, {
+		const res = await djangoBrowserFetch(event, '/auth/browser/v1/auth/password/request', {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRFToken': csrfToken,
-				Cookie: `csrftoken=${csrfToken}`,
-				Referer: event.url.origin // Include Referer header
-			},
-			body: JSON.stringify({
-				email
-			})
+			csrfToken,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email: email.trim() })
 		});
 
 		if (!res.ok) {
-			let message = await res.json();
-			return fail(res.status, message);
+			return fail(res.status, { message: 'auth.reset_request_failed' });
 		}
+
 		return { success: true };
 	}
 };

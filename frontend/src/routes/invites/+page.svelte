@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
 	interface CollectionInvite {
 		id: string;
@@ -10,8 +12,10 @@
 		created_at: string; // ISO 8601 date string
 	}
 
-	let invites: CollectionInvite[] = [];
-	let loading = true;
+	let invites: CollectionInvite[] = $state([]);
+	let loading = $state(true);
+
+	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
 
 	async function fetchInvites() {
 		try {
@@ -79,7 +83,7 @@
 	}
 
 	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString();
+		return formatDisplayDate(dateString, dateFormat);
 	}
 
 	onMount(() => {
@@ -90,7 +94,7 @@
 <div class="space-y-4">
 	<div class="flex items-center justify-between">
 		<h2 class="text-2xl font-bold">{$t('invites.title')}</h2>
-		<button class="btn btn-sm btn-ghost" on:click={fetchInvites} disabled={loading}>
+		<button class="btn btn-sm btn-ghost" onclick={fetchInvites} disabled={loading}>
 			{#if loading}
 				<span class="loading loading-spinner loading-sm"></span>
 			{:else}
@@ -115,7 +119,7 @@
 	{:else}
 		<div class="space-y-3">
 			{#each invites as invite}
-				<div class="card bg-base-100 shadow-sm border border-base-300">
+				<div class="card bg-base-100 shadow-xs border border-base-300">
 					<div class="card-body p-4">
 						<div class="flex items-start justify-between">
 							<div class="flex-1">
@@ -128,12 +132,12 @@
 								</p>
 							</div>
 							<div class="flex gap-2 ml-4">
-								<button class="btn btn-success btn-sm" on:click={() => acceptInvite(invite)}>
+								<button class="btn btn-success btn-sm" onclick={() => acceptInvite(invite)}>
 									{$t('invites.accept')}
 								</button>
 								<button
 									class="btn btn-error btn-sm btn-outline"
-									on:click={() => declineInvite(invite)}
+									onclick={() => declineInvite(invite)}
 								>
 									{$t('invites.decline')}
 								</button>

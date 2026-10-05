@@ -1,0 +1,50 @@
+name: Documentation
+description: Something in the docs is wrong, unclear, or missing.
+labels:
+  - documentation
+  - backlog
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for incorrect, unclear, or missing documentation.
+
+        A documentation-only pull request does not need an issue or a `Ready` label. You can open a PR directly and check **Documentation update** in the template.
+  - type: input
+    id: page-url
+    attributes:
+      label: Page or URL
+      description: Link to the docs page, or the path under `documentation/`.
+      placeholder: https://adventurelog.app/docs/...
+    validations:
+      required: true
+  - type: textarea
+    id: what-is-wrong
+    attributes:
+      label: What Is Wrong or Missing
+      description: Describe the problem with the current documentation.
+      placeholder: The Traefik guide still references an old environment variable...
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Fix
+      description: Optional — what should the docs say instead?
+      placeholder: Update the example to use...
+    validations:
+      required: false
+  - type: checkboxes
+    id: can-pr
+    attributes:
+      label: Pull request
+      options:
+        - label: I can open a pull request for this documentation change.
+          required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and confirmed this is not a duplicate.
+          required: true

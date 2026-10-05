@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount, untrack } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
@@ -9,29 +9,22 @@
 	import { DEFAULT_CURRENCY, toMoneyValue } from '$lib/money';
 	import { normalizeBasemapType } from '$lib';
 	import { saveLocation } from '$lib/location-save';
+	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
+	import DuplicateLocationPrompt from './DuplicateLocationPrompt.svelte';
 	import { addToast } from '$lib/toasts';
 	import type { Category, Collection, Location, MoneyValue, User } from '$lib/types';
 	import MapIcon from '~icons/mdi/map';
 	import InfoIcon from '~icons/mdi/information';
 	import CategoryIcon from '~icons/mdi/tag';
-	import GenerateIcon from '~icons/mdi/lightning-bolt';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import SaveIcon from '~icons/mdi/content-save';
 	import ClearIcon from '~icons/mdi/close-circle';
 
 	const dispatch = createEventDispatcher();
 
-	let isReverseGeocoding = false;
-	let defaultCurrency = DEFAULT_CURRENCY;
-	let moneyValue: MoneyValue = { amount: null, currency: DEFAULT_CURRENCY };
-
-	let initialSelection: {
-		name: string;
-		lat: number;
-		lng: number;
-		location: string;
-		category?: any;
-	} | null = null;
+	let isReverseGeocoding = $state(false);
+	let defaultCurrency = $state(DEFAULT_CURRENCY);
+	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
 
 	let location: {
 		name: string;
@@ -47,7 +40,7 @@
 		location: string;
 		tags: string[];
 		collections?: string[];
-	} = {
+	} = $state({
 		name: '',
 		category: null,
 		rating: NaN,
@@ -61,13 +54,12 @@
 		location: '',
 		tags: [],
 		collections: []
-	};
+	});
 
-	let user: User | null = null;
-	let locationToEdit: Location | null = null;
-	let wikiError = '';
-	let isGeneratingDesc = false;
-	let ownerUser: User | null = null;
+	let ownerUser: User | null = $state(null);
+	let isSaving = $state(false);
+	let isInitializing = $state(true);
+	const duplicates = new LocationDuplicateChecker();
 
 	function toFiniteNumber(value: unknown): number | null {
 		if (value === null || value === undefined) {
@@ -77,36 +69,62 @@
 		return Number.isFinite(parsed) ? parsed : null;
 	}
 
-	export let initialLocation: any = null;
-	export let currentUser: any = null;
-	export let editingLocation: any = null;
-	export let collection: Collection | null = null;
+	interface Props {
+		initialLocation?: any;
+		currentUser?: any;
+		editingLocation?: any;
+		collection?: Collection | null;
+	}
 
-	$: user = currentUser;
-	$: locationToEdit = editingLocation;
-	$: defaultCurrency = (user && user.default_currency) || DEFAULT_CURRENCY;
-	$: moneyValue =
-		location.price === null
-			? { amount: null, currency: location.price_currency || null }
-			: toMoneyValue(location.price, location.price_currency, defaultCurrency);
-	$: {
+	let {
+		initialLocation = null,
+		currentUser = null,
+		editingLocation = $bindable(null),
+		collection = null
+	}: Props = $props();
+
+	// Sync props to local state without triggering reactive loops
+	let user = $derived(currentUser);
+	let locationToEdit = $derived(editingLocation);
+
+	$effect(() => {
+		defaultCurrency = (user && user.default_currency) || DEFAULT_CURRENCY;
+	});
+
+	// Derive moneyValue instead of using an effect to prevent loops
+	$effect(() => {
+		moneyValue =
+			location.price === null
+				? { amount: null, currency: location.price_currency || defaultCurrency }
+				: toMoneyValue(location.price, location.price_currency, defaultCurrency);
+	});
+
+	// Use $effect.pre to ensure this runs before other effects
+	$effect.pre(() => {
 		if (location.price !== null && !location.price_currency) {
 			location.price_currency = defaultCurrency;
 		}
-	}
-	$: {
+	});
+
+	// Use $derived for initialSelection to prevent reactive loops
+	let initialSelection: {
+		name: string;
+		lat: number;
+		lng: number;
+		location: string;
+		category?: any;
+	} | null = $derived.by(() => {
 		const lat = toFiniteNumber(initialLocation?.latitude);
 		const lng = toFiniteNumber(initialLocation?.longitude);
-		initialSelection =
-			initialLocation && lat !== null && lng !== null
-				? {
-						name: initialLocation.name || '',
-						lat,
-						lng,
-						location: initialLocation.location || ''
-					}
-				: null;
-	}
+		return initialLocation && lat !== null && lng !== null
+			? {
+					name: initialLocation.name || '',
+					lat,
+					lng,
+					location: initialLocation.location || ''
+				}
+			: null;
+	});
 
 	function handleLocationUpdate(
 		event: CustomEvent<{ name?: string; lat: number; lng: number; location: string }>
@@ -124,28 +142,24 @@
 		location.location = '';
 	}
 
-	async function generateDesc() {
-		if (!location.name) return;
+	$effect(() => {
+		// Skip during initial setup to prevent loops
+		if (isInitializing) return;
 
-		isGeneratingDesc = true;
-		wikiError = '';
-
-		try {
-			const response = await fetch(
-				`/api/generate/desc/?name=${encodeURIComponent(location.name)}&lang=${$locale || 'en'}`
-			);
-			if (response.ok) {
-				const data = await response.json();
-				location.description = data.extract || '';
-			} else {
-				wikiError = `${$t('adventures.wikipedia_error') || 'Error fetching description from Wikipedia'}`;
-			}
-		} catch (error) {
-			wikiError = `${$t('adventures.wikipedia_error') || ''}`;
-		} finally {
-			isGeneratingDesc = false;
+		if (locationToEdit?.id) {
+			duplicates.reset();
+			return;
 		}
-	}
+
+		duplicates.schedule({
+			name: location.name,
+			latitude: location.latitude,
+			longitude: location.longitude,
+			location: location.location
+		});
+	});
+
+	onDestroy(() => duplicates.destroy());
 
 	async function handleSave() {
 		if (!location.name || !location.category) {
@@ -153,6 +167,7 @@
 			return;
 		}
 
+		isSaving = true;
 		try {
 			const savedLocation = await saveLocation({
 				location,
@@ -176,6 +191,8 @@
 		} catch (error) {
 			addToast('error', error instanceof Error ? error.message : 'Failed to save location');
 			return;
+		} finally {
+			isSaving = false;
 		}
 
 		dispatch('save', {
@@ -188,22 +205,25 @@
 	}
 
 	onMount(() => {
-		const lat = toFiniteNumber(initialLocation?.latitude);
-		const lng = toFiniteNumber(initialLocation?.longitude);
-		if (initialLocation && lat !== null && lng !== null) {
-			location.latitude = lat;
-			location.longitude = lng;
-			if (!location.name) location.name = initialLocation.name || '';
-			if (initialLocation.location) location.location = initialLocation.location;
-		}
-	});
-
-	onMount(() => {
+		// Consolidate all initialization logic in one place
+		// Use a flag to prevent effect triggers during initialization
 		if (initialLocation && typeof initialLocation === 'object') {
+			const lat = toFiniteNumber(initialLocation?.latitude);
+			const lng = toFiniteNumber(initialLocation?.longitude);
+
+			// Set coordinates if valid
+			if (lat !== null && lng !== null) {
+				location.latitude = lat;
+				location.longitude = lng;
+			}
+
+			// Set basic fields
 			if (!location.name) location.name = initialLocation.name || '';
 			if (!location.link) location.link = initialLocation.link || '';
 			if (!location.description) location.description = initialLocation.description || '';
 			if (Number.isNaN(location.rating)) location.rating = initialLocation.rating || NaN;
+
+			// Set price if not already set
 			if (location.price === null || location.price === undefined) {
 				const money = toMoneyValue(
 					initialLocation.price,
@@ -213,18 +233,22 @@
 				location.price = money.amount;
 				location.price_currency = money.currency;
 			}
+
 			if (location.is_public === false) location.is_public = initialLocation.is_public || false;
 
+			// Set category
 			if (!location.category || !location.category.id) {
 				if (initialLocation.category && initialLocation.category.id) {
 					location.category = initialLocation.category;
 				}
 			}
 
+			// Set tags
 			if (initialLocation.tags && Array.isArray(initialLocation.tags)) {
 				location.tags = initialLocation.tags;
 			}
 
+			// Set collections
 			if (initialLocation.collections && Array.isArray(initialLocation.collections)) {
 				location.collections = initialLocation.collections.map((c: any) =>
 					typeof c === 'string' ? c : c.id
@@ -239,68 +263,67 @@
 				);
 			}
 
+			// Set location display name
 			if (initialLocation.location) {
 				location.location = initialLocation.location;
 			}
 
+			// Set owner user
 			if (initialLocation.user) {
 				ownerUser = initialLocation.user;
 			}
 		}
 
-		return () => {
-			// no-op
-		};
+		// Mark initialization complete after a small delay to let effects settle
+		setTimeout(() => {
+			isInitializing = false;
+		}, 0);
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
-	<div class="max-w-full mx-auto space-y-6">
+<div class="h-full min-h-0 flex flex-col">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
 		<!-- Basic Information Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center gap-3 mb-6">
 					<div class="p-2 bg-primary/10 rounded-lg">
 						<InfoIcon class="w-5 h-5 text-primary" />
 					</div>
-					<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
+					<h2 class="text-xl font-bold text-base-content">{$t('adventures.basic_information')}</h2>
 				</div>
 
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 					<!-- Left Column -->
 					<div class="space-y-4">
 						<!-- Name Field -->
-						<div class="form-control">
-							<label class="label" for="name">
-								<span class="label-text font-medium">
-									{$t('adventures.name')} <span class="text-error">*</span>
-								</span>
+						<div class="flex flex-col">
+							<label class="field-label" for="name">
+								{$t('adventures.name')} <span class="text-error">*</span>
 							</label>
 							<input
 								type="text"
 								id="name"
 								bind:value={location.name}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input w-full"
 								placeholder="Enter location name"
 								required
 							/>
 						</div>
 
 						<!-- Category Field -->
-						<div class="form-control">
-							<label class="label" for="category">
-								<span class="label-text font-medium">
-									{$t('adventures.category')} <span class="text-error">*</span>
-								</span>
+						<div class="flex flex-col">
+							<label class="field-label" for="category">
+								{$t('adventures.category')} <span class="text-error">*</span>
 							</label>
 							{#if (user && ownerUser && user.uuid == ownerUser.uuid) || !ownerUser}
-								<CategoryDropdown bind:selected_category={location.category} />
+								<CategoryDropdown id="category" bind:selected_category={location.category} />
 							{:else}
 								<div
-									class="flex items-center gap-3 p-3 bg-base-100/80 border border-base-300 rounded-lg"
+									class="flex items-center gap-3 p-3 bg-base-200/40 border border-base-300 rounded-lg"
 								>
 									{#if location.category?.icon}
-										<span class="text-xl flex-shrink-0">{location.category.icon}</span>
+										<span class="text-xl shrink-0">{location.category.icon}</span>
 									{/if}
 									<span class="font-medium">
 										{location.category?.display_name || location.category?.name}
@@ -312,24 +335,18 @@
 						<MoneyInput
 							label={$t('adventures.price')}
 							value={moneyValue}
+							{defaultCurrency}
 							on:change={(event) => {
 								location.price = event.detail.amount;
-								location.price_currency = event.detail.currency;
-
-								// If an amount exists but no currency is chosen, fall back to the user's default
-								if (location.price !== null && !location.price_currency) {
-									location.price_currency = defaultCurrency;
-								}
+								location.price_currency = event.detail.currency || defaultCurrency;
 							}}
 						/>
 
 						<!-- Rating Field -->
-						<div class="form-control">
-							<label class="label" for="rating">
-								<span class="label-text font-medium">{$t('adventures.rating')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="rating">{$t('adventures.rating')}</label>
 							<div
-								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
+								class="flex items-center gap-4 p-3 bg-base-200/40 border border-base-300 rounded-lg"
 							>
 								<div class="rating">
 									<input
@@ -344,7 +361,7 @@
 											type="radio"
 											name="rating"
 											class="mask mask-star-2 bg-warning"
-											on:click={() => (location.rating = star)}
+											onclick={() => (location.rating = star)}
 											checked={location.rating === star}
 										/>
 									{/each}
@@ -353,7 +370,7 @@
 									<button
 										type="button"
 										class="btn btn-sm btn-error btn-outline gap-2"
-										on:click={() => (location.rating = NaN)}
+										onclick={() => (location.rating = NaN)}
 									>
 										<ClearIcon class="w-4 h-4" />
 										{$t('adventures.remove')}
@@ -366,67 +383,50 @@
 					<!-- Right Column -->
 					<div class="space-y-4">
 						<!-- Link Field -->
-						<div class="form-control">
-							<label class="label" for="link">
-								<span class="label-text font-medium">{$t('adventures.link')}</span>
-							</label>
+						<div class="flex flex-col">
+							<label class="field-label" for="link">{$t('adventures.link')}</label>
 							<input
 								type="url"
 								id="link"
 								bind:value={location.link}
-								class="input input-bordered bg-base-100/80 focus:bg-base-100"
+								class="input w-full"
 								placeholder="https://example.com"
 							/>
 						</div>
 
 						<!-- Public Toggle -->
 						{#if !locationToEdit || (locationToEdit.collections && locationToEdit.collections.length === 0)}
-							<div class="form-control">
-								<label class="label cursor-pointer justify-start gap-4" for="is_public">
+							<div class="flex flex-col">
+								<label class="field-toggle" for="is_public">
 									<input
 										type="checkbox"
 										class="toggle toggle-primary"
 										id="is_public"
 										bind:checked={location.is_public}
 									/>
-									<div>
-										<span class="label-text font-medium">{$t('adventures.public_location')}</span>
-										<p class="text-sm text-base-content/60">
+									<span>
+										<span class="font-semibold text-base-content"
+											>{$t('adventures.public_location')}</span
+										>
+										<p class="field-hint">
 											{$t('adventures.public_location_description')}
 										</p>
-									</div>
+									</span>
 								</label>
 							</div>
 						{/if}
 
 						<!-- Description Field -->
-						<div class="form-control">
-							<label class="label" for="description">
-								<span class="label-text font-medium">{$t('adventures.description')}</span>
-							</label>
-							<MarkdownEditor bind:text={location.description} editor_height="h-32" />
-
-							<div class="flex items-center gap-4 mt-3">
-								<button
-									type="button"
-									class="btn btn-neutral btn-sm gap-2"
-									on:click={generateDesc}
-									disabled={!location.name || isGeneratingDesc}
-								>
-									{#if isGeneratingDesc}
-										<span class="loading loading-spinner loading-xs"></span>
-									{:else}
-										<GenerateIcon class="w-4 h-4" />
-									{/if}
-									{$t('adventures.generate_desc')}
-								</button>
-								{#if wikiError}
-									<div class="alert alert-error alert-sm">
-										<InfoIcon class="w-4 h-4" />
-										<span class="text-sm">{wikiError}</span>
-									</div>
-								{/if}
-							</div>
+						<div class="flex flex-col">
+							<label class="field-label" for="description">{$t('adventures.description')}</label>
+							<MarkdownEditor
+								id="description"
+								bind:text={location.description}
+								editor_height="h-32"
+								enableFetch
+								fetchName={location.name}
+								fetchLang={$locale || 'en'}
+							/>
 						</div>
 					</div>
 				</div>
@@ -434,7 +434,7 @@
 		</div>
 
 		<!-- Tags Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center gap-3 mb-6">
 					<div class="p-2 bg-warning/10 rounded-lg">
@@ -449,7 +449,7 @@
 						name="tags"
 						hidden
 						bind:value={location.tags}
-						class="input input-bordered w-full"
+						class="input w-full"
 					/>
 					<TagComplete bind:tags={location.tags} />
 				</div>
@@ -457,7 +457,7 @@
 		</div>
 
 		<!-- Location Selection Section -->
-		<div class="card bg-base-100 border border-base-300 shadow-lg">
+		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
 				<div class="flex items-center gap-3 mb-6">
 					<div class="p-2 bg-secondary/10 rounded-lg">
@@ -477,19 +477,26 @@
 				/>
 			</div>
 		</div>
+	</div>
 
-		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
-			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
+	<!-- Action Buttons -->
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 space-y-2"
+	>
+		{#if !locationToEdit?.id && duplicates.visible}
+			<DuplicateLocationPrompt matches={duplicates.matches} checking={duplicates.checking} />
+		{/if}
+		<div class="flex gap-3 justify-end">
+			<button class="btn btn-ghost gap-2" onclick={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
 			</button>
 			<button
 				class="btn btn-primary gap-2"
-				disabled={!location.name || !location.category || isReverseGeocoding}
-				on:click={handleSave}
+				disabled={!location.name || !location.category || isReverseGeocoding || isSaving}
+				onclick={handleSave}
 			>
-				{#if isReverseGeocoding}
+				{#if isReverseGeocoding || isSaving}
 					<span class="loading loading-spinner loading-sm"></span>
 					{$t('adventures.processing')}...
 				{:else}

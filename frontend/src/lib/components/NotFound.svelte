@@ -1,7 +1,11 @@
 <script lang="ts">
 	import Lost from '$lib/assets/undraw_lost.svg';
-	export let error: string | undefined;
 	import { t } from 'svelte-i18n';
+	interface Props {
+		error: string | undefined;
+	}
+
+	let { error }: Props = $props();
 </script>
 
 <div

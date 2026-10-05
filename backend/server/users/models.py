@@ -30,6 +30,13 @@ CURRENCY_CHOICES = (
     ('TRY', 'Turkish Lira'),
 )
 
+DATE_FORMAT_CHOICES = (
+    ('locale', 'Browser default'),
+    ('mdy', 'MM/DD/YYYY'),
+    ('dmy', 'DD/MM/YYYY'),
+    ('ymd', 'YYYY-MM-DD'),
+)
+
 BASEMAP_CHOICES = (
     ('default', 'Default'),
     ('terrain-3d', '3D Terrain'),
@@ -59,16 +66,24 @@ BASEMAP_CHOICES = (
 )
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)  # Override the email field with unique constraint
+    # NULL (not '') so more than one user can exist without an email.
+    # PostgreSQL unique constraints treat NULL as distinct.
+    email = models.EmailField(unique=True, null=True, blank=True)
     profile_pic = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='profile-pics/')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     public_profile = models.BooleanField(default=False)
     disable_password = models.BooleanField(default=False)
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
     default_currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default='USD')
+    date_format = models.CharField(max_length=10, choices=DATE_FORMAT_CHOICES, default='locale')
     map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
-    
-    
+    legal_consent = models.JSONField(null=True, blank=True, editable=False)
+
+    def save(self, *args, **kwargs):
+        if isinstance(self.email, str) and not self.email.strip():
+            self.email = None
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.username
 

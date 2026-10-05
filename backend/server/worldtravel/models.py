@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.gis.db import models as gis_models
-from adventures.utils.geo import point_to_lat_lon
+from adventures.utils.geo import first_usable_lat_lon, point_to_lat_lon
 
 
 User = get_user_model()
@@ -42,14 +42,23 @@ class Region(models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
 
+    def resolved_lat_lon(self):
+        """Region centroid, or the parent country when the dataset has no region coords.
+
+        City-states (Vatican, Monaco, Singapore, …) are imported as a single
+        synthetic region with no coordinates of their own.
+        """
+        country_coords = self.country.coordinates if self.country_id else None
+        return first_usable_lat_lon(self.coordinates, country_coords)
+
     @property
     def latitude(self):
-        lat, _ = point_to_lat_lon(self.coordinates)
+        lat, _ = self.resolved_lat_lon()
         return lat
 
     @property
     def longitude(self):
-        _, lon = point_to_lat_lon(self.coordinates)
+        _, lon = self.resolved_lat_lon()
         return lon
 
     def __str__(self):
