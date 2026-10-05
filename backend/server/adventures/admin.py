@@ -248,6 +248,7 @@ class CollectionAdmin(TimestampedAdminMixin, admin.ModelAdmin):
     list_display = (
         'name',
         'user',
+        'type',
         'is_public',
         'is_archived',
         'start_date',
@@ -255,7 +256,7 @@ class CollectionAdmin(TimestampedAdminMixin, admin.ModelAdmin):
         'location_count',
         'updated_at',
     )
-    list_filter = ('is_public', 'is_archived', 'user')
+    list_filter = ('type', 'is_public', 'is_archived', 'user')
     search_fields = ('name', 'description', 'user__username')
     autocomplete_fields = ('user', 'primary_image')
     filter_horizontal = ('shared_with',)
@@ -270,6 +271,7 @@ class CollectionAdmin(TimestampedAdminMixin, admin.ModelAdmin):
                 'fields': (
                     'user',
                     'name',
+                    'type',
                     'description',
                     'link',
                     'is_public',

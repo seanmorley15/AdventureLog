@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import { page } from '$app/state';
+	import CloseIcon from '~icons/mdi/close';
 	import {
 		normalizeDateFormat,
 		formatDisplayDate,
@@ -72,6 +73,9 @@
 	const maxDate = $derived(max ? max.split('T')[0] : undefined);
 
 	const sizeClass = $derived(size === 'xs' ? 'input-xs' : size === 'sm' ? 'input-sm' : '');
+	const clearPadding = $derived(size === 'xs' ? 'pr-6' : size === 'sm' ? 'pr-8' : 'pr-10');
+	const clearIconClass = $derived(size === 'xs' ? 'size-3.5' : 'size-4');
+	const clearHitClass = $derived(size === 'xs' ? 'w-6' : size === 'sm' ? 'w-8' : 'w-9');
 
 	const canClear = $derived(!!(clearable && value && !readonly && !disabled));
 
@@ -125,39 +129,29 @@
 {/if}
 
 <div class={['flex gap-2 items-center w-full', className]}>
-	<div class={['flex-1 min-w-0', canClear && 'join']}>
+	<div class="relative min-w-0 flex-1">
 		<button
 			popovertarget={popoverId}
-			class={['input w-full justify-start font-normal', sizeClass, canClear && 'join-item']}
+			class={['input w-full justify-start font-normal', sizeClass, canClear && clearPadding]}
 			id={uniqueId}
 			style:anchor-name={anchorName}
 			disabled={disabled || readonly}
 			type="button"
 		>
-			<span class={!datePart ? 'text-base-content/50' : ''}>{displayDate}</span>
+			<span class={['truncate', !datePart && 'text-base-content/50']}>{displayDate}</span>
 		</button>
 
 		{#if canClear}
 			<button
 				type="button"
-				class={['btn btn-square', sizeClass || 'btn-md', 'join-item bg-base-100']}
+				class={[
+					'absolute inset-y-0 right-0 flex items-center justify-center text-base-content/45 hover:text-base-content',
+					clearHitClass
+				]}
 				onclick={handleClear}
 				aria-label="Clear date"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-4 w-4"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke="currentColor"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					/>
-				</svg>
+				<CloseIcon class={clearIconClass} />
 			</button>
 		{/if}
 	</div>

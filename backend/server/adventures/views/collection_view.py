@@ -22,6 +22,11 @@ from adventures.serializers import CollectionSerializer, CollectionInviteSeriali
 from users.models import CustomUser as User
 from adventures.utils import pagination
 from adventures.utils.geo import make_point, point_to_lat_lon
+from adventures.utils.collection_type import (
+    BACKUP_SCHEMA,
+    UnsupportedBackupSchema,
+    resolve_imported_collection_type,
+)
 from adventures.services.locations.duplicates import find_best_duplicate_location
 from users.serializers import CustomUserDetailsSerializer as UserSerializer
 from adventures.services.collection_pdf import (
@@ -148,19 +153,23 @@ class CollectionViewSet(viewsets.ModelViewSet):
         
         today = date.today()
         
-        if status_filter == 'folder':
-            # Collections without dates
-            return queryset.filter(Q(start_date__isnull=True) | Q(end_date__isnull=True))
-        elif status_filter == 'upcoming':
-            # Start date in the future
-            return queryset.filter(start_date__gt=today)
+        if status_filter == 'upcoming':
+            # Start date in the future. Both dates are required to match lifecycle status.
+            return queryset.filter(start_date__gt=today, end_date__isnull=False)
         elif status_filter == 'in_progress':
             # Currently ongoing
             return queryset.filter(start_date__lte=today, end_date__gte=today)
         elif status_filter == 'completed':
             # End date in the past
-            return queryset.filter(end_date__lt=today)
+            return queryset.filter(start_date__isnull=False, end_date__lt=today)
         
+        return queryset
+
+    def apply_type_filter(self, queryset):
+        """Filter by collection type. type=folder replaces the old status=folder list filter."""
+        type_filter = self.request.query_params.get('type')
+        if type_filter in ('folder', 'trip'):
+            return queryset.filter(type=type_filter)
         return queryset
     
     def get_serializer_context(self):
@@ -258,6 +267,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             )
         )
         
+        queryset = self.apply_type_filter(queryset)
         queryset = self.apply_status_filter(queryset)
         queryset = self.apply_sorting(queryset)
         return self.paginate_and_respond(queryset, request)
@@ -605,6 +615,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         export_data = {
             'version': getattr(settings, 'ADVENTURELOG_RELEASE_VERSION', 'unknown'),
+            'backup_schema': BACKUP_SCHEMA,
             'collection': {
                 'id': str(collection.id),
                 'name': collection.name,
@@ -613,6 +624,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 'is_archived': collection.is_archived,
                 'start_date': _iso(collection.start_date),
                 'end_date': _iso(collection.end_date),
+                'type': collection.type,
                 'link': collection.link,
             },
             'locations': [],
@@ -825,6 +837,23 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     i += 1
 
             collection_meta = metadata.get('collection') or {}
+            try:
+                imported_type = resolve_imported_collection_type(
+                    metadata.get('backup_schema'),
+                    collection_meta.get('start_date'),
+                    collection_meta.get('end_date'),
+                    collection_meta.get('type'),
+                )
+            except UnsupportedBackupSchema:
+                return Response(
+                    {'error': 'This backup uses a newer schema than this server supports.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except ValueError:
+                return Response(
+                    {'error': 'Invalid backup schema.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             new_collection = Collection.objects.create(
                 user=request.user,
                 name=unique_name,
@@ -833,6 +862,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 is_archived=collection_meta.get('is_archived', False),
                 start_date=_parse_date(collection_meta.get('start_date')),
                 end_date=_parse_date(collection_meta.get('end_date')),
+                type=imported_type,
                 link=collection_meta.get('link'),
             )
 
@@ -1051,6 +1081,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     is_archived=False,
                     start_date=original.start_date,
                     end_date=original.end_date,
+                    type=original.type,
                 )
 
                 # Link existing locations to the new collection

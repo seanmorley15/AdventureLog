@@ -25,6 +25,7 @@ class CollectionZipExportImportTests(APITestCase):
             description='Cherry blossom trip',
             start_date=date(2019, 3, 20),
             end_date=date(2019, 3, 28),
+            type='trip',
             link='https://example.com/japan-2019',
         )
         self.location = Location(
@@ -116,8 +117,10 @@ class CollectionZipExportImportTests(APITestCase):
     def test_export_includes_collection_dates_and_lodging_details(self):
         metadata = self._export_metadata()
 
+        self.assertEqual(metadata['backup_schema'], 2)
         self.assertEqual(metadata['collection']['start_date'], '2019-03-20')
         self.assertEqual(metadata['collection']['end_date'], '2019-03-28')
+        self.assertEqual(metadata['collection']['type'], 'trip')
 
         location = metadata['locations'][0]
         self.assertAlmostEqual(location['latitude'], 34.9671)
@@ -158,6 +161,7 @@ class CollectionZipExportImportTests(APITestCase):
         self.assertEqual(imported.name, 'Japan 2019 (1)')
         self.assertEqual(imported.start_date, date(2019, 3, 20))
         self.assertEqual(imported.end_date, date(2019, 3, 28))
+        self.assertEqual(imported.type, 'trip')
 
         lodging = Lodging.objects.get(collection=imported)
         self.assertEqual(lodging.name, 'Kyoto Ryokan')
@@ -229,6 +233,7 @@ class CollectionZipExportImportTests(APITestCase):
         imported = Collection.objects.get(id=response.json()['id'])
         self.assertEqual(imported.start_date, date(2018, 7, 1))
         self.assertEqual(imported.end_date, date(2018, 7, 10))
+        self.assertEqual(imported.type, 'trip')
 
         lodging = Lodging.objects.get(collection=imported)
         self.assertEqual(lodging.type, 'hostel')

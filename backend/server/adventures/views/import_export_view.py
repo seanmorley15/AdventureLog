@@ -27,6 +27,12 @@ from adventures.models import (
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 from adventures.utils.geo import make_point, point_to_lat_lon
+from adventures.utils.collection_type import (
+    BACKUP_SCHEMA,
+    UnsupportedBackupSchema,
+    ensure_backup_schema_supported,
+    resolve_imported_collection_type,
+)
 from adventures.services.images.metadata import create_content_image
 
 User = get_user_model()
@@ -315,6 +321,7 @@ class BackupViewSet(viewsets.ViewSet):
         # Build export data structure
         export_data = {
             'version': settings.ADVENTURELOG_RELEASE_VERSION,
+            'backup_schema': BACKUP_SCHEMA,
             'export_date': datetime.now().isoformat(),
             'user_email': user.email,
             'user_username': user.username,
@@ -364,6 +371,7 @@ class BackupViewSet(viewsets.ViewSet):
                 'is_public': collection.is_public,
                 'start_date': collection.start_date.isoformat() if collection.start_date else None,
                 'end_date': collection.end_date.isoformat() if collection.end_date else None,
+                'type': collection.type,
                 'is_archived': collection.is_archived,
                 'link': collection.link,
                 'shared_with_user_ids': [str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True)]
@@ -907,6 +915,19 @@ class BackupViewSet(viewsets.ViewSet):
                 
                 # Load data
                 backup_data = json.loads(zip_file.read('data.json').decode('utf-8'))
+
+                try:
+                    ensure_backup_schema_supported(backup_data.get('backup_schema'))
+                except UnsupportedBackupSchema:
+                    return Response(
+                        {'error': 'This backup uses a newer schema than this server supports.'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                except ValueError:
+                    return Response(
+                        {'error': 'Invalid backup schema.'},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
                 
                 # Import with transaction
                 with transaction.atomic():
@@ -1007,6 +1028,12 @@ class BackupViewSet(viewsets.ViewSet):
                 is_public=col_data.get('is_public', False),
                 start_date=col_data.get('start_date'),
                 end_date=col_data.get('end_date'),
+                type=resolve_imported_collection_type(
+                    backup_data.get('backup_schema'),
+                    col_data.get('start_date'),
+                    col_data.get('end_date'),
+                    col_data.get('type'),
+                ),
                 is_archived=col_data.get('is_archived', False),
                 link=col_data.get('link')
             )

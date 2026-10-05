@@ -21,7 +21,7 @@
 	let modal: HTMLDialogElement;
 
 	interface Props {
-		collectionToEdit?: Collection | null;
+		collectionToEdit?: Collection | SlimCollection | null;
 	}
 
 	let { collectionToEdit = null }: Props = $props();
@@ -32,75 +32,92 @@
 		description: '',
 		start_date: null,
 		end_date: null,
+		type: 'folder',
 		user: '',
 		is_public: false,
 		locations: [],
 		link: '',
 		shared_with: [],
 		itinerary: [],
-		status: 'folder',
+		status: null,
 		days_until_start: null,
 		primary_image: null,
 		primary_image_id: null,
 		itinerary_days: []
 	});
 
-	let availableImages: ContentImage[] = $state([]);
 	let coverImageId: string | null = $state(null);
+	let showCoverGrid = $state(false);
+	let availableImages = $derived(coverCandidates(collectionToEdit));
 	let previousCollectionId: string | null | undefined = undefined;
+
+	function coverCandidates(source: Collection | SlimCollection | null): ContentImage[] {
+		if (!source) return [];
+
+		const pooled: ContentImage[] = [];
+		if ('locations' in source && source.locations?.length) {
+			for (const loc of source.locations) {
+				if (loc.images?.length) pooled.push(...loc.images);
+			}
+		}
+		if (pooled.length === 0 && 'location_images' in source && source.location_images?.length) {
+			pooled.push(...source.location_images);
+		}
+
+		const deduped: ContentImage[] = [];
+		for (const img of pooled) {
+			if (!img?.id || !img.image || deduped.some((existing) => existing.id === img.id)) continue;
+			deduped.push(img);
+		}
+
+		deduped.sort((a, b) => {
+			if (a.is_primary && !b.is_primary) return -1;
+			if (!a.is_primary && b.is_primary) return 1;
+			return a.id.localeCompare(b.id);
+		});
+		return deduped;
+	}
 
 	$effect.pre(() => {
 		const sourceId = collectionToEdit?.id ?? null;
 		if (sourceId === previousCollectionId) return;
 
 		previousCollectionId = sourceId;
+		const locations =
+			collectionToEdit && 'locations' in collectionToEdit ? collectionToEdit.locations || [] : [];
+		const carriedCoverId =
+			collectionToEdit?.primary_image?.id ??
+			(collectionToEdit && 'primary_image_id' in collectionToEdit
+				? (collectionToEdit.primary_image_id ?? null)
+				: null);
 		collection = {
 			id: collectionToEdit?.id || '',
 			name: collectionToEdit?.name || '',
 			description: collectionToEdit?.description || '',
 			start_date: collectionToEdit?.start_date || null,
 			end_date: collectionToEdit?.end_date || null,
+			type:
+				collectionToEdit?.type ||
+				(collectionToEdit?.start_date && collectionToEdit?.end_date ? 'trip' : 'folder'),
 			user: collectionToEdit?.user || '',
 			is_public: collectionToEdit?.is_public || false,
-			locations: collectionToEdit?.locations || [],
+			locations,
 			link: collectionToEdit?.link || '',
 			shared_with: collectionToEdit?.shared_with || [],
-			itinerary: collectionToEdit?.itinerary || [],
-			status: collectionToEdit?.status || 'folder',
+			itinerary:
+				collectionToEdit && 'itinerary' in collectionToEdit ? collectionToEdit.itinerary || [] : [],
+			status: collectionToEdit?.status ?? null,
 			days_until_start: collectionToEdit?.days_until_start ?? null,
 			primary_image: collectionToEdit?.primary_image ?? null,
-			primary_image_id: collectionToEdit?.primary_image_id ?? null,
+			primary_image_id: carriedCoverId,
 			itinerary_days: []
 		};
-		coverImageId = collection.primary_image?.id || null;
+		coverImageId = collection.primary_image?.id || collection.primary_image_id || null;
 	});
-
-	function setImagesFromCollection(col: Collection) {
-		const seen = new Map<string, ContentImage>();
-		(col.locations || []).forEach((loc) => {
-			(loc.images || []).forEach((img) => {
-				if (!seen.has(img.id)) {
-					seen.set(img.id, img);
-				}
-			});
-		});
-
-		const deduped = Array.from(seen.values());
-		deduped.sort((a, b) => {
-			if (coverImageId && a.id === coverImageId) return -1;
-			if (coverImageId && b.id === coverImageId) return 1;
-			if (a.is_primary && !b.is_primary) return -1;
-			if (!a.is_primary && b.is_primary) return 1;
-			return a.id.localeCompare(b.id);
-		});
-
-		availableImages = deduped;
-	}
 
 	function selectCover(imageId: string | null) {
 		coverImageId = imageId;
 		collection.primary_image_id = imageId;
-		setImagesFromCollection(collection);
 	}
 
 	function toSlimCollection(col: Collection): SlimCollection {
@@ -112,48 +129,32 @@
 			is_public: col.is_public,
 			start_date: col.start_date,
 			end_date: col.end_date,
+			type: col.type,
 			is_archived: col.is_archived ?? false,
 			link: col.link ?? null,
 			created_at: col.created_at ?? '',
 			updated_at: col.updated_at ?? '',
-			location_images: (col.locations || []).flatMap((loc) => loc.images || []),
+			location_images: (() => {
+				const fromLocations = (col.locations || []).flatMap((loc) => loc.images || []);
+				return fromLocations.length > 0 ? fromLocations : availableImages;
+			})(),
 			location_count: (col.locations || []).length,
 			shared_with: col.shared_with || [],
-			status: col.status ?? 'folder',
+			status: col.status ?? null,
 			days_until_start: col.days_until_start ?? null,
 			primary_image: col.primary_image ?? null
 		};
 	}
 
-	async function loadCollectionDetails() {
-		if (!collectionToEdit?.id) {
-			setImagesFromCollection(collection);
-			return;
-		}
-
-		try {
-			const res = await fetch(`/api/collections/${collectionToEdit.id}?nested=true`);
-			if (res.ok) {
-				const data = (await res.json()) as Collection;
-				collection = { ...collection, ...data };
-				coverImageId = data.primary_image?.id ?? coverImageId;
-				collection.primary_image_id = coverImageId;
-				setImagesFromCollection(collection);
-				return;
-			}
-		} catch (err) {
-			console.error(err);
-		}
-
-		setImagesFromCollection(collection);
-	}
-
-	onMount(async () => {
+	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		if (modal) {
 			modal.showModal();
 		}
-		await loadCollectionDetails();
+		// Paint the form first. Cover photos are already on the card payload.
+		requestAnimationFrame(() => {
+			showCoverGrid = true;
+		});
 	});
 
 	function close() {
@@ -169,8 +170,16 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 
-		if (collection.start_date && !collection.end_date) {
-			collection.end_date = collection.start_date;
+		if (!collection.start_date) {
+			collection.start_date = null;
+		}
+		if (!collection.end_date) {
+			collection.end_date = null;
+		}
+
+		if (collection.type === 'trip' && (!collection.start_date || !collection.end_date)) {
+			addToast('error', $t('adventures.trip_requires_dates'));
+			return;
 		}
 
 		if (
@@ -182,20 +191,12 @@
 			return;
 		}
 
-		if (!collection.start_date && collection.end_date) {
-			collection.start_date = collection.end_date;
-		}
-
-		if (!collection.start_date && !collection.end_date) {
-			collection.start_date = null;
-			collection.end_date = null;
-		}
-
 		const payload: any = {
 			name: collection.name,
 			description: collection.description,
 			start_date: collection.start_date,
 			end_date: collection.end_date,
+			type: collection.type,
 			is_public: collection.is_public,
 			link: collection.link,
 			primary_image_id: coverImageId
@@ -225,7 +226,6 @@
 				collection = data as Collection;
 				coverImageId = collection.primary_image?.id ?? null;
 				collection.primary_image_id = coverImageId;
-				setImagesFromCollection(collection);
 				addToast('success', $t('collection.collection_created'));
 				dispatch('save', toSlimCollection(collection));
 			} else {
@@ -250,7 +250,6 @@
 				collection = data as Collection;
 				coverImageId = collection.primary_image?.id ?? null;
 				collection.primary_image_id = coverImageId;
-				setImagesFromCollection(collection);
 				addToast('success', $t('collection.collection_edit_success'));
 				dispatch('save', toSlimCollection(collection));
 			} else {
@@ -362,11 +361,49 @@
 
 							<!-- Right Column -->
 							<div class="space-y-4">
+								<div class="flex flex-col gap-2">
+									<span class="field-label" id="collection-type-label">
+										{$t('adventures.collection_type')}
+									</span>
+									<div
+										class="join w-full"
+										role="radiogroup"
+										aria-labelledby="collection-type-label"
+									>
+										<button
+											type="button"
+											class="btn join-item flex-1 {collection.type === 'trip' ? 'btn-primary' : ''}"
+											aria-pressed={collection.type === 'trip'}
+											onclick={() => (collection.type = 'trip')}
+										>
+											{$t('adventures.trip')}
+										</button>
+										<button
+											type="button"
+											class="btn join-item flex-1 {collection.type === 'folder'
+												? 'btn-primary'
+												: ''}"
+											aria-pressed={collection.type === 'folder'}
+											onclick={() => (collection.type = 'folder')}
+										>
+											{$t('adventures.folder')}
+										</button>
+									</div>
+									<p class="field-hint">
+										{collection.type === 'trip'
+											? $t('adventures.trip_type_hint')
+											: $t('adventures.folder_type_hint')}
+									</p>
+								</div>
+
 								<!-- Start Date -->
 								<div class="flex flex-col">
 									<label class="field-label flex items-center gap-2" for="start_date">
 										<CalendarIcon class="w-4 h-4" />
 										{$t('adventures.start_date')}
+										{#if collection.type === 'trip'}
+											<span class="text-error">*</span>
+										{/if}
 									</label>
 									<DateInput
 										id="start_date"
@@ -381,6 +418,9 @@
 									<label class="field-label flex items-center gap-2" for="end_date">
 										<CalendarIcon class="w-4 h-4" />
 										{$t('adventures.end_date')}
+										{#if collection.type === 'trip'}
+											<span class="text-error">*</span>
+										{/if}
 									</label>
 									<DateInput
 										id="end_date"
@@ -414,7 +454,7 @@
 				</div>
 
 				<!-- Date Warning Alert -->
-				{#if !collection.start_date && !collection.end_date}
+				{#if collection.type === 'folder' && !collection.start_date && !collection.end_date}
 					<div role="alert" class="alert alert-info shadow-lg">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -481,8 +521,12 @@
 											'No images available from linked locations yet.'}
 									</span>
 								</div>
+							{:else if !showCoverGrid}
+								<div class="h-32 rounded-xl bg-base-200/60"></div>
 							{:else}
-								<div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+								<div
+									class="grid max-h-80 grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 lg:grid-cols-4"
+								>
 									{#each availableImages as image (image.id)}
 										<button
 											type="button"
@@ -495,8 +539,10 @@
 										>
 											<img
 												src={image.image}
-												alt="Cover candidate"
-												class="w-full h-32 object-cover"
+												alt=""
+												loading="lazy"
+												decoding="async"
+												class="h-24 w-full object-cover"
 											/>
 											<div
 												class="absolute inset-0 bg-gradient-to-t from-base-300/60 to-transparent opacity-0 group-hover:opacity-100 transition"

@@ -190,6 +190,7 @@ export type Collection = {
 	updated_at?: string | null;
 	start_date: string | null;
 	end_date: string | null;
+	type: 'folder' | 'trip';
 	transportations?: Transportation[];
 	notes?: Note[];
 	lodging?: Lodging[];
@@ -202,7 +203,7 @@ export type Collection = {
 	primary_image_id?: string | null;
 	itinerary: CollectionItineraryItem[];
 	itinerary_days: CollectionItineraryDay[]; // Day metadata (names/descriptions)
-	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
+	status: 'upcoming' | 'in_progress' | 'completed' | null;
 	days_until_start: number | null;
 };
 
@@ -214,6 +215,7 @@ export type SlimCollection = {
 	is_public: boolean;
 	start_date: string | null;
 	end_date: string | null;
+	type: 'folder' | 'trip';
 	is_archived: boolean;
 	link: string | null;
 	created_at: string;
@@ -223,7 +225,7 @@ export type SlimCollection = {
 	shared_with: string[];
 	collaborators?: Collaborator[];
 	primary_image?: ContentImage | null;
-	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
+	status: 'upcoming' | 'in_progress' | 'completed' | null;
 	days_until_start: number | null;
 };
 

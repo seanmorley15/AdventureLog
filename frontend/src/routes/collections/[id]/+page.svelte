@@ -520,8 +520,8 @@
 			);
 		}
 	}
-	// Determine if this is a folder view (no dates) or itinerary view (has dates)
-	let isFolderView = $derived(!collection?.start_date && !collection?.end_date);
+	// Folder layout follows collection type. Dates no longer decide the view.
+	let isFolderView = $derived(collection?.type === 'folder');
 	// Gather hero images with collection primary image first when available
 	run(() => {
 		heroImages = (() => {

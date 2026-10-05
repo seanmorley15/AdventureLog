@@ -244,12 +244,17 @@
 		<CardCarousel images={location_images} name={collection.name} icon="📚" />
 
 		<!-- Status Badge Overlay -->
-		<div class="absolute top-2 left-4 flex items-center gap-2">
-			{#if collection.status === 'folder'}
+		<div class="absolute top-2 left-4 flex max-w-[75%] flex-wrap items-center gap-2">
+			{#if collection.type === 'trip'}
+				<div class="badge badge-sm badge-neutral shadow-xs">
+					{$t('adventures.trip')}
+				</div>
+			{:else}
 				<div class="badge badge-sm badge-neutral shadow-xs">
 					📁 {$t('adventures.folder')}
 				</div>
-			{:else if collection.status === 'upcoming'}
+			{/if}
+			{#if collection.status === 'upcoming'}
 				<div class="badge badge-sm badge-info shadow-xs">
 					🚀 {$t('adventures.upcoming')}
 				</div>

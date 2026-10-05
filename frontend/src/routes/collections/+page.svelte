@@ -60,12 +60,12 @@
 		currentPage = data.props.currentPage || 1;
 		orderBy = data.props.order_by || 'updated_at';
 		orderDirection = data.props.order_direction || 'asc';
-		statusFilter = data.props.status || '';
+		statusFilter = data.props.type === 'folder' ? 'folder' : data.props.status || '';
 		invites = data.props.invites || [];
 	});
 
 	let sidebarOpen = $state(false);
-	let collectionToEdit: Collection | null = $state(null);
+	let collectionToEdit: Collection | SlimCollection | null = $state(null);
 
 	let currentCollections = $derived(
 		activeView === 'owned'
@@ -128,10 +128,12 @@
 
 	async function updateStatusFilter(status: string) {
 		const url = new URL($page.url);
-		if (status) {
+		url.searchParams.delete('status');
+		url.searchParams.delete('type');
+		if (status === 'folder') {
+			url.searchParams.set('type', 'folder');
+		} else if (status) {
 			url.searchParams.set('status', status);
-		} else {
-			url.searchParams.delete('status');
 		}
 		url.searchParams.set('page', '1'); // Reset to first page when filter changes
 		currentPage = 1;
@@ -228,18 +230,8 @@
 		activeView = 'owned';
 	}
 
-	async function editCollection(event: CustomEvent<SlimCollection>) {
-		const slim = event.detail;
-		try {
-			const res = await fetch(`/api/collections/${slim.id}?nested=true`);
-			if (res.ok) {
-				collectionToEdit = (await res.json()) as Collection;
-			} else {
-				collectionToEdit = slim as unknown as Collection;
-			}
-		} catch (e) {
-			collectionToEdit = slim as unknown as Collection;
-		}
+	function editCollection(event: CustomEvent<SlimCollection>) {
+		collectionToEdit = event.detail;
 		isShowingCollectionModal = true;
 	}
 

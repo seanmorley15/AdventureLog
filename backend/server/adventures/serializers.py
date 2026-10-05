@@ -8,6 +8,7 @@ from integrations.models import ImmichIntegration
 from adventures.utils.geojson import gpx_to_geojson
 from adventures.utils.geo import point_to_lat_lon
 from adventures.utils.datetime_utils import ensure_aware_utc, normalize_all_day_visit_dates
+from adventures.utils.collection_type import assign_collection_type_from_dates, collection_lifecycle_status
 from adventures.utils.serializer_geo_fields import (
     ActivityCoordinateMixin,
     CoordinateSerializerMixin,
@@ -1063,6 +1064,7 @@ class CollectionSerializer(CustomModelSerializer):
             'created_at',
             'start_date',
             'end_date',
+            'type',
             'transportations',
             'notes',
             'updated_at',
@@ -1078,6 +1080,9 @@ class CollectionSerializer(CustomModelSerializer):
             'primary_image_id',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with', 'status', 'days_until_start', 'primary_image']
+        extra_kwargs = {
+            'type': {'required': False},
+        }
 
     def validate_link(self, value):
         """Convert empty or invalid URLs to None so Django doesn't reject them."""
@@ -1152,25 +1157,8 @@ class CollectionSerializer(CustomModelSerializer):
         return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
 
     def get_status(self, obj):
-        """Calculate the status of the collection based on dates"""
-        from datetime import date
-        
-        # If no dates, it's a folder
-        if not obj.start_date or not obj.end_date:
-            return 'folder'
-        
-        today = date.today()
-        
-        # Future trip
-        if obj.start_date > today:
-            return 'upcoming'
-        
-        # Past trip
-        if obj.end_date < today:
-            return 'completed'
-        
-        # Current trip
-        return 'in_progress'
+        """Lifecycle from dates. Type is a separate field and is never returned here."""
+        return collection_lifecycle_status(obj)
     
     def get_days_until_start(self, obj):
         """Calculate days until start for upcoming collections"""
@@ -1186,8 +1174,30 @@ class CollectionSerializer(CustomModelSerializer):
         
         return None
 
+    def _resolved_dates(self, data):
+        if self.instance:
+            start = data['start_date'] if 'start_date' in data else self.instance.start_date
+            end = data['end_date'] if 'end_date' in data else self.instance.end_date
+        else:
+            start = data.get('start_date')
+            end = data.get('end_date')
+        return start, end
+
+    def _apply_collection_type(self, data):
+        start, end = self._resolved_dates(data)
+        if 'type' not in data:
+            # Older clients omit type. Both dates are a trip; otherwise a folder.
+            data['type'] = assign_collection_type_from_dates(start, end)
+            return data
+        if data['type'] == 'trip' and (not start or not end):
+            raise serializers.ValidationError({
+                'type': 'A trip requires a start date and an end date.'
+            })
+        return data
+
     def validate(self, attrs):
         data = super().validate(attrs)
+        data = self._apply_collection_type(data)
 
         # Only validate primary image when explicitly provided
         if 'primary_image' not in data:
@@ -1256,7 +1266,7 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = [
-            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 
+            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 'type',
             'is_archived', 'link', 'created_at', 'updated_at', 'location_images', 
             'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image'
         ]
@@ -1317,25 +1327,8 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
         return obj.locations.count()
 
     def get_status(self, obj):
-        """Calculate the status of the collection based on dates"""
-        from datetime import date
-        
-        # If no dates, it's a folder
-        if not obj.start_date or not obj.end_date:
-            return 'folder'
-        
-        today = date.today()
-        
-        # Future trip
-        if obj.start_date > today:
-            return 'upcoming'
-        
-        # Past trip
-        if obj.end_date < today:
-            return 'completed'
-        
-        # Current trip
-        return 'in_progress'
+        """Lifecycle from dates. Type is a separate field and is never returned here."""
+        return collection_lifecycle_status(obj)
     
     def get_days_until_start(self, obj):
         """Calculate days until start for upcoming collections"""

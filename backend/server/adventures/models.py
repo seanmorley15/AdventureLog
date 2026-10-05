@@ -277,6 +277,10 @@ class CollectionInvite(models.Model):
         unique_together = ('collection', 'invited_user')
 
 class Collection(models.Model):
+    class Type(models.TextChoices):
+        FOLDER = 'folder', 'Folder'
+        TRIP = 'trip', 'Trip'
+
     #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(
@@ -287,6 +291,7 @@ class Collection(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
+    type = models.CharField(max_length=10, choices=Type.choices, default=Type.FOLDER)
     updated_at = models.DateTimeField(auto_now=True)
     is_archived = models.BooleanField(default=False)
     shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
@@ -301,6 +306,8 @@ class Collection(models.Model):
 
     # if connected locations are private and collection is public, raise an error
     def clean(self):
+        if self.type == self.Type.TRIP and (not self.start_date or not self.end_date):
+            raise ValidationError('A trip requires a start date and an end date.')
         if self.is_public and self.pk:  # Only check if the instance has a primary key
             # Updated to use the new related_name 'locations'
             for location in self.locations.all():

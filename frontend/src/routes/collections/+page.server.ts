@@ -22,7 +22,11 @@ export const load = (async (event) => {
 	// Get sorting and filtering parameters from URL
 	const order_by = event.url.searchParams.get('order_by') || 'updated_at';
 	const order_direction = event.url.searchParams.get('order_direction') || 'desc';
-	const status = event.url.searchParams.get('status') || '';
+	const rawStatus = event.url.searchParams.get('status') || '';
+	const rawType = event.url.searchParams.get('type') || '';
+	// Older links used status=folder. The list API filters that with type=folder.
+	const type = rawStatus === 'folder' ? 'folder' : rawType;
+	const status = rawStatus === 'folder' ? '' : rawStatus;
 	const page = event.url.searchParams.get('page') || '1';
 	const currentPage = parseInt(page);
 
@@ -33,7 +37,8 @@ export const load = (async (event) => {
 
 	// Build API URL with nested=true for lighter payload
 	const statusParam = status ? `&status=${status}` : '';
-	const apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true${statusParam}`;
+	const typeParam = type === 'folder' || type === 'trip' ? `&type=${type}` : '';
+	const apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true${statusParam}${typeParam}`;
 
 	try {
 		// Execute all API calls in parallel
@@ -69,6 +74,7 @@ export const load = (async (event) => {
 				order_by,
 				order_direction,
 				status,
+				type,
 				archivedCollections: archivedData as SlimCollection[],
 				invites: invitesData
 			}
