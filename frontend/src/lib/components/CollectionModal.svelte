@@ -7,6 +7,8 @@
 	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
 	import DateInput from './shared/DateInput.svelte';
+	import { addDays, browserTimezone, MAX_PLAN_DAYS } from '$lib/dayPlan';
+	import { formatDisplayDate } from '$lib/dateFormat';
 
 	// Icons
 	import CollectionIcon from '~icons/mdi/folder-multiple';
@@ -48,6 +50,18 @@
 
 	let coverImageId: string | null = $state(null);
 	let showCoverGrid = $state(false);
+	let planMode = $state<'dates' | 'days'>('dates');
+	let dayCount = $state<number | null>(null);
+
+	// A day-based trip is edited by day count; a date-keyed trip keeps its dates until "Plan by days".
+	const editingDayPlan = $derived(Boolean(collectionToEdit?.day_count));
+	const canChoosePlanMode = $derived(!editingDayPlan && collectionToEdit?.type !== 'trip');
+	const usesDayCount = $derived(collection.type === 'trip' && planMode === 'days');
+	const derivedEndDate = $derived(
+		usesDayCount && collection.start_date && dayCount && dayCount > 0
+			? addDays(collection.start_date, dayCount - 1)
+			: null
+	);
 	let availableImages = $derived(coverCandidates(collectionToEdit));
 	let previousCollectionId: string | null | undefined = undefined;
 
@@ -113,6 +127,8 @@
 			itinerary_days: []
 		};
 		coverImageId = collection.primary_image?.id || collection.primary_image_id || null;
+		dayCount = collectionToEdit?.day_count ?? null;
+		planMode = collectionToEdit?.day_count ? 'days' : 'dates';
 	});
 
 	function selectCover(imageId: string | null) {
@@ -130,6 +146,8 @@
 			start_date: col.start_date,
 			end_date: col.end_date,
 			type: col.type,
+			timezone: col.timezone,
+			day_count: col.day_count ?? null,
 			is_archived: col.is_archived ?? false,
 			link: col.link ?? null,
 			created_at: col.created_at ?? '',
@@ -177,12 +195,18 @@
 			collection.end_date = null;
 		}
 
-		if (collection.type === 'trip' && (!collection.start_date || !collection.end_date)) {
+		if (usesDayCount) {
+			if (!dayCount || dayCount < 1 || dayCount > MAX_PLAN_DAYS) {
+				addToast('error', $t('collection.day_count_required', { values: { max: MAX_PLAN_DAYS } }));
+				return;
+			}
+		} else if (collection.type === 'trip' && (!collection.start_date || !collection.end_date)) {
 			addToast('error', $t('adventures.trip_requires_dates'));
 			return;
 		}
 
 		if (
+			!usesDayCount &&
 			collection.start_date &&
 			collection.end_date &&
 			collection.start_date > collection.end_date
@@ -195,12 +219,20 @@
 			name: collection.name,
 			description: collection.description,
 			start_date: collection.start_date,
-			end_date: collection.end_date,
 			type: collection.type,
 			is_public: collection.is_public,
 			link: collection.link,
 			primary_image_id: coverImageId
 		};
+		if (usesDayCount) {
+			payload.day_count = dayCount;
+		} else {
+			payload.end_date = collection.end_date;
+		}
+		const anchorChanged = collection.start_date !== (collectionToEdit?.start_date ?? null);
+		if (collection.type === 'trip' && collection.start_date && anchorChanged) {
+			payload.timezone = browserTimezone();
+		}
 
 		// Clean up link: empty/whitespace → null, invalid URL → null
 		if (!payload.link || !payload.link.trim()) {
@@ -396,12 +428,63 @@
 									</p>
 								</div>
 
+								{#if collection.type === 'trip' && canChoosePlanMode}
+									<div class="flex flex-col gap-2">
+										<span class="field-label" id="plan-mode-label">{$t('collection.plan_by')}</span>
+										<div class="join w-full" role="radiogroup" aria-labelledby="plan-mode-label">
+											<button
+												type="button"
+												class="btn btn-sm join-item flex-1 {planMode === 'dates'
+													? 'btn-primary'
+													: ''}"
+												aria-pressed={planMode === 'dates'}
+												onclick={() => (planMode = 'dates')}
+											>
+												{$t('collection.plan_by_dates')}
+											</button>
+											<button
+												type="button"
+												class="btn btn-sm join-item flex-1 {planMode === 'days'
+													? 'btn-primary'
+													: ''}"
+												aria-pressed={planMode === 'days'}
+												onclick={() => (planMode = 'days')}
+											>
+												{$t('collection.plan_by_day_count')}
+											</button>
+										</div>
+									</div>
+								{/if}
+
+								{#if usesDayCount}
+									<div class="flex flex-col">
+										<label class="field-label" for="day_count">
+											{$t('collection.day_count')}<span class="text-error ml-1">*</span>
+										</label>
+										<input
+											type="number"
+											id="day_count"
+											name="day_count"
+											class="input w-full"
+											min="1"
+											max={MAX_PLAN_DAYS}
+											bind:value={dayCount}
+											required
+										/>
+										<p class="field-hint">
+											{$t('collection.day_count_hint', { values: { max: MAX_PLAN_DAYS } })}
+										</p>
+									</div>
+								{/if}
+
 								<!-- Start Date -->
 								<div class="flex flex-col">
 									<label class="field-label flex items-center gap-2" for="start_date">
 										<CalendarIcon class="w-4 h-4" />
-										{$t('adventures.start_date')}
-										{#if collection.type === 'trip'}
+										{usesDayCount
+											? $t('itinerary.start_date_optional')
+											: $t('adventures.start_date')}
+										{#if collection.type === 'trip' && !usesDayCount}
 											<span class="text-error">*</span>
 										{/if}
 									</label>
@@ -411,24 +494,33 @@
 										bind:value={collection.start_date}
 										clearable={true}
 									/>
+									{#if derivedEndDate}
+										<p class="field-hint">
+											{$t('collection.ends_on', {
+												values: { date: formatDisplayDate(derivedEndDate) }
+											})}
+										</p>
+									{/if}
 								</div>
 
-								<!-- End Date -->
-								<div class="flex flex-col">
-									<label class="field-label flex items-center gap-2" for="end_date">
-										<CalendarIcon class="w-4 h-4" />
-										{$t('adventures.end_date')}
-										{#if collection.type === 'trip'}
-											<span class="text-error">*</span>
-										{/if}
-									</label>
-									<DateInput
-										id="end_date"
-										name="end_date"
-										bind:value={collection.end_date}
-										clearable={true}
-									/>
-								</div>
+								{#if !usesDayCount}
+									<!-- End Date -->
+									<div class="flex flex-col">
+										<label class="field-label flex items-center gap-2" for="end_date">
+											<CalendarIcon class="w-4 h-4" />
+											{$t('adventures.end_date')}
+											{#if collection.type === 'trip'}
+												<span class="text-error">*</span>
+											{/if}
+										</label>
+										<DateInput
+											id="end_date"
+											name="end_date"
+											bind:value={collection.end_date}
+											clearable={true}
+										/>
+									</div>
+								{/if}
 
 								<!-- Public Toggle -->
 								<div class="flex flex-col">
@@ -471,7 +563,12 @@
 						</svg>
 						<span>{$t('adventures.collection_no_start_end_date')}</span>
 					</div>
-				{:else if collection.id && collectionToEdit?.start_date && collectionToEdit?.end_date && (collection.start_date !== collectionToEdit.start_date || collection.end_date !== collectionToEdit.end_date)}
+				{:else if editingDayPlan && collection.start_date !== (collectionToEdit?.start_date ?? null)}
+					<div role="alert" class="alert alert-info shadow-lg">
+						<CalendarIcon class="h-6 w-6 shrink-0" />
+						<span>{$t('collection.day_plan_date_hint')}</span>
+					</div>
+				{:else if !editingDayPlan && collection.id && collectionToEdit?.start_date && collectionToEdit?.end_date && (collection.start_date !== collectionToEdit.start_date || collection.end_date !== collectionToEdit.end_date)}
 					<div role="alert" class="alert alert-warning shadow-lg">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"

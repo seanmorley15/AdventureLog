@@ -9,6 +9,7 @@ from adventures.utils.geojson import gpx_to_geojson
 from adventures.utils.geo import point_to_lat_lon
 from adventures.utils.datetime_utils import ensure_aware_utc, normalize_all_day_visit_dates
 from adventures.utils.collection_type import assign_collection_type_from_dates, collection_lifecycle_status
+from adventures.utils import itinerary_days as day_plan
 from adventures.utils.serializer_geo_fields import (
     ActivityCoordinateMixin,
     CoordinateSerializerMixin,
@@ -1051,6 +1052,7 @@ class CollectionSerializer(CustomModelSerializer):
     # Override link as CharField so DRF's URLField doesn't reject invalid
     # values before validate_link() can clean them up.
     link = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    day_count = serializers.IntegerField(required=False, allow_null=True, min_value=1)
 
     class Meta:
         model = Collection
@@ -1065,6 +1067,8 @@ class CollectionSerializer(CustomModelSerializer):
             'start_date',
             'end_date',
             'type',
+            'timezone',
+            'day_count',
             'transportations',
             'notes',
             'updated_at',
@@ -1183,21 +1187,102 @@ class CollectionSerializer(CustomModelSerializer):
             end = data.get('end_date')
         return start, end
 
+    def _instance_day_count(self):
+        if self.instance is None or not self.instance.pk:
+            return None
+        if not hasattr(self, '_cached_instance_day_count'):
+            count = day_plan.day_count(self.instance)
+            self._cached_instance_day_count = count or None
+        return self._cached_instance_day_count
+
     def _apply_collection_type(self, data):
         start, end = self._resolved_dates(data)
+        count = data.get('day_count') or self._instance_day_count()
         if 'type' not in data:
             # Older clients omit type. Both dates are a trip; otherwise a folder.
-            data['type'] = assign_collection_type_from_dates(start, end)
+            data['type'] = 'trip' if count else assign_collection_type_from_dates(start, end)
             return data
-        if data['type'] == 'trip' and (not start or not end):
+        if data['type'] == 'trip' and not count and (not start or not end):
             raise serializers.ValidationError({
-                'type': 'A trip requires a start date and an end date.'
+                'type': 'A trip requires a start date and an end date, or a day count.'
             })
         return data
+
+    def _apply_day_count(self, data):
+        """Day-based trips derive end_date from the anchor and the day count."""
+        requested = data.get('day_count')
+        current = self._instance_day_count()
+        if requested is not None and requested > day_plan.MAX_PLAN_DAYS:
+            raise serializers.ValidationError({
+                'day_count': f'A trip can have at most {day_plan.MAX_PLAN_DAYS} days. Split this collection into shorter trips.'
+            })
+        count = requested or current
+        if not count or data.get('type', getattr(self.instance, 'type', None)) != 'trip':
+            data.pop('day_count', None)
+            return data
+        start = data['start_date'] if 'start_date' in data else getattr(self.instance, 'start_date', None)
+        derived_end = day_plan.projected_date(start, count) if start else None
+        if 'end_date' in data and data['end_date'] != derived_end:
+            raise serializers.ValidationError({
+                'end_date': 'end_date is derived from the start date and the day count. Send day_count instead.'
+            })
+        data['end_date'] = derived_end
+        data['day_count'] = count
+        return data
+
+    def validate_timezone(self, value):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from adventures.utils.timezones import validate_timezone
+
+        try:
+            validate_timezone(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages[0])
+        return value or 'UTC'
+
+    def create(self, validated_data):
+        count = validated_data.pop('day_count', None)
+        collection = super().create(validated_data)
+        if collection.type == 'trip':
+            if count:
+                day_plan.build_days(collection, count)
+            else:
+                day_plan.convert_collection(collection)
+        return collection
+
+    def update(self, instance, validated_data):
+        count = validated_data.pop('day_count', None)
+        current = self._instance_day_count()
+        if current:
+            start_changed = 'start_date' in validated_data and validated_data['start_date'] != instance.start_date
+            anchor = validated_data.pop('start_date', instance.start_date)
+            validated_data.pop('end_date', None)
+            timezone_name = validated_data.get('timezone')
+            instance = super().update(instance, validated_data)
+            try:
+                day_plan.set_duration(
+                    instance,
+                    count or current,
+                    anchor=anchor if start_changed else ...,
+                    timezone_name=timezone_name,
+                )
+            except day_plan.DayPlanError as exc:
+                raise serializers.ValidationError({'day_count': exc.message, 'code': exc.code, **exc.extra})
+            instance.refresh_from_db()
+            return instance
+
+        instance = super().update(instance, validated_data)
+        if instance.type == 'trip':
+            if count:
+                day_plan.build_days(instance, count)
+            else:
+                day_plan.convert_collection(instance)
+        return instance
 
     def validate(self, attrs):
         data = super().validate(attrs)
         data = self._apply_collection_type(data)
+        data = self._apply_day_count(data)
 
         # Only validate primary image when explicitly provided
         if 'primary_image' not in data:
@@ -1229,6 +1314,7 @@ class CollectionSerializer(CustomModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['day_count'] = day_plan.day_count(instance) or None
         
         # Make it display the user uuid for the shared users instead of the PK
         shared_uuids = []
@@ -1262,11 +1348,16 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
     days_until_start = serializers.SerializerMethodField()
     primary_image = ContentImageSerializer(read_only=True)
     collaborators = serializers.SerializerMethodField()
+    day_count = serializers.SerializerMethodField()
+
+    def get_day_count(self, obj):
+        return day_plan.day_count(obj) or None
     
     class Meta:
         model = Collection
         fields = [
             'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 'type',
+            'timezone', 'day_count',
             'is_archived', 'link', 'created_at', 'updated_at', 'location_images', 
             'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image'
         ]
@@ -1360,8 +1451,26 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
 class CollectionItineraryDaySerializer(CustomModelSerializer):
     class Meta:
         model = CollectionItineraryDay
-        fields = ['id', 'collection', 'date', 'name', 'description', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = ['id', 'collection', 'index', 'date', 'name', 'description', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'index', 'created_at', 'updated_at']
+        # The (collection, date) constraint only applies to date-keyed rows.
+        validators = []
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if self.instance is None:
+            collection = data.get('collection')
+            if collection is not None and day_plan.is_day_based(collection):
+                raise serializers.ValidationError({
+                    'collection': 'Add days to a day-based trip with the itinerary day actions.'
+                })
+            if not data.get('date'):
+                raise serializers.ValidationError({'date': 'A date is required.'})
+            if collection is not None and CollectionItineraryDay.objects.filter(
+                collection=collection, index__isnull=True, date=data['date']
+            ).exists():
+                raise serializers.ValidationError({'date': 'This date already has day details.'})
+        return data
     
     def update(self, instance, validated_data):
         # Security: Prevent changing collection or date after creation
@@ -1377,11 +1486,19 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
     end_datetime = serializers.ReadOnlyField()
     object_name = serializers.ReadOnlyField(source='content_type.model')
     is_global = serializers.BooleanField(required=False, default=False)
+    day_index = serializers.SerializerMethodField()
     
     class Meta:
         model = CollectionItineraryItem
-        fields = ['id', 'collection', 'content_type', 'object_id', 'item', 'date', 'is_global', 'order', 'start_datetime', 'end_datetime', 'created_at', 'object_name']
-        read_only_fields = ['id', 'created_at', 'start_datetime', 'end_datetime', 'item', 'object_name']
+        fields = [
+            'id', 'collection', 'content_type', 'object_id', 'item', 'date', 'is_global', 'order',
+            'day', 'day_index', 'span_end_index', 'is_optional', 'start_time', 'end_time', 'timezone',
+            'logged_visit', 'start_datetime', 'end_datetime', 'created_at', 'updated_at', 'object_name',
+        ]
+        read_only_fields = [
+            'id', 'created_at', 'updated_at', 'start_datetime', 'end_datetime', 'item', 'object_name',
+            'day', 'day_index', 'span_end_index', 'logged_visit',
+        ]
         # DRF 3.15 generates UniqueTogetherValidator from UniqueConstraints without applying
         # their conditions, causing false 400s (e.g. a dated item with order=0 is rejected
         # when a global item with the same order exists). The view and DB constraints
@@ -1408,12 +1525,21 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
                 'is_global': 'Provide either a date or set is_global, not both.',
             })
 
-        if not is_global and date is None and self.instance is None:
+        collection = data.get('collection') or getattr(self.instance, 'collection', None)
+        if (
+            not is_global
+            and date is None
+            and self.instance is None
+            and not (collection is not None and day_plan.is_day_based(collection))
+        ):
             raise serializers.ValidationError({
                 'date': 'Dated items must include a date. To create a trip-wide item, set is_global=true.',
             })
 
         return data
+
+    def get_day_index(self, obj):
+        return obj.day.index if obj.day_id else None
     
     def update(self, instance, validated_data):
         # Security: Prevent changing collection, content_type, or object_id after creation
@@ -1441,6 +1567,8 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
         representation['content_type'] = instance.content_type.model if instance.content_type_id else None
         representation['object_id'] = str(instance.object_id)
         representation['collection'] = str(instance.collection_id)
+        representation['day'] = str(instance.day_id) if instance.day_id else None
+        representation['logged_visit'] = str(instance.logged_visit_id) if instance.logged_visit_id else None
         return representation
 
 

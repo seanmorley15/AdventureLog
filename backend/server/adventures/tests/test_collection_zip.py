@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APITestCase
 
 from adventures.models import Checklist, ChecklistItem, Collection, Location, Lodging, Note, Transportation
+from adventures.utils.collection_type import BACKUP_SCHEMA
 from adventures.utils.geo import make_point, point_to_lat_lon
 from users.models import CustomUser
 
@@ -117,7 +118,7 @@ class CollectionZipExportImportTests(APITestCase):
     def test_export_includes_collection_dates_and_lodging_details(self):
         metadata = self._export_metadata()
 
-        self.assertEqual(metadata['backup_schema'], 2)
+        self.assertEqual(metadata['backup_schema'], BACKUP_SCHEMA)
         self.assertEqual(metadata['collection']['start_date'], '2019-03-20')
         self.assertEqual(metadata['collection']['end_date'], '2019-03-28')
         self.assertEqual(metadata['collection']['type'], 'trip')

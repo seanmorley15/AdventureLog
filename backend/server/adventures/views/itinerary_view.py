@@ -1,12 +1,17 @@
-from adventures.models import Location, Collection, CollectionItineraryItem, Transportation, Note, Lodging, Visit, Checklist, Note, CollectionItineraryDay
-import datetime
-from django.utils.dateparse import parse_date, parse_datetime
+from adventures.models import Location, Collection, CollectionItineraryItem, Transportation, Note, Lodging, Visit, Checklist, CollectionItineraryDay
+from django.utils.dateparse import parse_date, parse_datetime, parse_time
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from adventures.serializers import CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
+from django.db import IntegrityError, models
+from adventures.serializers import (
+    CollectionItineraryItemSerializer,
+    CollectionItineraryDaySerializer,
+    LodgingSerializer,
+    TransportationSerializer,
+    VisitSerializer,
+)
 from adventures.utils.itinerary import reorder_itinerary_items
 from adventures.utils.autogenerate_itinerary import auto_generate_itinerary
-from adventures.utils.datetime_utils import aware_utc_from_date, aware_utc_from_date_and_time, ensure_aware_utc
+from adventures.utils import itinerary_days as day_plan
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,7 +19,107 @@ from rest_framework.exceptions import ValidationError, PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from django.db.models import Q
 from django.db import transaction
-from django.utils import timezone
+
+CONTENT_MODELS = {
+    'location': Location,
+    'transportation': Transportation,
+    'note': Note,
+    'lodging': Lodging,
+    'visit': Visit,
+    'checklist': Checklist,
+}
+
+_ERROR_STATUS = {
+    'not_found': status.HTTP_404_NOT_FOUND,
+    'conflict': status.HTTP_409_CONFLICT,
+}
+
+ORDER_CONFLICT = {
+    'error': 'The itinerary changed while you were editing. Refresh and try again.',
+    'code': 'order_conflict',
+}
+
+
+def _plan_error(exc: day_plan.DayPlanError):
+    body = {'error': exc.message, 'code': exc.code, **exc.extra}
+    return Response(body, status=_ERROR_STATUS.get(exc.code, status.HTTP_400_BAD_REQUEST))
+
+
+def _parse_bool(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ('1', 'true', 'yes', 'y', 't')
+
+
+def _parse_day_date(value):
+    if value in (None, ''):
+        return None
+    text = str(value)
+    parsed = parse_date(text.split('T')[0])
+    if parsed is None:
+        raise day_plan.DayPlanError('Use a YYYY-MM-DD date.')
+    return parsed
+
+
+def _parse_clock(value):
+    if value in (None, ''):
+        return None
+    parsed = parse_time(str(value))
+    if parsed is None:
+        raise day_plan.DayPlanError('Use an HH:MM time.')
+    return parsed
+
+
+def _is_member(user, collection):
+    return collection.user_id == user.id or collection.shared_with.filter(id=user.id).exists()
+
+
+def _member_collection(request, collection_id):
+    if not collection_id:
+        raise day_plan.DayPlanError('collection is required.')
+    try:
+        collection = Collection.objects.get(id=collection_id)
+    except (Collection.DoesNotExist, ValueError, TypeError):
+        raise day_plan.DayPlanError('Collection not found.', code='not_found')
+    except Exception:
+        raise day_plan.DayPlanError('Collection not found.', code='not_found')
+    if not _is_member(request.user, collection):
+        raise PermissionDenied('You do not have permission to modify this collection.')
+    return collection
+
+
+def plan_state(collection, context=None):
+    """The day plan the planner renders, returned after structural changes."""
+    collection.refresh_from_db()
+    items = CollectionItineraryItem.objects.filter(collection=collection).select_related('day', 'content_type')
+    days = CollectionItineraryDay.objects.filter(collection=collection).order_by('index', 'date')
+    return {
+        'collection': {
+            'id': str(collection.id),
+            'start_date': collection.start_date,
+            'end_date': collection.end_date,
+            'timezone': collection.timezone,
+            'day_count': day_plan.day_count(collection) or None,
+            'updated_at': collection.updated_at,
+        },
+        'itinerary': CollectionItineraryItemSerializer(items, many=True, context=context or {}).data,
+        'itinerary_days': CollectionItineraryDaySerializer(days, many=True, context=context or {}).data,
+        'lodging': LodgingSerializer(collection.lodging_set.all(), many=True, context=context or {}).data,
+        'transportations': TransportationSerializer(collection.transportation_set.all(), many=True, context=context or {}).data,
+    }
+
+
+def _serialize_updated_object(obj, context):
+    if obj is None:
+        return None
+    if isinstance(obj, Lodging):
+        return LodgingSerializer(obj, context=context).data
+    if isinstance(obj, Transportation):
+        return TransportationSerializer(obj, context=context).data
+    return None
+
 
 class ItineraryViewSet(viewsets.ModelViewSet):
     serializer_class = CollectionItineraryItemSerializer
@@ -29,18 +134,39 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         # Return itinerary items from collections the user owns or is shared with
         return CollectionItineraryItem.objects.filter(
             Q(collection__user=user) | Q(collection__shared_with=user)
-        ).distinct().select_related('collection', 'collection__user').order_by('date', 'order')
+        ).distinct().select_related('collection', 'collection__user', 'day', 'content_type').order_by('date', 'order')
+
+    def handle_exception(self, exc):
+        if isinstance(exc, IntegrityError):
+            return Response(ORDER_CONFLICT, status=status.HTTP_409_CONFLICT)
+        if isinstance(exc, day_plan.DayPlanError):
+            return _plan_error(exc)
+        return super().handle_exception(exc)
+
+    def _resolve_content(self, request, content_type_val, object_id):
+        if content_type_val not in CONTENT_MODELS:
+            raise ValidationError({'error': f"Invalid content_type. Must be one of: {', '.join(CONTENT_MODELS)}"})
+        model_class = CONTENT_MODELS[content_type_val]
+        try:
+            content_object = model_class.objects.get(id=object_id)
+        except (ValueError, model_class.DoesNotExist):
+            return None, None
+        except Exception:
+            return None, None
+        permission_checker = IsOwnerOrSharedWithFullAccess()
+        if not permission_checker.has_object_permission(request, self, content_object):
+            raise PermissionDenied('User does not have permission to access this content')
+        return content_object, ContentType.objects.get_for_model(model_class)
 
     def create(self, request, *args, **kwargs):
         """
         Accept 'content_type' as either a ContentType PK or a model name string
-        (e.g. 'location', 'lodging', 'transportation', 'note', 'visit'). If a
-        string is provided we resolve it to the appropriate ContentType PK and
-        validate the referenced object exists and the user has permission to
-        access it.
-        
-        Optional parameter 'update_item_date': if True, update the actual item's
-        date field to match the itinerary date.
+        (e.g. 'location', 'lodging', 'transportation', 'note', 'visit').
+
+        Day-based trips place the object on ``day_index`` (or in Ideas when it is
+        omitted, or trip-wide with ``is_global``). Lodging and transport dates are
+        written with the placement. ``update_item_date`` is ignored: placing a
+        location never creates or rewrites a visit.
         """
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -48,14 +174,9 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         content_type_val = data.get('content_type')
         object_id = data.get('object_id')
-        update_item_date = data.get('update_item_date', False)
-        target_date = data.get('date')
-        is_global = data.get('is_global', False)
-        # Normalize is_global to boolean
-        if isinstance(is_global, str):
-            is_global = is_global.lower() in ['1', 'true', 'yes']
+        is_global = _parse_bool(data.get('is_global'), False)
         data['is_global'] = is_global
-        if is_global and not target_date:
+        if is_global and not data.get('date'):
             data['date'] = None
 
         # Support legacy field 'location' -> treat as content_type='location'
@@ -65,348 +186,228 @@ class ItineraryViewSet(viewsets.ModelViewSet):
             data['content_type'] = content_type_val
             data['object_id'] = object_id
 
-        # If content_type is provided as a string model name, map to ContentType PK
-        if content_type_val and isinstance(content_type_val, str):
-            # If it's already numeric-like, leave it
-            if not content_type_val.isdigit():
-                content_map = {
-                    'location': Location,
-                    'transportation': Transportation,
-                    'note': Note,
-                    'lodging': Lodging,
-                    'visit': Visit,
-                    'checklist': Checklist,
-                    'note': Note,
-                }
+        content_object = None
+        if content_type_val and isinstance(content_type_val, str) and not content_type_val.isdigit():
+            content_object, ct = self._resolve_content(request, content_type_val, object_id)
+            if content_object is None:
+                return Response({'error': f"{content_type_val} not found"}, status=status.HTTP_404_NOT_FOUND)
+            data['content_type'] = ct.pk
 
-                if content_type_val not in content_map:
-                    return Response({
-                        'error': f"Invalid content_type. Must be one of: {', '.join(content_map.keys())}"
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
-                model_class = content_map[content_type_val]
-
-                # Validate referenced object exists
-                try:
-                    content_object = model_class.objects.get(id=object_id)
-                except (ValueError, model_class.DoesNotExist):
-                    return Response({'error': f"{content_type_val} not found"}, status=status.HTTP_404_NOT_FOUND)
-
-                # Permission check
-                permission_checker = IsOwnerOrSharedWithFullAccess()
-                if not permission_checker.has_object_permission(request, self, content_object):
-                    return Response({'error': 'User does not have permission to access this content'}, status=status.HTTP_403_FORBIDDEN)
-
-                ct = ContentType.objects.get_for_model(model_class)
-                data['content_type'] = ct.pk
-                
-                # If update_item_date is True and target_date is provided, update the item's date
-                if update_item_date and target_date and content_object:
-                    # Extract just the date part if target_date is datetime
-                    clean_date = str(target_date).split('T')[0] if 'T' in str(target_date) else str(target_date)
-                    
-                    # For locations, create an all-day visit instead of updating a date field
-                    if content_type_val == 'location':
-                        # Determine start/end bounds. Support single date or optional start_date/end_date in payload.
-                        # Prefer explicit start_date/end_date if provided, otherwise use the single target date.
-                        start_input = data.get('start_date') or clean_date
-                        end_input = data.get('end_date') or clean_date
-
-                        def parse_bounds(val):
-                            if not val:
-                                return None
-                            s = str(val)
-                            # If datetime string provided, parse directly
-                            if 'T' in s:
-                                dt = parse_datetime(s)
-                                return dt
-                            # Otherwise parse as date and convert to datetime at start/end of day
-                            d = parse_date(s)
-                            if d:
-                                return d
-                            return None
-
-                        # Normalize to date or datetime values
-                        parsed_start = parse_bounds(start_input)
-                        parsed_end = parse_bounds(end_input)
-
-                        # If both are plain dates, convert to datetimes spanning the day
-                        if isinstance(parsed_start, datetime.date) and not isinstance(parsed_start, datetime.datetime):
-                            new_start = aware_utc_from_date(parsed_start)
-                        elif isinstance(parsed_start, datetime.datetime):
-                            new_start = ensure_aware_utc(parsed_start)
-                        else:
-                            new_start = None
-
-                        if isinstance(parsed_end, datetime.date) and not isinstance(parsed_end, datetime.datetime):
-                            new_end = aware_utc_from_date(parsed_end)
-                        elif isinstance(parsed_end, datetime.datetime):
-                            new_end = ensure_aware_utc(parsed_end)
-                        else:
-                            new_end = None
-
-                        # If we couldn't parse bounds, fallback to the all-day target date
-                        if not new_start or not new_end:
-                            try:
-                                d = parse_date(clean_date)
-                                new_start = aware_utc_from_date(d)
-                                new_end = aware_utc_from_date(d)
-                            except Exception:
-                                new_start = None
-                                new_end = None
-
-                        # Update existing visit or create new one
-                        # When moving between days, update the existing visit to preserve visit ID and data
-                        if new_start and new_end:
-                            source_visit_id = data.get('source_visit_id')
-                            
-                            # If source visit provided, update it
-                            if source_visit_id:
-                                try:
-                                    source_visit = Visit.objects.get(id=source_visit_id, location=content_object)
-                                    source_visit.start_date = new_start
-                                    source_visit.end_date = new_end
-                                    source_visit.save(update_fields=['start_date', 'end_date'])
-                                except Visit.DoesNotExist:
-                                    # Fall back to create logic below
-                                    pass
-                            
-                            # If no source visit or update failed, check for overlapping visits
-                            if not source_visit_id:
-                                # Check for exact match to avoid duplicates
-                                exact_match = Visit.objects.filter(
-                                    location=content_object,
-                                    start_date=new_start,
-                                    end_date=new_end
-                                ).exists()
-                                
-                                if not exact_match:
-                                    # Check for any overlapping visits
-                                    overlap_q = Q(start_date__lte=new_end) & Q(end_date__gte=new_start)
-                                    existing = Visit.objects.filter(location=content_object).filter(overlap_q).first()
-                                    
-                                    if existing:
-                                        # Update existing overlapping visit
-                                        existing.start_date = new_start
-                                        existing.end_date = new_end
-                                        existing.save(update_fields=['start_date', 'end_date'])
-                                    else:
-                                        # Create new visit
-                                        Visit.objects.create(
-                                            location=content_object,
-                                            start_date=new_start,
-                                            end_date=new_end,
-                                            notes="Created from itinerary planning"
-                                        )
-                    else:
-                        # For other item types, update their date field and preserve duration
-                        if content_type_val == 'transportation':
-                            # For transportation: update date and end_date, preserving duration and times
-                            if hasattr(content_object, 'date') and hasattr(content_object, 'end_date'):
-                                old_date = content_object.date
-                                old_end_date = content_object.end_date
-                                
-                                if old_date and old_end_date:
-                                    # Extract time from original start date
-                                    original_time = old_date.time()
-                                    # Create new_date with the new date but preserve the original time
-                                    new_date = aware_utc_from_date_and_time(parse_date(clean_date), original_time)
-                                    # Duration = end_date - date
-                                    duration = old_end_date - old_date
-                                    # Apply same duration to new date
-                                    new_end_date = new_date + duration
-                                else:
-                                    # No original end date, set to same as start date
-                                    new_date = aware_utc_from_date(parse_date(clean_date))
-                                    new_end_date = new_date
-                                
-                                content_object.date = new_date
-                                content_object.end_date = new_end_date
-                                content_object.save(update_fields=['date', 'end_date'])
-                        elif content_type_val == 'lodging':
-                            # For lodging: update check_in and check_out, preserving duration and times
-                            if hasattr(content_object, 'check_in') and hasattr(content_object, 'check_out'):
-                                old_check_in = content_object.check_in
-                                old_check_out = content_object.check_out
-                                
-                                if old_check_in and old_check_out:
-                                    # Extract time from original check_in
-                                    original_time = old_check_in.time()
-                                    # Create new_check_in with the new date but preserve the original time
-                                    new_check_in = aware_utc_from_date_and_time(parse_date(clean_date), original_time)
-                                    # Duration = check_out - check_in
-                                    duration = old_check_out - old_check_in
-                                    # Apply same duration to new check_in
-                                    new_check_out = new_check_in + duration
-                                else:
-                                    # No original dates: check_in at midnight on selected day, check_out at midnight next day
-                                    new_check_in = aware_utc_from_date(parse_date(clean_date))
-                                    new_check_out = new_check_in + datetime.timedelta(days=1)
-                                
-                                content_object.check_in = new_check_in
-                                content_object.check_out = new_check_out
-                                content_object.save(update_fields=['check_in', 'check_out'])
-                        else:
-                            # For note, checklist, etc. - just update the date field
-                            date_field = None
-                            if hasattr(content_object, 'date'):
-                                date_field = 'date'
-                            elif hasattr(content_object, 'start_date'):
-                                date_field = 'start_date'
-                            
-                            if date_field:
-                                setattr(content_object, date_field, clean_date)
-                                content_object.save(update_fields=[date_field])
-
-        # Ensure order is unique for this collection+group combination (day or global)
         collection_id = data.get('collection')
+        collection = None
+        if collection_id:
+            try:
+                collection = Collection.objects.get(id=collection_id)
+            except (Collection.DoesNotExist, ValueError):
+                return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
+            except Exception:
+                return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if collection is not None and day_plan.is_day_based(collection):
+            return self._create_day_placement(request, collection, data, content_object, content_type_val)
+
+        return self._create_dated_row(request, data, collection, is_global)
+
+    @transaction.atomic
+    def _create_day_placement(self, request, collection, data, content_object, content_type_val):
+        if not _is_member(request.user, collection):
+            raise PermissionDenied('You do not have permission to modify this collection.')
+        if content_object is None:
+            content_type = ContentType.objects.filter(pk=data.get('content_type')).first()
+            if content_type is None:
+                return Response({'error': 'content_type is required'}, status=status.HTTP_400_BAD_REQUEST)
+            content_type_val = content_type.model
+            content_object, _ = self._resolve_content(request, content_type_val, data.get('object_id'))
+            if content_object is None:
+                return Response({'error': f"{content_type_val} not found"}, status=status.HTTP_404_NOT_FOUND)
+        if content_type_val == 'visit':
+            content_object = content_object.location
+            content_type_val = 'location'
+        content_type = ContentType.objects.get_for_model(type(content_object))
+
+        day = None
+        day_index = data.get('day_index')
+        if day_index in (None, '') and data.get('date') and not data.get('is_global'):
+            target = _parse_day_date(data.get('date'))
+            day = CollectionItineraryDay.objects.filter(collection=collection, index__isnull=False, date=target).first()
+            if day is None:
+                return Response({'error': 'That date is not a day of this trip.'}, status=status.HTTP_400_BAD_REQUEST)
+        elif day_index not in (None, ''):
+            day = day_plan.get_day_by_index(collection, day_index)
+
+        order = data.get('order')
+        item, created = day_plan.place_object(
+            collection,
+            content_type,
+            content_object.id,
+            day=day,
+            is_global=bool(data.get('is_global')),
+            order=int(order) if order not in (None, '') else None,
+            span_end_index=data.get('span_end_index') or None,
+            is_optional=_parse_bool(data.get('is_optional'), False),
+            start_time=_parse_clock(data.get('start_time')),
+            end_time=_parse_clock(data.get('end_time')),
+            timezone_name=data.get('timezone') or None,
+        )
+        item = CollectionItineraryItem.objects.select_related('day', 'content_type').get(pk=item.pk)
+        context = self.get_serializer_context()
+        response_data = dict(self.get_serializer(item).data)
+        content_object.refresh_from_db()
+        updated = _serialize_updated_object(content_object, context)
+        if updated is not None:
+            response_data['updated_object'] = updated
+        return Response(response_data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    def _create_dated_row(self, request, data, collection, is_global):
         item_date = data.get('date')
         item_order = data.get('order', 0)
-        
-        # Basic XOR validation between date and is_global
+
         if is_global and item_date:
             return Response({'error': 'Global itinerary items must not include a date.'}, status=status.HTTP_400_BAD_REQUEST)
         if (not is_global) and not item_date:
             return Response({'error': 'Dated itinerary items must include a date.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate that the itinerary date (if provided) falls within the
-        # collection's start_date/end_date range (if those bounds are set).
-        if collection_id and item_date and not is_global:
-            # Try parse date or datetime-like values
-            parsed_date = None
-            try:
-                parsed_date = parse_date(str(item_date))
-            except Exception:
-                parsed_date = None
+
+        # The itinerary date must fall inside the collection's date range.
+        if collection is not None and item_date and not is_global:
+            parsed_date = parse_date(str(item_date))
             if parsed_date is None:
-                try:
-                    dt = parse_datetime(str(item_date))
-                    if dt:
-                        parsed_date = dt.date()
-                except Exception:
-                    parsed_date = None
-
+                dt = parse_datetime(str(item_date))
+                parsed_date = dt.date() if dt else None
             if parsed_date is not None:
-                try:
-                    collection_obj = Collection.objects.get(id=collection_id)
-                except Collection.DoesNotExist:
-                    return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
-
-                if collection_obj.start_date and parsed_date < collection_obj.start_date:
+                if collection.start_date and parsed_date < collection.start_date:
                     return Response({'error': 'Itinerary item date is before the collection start_date'}, status=status.HTTP_400_BAD_REQUEST)
-                if collection_obj.end_date and parsed_date > collection_obj.end_date:
+                if collection.end_date and parsed_date > collection.end_date:
                     return Response({'error': 'Itinerary item date is after the collection end_date'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if collection_id:
+        if collection is not None:
             if is_global:
-                # Max order within global group
                 existing_max = CollectionItineraryItem.objects.filter(
-                    collection_id=collection_id,
-                    is_global=True
+                    collection=collection, is_global=True
                 ).aggregate(max_order=models.Max('order'))['max_order']
                 if existing_max is None:
                     existing_max = -1
-                if item_order is None or item_order <= existing_max:
+                if item_order is None or int(item_order) <= existing_max:
                     data['order'] = existing_max + 1
             elif item_date:
-                # Find the maximum order for this collection+date
                 existing_max = CollectionItineraryItem.objects.filter(
-                    collection_id=collection_id,
-                    date=item_date,
-                    is_global=False
+                    collection=collection, date=item_date, is_global=False, day__isnull=True
                 ).aggregate(max_order=models.Max('order'))['max_order']
-                
-                # Check if the requested order conflicts with existing items
-                if existing_max is not None and item_order <= existing_max:
-                    # Assign next available order
+                if existing_max is not None and int(item_order or 0) <= existing_max:
                     data['order'] = existing_max + 1
-        
-        # Proceed with normal serializer flow using modified data
+
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        
-        # If we updated the item's date, include the updated object in response for frontend sync
-        response_data = serializer.data
-        if update_item_date and content_type_val and object_id:
-            if content_type_val == 'transportation':
-                try:
-                    t = Transportation.objects.get(id=object_id)
-                    from adventures.serializers import TransportationSerializer
-                    response_data['updated_object'] = TransportationSerializer(t).data
-                except Transportation.DoesNotExist:
-                    pass
-            elif content_type_val == 'lodging':
-                try:
-                    l = Lodging.objects.get(id=object_id)
-                    from adventures.serializers import LodgingSerializer
-                    response_data['updated_object'] = LodgingSerializer(l).data
-                except Lodging.DoesNotExist:
-                    pass
-        
+        with transaction.atomic():
+            self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
-    
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    PLACEMENT_FIELDS = ('is_optional', 'start_time', 'end_time', 'timezone')
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if not day_plan.is_day_based(instance.collection):
+            return super().update(request, *args, **kwargs)
+
+        data = request.data
+        moving = any(key in data for key in ('day_index', 'is_global', 'order', 'span_end_index'))
+        if moving:
+            is_global = _parse_bool(data.get('is_global'), instance.is_global if 'is_global' not in data else False)
+            if 'day_index' in data:
+                day = day_plan.get_day_by_index(instance.collection, data['day_index']) if data['day_index'] not in (None, '') else None
+            else:
+                day = instance.day if not is_global else None
+            if is_global:
+                day = None
+            order = data.get('order')
+            day_plan.move_placement(
+                instance.collection,
+                instance,
+                day=day,
+                is_global=is_global,
+                order=int(order) if order not in (None, '') else None,
+                span_end_index=data.get('span_end_index') if 'span_end_index' in data else None,
+                span_given='span_end_index' in data,
+            )
+            instance.refresh_from_db()
+
+        changes = {}
+        for key in self.PLACEMENT_FIELDS:
+            if key not in data:
+                continue
+            value = data.get(key)
+            if key == 'is_optional':
+                value = _parse_bool(value)
+            elif key in ('start_time', 'end_time'):
+                value = _parse_clock(value)
+            else:
+                value = value or None
+            changes[key] = value
+        if changes:
+            serializer = self.get_serializer(instance, data=changes, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            instance.refresh_from_db()
+            if instance.day_id and ('start_time' in changes or 'end_time' in changes):
+                day_plan.write_object_dates(instance, instance.collection.start_date)
+
+        instance = CollectionItineraryItem.objects.select_related('day', 'content_type').get(pk=instance.pk)
+        response_data = dict(self.get_serializer(instance).data)
+        if instance.item is not None:
+            updated = _serialize_updated_object(type(instance.item).objects.get(pk=instance.object_id), self.get_serializer_context())
+            if updated is not None:
+                response_data['updated_object'] = updated
+        return Response(response_data)
+
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
-        Override destroy to remove associated visits when deleting a location itinerary item.
-        
-        When removing a location from the itinerary, any PLANNED visits (future visits) at 
-        that location on the same date as the itinerary item should also be removed.
-        
-        If preserve_visits=true query parameter is provided, visits will NOT be deleted.
-        This is useful when moving items to global/trip context where we want to keep the visits.
+        Remove a placement. Visits are kept: placing never created them, so
+        removing never deletes them. ``confirm_delete_visits=true`` deletes the
+        visit this placement logged. ``preserve_visits`` is accepted and keeps
+        visits, as it always did.
         """
         instance = self.get_object()
-        preserve_visits = request.query_params.get('preserve_visits', 'false').lower() == 'true'
-        
-        # Check if this is a location type itinerary item
-        location_ct = ContentType.objects.get_for_model(Location)
-        if instance.content_type == location_ct and instance.object_id and not preserve_visits:
-            try:
-                location = Location.objects.get(id=instance.object_id)
-                itinerary_date = instance.date
-                
-                if itinerary_date:
-                    # Convert itinerary date to datetime for comparison
-                    if isinstance(itinerary_date, str):
-                        itinerary_date = parse_date(itinerary_date)
-                    
-                    # Find and delete visits at this location on this date
-                    # When removing from itinerary, we remove the associated visit
-                    visits_to_delete = Visit.objects.filter(
-                        location=location,
-                        start_date__date=itinerary_date
-                    )
-                    
-                    deleted_count = visits_to_delete.count()
-                    if deleted_count > 0:
-                        visits_to_delete.delete()
-                        
-            except Location.DoesNotExist:
-                # Location doesn't exist, just proceed with deleting the itinerary item
-                pass
-        
-        # Call parent destroy to delete the itinerary item
-        return super().destroy(request, *args, **kwargs)
+        confirm_delete = _parse_bool(request.query_params.get('confirm_delete_visits'), False)
+        if confirm_delete and instance.logged_visit_id:
+            visit = instance.logged_visit
+            if IsOwnerOrSharedWithFullAccess().has_object_permission(request, self, visit):
+                visit.delete()
+        collection = instance.collection
+        bucket = (instance.day_id, instance.is_global)
+        instance.delete()
+        if day_plan.is_day_based(collection):
+            day_plan._compact_bucket(collection, *bucket)
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
     @action(detail=False, methods=['post'], url_path='reorder')
     @transaction.atomic
     def reorder(self, request):
         """
         Reorder itinerary items in bulk.
-        
-        Expected payload:
-        {
-            "items": [
-                {"id": "uuid", "date": "2024-01-01", "order": 0},
-                {"id": "uuid", "date": "2024-01-01", "order": 1},
-                ...
-            ]
-        }
+
+        Date-keyed trips: ``{"items": [{"id", "date", "order", "is_global"}]}``.
+        Day-based trips: ``{"items": [{"id", "day_index", "order", "is_global", "span_end_index"?}]}``.
+        Lodging and transport dates move with their placement. A unique-order
+        conflict returns 409; refetch and retry.
         """
         items_data = request.data.get('items', [])
+        if not items_data:
+            return Response([], status=status.HTTP_200_OK)
+
+        first = CollectionItineraryItem.objects.filter(id=items_data[0].get('id')).select_related('collection').first()
+        if first is not None and day_plan.is_day_based(first.collection):
+            if not _is_member(request.user, first.collection):
+                raise PermissionDenied('You do not have permission to modify this collection.')
+            items, updated_objects = day_plan.reorder_day_plan(first.collection, items_data)
+            refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in items]).select_related('day', 'content_type')
+            by_pk = {item.pk: item for item in refreshed}
+            context = self.get_serializer_context()
+            return Response({
+                'items': self.get_serializer([by_pk[i.pk] for i in items], many=True).data,
+                'updated_objects': [_serialize_updated_object(obj, context) for obj in updated_objects],
+            }, status=status.HTTP_200_OK)
 
         # Delegate to reusable helper which handles validation, permission checks
         # and the two-phase update to avoid unique constraint races.
@@ -419,18 +420,9 @@ class ItineraryViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def auto_generate(self, request):
         """
-        Auto-generate itinerary items for a collection based on dated records.
-        
-        Only works when:
-        - Collection has zero itinerary items
-        - Collection has dated records (visits, lodging, transportation, notes, checklists)
-        
-        Expected payload:
-        {
-            "collection_id": "uuid"
-        }
-        
-        Returns: List of created itinerary items
+        Auto-generate itinerary items for a date-keyed collection from dated records.
+
+        Day-based trips are built by the conversion and do not use this.
         """
         collection_id = request.data.get('collection_id')
         
@@ -440,7 +432,6 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Get collection and check permissions
         try:
             collection = Collection.objects.get(id=collection_id)
         except Collection.DoesNotExist:
@@ -449,11 +440,15 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Permission check: user must be collection owner or in shared_with
-        if not (collection.user == request.user or collection.shared_with.filter(id=request.user.id).exists()):
+        if not _is_member(request.user, collection):
             return Response(
                 {"error": "You do not have permission to modify this collection"},
                 status=status.HTTP_403_FORBIDDEN
+            )
+        if day_plan.is_day_based(collection):
+            return Response(
+                {"error": "This trip is planned by days. Place items on days instead."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         
         try:
@@ -466,9 +461,126 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
+    # -- Day plan actions ---------------------------------------------------
+
+    def _state_response(self, collection, extra=None, status_code=status.HTTP_200_OK):
+        body = plan_state(collection, self.get_serializer_context())
+        if extra:
+            body.update(extra)
+        return Response(body, status=status_code)
+
+    @action(detail=False, methods=['post'], url_path='plan-by-days')
+    def plan_by_days(self, request):
+        """Build a day plan for a long date-keyed trip. ``day_count`` defaults to 21, max 62."""
+        collection = _member_collection(request, request.data.get('collection'))
+        raw_count = request.data.get('day_count', day_plan.DEFAULT_PLAN_DAYS)
+        try:
+            count = int(raw_count)
+        except (TypeError, ValueError):
+            raise day_plan.DayPlanError('Day count must be a whole number.')
+        with transaction.atomic():
+            day_plan.plan_by_days(collection, count)
+        return self._state_response(collection)
+
+    @action(detail=False, methods=['post'], url_path='days/insert')
+    def insert_day(self, request):
+        collection = _member_collection(request, request.data.get('collection'))
+        position = request.data.get('position')
+        day = day_plan.insert_day(
+            collection,
+            int(position) if position not in (None, '') else None,
+            request.data.get('name'),
+            request.data.get('description'),
+        )
+        return self._state_response(collection, {'day': str(day.pk)}, status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='days/duplicate')
+    def duplicate_day(self, request):
+        collection = _member_collection(request, request.data.get('collection'))
+        day = day_plan.duplicate_day(collection, request.data.get('day'))
+        return self._state_response(collection, {'day': str(day.pk)}, status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path='days/move')
+    def move_day(self, request):
+        collection = _member_collection(request, request.data.get('collection'))
+        position = request.data.get('position')
+        if position in (None, ''):
+            raise day_plan.DayPlanError('position is required.')
+        day_plan.move_day(collection, request.data.get('day'), int(position))
+        return self._state_response(collection)
+
+    @action(detail=False, methods=['post'], url_path='days/delete')
+    def delete_day(self, request):
+        collection = _member_collection(request, request.data.get('collection'))
+        day_plan.delete_day(
+            collection,
+            request.data.get('day'),
+            destination=request.data.get('destination'),
+            target_day_id=request.data.get('target_day'),
+        )
+        return self._state_response(collection)
+
+    @action(detail=False, methods=['post'], url_path='duration')
+    def duration(self, request):
+        """
+        Set the day count and, optionally, the anchor (``start_date``; null clears it).
+        ``end_date`` is derived; sending one that does not match returns 400.
+        """
+        collection = _member_collection(request, request.data.get('collection'))
+        count = request.data.get('day_count')
+        if count in (None, ''):
+            raise day_plan.DayPlanError('day_count is required.')
+        anchor = ...
+        if 'start_date' in request.data:
+            anchor = _parse_day_date(request.data.get('start_date'))
+        if 'end_date' in request.data:
+            effective_anchor = anchor if anchor is not ... else collection.start_date
+            expected = day_plan.projected_date(effective_anchor, int(count)) if effective_anchor else None
+            if _parse_day_date(request.data.get('end_date')) != expected:
+                raise day_plan.DayPlanError(
+                    'end_date is derived from the start date and the day count. Send day_count instead.'
+                )
+        day_plan.set_duration(
+            collection,
+            count,
+            anchor=anchor,
+            destination=request.data.get('destination'),
+            target_day_id=request.data.get('target_day'),
+            timezone_name=request.data.get('timezone') or None,
+        )
+        return self._state_response(collection)
+
+    @action(detail=True, methods=['post'], url_path='log-visited')
+    def log_visited(self, request, pk=None):
+        """Create one visit for this stop, or return the visit it already logged."""
+        item = self.get_object()
+        if not _is_member(request.user, item.collection):
+            raise PermissionDenied('You do not have permission to modify this collection.')
+        visit_date = _parse_day_date(request.data.get('date'))
+        visit, created = day_plan.log_visited(item, visit_date)
+        item.refresh_from_db()
+        return Response({
+            'item': self.get_serializer(item).data,
+            'visit': VisitSerializer(visit, context=self.get_serializer_context()).data,
+            'created': created,
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='log-day')
+    def log_day(self, request):
+        """Log every non-optional location stop on a day that has no logged visit."""
+        collection = _member_collection(request, request.data.get('collection'))
+        day = day_plan._get_day(collection, request.data.get('day'))
+        visit_date = _parse_day_date(request.data.get('date'))
+        logged = day_plan.log_day(collection, day, visit_date)
+        refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in logged]).select_related('day', 'content_type', 'logged_visit')
+        return Response({
+            'items': self.get_serializer(refreshed, many=True).data,
+            'visits': VisitSerializer([i.logged_visit for i in refreshed], many=True, context=self.get_serializer_context()).data,
+        }, status=status.HTTP_200_OK)
+
 
 class ItineraryDayViewSet(viewsets.ModelViewSet):
-    """ViewSet for managing itinerary day metadata (names and descriptions)"""
+    """Day names and descriptions. Day-based trips add and remove days with the itinerary actions."""
     serializer_class = CollectionItineraryDaySerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
 
@@ -481,7 +593,7 @@ class ItineraryDayViewSet(viewsets.ModelViewSet):
         # Return day metadata from collections the user owns or is shared with
         return CollectionItineraryDay.objects.filter(
             Q(collection__user=user) | Q(collection__shared_with=user)
-        ).distinct().select_related('collection', 'collection__user').order_by('date')
+        ).distinct().select_related('collection', 'collection__user').order_by('index', 'date')
 
     def perform_create(self, serializer):
         """Ensure the user has permission to modify the collection"""
@@ -517,5 +629,7 @@ class ItineraryDayViewSet(viewsets.ModelViewSet):
         if not (collection.user == self.request.user or 
                 collection.shared_with.filter(id=self.request.user.id).exists()):
             raise PermissionDenied("You do not have permission to modify this collection")
+        if instance.index is not None:
+            raise ValidationError("Delete a trip day with the itinerary day actions.")
         
         instance.delete()

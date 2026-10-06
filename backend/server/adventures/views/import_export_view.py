@@ -23,16 +23,19 @@ from users.services.account_deletion import clear_user_adventure_data
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
     ContentImage, ContentAttachment, Category, Lodging, Visit, Trail, Activity,
-    CollectionItineraryItem
+    CollectionItineraryItem, CollectionItineraryDay
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 from adventures.utils.geo import make_point, point_to_lat_lon
 from adventures.utils.collection_type import (
     BACKUP_SCHEMA,
     UnsupportedBackupSchema,
+    backup_has_day_plan,
     ensure_backup_schema_supported,
     resolve_imported_collection_type,
 )
+from adventures.utils.itinerary_days import convert_collection
+from adventures.utils.timezones import timezone_or_utc
 from adventures.services.images.metadata import create_content_image
 
 User = get_user_model()
@@ -334,8 +337,10 @@ class BackupViewSet(viewsets.ViewSet):
             'lodging': [],
             'visited_cities': [],
             'visited_regions': [],
+            'itinerary_days': [],
             'itinerary_items': []
         }
+        visit_id_to_export_ref = {}
 
         # Export Visited Cities
         for visited_city in user.visitedcity_set.all():
@@ -372,10 +377,19 @@ class BackupViewSet(viewsets.ViewSet):
                 'start_date': collection.start_date.isoformat() if collection.start_date else None,
                 'end_date': collection.end_date.isoformat() if collection.end_date else None,
                 'type': collection.type,
+                'timezone': collection.timezone,
                 'is_archived': collection.is_archived,
                 'link': collection.link,
                 'shared_with_user_ids': [str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True)]
             })
+            for day in collection.itinerary_days.all().order_by('index', 'date'):
+                export_data['itinerary_days'].append({
+                    'collection_export_id': idx,
+                    'index': day.index,
+                    'date': day.date.isoformat() if day.date else None,
+                    'name': day.name,
+                    'description': day.description,
+                })
         
         # Create collection name to export_id mapping
         collection_name_to_id = {col.name: idx for idx, col in enumerate(user.collection_set.all())}
@@ -412,6 +426,7 @@ class BackupViewSet(viewsets.ViewSet):
             
             # Add visits
             for visit_idx, visit in enumerate(location.visits.all()):
+                visit_id_to_export_ref[visit.id] = [idx, visit_idx]
                 visit_data = {
                     'export_id': visit_idx,  # Add unique identifier for this visit
                     'start_date': visit.start_date.isoformat() if visit.start_date else None,
@@ -681,7 +696,7 @@ class BackupViewSet(viewsets.ViewSet):
         checklist_id_to_export_id = {c.id: idx for idx, c in enumerate(user.checklist_set.all())}
         
         for collection_idx, collection in enumerate(user.collection_set.all()):
-            for itinerary_item in collection.itinerary_items.all():
+            for itinerary_item in collection.itinerary_items.select_related('day', 'content_type'):
                 content_type_str = itinerary_item.content_type.model
                 item_reference = None
                 
@@ -704,7 +719,14 @@ class BackupViewSet(viewsets.ViewSet):
                         'item_reference': item_reference,
                         'date': itinerary_item.date.isoformat() if itinerary_item.date else None,
                         'is_global': itinerary_item.is_global,
-                        'order': itinerary_item.order
+                        'order': itinerary_item.order,
+                        'day_index': itinerary_item.day.index if itinerary_item.day_id else None,
+                        'span_end_index': itinerary_item.span_end_index,
+                        'is_optional': itinerary_item.is_optional,
+                        'start_time': itinerary_item.start_time.isoformat() if itinerary_item.start_time else None,
+                        'end_time': itinerary_item.end_time.isoformat() if itinerary_item.end_time else None,
+                        'timezone': itinerary_item.timezone,
+                        'logged_visit_ref': visit_id_to_export_ref.get(itinerary_item.logged_visit_id),
                     })
         
         # Create ZIP file
@@ -1009,6 +1031,7 @@ class BackupViewSet(viewsets.ViewSet):
         pending_primary_images = []
         location_images_map = {}
         visit_images_map = {}
+        visit_map = {}
         transportation_images_map = {}
         note_images_map = {}
         lodging_images_map = {}
@@ -1034,6 +1057,7 @@ class BackupViewSet(viewsets.ViewSet):
                     col_data.get('end_date'),
                     col_data.get('type'),
                 ),
+                timezone=timezone_or_utc(col_data.get('timezone')),
                 is_archived=col_data.get('is_archived', False),
                 link=col_data.get('link')
             )
@@ -1128,6 +1152,7 @@ class BackupViewSet(viewsets.ViewSet):
                 visit_export_id = visit_data.get('export_id')
                 if visit_export_id is not None:
                     visit_images_map.setdefault((adv_data['export_id'], visit_export_id), [])
+                    visit_map[(adv_data['export_id'], visit_export_id)] = visit
                 
                 # Import activities for this visit
                 for activity_data in visit_data.get('activities', []):
@@ -1476,6 +1501,25 @@ class BackupViewSet(viewsets.ViewSet):
                 collection.primary_image = images_for_object[img_index]
                 collection.save(update_fields=['primary_image'])
         
+        has_day_plan = backup_has_day_plan(backup_data.get('backup_schema'))
+
+        # Import itinerary days (schema 3). Older files only stored placements by date.
+        day_map = {}
+        if has_day_plan:
+            for day_data in backup_data.get('itinerary_days', []):
+                collection = collection_map.get(day_data.get('collection_export_id'))
+                if not collection:
+                    continue
+                day = CollectionItineraryDay.objects.create(
+                    collection=collection,
+                    index=day_data.get('index'),
+                    date=day_data.get('date'),
+                    name=day_data.get('name'),
+                    description=day_data.get('description'),
+                )
+                if day.index is not None:
+                    day_map[(day_data.get('collection_export_id'), day.index)] = day
+
         # Import Itinerary Items
         # Maps already created during import of each content type
         
@@ -1508,14 +1552,37 @@ class BackupViewSet(viewsets.ViewSet):
                 content_type = ContentType.objects.get(model='checklist')
             
             if content_object and content_type:
+                is_global = bool(itinerary_data.get('is_global', False))
+                day = None
+                placement = {}
+                if has_day_plan:
+                    day = day_map.get((itinerary_data['collection_export_id'], itinerary_data.get('day_index')))
+                    logged_ref = itinerary_data.get('logged_visit_ref')
+                    placement = {
+                        'span_end_index': itinerary_data.get('span_end_index') if day else None,
+                        'is_optional': bool(itinerary_data.get('is_optional', False)),
+                        'start_time': itinerary_data.get('start_time'),
+                        'end_time': itinerary_data.get('end_time'),
+                        'timezone': itinerary_data.get('timezone'),
+                        'logged_visit': visit_map.get(tuple(logged_ref)) if logged_ref else None,
+                    }
                 CollectionItineraryItem.objects.create(
                     collection=collection,
                     content_type=content_type,
                     object_id=content_object.id,
-                    date=itinerary_data.get('date') if not itinerary_data.get('is_global') else None,
-                    is_global=bool(itinerary_data.get('is_global', False)),
-                    order=itinerary_data['order']
+                    day=day,
+                    date=itinerary_data.get('date') if not is_global else None,
+                    is_global=is_global,
+                    order=itinerary_data['order'],
+                    **placement,
                 )
                 summary['itinerary_items'] += 1
+
+        # Schema 2 and older: run the day-plan conversion once per trip.
+        if not has_day_plan:
+            for collection in collection_map.values():
+                if collection.type == 'trip':
+                    collection.refresh_from_db()
+                    convert_collection(collection)
         
         return summary

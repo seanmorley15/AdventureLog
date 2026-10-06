@@ -14,7 +14,7 @@ from djmoney.models.fields import MoneyField
 from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from adventures.utils.timezones import TIMEZONES
+from adventures.utils.timezones import TIMEZONES, validate_timezone
 from adventures.utils.sports_types import SPORT_TYPE_CHOICES
 from adventures.utils.get_is_visited import is_location_visited
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -141,7 +141,7 @@ class Visit(models.Model):
     attachments = GenericRelation('ContentAttachment', related_query_name='visit')
 
     def clean(self):
-        if self.start_date > self.end_date:
+        if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValidationError('The start date must be before or equal to the end date.')
 
     def delete(self, *args, **kwargs):
@@ -292,6 +292,7 @@ class Collection(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     type = models.CharField(max_length=10, choices=Type.choices, default=Type.FOLDER)
+    timezone = models.CharField(max_length=50, default='UTC', validators=[validate_timezone])
     updated_at = models.DateTimeField(auto_now=True)
     is_archived = models.BooleanField(default=False)
     shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
@@ -306,7 +307,8 @@ class Collection(models.Model):
 
     # if connected locations are private and collection is public, raise an error
     def clean(self):
-        if self.type == self.Type.TRIP and (not self.start_date or not self.end_date):
+        # An unanchored day-based trip has neither date; any other trip needs both.
+        if self.type == self.Type.TRIP and bool(self.start_date) != bool(self.end_date):
             raise ValidationError('A trip requires a start date and an end date.')
         if self.is_public and self.pk:  # Only check if the instance has a primary key
             # Updated to use the new related_name 'locations'
@@ -722,24 +724,42 @@ class Activity(models.Model):
         verbose_name_plural = "Activities"
 
 class CollectionItineraryDay(models.Model):
-    """Metadata for a specific day in a collection's itinerary"""
+    """
+    A day in a collection's itinerary.
+
+    Day-based trips identify days by a 1-based contiguous ``index``; ``date`` then
+    mirrors the projected date (anchor + index - 1) and is null without an anchor.
+    Date-keyed trips (not yet converted) store day metadata by ``date`` with no index.
+    """
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='itinerary_days')
-    date = models.DateField()
+    index = models.PositiveIntegerField(blank=True, null=True)
+    date = models.DateField(blank=True, null=True)
     name = models.CharField(max_length=200, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = [['collection', 'date']]
-        ordering = ['date']
+        ordering = ['index', 'date']
         verbose_name = "Collection Itinerary Day"
         verbose_name_plural = "Collection Itinerary Days"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['collection', 'index'],
+                name='unique_itinerary_day_index',
+                condition=Q(index__isnull=False),
+            ),
+            models.UniqueConstraint(
+                fields=['collection', 'date'],
+                name='unique_itinerary_day_date_keyed',
+                condition=Q(index__isnull=True) & Q(date__isnull=False),
+            ),
+        ]
     
     def __str__(self):
-        return f"{
-            self.collection.name} - {self.date} - {self.name or 'Unnamed Day'}"
+        label = f"Day {self.index}" if self.index else str(self.date)
+        return f"{self.collection.name} - {label} - {self.name or 'Unnamed Day'}"
 
 
 class CollectionItineraryItem(models.Model):
@@ -756,22 +776,59 @@ class CollectionItineraryItem(models.Model):
     object_id = models.UUIDField()
     item = GenericForeignKey("content_type", "object_id")
 
-    # Placement (planning concern, not content concern)
-    # Either a specific date or marked as trip-wide (global). Exactly one of these applies.
+    # Placement (planning concern, not content concern).
+    # Day-based trips: a row sits on a day (``day`` set), in Ideas (no day, not
+    # global), or trip-wide (``is_global``). ``date`` mirrors the day's projected
+    # date. Date-keyed trips: a row has a ``date`` or is global.
+    day = models.ForeignKey(
+        CollectionItineraryDay,
+        on_delete=models.SET_NULL,
+        related_name="items",
+        blank=True,
+        null=True,
+    )
     date = models.DateField(blank=True, null=True)
     is_global = models.BooleanField(default=False, help_text="Applies to the whole trip (no specific date)")
     order = models.PositiveIntegerField(help_text="Manual order within a day")
 
+    # Lodging and transportation can cover several days; the row lives on its
+    # start day and lists on every day through span_end_index.
+    span_end_index = models.PositiveIntegerField(blank=True, null=True)
+    is_optional = models.BooleanField(default=False)
+    start_time = models.TimeField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
+    timezone = models.CharField(max_length=50, blank=True, null=True, validators=[validate_timezone])
+    logged_visit = models.ForeignKey(
+        Visit,
+        on_delete=models.SET_NULL,
+        related_name="itinerary_placements",
+        blank=True,
+        null=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["date", "order"]
         constraints = [
-            # Ensure unique order per day for dated items
+            # Date-keyed trips: unique order per date
             models.UniqueConstraint(
                 fields=["collection", "date", "order"],
                 name="unique_order_per_collection_day",
-                condition=Q(is_global=False) & Q(date__isnull=False),
+                condition=Q(is_global=False) & Q(date__isnull=False) & Q(day__isnull=True),
+            ),
+            # Day-based trips: unique order per day
+            models.UniqueConstraint(
+                fields=["collection", "day", "order"],
+                name="unique_order_per_itinerary_day",
+                condition=Q(day__isnull=False),
+            ),
+            # Ideas: unique order among unplaced rows
+            models.UniqueConstraint(
+                fields=["collection", "order"],
+                name="unique_order_per_collection_ideas",
+                condition=Q(day__isnull=True) & Q(is_global=False) & Q(date__isnull=True),
             ),
             # Ensure unique order within the global group for a collection
             models.UniqueConstraint(
@@ -782,20 +839,27 @@ class CollectionItineraryItem(models.Model):
         ]
 
     def __str__(self):
-        scope = "GLOBAL" if self.is_global else str(self.date)
+        if self.is_global:
+            scope = "GLOBAL"
+        elif self.day_id:
+            scope = f"Day {self.day.index}"
+        elif self.date:
+            scope = str(self.date)
+        else:
+            scope = "IDEAS"
         return f"{self.collection.name} - {self.content_type.model} - {scope} ({self.order})"
 
     def clean(self):
-        # Enforce XOR between date and is_global
-        if self.is_global and self.date is not None:
+        if self.is_global and (self.date is not None or self.day_id is not None):
             raise ValidationError({
                 "is_global": "Global items must not have a date.",
                 "date": "Provide either a date or set is_global, not both.",
             })
-        if (not self.is_global) and self.date is None:
-            raise ValidationError({
-                "date": "Dated items must include a date. To create a trip-wide item, set is_global=true.",
-            })
+        if self.span_end_index is not None:
+            if self.day_id is None:
+                raise ValidationError({"span_end_index": "Only placements on a day can span days."})
+            if self.span_end_index < self.day.index:
+                raise ValidationError({"span_end_index": "A span cannot end before it starts."})
     
     @property
     def start_datetime(self):

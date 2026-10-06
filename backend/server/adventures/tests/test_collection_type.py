@@ -136,7 +136,8 @@ class CollectionTypeApiTests(APITestCase):
         stored_folder = Collection.objects.get(id=folder.json()['id'])
         self.assertEqual(stored_trip.type, 'trip')
         self.assertEqual(stored_folder.type, 'folder')
-        self.assertEqual(stored_trip.itinerary_days.count(), 0)
+        # A trip of 21 days or fewer is built as days; a folder never is.
+        self.assertEqual(stored_trip.itinerary_days.filter(index__isnull=False).count(), 3)
         self.assertEqual(stored_folder.itinerary_days.count(), 0)
 
     def test_trip_requires_both_dates(self):

@@ -21,6 +21,8 @@ from adventures.permissions import CollectionShared
 from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
+from adventures.utils import itinerary_days as day_plan
+from adventures.utils.timezones import timezone_or_utc
 from adventures.utils.geo import make_point, point_to_lat_lon
 from adventures.utils.collection_type import (
     BACKUP_SCHEMA,
@@ -319,7 +321,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         data = serializer.data
 
         # Include itinerary items inline with collection details
-        itinerary_items = CollectionItineraryItem.objects.filter(collection=collection)
+        itinerary_items = CollectionItineraryItem.objects.filter(collection=collection).select_related('day', 'content_type')
         itinerary_serializer = CollectionItineraryItemSerializer(itinerary_items, many=True)
         data['itinerary'] = itinerary_serializer.data
         
@@ -625,6 +627,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 'start_date': _iso(collection.start_date),
                 'end_date': _iso(collection.end_date),
                 'type': collection.type,
+                'timezone': collection.timezone,
+                'day_count': day_plan.day_count(collection) or None,
                 'link': collection.link,
             },
             'locations': [],
@@ -863,6 +867,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 start_date=_parse_date(collection_meta.get('start_date')),
                 end_date=_parse_date(collection_meta.get('end_date')),
                 type=imported_type,
+                timezone=timezone_or_utc(collection_meta.get('timezone')),
                 link=collection_meta.get('link'),
             )
 
@@ -1046,6 +1051,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     location=lodg_data.get('location'),
                     is_public=bool(lodg_data.get('is_public', False)),
                 )
+
+            # This export carries no itinerary rows; rebuild the day plan from the records' dates.
+            if new_collection.type == 'trip':
+                imported_day_count = collection_meta.get('day_count')
+                if isinstance(imported_day_count, int) and 1 <= imported_day_count <= day_plan.MAX_PLAN_DAYS:
+                    day_plan.build_days(new_collection, imported_day_count)
+                else:
+                    day_plan.convert_collection(new_collection)
 
             serializer = self.get_serializer(new_collection)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1252,10 +1265,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
                             is_checked=checklist_item.is_checked,
                         )
 
-                # Copy itinerary day metadata
+                # Copy itinerary days and placements; logged visits stay with the original.
+                day_map = {}
                 for day in CollectionItineraryDay.objects.filter(collection=original):
-                    CollectionItineraryDay.objects.create(
+                    day_map[day.id] = CollectionItineraryDay.objects.create(
                         collection=new_collection,
+                        index=day.index,
                         date=day.date,
                         name=day.name,
                         description=day.description,
@@ -1267,9 +1282,15 @@ class CollectionViewSet(viewsets.ModelViewSet):
                         collection=new_collection,
                         content_type=item.content_type,
                         object_id=object_id_map.get(item.object_id, item.object_id),
+                        day=day_map.get(item.day_id),
                         date=item.date,
                         is_global=item.is_global,
                         order=item.order,
+                        span_end_index=item.span_end_index,
+                        is_optional=item.is_optional,
+                        start_time=item.start_time,
+                        end_time=item.end_time,
+                        timezone=item.timezone,
                     )
 
             serializer = self.get_serializer(new_collection)
@@ -1288,9 +1309,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
     
     def _cleanup_out_of_range_itinerary_items(self, collection):
-        """Delete itinerary items and day metadata outside the collection's date range."""
+        """Delete itinerary items and day metadata outside a date-keyed collection's range."""
         if not collection.start_date or not collection.end_date:
             # If no date range is set, don't delete anything
+            return
+        if day_plan.is_day_based(collection):
+            # Day-based trips are keyed by index; their dates are only projections.
             return
         
         # Delete itinerary items outside the date range

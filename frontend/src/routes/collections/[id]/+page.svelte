@@ -22,6 +22,9 @@
 	import { normalizeContentImage } from '$lib/images';
 	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
 	import CollectionItineraryPlanner from '$lib/components/collections/CollectionItineraryPlanner.svelte';
+	import TripDayPlanner from '$lib/components/collections/TripDayPlanner.svelte';
+	import PlanByDaysPrompt from '$lib/components/collections/PlanByDaysPrompt.svelte';
+	import { isDayBased } from '$lib/dayPlan';
 	import CollectionRecommendationView from '$lib/components/CollectionRecommendationView.svelte';
 	import CollectionMap from '$lib/components/collections/CollectionMap.svelte';
 	import CollectionStats from '$lib/components/collections/CollectionStats.svelte';
@@ -1092,11 +1095,18 @@
 
 				<!-- Itinerary View -->
 				{#if currentView === 'itinerary'}
-					<CollectionItineraryPlanner
-						bind:collection
-						user={data.user}
-						canModify={canModifyCollection}
-					/>
+					{#if isDayBased(collection)}
+						<TripDayPlanner bind:collection user={data.user} canModify={canModifyCollection} />
+					{:else}
+						{#if canModifyCollection && collection.type === 'trip' && collection.start_date && collection.end_date}
+							<PlanByDaysPrompt {collection} onConverted={(updated) => (collection = updated)} />
+						{/if}
+						<CollectionItineraryPlanner
+							bind:collection
+							user={data.user}
+							canModify={canModifyCollection}
+						/>
+					{/if}
 				{/if}
 
 				<!-- Stats View -->

@@ -462,3 +462,16 @@ TIMEZONES = [
   "Pacific/Wake",
   "Pacific/Wallis"
 ]
+
+_VALID_TIMEZONES = frozenset(TIMEZONES) | {"UTC"}
+
+
+def timezone_or_utc(value):
+    return value if value in _VALID_TIMEZONES else "UTC"
+
+
+def validate_timezone(value):
+    from django.core.exceptions import ValidationError
+
+    if value and value not in _VALID_TIMEZONES:
+        raise ValidationError(f"Unknown timezone: {value}")

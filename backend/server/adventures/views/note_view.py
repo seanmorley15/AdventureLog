@@ -83,7 +83,8 @@ class NoteViewSet(viewsets.ModelViewSet):
             old_itinerary_items = CollectionItineraryItem.objects.filter(
                 content_type=note_ct,
                 object_id=str(instance.id),
-                date=old_date
+                date=old_date,
+                day__isnull=True,
             )
             old_itinerary_items.delete()
         

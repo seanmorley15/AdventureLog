@@ -10,7 +10,8 @@ from rest_framework.response import Response
 
 from django.contrib.contenttypes.models import ContentType
 
-from adventures.models import Collection, CollectionItineraryItem, Visit
+from adventures.models import Collection, CollectionItineraryDay, CollectionItineraryItem
+from adventures.utils import itinerary_days as day_plan
 from adventures.utils.datetime_utils import aware_utc_from_date
 
 
@@ -230,38 +231,11 @@ def validate_itinerary_date(collection, date_value):
 
 
 def apply_quick_add_itinerary_date(content_object, date_value):
+    """Date-keyed trips: give undated lodging that day. Locations never get a visit."""
     if not content_object or not date_value:
         return
 
-    model_name = content_object._meta.model_name
-
-    if model_name == "location":
-        start_dt = aware_utc_from_date(date_value)
-        end_dt = aware_utc_from_date(date_value)
-
-        exact_match = Visit.objects.filter(
-            location=content_object, start_date=start_dt, end_date=end_dt
-        ).first()
-        if exact_match:
-            return
-
-        overlap_q = models.Q(start_date__lte=end_dt) & models.Q(end_date__gte=start_dt)
-        existing = Visit.objects.filter(location=content_object).filter(overlap_q).first()
-        if existing:
-            existing.start_date = start_dt
-            existing.end_date = end_dt
-            existing.save(update_fields=["start_date", "end_date"])
-            return
-
-        Visit.objects.create(
-            location=content_object,
-            start_date=start_dt,
-            end_date=end_dt,
-            notes="Created from quick add",
-        )
-        return
-
-    if model_name == "lodging":
+    if content_object._meta.model_name == "lodging":
         if content_object.check_in and content_object.check_out:
             return
 
@@ -281,6 +255,24 @@ def create_quick_add_itinerary_item(collection, content_object, date_value):
         return existing_error
 
     content_type = ContentType.objects.get_for_model(content_object.__class__)
+
+    if day_plan.is_day_based(collection):
+        day = CollectionItineraryDay.objects.filter(
+            collection=collection, index__isnull=False, date=date_value
+        ).first()
+        if day is None:
+            return Response(
+                {"error": "That date is not a day of this trip."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        existing_item = CollectionItineraryItem.objects.filter(
+            collection=collection, content_type=content_type, object_id=content_object.id, day=day
+        ).first()
+        if existing_item:
+            return existing_item
+        item, _ = day_plan.place_object(collection, content_type, content_object.id, day=day)
+        return item
+
     existing_item = CollectionItineraryItem.objects.filter(
         collection=collection,
         content_type=content_type,
@@ -293,10 +285,11 @@ def create_quick_add_itinerary_item(collection, content_object, date_value):
 
     max_order = (
         CollectionItineraryItem.objects.filter(
-            collection=collection, date=date_value, is_global=False
+            collection=collection, date=date_value, is_global=False, day__isnull=True
         ).aggregate(max_order=models.Max("order"))["max_order"]
-        or -1
     )
+    if max_order is None:
+        max_order = -1
 
     apply_quick_add_itinerary_date(content_object, date_value)
 

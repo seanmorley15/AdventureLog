@@ -4,5 +4,37 @@ set -e
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root/frontend"
 
+# Git GUIs run hooks without an interactive shell, so nvm is not on PATH.
+if ! command -v pnpm >/dev/null 2>&1; then
+	nvm_dir="${NVM_DIR:-$HOME/.nvm}"
+	node_bin=""
+
+	if [ -f .nvmrc ]; then
+		version=$(tr -d '[:space:]' < .nvmrc)
+		case "$version" in
+		v*)
+			node_bin="$nvm_dir/versions/node/$version/bin"
+			;;
+		"") ;;
+		*)
+			node_bin=$(
+				ls -d "$nvm_dir/versions/node/v${version}"* 2>/dev/null | sort -V | tail -n 1 || true
+			)
+			node_bin="${node_bin:+$node_bin/bin}"
+			;;
+		esac
+	fi
+
+	if [ -n "$node_bin" ] && [ -x "$node_bin/pnpm" ]; then
+		PATH="$node_bin:$PATH"
+		export PATH
+	fi
+fi
+
+if ! command -v pnpm >/dev/null 2>&1; then
+	echo "pre-commit: pnpm was not found. Install Node and enable pnpm (corepack enable)." >&2
+	exit 1
+fi
+
 pnpm run format --write
 git add -u .

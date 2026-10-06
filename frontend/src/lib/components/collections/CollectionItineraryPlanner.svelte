@@ -1393,13 +1393,7 @@
 					content_type: objectType,
 					object_id: objectId,
 					date: dateISO,
-					order,
-					update_item_date: updateItemDate,
-					// Pass source visit ID so backend can update the existing visit
-					source_visit_id:
-						objectType === 'location' && updateItemDate && isValidUUID(dayPickSourceVisit?.id)
-							? dayPickSourceVisit!.id
-							: undefined
+					order
 				})
 			});
 
@@ -1411,116 +1405,6 @@
 			const created = await res.json();
 			collection.itinerary = collection.itinerary.map((it) => (it.id === tempId ? created : it));
 			pendingAddDate = null;
-
-			// If we updated the item's date, sync the updated object from server response
-			if (updateItemDate && created.updated_object) {
-				if (objectType === 'transportation') {
-					if (collection.transportations) {
-						collection.transportations = collection.transportations.map((t) =>
-							t.id === objectId ? { ...t, ...created.updated_object } : t
-						);
-					}
-				} else if (objectType === 'lodging') {
-					if (collection.lodging) {
-						collection.lodging = collection.lodging.map((l) =>
-							l.id === objectId ? { ...l, ...created.updated_object } : l
-						);
-					}
-				}
-			} else if (updateItemDate) {
-				// Fallback: if server didn't return updated_object, do manual update for other types
-				const isoDate = `${dateISO}T00:00:00`;
-
-				if (objectType === 'location') {
-					// Shift the existing visit dates locally to match the new itinerary date
-					if (collection.locations) {
-						collection.locations = collection.locations.map((loc) => {
-							if (loc.id !== objectId) return loc;
-
-							const visits = loc.visits || [];
-							// Prefer matching by visit id (source_visit) then by old date
-							const sourceId = dayPickSourceVisit?.id;
-							const oldDate = dayPickSourceVisit?.start_date
-								? dayPickSourceVisit.start_date.split('T')[0]
-								: null;
-							let idx = sourceId ? visits.findIndex((v) => v.id === sourceId) : -1;
-							if (idx === -1 && oldDate) {
-								idx = visits.findIndex((v) => v.start_date?.startsWith(oldDate));
-							}
-
-							if (idx === -1) return loc;
-
-							const v = visits[idx];
-							const visitAllDay = isVisitAllDay(v.start_date, v.end_date);
-
-							if (visitAllDay) {
-								const startDateOnly = v.start_date.split('T')[0];
-								const endDateOnly = (v.end_date || v.start_date).split('T')[0];
-								const daySpan = DateTime.fromISO(endDateOnly).diff(
-									DateTime.fromISO(startDateOnly),
-									'days'
-								).days;
-								const newEndDate = DateTime.fromISO(dateISO).plus({ days: daySpan }).toISODate();
-								const newStart = `${dateISO}T00:00:00Z`;
-								const newEnd = `${newEndDate}T00:00:00Z`;
-								const nextVisits = [...visits];
-								nextVisits[idx] = { ...v, start_date: newStart, end_date: newEnd };
-								return { ...loc, visits: nextVisits };
-							}
-
-							const startDT = v.start_date ? DateTime.fromISO(v.start_date) : null;
-							const endDT = v.end_date ? DateTime.fromISO(v.end_date) : null;
-							const baseStart = DateTime.fromISO(dateISO);
-							const newStart = startDT
-								? baseStart
-										.set({
-											second: startDT.second,
-											minute: startDT.minute,
-											hour: startDT.hour,
-											millisecond: startDT.millisecond
-										})
-										.toISO()
-								: `${dateISO}T00:00:00Z`;
-							const newEnd = endDT
-								? DateTime.fromISO(dateISO)
-										.set({
-											second: endDT.second,
-											minute: endDT.minute,
-											hour: endDT.hour,
-											millisecond: endDT.millisecond
-										})
-										.toISO()
-								: `${dateISO}T00:00:00Z`;
-
-							const nextVisits = [...visits];
-							nextVisits[idx] = { ...v, start_date: newStart, end_date: newEnd };
-							return { ...loc, visits: nextVisits };
-						});
-					}
-				} else if (objectType === 'lodging') {
-					if (collection.lodging) {
-						// Set check_in to selected day, check_out to next day
-						const checkOutDate = DateTime.fromISO(dateISO).plus({ days: 1 }).toISODate();
-						collection.lodging = collection.lodging.map((l) =>
-							l.id === objectId
-								? { ...l, check_in: `${dateISO}T00:00:00`, check_out: `${checkOutDate}T00:00:00` }
-								: l
-						);
-					}
-				} else if (objectType === 'note') {
-					if (collection.notes) {
-						collection.notes = collection.notes.map((n) =>
-							n.id === objectId ? { ...n, date: isoDate } : n
-						);
-					}
-				} else if (objectType === 'checklist') {
-					if (collection.checklists) {
-						collection.checklists = collection.checklists.map((c) =>
-							c.id === objectId ? { ...c, date: isoDate } : c
-						);
-					}
-				}
-			}
 
 			days = groupItemsByDay(collection);
 		} catch (err) {

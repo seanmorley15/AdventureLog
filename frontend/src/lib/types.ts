@@ -191,6 +191,8 @@ export type Collection = {
 	start_date: string | null;
 	end_date: string | null;
 	type: 'folder' | 'trip';
+	timezone?: string;
+	day_count?: number | null; // Set only for day-based trips
 	transportations?: Transportation[];
 	notes?: Note[];
 	lodging?: Lodging[];
@@ -216,6 +218,8 @@ export type SlimCollection = {
 	start_date: string | null;
 	end_date: string | null;
 	type: 'folder' | 'trip';
+	timezone?: string;
+	day_count?: number | null;
 	is_archived: boolean;
 	link: string | null;
 	created_at: string;
@@ -707,7 +711,8 @@ export type MapSearchMode = 'my' | 'places' | 'nearby';
 export type CollectionItineraryDay = {
 	id: string;
 	collection: string; // UUID of the collection
-	date: string; // ISO 8601 date string (YYYY-MM-DD)
+	index?: number | null; // 1-based position in a day-based trip
+	date: string | null; // ISO 8601 date string (YYYY-MM-DD); null for unanchored day-based trips
 	name: string | null; // Optional custom name for the day
 	description: string | null; // Optional description for the day
 	created_at: string; // ISO 8601 date string
@@ -729,9 +734,33 @@ export type CollectionItineraryItem = {
 	date: string | null; // ISO 8601 date string
 	is_global?: boolean; // Trip-wide item (no specific date)
 	order: number; // Manual order within a day
+	day?: string | null; // UUID of the itinerary day (day-based trips)
+	day_index?: number | null;
+	span_end_index?: number | null; // Last day covered by a spanning placement
+	is_optional?: boolean;
+	start_time?: string | null; // HH:MM:SS
+	end_time?: string | null;
+	timezone?: string | null;
+	logged_visit?: string | null; // UUID of the visit created by Log visit
 	created_at: string; // ISO 8601 date string
+	updated_at?: string;
 	start_datetime: string | null; // Computed property - ISO 8601 date string
 	end_datetime: string | null; // Computed property - ISO 8601 date string
+};
+
+export type DayPlanState = {
+	collection: {
+		id: string;
+		start_date: string | null;
+		end_date: string | null;
+		timezone: string;
+		day_count: number | null;
+		updated_at: string;
+	};
+	itinerary: CollectionItineraryItem[];
+	itinerary_days: CollectionItineraryDay[];
+	lodging: Lodging[];
+	transportations: Transportation[];
 };
 
 export type ActivityRecord = {

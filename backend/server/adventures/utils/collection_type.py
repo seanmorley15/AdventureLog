@@ -1,12 +1,15 @@
-"""Collection type (folder or trip) and backup schema 2.
+"""Collection type (folder or trip) and backup schema versions.
 
-Phase 1 only. Later phases bump BACKUP_SCHEMA and run their own steps
-after this one. This step does not create days or move itinerary rows.
+Schema 2 added ``type``. Schema 3 added the day plan: timezone, day indexes,
+placements, spans, optional flags, and local times. Import of an older schema
+runs each later step in order; see ``backup_needs_day_conversion``.
 """
 
 from datetime import date
 
-BACKUP_SCHEMA = 2
+TYPE_SCHEMA = 2
+DAY_PLAN_SCHEMA = 3
+BACKUP_SCHEMA = DAY_PLAN_SCHEMA
 
 FOLDER = 'folder'
 TRIP = 'trip'
@@ -53,16 +56,22 @@ def ensure_backup_schema_supported(value):
 def resolve_imported_collection_type(backup_schema, start_date, end_date, type_value):
     """Run import migrations through the current schema.
 
-    A file with no schema, or an older schema, sets type from its dates.
-    Schema 2 keeps an explicit folder or trip. A newer schema is rejected
+    A file with no schema, or schema 1, sets type from its dates. Schema 2
+    and later keep an explicit folder or trip. A newer schema is rejected
     and is not imported with unknown keys dropped.
     """
     schema = ensure_backup_schema_supported(backup_schema)
-    if schema is None or schema < BACKUP_SCHEMA:
+    if schema is None or schema < TYPE_SCHEMA:
         return assign_collection_type_from_dates(start_date, end_date)
     if type_value in COLLECTION_TYPES:
         return type_value
     return assign_collection_type_from_dates(start_date, end_date)
+
+
+def backup_has_day_plan(backup_schema):
+    """True when the file stores days and placements (schema 3 or later)."""
+    schema = parse_backup_schema(backup_schema)
+    return schema is not None and schema >= DAY_PLAN_SCHEMA
 
 
 def collection_lifecycle_status(collection, today=None):
