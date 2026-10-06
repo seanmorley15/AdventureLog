@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
-from django.db.models import Q, Max, Prefetch, Exists, OuterRef
+from django.db.models import Q, Max, Prefetch, Exists, OuterRef, F
+from django.contrib.gis.db.models.functions import Distance
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.conf import settings
@@ -148,12 +149,9 @@ class LocationViewSet(viewsets.ModelViewSet):
         # Validate permissions for all collections
         self._validate_collection_permissions(collections)
 
-        # Determine what user to assign as owner
-        user_to_assign = self.request.user
-        
-        if collections:
-            # Use the current user as owner since ManyToMany allows multiple collection owners
-            user_to_assign = self.request.user
+        # A place created inside a collection belongs to the collection owner,
+        # including when a collaborator creates it. Their own map does not gain the pin.
+        user_to_assign = collections[0].user if collections else self.request.user
 
         serializer.save(user=user_to_assign)
 
@@ -634,6 +632,60 @@ class LocationViewSet(viewsets.ModelViewSet):
         locations = Location.objects.filter(user=request.user)
         serializer = MapPinSerializer(locations, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='suggest')
+    def suggest(self, request):  # nearest places, or a name search
+        """
+        A short list of the user's own places.
+
+        With ``q``, search by name (at most 24). Without it, return the places
+        nearest the collection's geometric median. Nothing else is listed.
+        """
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        query = str(request.query_params.get('q') or '').strip()
+        try:
+            limit = int(request.query_params.get('limit') or 24)
+        except (TypeError, ValueError):
+            limit = 24
+        limit = min(max(limit, 1), 24)
+
+        from adventures.utils.geo import collection_center
+
+        center = None
+        collection_id = request.query_params.get('collection')
+        if collection_id:
+            collection = Collection.objects.filter(id=collection_id).first()
+            if collection is None:
+                return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
+            is_member = (
+                collection.user_id == request.user.id
+                or collection.shared_with.filter(uuid=request.user.uuid).exists()
+            )
+            if not is_member:
+                return Response({'error': 'You do not have access to this collection.'}, status=status.HTTP_403_FORBIDDEN)
+            center = collection_center(collection)
+
+        locations = Location.objects.filter(user=request.user).select_related('category')
+        if len(query) >= 2:
+            locations = locations.filter(name__icontains=query)
+        elif center is None:
+            return Response({'results': [], 'anchored': False})
+        else:
+            locations = locations.filter(coordinates__isnull=False)
+
+        if center is not None:
+            locations = locations.annotate(distance=Distance('coordinates', center)).order_by(
+                F('distance').asc(nulls_last=True), 'name'
+            )
+        else:
+            locations = locations.order_by('name')
+
+        return Response({
+            'results': MapPinSerializer(locations[:limit], many=True).data,
+            'anchored': center is not None,
+        })
 
     # ==================== HELPER METHODS ====================
 

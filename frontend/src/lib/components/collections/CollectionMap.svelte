@@ -17,6 +17,7 @@
 	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
 	import { t } from 'svelte-i18n';
 	import type { Collection, Location, User } from '$lib/types';
+	import { dayPinColor, pinCoversDay, type PlanPin } from '$lib/dayPlan';
 	import DateInput from '$lib/components/shared/DateInput.svelte';
 
 	interface Props {
@@ -26,6 +27,16 @@
 		// Allow disabling/enabling clustering for markers
 		clusterEnabled?: boolean;
 		clusterOptions?: any;
+		/** Day-plan pins. A span is one pin, numbered by its start day. */
+		planPins?: PlanPin[];
+		selectedDay?: number | null;
+		highlightedDay?: number | null;
+		onPinSelect?: (type: string, objectId: string, dayIndex: number | null) => void;
+		/** Map fills its parent and hides the filter chrome. */
+		embedded?: boolean;
+		mapClass?: string;
+		/** Folder maps hide route and trail controls. */
+		showRoutes?: boolean;
 	}
 
 	let {
@@ -33,7 +44,14 @@
 		user = null,
 		canModify = false,
 		clusterEnabled = false,
-		clusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 }
+		clusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 },
+		planPins = [],
+		selectedDay = null,
+		highlightedDay = null,
+		onPinSelect,
+		embedded = false,
+		mapClass = 'w-full h-[600px]',
+		showRoutes = true
 	}: Props = $props();
 
 	let basemapType = $state('default');
@@ -643,6 +661,29 @@
 		return true;
 	}
 
+	function pinObjectId(props: MarkerProperties): string {
+		return props.type === 'transportation' ? props.id.split(':')[0] : props.id;
+	}
+
+	function pinsFor(props: MarkerProperties): PlanPin[] {
+		const objectId = pinObjectId(props);
+		return planPins.filter((pin) => pin.type === props.type && pin.objectId === objectId);
+	}
+
+	function displayPin(props: MarkerProperties): PlanPin | null {
+		const matches = pinsFor(props);
+		if (!matches.length) return null;
+		if (selectedDay != null) {
+			return matches.find((pin) => pinCoversDay(pin, selectedDay)) ?? null;
+		}
+		return matches.find((pin) => pin.dayIndex != null) ?? matches[0];
+	}
+
+	function pinIsHighlighted(pin: PlanPin | null): boolean {
+		if (!pin || highlightedDay == null) return false;
+		return pinCoversDay(pin, highlightedDay);
+	}
+
 	function getNavigationUrl(props: MarkerProperties): string {
 		if (props.type === 'location') {
 			return `/locations/${props.id}`;
@@ -725,19 +766,25 @@
 		)
 	);
 	let filteredFeatures = $derived(
-		allFeatures.filter((feature) =>
-			matchesFilters(feature, {
-				showLocations,
-				showLodging,
-				showTransportation,
-				showVisited,
-				showPlanned,
-				startDate: startDateFilter,
-				endDate: endDateFilter,
-				categories: selectedCategories,
-				search: searchQuery.trim()
-			})
-		)
+		allFeatures.filter((feature) => {
+			if (
+				!matchesFilters(feature, {
+					showLocations,
+					showLodging,
+					showTransportation,
+					showVisited,
+					showPlanned,
+					startDate: startDateFilter,
+					endDate: endDateFilter,
+					categories: selectedCategories,
+					search: searchQuery.trim()
+				})
+			) {
+				return false;
+			}
+			if (selectedDay == null || planPins.length === 0) return true;
+			return displayPin(feature.properties) != null;
+		})
 	);
 	// Auto-zoom when search results change
 	$effect(() => {
@@ -804,7 +851,7 @@
 </script>
 
 <!-- Add to Collection CTA (compact) -->
-{#if canModify}
+{#if canModify && !embedded}
 	<div class="card bg-base-100 shadow-xs mb-3 border border-base-200">
 		<div class="card-body py-3 px-4 gap-2">
 			<div class="flex items-center justify-between gap-3">
@@ -867,236 +914,243 @@
 {/if}
 
 <!-- Filter Header -->
-<div class="card bg-base-100 shadow-lg mb-4">
-	<div class="card-body p-3 gap-2">
-		<!-- Toggle filter visibility -->
-		<div class="flex items-center justify-between gap-3">
-			<button
-				type="button"
-				class="btn btn-sm btn-ghost gap-2 min-w-0 flex-1 justify-start px-2"
-				onclick={() => (showFilters = !showFilters)}
-			>
-				<span
-					class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary shrink-0"
+{#if !embedded}
+	<div class="card bg-base-100 shadow-lg mb-4">
+		<div class="card-body p-3 gap-2">
+			<!-- Toggle filter visibility -->
+			<div class="flex items-center justify-between gap-3">
+				<button
+					type="button"
+					class="btn btn-sm btn-ghost gap-2 min-w-0 flex-1 justify-start px-2"
+					onclick={() => (showFilters = !showFilters)}
 				>
-					<FilterIcon class="w-4 h-4" />
-				</span>
-				<span class="font-medium text-sm truncate">
-					{showFilters ? $t('adventures.hide_filters') : $t('adventures.show_filters')}
-				</span>
-				<ChevronDown
-					class="w-4 h-4 shrink-0 transition-transform ml-auto {showFilters ? 'rotate-180' : ''}"
-				/>
-			</button>
-
-			<div class="flex items-center gap-1.5 shrink-0">
-				<div class="badge badge-ghost badge-sm whitespace-nowrap">
-					{visiblePinCount}/{totalPinCount}
-				</div>
-				{#if !filtersPristine}
-					<button type="button" class="btn btn-xs btn-ghost" onclick={resetFilters}>
-						{$t('adventures.reset_filters')}
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Expanded Filter UI -->
-		{#if showFilters}
-			<div class="divider my-1"></div>
-			<div class="space-y-3">
-				<label class="input input-xs flex items-center gap-2 h-8 min-h-8">
-					<SearchIcon class="h-3.5 w-3.5 opacity-70 shrink-0" />
-					<input
-						type="text"
-						class="grow text-sm"
-						placeholder={$t('map.search_locations')}
-						bind:value={searchQuery}
+					<span
+						class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary shrink-0"
+					>
+						<FilterIcon class="w-4 h-4" />
+					</span>
+					<span class="font-medium text-sm truncate">
+						{showFilters ? $t('adventures.hide_filters') : $t('adventures.show_filters')}
+					</span>
+					<ChevronDown
+						class="w-4 h-4 shrink-0 transition-transform ml-auto {showFilters ? 'rotate-180' : ''}"
 					/>
-					{#if searchQuery}
-						<button
-							type="button"
-							class="btn btn-ghost btn-xs btn-circle h-5 w-5 min-h-5"
-							onclick={() => (searchQuery = '')}
-							aria-label={$t('adventures.clear_search')}
-						>
-							✕
+				</button>
+
+				<div class="flex items-center gap-1.5 shrink-0">
+					<div class="badge badge-ghost badge-sm whitespace-nowrap">
+						{visiblePinCount}/{totalPinCount}
+					</div>
+					{#if !filtersPristine}
+						<button type="button" class="btn btn-xs btn-ghost" onclick={resetFilters}>
+							{$t('adventures.reset_filters')}
 						</button>
 					{/if}
-				</label>
-
-				<div class="grid gap-3 lg:grid-cols-2">
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.visits')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={filterChipClass(showVisited, 'btn-success')}
-								onclick={() => (showVisited = !showVisited)}
-							>
-								✓ {$t('adventures.visited')}
-								<span class="opacity-80">({filteredVisitedCount})</span>
-							</button>
-							<button
-								type="button"
-								class={filterChipClass(showPlanned, 'btn-info')}
-								onclick={() => (showPlanned = !showPlanned)}
-							>
-								○ {$t('adventures.planned')}
-								<span class="opacity-80">({filteredPlannedCount})</span>
-							</button>
-						</div>
-					</div>
-
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.pins')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={filterChipClass(showLocations, 'btn-primary')}
-								onclick={() => (showLocations = !showLocations)}
-							>
-								📍 {$t('locations.locations')}
-								<span class="opacity-80">({locationFeatures.length})</span>
-							</button>
-							{#if lodgingFeatures.length}
-								<button
-									type="button"
-									class={filterChipClass(showLodging, 'btn-secondary')}
-									onclick={() => (showLodging = !showLodging)}
-								>
-									🏨 {$t('adventures.lodging')}
-									<span class="opacity-80">({lodgingFeatures.length})</span>
-								</button>
-							{/if}
-							{#if transportationFeatures.length}
-								<button
-									type="button"
-									class={filterChipClass(showTransportation, 'btn-accent')}
-									onclick={() => (showTransportation = !showTransportation)}
-								>
-									✈️ {$t('adventures.transportation')}
-									<span class="opacity-80">({transportationFeatures.length / 2})</span>
-								</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				{#if categoryOptions.length}
-					<div class="space-y-1.5">
-						<div class="flex items-center justify-between gap-2">
-							<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-								{$t('adventures.categories')}
-							</p>
-							{#if hasActiveCategoryFilter}
-								<button
-									type="button"
-									class="btn btn-ghost btn-xs h-6 min-h-6"
-									onclick={() => (selectedCategories = new Set())}
-								>
-									{$t('adventures.clear')}
-								</button>
-							{/if}
-						</div>
-						<div class="flex flex-wrap gap-1">
-							{#each categoryOptions as category}
-								<button
-									type="button"
-									class="badge badge-sm h-6 {selectedCategories.has(category)
-										? 'badge-primary'
-										: 'badge-ghost border border-base-300/80'} cursor-pointer"
-									onclick={() => toggleCategory(category)}
-								>
-									{category}
-								</button>
-							{/each}
-						</div>
-					</div>
-				{/if}
-
-				<div class="grid gap-3 md:grid-cols-2">
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.dates')}
-						</p>
-						<div class="flex gap-2">
-							<DateInput
-								bind:value={startDateFilter}
-								size="xs"
-								min={collectionStartDateISO}
-								max={collectionEndDateISO}
-								clearable={true}
-								placeholder={$t('adventures.start_date')}
-							/>
-							<DateInput
-								bind:value={endDateFilter}
-								size="xs"
-								min={collectionStartDateISO}
-								max={collectionEndDateISO}
-								clearable={true}
-								placeholder={$t('adventures.end_date')}
-							/>
-						</div>
-					</div>
-
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.routes_and_activities')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={filterChipClass(showLines, 'btn-neutral')}
-								onclick={() => (showLines = !showLines)}
-							>
-								🗺️ {$t('adventures.gpx_routes')}
-							</button>
-							{#if trailCount > 0}
-								<button
-									type="button"
-									class={filterChipClass(
-										showTrails,
-										'bg-[#a855f7] hover:bg-[#9333ea] border-[#a855f7] text-white'
-									)}
-									onclick={() => (showTrails = !showTrails)}
-								>
-									🥾 {$t('adventures.trails')}
-									<span class="opacity-80">({trailCount})</span>
-								</button>
-							{/if}
-							{#if imagePinCount > 0}
-								<button
-									type="button"
-									class={filterChipClass(
-										showImagePins,
-										'bg-rose-500 hover:bg-rose-600 border-rose-500 text-white'
-									)}
-									onclick={() => (showImagePins = !showImagePins)}
-								>
-									📷 {$t('map.photos')}
-									<span class="opacity-80">({imagePinCount})</span>
-								</button>
-							{/if}
-						</div>
-					</div>
 				</div>
 			</div>
-		{/if}
+
+			<!-- Expanded Filter UI -->
+			{#if showFilters}
+				<div class="divider my-1"></div>
+				<div class="space-y-3">
+					<label class="input input-xs flex items-center gap-2 h-8 min-h-8">
+						<SearchIcon class="h-3.5 w-3.5 opacity-70 shrink-0" />
+						<input
+							type="text"
+							class="grow text-sm"
+							placeholder={$t('map.search_locations')}
+							bind:value={searchQuery}
+						/>
+						{#if searchQuery}
+							<button
+								type="button"
+								class="btn btn-ghost btn-xs btn-circle h-5 w-5 min-h-5"
+								onclick={() => (searchQuery = '')}
+								aria-label={$t('adventures.clear_search')}
+							>
+								✕
+							</button>
+						{/if}
+					</label>
+
+					<div class="grid gap-3 lg:grid-cols-2">
+						<div class="space-y-1.5">
+							<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+								{$t('adventures.visits')}
+							</p>
+							<div class="flex flex-wrap gap-1.5">
+								<button
+									type="button"
+									class={filterChipClass(showVisited, 'btn-success')}
+									onclick={() => (showVisited = !showVisited)}
+								>
+									✓ {$t('adventures.visited')}
+									<span class="opacity-80">({filteredVisitedCount})</span>
+								</button>
+								<button
+									type="button"
+									class={filterChipClass(showPlanned, 'btn-info')}
+									onclick={() => (showPlanned = !showPlanned)}
+								>
+									○ {$t('adventures.planned')}
+									<span class="opacity-80">({filteredPlannedCount})</span>
+								</button>
+							</div>
+						</div>
+
+						<div class="space-y-1.5">
+							<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+								{$t('adventures.pins')}
+							</p>
+							<div class="flex flex-wrap gap-1.5">
+								<button
+									type="button"
+									class={filterChipClass(showLocations, 'btn-primary')}
+									onclick={() => (showLocations = !showLocations)}
+								>
+									📍 {$t('locations.locations')}
+									<span class="opacity-80">({locationFeatures.length})</span>
+								</button>
+								{#if lodgingFeatures.length}
+									<button
+										type="button"
+										class={filterChipClass(showLodging, 'btn-secondary')}
+										onclick={() => (showLodging = !showLodging)}
+									>
+										🏨 {$t('adventures.lodging')}
+										<span class="opacity-80">({lodgingFeatures.length})</span>
+									</button>
+								{/if}
+								{#if transportationFeatures.length}
+									<button
+										type="button"
+										class={filterChipClass(showTransportation, 'btn-accent')}
+										onclick={() => (showTransportation = !showTransportation)}
+									>
+										✈️ {$t('adventures.transportation')}
+										<span class="opacity-80">({transportationFeatures.length / 2})</span>
+									</button>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					{#if categoryOptions.length}
+						<div class="space-y-1.5">
+							<div class="flex items-center justify-between gap-2">
+								<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+									{$t('adventures.categories')}
+								</p>
+								{#if hasActiveCategoryFilter}
+									<button
+										type="button"
+										class="btn btn-ghost btn-xs h-6 min-h-6"
+										onclick={() => (selectedCategories = new Set())}
+									>
+										{$t('adventures.clear')}
+									</button>
+								{/if}
+							</div>
+							<div class="flex flex-wrap gap-1">
+								{#each categoryOptions as category}
+									<button
+										type="button"
+										class="badge badge-sm h-6 {selectedCategories.has(category)
+											? 'badge-primary'
+											: 'badge-ghost border border-base-300/80'} cursor-pointer"
+										onclick={() => toggleCategory(category)}
+									>
+										{category}
+									</button>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<div class="grid gap-3 md:grid-cols-2">
+						<div class="space-y-1.5">
+							<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+								{$t('adventures.dates')}
+							</p>
+							<div class="flex gap-2">
+								<DateInput
+									bind:value={startDateFilter}
+									size="xs"
+									min={collectionStartDateISO}
+									max={collectionEndDateISO}
+									clearable={true}
+									placeholder={$t('adventures.start_date')}
+								/>
+								<DateInput
+									bind:value={endDateFilter}
+									size="xs"
+									min={collectionStartDateISO}
+									max={collectionEndDateISO}
+									clearable={true}
+									placeholder={$t('adventures.end_date')}
+								/>
+							</div>
+						</div>
+
+						{#if showRoutes}
+							<div class="space-y-1.5">
+								<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+									{$t('adventures.routes_and_activities')}
+								</p>
+								<div class="flex flex-wrap gap-1.5">
+									<button
+										type="button"
+										class={filterChipClass(showLines, 'btn-neutral')}
+										onclick={() => (showLines = !showLines)}
+									>
+										🗺️ {$t('adventures.gpx_routes')}
+									</button>
+									{#if trailCount > 0}
+										<button
+											type="button"
+											class={filterChipClass(
+												showTrails,
+												'bg-[#a855f7] hover:bg-[#9333ea] border-[#a855f7] text-white'
+											)}
+											onclick={() => (showTrails = !showTrails)}
+										>
+											🥾 {$t('adventures.trails')}
+											<span class="opacity-80">({trailCount})</span>
+										</button>
+									{/if}
+									{#if imagePinCount > 0}
+										<button
+											type="button"
+											class={filterChipClass(
+												showImagePins,
+												'bg-rose-500 hover:bg-rose-600 border-rose-500 text-white'
+											)}
+											onclick={() => (showImagePins = !showImagePins)}
+										>
+											📷 {$t('map.photos')}
+											<span class="opacity-80">({imagePinCount})</span>
+										</button>
+									{/if}
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}
 
 <!-- Map -->
-<div class="w-full" style="min-height:600px; height:600px;">
+<div
+	class={embedded ? 'h-full w-full' : 'w-full'}
+	style={embedded ? undefined : 'min-height:600px; height:600px;'}
+>
 	<FullMap
 		geoJson={markerGeoJson}
 		center={mapCenter}
 		zoom={mapZoom}
-		mapClass="w-full h-[600px]"
+		{mapClass}
 		bind:basemapType
 		{clusterEnabled}
 		clusterOptions={resolvedClusterOptions}
@@ -1105,15 +1159,25 @@
 	>
 		{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
 			{#if markerProps && markerLngLat}
+				{@const pin = displayPin(markerProps)}
 				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
 					<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
 						<div
-							class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base group-hover:scale-110 transition-all duration-200 {getMarkerColorClass(
-								markerProps
-							)}"
+							class="map-pin-hit relative grid place-items-center w-8 h-8 rounded-full border-2 shadow-lg text-sm font-bold group-hover:scale-110 transition-all duration-200 {pin
+								? 'text-white'
+								: getMarkerColorClass(markerProps)}"
+							class:border-white={!pin?.optional && !pin?.ideas}
+							class:border-dashed={pin?.optional || pin?.ideas}
+							class:border-warning={pin?.ideas}
 							class:scale-110={isActive}
+							class:ring-4={pinIsHighlighted(pin)}
+							class:ring-primary={pinIsHighlighted(pin)}
 							class:cursor-pointer={canNavigate(markerProps)}
-							class:cursor-default={!canNavigate(markerProps)}
+							style={pin?.dayIndex
+								? `background:${dayPinColor(pin.dayIndex)}`
+								: pin?.ideas
+									? 'background:#78716c'
+									: undefined}
 							role="button"
 							tabindex="0"
 							onmouseenter={() => setActive(true)}
@@ -1122,17 +1186,40 @@
 							onblur={() => setActive(false)}
 							onclick={(e) => {
 								e.stopPropagation();
+								if (pin && onPinSelect) {
+									onPinSelect(pin.type, pin.objectId, pin.dayIndex);
+									return;
+								}
 								if (canNavigate(markerProps)) goto(getNavigationUrl(markerProps));
 							}}
 							onkeydown={(e) => {
-								if ((e.key === 'Enter' || e.key === ' ') && canNavigate(markerProps)) {
-									e.preventDefault();
-									e.stopPropagation();
-									goto(getNavigationUrl(markerProps));
+								if (e.key !== 'Enter' && e.key !== ' ') return;
+								e.preventDefault();
+								e.stopPropagation();
+								if (pin && onPinSelect) {
+									onPinSelect(pin.type, pin.objectId, pin.dayIndex);
+									return;
 								}
+								if (canNavigate(markerProps)) goto(getNavigationUrl(markerProps));
 							}}
 						>
-							{markerProps.categoryIcon || '📍'}
+							{#if pin?.dayIndex}
+								{pin.dayIndex}
+							{:else if pin?.ideas}
+								?
+							{:else}
+								{markerProps.categoryIcon || '📍'}
+							{/if}
+							{#if pin?.visited && pin.visitId}
+								<a
+									href={`/locations/${pin.objectId}#visit-${pin.visitId}`}
+									class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-success text-[10px] text-success-content"
+									aria-label={$t('itinerary.visited')}
+									onclick={(e) => e.stopPropagation()}
+								>
+									✓
+								</a>
+							{/if}
 						</div>
 
 						<!-- Marker Popup -->
@@ -1190,7 +1277,7 @@
 		{/snippet}
 
 		{#snippet overlays()}
-			{#if showLines && linesGeoJson}
+			{#if showRoutes && showLines && linesGeoJson}
 				<GeoJSON id={`collection-lines-${mapKey}`} data={linesGeoJson} generateId>
 					<LineLayer
 						id={`collection-lines-path-${mapKey}`}
@@ -1203,7 +1290,7 @@
 				</GeoJSON>
 			{/if}
 
-			{#if showTrails && trailsGeoJson}
+			{#if showRoutes && showTrails && trailsGeoJson}
 				<GeoJSON id={`collection-trails-${mapKey}`} data={trailsGeoJson} generateId>
 					<LineLayer
 						id={`collection-trails-path-${mapKey}`}
@@ -1216,7 +1303,7 @@
 				</GeoJSON>
 			{/if}
 
-			{#if transportationLinesGeoJson}
+			{#if showRoutes && transportationLinesGeoJson}
 				<GeoJSON
 					id={`collection-transport-lines-${mapKey}`}
 					data={transportationLinesGeoJson}

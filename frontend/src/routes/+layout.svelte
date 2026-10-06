@@ -88,6 +88,7 @@
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import CommandPalette from '$lib/components/search/CommandPalette.svelte';
+	import LocationDrawer from '$lib/components/locations/LocationDrawer.svelte';
 	import '../app.css';
 
 	// Create a promise that resolves when the locale is ready
@@ -102,6 +103,7 @@
 		<CommandPalette />
 	{/if}
 	<Toast />
+	<LocationDrawer />
 	{@render children?.()}
 {/await}
 

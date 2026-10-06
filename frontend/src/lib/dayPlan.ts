@@ -90,6 +90,108 @@ export function isDayBased(collection: Collection): boolean {
 	return collection.type === 'trip' && Boolean(collection.day_count);
 }
 
+/** Day planner, including a trip that only has Ideas and no days yet. */
+export function showsDayPlanner(collection: Collection): boolean {
+	if (collection.type !== 'trip') return false;
+	if (collection.day_count) return true;
+	return (collection.itinerary ?? []).some((item) => !item.day && !item.is_global && !item.date);
+}
+
+export type PlanPin = {
+	type: PlanObjectType;
+	objectId: string;
+	dayIndex: number | null;
+	spanEnd: number | null;
+	optional: boolean;
+	ideas: boolean;
+	visited: boolean;
+	visitId: string | null;
+};
+
+const PIN_TYPES = new Set<PlanObjectType>(['location', 'lodging', 'transportation']);
+
+export const DAY_PIN_COLORS = [
+	'#0ea5e9',
+	'#10b981',
+	'#f59e0b',
+	'#8b5cf6',
+	'#f43f5e',
+	'#06b6d4',
+	'#f97316',
+	'#6366f1'
+];
+
+export function dayPinColor(index: number): string {
+	return DAY_PIN_COLORS[(Math.max(index, 1) - 1) % DAY_PIN_COLORS.length];
+}
+
+export function pinCoversDay(pin: PlanPin, day: number): boolean {
+	if (pin.dayIndex == null) return false;
+	const end = pin.spanEnd ?? pin.dayIndex;
+	return pin.dayIndex <= day && day <= end;
+}
+
+/** One entry per placement that can be a pin. A span is a single entry. */
+export function planPins(collection: Collection): PlanPin[] {
+	const pins: PlanPin[] = [];
+	for (const item of collection.itinerary ?? []) {
+		const type = placementType(item);
+		if (!type || !PIN_TYPES.has(type)) continue;
+		const ideas = !item.day && !item.is_global;
+		const visitId =
+			type === 'location' ? recordedVisitId(collection, item) : (item.logged_visit ?? null);
+		pins.push({
+			type,
+			objectId: String(item.object_id),
+			dayIndex: item.day_index ?? null,
+			spanEnd: item.span_end_index ?? item.day_index ?? null,
+			optional: Boolean(item.is_optional),
+			ideas,
+			visited: Boolean(visitId),
+			visitId
+		});
+	}
+	return pins;
+}
+
+/** The dates a placement covers, from its projected start through a span. */
+export function placementRange(
+	item: CollectionItineraryItem
+): { start: string; end: string } | null {
+	const start = dateOnly(item.date);
+	if (!start || item.day_index == null) return null;
+	const extra =
+		item.span_end_index != null && item.span_end_index > item.day_index
+			? item.span_end_index - item.day_index
+			: 0;
+	return { start, end: addDays(start, extra) };
+}
+
+/**
+ * A visit already written for this stop, either by Log visit or earlier on the
+ * same dates. A visit on a different day does not count.
+ */
+export function recordedVisitId(
+	collection: Collection,
+	item: CollectionItineraryItem | null | undefined
+): string | null {
+	if (!item) return null;
+	if (item.logged_visit) return item.logged_visit;
+	const range = placementRange(item);
+	if (!range) return null;
+	const location = (collection.locations ?? []).find(
+		(entry) => String(entry.id) === String(item.object_id)
+	);
+	let match: { id: string; start: string } | null = null;
+	for (const visit of location?.visits ?? []) {
+		const start = dateOnly(visit.start_date);
+		const end = dateOnly(visit.end_date) || start;
+		if (!start || !end || start > range.end || end < range.start) continue;
+		if (!match || start < match.start) match = { id: visit.id, start };
+	}
+	return match?.id ?? null;
+}
+
 /** HH:MM from an API time (HH:MM:SS) or an empty string. */
 export function clockValue(value: string | null | undefined): string {
 	return value ? value.slice(0, 5) : '';

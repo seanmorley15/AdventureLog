@@ -4,7 +4,8 @@
 	import type { Checklist, Location, Lodging, Note, Transportation } from '$lib/types';
 	import { formatDisplayTime, type DateFormatPreference } from '$lib/dateFormat';
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
-	import { clockValue, type LogVisitResult, type PlanRow } from '$lib/dayPlan';
+	import { clockValue, recordedVisitId, type LogVisitResult, type PlanRow } from '$lib/dayPlan';
+	import type { Collection } from '$lib/types';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Bed from '~icons/mdi/bed';
 	import Car from '~icons/mdi/car';
@@ -29,6 +30,8 @@
 		/** Rendered on a later day of a span; not draggable and not loggable. */
 		continuation?: boolean;
 		draggable?: boolean;
+		readMode?: boolean;
+		collection?: Collection;
 		onLogVisit?: (row: PlanRow, date?: string) => Promise<LogVisitResult>;
 		onEditObject?: (row: PlanRow) => void;
 		onEditPlacement?: (row: PlanRow) => void;
@@ -45,6 +48,8 @@
 		hasProjectedDate,
 		continuation = false,
 		draggable = false,
+		readMode = false,
+		collection,
 		onLogVisit,
 		onEditObject,
 		onEditPlacement,
@@ -109,10 +114,15 @@
 		const parts = [start, end].filter(Boolean).map((value) => formatDisplayTime(value, dateFormat));
 		return parts.join(' – ');
 	});
-	const canLog = $derived(
-		canModify && !continuation && row.type === 'location' && Boolean(item) && !item?.logged_visit
+	const recordedVisit = $derived(
+		row.type === 'location' && collection
+			? recordedVisitId(collection, item)
+			: (item?.logged_visit ?? null)
 	);
-	const isVisited = $derived(row.type === 'location' && Boolean(item?.logged_visit));
+	const canLog = $derived(
+		canModify && !continuation && row.type === 'location' && Boolean(item) && !recordedVisit
+	);
+	const isVisited = $derived(row.type === 'location' && Boolean(recordedVisit));
 
 	async function logVisit(date?: string) {
 		if (!onLogVisit || logging) return;
@@ -144,9 +154,14 @@
 </script>
 
 <div
+	id={!continuation && row.type
+		? `plan-${row.type}-${row.objectId}-day-${item?.day_index ?? 'ideas'}`
+		: undefined}
 	class={[
-		'flex items-center gap-2 rounded-lg border px-2 py-2 sm:px-3',
-		continuation ? 'border-dashed border-base-300 bg-base-100/60' : 'border-base-300 bg-base-100',
+		'flex items-center gap-2 rounded-xl border px-3 py-2.5',
+		continuation
+			? 'border-dashed border-base-300 bg-base-100/70'
+			: 'border-base-300/80 bg-base-100 shadow-sm',
 		item?.is_optional && 'opacity-80'
 	]}
 >
@@ -235,11 +250,13 @@
 
 	<div class="flex shrink-0 items-center gap-1">
 		{#if isVisited}
-			<span class="flex items-center gap-1 text-sm font-medium text-success">
-				<CheckCircle class="h-4 w-4" />
-				<span class="hidden sm:inline">{$t('itinerary.visited')}</span>
-				<span class="sr-only sm:hidden">{$t('itinerary.visited')}</span>
-			</span>
+			<a
+				href={`/locations/${row.objectId}#visit-${recordedVisit}`}
+				class="badge badge-success gap-1 px-2 py-3 font-medium"
+			>
+				<CheckCircle class="h-3.5 w-3.5" />
+				{$t('itinerary.visited')}
+			</a>
 		{:else if canLog && askingDate}
 			<form class="join" onsubmit={confirmDate}>
 				<input
@@ -278,14 +295,14 @@
 			</button>
 		{/if}
 
-		{#if canModify && !item && onAddToPlan}
+		{#if canModify && !readMode && !item && onAddToPlan}
 			<button type="button" class="btn btn-sm btn-ghost gap-1" onclick={() => onAddToPlan?.(row)}>
 				<Plus class="h-4 w-4" />
 				<span class="hidden sm:inline">{$t('itinerary.add_to_plan')}</span>
 			</button>
 		{/if}
 
-		{#if canModify && (item || onEditObject)}
+		{#if canModify && !readMode && (item || onEditObject)}
 			<div
 				class="dropdown dropdown-end"
 				role="group"

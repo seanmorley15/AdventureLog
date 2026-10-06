@@ -311,6 +311,20 @@ class PlacementTests(DayPlanTestBase):
         self.assertIsNone(hotel.check_in)
         self.assertIsNone(hotel.check_out)
 
+    def test_an_item_already_on_a_day_cannot_also_sit_in_ideas(self):
+        museum = self.location('Museum', self.trip)
+        self.place(museum, 'location', 1)
+        refused = self.place(museum, 'location')
+        self.assertEqual(refused.status_code, 400, refused.content)
+        self.assertEqual(refused.json()['code'], 'already_planned')
+        self.assertEqual(len(self.placements(self.trip, museum)), 1)
+
+        hotel = Lodging.objects.create(user=self.user, name='Hotel', collection=self.trip)
+        self.place(hotel, 'lodging', 2)
+        refused_hotel = self.place(hotel, 'lodging')
+        self.assertEqual(refused_hotel.status_code, 400, refused_hotel.content)
+        self.assertEqual(CollectionItineraryItem.objects.get(object_id=hotel.id).day.index, 2)
+
     def test_dropping_a_flight_writes_departure(self):
         flight = Transportation.objects.create(
             user=self.user, name='Flight', type='plane', collection=self.trip,
@@ -357,6 +371,28 @@ class PlacementTests(DayPlanTestBase):
         self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
         self.client.delete(f'/api/itineraries/{item_id}/?confirm_delete_visits=true')
         self.assertEqual(Visit.objects.count(), 0)
+
+    def test_log_visit_links_a_visit_already_on_those_dates(self):
+        museum = self.location('Museum', self.trip)
+        existing = Visit.objects.create(location=museum, start_date=utc(2026, 6, 2), end_date=utc(2026, 6, 2))
+        item_id = self.place(museum, 'location', 2).json()['id']
+
+        response = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(Visit.objects.count(), 1)
+        self.assertEqual(response.json()['item']['logged_visit'], str(existing.id))
+        self.assertFalse(response.json()['created'])
+
+    def test_log_visit_ignores_a_visit_on_a_different_day(self):
+        museum = self.location('Museum', self.trip)
+        Visit.objects.create(location=museum, start_date=utc(2026, 6, 1), end_date=utc(2026, 6, 1))
+        item_id = self.place(museum, 'location', 2).json()['id']
+
+        response = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(Visit.objects.count(), 2)
 
     def test_log_visit_without_an_anchor_needs_a_date(self):
         trip = Collection.objects.create(user=self.user, name='Loose', type='trip')

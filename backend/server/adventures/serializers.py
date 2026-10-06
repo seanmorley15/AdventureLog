@@ -1203,9 +1203,12 @@ class CollectionSerializer(CustomModelSerializer):
             data['type'] = 'trip' if count else assign_collection_type_from_dates(start, end)
             return data
         if data['type'] == 'trip' and not count and (not start or not end):
-            raise serializers.ValidationError({
-                'type': 'A trip requires a start date and an end date, or a day count.'
-            })
+            # A new trip still needs a plan. An existing folder may become a trip
+            # with no days: linked places go to Ideas and Day 1 is not invented.
+            if self.instance is None:
+                raise serializers.ValidationError({
+                    'type': 'A trip requires a start date and an end date, or a day count.'
+                })
         return data
 
     def _apply_day_count(self, data):
@@ -1253,7 +1256,14 @@ class CollectionSerializer(CustomModelSerializer):
     def update(self, instance, validated_data):
         count = validated_data.pop('day_count', None)
         current = self._instance_day_count()
-        if current:
+        previous_type = instance.type
+        resulting_type = validated_data.get('type', previous_type)
+
+        # A trip becoming a folder keeps its day rows. Duration is not applied.
+        if resulting_type == 'folder':
+            return super().update(instance, validated_data)
+
+        if current and previous_type == 'trip':
             start_changed = 'start_date' in validated_data and validated_data['start_date'] != instance.start_date
             anchor = validated_data.pop('start_date', instance.start_date)
             validated_data.pop('end_date', None)
@@ -1272,6 +1282,15 @@ class CollectionSerializer(CustomModelSerializer):
             return instance
 
         instance = super().update(instance, validated_data)
+        if previous_type == 'folder' and instance.type == 'trip':
+            # Saved days stay. A day count is used only when the user asked for one
+            # and the collection does not already have days.
+            if count and not day_plan.is_day_based(instance):
+                try:
+                    day_plan.build_days(instance, count)
+                except day_plan.DayPlanError as exc:
+                    raise serializers.ValidationError({'day_count': exc.message, 'code': exc.code, **exc.extra})
+            return instance
         if instance.type == 'trip':
             if count:
                 day_plan.build_days(instance, count)

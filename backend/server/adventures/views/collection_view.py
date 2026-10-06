@@ -1351,6 +1351,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         old_is_public = instance.is_public
         old_start_date = instance.start_date
         old_end_date = instance.end_date
+        old_type = instance.type
         
         # Perform the standard update
         partial = kwargs.pop('partial', False)
@@ -1411,14 +1412,19 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     lodging.is_public = False
                     lodging.save(update_fields=['is_public'])
         
+        if old_type != serializer.instance.type:
+            day_plan.apply_type_change(serializer.instance, old_type)
+
         # Check if dates changed
         new_start_date = serializer.instance.start_date
         new_end_date = serializer.instance.end_date
         
         dates_changed = (old_start_date != new_start_date or old_end_date != new_end_date)
-        
+        # A folder that just became a trip keeps Ideas rows, which have no date.
+        became_trip = old_type == 'folder' and serializer.instance.type == 'trip'
+
         # Clean up out-of-range items if dates changed
-        if dates_changed:
+        if dates_changed and not became_trip:
             self._cleanup_out_of_range_itinerary_items(serializer.instance)
         
         if getattr(instance, '_prefetched_objects_cache', None):

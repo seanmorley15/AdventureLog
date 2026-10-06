@@ -30,6 +30,26 @@ def has_coordinates(point: Point | None) -> bool:
     return point is not None
 
 
+def collection_center(collection) -> Point | None:
+    """Geometric median of a collection's places: where most of them sit."""
+    from django.contrib.gis.db.models.aggregates import Collect
+    from django.contrib.gis.db.models.functions import Centroid, GeoFunc
+
+    from adventures.models import Location
+
+    class GeometricMedian(GeoFunc):
+        function = 'ST_GeometricMedian'
+        arity = 1
+
+    points = Location.objects.filter(collections=collection, coordinates__isnull=False)
+    if not points.exists():
+        return None
+    center = points.aggregate(center=GeometricMedian(Collect('coordinates')))['center']
+    if center is None:
+        center = points.aggregate(center=Centroid(Collect('coordinates')))['center']
+    return center
+
+
 def first_usable_lat_lon(*points: Point | None) -> tuple[float | None, float | None]:
     """Return the first (lat, lon) that is present and not Null Island (0, 0)."""
     for point in points:

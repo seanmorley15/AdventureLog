@@ -8,6 +8,10 @@
 	import ChecklistCard from '$lib/components/cards/ChecklistCard.svelte';
 	import Magnify from '~icons/mdi/magnify';
 	import ClipboardList from '~icons/mdi/clipboard-list';
+	import MapMarker from '~icons/mdi/map-marker';
+	import Airplane from '~icons/mdi/airplane';
+	import Bed from '~icons/mdi/bed';
+	import NoteTextOutline from '~icons/mdi/note-text-outline';
 	import { t } from 'svelte-i18n';
 
 	const dispatch = createEventDispatcher();
@@ -176,30 +180,34 @@
 <!-- Show each section as its own card so transportations and others
 	 render even when there are no locations. Use vertical spacing
 	 between cards via a wrapper. -->
-<div class="space-y-6">
+<div class="space-y-5">
 	{#if collection.locations && collection.locations.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-					<h2 class="card-title text-2xl">
-						📍 {$t('locations.locations') || 'Locations'} ({sortedLocations.length}/{collection
-							.locations.length})
+		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
+			<div>
+				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
+						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
+							<MapMarker class="h-5 w-5" />
+						</span>
+						{$t('locations.locations') || 'Locations'}
+						<span class="badge badge-ghost badge-sm font-medium">
+							{sortedLocations.length}/{collection.locations.length}
+						</span>
 					</h2>
 
 					{#if isFolderView}
 						<div class="flex flex-wrap gap-2">
-							<!-- Search -->
-							<div class="join">
+							<label class="input input-sm input-bordered flex w-48 items-center gap-2 bg-base-100">
+								<Magnify class="h-4 w-4 opacity-50" />
 								<input
 									type="text"
 									placeholder="Search locations..."
-									class="input input-sm join-item w-48"
+									class="grow"
 									bind:value={locationSearch}
 								/>
-							</div>
+							</label>
 
-							<!-- Sort dropdown -->
-							<select class="select select-sm" bind:value={locationSort}>
+							<select class="select select-sm select-bordered" bind:value={locationSort}>
 								<option value="alphabetical-asc">A → Z</option>
 								<option value="alphabetical-desc">Z → A</option>
 								<option value="visited">Visited First</option>
@@ -213,7 +221,7 @@
 				<div
 					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
 				>
-					{#each sortedLocations as location}
+					{#each sortedLocations as location (location.id)}
 						<LocationCard
 							adventure={location}
 							{user}
@@ -227,22 +235,27 @@
 				</div>
 
 				{#if sortedLocations.length === 0}
-					<div class="text-center py-8 opacity-70">
+					<div class="py-8 text-center text-sm text-base-content/60">
 						<p>No locations match your search</p>
 					</div>
 				{/if}
 			</div>
-		</div>
+		</section>
 	{/if}
 
 	<!-- Transportations Section -->
-	{#if collection.transportations && collection.transportations.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-					<h2 class="card-title text-2xl">
-						✈️ {$t('adventures.transportation') || 'Transportation'} ({filteredTransportations.length}/{collection
-							.transportations.length})
+	{#if !isFolderView && collection.transportations && collection.transportations.length > 0}
+		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
+			<div>
+				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
+						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
+							<Airplane class="h-5 w-5" />
+						</span>
+						{$t('adventures.transportation') || 'Transportation'}
+						<span class="badge badge-ghost badge-sm font-medium">
+							{filteredTransportations.length}/{collection.transportations.length}
+						</span>
 					</h2>
 
 					{#if isFolderView}
@@ -263,7 +276,7 @@
 				<div
 					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
 				>
-					{#each filteredTransportations as transport}
+					{#each filteredTransportations as transport (transport.id)}
 						<TransportationCard
 							transportation={transport}
 							{user}
@@ -275,22 +288,27 @@
 				</div>
 
 				{#if filteredTransportations.length === 0}
-					<div class="text-center py-8 opacity-70">
+					<div class="py-8 text-center text-sm text-base-content/60">
 						<p>No transportation matches your search</p>
 					</div>
 				{/if}
 			</div>
-		</div>
+		</section>
 	{/if}
 
 	<!-- Lodging Section -->
-	{#if collection.lodging && collection.lodging.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-					<h2 class="card-title text-2xl">
-						🏨 {$t('adventures.lodging') || 'Lodging'} ({filteredLodging.length}/{collection.lodging
-							.length})
+	{#if !isFolderView && collection.lodging && collection.lodging.length > 0}
+		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
+			<div>
+				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
+						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
+							<Bed class="h-5 w-5" />
+						</span>
+						{$t('adventures.lodging') || 'Lodging'}
+						<span class="badge badge-ghost badge-sm font-medium">
+							{filteredLodging.length}/{collection.lodging.length}
+						</span>
 					</h2>
 
 					{#if isFolderView}
@@ -311,7 +329,7 @@
 				<div
 					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
 				>
-					{#each filteredLodging as lodging}
+					{#each filteredLodging as lodging (lodging.id)}
 						<LodgingCard
 							{lodging}
 							{user}
@@ -323,21 +341,27 @@
 				</div>
 
 				{#if filteredLodging.length === 0}
-					<div class="text-center py-8 opacity-70">
+					<div class="py-8 text-center text-sm text-base-content/60">
 						<p>No lodging matches your search</p>
 					</div>
 				{/if}
 			</div>
-		</div>
+		</section>
 	{/if}
 
 	<!-- Notes Section -->
 	{#if collection.notes && collection.notes.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-					<h2 class="card-title text-2xl">
-						📝 Notes ({filteredNotes.length}/{collection.notes.length})
+		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
+			<div>
+				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
+						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
+							<NoteTextOutline class="h-5 w-5" />
+						</span>
+						{$t('adventures.notes')}
+						<span class="badge badge-ghost badge-sm font-medium">
+							{filteredNotes.length}/{collection.notes.length}
+						</span>
 					</h2>
 
 					{#if isFolderView}
@@ -358,7 +382,7 @@
 				<div
 					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
 				>
-					{#each filteredNotes as note}
+					{#each filteredNotes as note (note.id)}
 						<NoteCard
 							{note}
 							{user}
@@ -370,22 +394,27 @@
 				</div>
 
 				{#if filteredNotes.length === 0}
-					<div class="text-center py-8 opacity-70">
+					<div class="py-8 text-center text-sm text-base-content/60">
 						<p>No notes match your search</p>
 					</div>
 				{/if}
 			</div>
-		</div>
+		</section>
 	{/if}
 
 	<!-- Checklists Section -->
 	{#if collection.checklists && collection.checklists.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-					<h2 class="card-title text-2xl">
-						<ClipboardList class="w-6 h-6" />
-						Checklists ({filteredChecklists.length}/{collection.checklists.length})
+		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
+			<div>
+				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
+						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
+							<ClipboardList class="h-5 w-5" />
+						</span>
+						{$t('adventures.checklists')}
+						<span class="badge badge-ghost badge-sm font-medium">
+							{filteredChecklists.length}/{collection.checklists.length}
+						</span>
 					</h2>
 
 					{#if isFolderView}
@@ -406,7 +435,7 @@
 				<div
 					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
 				>
-					{#each filteredChecklists as checklist}
+					{#each filteredChecklists as checklist (checklist.id)}
 						<ChecklistCard
 							{checklist}
 							{user}
@@ -418,11 +447,11 @@
 				</div>
 
 				{#if filteredChecklists.length === 0}
-					<div class="text-center py-8 opacity-70">
+					<div class="py-8 text-center text-sm text-base-content/60">
 						<p>No checklists match your search</p>
 					</div>
 				{/if}
 			</div>
-		</div>
+		</section>
 	{/if}
 </div>

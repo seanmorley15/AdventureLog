@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { openLocationHref } from '$lib/location-drawer.svelte';
 	import { page } from '$app/stores';
 	import { searchApp } from '$lib/search/api';
 	import SearchResultRow from '$lib/search/SearchResultRow.svelte';
@@ -222,7 +223,13 @@
 				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-xs divide-y divide-base-300"
 			>
 				{#each results as hit (hit.type + hit.id)}
-					<SearchResultRow {hit} spotlight on:select={() => goto(hit.url)} />
+					<SearchResultRow
+						{hit}
+						spotlight
+						on:select={() => {
+							if (!openLocationHref(hit.url)) goto(hit.url);
+						}}
+					/>
 				{/each}
 			</div>
 

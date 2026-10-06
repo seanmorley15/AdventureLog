@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { openLocationHref } from '$lib/location-drawer.svelte';
 	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
 	import type { DuplicateLocationMatch } from '$lib/types';
@@ -56,10 +56,10 @@
 		});
 	}
 
-	async function openExisting() {
+	function openExisting() {
 		if (!primaryMatch) return;
 		dispatch('openExisting', primaryMatch);
-		await goto(`/locations/${primaryMatch.id}`);
+		openLocationHref(`/locations/${primaryMatch.id}`);
 	}
 </script>
 

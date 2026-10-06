@@ -56,6 +56,12 @@
 	// A day-based trip is edited by day count; a date-keyed trip keeps its dates until "Plan by days".
 	const editingDayPlan = $derived(Boolean(collectionToEdit?.day_count));
 	const canChoosePlanMode = $derived(!editingDayPlan && collectionToEdit?.type !== 'trip');
+	const convertingFolder = $derived(
+		collectionToEdit?.type === 'folder' && collection.type === 'trip'
+	);
+	const convertingToFolder = $derived(
+		collectionToEdit?.type === 'trip' && collection.type === 'folder'
+	);
 	const usesDayCount = $derived(collection.type === 'trip' && planMode === 'days');
 	const derivedEndDate = $derived(
 		usesDayCount && collection.start_date && dayCount && dayCount > 0
@@ -195,12 +201,25 @@
 			collection.end_date = null;
 		}
 
-		if (usesDayCount) {
+		if (convertingToFolder && !window.confirm($t('collection.convert_to_folder_warning'))) {
+			return;
+		}
+
+		const dayCountOptional = convertingFolder && !collectionToEdit?.day_count;
+		if (usesDayCount && !dayCountOptional) {
 			if (!dayCount || dayCount < 1 || dayCount > MAX_PLAN_DAYS) {
 				addToast('error', $t('collection.day_count_required', { values: { max: MAX_PLAN_DAYS } }));
 				return;
 			}
-		} else if (collection.type === 'trip' && (!collection.start_date || !collection.end_date)) {
+		} else if (usesDayCount && dayCount && (dayCount < 1 || dayCount > MAX_PLAN_DAYS)) {
+			addToast('error', $t('collection.day_count_required', { values: { max: MAX_PLAN_DAYS } }));
+			return;
+		} else if (
+			collection.type === 'trip' &&
+			!usesDayCount &&
+			!convertingFolder &&
+			(!collection.start_date || !collection.end_date)
+		) {
 			addToast('error', $t('adventures.trip_requires_dates'));
 			return;
 		}
@@ -224,9 +243,9 @@
 			link: collection.link,
 			primary_image_id: coverImageId
 		};
-		if (usesDayCount) {
+		if (usesDayCount && dayCount) {
 			payload.day_count = dayCount;
-		} else {
+		} else if (!usesDayCount) {
 			payload.end_date = collection.end_date;
 		}
 		const anchorChanged = collection.start_date !== (collectionToEdit?.start_date ?? null);
@@ -426,6 +445,14 @@
 											? $t('adventures.trip_type_hint')
 											: $t('adventures.folder_type_hint')}
 									</p>
+									{#if convertingToFolder}
+										<div class="alert alert-warning py-2 text-sm">
+											{$t('collection.convert_to_folder_warning')}
+										</div>
+									{/if}
+									{#if convertingFolder && !collectionToEdit?.day_count}
+										<p class="field-hint">{$t('collection.folder_to_trip_hint')}</p>
+									{/if}
 								</div>
 
 								{#if collection.type === 'trip' && canChoosePlanMode}
@@ -459,7 +486,10 @@
 								{#if usesDayCount}
 									<div class="flex flex-col">
 										<label class="field-label" for="day_count">
-											{$t('collection.day_count')}<span class="text-error ml-1">*</span>
+											{$t('collection.day_count')}
+											{#if !(convertingFolder && !collectionToEdit?.day_count)}
+												<span class="text-error ml-1">*</span>
+											{/if}
 										</label>
 										<input
 											type="number"
@@ -469,7 +499,7 @@
 											min="1"
 											max={MAX_PLAN_DAYS}
 											bind:value={dayCount}
-											required
+											required={!(convertingFolder && !collectionToEdit?.day_count)}
 										/>
 										<p class="field-hint">
 											{$t('collection.day_count_hint', { values: { max: MAX_PLAN_DAYS } })}
@@ -484,7 +514,7 @@
 										{usesDayCount
 											? $t('itinerary.start_date_optional')
 											: $t('adventures.start_date')}
-										{#if collection.type === 'trip' && !usesDayCount}
+										{#if collection.type === 'trip' && !usesDayCount && !convertingFolder}
 											<span class="text-error">*</span>
 										{/if}
 									</label>

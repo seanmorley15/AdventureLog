@@ -3,6 +3,7 @@
 
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { openLocationHref } from '$lib/location-drawer.svelte';
 	import { debounce } from '$lib';
 	import { searchPlaces } from '$lib/map/places';
 	import { filterQuickNavActions, quickNavActions, type QuickNavAction } from '$lib/search/actions';
@@ -90,7 +91,7 @@
 			addRecentSearch(searchTerm);
 		}
 		closeDialog();
-		goto(url);
+		if (!openLocationHref(url)) goto(url);
 	}
 
 	function handleSelectItem(item: PaletteItem) {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { openLocationDrawer } from '$lib/location-drawer.svelte';
 	import type { Location, Collection, User, CollectionItineraryItem } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
@@ -408,7 +408,7 @@
 				<button
 					class="btn btn-square btn-sm p-1 text-base-content"
 					aria-label="open-details"
-					onclick={() => goto(`/locations/${adventure.id}`)}
+					onclick={() => openLocationDrawer(adventure.id)}
 				>
 					<Launch class="w-5 h-5" />
 				</button>

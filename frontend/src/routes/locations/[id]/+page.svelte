@@ -6,6 +6,8 @@
 	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '$lib/sunriseSunset';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { openLocationDrawer } from '$lib/location-drawer.svelte';
 	import Lost from '$lib/assets/undraw_lost.svg';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
@@ -41,6 +43,7 @@
 	import ImageOutline from '~icons/mdi/image-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import LocationPageHead from '$lib/components/locations/LocationPageHead.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -48,14 +51,22 @@
 
 	interface Props {
 		data: PageData;
+		embedded?: boolean;
+		scrollHash?: string;
 	}
 
-	let { data }: Props = $props();
+	let { data, embedded = false, scrollHash = '' }: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(data.user));
 	let measurementSystem = $derived(data.user?.measurement_system || 'metric');
 
 	let adventure: Location | undefined = $state();
+
+	$effect(() => {
+		const hash = embedded ? scrollHash : $page.url.hash;
+		if (!hash.startsWith('#visit-') || !adventure) return;
+		document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'center' });
+	});
 	let visitSunriseSunset: Record<string, SunriseSunset> = $state({});
 	let sunriseSunsetLoading: Record<string, boolean> = $state({});
 	let currentSlide = $state(0);
@@ -241,7 +252,11 @@
 			if (res.ok) {
 				const newLocation = await res.json();
 				addToast('success', $t('adventures.location_duplicate_success'));
-				goto(`/locations/${newLocation.id}`);
+				if (embedded) {
+					openLocationDrawer(newLocation.id);
+				} else {
+					goto(`/locations/${newLocation.id}`);
+				}
 			} else {
 				addToast('error', $t('adventures.location_duplicate_error'));
 			}
@@ -388,7 +403,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
+	{#if !embedded && data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
 		<div class="fixed bottom-6 right-6 z-50">
 			<div class="dropdown dropdown-top dropdown-end" class:dropdown-open={isFabMenuOpen}>
 				<button
@@ -591,9 +606,9 @@
 
 	<!-- Main Content -->
 	<div class="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-7xl">
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+		<div class={['grid grid-cols-1 gap-4 sm:gap-8', !embedded && 'lg:grid-cols-3']}>
 			<!-- Left Column - Main Content -->
-			<div class="lg:col-span-2 space-y-6 sm:space-y-8">
+			<div class={['space-y-6 sm:space-y-8', !embedded && 'lg:col-span-2']}>
 				<!-- Author Info Card -->
 				{#if adventure.user}
 					<div class="card bg-base-200 shadow-xl">
@@ -681,7 +696,7 @@
 							<div class="space-y-4">
 								{#each adventure.visits as visit, index}
 									{@const visitDate = visitDateKey(visit.start_date)}
-									<div class="flex gap-4">
+									<div class="flex gap-4" id="visit-{visit.id}">
 										<div class="flex flex-col items-center">
 											<div class="w-4 h-4 bg-primary rounded-full"></div>
 											{#if index < adventure.visits.length - 1}
@@ -1158,24 +1173,6 @@
 	</div>
 {/if}
 
-<svelte:head>
-	<title>
-		{data.props.adventure && data.props.adventure.name
-			? `${data.props.adventure.name}`
-			: 'Adventure'}
-	</title>
-	{#if data.shareMeta}
-		<meta name="description" content={data.shareMeta.description} />
-		<meta property="og:title" content={data.shareMeta.title} />
-		<meta property="og:description" content={data.shareMeta.description} />
-		<meta property="og:image" content={data.shareMeta.imageUrl} />
-		<meta property="og:url" content={data.shareMeta.pageUrl} />
-		<meta property="og:type" content="website" />
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="twitter:title" content={data.shareMeta.title} />
-		<meta name="twitter:description" content={data.shareMeta.description} />
-		<meta name="twitter:image" content={data.shareMeta.imageUrl} />
-	{:else}
-		<meta name="description" content="Explore the world and add countries to your visited list!" />
-	{/if}
-</svelte:head>
+{#if !embedded}
+	<LocationPageHead name={data.props.adventure?.name} shareMeta={data.shareMeta} />
+{/if}

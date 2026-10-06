@@ -23,6 +23,7 @@
 	import { createEmptyLocation } from '$lib/location-draft';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
+	import { openLocationDrawer, openLocationHref } from '$lib/location-drawer.svelte';
 	import { getActivityColor, normalizeBasemapType } from '$lib';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
@@ -568,7 +569,7 @@
 	}
 
 	function handleViewImageParent(event: CustomEvent<{ href: string }>) {
-		goto(event.detail.href);
+		if (!openLocationHref(event.detail.href)) goto(event.detail.href);
 	}
 
 	function attachViewportCenterSync() {
@@ -659,7 +660,7 @@
 	}
 
 	function handleViewFull(event: CustomEvent<{ pinId: string }>) {
-		goto(`/locations/${event.detail.pinId}`);
+		openLocationDrawer(event.detail.pinId);
 	}
 
 	function backToControls() {

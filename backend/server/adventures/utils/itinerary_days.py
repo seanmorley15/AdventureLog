@@ -161,6 +161,15 @@ def is_day_based(collection, registry=None) -> bool:
     return reg.Day.objects.filter(collection_id=collection.pk, index__isnull=False).exists()
 
 
+def _has_legacy_dated_items(collection) -> bool:
+    """Date-keyed rows that have not been converted to a day index."""
+    from adventures.models import CollectionItineraryItem
+
+    return CollectionItineraryItem.objects.filter(
+        collection=collection, date__isnull=False, day__isnull=True
+    ).exists()
+
+
 def indexed_days(collection, registry=None):
     reg = registry or _Registry()
     return list(reg.Day.objects.filter(collection_id=collection.pk, index__isnull=False).order_by('index'))
@@ -221,6 +230,53 @@ def plan_by_days(collection, count=DEFAULT_PLAN_DAYS):
     if collection.start_date:
         collection.end_date = projected_date(collection.start_date, count)
         collection.save(update_fields=['end_date', 'updated_at'])
+
+
+def apply_type_change(collection, previous_type):
+    """
+    Keep stored days when a trip becomes a folder.
+
+    A folder that becomes a trip shows those days when they exist. With no day
+    rows, each linked location that does not already have a placement goes to
+    Ideas. Day 1 is not created. Running this again does not add a second Ideas
+    row for the same location.
+    """
+    if previous_type == collection.type:
+        return
+    if previous_type == 'folder' and collection.type == 'trip' and not is_day_based(collection):
+        _seed_unplaced_locations(collection)
+
+
+def _seed_unplaced_locations(collection):
+    from django.contrib.contenttypes.models import ContentType
+
+    from adventures.models import CollectionItineraryItem, Location
+
+    location_ct = ContentType.objects.get_for_model(Location)
+    placed = set(
+        CollectionItineraryItem.objects.filter(
+            collection=collection, content_type=location_ct
+        ).values_list('object_id', flat=True)
+    )
+    order = _next_order(collection)
+    rows = []
+    for location in collection.locations.all():
+        if location.pk in placed:
+            continue
+        rows.append(
+            CollectionItineraryItem(
+                collection=collection,
+                content_type=location_ct,
+                object_id=location.pk,
+                day=None,
+                is_global=False,
+                date=None,
+                order=order,
+            )
+        )
+        order += 1
+    if rows:
+        CollectionItineraryItem.objects.bulk_create(rows)
 
 
 def build_days(collection, count):
@@ -663,7 +719,19 @@ def insert_day(collection, position=None, name=None, description=None):
 
     with transaction.atomic():
         collection = _lock(collection)
-        _require_day_based(collection)
+        if not is_day_based(collection):
+            if collection.type != 'trip' or _has_legacy_dated_items(collection):
+                raise DayPlanError('This trip is not planned by days yet.', code='not_day_based')
+            if position not in (None, 1):
+                raise DayPlanError('Position is outside the trip.')
+            CollectionItineraryDay.objects.create(
+                collection=collection,
+                index=1,
+                name=name or None,
+                description=description or None,
+            )
+            sync_projection(collection)
+            return collection
         days = indexed_days(collection)
         if len(days) >= MAX_PLAN_DAYS:
             raise DayPlanError(f'A trip can have at most {MAX_PLAN_DAYS} days.', code='too_many_days')
@@ -877,7 +945,14 @@ def set_duration(collection, count, anchor=..., destination=None, target_day_id=
     """
     with transaction.atomic():
         collection = _lock(collection)
-        _require_day_based(collection)
+        if not is_day_based(collection):
+            if collection.type != 'trip' or _has_legacy_dated_items(collection):
+                raise DayPlanError('This trip is not planned by days yet.', code='not_day_based')
+            build_days(collection, int(count))
+            collection.refresh_from_db()
+            if anchor is not ...:
+                set_anchor(collection, anchor, timezone_name=timezone_name)
+            return collection
         try:
             count = int(count)
         except (TypeError, ValueError):
@@ -1013,6 +1088,18 @@ def place_object(collection, content_type, object_id, *, day=None, is_global=Fal
 
     with transaction.atomic():
         collection = _lock(collection)
+        if day is None and not is_global:
+            on_a_day = CollectionItineraryItem.objects.filter(
+                collection=collection,
+                content_type=content_type,
+                object_id=object_id,
+                day__isnull=False,
+            ).exists()
+            if on_a_day:
+                raise DayPlanError(
+                    'This is already on a day, so it stays on the plan.',
+                    code='already_planned',
+                )
         count = day_count(collection)
         span_end_index = validate_span(item_type, day.index if day else None, span_end_index, count)
 
@@ -1241,12 +1328,30 @@ def reorder_day_plan(collection, entries):
 # Visits
 # ---------------------------------------------------------------------------
 
+def _visit_on_dates(location_id, start, end):
+    """An existing visit whose dates overlap this stop. The earliest start wins."""
+    from adventures.models import Visit
+
+    match = None
+    match_start = None
+    for visit in Visit.objects.filter(location_id=location_id):
+        visit_start = local_date(visit.start_date, visit.timezone)
+        visit_end = local_date(visit.end_date, visit.timezone) or visit_start
+        if visit_start is None or visit_end is None:
+            continue
+        if visit_start <= end and visit_end >= start and (match_start is None or visit_start < match_start):
+            match = visit
+            match_start = visit_start
+    return match
+
+
 def log_visited(item, visit_date=None):
     """
-    Create one visit for a location placement, or return the one already logged.
+    Create one visit for a location placement, or return one that already covers it.
 
-    Uses the projected date; ``visit_date`` is required when the trip has no anchor
-    or the placement is in Ideas. Both visit bounds are always set.
+    A visit logged earlier on these dates is linked instead of copied. Uses the
+    projected date; ``visit_date`` is required when the trip has no anchor or the
+    placement is in Ideas. Both visit bounds are always set.
     """
     from adventures.models import Visit
 
@@ -1266,6 +1371,12 @@ def log_visited(item, visit_date=None):
             end_day = visit_date + datetime.timedelta(days=span_days)
         if start_day is None:
             raise DayPlanError('Choose the date you visited.', code='date_required')
+
+        existing = _visit_on_dates(item.object_id, start_day, end_day or start_day)
+        if existing is not None:
+            item.logged_visit = existing
+            item.save(update_fields=['logged_visit', 'updated_at'])
+            return existing, False
 
         visit = Visit.objects.create(
             location_id=item.object_id,
