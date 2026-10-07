@@ -154,6 +154,65 @@ export function planPins(collection: Collection): PlanPin[] {
 	return pins;
 }
 
+function lngLat(latitude: unknown, longitude: unknown): [number, number] | null {
+	const lat = typeof latitude === 'number' ? latitude : Number(latitude);
+	const lon = typeof longitude === 'number' ? longitude : Number(longitude);
+	if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+	return [lon, lat];
+}
+
+function samePoint(a: [number, number], b: [number, number]): boolean {
+	return Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1]) < 1e-6;
+}
+
+/**
+ * Map points for one day's stops, in plan order. Stays that started on an
+ * earlier day come first, then this day's items. A transport contributes its
+ * origin and then its destination.
+ */
+export function dayStopPath(collection: Collection, day: number): [number, number][] {
+	const items = (collection.itinerary ?? []).filter((item) => {
+		const type = placementType(item);
+		if (!type || !PIN_TYPES.has(type) || item.day_index == null) return false;
+		const end = item.span_end_index ?? item.day_index;
+		return item.day_index <= day && day <= end;
+	});
+	items.sort((a, b) => {
+		const aStart = a.day_index ?? day;
+		const bStart = b.day_index ?? day;
+		const aContinued = aStart < day ? 0 : 1;
+		const bContinued = bStart < day ? 0 : 1;
+		if (aContinued !== bContinued) return aContinued - bContinued;
+		if (aContinued === 0 && aStart !== bStart) return aStart - bStart;
+		return a.order - b.order;
+	});
+
+	const points: [number, number][] = [];
+	for (const item of items) {
+		const type = placementType(item);
+		if (!type) continue;
+		const obj = findObject(collection, type, String(item.object_id));
+		if (!obj) continue;
+		const next: [number, number][] = [];
+		if (type === 'transportation') {
+			const transport = obj as Transportation;
+			const origin = lngLat(transport.origin_latitude, transport.origin_longitude);
+			const destination = lngLat(transport.destination_latitude, transport.destination_longitude);
+			if (origin) next.push(origin);
+			if (destination && (!origin || !samePoint(origin, destination))) next.push(destination);
+		} else {
+			const place = obj as Location | Lodging;
+			const point = lngLat(place.latitude, place.longitude);
+			if (point) next.push(point);
+		}
+		for (const point of next) {
+			const last = points[points.length - 1];
+			if (!last || !samePoint(last, point)) points.push(point);
+		}
+	}
+	return points;
+}
+
 /** The dates a placement covers, from its projected start through a span. */
 export function placementRange(
 	item: CollectionItineraryItem

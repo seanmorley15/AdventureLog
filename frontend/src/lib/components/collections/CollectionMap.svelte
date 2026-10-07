@@ -17,7 +17,8 @@
 	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
 	import { t } from 'svelte-i18n';
 	import type { Collection, Location, User } from '$lib/types';
-	import { dayPinColor, pinCoversDay, type PlanPin } from '$lib/dayPlan';
+	import { dayPinColor, dayStopPath, pinCoversDay, type PlanPin } from '$lib/dayPlan';
+	import MapMarkerPath from '~icons/mdi/map-marker-path';
 	import DateInput from '$lib/components/shared/DateInput.svelte';
 
 	interface Props {
@@ -90,6 +91,7 @@
 	let showPlanned = $state(true);
 	let showLines = $state(true);
 	let showTrails = $state(true);
+	let showDayLinks = $state(false);
 	let showImagePins = $state(true);
 	let startDateFilter = $state('');
 	let endDateFilter = $state('');
@@ -399,10 +401,16 @@
 		);
 	}
 
+	type DayTrackScope = {
+		locationIds: Set<string>;
+		transportIds: Set<string>;
+	};
+
 	// Merge attachments/activity geojson into a single feature collection
 	function collectLinesGeojson(
 		coll: Collection,
-		filters: { startDate: string; endDate: string }
+		filters: { startDate: string; endDate: string },
+		scope: DayTrackScope | null
 	): { type: 'FeatureCollection'; features: any[] } | null {
 		if (!coll) return null;
 		const features: any[] = [];
@@ -423,6 +431,7 @@
 
 		// Locations: attachments and visits -> activities
 		for (const loc of coll.locations || []) {
+			if (scope && !scope.locationIds.has(String(loc.id))) continue;
 			if (Array.isArray(loc.attachments)) {
 				for (const a of loc.attachments) {
 					if (!a || !a.geojson) continue;
@@ -450,6 +459,7 @@
 
 		// Transportations: attachments
 		for (const t of coll.transportations || []) {
+			if (scope && !scope.transportIds.has(String(t.id))) continue;
 			if (!t || !Array.isArray(t.attachments)) continue;
 			for (const a of t.attachments) {
 				if (!a || !a.geojson) continue;
@@ -462,12 +472,14 @@
 	}
 
 	function collectTrailGeojson(
-		coll: Collection
+		coll: Collection,
+		scope: DayTrackScope | null
 	): { type: 'FeatureCollection'; features: any[] } | null {
 		if (!coll) return null;
 		const features: any[] = [];
 
 		for (const loc of coll.locations || []) {
+			if (scope && !scope.locationIds.has(String(loc.id))) continue;
 			if (!Array.isArray(loc.trails)) continue;
 			for (const trail of loc.trails) {
 				if (!trail?.geojson) continue;
@@ -739,26 +751,62 @@
 			.filter(Boolean) as MarkerFeature[]
 	);
 	let allFeatures = $derived([...locationFeatures, ...lodgingFeatures, ...transportationFeatures]);
+	let trackScope = $derived.by(() => {
+		if (selectedDay == null || planPins.length === 0) return null;
+		const dayIndex = selectedDay;
+		return {
+			locationIds: new Set(
+				planPins
+					.filter((pin) => pin.type === 'location' && pinCoversDay(pin, dayIndex))
+					.map((pin) => pin.objectId)
+			),
+			transportIds: new Set(
+				planPins
+					.filter((pin) => pin.type === 'transportation' && pinCoversDay(pin, dayIndex))
+					.map((pin) => pin.objectId)
+			)
+		};
+	});
 	let linesGeoJson = $derived(
-		collectLinesGeojson(collection, {
-			startDate: startDateFilter || collection?.start_date || '',
-			endDate: endDateFilter || collection?.end_date || ''
-		})
+		collectLinesGeojson(
+			collection,
+			{
+				startDate: startDateFilter || collection?.start_date || '',
+				endDate: endDateFilter || collection?.end_date || ''
+			},
+			trackScope
+		)
 	);
 	let transportationLinesGeoJson = $derived(
 		showTransportation
 			? collectTransportationLinesGeojson(
-					(collection?.transportations || []).filter((t) =>
-						transportationMatchesFilters(t, {
+					(collection?.transportations || []).filter((t) => {
+						if (trackScope && !trackScope.transportIds.has(String(t.id))) return false;
+						return transportationMatchesFilters(t, {
 							startDate: startDateFilter,
 							endDate: endDateFilter,
 							search: searchQuery.trim()
-						})
-					)
+						});
+					})
 				)
 			: null
 	);
-	let trailsGeoJson = $derived(collectTrailGeojson(collection));
+	let trailsGeoJson = $derived(collectTrailGeojson(collection, trackScope));
+	let dayLinkGeoJson = $derived.by(() => {
+		if (selectedDay == null || !showDayLinks) return null;
+		const coordinates = dayStopPath(collection, selectedDay);
+		if (coordinates.length < 2) return null;
+		return {
+			type: 'FeatureCollection' as const,
+			features: [
+				{
+					type: 'Feature' as const,
+					geometry: { type: 'LineString' as const, coordinates },
+					properties: { _color: dayPinColor(selectedDay) }
+				}
+			]
+		};
+	});
 	let trailCount = $derived(
 		(collection?.locations || []).reduce(
 			(count, loc) => count + (loc.trails || []).filter((trail) => trail.geojson).length,
@@ -835,7 +883,7 @@
 	let imagePinGeoJson = $derived(collectCollectionImageGeoJson(collection));
 	let imagePinCount = $derived(imagePinGeoJson.features.length);
 	let mapKey = $derived(
-		`${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${Array.from(
+		`${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${selectedDay ?? 'all'}-${showDayLinks}-${Array.from(
 			selectedCategories
 		)
 			.sort()
@@ -1143,7 +1191,7 @@
 
 <!-- Map -->
 <div
-	class={embedded ? 'h-full w-full' : 'w-full'}
+	class={embedded ? 'relative h-full w-full' : 'relative w-full'}
 	style={embedded ? undefined : 'min-height:600px; height:600px;'}
 >
 	<FullMap
@@ -1277,6 +1325,29 @@
 		{/snippet}
 
 		{#snippet overlays()}
+			{#if showRoutes && dayLinkGeoJson}
+				<GeoJSON id={`collection-day-links-${mapKey}`} data={dayLinkGeoJson} generateId>
+					<LineLayer
+						id={`collection-day-links-casing-${mapKey}`}
+						layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+						paint={{
+							'line-color': '#ffffff',
+							'line-width': 6,
+							'line-opacity': 0.85
+						}}
+					/>
+					<LineLayer
+						id={`collection-day-links-path-${mapKey}`}
+						layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+						paint={{
+							'line-color': ['coalesce', ['get', '_color'], '#0ea5e9'],
+							'line-width': 3,
+							'line-opacity': 0.95
+						}}
+					/>
+				</GeoJSON>
+			{/if}
+
 			{#if showRoutes && showLines && linesGeoJson}
 				<GeoJSON id={`collection-lines-${mapKey}`} data={linesGeoJson} generateId>
 					<LineLayer
@@ -1334,6 +1405,24 @@
 			<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
 		{/snippet}
 	</FullMap>
+
+	{#if selectedDay != null}
+		<div class="pointer-events-none absolute left-3 top-3 z-20">
+			<button
+				type="button"
+				class={[
+					'pointer-events-auto btn btn-sm gap-2 border border-base-300 bg-base-100/90 shadow-md backdrop-blur-lg',
+					showDayLinks && 'border-primary bg-primary text-primary-content'
+				]}
+				aria-pressed={showDayLinks}
+				title={showDayLinks ? $t('itinerary.hide_day_route') : $t('itinerary.show_day_route')}
+				onclick={() => (showDayLinks = !showDayLinks)}
+			>
+				<MapMarkerPath class="h-4 w-4" />
+				{$t('itinerary.connect_stops')}
+			</button>
+		</div>
+	{/if}
 </div>
 
 {#if canModify && createModalOpen}

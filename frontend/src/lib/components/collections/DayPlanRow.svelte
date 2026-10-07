@@ -161,91 +161,92 @@
 		'flex items-center gap-2 rounded-xl border px-3 py-2.5',
 		continuation
 			? 'border-dashed border-base-300 bg-base-100/70'
-			: 'border-base-300/80 bg-base-100 shadow-sm',
-		item?.is_optional && 'opacity-80'
+			: 'border-base-300/80 bg-base-100 shadow-sm'
 	]}
 >
-	{#if draggable && canModify}
-		<span
-			use:dragHandle
-			class="flex h-8 w-6 shrink-0 items-center justify-center rounded text-base-content/40 hover:text-base-content"
-			aria-label={$t('itinerary.drag_to_reorder')}
-			title={$t('itinerary.drag_to_reorder')}
-		>
-			<DragVertical class="h-5 w-5" />
-		</span>
-	{/if}
-
-	<div
-		class={[
-			'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
-			row.type === 'lodging' && 'bg-info/15 text-info',
-			row.type === 'transportation' && 'bg-secondary/15 text-secondary',
-			row.type === 'location' && 'bg-primary/15 text-primary',
-			(row.type === 'note' || row.type === 'checklist') && 'bg-base-300 text-base-content'
-		]}
-	>
-		{#if row.type === 'location'}
-			{#if categoryIcon}
-				<span class="text-base leading-none">{categoryIcon}</span>
-			{:else}
-				<MapMarker class="h-4 w-4" />
-			{/if}
-		{:else if row.type === 'lodging'}
-			<Bed class="h-4 w-4" />
-		{:else if row.type === 'transportation'}
-			{#if transportType === 'plane'}
-				<Airplane class="h-4 w-4" />
-			{:else if transportType === 'train'}
-				<Train class="h-4 w-4" />
-			{:else if transportType === 'bus'}
-				<Bus class="h-4 w-4" />
-			{:else if transportType === 'boat'}
-				<Ferry class="h-4 w-4" />
-			{:else}
-				<Car class="h-4 w-4" />
-			{/if}
-		{:else if row.type === 'note'}
-			<NoteText class="h-4 w-4" />
-		{:else}
-			<ListChecks class="h-4 w-4" />
+	<div class={['flex min-w-0 flex-1 items-center gap-2', item?.is_optional && 'opacity-80']}>
+		{#if draggable && canModify}
+			<span
+				use:dragHandle
+				class="flex h-8 w-6 shrink-0 items-center justify-center rounded text-base-content/40 hover:text-base-content"
+				aria-label={$t('itinerary.drag_to_reorder')}
+				title={$t('itinerary.drag_to_reorder')}
+			>
+				<DragVertical class="h-5 w-5" />
+			</span>
 		{/if}
-	</div>
 
-	<div class="min-w-0 flex-1">
-		<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-			{#if href}
-				<a {href} class="truncate font-semibold hover:text-primary">{name}</a>
-			{:else if onEditObject && row.object}
-				<button
-					type="button"
-					class="truncate text-left font-semibold hover:text-primary"
-					onclick={() => onEditObject?.(row)}
-				>
-					{name}
-				</button>
+		<div
+			class={[
+				'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+				row.type === 'lodging' && 'bg-info/15 text-info',
+				row.type === 'transportation' && 'bg-secondary/15 text-secondary',
+				row.type === 'location' && 'bg-primary/15 text-primary',
+				(row.type === 'note' || row.type === 'checklist') && 'bg-base-300 text-base-content'
+			]}
+		>
+			{#if row.type === 'location'}
+				{#if categoryIcon}
+					<span class="text-base leading-none">{categoryIcon}</span>
+				{:else}
+					<MapMarker class="h-4 w-4" />
+				{/if}
+			{:else if row.type === 'lodging'}
+				<Bed class="h-4 w-4" />
+			{:else if row.type === 'transportation'}
+				{#if transportType === 'plane'}
+					<Airplane class="h-4 w-4" />
+				{:else if transportType === 'train'}
+					<Train class="h-4 w-4" />
+				{:else if transportType === 'bus'}
+					<Bus class="h-4 w-4" />
+				{:else if transportType === 'boat'}
+					<Ferry class="h-4 w-4" />
+				{:else}
+					<Car class="h-4 w-4" />
+				{/if}
+			{:else if row.type === 'note'}
+				<NoteText class="h-4 w-4" />
 			{:else}
-				<span class="truncate font-semibold">{name}</span>
-			{/if}
-			{#if item?.is_optional}
-				<span class="badge badge-outline badge-sm">{$t('itinerary.optional')}</span>
-			{/if}
-			{#if timeLabel}
-				<span class="badge badge-ghost badge-sm">{timeLabel}</span>
-			{/if}
-			{#if spanLabel}
-				<span class="badge badge-info badge-outline badge-sm">{spanLabel}</span>
+				<ListChecks class="h-4 w-4" />
 			{/if}
 		</div>
-		{#if continuation && item?.day_index}
-			<p class="truncate text-xs opacity-60">
-				{row.type === 'lodging'
-					? $t('itinerary.staying_overnight')
-					: $t('itinerary.continues_from', { values: { n: item.day_index } })}
-			</p>
-		{:else if secondary}
-			<p class="truncate text-xs opacity-60">{secondary}</p>
-		{/if}
+
+		<div class="min-w-0 flex-1">
+			<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+				{#if href}
+					<a {href} class="truncate font-semibold hover:text-primary">{name}</a>
+				{:else if onEditObject && row.object}
+					<button
+						type="button"
+						class="truncate text-left font-semibold hover:text-primary"
+						onclick={() => onEditObject?.(row)}
+					>
+						{name}
+					</button>
+				{:else}
+					<span class="truncate font-semibold">{name}</span>
+				{/if}
+				{#if item?.is_optional}
+					<span class="badge badge-outline badge-sm">{$t('itinerary.optional')}</span>
+				{/if}
+				{#if timeLabel}
+					<span class="badge badge-ghost badge-sm">{timeLabel}</span>
+				{/if}
+				{#if spanLabel}
+					<span class="badge badge-info badge-outline badge-sm">{spanLabel}</span>
+				{/if}
+			</div>
+			{#if continuation && item?.day_index}
+				<p class="truncate text-xs opacity-60">
+					{row.type === 'lodging'
+						? $t('itinerary.staying_overnight')
+						: $t('itinerary.continues_from', { values: { n: item.day_index } })}
+				</p>
+			{:else if secondary}
+				<p class="truncate text-xs opacity-60">{secondary}</p>
+			{/if}
+		</div>
 	</div>
 
 	<div class="flex shrink-0 items-center gap-1">
@@ -304,7 +305,7 @@
 
 		{#if canModify && !readMode && (item || onEditObject)}
 			<div
-				class="dropdown dropdown-end"
+				class="dropdown dropdown-end relative z-50 focus-within:z-[200]"
 				role="group"
 				onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 			>
@@ -319,7 +320,7 @@
 				</div>
 				<ul
 					tabindex="-1"
-					class="dropdown-content menu z-40 w-56 rounded-box bg-base-300 p-2 shadow-sm"
+					class="dropdown-content menu z-[9999] w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 					role="menu"
 				>
 					{#if row.object && onEditObject}

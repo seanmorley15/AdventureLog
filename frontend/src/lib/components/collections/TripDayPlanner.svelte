@@ -28,6 +28,7 @@
 		browserTimezone,
 		errorMessage,
 		findObject,
+		dayPinColor,
 		indexedDays,
 		recordedVisitId,
 		objectsOfType,
@@ -188,9 +189,142 @@
 		return $t('itinerary.day_n', { values: { n: day.index } });
 	}
 
-	function weekday(iso: string): string {
-		return new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long' });
+	function shortDayDate(iso: string): string {
+		return new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, {
+			weekday: 'short',
+			month: 'short',
+			day: 'numeric'
+		});
 	}
+
+	let sectionsRoot: HTMLElement | null = $state(null);
+	let jumpNav: HTMLElement | null = $state(null);
+	let activeSection = $state('ideas');
+
+	function nearestScroller(node: HTMLElement): HTMLElement | null {
+		let current: HTMLElement | null = node.parentElement;
+		while (current) {
+			const overflow = getComputedStyle(current).overflowY;
+			if (overflow === 'auto' || overflow === 'scroll') return current;
+			current = current.parentElement;
+		}
+		return null;
+	}
+
+	function jumpLabel(id: string): string {
+		if (id === 'ideas') return $t('itinerary.ideas');
+		if (id === 'global') return $t('itinerary.trip_wide');
+		const day = days.find((entry) => String(entry.index) === id);
+		if (!day) return id;
+		const date = day.date ? formatDisplayDate(day.date, dateFormat) : '';
+		return [dayTitle(day), date, day.name].filter(Boolean).join(' · ');
+	}
+
+	function revealInRail(id: string) {
+		const nav = jumpNav;
+		const button = nav?.querySelector(`[data-jump="${id}"]`);
+		if (!nav || !(button instanceof HTMLElement)) return;
+		const navRect = nav.getBoundingClientRect();
+		const buttonRect = button.getBoundingClientRect();
+		if (buttonRect.top < navRect.top) nav.scrollTop -= navRect.top - buttonRect.top + 4;
+		else if (buttonRect.bottom > navRect.bottom)
+			nav.scrollTop += buttonRect.bottom - navRect.bottom + 4;
+	}
+
+	let jumpFrame = 0;
+
+	function scrollPlannerTo(scroller: HTMLElement, top: number) {
+		cancelAnimationFrame(jumpFrame);
+		const start = scroller.scrollTop;
+		const distance = top - start;
+		if (Math.abs(distance) < 2) {
+			scroller.scrollTop = top;
+			return;
+		}
+		const duration = 280;
+		const started = performance.now();
+		const step = (now: number) => {
+			const progress = Math.min(1, (now - started) / duration);
+			const eased = 1 - (1 - progress) ** 3;
+			scroller.scrollTop = start + distance * eased;
+			if (progress < 1) jumpFrame = requestAnimationFrame(step);
+		};
+		jumpFrame = requestAnimationFrame(step);
+	}
+
+	function jumpTo(id: string) {
+		const section = document.getElementById(`plan-section-${id}`);
+		const scroller = sectionsRoot ? nearestScroller(sectionsRoot) : null;
+		if (!section) return;
+		activeSection = id;
+		revealInRail(id);
+		if (!scroller) {
+			section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			return;
+		}
+		const top =
+			section.getBoundingClientRect().top -
+			scroller.getBoundingClientRect().top +
+			scroller.scrollTop -
+			8;
+		scrollPlannerTo(scroller, top);
+	}
+
+	const trackSections: Attachment = (node) => {
+		sectionsRoot = node;
+		const scroller = nearestScroller(node);
+		let frame = 0;
+		const update = () => {
+			const anchor = (scroller?.getBoundingClientRect().top ?? 0) + 56;
+			const sections = node.querySelectorAll<HTMLElement>('[data-plan-section]');
+			const atEnd =
+				scroller != null && scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 8;
+			let current = sections[0]?.dataset.planSection ?? 'ideas';
+			if (atEnd && sections.length > 0) {
+				current = sections[sections.length - 1].dataset.planSection ?? current;
+			} else {
+				for (const section of sections) {
+					if (section.getBoundingClientRect().top <= anchor) {
+						current = section.dataset.planSection ?? current;
+					}
+				}
+			}
+			if (current !== activeSection) {
+				activeSection = current;
+				revealInRail(current);
+			}
+		};
+		const onScroll = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(update);
+		};
+		update();
+		const target: HTMLElement | Window = scroller ?? window;
+		target.addEventListener('scroll', onScroll, { passive: true });
+		return () => {
+			cancelAnimationFrame(frame);
+			if (sectionsRoot === node) sectionsRoot = null;
+			target.removeEventListener('scroll', onScroll);
+		};
+	};
+
+	const fitRail: Attachment = (node) => {
+		jumpNav = node;
+		const scroller = nearestScroller(node);
+		const apply = () => {
+			const height = Math.max(160, (scroller?.clientHeight ?? window.innerHeight) - 24);
+			node.style.maxHeight = `${height}px`;
+		};
+		apply();
+		const observer = new ResizeObserver(apply);
+		if (scroller) observer.observe(scroller);
+		window.addEventListener('resize', apply);
+		return () => {
+			observer.disconnect();
+			if (jumpNav === node) jumpNav = null;
+			window.removeEventListener('resize', apply);
+		};
+	};
 
 	// ---------------------------------------------------------------- state sync
 
@@ -819,7 +953,7 @@
 
 {#snippet addMenu(target: CreateTarget)}
 	<div
-		class="dropdown dropdown-end"
+		class="dropdown dropdown-end relative z-50 focus-within:z-[200]"
 		role="group"
 		onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 	>
@@ -835,7 +969,7 @@
 		</div>
 		<ul
 			tabindex="-1"
-			class="dropdown-content menu z-40 w-56 rounded-box bg-base-300 p-2 shadow-sm"
+			class="dropdown-content menu z-[9999] w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 			role="menu"
 		>
 			<li>
@@ -933,146 +1067,154 @@
 	</div>
 {/snippet}
 
-<div class="space-y-4">
-	<!-- Trip summary and duration -->
-	<div class="rounded-xl bg-base-200 px-3 py-1.5">
-		<div class="flex min-h-8 items-center gap-2">
-			<p class="min-w-0 truncate text-sm">
-				<span class="font-medium tabular-nums">{dayCount}</span>
-				<span class="text-base-content/70"> {$t('itinerary.days_label')}</span>
-				<span class="mx-1.5 text-base-content/30" aria-hidden="true">·</span>
-				{#if anchored}
-					<span class="text-base-content/70">
-						{formatDisplayDate(collection.start_date, dateFormat)} – {formatDisplayDate(
-							collection.end_date,
-							dateFormat
-						)}
+<div class="flex gap-2">
+	<div class="plan-sections min-w-0 flex-1 space-y-4" {@attach trackSections}>
+		<!-- Trip summary and duration -->
+		<div class="rounded-xl bg-base-200 px-3 py-1.5">
+			<div class="flex min-h-8 items-center gap-2">
+				<p class="min-w-0 truncate text-sm">
+					<span class="font-medium tabular-nums">{dayCount}</span>
+					<span class="text-base-content/70"> {$t('itinerary.days_label')}</span>
+					<span class="mx-1.5 text-base-content/30" aria-hidden="true">·</span>
+					{#if anchored}
+						<span class="text-base-content/70">
+							{formatDisplayDate(collection.start_date, dateFormat)} – {formatDisplayDate(
+								collection.end_date,
+								dateFormat
+							)}
+						</span>
+					{:else}
+						<span class="text-base-content/50">{$t('itinerary.dates_not_set')}</span>
+					{/if}
+				</p>
+				{#if anchored && collection.timezone && collection.timezone !== 'UTC'}
+					<span class="hidden shrink-0 text-xs text-base-content/45 sm:inline">
+						{$t('itinerary.times_in', { values: { zone: collection.timezone } })}
 					</span>
-				{:else}
-					<span class="text-base-content/50">{$t('itinerary.dates_not_set')}</span>
 				{/if}
-			</p>
-			{#if anchored && collection.timezone && collection.timezone !== 'UTC'}
-				<span class="hidden shrink-0 text-xs text-base-content/45 sm:inline">
-					{$t('itinerary.times_in', { values: { zone: collection.timezone } })}
-				</span>
-			{/if}
-			<div class="ml-auto flex shrink-0 items-center">
-				{#if saving}
-					<span class="loading loading-spinner loading-xs opacity-70"></span>
-				{/if}
-				{#if planning}
-					<button
-						type="button"
-						class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
-						aria-label={$t('itinerary.edit_days')}
-						aria-expanded={editingDuration}
-						data-tip={$t('itinerary.edit_days')}
-						onclick={() => (editingDuration ? (editingDuration = false) : openDuration())}
-					>
-						{#if editingDuration}
-							<Close class="h-4 w-4" />
-						{:else}
-							<CalendarEdit class="h-4 w-4" />
-						{/if}
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		{#if editingDuration}
-			<form
-				class="mt-1.5 flex flex-wrap items-end gap-2 border-t border-base-300/70 pt-2"
-				onsubmit={applyDuration}
-			>
-				<label class="flex flex-col gap-1">
-					<span class="text-xs text-base-content/60">{$t('itinerary.days_label')}</span>
-					<input
-						type="number"
-						class="input input-xs w-20 bg-base-100"
-						min="1"
-						max={MAX_PLAN_DAYS}
-						bind:value={durationCount}
-						required
-					/>
-				</label>
-				<label class="flex flex-col gap-1">
-					<span class="text-xs text-base-content/60">{$t('itinerary.start_date_optional')}</span>
-					<input type="date" class="input input-xs w-40 bg-base-100" bind:value={durationStart} />
-				</label>
-				<button type="submit" class="btn btn-xs btn-primary" disabled={saving}>
-					{$t('itinerary.apply')}
-				</button>
-			</form>
-		{/if}
-	</div>
-
-	<!-- Trip-wide notes and checklists -->
-	{#if zones.global.length > 0 || planning}
-		<section class="card bg-base-200 shadow-xl">
-			<div class="card-body gap-3 p-4 sm:p-5">
-				<div class="flex items-center gap-3">
-					<Earth class="h-5 w-5 text-primary" />
-					<div class="min-w-0 flex-1">
-						<h3 class="text-lg font-bold">{$t('itinerary.trip_wide')}</h3>
-						<p class="text-sm opacity-70">{$t('itinerary.trip_wide_desc')}</p>
-					</div>
+				<div class="ml-auto flex shrink-0 items-center">
+					{#if saving}
+						<span class="loading loading-spinner loading-xs opacity-70"></span>
+					{/if}
 					{#if planning}
-						{@render addMenu({ dayIndex: null, isGlobal: true })}
+						<button
+							type="button"
+							class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
+							aria-label={$t('itinerary.edit_days')}
+							aria-expanded={editingDuration}
+							data-tip={$t('itinerary.edit_days')}
+							onclick={() => (editingDuration ? (editingDuration = false) : openDuration())}
+						>
+							{#if editingDuration}
+								<Close class="h-4 w-4" />
+							{:else}
+								<CalendarEdit class="h-4 w-4" />
+							{/if}
+						</button>
 					{/if}
 				</div>
-				{@render zone('global', zones.global, false, $t('itinerary.no_trip_context_items'))}
 			</div>
-		</section>
-	{/if}
 
-	<!-- Ideas -->
-	<section
-		class="card bg-base-200 shadow-xl"
-		class:ring-2={highlightKey === 'ideas'}
-		class:ring-primary={highlightKey === 'ideas'}
-	>
-		<div class="card-body gap-3 p-4 sm:p-5">
-			<div class="flex items-center gap-3">
-				<Lightbulb class="h-5 w-5 text-warning" />
-				<div class="min-w-0 flex-1">
-					<h3 class="text-lg font-bold">{$t('itinerary.ideas')}</h3>
-					<p class="text-sm opacity-70">{$t('itinerary.ideas_desc')}</p>
-				</div>
-				{#if planning}
-					{@render addMenu({ dayIndex: null, isGlobal: false })}
-				{/if}
-			</div>
-			{@render zone('ideas', zones.ideas, false, $t('itinerary.ideas_empty'))}
-			{#if unplaced.length > 0}
-				<div class="space-y-2 pt-2">
-					<h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">
-						{$t('itinerary.not_on_plan')}
-					</h4>
-					{#each unplaced as row (row.id)}
-						{@render planRow(row, { draggable: false, projected: false })}
-					{/each}
-				</div>
+			{#if editingDuration}
+				<form
+					class="mt-1.5 flex flex-wrap items-end gap-2 border-t border-base-300/70 pt-2"
+					onsubmit={applyDuration}
+				>
+					<label class="flex flex-col gap-1">
+						<span class="text-xs text-base-content/60">{$t('itinerary.days_label')}</span>
+						<input
+							type="number"
+							class="input input-xs w-20 bg-base-100"
+							min="1"
+							max={MAX_PLAN_DAYS}
+							bind:value={durationCount}
+							required
+						/>
+					</label>
+					<label class="flex flex-col gap-1">
+						<span class="text-xs text-base-content/60">{$t('itinerary.start_date_optional')}</span>
+						<input type="date" class="input input-xs w-40 bg-base-100" bind:value={durationStart} />
+					</label>
+					<button type="submit" class="btn btn-xs btn-primary" disabled={saving}>
+						{$t('itinerary.apply')}
+					</button>
+				</form>
 			{/if}
 		</div>
-	</section>
 
-	<!-- Days -->
-	{#each days as day (day.id)}
-		{@const key = dayZone(day.id)}
-		{@const rows = zones[key] ?? []}
-		{@const carried = continuing.get(day.index ?? 0) ?? []}
-		{@const loggable = loggableCount(day)}
+		<!-- Trip-wide notes and checklists -->
+		{#if zones.global.length > 0 || planning}
+			<section
+				id="plan-section-global"
+				data-plan-section="global"
+				class="card bg-base-200 shadow-xl"
+			>
+				<div class="card-body gap-3 p-4 sm:p-5">
+					<div class="flex items-center gap-3">
+						<Earth class="h-5 w-5 text-primary" />
+						<div class="min-w-0 flex-1">
+							<h3 class="text-lg font-bold">{$t('itinerary.trip_wide')}</h3>
+							<p class="text-sm opacity-70">{$t('itinerary.trip_wide_desc')}</p>
+						</div>
+						{#if planning}
+							{@render addMenu({ dayIndex: null, isGlobal: true })}
+						{/if}
+					</div>
+					{@render zone('global', zones.global, false, $t('itinerary.no_trip_context_items'))}
+				</div>
+			</section>
+		{/if}
+
+		<!-- Ideas -->
 		<section
+			id="plan-section-ideas"
+			data-plan-section="ideas"
 			class="card bg-base-200 shadow-xl"
-			class:ring-2={highlightKey === key || selectedDay === day.index}
-			class:ring-primary={highlightKey === key || selectedDay === day.index}
+			class:ring-2={highlightKey === 'ideas'}
+			class:ring-primary={highlightKey === 'ideas'}
 		>
 			<div class="card-body gap-3 p-4 sm:p-5">
-				<div class="flex items-start gap-3">
-					<div class="min-w-0 flex-1 space-y-1">
-						<div class="flex flex-wrap items-baseline gap-x-3">
-							<h3 class="text-lg font-bold md:text-xl">
+				<div class="flex items-center gap-3">
+					<Lightbulb class="h-5 w-5 text-warning" />
+					<div class="min-w-0 flex-1">
+						<h3 class="text-lg font-bold">{$t('itinerary.ideas')}</h3>
+						<p class="text-sm opacity-70">{$t('itinerary.ideas_desc')}</p>
+					</div>
+					{#if planning}
+						{@render addMenu({ dayIndex: null, isGlobal: false })}
+					{/if}
+				</div>
+				{@render zone('ideas', zones.ideas, false, $t('itinerary.ideas_empty'))}
+				{#if unplaced.length > 0}
+					<div class="space-y-2 pt-2">
+						<h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">
+							{$t('itinerary.not_on_plan')}
+						</h4>
+						{#each unplaced as row (row.id)}
+							{@render planRow(row, { draggable: false, projected: false })}
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</section>
+
+		<!-- Days -->
+		{#each days as day (day.id)}
+			{@const key = dayZone(day.id)}
+			{@const rows = zones[key] ?? []}
+			{@const carried = continuing.get(day.index ?? 0) ?? []}
+			{@const loggable = loggableCount(day)}
+			<section
+				id={`plan-section-${day.index}`}
+				data-plan-section={String(day.index)}
+				class="card bg-base-200 shadow-xl"
+				class:ring-2={highlightKey === key || selectedDay === day.index}
+				class:ring-primary={highlightKey === key || selectedDay === day.index}
+			>
+				<div class="card-body gap-3 p-4 sm:p-5">
+					<div class="flex items-center gap-3">
+						<div class="flex min-w-0 flex-1 items-baseline gap-x-1.5">
+							<h3 class="shrink-0 text-base font-bold">
 								<button
 									type="button"
 									class="hover:text-primary"
@@ -1081,250 +1223,324 @@
 									{dayTitle(day)}
 								</button>
 							</h3>
-							{#if day.date}
-								<span class="text-sm opacity-70">
-									{weekday(day.date)}, {formatDisplayDate(day.date, dateFormat, { month: 'long' })}
-								</span>
-							{/if}
-						</div>
-						{#if planning && dayFieldEditing(day, 'name')}
-							<input
-								type="text"
-								class="input input-sm w-full max-w-md border-base-300 bg-base-100"
-								placeholder={$t('adventures.name')}
-								value={day.name ?? ''}
-								{@attach focusField}
-								onblur={(e) => commitDayField(day, 'name', e.currentTarget.value)}
-							/>
-						{:else if day.name}
-							{#if planning}
-								<button
-									type="button"
-									class="block max-w-md text-left font-medium hover:text-primary"
-									onclick={() => openDayField(day.id, 'name')}
-								>
-									{day.name}
-								</button>
-							{:else}
-								<p class="font-medium">{day.name}</p>
-							{/if}
-						{/if}
-						{#if planning && dayFieldEditing(day, 'description')}
-							<textarea
-								class="textarea textarea-sm w-full max-w-md border-base-300 bg-base-100"
-								rows="2"
-								placeholder={$t('itinerary.add_description')}
-								value={day.description ?? ''}
-								{@attach focusField}
-								onblur={(e) => commitDayField(day, 'description', e.currentTarget.value)}
-							></textarea>
-						{:else if day.description}
-							{#if planning}
-								<button
-									type="button"
-									class="block max-w-md whitespace-pre-wrap text-left text-sm opacity-80 hover:text-primary"
-									onclick={() => openDayField(day.id, 'description')}
-								>
-									{day.description}
-								</button>
-							{:else}
-								<p class="whitespace-pre-wrap text-sm opacity-80">{day.description}</p>
-							{/if}
-						{/if}
-					</div>
-
-					{#if canModify}
-						<div class="flex shrink-0 items-center gap-1">
-							{#if loggable > 0 && logDayPromptFor !== day.id}
-								<button
-									type="button"
-									class="btn btn-sm btn-ghost gap-1"
-									disabled={loggingDay === day.id}
-									onclick={() => logDay(day)}
-								>
-									{#if loggingDay === day.id}
-										<span class="loading loading-spinner loading-xs"></span>
-									{:else}
-										<CheckAll class="h-4 w-4" />
-									{/if}
-									{$t('itinerary.log_day')}
-								</button>
-							{/if}
-							{#if planning}
-								{#if !day.name && !dayFieldEditing(day, 'name')}
+							{#if planning && dayFieldEditing(day, 'name')}
+								<input
+									type="text"
+									class="input input-xs h-7 w-40 max-w-[40%] border-base-300 bg-base-100"
+									placeholder={$t('adventures.name')}
+									value={day.name ?? ''}
+									{@attach focusField}
+									onblur={(e) => commitDayField(day, 'name', e.currentTarget.value)}
+								/>
+							{:else if day.name}
+								<span class="text-base-content/25" aria-hidden="true">·</span>
+								{#if planning}
 									<button
 										type="button"
-										class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
-										aria-label={$t('adventures.name')}
-										data-tip={$t('adventures.name')}
+										class="max-w-[34%] truncate text-left text-sm font-medium hover:text-primary"
+										title={day.name}
 										onclick={() => openDayField(day.id, 'name')}
 									>
-										<RenameOutline class="h-4 w-4" />
+										{day.name}
 									</button>
+								{:else}
+									<span class="max-w-[34%] truncate text-sm font-medium" title={day.name}
+										>{day.name}</span
+									>
 								{/if}
-								{#if !day.description && !dayFieldEditing(day, 'description')}
+							{/if}
+							{#if day.date}
+								<span class="text-base-content/25" aria-hidden="true">·</span>
+								<span class="shrink-0 text-sm text-base-content/60">{shortDayDate(day.date)}</span>
+							{/if}
+							{#if planning && dayFieldEditing(day, 'description')}
+								<input
+									type="text"
+									class="input input-xs h-7 min-w-0 flex-1 border-base-300 bg-base-100"
+									placeholder={$t('itinerary.add_description')}
+									value={day.description ?? ''}
+									{@attach focusField}
+									onblur={(e) => commitDayField(day, 'description', e.currentTarget.value)}
+								/>
+							{:else if day.description}
+								<span class="text-base-content/25" aria-hidden="true">·</span>
+								{#if planning}
 									<button
 										type="button"
-										class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
-										aria-label={$t('itinerary.add_description')}
-										data-tip={$t('itinerary.add_description')}
+										class="min-w-0 flex-1 truncate text-left text-sm text-base-content/60 hover:text-primary"
+										title={day.description}
 										onclick={() => openDayField(day.id, 'description')}
 									>
-										<TextBoxOutline class="h-4 w-4" />
+										{day.description.replace(/\s+/g, ' ')}
 									</button>
+								{:else}
+									<span
+										class="min-w-0 flex-1 truncate text-sm text-base-content/60"
+										title={day.description}
+									>
+										{day.description.replace(/\s+/g, ' ')}
+									</span>
 								{/if}
-								{@render addMenu({ dayIndex: day.index ?? null, isGlobal: false })}
-								<div
-									class="dropdown dropdown-end"
-									role="group"
-									onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
-								>
-									<div
-										tabindex="0"
-										role="button"
-										class="btn btn-sm btn-square btn-ghost"
-										aria-label={$t('itinerary.day_actions')}
-										title={$t('itinerary.day_actions')}
-									>
-										<DotsVertical class="h-5 w-5" />
-									</div>
-									<ul
-										tabindex="-1"
-										class="dropdown-content menu z-40 w-56 rounded-box bg-base-300 p-2 shadow-sm"
-										role="menu"
-									>
-										<li>
-											<button
-												type="button"
-												role="menuitem"
-												disabled={dayCount >= MAX_PLAN_DAYS}
-												onclick={() => insertDay(day.index ?? 1)}
-											>
-												{$t('itinerary.insert_day_before')}
-											</button>
-										</li>
-										<li>
-											<button
-												type="button"
-												role="menuitem"
-												disabled={dayCount >= MAX_PLAN_DAYS}
-												onclick={() => insertDay((day.index ?? 0) + 1)}
-											>
-												{$t('itinerary.insert_day_after')}
-											</button>
-										</li>
-										<li>
-											<button
-												type="button"
-												role="menuitem"
-												disabled={dayCount >= MAX_PLAN_DAYS}
-												onclick={() => duplicateDay(day)}
-											>
-												{$t('itinerary.duplicate_day')}
-											</button>
-										</li>
-										<li>
-											<button
-												type="button"
-												role="menuitem"
-												disabled={day.index === 1}
-												onclick={() => moveDay(day, (day.index ?? 1) - 1)}
-											>
-												{$t('itinerary.move_day_earlier')}
-											</button>
-										</li>
-										<li>
-											<button
-												type="button"
-												role="menuitem"
-												disabled={day.index === dayCount}
-												onclick={() => moveDay(day, (day.index ?? 0) + 1)}
-											>
-												{$t('itinerary.move_day_later')}
-											</button>
-										</li>
-										<li>
-											<button
-												type="button"
-												role="menuitem"
-												class="text-error"
-												disabled={dayCount <= 1}
-												onclick={() => deleteDay(day)}
-											>
-												{$t('itinerary.delete_day')}
-											</button>
-										</li>
-									</ul>
-								</div>
 							{/if}
 						</div>
-					{/if}
-				</div>
 
-				{#if logDayPromptFor === day.id}
-					<form
-						class="flex flex-wrap items-center gap-2"
-						onsubmit={(e) => {
-							e.preventDefault();
-							void logDay(day, logDayDate);
-						}}
-					>
-						<span class="text-sm">{$t('itinerary.visit_date')}</span>
-						<div class="join">
-							<input
-								type="date"
-								class="input input-sm join-item"
-								bind:value={logDayDate}
-								required
-							/>
-							<button
-								type="submit"
-								class="btn btn-sm btn-primary join-item"
-								disabled={loggingDay === day.id}
-							>
-								{$t('itinerary.log_day')}
-							</button>
-							<button
-								type="button"
-								class="btn btn-sm btn-ghost join-item"
-								aria-label={$t('about.close')}
-								onclick={() => (logDayPromptFor = null)}
-							>
-								<Close class="h-4 w-4" />
-							</button>
-						</div>
-					</form>
-				{/if}
-
-				{#if carried.length > 0}
-					<div class="flex flex-col gap-2">
-						{#each carried as row (row.id)}
-							{@render planRow(row, { draggable: false, projected: anchored, continuation: true })}
-						{/each}
+						{#if canModify}
+							<div class="flex shrink-0 items-center gap-1">
+								{#if loggable > 0 && logDayPromptFor !== day.id}
+									<button
+										type="button"
+										class="btn btn-sm btn-ghost gap-1"
+										disabled={loggingDay === day.id}
+										onclick={() => logDay(day)}
+									>
+										{#if loggingDay === day.id}
+											<span class="loading loading-spinner loading-xs"></span>
+										{:else}
+											<CheckAll class="h-4 w-4" />
+										{/if}
+										{$t('itinerary.log_day')}
+									</button>
+								{/if}
+								{#if planning}
+									{#if !day.name && !dayFieldEditing(day, 'name')}
+										<button
+											type="button"
+											class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
+											aria-label={$t('adventures.name')}
+											data-tip={$t('adventures.name')}
+											onclick={() => openDayField(day.id, 'name')}
+										>
+											<RenameOutline class="h-4 w-4" />
+										</button>
+									{/if}
+									{#if !day.description && !dayFieldEditing(day, 'description')}
+										<button
+											type="button"
+											class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
+											aria-label={$t('itinerary.add_description')}
+											data-tip={$t('itinerary.add_description')}
+											onclick={() => openDayField(day.id, 'description')}
+										>
+											<TextBoxOutline class="h-4 w-4" />
+										</button>
+									{/if}
+									{@render addMenu({ dayIndex: day.index ?? null, isGlobal: false })}
+									<div
+										class="dropdown dropdown-end relative z-50 focus-within:z-[200]"
+										role="group"
+										onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+									>
+										<div
+											tabindex="0"
+											role="button"
+											class="btn btn-sm btn-square btn-ghost"
+											aria-label={$t('itinerary.day_actions')}
+											title={$t('itinerary.day_actions')}
+										>
+											<DotsVertical class="h-5 w-5" />
+										</div>
+										<ul
+											tabindex="-1"
+											class="dropdown-content menu z-[9999] w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
+											role="menu"
+										>
+											<li>
+												<button
+													type="button"
+													role="menuitem"
+													disabled={dayCount >= MAX_PLAN_DAYS}
+													onclick={() => insertDay(day.index ?? 1)}
+												>
+													{$t('itinerary.insert_day_before')}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													role="menuitem"
+													disabled={dayCount >= MAX_PLAN_DAYS}
+													onclick={() => insertDay((day.index ?? 0) + 1)}
+												>
+													{$t('itinerary.insert_day_after')}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													role="menuitem"
+													disabled={dayCount >= MAX_PLAN_DAYS}
+													onclick={() => duplicateDay(day)}
+												>
+													{$t('itinerary.duplicate_day')}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													role="menuitem"
+													disabled={day.index === 1}
+													onclick={() => moveDay(day, (day.index ?? 1) - 1)}
+												>
+													{$t('itinerary.move_day_earlier')}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													role="menuitem"
+													disabled={day.index === dayCount}
+													onclick={() => moveDay(day, (day.index ?? 0) + 1)}
+												>
+													{$t('itinerary.move_day_later')}
+												</button>
+											</li>
+											<li>
+												<button
+													type="button"
+													role="menuitem"
+													class="text-error"
+													disabled={dayCount <= 1}
+													onclick={() => deleteDay(day)}
+												>
+													{$t('itinerary.delete_day')}
+												</button>
+											</li>
+										</ul>
+									</div>
+								{/if}
+							</div>
+						{/if}
 					</div>
-				{/if}
 
-				{@render zone(
-					key,
-					rows,
-					anchored,
-					carried.length > 0 ? $t('itinerary.drop_plans_here') : $t('itinerary.no_plans_for_day')
-				)}
+					{#if logDayPromptFor === day.id}
+						<form
+							class="flex flex-wrap items-center gap-2"
+							onsubmit={(e) => {
+								e.preventDefault();
+								void logDay(day, logDayDate);
+							}}
+						>
+							<span class="text-sm">{$t('itinerary.visit_date')}</span>
+							<div class="join">
+								<input
+									type="date"
+									class="input input-sm join-item"
+									bind:value={logDayDate}
+									required
+								/>
+								<button
+									type="submit"
+									class="btn btn-sm btn-primary join-item"
+									disabled={loggingDay === day.id}
+								>
+									{$t('itinerary.log_day')}
+								</button>
+								<button
+									type="button"
+									class="btn btn-sm btn-ghost join-item"
+									aria-label={$t('about.close')}
+									onclick={() => (logDayPromptFor = null)}
+								>
+									<Close class="h-4 w-4" />
+								</button>
+							</div>
+						</form>
+					{/if}
+
+					{#if carried.length > 0}
+						<div class="flex flex-col gap-2">
+							{#each carried as row (row.id)}
+								{@render planRow(row, {
+									draggable: false,
+									projected: anchored,
+									continuation: true
+								})}
+							{/each}
+						</div>
+					{/if}
+
+					{@render zone(
+						key,
+						rows,
+						anchored,
+						carried.length > 0 ? $t('itinerary.drop_plans_here') : $t('itinerary.no_plans_for_day')
+					)}
+				</div>
+			</section>
+		{/each}
+
+		{#if planning}
+			<div class="flex justify-center">
+				<button
+					type="button"
+					class="btn btn-outline gap-2"
+					disabled={dayCount >= MAX_PLAN_DAYS}
+					onclick={() => insertDay()}
+				>
+					<Plus class="h-5 w-5" />
+					{$t('itinerary.add_day')}
+				</button>
 			</div>
-		</section>
-	{/each}
+		{/if}
+	</div>
 
-	{#if planning}
-		<div class="flex justify-center">
-			<button
-				type="button"
-				class="btn btn-outline gap-2"
-				disabled={dayCount >= MAX_PLAN_DAYS}
-				onclick={() => insertDay()}
+	{#if days.length > 0}
+		<div class="w-8 shrink-0">
+			<nav
+				class="day-rail sticky top-2 z-30 flex w-8 flex-col items-center gap-1 overflow-x-hidden overflow-y-auto rounded-full border border-base-300 bg-base-100/90 p-1 shadow-lg backdrop-blur-lg"
+				aria-label={$t('itinerary.jump_to_day')}
+				{@attach fitRail}
 			>
-				<Plus class="h-5 w-5" />
-				{$t('itinerary.add_day')}
-			</button>
+				{#if zones.global.length > 0 || planning}
+					<button
+						type="button"
+						data-jump="global"
+						class={[
+							'grid h-6 w-6 shrink-0 place-items-center rounded-full text-primary',
+							activeSection === 'global' ? 'bg-primary/15 ring-2 ring-primary' : 'hover:bg-base-200'
+						]}
+						aria-current={activeSection === 'global' ? 'true' : undefined}
+						title={jumpLabel('global')}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => jumpTo('global')}
+					>
+						<Earth class="h-3.5 w-3.5" />
+					</button>
+				{/if}
+				<button
+					type="button"
+					data-jump="ideas"
+					class={[
+						'grid h-6 w-6 shrink-0 place-items-center rounded-full text-warning',
+						activeSection === 'ideas' ? 'bg-warning/15 ring-2 ring-warning' : 'hover:bg-base-200'
+					]}
+					aria-current={activeSection === 'ideas' ? 'true' : undefined}
+					title={jumpLabel('ideas')}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={() => jumpTo('ideas')}
+				>
+					<Lightbulb class="h-3.5 w-3.5" />
+				</button>
+				{#each days as day (day.id)}
+					{@const id = String(day.index)}
+					<button
+						type="button"
+						data-jump={id}
+						class={[
+							'grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-bold text-white',
+							activeSection === id && 'ring-2 ring-inset ring-base-content',
+							activeSection !== id && selectedDay === day.index && 'ring-2 ring-inset ring-primary'
+						]}
+						style:background={day.index ? dayPinColor(day.index) : undefined}
+						aria-current={activeSection === id ? 'true' : undefined}
+						title={jumpLabel(id)}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => jumpTo(id)}
+					>
+						{day.index}
+					</button>
+				{/each}
+			</nav>
 		</div>
 	{/if}
 </div>
@@ -1430,3 +1646,16 @@
 		initialVisitDate={checklistToEdit ? null : createDate}
 	/>
 {/if}
+
+<style>
+	.plan-sections {
+		padding-bottom: 70vh;
+		overflow-anchor: none;
+	}
+	.day-rail {
+		scrollbar-width: none;
+	}
+	.day-rail::-webkit-scrollbar {
+		display: none;
+	}
+</style>

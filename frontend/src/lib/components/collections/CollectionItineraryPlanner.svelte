@@ -2063,7 +2063,7 @@
 
 							{#if canModify}
 								<div
-									class="dropdown dropdown-end z-30"
+									class="dropdown dropdown-end relative z-50 focus-within:z-[200]"
 									role="group"
 									onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
 								>
@@ -2079,7 +2079,7 @@
 									</div>
 									<ul
 										tabindex="-1"
-										class="dropdown-content menu p-2 shadow-sm bg-base-300 rounded-box w-56 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
+										class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-56 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 										role="menu"
 									>
 										<li>

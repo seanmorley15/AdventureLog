@@ -50,7 +50,7 @@
 	</div>
 
 	<div
-		class="absolute inset-x-0 bottom-0 top-[34%] z-10 overflow-y-auto overscroll-contain rounded-t-3xl bg-base-100 px-2 pb-8 shadow-2xl lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-2 lg:shadow-none"
+		class="planner-pane absolute inset-x-0 bottom-0 top-[34%] z-10 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-3xl bg-base-100 px-2 pb-8 shadow-2xl lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-2 lg:shadow-none"
 	>
 		<div class="mx-auto mb-3 mt-2 h-1.5 w-12 rounded-full bg-base-300 lg:hidden"></div>
 		<TripDayPlanner
@@ -65,3 +65,12 @@
 		/>
 	</div>
 </div>
+
+<style>
+	.planner-pane {
+		scrollbar-width: none;
+	}
+	.planner-pane::-webkit-scrollbar {
+		display: none;
+	}
+</style>

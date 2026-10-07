@@ -1650,7 +1650,11 @@
 		"order_conflict": "The plan changed while you were editing. Showing the latest version.",
 		"save_failed": "Couldn't save that change.",
 		"placement_saved": "Plan updated",
-		"drop_plans_here": "Drag plans here"
+		"drop_plans_here": "Drag plans here",
+		"jump_to_day": "Jump to a day",
+		"connect_stops": "Connect stops",
+		"show_day_route": "Show a line through this day's stops, in order",
+		"hide_day_route": "Hide the line through this day's stops"
 	},
 	"common": {
 		"show_less": "Hide details",
