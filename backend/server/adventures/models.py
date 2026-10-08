@@ -727,9 +727,8 @@ class CollectionItineraryDay(models.Model):
     """
     A day in a collection's itinerary.
 
-    Day-based trips identify days by a 1-based contiguous ``index``; ``date`` then
-    mirrors the projected date (anchor + index - 1) and is null without an anchor.
-    Date-keyed trips (not yet converted) store day metadata by ``date`` with no index.
+    Trips identify days by a 1-based contiguous ``index``; ``date`` then mirrors
+    the projected date (anchor + index - 1) and is null without an anchor.
     """
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='itinerary_days')

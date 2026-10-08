@@ -24,7 +24,6 @@
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 	import { createEmptyLocation } from '$lib/location-draft';
 	import {
-		MAX_PLAN_DAYS,
 		browserTimezone,
 		errorMessage,
 		findObject,
@@ -693,8 +692,8 @@
 
 	async function applyDuration(event: SubmitEvent) {
 		event.preventDefault();
-		if (durationCount < 1 || durationCount > MAX_PLAN_DAYS) {
-			addToast('error', $t('collection.day_count_required', { values: { max: MAX_PLAN_DAYS } }));
+		if (durationCount < 1) {
+			addToast('error', $t('collection.day_count_required'));
 			return;
 		}
 		const body: Record<string, unknown> = { day_count: durationCount };
@@ -1126,7 +1125,6 @@
 							type="number"
 							class="input input-xs w-20 bg-base-100"
 							min="1"
-							max={MAX_PLAN_DAYS}
 							bind:value={durationCount}
 							required
 						/>
@@ -1348,7 +1346,6 @@
 												<button
 													type="button"
 													role="menuitem"
-													disabled={dayCount >= MAX_PLAN_DAYS}
 													onclick={() => insertDay(day.index ?? 1)}
 												>
 													{$t('itinerary.insert_day_before')}
@@ -1358,19 +1355,13 @@
 												<button
 													type="button"
 													role="menuitem"
-													disabled={dayCount >= MAX_PLAN_DAYS}
 													onclick={() => insertDay((day.index ?? 0) + 1)}
 												>
 													{$t('itinerary.insert_day_after')}
 												</button>
 											</li>
 											<li>
-												<button
-													type="button"
-													role="menuitem"
-													disabled={dayCount >= MAX_PLAN_DAYS}
-													onclick={() => duplicateDay(day)}
-												>
+												<button type="button" role="menuitem" onclick={() => duplicateDay(day)}>
 													{$t('itinerary.duplicate_day')}
 												</button>
 											</li>
@@ -1471,12 +1462,7 @@
 
 		{#if planning}
 			<div class="flex justify-center">
-				<button
-					type="button"
-					class="btn btn-outline gap-2"
-					disabled={dayCount >= MAX_PLAN_DAYS}
-					onclick={() => insertDay()}
-				>
+				<button type="button" class="btn btn-outline gap-2" onclick={() => insertDay()}>
 					<Plus class="h-5 w-5" />
 					{$t('itinerary.add_day')}
 				</button>

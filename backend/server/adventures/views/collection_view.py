@@ -1055,7 +1055,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             # This export carries no itinerary rows; rebuild the day plan from the records' dates.
             if new_collection.type == 'trip':
                 imported_day_count = collection_meta.get('day_count')
-                if isinstance(imported_day_count, int) and 1 <= imported_day_count <= day_plan.MAX_PLAN_DAYS:
+                if isinstance(imported_day_count, int) and imported_day_count >= 1:
                     day_plan.build_days(new_collection, imported_day_count)
                 else:
                     day_plan.convert_collection(new_collection)

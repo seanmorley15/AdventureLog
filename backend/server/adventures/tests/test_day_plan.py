@@ -193,13 +193,14 @@ class ConversionTests(DayPlanTestBase):
         self.assertEqual(rows[0].day.index, 2)
         self.assertTrue(Visit.objects.filter(id=visit.id).exists())
 
-    def test_long_trip_and_folder_get_no_days(self):
+    def test_long_trip_converts_and_folder_does_not(self):
         year = self.make_trip(start=date(2026, 1, 1), end=date(2026, 12, 31))
         folder = Collection.objects.create(user=self.user, name='Folder', type='folder')
         self.location('Somewhere', folder)
+        self.assertTrue(convert_collection(year))
         self.assertFalse(convert_collection(year))
+        self.assertEqual(len(self.days(year)), 365)
         self.assertFalse(convert_collection(folder))
-        self.assertEqual(year.itinerary_days.count(), 0)
         self.assertEqual(folder.itinerary_days.count(), 0)
         self.assertEqual(folder.itinerary_items.count(), 0)
 
@@ -211,6 +212,21 @@ class ConversionTests(DayPlanTestBase):
         migration.convert_trips(global_apps, None)
         self.assertEqual(len(self.days(trip)), 5)
         self.assertEqual(trip.itinerary_items.count(), 1)
+
+    def test_remaining_migration_converts_a_long_trip_once(self):
+        year = self.make_trip(start=date(2026, 1, 1), end=date(2026, 12, 31))
+        museum = self.location('Museum', year)
+        self.row(year, museum, on=date(2026, 6, 1))
+        short = self.make_trip()
+        convert_collection(short)
+
+        migration = importlib.import_module('adventures.migrations.0080_convert_remaining_trips_to_day_plans')
+        migration.convert_remaining_trips(global_apps, None)
+        migration.convert_remaining_trips(global_apps, None)
+
+        self.assertEqual(len(self.days(year)), 365)
+        self.assertEqual(self.placements(year, museum)[0].day.index, 152)
+        self.assertEqual(len(self.days(short)), 5)
 
     def test_visit_clean_tolerates_null_dates(self):
         museum = self.location('Museum')
@@ -242,11 +258,13 @@ class CollectionDayCountTests(DayPlanTestBase):
         self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(response.json()['end_date'], '2026-07-07')
 
-    def test_day_count_over_62_is_refused(self):
+    def test_large_day_count_is_accepted(self):
         response = self.client.post(
-            '/api/collections/', {'name': 'Too long', 'type': 'trip', 'day_count': 63}, format='json'
+            '/api/collections/', {'name': 'Long stay', 'type': 'trip', 'day_count': 400}, format='json'
         )
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(response.json()['day_count'], 400)
+        self.assertIsNone(response.json()['start_date'])
 
     def test_mismatched_end_date_is_refused(self):
         trip = self.make_trip()
@@ -598,8 +616,9 @@ class DayActionTests(DayPlanTestBase):
         self.assertEqual(extended.json()['collection']['end_date'], '2026-06-08')
         mismatch = self.post('duration', {'day_count': 8, 'end_date': '2026-06-20'})
         self.assertEqual(mismatch.status_code, 400)
-        too_many = self.post('duration', {'day_count': 63})
-        self.assertEqual(too_many.status_code, 400)
+        extended_far = self.post('duration', {'day_count': 400})
+        self.assertEqual(extended_far.status_code, 200, extended_far.content)
+        self.assertEqual(extended_far.json()['collection']['day_count'], 400)
 
     def test_setting_an_anchor_fills_lodging(self):
         trip = Collection.objects.create(user=self.user, name='Loose', type='trip')
@@ -635,19 +654,20 @@ class DayActionTests(DayPlanTestBase):
         far = self.location('Far', year)
         self.row(year, far, on=date(2026, 6, 1))
 
-        too_many = self.client.post(
-            '/api/itineraries/plan-by-days/', {'collection': str(year.id), 'day_count': 63}, format='json'
-        )
-        self.assertEqual(too_many.status_code, 400)
-        self.assertEqual(year.itinerary_days.count(), 0)
-
         response = self.client.post('/api/itineraries/plan-by-days/', {'collection': str(year.id)}, format='json')
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(len(self.days(year)), 21)
+        self.assertEqual(len(self.days(year)), 365)
         self.assertEqual(self.placements(year, museum)[0].day.index, 3)
-        self.assertIsNone(self.placements(year, far)[0].day_id)
+        self.assertEqual(self.placements(year, far)[0].day.index, 152)
         year.refresh_from_db()
-        self.assertEqual(year.end_date, date(2026, 1, 21))
+        self.assertEqual(year.end_date, date(2026, 12, 31))
+
+        longer = self.make_trip(start=date(2026, 1, 1), end=date(2026, 3, 1))
+        counted = self.client.post(
+            '/api/itineraries/plan-by-days/', {'collection': str(longer.id), 'day_count': 400}, format='json'
+        )
+        self.assertEqual(counted.status_code, 200, counted.content)
+        self.assertEqual(len(self.days(longer)), 400)
 
     def test_shared_user_can_change_days(self):
         friend = CustomUser.objects.create_user(username='friend', email='friend@example.com', password='pw12345678')
@@ -736,5 +756,7 @@ class DayPlanBackupTests(DayPlanTestBase):
         rows = list(short.itinerary_items.select_related('day'))
         self.assertEqual(len(rows), 1)
         self.assertEqual((rows[0].day.index, rows[0].span_end_index), (2, 3))
-        self.assertEqual(Collection.objects.get(user=self.user, name='Long').itinerary_days.count(), 0)
+        long_trip = Collection.objects.get(user=self.user, name='Long')
+        self.assertEqual(len(self.days(long_trip)), 365)
+        self.assertEqual(long_trip.end_date, date(2026, 12, 31))
         self.assertEqual(Collection.objects.get(user=self.user, name='Box').itinerary_days.count(), 0)

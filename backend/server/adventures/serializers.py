@@ -1215,10 +1215,6 @@ class CollectionSerializer(CustomModelSerializer):
         """Day-based trips derive end_date from the anchor and the day count."""
         requested = data.get('day_count')
         current = self._instance_day_count()
-        if requested is not None and requested > day_plan.MAX_PLAN_DAYS:
-            raise serializers.ValidationError({
-                'day_count': f'A trip can have at most {day_plan.MAX_PLAN_DAYS} days. Split this collection into shorter trips.'
-            })
         count = requested or current
         if not count or data.get('type', getattr(self.instance, 'type', None)) != 'trip':
             data.pop('day_count', None)

@@ -25,7 +25,7 @@ class UnsupportedBackupSchema(Exception):
 def assign_collection_type_from_dates(start_date, end_date):
     """Set type from dates.
 
-    Both dates mean trip, including a range longer than 21 days.
+    Both dates mean trip, of any length.
     One date or neither means folder. The dates themselves are unchanged.
     """
     if start_date and end_date:

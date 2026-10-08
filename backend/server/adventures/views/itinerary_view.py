@@ -471,13 +471,16 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='plan-by-days')
     def plan_by_days(self, request):
-        """Build a day plan for a long date-keyed trip. ``day_count`` defaults to 21, max 62."""
+        """Build a day plan for a date-keyed trip. Omit ``day_count`` to use the date span."""
         collection = _member_collection(request, request.data.get('collection'))
-        raw_count = request.data.get('day_count', day_plan.DEFAULT_PLAN_DAYS)
-        try:
-            count = int(raw_count)
-        except (TypeError, ValueError):
-            raise day_plan.DayPlanError('Day count must be a whole number.')
+        raw_count = request.data.get('day_count', None)
+        if raw_count in (None, ''):
+            count = None
+        else:
+            try:
+                count = int(raw_count)
+            except (TypeError, ValueError):
+                raise day_plan.DayPlanError('Day count must be a whole number.')
         with transaction.atomic():
             day_plan.plan_by_days(collection, count)
         return self._state_response(collection)

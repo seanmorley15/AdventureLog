@@ -1,14 +1,15 @@
 """
 Day-based trip planning.
 
-A converted trip stores contiguous ``CollectionItineraryDay`` rows indexed 1..N.
+A trip stores contiguous ``CollectionItineraryDay`` rows indexed 1..N.
 ``Collection.start_date`` is the optional anchor; ``end_date`` is derived as the
 last projected day. Placements (``CollectionItineraryItem``) sit on a day, in
 Ideas (no day, not global), or trip-wide (global notes and checklists).
 
 ``convert_collection`` is the single idempotent conversion used by the data
-migration and by backup import. The other helpers back the itinerary actions
-and only run against live models.
+migrations and by backup import. It builds one day per date in the trip, with
+no length cap. The other helpers back the itinerary actions and only run
+against live models.
 """
 from __future__ import annotations
 
@@ -20,9 +21,6 @@ from django.apps import apps as global_apps
 from django.db import transaction
 from django.db.models import Max, Q
 
-MAX_AUTO_BUILD_DAYS = 21
-MAX_PLAN_DAYS = 62
-DEFAULT_PLAN_DAYS = 21
 TEMP_ORDER_OFFSET = 1_000_000
 
 SPAN_TYPES = ('lodging', 'transportation')
@@ -194,11 +192,11 @@ class _Target:
 
 def convert_collection(collection, apps=None) -> bool:
     """
-    Convert a date-keyed trip of 21 days or fewer to a day plan.
+    Convert a date-keyed trip into a day plan covering every date it spans.
 
-    Idempotent: a collection that already has day indexes, a folder, an undated
-    trip, or a trip longer than 21 days is left unchanged. Returns True when
-    days were built.
+    Idempotent: a collection that already has day indexes, a folder, or a trip
+    without a positive date span is left unchanged. Returns True when days
+    were built.
     """
     reg = _Registry(apps)
     if collection.type != 'trip':
@@ -206,26 +204,23 @@ def convert_collection(collection, apps=None) -> bool:
     if is_day_based(collection, reg):
         return False
     span = inclusive_span(collection.start_date, collection.end_date)
-    if span is None or span < 1 or span > MAX_AUTO_BUILD_DAYS:
+    if span is None or span < 1:
         return False
     _build_day_plan(collection, span, reg)
     return True
 
 
-def plan_by_days(collection, count=DEFAULT_PLAN_DAYS):
-    """Build ``count`` days from the anchor for a long date-keyed trip."""
+def plan_by_days(collection, count=None):
+    """Build a day plan from the anchor. ``count`` defaults to the date span."""
     reg = _Registry()
     if collection.type != 'trip':
         raise DayPlanError('Only trips can be planned by days.')
     if is_day_based(collection, reg):
         raise DayPlanError('This trip is already planned by days.', code='conflict')
+    if count is None:
+        count = inclusive_span(collection.start_date, collection.end_date)
     if not isinstance(count, int) or count < 1:
         raise DayPlanError('Day count must be at least 1.')
-    if count > MAX_PLAN_DAYS:
-        raise DayPlanError(
-            f'A trip can have at most {MAX_PLAN_DAYS} days. Split this collection into shorter trips.',
-            code='too_many_days',
-        )
     _build_day_plan(collection, count, reg)
     if collection.start_date:
         collection.end_date = projected_date(collection.start_date, count)
@@ -285,8 +280,8 @@ def build_days(collection, count):
     records by date. Without an anchor every record goes to Ideas.
     """
     reg = _Registry()
-    if count < 1 or count > MAX_PLAN_DAYS:
-        raise DayPlanError(f'Day count must be between 1 and {MAX_PLAN_DAYS}.')
+    if not isinstance(count, int) or count < 1:
+        raise DayPlanError('Day count must be at least 1.')
     if is_day_based(collection, reg):
         raise DayPlanError('This trip is already planned by days.', code='conflict')
     _build_day_plan(collection, count, reg)
@@ -301,15 +296,28 @@ def _build_day_plan(collection, count, reg):
         for day in reg.Day.objects.filter(collection_id=collection.pk, index__isnull=True)
     }
     days_by_index = {}
+    pending = []
+    now = datetime.datetime.now(datetime.timezone.utc)
     for index in range(1, count + 1):
         day_date = projected_date(anchor, index)
         day = legacy_days.pop(day_date, None) if day_date else None
         if day is not None:
             day.index = index
             day.save(update_fields=['index'])
+            days_by_index[index] = day
         else:
-            day = reg.Day.objects.create(collection_id=collection.pk, index=index, date=day_date)
-        days_by_index[index] = day
+            pending.append(
+                reg.Day(
+                    collection_id=collection.pk,
+                    index=index,
+                    date=day_date,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+    if pending:
+        for day in reg.Day.objects.bulk_create(pending, batch_size=500):
+            days_by_index[day.index] = day
     for leftover in legacy_days.values():
         leftover.delete()
 
@@ -733,8 +741,6 @@ def insert_day(collection, position=None, name=None, description=None):
             sync_projection(collection)
             return collection
         days = indexed_days(collection)
-        if len(days) >= MAX_PLAN_DAYS:
-            raise DayPlanError(f'A trip can have at most {MAX_PLAN_DAYS} days.', code='too_many_days')
         count = len(days)
         position = count + 1 if position is None else int(position)
         if position < 1 or position > count + 1:
@@ -959,11 +965,6 @@ def set_duration(collection, count, anchor=..., destination=None, target_day_id=
             raise DayPlanError('Day count must be a whole number.')
         if count < 1:
             raise DayPlanError('A trip needs at least one day.')
-        if count > MAX_PLAN_DAYS:
-            raise DayPlanError(
-                f'A trip can have at most {MAX_PLAN_DAYS} days. Split this collection into shorter trips.',
-                code='too_many_days',
-            )
 
         days = indexed_days(collection)
         current = len(days)

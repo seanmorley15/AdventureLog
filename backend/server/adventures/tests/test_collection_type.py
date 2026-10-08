@@ -136,7 +136,7 @@ class CollectionTypeApiTests(APITestCase):
         stored_folder = Collection.objects.get(id=folder.json()['id'])
         self.assertEqual(stored_trip.type, 'trip')
         self.assertEqual(stored_folder.type, 'folder')
-        # A trip of 21 days or fewer is built as days; a folder never is.
+        # A dated trip is built as days; a folder never is.
         self.assertEqual(stored_trip.itinerary_days.filter(index__isnull=False).count(), 3)
         self.assertEqual(stored_folder.itinerary_days.count(), 0)
 
@@ -182,7 +182,7 @@ class CollectionTypeApiTests(APITestCase):
         self.assertIsNone(one.json()['end_date'])
         self.assertIsNone(one.json()['status'])
 
-    def test_range_over_21_days_is_a_trip_without_day_rows(self):
+    def test_long_range_is_a_day_based_trip(self):
         response = self.client.post(
             '/api/collections/',
             {
@@ -194,9 +194,10 @@ class CollectionTypeApiTests(APITestCase):
         )
         self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(response.json()['type'], 'trip')
+        self.assertEqual(response.json()['day_count'], 365)
         collection = Collection.objects.get(id=response.json()['id'])
-        self.assertGreater((collection.end_date - collection.start_date).days, 21)
-        self.assertEqual(collection.itinerary_days.count(), 0)
+        self.assertEqual(collection.end_date, date(2026, 12, 31))
+        self.assertEqual(collection.itinerary_days.filter(index__isnull=False).count(), 365)
         self.assertEqual(collection.itinerary_items.count(), 0)
 
     def test_list_filter_uses_type_not_status_folder(self):
@@ -338,11 +339,8 @@ class CollectionTypeBackupTests(APITestCase):
         self.assertEqual(restored['Old trip'].type, 'trip')
         self.assertEqual(restored['Old trip'].start_date, date(2018, 1, 1))
         self.assertEqual(restored['Old trip'].end_date, date(2018, 12, 31))
-        self.assertGreater(
-            (restored['Old trip'].end_date - restored['Old trip'].start_date).days,
-            21,
-        )
-        self.assertEqual(restored['Old trip'].itinerary_days.count(), 0)
+        self.assertEqual(restored['Old trip'].end_date, date(2018, 12, 31))
+        self.assertEqual(restored['Old trip'].itinerary_days.filter(index__isnull=False).count(), 365)
         self.assertEqual(restored['Old folder'].type, 'folder')
         self.assertEqual(restored['Old one date'].type, 'folder')
         self.assertEqual(restored['Old one date'].start_date, date(2018, 6, 1))

@@ -9,9 +9,6 @@ import type {
 	Transportation
 } from '$lib/types';
 
-export const MAX_PLAN_DAYS = 62;
-export const DEFAULT_PLAN_DAYS = 21;
-
 export type PlanObjectType = 'location' | 'lodging' | 'transportation' | 'note' | 'checklist';
 export type PlanObject = Location | Lodging | Transportation | Note | Checklist;
 
@@ -90,11 +87,9 @@ export function isDayBased(collection: Collection): boolean {
 	return collection.type === 'trip' && Boolean(collection.day_count);
 }
 
-/** Day planner, including a trip that only has Ideas and no days yet. */
+/** Every trip is planned by days. Folders are not. */
 export function showsDayPlanner(collection: Collection): boolean {
-	if (collection.type !== 'trip') return false;
-	if (collection.day_count) return true;
-	return (collection.itinerary ?? []).some((item) => !item.day && !item.is_global && !item.date);
+	return collection.type === 'trip';
 }
 
 export type PlanPin = {

@@ -7,7 +7,7 @@
 	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
 	import DateInput from './shared/DateInput.svelte';
-	import { addDays, browserTimezone, MAX_PLAN_DAYS } from '$lib/dayPlan';
+	import { addDays, browserTimezone } from '$lib/dayPlan';
 	import { formatDisplayDate } from '$lib/dateFormat';
 
 	// Icons
@@ -207,12 +207,12 @@
 
 		const dayCountOptional = convertingFolder && !collectionToEdit?.day_count;
 		if (usesDayCount && !dayCountOptional) {
-			if (!dayCount || dayCount < 1 || dayCount > MAX_PLAN_DAYS) {
-				addToast('error', $t('collection.day_count_required', { values: { max: MAX_PLAN_DAYS } }));
+			if (!dayCount || dayCount < 1) {
+				addToast('error', $t('collection.day_count_required'));
 				return;
 			}
-		} else if (usesDayCount && dayCount && (dayCount < 1 || dayCount > MAX_PLAN_DAYS)) {
-			addToast('error', $t('collection.day_count_required', { values: { max: MAX_PLAN_DAYS } }));
+		} else if (usesDayCount && dayCount && dayCount < 1) {
+			addToast('error', $t('collection.day_count_required'));
 			return;
 		} else if (
 			collection.type === 'trip' &&
@@ -497,12 +497,11 @@
 											name="day_count"
 											class="input w-full"
 											min="1"
-											max={MAX_PLAN_DAYS}
 											bind:value={dayCount}
 											required={!(convertingFolder && !collectionToEdit?.day_count)}
 										/>
 										<p class="field-hint">
-											{$t('collection.day_count_hint', { values: { max: MAX_PLAN_DAYS } })}
+											{$t('collection.day_count_hint')}
 										</p>
 									</div>
 								{/if}

@@ -23,9 +23,7 @@
 	import ImageFrame from '$lib/components/ImageFrame.svelte';
 	import { normalizeContentImage } from '$lib/images';
 	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
-	import CollectionItineraryPlanner from '$lib/components/collections/CollectionItineraryPlanner.svelte';
 	import TripWorkspace from '$lib/components/collections/TripWorkspace.svelte';
-	import PlanByDaysPrompt from '$lib/components/collections/PlanByDaysPrompt.svelte';
 	import LinkItemsModal from '$lib/components/collections/LinkItemsModal.svelte';
 	import type { LinkScope } from '$lib/components/collections/LinkItemsModal.svelte';
 	import { placementType, showsDayPlanner, type PlanObjectType } from '$lib/dayPlan';
@@ -207,7 +205,6 @@
 	// View state from URL params
 	type ViewType =
 		| 'all'
-		| 'itinerary'
 		| 'plan'
 		| 'read'
 		| 'map'
@@ -215,7 +212,7 @@
 		| 'recommendations'
 		| 'stats'
 		| 'budget';
-	let currentView: ViewType = $state('itinerary');
+	let currentView: ViewType = $state('plan');
 	// How many view tabs fit in the row. The rest collapse into More.
 	let visibleTabCount = $state(Number.POSITIVE_INFINITY);
 
@@ -746,7 +743,6 @@
 		all: true,
 		plan: dayPlanner,
 		read: dayPlanner,
-		itinerary: !isFolderView && !dayPlanner,
 		map:
 			!dayPlanner &&
 			!isFolderView &&
@@ -774,10 +770,6 @@
 			add('read', $t('collection.read'), BookOpenVariant);
 			add('all', $t('collections.all_items'), FormatListBulleted);
 		}
-		if (availableViews.itinerary) {
-			add('itinerary', $t('adventures.itinerary'), Timeline);
-			add('all', $t('collections.all_items'), FormatListBulleted);
-		}
 		if (availableViews.map) add('map', $t('navbar.map'), Map);
 		if (isFolderView && !tabs.some((tab) => tab.id === 'all')) {
 			add('all', $t('collections.all_items'), FormatListBulleted);
@@ -799,28 +791,20 @@
 	);
 	let coverImage = $derived(heroImages[slideIndex] ?? null);
 	run(() => {
-		defaultView = (dayPlanner ? 'plan' : isFolderView ? 'all' : 'itinerary') as ViewType;
+		defaultView = (dayPlanner ? 'plan' : 'all') as ViewType;
 	});
 	// Read view from URL params and validate it's available
 	run(() => {
-		const view = $page.url.searchParams.get('view') as ViewType;
-		const normalized = view === 'itinerary' && dayPlanner ? 'plan' : view;
+		const requested = $page.url.searchParams.get('view');
+		const view = (requested === 'itinerary' ? 'plan' : requested) as ViewType;
 		if (
-			normalized &&
-			[
-				'all',
-				'itinerary',
-				'plan',
-				'read',
-				'map',
-				'calendar',
-				'recommendations',
-				'stats',
-				'budget'
-			].includes(normalized) &&
-			availableViews[normalized]
+			view &&
+			['all', 'plan', 'read', 'map', 'calendar', 'recommendations', 'stats', 'budget'].includes(
+				view
+			) &&
+			availableViews[view]
 		) {
-			currentView = normalized;
+			currentView = view;
 		} else {
 			currentView = defaultView;
 		}
@@ -1411,18 +1395,6 @@
 								onOpenLink={(scope) => (linkScope = scope)}
 							/>
 						</div>
-					{/if}
-
-					<!-- Itinerary View (unconverted long trips) -->
-					{#if currentView === 'itinerary'}
-						{#if canModifyCollection && collection.type === 'trip' && collection.start_date && collection.end_date}
-							<PlanByDaysPrompt {collection} onConverted={(updated) => (collection = updated)} />
-						{/if}
-						<CollectionItineraryPlanner
-							bind:collection
-							user={data.user}
-							canModify={canModifyCollection}
-						/>
 					{/if}
 
 					{#if currentView === 'budget'}
