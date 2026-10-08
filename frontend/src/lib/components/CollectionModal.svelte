@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import { addToast } from '$lib/toasts';
@@ -20,7 +19,6 @@
 	import ImageIcon from '~icons/mdi/image-multiple';
 
 	const dispatch = createEventDispatcher();
-	let modal: HTMLDialogElement;
 
 	interface Props {
 		collectionToEdit?: Collection | SlimCollection | null;
@@ -50,8 +48,20 @@
 
 	let coverImageId: string | null = $state(null);
 	let showCoverGrid = $state(false);
+
+	function openModal(node: HTMLDialogElement) {
+		node.showModal();
+		const frame = requestAnimationFrame(() => {
+			showCoverGrid = true;
+		});
+		return () => {
+			cancelAnimationFrame(frame);
+			if (node.open) node.close();
+		};
+	}
 	let planMode = $state<'dates' | 'days'>('dates');
 	let dayCount = $state<number | null>(null);
+	let isSaving = $state(false);
 
 	// A day-based trip is edited by day count; a date-keyed trip keeps its dates until "Plan by days".
 	const editingDayPlan = $derived(Boolean(collectionToEdit?.day_count));
@@ -170,17 +180,6 @@
 		};
 	}
 
-	onMount(() => {
-		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		if (modal) {
-			modal.showModal();
-		}
-		// Paint the form first. Cover photos are already on the card payload.
-		requestAnimationFrame(() => {
-			showCoverGrid = true;
-		});
-	});
-
 	function close() {
 		dispatch('close');
 	}
@@ -193,6 +192,7 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+		if (isSaving) return;
 
 		if (!collection.start_date) {
 			collection.start_date = null;
@@ -264,82 +264,85 @@
 			}
 		}
 
-		if (collection.id === '') {
-			let res = await fetch('/api/collections', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(payload)
-			});
-			let data = await res.json();
-			if (data.id) {
-				collection = data as Collection;
-				coverImageId = collection.primary_image?.id ?? null;
-				collection.primary_image_id = coverImageId;
-				addToast('success', $t('collection.collection_created'));
-				dispatch('save', toSlimCollection(collection));
+		isSaving = true;
+		try {
+			if (collection.id === '') {
+				let res = await fetch('/api/collections', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(payload)
+				});
+				let data = await res.json();
+				if (data.id) {
+					collection = data as Collection;
+					coverImageId = collection.primary_image?.id ?? null;
+					collection.primary_image_id = coverImageId;
+					addToast('success', $t('collection.collection_created'));
+					dispatch('save', toSlimCollection(collection));
+				} else {
+					console.error(data);
+					const fieldErrors = Object.entries(data)
+						.filter(([_, v]) => Array.isArray(v))
+						.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
+						.join('; ');
+					addToast('error', fieldErrors || $t('collection.error_creating_collection'));
+				}
 			} else {
-				console.error(data);
-				// Extract field-level errors from Django response
-				const fieldErrors = Object.entries(data)
-					.filter(([_, v]) => Array.isArray(v))
-					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-					.join('; ');
-				addToast('error', fieldErrors || $t('collection.error_creating_collection'));
+				let res = await fetch(`/api/collections/${collection.id}`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(payload)
+				});
+				let data = await res.json();
+				if (data.id) {
+					collection = data as Collection;
+					coverImageId = collection.primary_image?.id ?? null;
+					collection.primary_image_id = coverImageId;
+					addToast('success', $t('collection.collection_edit_success'));
+					dispatch('save', toSlimCollection(collection));
+				} else {
+					const fieldErrors = Object.entries(data)
+						.filter(([_, v]) => Array.isArray(v))
+						.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
+						.join('; ');
+					addToast('error', fieldErrors || $t('collection.error_editing_collection'));
+				}
 			}
-		} else {
-			let res = await fetch(`/api/collections/${collection.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(payload)
-			});
-			let data = await res.json();
-			if (data.id) {
-				collection = data as Collection;
-				coverImageId = collection.primary_image?.id ?? null;
-				collection.primary_image_id = coverImageId;
-				addToast('success', $t('collection.collection_edit_success'));
-				dispatch('save', toSlimCollection(collection));
-			} else {
-				// Extract field-level errors from Django response
-				const fieldErrors = Object.entries(data)
-					.filter(([_, v]) => Array.isArray(v))
-					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-					.join('; ');
-				addToast('error', fieldErrors || $t('collection.error_editing_collection'));
-			}
+		} finally {
+			isSaving = false;
 		}
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal backdrop-blur-xs">
-	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<dialog
+	{@attach openModal}
+	class="modal modal-bottom md:modal-middle backdrop-blur-xs"
+	aria-labelledby="collection-modal-title"
+	onkeydown={handleKeydown}
+>
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl max-h-[85vh] flex flex-col"
-		role="dialog"
-		onkeydown={handleKeydown}
-		tabindex="0"
+		class="modal-box collection-modal-box w-11/12 max-w-6xl bg-base-100 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 	>
-		<!-- Header Section -->
-		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
-		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<div class="p-2 bg-primary/10 rounded-xl">
+		<div class="shrink-0 bg-base-100 border-b border-base-300 px-4 md:px-6 py-3 md:py-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
+					<div class="p-2 bg-primary/10 rounded-xl shrink-0">
 						<CollectionIcon class="w-8 h-8 text-primary" />
 					</div>
-					<div>
-						<h1 class="text-3xl font-bold text-primary bg-clip-text">
+					<div class="min-w-0">
+						<h1
+							id="collection-modal-title"
+							class="text-2xl md:text-3xl font-bold text-primary truncate"
+						>
 							{collectionToEdit
 								? $t('adventures.edit_collection')
 								: $t('collection.new_collection')}
 						</h1>
-						<p class="text-sm text-base-content/80">
+						<p class="text-sm text-base-content/80 truncate">
 							{collectionToEdit
 								? $t('collection.update_collection_details')
 								: $t('collection.create_new_collection')}
@@ -347,24 +350,30 @@
 					</div>
 				</div>
 
-				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" onclick={close}>
+				<button
+					type="button"
+					class="btn btn-ghost btn-square shrink-0"
+					aria-label={$t('about.close')}
+					title={$t('about.close')}
+					onclick={close}
+				>
 					<CloseIcon class="w-5 h-5" />
 				</button>
 			</div>
 		</div>
 
-		<!-- Main Content -->
-		<div class="p-6 overflow-auto max-h-[70vh]">
-			<form method="post" onsubmit={handleSubmit} class="space-y-6">
+		<form method="post" onsubmit={handleSubmit} class="flex flex-1 min-h-0 flex-col">
+			<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
 				<!-- Basic Information Section -->
-				<div class="card bg-base-100 border border-base-300 shadow-lg">
+				<div class="card bg-base-100 border border-base-300">
 					<div class="card-body p-6">
 						<div class="flex items-center gap-3 mb-6">
 							<div class="p-2 bg-primary/10 rounded-lg">
 								<InfoIcon class="w-5 h-5 text-primary" />
 							</div>
-							<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
+							<h2 class="text-xl font-bold text-base-content">
+								{$t('adventures.basic_information')}
+							</h2>
 						</div>
 
 						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -390,7 +399,7 @@
 								<div class="flex flex-col">
 									<label class="field-label" for="description">{$t('adventures.description')}</label
 									>
-									<MarkdownEditor bind:text={collection.description} editor_height={'h-32'} />
+									<MarkdownEditor bind:text={collection.description} editor_height="h-32" />
 								</div>
 
 								<!-- Link Field -->
@@ -576,7 +585,7 @@
 
 				<!-- Date Warning Alert -->
 				{#if collection.type === 'folder' && !collection.start_date && !collection.end_date}
-					<div role="alert" class="alert alert-info shadow-lg">
+					<div role="alert" class="alert alert-info">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -593,12 +602,12 @@
 						<span>{$t('adventures.collection_no_start_end_date')}</span>
 					</div>
 				{:else if editingDayPlan && collection.start_date !== (collectionToEdit?.start_date ?? null)}
-					<div role="alert" class="alert alert-info shadow-lg">
+					<div role="alert" class="alert alert-info">
 						<CalendarIcon class="h-6 w-6 shrink-0" />
 						<span>{$t('collection.day_plan_date_hint')}</span>
 					</div>
 				{:else if !editingDayPlan && collection.id && collectionToEdit?.start_date && collectionToEdit?.end_date && (collection.start_date !== collectionToEdit.start_date || collection.end_date !== collectionToEdit.end_date)}
-					<div role="alert" class="alert alert-warning shadow-lg">
+					<div role="alert" class="alert alert-warning">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="stroke-current shrink-0 h-6 w-6"
@@ -623,7 +632,7 @@
 
 				<!-- Cover Image Selection -->
 				{#if collection.id}
-					<div class="card bg-base-100 border border-base-300 shadow-lg">
+					<div class="card bg-base-100 border border-base-300">
 						<div class="card-body p-6 space-y-4">
 							<div class="flex items-center gap-3">
 								<div class="p-2 bg-primary/10 rounded-lg">
@@ -709,7 +718,7 @@
 
 				<!-- Share Link Section (only if public and has ID) -->
 				{#if collection.is_public && collection.id}
-					<div class="card bg-base-100 border border-base-300 shadow-lg">
+					<div class="card bg-base-100 border border-base-300">
 						<div class="card-body p-6">
 							<h3 class="font-semibold text-lg mb-3">{$t('adventures.share_collection')}</h3>
 							<div class="flex items-center gap-3">
@@ -740,19 +749,49 @@
 						</div>
 					</div>
 				{/if}
+			</div>
 
-				<!-- Action Buttons -->
-				<div class="flex gap-3 justify-end pt-4">
-					<button type="button" class="btn btn-neutral gap-2" onclick={close}>
+			<div
+				class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3"
+			>
+				<div class="flex gap-3 justify-end">
+					<button type="button" class="btn btn-ghost gap-2" onclick={close} disabled={isSaving}>
 						<CloseIcon class="w-5 h-5" />
 						{$t('about.close')}
 					</button>
-					<button type="submit" class="btn btn-primary gap-2">
-						<SaveIcon class="w-5 h-5" />
-						{$t('notes.save')}
+					<button
+						type="submit"
+						class="btn btn-primary gap-2"
+						disabled={isSaving || !collection.name.trim()}
+					>
+						{#if isSaving}
+							<span class="loading loading-spinner loading-sm"></span>
+							{$t('adventures.processing')}...
+						{:else}
+							<SaveIcon class="w-5 h-5" />
+							{$t('notes.save')}
+						{/if}
 					</button>
 				</div>
-			</form>
-		</div>
+			</div>
+		</form>
 	</div>
 </dialog>
+
+<style>
+	.collection-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.collection-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>
