@@ -217,6 +217,7 @@ export default defineConfig({
             text: "Development Setup",
             link: "/docs/install/dev_container_wsl",
           },
+          { text: "Testing", link: "/docs/install/testing" },
           {
             text: "Platform Guides",
             collapsed: true,

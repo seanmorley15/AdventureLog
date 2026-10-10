@@ -1,0 +1,108 @@
+name: E2E Tests
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker/**"
+      - "docker-compose.yml"
+      - ".github/workflows/e2e-test.yml"
+  push:
+    branches:
+      - main
+      - development
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker/**"
+      - "docker-compose.yml"
+      - ".github/workflows/e2e-test.yml"
+
+env:
+  POSTGRES_PASSWORD: e2e-test-pass
+  COMPOSE_ARGS: -p adventurelog-e2e -f docker-compose.yml -f docker/docker-compose.e2e.yml
+
+jobs:
+  playwright:
+    name: Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10.32.1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: read playwright version
+        id: playwright
+        working-directory: frontend
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: cache playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: install chromium
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: build image from source
+        run: docker build -f docker/Dockerfile --target aio -t adventurelog-e2e:local .
+
+      - name: start stack
+        run: docker compose $COMPOSE_ARGS up -d --wait
+
+      - name: wait for health endpoint
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8017/health; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Health check failed"
+          exit 1
+
+      - name: run playwright
+        working-directory: frontend
+        run: pnpm test:e2e
+
+      - name: upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: stack logs
+        if: failure()
+        run: |
+          docker compose $COMPOSE_ARGS ps
+          docker compose $COMPOSE_ARGS logs
+
+      - name: tear down
+        if: always()
+        run: docker compose $COMPOSE_ARGS down -v
