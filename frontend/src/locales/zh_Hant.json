@@ -1,1 +1,48 @@
-{}
+{
+  "navbar": {
+    "collections": "收藏",
+    "map": "地圖",
+    "users": "使用者",
+    "search": "搜尋",
+    "profile": "個人檔案",
+    "greeting": "你好",
+    "shared_with_me": "與我共享",
+    "settings": "偏好設定",
+    "logout": "登出",
+    "about": "關於 AdventureLog",
+    "documentation": "說明文件",
+    "language_selection": "語言",
+    "support": "支援",
+    "calendar": "日曆",
+    "theme_selection": "主題選擇",
+    "admin_panel": "管理面板",
+    "worldtravel": "環球旅行",
+    "navigation": "導覽列",
+    "billing": "帳單",
+    "trial_days_left": "試用版：剩餘 {days} 天",
+    "access_paused": "存取已暫停"
+  },
+  "about": {
+    "about": "關於",
+    "license": "本軟體採用 GPL-3.0 授權。",
+    "close": "關閉",
+    "thank_you": "感謝你使用 AdventureLog！",
+    "version": "版本",
+    "copy_version": "複製版本號碼",
+    "view_changelog": "查看更新日誌",
+    "developer": "開發者",
+    "license_info": "授權",
+    "view_license": "查看授權",
+    "sponsor": "贊助人"
+  },
+  "search": {
+    "close": "關閉"
+  },
+  "home": {
+    "hero_1": "探索世界上最刺激的冒險體驗",
+    "hero_2": "使用 AdventureLog 探索並規劃你的下一趟冒險。探索令人驚豔的目的地、建立個人化行程，並在旅途中保持聯繫。",
+    "go_to": "前往 AdventureLog",
+    "desc_1": "輕鬆探索世界，從容規劃旅程",
+    "key_features": "核心功能"
+  }
+}
