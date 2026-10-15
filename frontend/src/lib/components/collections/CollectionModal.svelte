@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import MarkdownEditor from './MarkdownEditor.svelte';
+	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import { addToast } from '$lib/toasts';
 	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
-	import DateInput from './shared/DateInput.svelte';
-	import { addDays, browserTimezone } from '$lib/dayPlan';
+	import DateInput from '../shared/DateInput.svelte';
+	import { addDays, browserTimezone } from '$lib/collections/plan';
 	import { formatDisplayDate } from '$lib/dateFormat';
 
 	// Icons

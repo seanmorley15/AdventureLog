@@ -8,8 +8,10 @@
 		SPAN_TYPES,
 		type PlacementPayload,
 		type PlanRow
-	} from '$lib/dayPlan';
+	} from '$lib/collections/plan';
 	import Close from '~icons/mdi/close';
+	import CalendarPlus from '~icons/mdi/calendar-plus';
+	import MapMarker from '~icons/mdi/map-marker';
 
 	interface Props {
 		mode: 'edit' | 'add';
@@ -96,74 +98,123 @@
 	}
 </script>
 
-<dialog {@attach (node) => node.showModal()} class="modal" onclose={onClose}>
-	<div class="modal-box max-w-md">
-		<div class="mb-4 flex items-start justify-between gap-3">
-			<div class="min-w-0">
-				<h3 class="text-lg font-bold">
-					{mode === 'add' ? $t('itinerary.add_to_plan') : $t('itinerary.edit_placement')}
-				</h3>
-				{#if name}
-					<p class="truncate text-sm opacity-70">{name}</p>
-				{/if}
+<dialog
+	class="modal modal-bottom backdrop-blur-xs md:modal-middle"
+	{@attach (node) => node.showModal()}
+	onclose={onClose}
+>
+	<div
+		class="modal-box flex w-11/12 max-w-xl flex-col overflow-hidden rounded-none border border-base-300 bg-base-100 p-0 shadow-2xl md:rounded-2xl"
+		role="dialog"
+		aria-labelledby="placement-title"
+	>
+		<div class="shrink-0 border-b border-base-300 bg-base-100 px-4 py-3 md:px-6 md:py-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex min-w-0 items-center gap-3">
+					<div class="shrink-0 rounded-xl bg-primary/10 p-2 text-primary">
+						<CalendarPlus class="h-8 w-8" />
+					</div>
+					<div class="min-w-0">
+						<h1 id="placement-title" class="truncate text-2xl font-bold text-primary md:text-3xl">
+							{mode === 'add' ? $t('itinerary.add_to_plan') : $t('itinerary.edit_placement')}
+						</h1>
+						{#if name}
+							<p class="truncate text-sm text-base-content/80">{name}</p>
+						{/if}
+					</div>
+				</div>
+				<button
+					type="button"
+					class="btn btn-ghost btn-square shrink-0"
+					aria-label={$t('about.close')}
+					onclick={onClose}
+				>
+					<Close class="h-5 w-5" />
+				</button>
 			</div>
-			<button
-				type="button"
-				class="btn btn-sm btn-ghost btn-square"
-				aria-label={$t('about.close')}
-				onclick={onClose}
-			>
-				<Close class="h-4 w-4" />
-			</button>
 		</div>
 
-		<form class="space-y-4" onsubmit={submit}>
-			<label class="flex flex-col gap-1">
-				<span class="field-label">{$t('itinerary.where')}</span>
-				<select class="select w-full" bind:value={where} onchange={handleWhereChange}>
-					<option value="ideas">{$t('itinerary.ideas')}</option>
-					{#if canBeGlobal}
-						<option value="global">{$t('itinerary.trip_wide')}</option>
-					{/if}
-					{#each days as day (day.id)}
-						<option value={`day:${day.index}`}>{dayLabel(day)}</option>
-					{/each}
-				</select>
-			</label>
+		<form class="flex flex-col" onsubmit={submit}>
+			<div class="px-4 py-4 md:px-6 md:py-5">
+				<div class="card border border-base-300 bg-base-100">
+					<div class="card-body gap-4 p-6">
+						<div class="mb-2 flex items-center gap-3">
+							<div class="rounded-lg bg-primary/10 p-2 text-primary">
+								<MapMarker class="h-5 w-5" />
+							</div>
+							<h2 class="text-xl font-bold">{$t('itinerary.where')}</h2>
+						</div>
 
-			{#if canSpan}
-				<label class="flex flex-col gap-1">
-					<span class="field-label">{$t('itinerary.ends_on')}</span>
-					<select class="select w-full" bind:value={spanEnd}>
-						<option value={null}>{$t('itinerary.same_day')}</option>
-						{#each laterDays as day (day.id)}
-							<option value={day.index}>{dayLabel(day)}</option>
-						{/each}
-					</select>
-				</label>
-			{/if}
+						<label class="flex flex-col">
+							<select
+								class="select w-full"
+								aria-label={$t('itinerary.where')}
+								bind:value={where}
+								onchange={handleWhereChange}
+							>
+								<option value="ideas">{$t('itinerary.ideas')}</option>
+								{#if canBeGlobal}
+									<option value="global">{$t('itinerary.trip_wide')}</option>
+								{/if}
+								{#each days as day (day.id)}
+									<option value={`day:${day.index}`}>{dayLabel(day)}</option>
+								{/each}
+							</select>
+						</label>
 
-			{#if dayIndex !== null}
-				<div class="grid grid-cols-2 gap-3">
-					<label class="flex flex-col gap-1">
-						<span class="field-label">{$t('itinerary.start_time')}</span>
-						<input type="time" class="input w-full" bind:value={startTime} />
-					</label>
-					<label class="flex flex-col gap-1">
-						<span class="field-label">{$t('itinerary.end_time')}</span>
-						<input type="time" class="input w-full" bind:value={endTime} />
-					</label>
+						{#if canSpan}
+							<label class="flex flex-col" for="placement-end">
+								<span class="field-label">{$t('itinerary.ends_on')}</span>
+								<select id="placement-end" class="select w-full" bind:value={spanEnd}>
+									<option value={null}>{$t('itinerary.same_day')}</option>
+									{#each laterDays as day (day.id)}
+										<option value={day.index}>{dayLabel(day)}</option>
+									{/each}
+								</select>
+							</label>
+						{/if}
+
+						{#if dayIndex !== null}
+							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+								<label class="flex flex-col" for="placement-start">
+									<span class="field-label">{$t('itinerary.start_time')}</span>
+									<input
+										id="placement-start"
+										type="time"
+										class="input w-full"
+										bind:value={startTime}
+									/>
+								</label>
+								<label class="flex flex-col" for="placement-end-time">
+									<span class="field-label">{$t('itinerary.end_time')}</span>
+									<input
+										id="placement-end-time"
+										type="time"
+										class="input w-full"
+										bind:value={endTime}
+									/>
+								</label>
+							</div>
+						{/if}
+
+						{#if where !== 'global'}
+							<label class="field-toggle" for="placement-optional">
+								<input
+									id="placement-optional"
+									type="checkbox"
+									class="toggle toggle-primary"
+									bind:checked={isOptional}
+								/>
+								<span class="font-semibold text-base-content">{$t('itinerary.mark_optional')}</span>
+							</label>
+						{/if}
+					</div>
 				</div>
-			{/if}
+			</div>
 
-			{#if where !== 'global'}
-				<label class="field-toggle">
-					<input type="checkbox" class="toggle toggle-primary" bind:checked={isOptional} />
-					<span class="font-medium">{$t('itinerary.optional')}</span>
-				</label>
-			{/if}
-
-			<div class="modal-action">
+			<div
+				class="flex shrink-0 items-center justify-end gap-2 border-t border-base-300 px-4 py-3 md:px-6"
+			>
 				<button type="button" class="btn btn-ghost" onclick={onClose}>{$t('about.close')}</button>
 				<button type="submit" class="btn btn-primary" disabled={saving}>
 					{#if saving}
@@ -175,6 +226,8 @@
 		</form>
 	</div>
 	<form method="dialog" class="modal-backdrop">
-		<button aria-label={$t('about.close')}>close</button>
+		<button type="button" aria-label={$t('about.close')} onclick={onClose}
+			>{$t('about.close')}</button
+		>
 	</form>
 </dialog>

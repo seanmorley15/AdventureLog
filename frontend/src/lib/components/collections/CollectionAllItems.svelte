@@ -6,45 +6,42 @@
 	import LodgingCard from '$lib/components/cards/LodgingCard.svelte';
 	import NoteCard from '$lib/components/cards/NoteCard.svelte';
 	import ChecklistCard from '$lib/components/cards/ChecklistCard.svelte';
-	import Magnify from '~icons/mdi/magnify';
+	import CollectionCatalogFilters from './CollectionCatalogFilters.svelte';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Airplane from '~icons/mdi/airplane';
 	import Bed from '~icons/mdi/bed';
 	import NoteTextOutline from '~icons/mdi/note-text-outline';
 	import { t } from 'svelte-i18n';
+	import {
+		CatalogFilters,
+		checklistMatches,
+		locationMatches,
+		lodgingDateOf,
+		lodgingMatches,
+		noteMatches,
+		sortByNameAndDate,
+		sortLocations,
+		transportationDateOf,
+		transportationMatches
+	} from '$lib/collections/catalog.svelte';
 
 	const dispatch = createEventDispatcher();
-
-	// Whether the current user can modify this collection (owner or shared user)
 
 	interface Props {
 		collection: Collection;
 		user: any;
 		isFolderView?: boolean;
-		// Exported so a parent can bind to them if desired
-		locationSearch?: string;
-		locationSort?: 'alphabetical-asc' | 'alphabetical-desc' | 'visited' | 'date-asc' | 'date-desc';
-		// Transportations
-		transportationSearch?: string;
-		// Lodging
-		lodgingSearch?: string;
-		// Notes
-		noteSearch?: string;
-		// Checklists
-		checklistSearch?: string;
+		filters?: CatalogFilters;
+		showMapToggles?: boolean;
 	}
 
 	let {
 		collection = $bindable(),
 		user,
 		isFolderView = false,
-		locationSearch = $bindable(''),
-		locationSort = $bindable('alphabetical-asc'),
-		transportationSearch = $bindable(''),
-		lodgingSearch = $bindable(''),
-		noteSearch = $bindable(''),
-		checklistSearch = $bindable('')
+		filters = new CatalogFilters(),
+		showMapToggles = false
 	}: Props = $props();
 
 	// Generic handlers for editing and deleting items in the collection.
@@ -106,350 +103,286 @@
 		};
 	}
 	let sortedLocations = $derived(
-		(() => {
-			if (!collection?.locations) return [];
-
-			let filtered = collection.locations.filter(
-				(loc) =>
-					loc.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
-					loc.location?.toLowerCase().includes(locationSearch.toLowerCase())
-			);
-
-			switch (locationSort) {
-				case 'alphabetical-asc':
-					return filtered.sort((a, b) => a.name.localeCompare(b.name));
-				case 'alphabetical-desc':
-					return filtered.sort((a, b) => b.name.localeCompare(a.name));
-				case 'visited':
-					return filtered.sort((a, b) => {
-						const aVisited = a.visits && a.visits.length > 0 ? 1 : 0;
-						const bVisited = b.visits && b.visits.length > 0 ? 1 : 0;
-						return bVisited - aVisited;
-					});
-				case 'date-asc':
-					return filtered.sort((a, b) => {
-						const aDate = a.visits?.[0]?.start_date || '';
-						const bDate = b.visits?.[0]?.start_date || '';
-						return aDate.localeCompare(bDate);
-					});
-				case 'date-desc':
-					return filtered.sort((a, b) => {
-						const aDate = a.visits?.[0]?.start_date || '';
-						const bDate = b.visits?.[0]?.start_date || '';
-						return bDate.localeCompare(aDate);
-					});
-				default:
-					return filtered;
-			}
-		})()
+		sortLocations(
+			(collection.locations ?? []).filter((loc) => locationMatches(loc, filters)),
+			filters.sort
+		)
 	);
 	let filteredTransportations = $derived(
-		(() => {
-			if (!collection?.transportations) return [];
-			return collection.transportations.filter((t) =>
-				t.name.toLowerCase().includes(transportationSearch.toLowerCase())
-			);
-		})()
+		sortByNameAndDate(
+			(collection.transportations ?? []).filter((item) => transportationMatches(item, filters)),
+			filters.sort,
+			transportationDateOf
+		)
 	);
 	let filteredLodging = $derived(
-		(() => {
-			if (!collection?.lodging) return [];
-			return collection.lodging.filter((l) =>
-				l.name.toLowerCase().includes(lodgingSearch.toLowerCase())
-			);
-		})()
+		sortByNameAndDate(
+			(collection.lodging ?? []).filter((item) => lodgingMatches(item, filters)),
+			filters.sort,
+			lodgingDateOf
+		)
 	);
 	let filteredNotes = $derived(
-		(() => {
-			if (!collection?.notes) return [];
-			return collection.notes.filter((n) =>
-				n.name.toLowerCase().includes(noteSearch.toLowerCase())
-			);
-		})()
+		sortByNameAndDate(
+			(collection.notes ?? []).filter((item) => noteMatches(item, filters)),
+			filters.sort,
+			(item) => item.date
+		)
 	);
 	let filteredChecklists = $derived(
-		(() => {
-			if (!collection?.checklists) return [];
-			return collection.checklists.filter((c) =>
-				c.name.toLowerCase().includes(checklistSearch.toLowerCase())
-			);
-		})()
+		sortByNameAndDate(
+			(collection.checklists ?? []).filter((item) => checklistMatches(item, filters)),
+			filters.sort,
+			(item) => item.date
+		)
+	);
+
+	const hasItems = $derived(
+		(collection.locations?.length ?? 0) +
+			(collection.transportations?.length ?? 0) +
+			(collection.lodging?.length ?? 0) +
+			(collection.notes?.length ?? 0) +
+			(collection.checklists?.length ?? 0) >
+			0
+	);
+	const matchedCount = $derived(
+		sortedLocations.length +
+			filteredTransportations.length +
+			filteredLodging.length +
+			filteredNotes.length +
+			filteredChecklists.length
+	);
+	const totalCount = $derived(
+		(collection.locations?.length ?? 0) +
+			(collection.transportations?.length ?? 0) +
+			(collection.lodging?.length ?? 0) +
+			(collection.notes?.length ?? 0) +
+			(collection.checklists?.length ?? 0)
 	);
 </script>
 
-<!-- Show each section as its own card so transportations and others
-	 render even when there are no locations. Use vertical spacing
-	 between cards via a wrapper. -->
-<div class="space-y-5">
-	{#if collection.locations && collection.locations.length > 0}
-		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
-			<div>
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
-						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
-							<MapMarker class="h-5 w-5" />
-						</span>
-						{$t('locations.locations') || 'Locations'}
+<div class="space-y-4 pb-24">
+	<CollectionCatalogFilters
+		{filters}
+		{collection}
+		{showMapToggles}
+		showDayNumbers={showMapToggles}
+		showCatalog
+		{matchedCount}
+		{totalCount}
+	/>
+
+	{#if !hasItems}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body p-4 sm:p-5">
+				<p
+					class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 text-sm text-base-content/60"
+				>
+					{$t('collections.no_items')}
+				</p>
+			</div>
+		</section>
+	{/if}
+
+	{#if filters.showLocations && collection.locations && collection.locations.length > 0}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-3 p-4 sm:p-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex min-w-0 items-center gap-3">
+						<MapMarker class="h-5 w-5 shrink-0 text-primary" />
+						<div class="min-w-0 flex-1">
+							<h3 class="text-lg font-bold">{$t('locations.locations') || 'Locations'}</h3>
+						</div>
 						<span class="badge badge-ghost badge-sm font-medium">
 							{sortedLocations.length}/{collection.locations.length}
 						</span>
-					</h2>
-
-					{#if isFolderView}
-						<div class="flex flex-wrap gap-2">
-							<label class="input input-sm input-bordered flex w-48 items-center gap-2 bg-base-100">
-								<Magnify class="h-4 w-4 opacity-50" />
-								<input
-									type="text"
-									placeholder="Search locations..."
-									class="grow"
-									bind:value={locationSearch}
-								/>
-							</label>
-
-							<select class="select select-sm select-bordered" bind:value={locationSort}>
-								<option value="alphabetical-asc">A → Z</option>
-								<option value="alphabetical-desc">Z → A</option>
-								<option value="visited">Visited First</option>
-								<option value="date-asc">Oldest First</option>
-								<option value="date-desc">Newest First</option>
-							</select>
-						</div>
-					{/if}
+					</div>
 				</div>
 
-				<div
-					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
-				>
+				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
 					{#each sortedLocations as location (location.id)}
-						<LocationCard
-							adventure={location}
-							{user}
-							{collection}
-							on:delete={(e) => handleItemDelete('locations', e.detail)}
-							on:edit={(e) => handleItemEdit('locations', e.detail)}
-							on:editVisits={(e) => handleLocationEditVisits(e.detail)}
-							on:duplicate={(e) => handleLocationDuplicate(e.detail)}
-						/>
+						<div id={`catalog-location-${location.id}`} class="h-full">
+							<LocationCard
+								adventure={location}
+								{user}
+								{collection}
+								on:delete={(e) => handleItemDelete('locations', e.detail)}
+								on:edit={(e) => handleItemEdit('locations', e.detail)}
+								on:editVisits={(e) => handleLocationEditVisits(e.detail)}
+								on:duplicate={(e) => handleLocationDuplicate(e.detail)}
+							/>
+						</div>
 					{/each}
 				</div>
 
 				{#if sortedLocations.length === 0}
-					<div class="py-8 text-center text-sm text-base-content/60">
-						<p>No locations match your search</p>
-					</div>
+					<p
+						class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 text-sm text-base-content/60"
+					>
+						{$t('itinerary.no_matching_items')}
+					</p>
 				{/if}
 			</div>
 		</section>
 	{/if}
 
-	<!-- Transportations Section -->
-	{#if !isFolderView && collection.transportations && collection.transportations.length > 0}
-		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
-			<div>
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
-						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
-							<Airplane class="h-5 w-5" />
-						</span>
-						{$t('adventures.transportation') || 'Transportation'}
+	{#if !isFolderView && filters.showTransportation && collection.transportations && collection.transportations.length > 0}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-3 p-4 sm:p-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex min-w-0 items-center gap-3">
+						<Airplane class="h-5 w-5 shrink-0 text-secondary" />
+						<div class="min-w-0 flex-1">
+							<h3 class="text-lg font-bold">
+								{$t('adventures.transportation') || 'Transportation'}
+							</h3>
+						</div>
 						<span class="badge badge-ghost badge-sm font-medium">
 							{filteredTransportations.length}/{collection.transportations.length}
 						</span>
-					</h2>
-
-					{#if isFolderView}
-						<div class="join">
-							<input
-								type="text"
-								placeholder="Search transportation..."
-								class="input input-sm join-item w-48"
-								bind:value={transportationSearch}
-							/>
-							<button class="btn btn-sm btn-square join-item">
-								<Magnify class="w-4 h-4" />
-							</button>
-						</div>
-					{/if}
+					</div>
 				</div>
 
-				<div
-					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
-				>
+				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
 					{#each filteredTransportations as transport (transport.id)}
-						<TransportationCard
-							transportation={transport}
-							{user}
-							{collection}
-							on:delete={(e) => handleItemDelete('transportations', e.detail)}
-							on:edit={(e) => handleItemEdit('transportations', e.detail)}
-						/>
+						<div id={`catalog-transportation-${transport.id}`} class="h-full">
+							<TransportationCard
+								transportation={transport}
+								{user}
+								{collection}
+								on:delete={(e) => handleItemDelete('transportations', e.detail)}
+								on:edit={(e) => handleItemEdit('transportations', e.detail)}
+							/>
+						</div>
 					{/each}
 				</div>
 
 				{#if filteredTransportations.length === 0}
-					<div class="py-8 text-center text-sm text-base-content/60">
-						<p>No transportation matches your search</p>
-					</div>
+					<p
+						class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 text-sm text-base-content/60"
+					>
+						{$t('itinerary.no_matching_items')}
+					</p>
 				{/if}
 			</div>
 		</section>
 	{/if}
 
-	<!-- Lodging Section -->
-	{#if !isFolderView && collection.lodging && collection.lodging.length > 0}
-		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
-			<div>
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
-						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
-							<Bed class="h-5 w-5" />
-						</span>
-						{$t('adventures.lodging') || 'Lodging'}
+	{#if !isFolderView && filters.showLodging && collection.lodging && collection.lodging.length > 0}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-3 p-4 sm:p-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex min-w-0 items-center gap-3">
+						<Bed class="h-5 w-5 shrink-0 text-info" />
+						<div class="min-w-0 flex-1">
+							<h3 class="text-lg font-bold">{$t('adventures.lodging') || 'Lodging'}</h3>
+						</div>
 						<span class="badge badge-ghost badge-sm font-medium">
 							{filteredLodging.length}/{collection.lodging.length}
 						</span>
-					</h2>
-
-					{#if isFolderView}
-						<div class="join">
-							<input
-								type="text"
-								placeholder="Search lodging..."
-								class="input input-sm join-item w-48"
-								bind:value={lodgingSearch}
-							/>
-							<button class="btn btn-sm btn-square join-item">
-								<Magnify class="w-4 h-4" />
-							</button>
-						</div>
-					{/if}
+					</div>
 				</div>
 
-				<div
-					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
-				>
+				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
 					{#each filteredLodging as lodging (lodging.id)}
-						<LodgingCard
-							{lodging}
-							{user}
-							{collection}
-							on:delete={(e) => handleItemDelete('lodging', e.detail)}
-							on:edit={(e) => handleItemEdit('lodging', e.detail)}
-						/>
+						<div id={`catalog-lodging-${lodging.id}`} class="h-full">
+							<LodgingCard
+								{lodging}
+								{user}
+								{collection}
+								on:delete={(e) => handleItemDelete('lodging', e.detail)}
+								on:edit={(e) => handleItemEdit('lodging', e.detail)}
+							/>
+						</div>
 					{/each}
 				</div>
 
 				{#if filteredLodging.length === 0}
-					<div class="py-8 text-center text-sm text-base-content/60">
-						<p>No lodging matches your search</p>
-					</div>
+					<p
+						class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 text-sm text-base-content/60"
+					>
+						{$t('itinerary.no_matching_items')}
+					</p>
 				{/if}
 			</div>
 		</section>
 	{/if}
 
-	<!-- Notes Section -->
-	{#if collection.notes && collection.notes.length > 0}
-		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
-			<div>
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
-						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
-							<NoteTextOutline class="h-5 w-5" />
-						</span>
-						{$t('adventures.notes')}
+	{#if filters.showNotes && collection.notes && collection.notes.length > 0}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-3 p-4 sm:p-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex min-w-0 items-center gap-3">
+						<NoteTextOutline class="h-5 w-5 shrink-0 text-base-content" />
+						<div class="min-w-0 flex-1">
+							<h3 class="text-lg font-bold">{$t('adventures.notes')}</h3>
+						</div>
 						<span class="badge badge-ghost badge-sm font-medium">
 							{filteredNotes.length}/{collection.notes.length}
 						</span>
-					</h2>
-
-					{#if isFolderView}
-						<div class="join">
-							<input
-								type="text"
-								placeholder="Search notes..."
-								class="input input-sm join-item w-48"
-								bind:value={noteSearch}
-							/>
-							<button class="btn btn-sm btn-square join-item">
-								<Magnify class="w-4 h-4" />
-							</button>
-						</div>
-					{/if}
+					</div>
 				</div>
 
-				<div
-					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
-				>
+				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
 					{#each filteredNotes as note (note.id)}
-						<NoteCard
-							{note}
-							{user}
-							{collection}
-							on:delete={(e) => handleItemDelete('notes', e.detail)}
-							on:edit={(e) => handleItemEdit('notes', e.detail)}
-						/>
+						<div id={`catalog-note-${note.id}`} class="h-full">
+							<NoteCard
+								{note}
+								{user}
+								{collection}
+								on:delete={(e) => handleItemDelete('notes', e.detail)}
+								on:edit={(e) => handleItemEdit('notes', e.detail)}
+							/>
+						</div>
 					{/each}
 				</div>
 
 				{#if filteredNotes.length === 0}
-					<div class="py-8 text-center text-sm text-base-content/60">
-						<p>No notes match your search</p>
-					</div>
+					<p
+						class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 text-sm text-base-content/60"
+					>
+						{$t('itinerary.no_matching_items')}
+					</p>
 				{/if}
 			</div>
 		</section>
 	{/if}
 
-	<!-- Checklists Section -->
-	{#if collection.checklists && collection.checklists.length > 0}
-		<section class="rounded-2xl border border-base-300/70 bg-base-100 p-4 shadow-sm sm:p-5">
-			<div>
-				<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="flex items-center gap-2.5 text-lg font-semibold">
-						<span class="rounded-lg bg-primary/10 p-1.5 text-primary">
-							<ClipboardList class="h-5 w-5" />
-						</span>
-						{$t('adventures.checklists')}
+	{#if filters.showChecklists && collection.checklists && collection.checklists.length > 0}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-3 p-4 sm:p-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex min-w-0 items-center gap-3">
+						<ClipboardList class="h-5 w-5 shrink-0 text-base-content" />
+						<div class="min-w-0 flex-1">
+							<h3 class="text-lg font-bold">{$t('adventures.checklists')}</h3>
+						</div>
 						<span class="badge badge-ghost badge-sm font-medium">
 							{filteredChecklists.length}/{collection.checklists.length}
 						</span>
-					</h2>
-
-					{#if isFolderView}
-						<div class="join">
-							<input
-								type="text"
-								placeholder="Search checklists..."
-								class="input input-sm join-item w-48"
-								bind:value={checklistSearch}
-							/>
-							<button class="btn btn-sm btn-square join-item">
-								<Magnify class="w-4 h-4" />
-							</button>
-						</div>
-					{/if}
+					</div>
 				</div>
 
-				<div
-					class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch"
-				>
+				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
 					{#each filteredChecklists as checklist (checklist.id)}
-						<ChecklistCard
-							{checklist}
-							{user}
-							{collection}
-							on:delete={(e) => handleItemDelete('checklists', e.detail)}
-							on:edit={(e) => handleItemEdit('checklists', e.detail)}
-						/>
+						<div id={`catalog-checklist-${checklist.id}`} class="h-full">
+							<ChecklistCard
+								{checklist}
+								{user}
+								{collection}
+								on:delete={(e) => handleItemDelete('checklists', e.detail)}
+								on:edit={(e) => handleItemEdit('checklists', e.detail)}
+							/>
+						</div>
 					{/each}
 				</div>
 
 				{#if filteredChecklists.length === 0}
-					<div class="py-8 text-center text-sm text-base-content/60">
-						<p>No checklists match your search</p>
-					</div>
+					<p
+						class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 text-sm text-base-content/60"
+					>
+						{$t('itinerary.no_matching_items')}
+					</p>
 				{/if}
 			</div>
 		</section>

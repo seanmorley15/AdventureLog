@@ -32,6 +32,7 @@
 	import {
 		enrichPlace,
 		fetchRecommendations,
+		nearbyRadiusOptions,
 		placeToLocationPrefill,
 		placeToQuickAddPayload,
 		quickAddLocation,
@@ -1009,25 +1010,7 @@
 		typeString ? typeString.split(',').filter((item) => item !== '') : []
 	);
 	let isMetric = $derived(data.user?.measurement_system !== 'imperial');
-	let recRadiusOptions = $derived(
-		isMetric
-			? [
-					{ value: 1000, label: '1 km' },
-					{ value: 2000, label: '2 km' },
-					{ value: 5000, label: '5 km' },
-					{ value: 10000, label: '10 km' },
-					{ value: 20000, label: '20 km' },
-					{ value: 50000, label: '50 km' }
-				]
-			: [
-					{ value: 1609, label: '1 mi' },
-					{ value: 3219, label: '2 mi' },
-					{ value: 8047, label: '5 mi' },
-					{ value: 16093, label: '10 mi' },
-					{ value: 32187, label: '20 mi' },
-					{ value: 80467, label: '50 mi' }
-				]
-	);
+	let recRadiusOptions = $derived(nearbyRadiusOptions(isMetric));
 	run(() => {
 		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
 		filteredPins = pins.filter((pin) => {

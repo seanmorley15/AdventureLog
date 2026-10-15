@@ -1,6 +1,8 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import type { Collection } from '$lib/types';
-	import { planPins } from '$lib/dayPlan';
+	import { planPins } from '$lib/collections/plan';
+	import { CatalogFilters } from '$lib/collections/catalog.svelte';
 	import CollectionMap from './CollectionMap.svelte';
 	import TripDayPlanner from './TripDayPlanner.svelte';
 	import type { LinkScope } from './LinkItemsModal.svelte';
@@ -11,6 +13,7 @@
 		canModify?: boolean;
 		readMode?: boolean;
 		onOpenLink?: (scope: LinkScope) => void;
+		children?: Snippet<[CatalogFilters]>;
 	}
 
 	let {
@@ -18,8 +21,11 @@
 		user,
 		canModify = false,
 		readMode = false,
-		onOpenLink
+		onOpenLink,
+		children
 	}: Props = $props();
+
+	const catalogFilters = new CatalogFilters();
 
 	let selectedDay = $state<number | null>(null);
 	let highlightedDay = $state<number | null>(null);
@@ -27,8 +33,17 @@
 	const pins = $derived(planPins(collection));
 
 	function scrollToPin(type: string, objectId: string, dayIndex: number | null) {
-		const id = `plan-${type}-${objectId}-day-${dayIndex ?? 'ideas'}`;
-		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		const ids = [
+			`plan-${type}-${objectId}-day-${dayIndex ?? 'ideas'}`,
+			`catalog-${type}-${objectId}`
+		];
+		for (const id of ids) {
+			const el = document.getElementById(id);
+			if (el) {
+				el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				return;
+			}
+		}
 	}
 </script>
 
@@ -46,6 +61,9 @@
 			{selectedDay}
 			{highlightedDay}
 			onPinSelect={scrollToPin}
+			filters={children ? catalogFilters : undefined}
+			numberedPins={!children}
+			pinStyleToggle={Boolean(children)}
 		/>
 	</div>
 
@@ -53,16 +71,20 @@
 		class="planner-pane absolute inset-x-0 bottom-0 top-[34%] z-10 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-3xl bg-base-100 px-2 pb-8 shadow-2xl lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-2 lg:shadow-none"
 	>
 		<div class="mx-auto mb-3 mt-2 h-1.5 w-12 rounded-full bg-base-300 lg:hidden"></div>
-		<TripDayPlanner
-			bind:collection
-			{user}
-			{canModify}
-			{readMode}
-			{selectedDay}
-			onSelectDay={(day) => (selectedDay = selectedDay === day ? null : day)}
-			onHighlightDay={(day) => (highlightedDay = day)}
-			{onOpenLink}
-		/>
+		{#if children}
+			{@render children(catalogFilters)}
+		{:else}
+			<TripDayPlanner
+				bind:collection
+				{user}
+				{canModify}
+				{readMode}
+				{selectedDay}
+				onSelectDay={(day) => (selectedDay = selectedDay === day ? null : day)}
+				onHighlightDay={(day) => (highlightedDay = day)}
+				{onOpenLink}
+			/>
+		{/if}
 	</div>
 </div>
 

@@ -183,7 +183,10 @@ export type QuickAddPayload = {
 	type?: string;
 };
 
-export async function quickAddLocation(payload: QuickAddPayload): Promise<Location> {
+export async function quickAddLocation(
+	payload: QuickAddPayload,
+	collectionId?: string | null
+): Promise<Location> {
 	const body: Record<string, unknown> = {
 		name: payload.name,
 		latitude: payload.latitude,
@@ -200,6 +203,7 @@ export async function quickAddLocation(payload: QuickAddPayload): Promise<Locati
 		photos: payload.photos || [],
 		is_public: false
 	};
+	if (collectionId) body.collection_id = collectionId;
 	if (payload.type) body.type = payload.type;
 
 	const res = await fetch('/api/locations/quick-add/', {
@@ -301,6 +305,26 @@ export function recommendationToLocationPrefill(rec: Recommendation) {
 		photos: photoUrls,
 		images: photoUrls.map((url, i) => googleContentImage(`rec-${i}`, url, i === 0))
 	};
+}
+
+export function nearbyRadiusOptions(isMetric: boolean): { value: number; label: string }[] {
+	return isMetric
+		? [
+				{ value: 1000, label: '1 km' },
+				{ value: 2000, label: '2 km' },
+				{ value: 5000, label: '5 km' },
+				{ value: 10000, label: '10 km' },
+				{ value: 20000, label: '20 km' },
+				{ value: 50000, label: '50 km' }
+			]
+		: [
+				{ value: 1609, label: '1 mi' },
+				{ value: 3219, label: '2 mi' },
+				{ value: 8047, label: '5 mi' },
+				{ value: 16093, label: '10 mi' },
+				{ value: 32187, label: '20 mi' },
+				{ value: 80467, label: '50 mi' }
+			];
 }
 
 export async function fetchRecommendations(params: {

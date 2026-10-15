@@ -48,6 +48,7 @@
 		"dompurify": "^3.2.5",
 		"emoji-picker-element": "^1.26.3",
 		"gsap": "^3.12.7",
+		"layerchart": "^2.8.0",
 		"luxon": "^3.6.1",
 		"marked": "^15.0.11",
 		"psl": "^1.15.0",

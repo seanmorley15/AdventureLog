@@ -4,7 +4,12 @@
 	import type { Checklist, Location, Lodging, Note, Transportation } from '$lib/types';
 	import { formatDisplayTime, type DateFormatPreference } from '$lib/dateFormat';
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
-	import { clockValue, recordedVisitId, type LogVisitResult, type PlanRow } from '$lib/dayPlan';
+	import {
+		clockValue,
+		recordedVisitId,
+		type LogVisitResult,
+		type PlanRow
+	} from '$lib/collections/plan';
 	import type { Collection } from '$lib/types';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Bed from '~icons/mdi/bed';

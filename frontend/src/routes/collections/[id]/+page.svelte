@@ -11,14 +11,8 @@
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	// @ts-ignore
-	import { DateTime } from 'luxon';
 	import Calendar from '~icons/mdi/calendar';
-	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
-	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
-	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
-	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import ImageFrame from '$lib/components/ImageFrame.svelte';
 	import { normalizeContentImage } from '$lib/images';
@@ -26,17 +20,17 @@
 	import TripWorkspace from '$lib/components/collections/TripWorkspace.svelte';
 	import LinkItemsModal from '$lib/components/collections/LinkItemsModal.svelte';
 	import type { LinkScope } from '$lib/components/collections/LinkItemsModal.svelte';
-	import { placementType, showsDayPlanner, type PlanObjectType } from '$lib/dayPlan';
-	import CollectionRecommendationView from '$lib/components/CollectionRecommendationView.svelte';
+	import { placementType, showsDayPlanner, type PlanObjectType } from '$lib/collections/plan';
+	import CollectionRecommendationView from '$lib/components/collections/CollectionRecommendationView.svelte';
 	import CollectionMap from '$lib/components/collections/CollectionMap.svelte';
 	import CollectionStats from '$lib/components/collections/CollectionStats.svelte';
-	import { getBasemapUrl } from '$lib';
-	import { formatMoney, toMoneyValue, DEFAULT_CURRENCY } from '$lib/money';
+	import CollectionCosts from '$lib/components/collections/CollectionCosts.svelte';
+	import CollectionCalendar from '$lib/components/collections/CollectionCalendar.svelte';
+	import { DEFAULT_CURRENCY } from '$lib/money';
 	import FolderMultiple from '~icons/mdi/folder-multiple';
 	import FormatListBulleted from '~icons/mdi/format-list-bulleted';
 	import Timeline from '~icons/mdi/timeline';
 	import BookOpenVariant from '~icons/mdi/book-open-variant';
-	import Map from '~icons/mdi/map';
 	import Lightbulb from '~icons/mdi/lightbulb';
 	import ChartBar from '~icons/mdi/chart-bar';
 	import Plus from '~icons/mdi/plus';
@@ -97,7 +91,6 @@
 	let modalInitialIndex: number = $state(0);
 	let isImageModalOpen: boolean = $state(false);
 	let linkScope = $state<LinkScope | null>(null);
-	let showCalendarModal = $state(false);
 
 	// Shared helpers for keeping collection sub-items in sync after modal actions
 	type CollectionArrayKey = 'locations' | 'transportations' | 'lodging' | 'notes' | 'checklists';
@@ -222,8 +215,17 @@
 		icon: Component<Record<string, unknown>>;
 	};
 
-	const overflowTabClass =
-		'inline-flex h-(--tab-height) shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium';
+	const viewTabClass =
+		'inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-medium transition-colors';
+
+	function tabButtonClass(active: boolean) {
+		return [
+			viewTabClass,
+			active
+				? 'bg-primary text-primary-content shadow-sm'
+				: 'text-base-content/70 hover:bg-base-100 hover:text-base-content'
+		];
+	}
 
 	// Get default view based on available views
 	let defaultView: ViewType = $state('itinerary');
@@ -259,140 +261,9 @@
 		}
 	}
 
-	// Calendar events from collection data
-	let timezoneMode: CalendarTimezoneMode = $state('event');
-	let selectedCalendarEvent: CalendarDisplayEvent | null = $state(null);
-
-	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	const numberLocale = Intl.DateTimeFormat().resolvedOptions().locale;
-
-	type CostCategory = 'lodging' | 'transportation' | 'location';
-
-	type CostEntry = {
-		currency: string;
-		amount: number;
-		category: CostCategory;
-	};
-
-	type CurrencyBreakdown = {
-		currency: string;
-		total: number;
-		formattedTotal: string;
-		categories: Array<{
-			category: CostCategory;
-			label: string;
-			total: number;
-			count: number;
-			formattedTotal: string;
-		}>;
-	};
-
-	let preferredCurrency: string = $state(DEFAULT_CURRENCY);
-	let costEntries: CostEntry[] = $state([]);
-	let costSummary: CurrencyBreakdown[] = $state([]);
-	let pricedItemCount = $state(0);
-	let currencyCount = $state(0);
-
-	function buildCostEntries(current: Collection | null, fallbackCurrency: string): CostEntry[] {
-		if (!current) return [];
-		const entries: CostEntry[] = [];
-		const fallback = fallbackCurrency || DEFAULT_CURRENCY;
-
-		(current.locations || []).forEach((item) => {
-			const moneyValue = toMoneyValue(item.price, item.price_currency, fallback);
-			if (moneyValue.amount === null || moneyValue.amount === undefined) return;
-			entries.push({
-				currency: moneyValue.currency || fallback,
-				amount: moneyValue.amount,
-				category: 'location'
-			});
-		});
-
-		(current.transportations || []).forEach((item) => {
-			const moneyValue = toMoneyValue(item.price, item.price_currency, fallback);
-			if (moneyValue.amount === null || moneyValue.amount === undefined) return;
-			entries.push({
-				currency: moneyValue.currency || fallback,
-				amount: moneyValue.amount,
-				category: 'transportation'
-			});
-		});
-
-		(current.lodging || []).forEach((item) => {
-			const moneyValue = toMoneyValue(item.price, item.price_currency, fallback);
-			if (moneyValue.amount === null || moneyValue.amount === undefined) return;
-			entries.push({
-				currency: moneyValue.currency || fallback,
-				amount: moneyValue.amount,
-				category: 'lodging'
-			});
-		});
-
-		return entries;
-	}
-
-	function summarizeCostEntries(
-		entries: CostEntry[],
-		locale: string,
-		labels: Record<CostCategory, string>
-	): CurrencyBreakdown[] {
-		const currencyBuckets: Record<
-			string,
-			{ total: number; categories: Record<CostCategory, { total: number; count: number }> }
-		> = {};
-
-		entries.forEach(({ currency, amount, category }) => {
-			if (amount === null || amount === undefined || Number.isNaN(amount)) return;
-			const safeCurrency = currency || DEFAULT_CURRENCY;
-			if (!currencyBuckets[safeCurrency]) {
-				currencyBuckets[safeCurrency] = {
-					total: 0,
-					categories: {} as Record<CostCategory, { total: number; count: number }>
-				};
-			}
-
-			const bucket = currencyBuckets[safeCurrency];
-			bucket.total += amount;
-			bucket.categories[category] = bucket.categories[category] || { total: 0, count: 0 };
-			bucket.categories[category].total += amount;
-			bucket.categories[category].count += 1;
-		});
-
-		const format = (value: number, currency: string) =>
-			formatMoney({ amount: value, currency }, locale) || `${currency} ${value}`;
-
-		return Object.entries(currencyBuckets)
-			.map(([currency, data]) => {
-				const categories = Object.entries(data.categories).map(([categoryKey, info]) => {
-					const category = categoryKey as CostCategory;
-					return {
-						category,
-						label: labels[category],
-						total: info.total,
-						count: info.count,
-						formattedTotal: format(info.total, currency)
-					};
-				});
-
-				return {
-					currency,
-					total: data.total,
-					formattedTotal: format(data.total, currency),
-					categories
-				};
-			})
-			.sort((a, b) => a.currency.localeCompare(b.currency));
-	}
-
-	function handleCalendarEventClick(event: CalendarDisplayEvent) {
-		selectedCalendarEvent = event;
-		showCalendarModal = true;
-	}
-
-	function closeCalendarModal() {
-		showCalendarModal = false;
-		selectedCalendarEvent = null;
-	}
+	const preferredCurrency = $derived(
+		(data.user as { default_currency?: string } | null)?.default_currency || DEFAULT_CURRENCY
+	);
 
 	function resetCollectionPageUiState() {
 		currentSlide = 0;
@@ -408,8 +279,6 @@
 		lodgingToEdit = null;
 		isImageModalOpen = false;
 		linkScope = null;
-		showCalendarModal = false;
-		selectedCalendarEvent = null;
 		isSocialShareModalOpen = false;
 	}
 
@@ -452,6 +321,7 @@
 		const styles = getComputedStyle(row);
 		const pad =
 			(Number.parseFloat(styles.paddingLeft) || 0) + (Number.parseFloat(styles.paddingRight) || 0);
+		const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
 		const limit = node.clientWidth - pad;
 		const moreWidth = more?.getBoundingClientRect().width ?? 0;
 		let used = 0;
@@ -460,9 +330,10 @@
 		for (let index = 0; index < tabs.length; index += 1) {
 			const width = tabs[index].getBoundingClientRect().width;
 			const remaining = tabs.length - index - 1;
-			const reserve = remaining > 0 ? moreWidth : 0;
-			if (used + width + reserve <= limit + 1) {
-				used += width;
+			const next = used + (count > 0 ? gap : 0) + width;
+			const reserve = remaining > 0 ? gap + moreWidth : 0;
+			if (next + reserve <= limit + 1) {
+				used = next;
 				count += 1;
 			} else {
 				break;
@@ -726,18 +597,25 @@
 	let canExportCollection = $derived(!!collection?.is_public || canModifyCollection);
 	// Define available views based on collection type
 	let dayPlanner = $derived(collection ? showsDayPlanner(collection) : false);
-	// The item catalog keeps the sidebar. The planner, map, and calendar use the full width.
-	let catalogView = $derived(currentView === 'all');
-	// Plan, read, and the standalone map fill the space under the tab bar. Other views scroll inside it.
+	// Folders keep the catalog sidebar. Trip all-items uses the planner workspace chrome.
+	let catalogView = $derived(currentView === 'all' && !dayPlanner);
+	// Plan, read, trip all-items, the map, calendar, and recommendations fill the space under the tab bar.
 	let lockedPane = $derived(
-		!catalogView && (currentView === 'plan' || currentView === 'read' || currentView === 'map')
+		currentView === 'plan' ||
+			currentView === 'read' ||
+			currentView === 'map' ||
+			currentView === 'calendar' ||
+			currentView === 'recommendations' ||
+			(currentView === 'all' && dayPlanner)
 	);
 	let showComposer = $derived(
 		!!collection &&
 			canModifyCollection &&
 			!collection.is_archived &&
 			currentView !== 'read' &&
-			currentView !== 'plan'
+			currentView !== 'plan' &&
+			currentView !== 'calendar' &&
+			currentView !== 'recommendations'
 	);
 	let availableViews = $derived({
 		all: true,
@@ -808,64 +686,6 @@
 		} else {
 			currentView = defaultView;
 		}
-	});
-	let calendarTimezoneLabels = $derived({
-		eventTimezone: $t('collections.event_timezone'),
-		localTimezone: $t('collections.local_timezone')
-	});
-	let collectionEvents = $derived(
-		collection
-			? buildCollectionCalendarEvents(
-					collection,
-					timezoneMode,
-					userTimezone,
-					calendarTimezoneLabels,
-					(key) => $t(key),
-					dateFormat
-				)
-			: []
-	);
-	// Localized category labels - computed reactively from i18n
-	let costCategoryLabels = $derived({
-		lodging: $t('adventures.lodging') || 'Lodging',
-		transportation: $t('adventures.transportation') || 'Transportation',
-		location: $t('locations.locations') || 'Locations'
-	});
-	run(() => {
-		preferredCurrency = (data.user as any)?.default_currency || DEFAULT_CURRENCY;
-	});
-	run(() => {
-		costEntries = buildCostEntries(collection ?? null, preferredCurrency);
-	});
-	run(() => {
-		costSummary = summarizeCostEntries(costEntries, numberLocale, costCategoryLabels);
-	});
-	run(() => {
-		pricedItemCount = costEntries.length;
-	});
-	run(() => {
-		currencyCount = costSummary.length;
-	});
-	let calendarInitialDate = $derived.by(() => {
-		if (!collectionEvents.length) return null;
-
-		const collectionRangeStart = collection?.start_date
-			? DateTime.fromISO(collection.start_date)
-			: null;
-		const collectionRangeEnd = collection?.end_date ? DateTime.fromISO(collection.end_date) : null;
-
-		const validEvents = collectionEvents
-			.map((ev) => ({ date: DateTime.fromISO(ev.start), event: ev }))
-			.filter(({ date }) => date.isValid)
-			.sort((a, b) => a.date.toMillis() - b.date.toMillis());
-
-		const inCollectionRange = validEvents.filter(({ date }) => {
-			if (collectionRangeStart?.isValid && date < collectionRangeStart.startOf('day')) return false;
-			if (collectionRangeEnd?.isValid && date > collectionRangeEnd.endOf('day')) return false;
-			return true;
-		});
-
-		return (inCollectionRange[0] || validEvents[0])?.date?.toISODate() || null;
 	});
 	$effect.pre(() => {
 		applyCollectionPageData(getCollectionFromPageData(data));
@@ -1111,14 +931,6 @@
 	/>
 {/if}
 
-<EventDetailsModal
-	show={showCalendarModal}
-	event={selectedCalendarEvent}
-	{timezoneMode}
-	{userTimezone}
-	onClose={closeCalendarModal}
-/>
-
 {#if !collection && !notFound}
 	<div class="hero min-h-screen overflow-x-hidden">
 		<div class="hero-content">
@@ -1133,7 +945,7 @@
 			? 'min-h-screen bg-gradient-to-b from-base-200 via-base-100 to-base-200'
 			: 'flex h-[calc(100dvh-4.75rem)] min-h-0 flex-col'}
 	>
-		<header class="relative shrink-0 overflow-hidden border-b border-base-300/70 bg-base-100">
+		<header class="relative shrink-0 overflow-hidden bg-base-100">
 			{#if coverImage}
 				<div class="pointer-events-none absolute inset-0" aria-hidden="true">
 					<img src={coverImage.image} alt="" class="h-full w-full object-cover opacity-40" />
@@ -1234,112 +1046,103 @@
 					</div>
 				{/if}
 			</div>
-		</header>
 
-		<!-- Tabs stay in this bar on every view, so switching pages does not shift them. -->
-		<div class="shrink-0 border-b border-base-300 bg-base-100 px-3 py-2 sm:px-4">
-			<div
-				class="relative min-w-0 w-full"
-				{@attach (node) => {
-					const signature = viewTabs.map((tab) => tab.id + tab.label).join('|');
-					void signature;
-					const apply = () => {
-						const next = fitTabCount(node);
-						if (next !== null && next !== untrack(() => visibleTabCount)) visibleTabCount = next;
-					};
-					const observer = new ResizeObserver(() => apply());
-					observer.observe(node);
-					const frame = requestAnimationFrame(apply);
-					let cancelled = false;
-					document.fonts?.ready.then(() => {
-						if (!cancelled) apply();
-					});
-					return () => {
-						cancelled = true;
-						cancelAnimationFrame(frame);
-						observer.disconnect();
-					};
-				}}
-			>
+			<nav class="relative min-w-0 px-3 pb-3 sm:px-4" aria-label={collection.name}>
 				<div
-					class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-0 overflow-hidden"
-					aria-hidden="true"
+					class="relative min-w-0 w-full"
+					{@attach (node) => {
+						const signature = viewTabs.map((tab) => tab.id + tab.label).join('|');
+						void signature;
+						const apply = () => {
+							const next = fitTabCount(node);
+							if (next !== null && next !== untrack(() => visibleTabCount)) visibleTabCount = next;
+						};
+						const observer = new ResizeObserver(() => apply());
+						observer.observe(node);
+						const frame = requestAnimationFrame(apply);
+						let cancelled = false;
+						document.fonts?.ready.then(() => {
+							if (!cancelled) apply();
+						});
+						return () => {
+							cancelled = true;
+							cancelAnimationFrame(frame);
+							observer.disconnect();
+						};
+					}}
 				>
-					<div data-measure-row class="tabs tabs-box view-tabs w-max">
-						{#each viewTabs as tab (tab.id)}
+					<div
+						class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-0 overflow-hidden"
+						aria-hidden="true"
+					>
+						<div data-measure-row class="flex w-max items-center gap-1 p-1">
+							{#each viewTabs as tab (tab.id)}
+								<button type="button" tabindex="-1" data-tab-measure class={viewTabClass}>
+									{@render viewTabLabel(tab, true)}
+								</button>
+							{/each}
+							<button type="button" tabindex="-1" data-more-measure class={viewTabClass}>
+								{@render moreTabLabel()}
+							</button>
+						</div>
+					</div>
+					<div
+						role="tablist"
+						class="flex w-max max-w-full items-center gap-1 rounded-full bg-base-200/70 p-1 ring-1 ring-base-content/10"
+					>
+						{#each shownTabs as tab (tab.id)}
 							<button
 								type="button"
-								tabindex="-1"
-								data-tab-measure
-								class="tab shrink-0 gap-2 whitespace-nowrap"
+								role="tab"
+								class={tabButtonClass(currentView === tab.id)}
+								aria-selected={currentView === tab.id}
+								onclick={() => switchView(tab.id)}
 							>
 								{@render viewTabLabel(tab, true)}
 							</button>
 						{/each}
-						<button type="button" tabindex="-1" data-more-measure class={overflowTabClass}>
-							{@render moreTabLabel()}
-						</button>
+						{#if overflowTabs.length > 0}
+							<div class="dropdown dropdown-end">
+								<button
+									type="button"
+									class={tabButtonClass(overflowHasActive)}
+									aria-haspopup="menu"
+								>
+									{@render moreTabLabel()}
+								</button>
+								<ul
+									class="dropdown-content menu z-[1100] mt-2 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+								>
+									{#each overflowTabs as tab (tab.id)}
+										<li>
+											<button
+												type="button"
+												class="gap-2"
+												class:bg-base-200={currentView === tab.id}
+												onclick={() => switchView(tab.id)}
+											>
+												{@render viewTabLabel(tab, false)}
+											</button>
+										</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
 					</div>
 				</div>
-				<div role="tablist" class="tabs tabs-box view-tabs w-max max-w-full">
-					{#each shownTabs as tab (tab.id)}
-						<button
-							type="button"
-							role="tab"
-							class="tab shrink-0 gap-2 whitespace-nowrap"
-							class:tab-active={currentView === tab.id}
-							aria-selected={currentView === tab.id}
-							onclick={() => switchView(tab.id)}
-						>
-							{@render viewTabLabel(tab, true)}
-						</button>
-					{/each}
-					{#if overflowTabs.length > 0}
-						<div class="dropdown dropdown-end">
-							<button
-								type="button"
-								class={[
-									overflowTabClass,
-									overflowHasActive
-										? 'bg-base-100 text-base-content shadow-sm'
-										: 'text-base-content/60 hover:text-base-content'
-								]}
-								aria-haspopup="menu"
-							>
-								{@render moreTabLabel()}
-							</button>
-							<ul
-								class="dropdown-content menu z-[1100] mt-2 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
-							>
-								{#each overflowTabs as tab (tab.id)}
-									<li>
-										<button
-											type="button"
-											class="gap-2"
-											class:bg-base-200={currentView === tab.id}
-											onclick={() => switchView(tab.id)}
-										>
-											{@render viewTabLabel(tab, false)}
-										</button>
-									</li>
-								{/each}
-							</ul>
-						</div>
-					{/if}
-				</div>
-			</div>
-		</div>
+			</nav>
+		</header>
 
 		<!-- Main Content -->
 		<div
 			class={catalogView
-				? 'container mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 sm:py-6'
+				? 'container mx-auto w-full max-w-7xl px-3 pb-6 pt-1 sm:px-6 sm:pb-8'
 				: 'flex min-h-0 w-full flex-1 flex-col'}
 		>
 			<div
 				class={catalogView
 					? 'grid grid-cols-1 items-start gap-6 lg:grid-cols-4'
-					: 'min-h-0 flex-1 overflow-hidden px-3 pb-3 sm:px-4'}
+					: 'min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-1 sm:px-4'}
 			>
 				<!-- Left Column - Main Content -->
 				<div
@@ -1364,24 +1167,43 @@
 
 					<!-- All Items View -->
 					{#if currentView === 'all'}
-						{#if isFolderView}
-							<div class="h-[50vh] overflow-hidden rounded-2xl border border-base-300/70 shadow-sm">
-								<CollectionMap
-									bind:collection
-									user={data.user}
-									canModify={canModifyCollection}
-									embedded
-									showRoutes={false}
-									mapClass="h-full w-full"
-								/>
+						{#if dayPlanner}
+							<div class="h-full min-h-0">
+								<TripWorkspace bind:collection user={data.user} canModify={canModifyCollection}>
+									{#snippet children(filters)}
+										<CollectionAllItems
+											bind:collection
+											user={data.user}
+											{isFolderView}
+											{filters}
+											showMapToggles
+											on:openEdit={handleOpenEdit}
+										/>
+									{/snippet}
+								</TripWorkspace>
 							</div>
+						{:else}
+							{#if isFolderView}
+								<div
+									class="h-[50vh] overflow-hidden rounded-2xl border border-base-300/70 shadow-sm"
+								>
+									<CollectionMap
+										bind:collection
+										user={data.user}
+										canModify={canModifyCollection}
+										embedded
+										showRoutes={false}
+										mapClass="h-full w-full"
+									/>
+								</div>
+							{/if}
+							<CollectionAllItems
+								bind:collection
+								user={data.user}
+								{isFolderView}
+								on:openEdit={handleOpenEdit}
+							/>
 						{/if}
-						<CollectionAllItems
-							bind:collection
-							user={data.user}
-							{isFolderView}
-							on:openEdit={handleOpenEdit}
-						/>
 					{/if}
 
 					<!-- Day plan and read, with the map -->
@@ -1398,29 +1220,7 @@
 					{/if}
 
 					{#if currentView === 'budget'}
-						<div class="card bg-base-200 shadow-xl">
-							<div class="card-body space-y-4">
-								<h3 class="card-title text-lg">{$t('collections.trip_costs')}</h3>
-								{#if pricedItemCount === 0}
-									<p class="text-sm opacity-70">{$t('collections.no_priced_items')}</p>
-								{:else}
-									{#each costSummary as summary}
-										<div class="bg-base-300 rounded-lg p-3 space-y-2">
-											<div class="flex items-center justify-between">
-												<span class="badge badge-outline badge-sm">{summary.currency}</span>
-												<span class="text-lg font-bold">{summary.formattedTotal}</span>
-											</div>
-											{#each summary.categories as category}
-												<div class="flex items-center justify-between text-sm">
-													<span class="opacity-70">{category.label} ({category.count})</span>
-													<span class="font-semibold">{category.formattedTotal}</span>
-												</div>
-											{/each}
-										</div>
-									{/each}
-								{/if}
-							</div>
-						</div>
+						<CollectionCosts {collection} currency={preferredCurrency} />
 					{/if}
 
 					<!-- Stats View -->
@@ -1446,65 +1246,17 @@
 						</div>
 					{/if}
 
-					<!-- Calendar View -->
 					{#if currentView === 'calendar'}
-						{#if collectionEvents.length === 0}
-							<div class="card bg-base-200 shadow-xl">
-								<div class="card-body">
-									<h2 class="card-title text-2xl mb-4">📆 {$t('navbar.calendar')}</h2>
-									<p class="text-base-content/70">{$t('collections.no_calendar_events')}</p>
-								</div>
-							</div>
-						{:else}
-							<div class="card bg-base-200 shadow-xl">
-								<div class="card-body space-y-4">
-									<h2 class="card-title text-2xl flex items-center gap-2">
-										📆 {$t('navbar.calendar')}
-									</h2>
-									<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-										<div class="flex items-center gap-2 text-sm text-base-content/80">
-											<span class="badge badge-ghost"
-												>{collectionEvents.length} {$t('collections.events')}</span
-											>
-										</div>
-										<div class="flex items-center gap-2">
-											<span class="text-xs opacity-70">{$t('collections.times_shown_in')}</span>
-											<div class="join">
-												<button
-													class="btn btn-xs sm:btn-sm join-item"
-													class:btn-active={timezoneMode === 'event'}
-													onclick={() => (timezoneMode = 'event')}
-												>
-													{$t('collections.event_timezone')}
-												</button>
-												<button
-													class="btn btn-xs sm:btn-sm join-item"
-													class:btn-active={timezoneMode === 'local'}
-													onclick={() => (timezoneMode = 'local')}
-												>
-													{$t('collections.local_timezone')}
-												</button>
-											</div>
-										</div>
-									</div>
-									<p class="text-xs text-base-content/70">
-										{$t('collections.event_timezone_desc')}
-										{userTimezone}.
-									</p>
-									<CalendarComponent
-										events={collectionEvents}
-										initialDate={calendarInitialDate}
-										bare={true}
-										on:eventClick={(e) => handleCalendarEventClick(e.detail)}
-									/>
-								</div>
-							</div>
-						{/if}
+						<div class="h-full min-h-0">
+							<CollectionCalendar {collection} {dateFormat} />
+						</div>
 					{/if}
 
 					<!-- Recommendations View -->
 					{#if currentView === 'recommendations' && canModifyCollection}
-						<CollectionRecommendationView bind:collection user={data.user} />
+						<div class="h-full min-h-0">
+							<CollectionRecommendationView bind:collection user={data.user} />
+						</div>
 					{/if}
 				</div>
 
@@ -1776,15 +1528,3 @@
 		<meta name="description" content="View collection details and locations" />
 	{/if}
 </svelte:head>
-
-<style>
-	.view-tabs {
-		flex-wrap: nowrap;
-		align-items: center;
-	}
-
-	.view-tabs > .dropdown {
-		display: flex;
-		align-items: center;
-	}
-</style>

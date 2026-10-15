@@ -19,7 +19,7 @@
 	import Link from '~icons/mdi/link-variant';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
-	import CollectionLink from '../CollectionLink.svelte';
+	import CollectionLink from '../collections/CollectionLink.svelte';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import CardCarousel from '../CardCarousel.svelte';

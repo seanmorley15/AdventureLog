@@ -11,5 +11,9 @@ export default defineConfig({
 		Icons({
 			compiler: 'svelte'
 		})
-	]
+	],
+	ssr: {
+		// LayerChart ships Svelte source. Vite must compile it during server render.
+		noExternal: ['layerchart']
+	}
 });

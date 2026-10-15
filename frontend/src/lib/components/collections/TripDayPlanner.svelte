@@ -41,7 +41,7 @@
 		type PlanObjectType,
 		type PlanResponse,
 		type PlanRow
-	} from '$lib/dayPlan';
+	} from '$lib/collections/plan';
 	import DayPlanRow from './DayPlanRow.svelte';
 	import DayPlacementModal from './DayPlacementModal.svelte';
 	import type { LinkScope } from './LinkItemsModal.svelte';

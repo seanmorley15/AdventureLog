@@ -215,7 +215,7 @@
 		"my_collections": "My Collections",
 		"show_filters": "Show Filters",
 		"hide_filters": "Hide Filters",
-		"pins": "pins",
+		"pins": "Pins",
 		"reset_filters": "Reset",
 		"clear_search": "Clear search",
 		"archived_collections": "Archived Collections",
@@ -1663,6 +1663,9 @@
 	"collections": {
 		"not_found": "Collection Not Found",
 		"all_items": "All Items",
+		"no_items": "No items in this collection yet",
+		"search_items": "Search locations, lodging, notes...",
+		"day_numbers": "Day numbers",
 		"no_calendar_events": "No visits are scheduled for this collection yet.",
 		"events": "events",
 		"times_shown_in": "Times shown in",

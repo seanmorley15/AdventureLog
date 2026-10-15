@@ -253,10 +253,13 @@ def get_recommendations(lat: float, lon: float, radius: float, category: str, so
         else:
             google_results = _parse_google_places(provider_payload.data or [], origin)
 
-    if sources in ['osm', 'both'] or (sources == 'google' and not google_results):
+    # The public Overpass API often returns 504. Use it only for an explicit OSM
+    # search, or when Google Places is not configured.
+    need_osm = sources == 'osm' or (sources == 'both' and not api_key)
+    if need_osm:
         if category == 'tourism':
             query = f"""
-                [out:json][timeout:25];
+                [out:json][timeout:8];
                 (
                   nwr["tourism"~"attraction|viewpoint|museum|gallery|zoo|aquarium"](around:{min(radius,5000)},{lat},{lon});
                   nwr["leisure"~"park|garden|nature_reserve"](around:{min(radius,5000)},{lat},{lon});
@@ -265,13 +268,13 @@ def get_recommendations(lat: float, lon: float, radius: float, category: str, so
                 """
         elif category == 'lodging':
             query = f"""
-                [out:json][timeout:25];
+                [out:json][timeout:8];
                 nwr["tourism"~"hotel|motel|guest_house|hostel"](around:{min(radius,5000)},{lat},{lon});
                 out center tags 50;
                 """
         else:
             query = f"""
-                [out:json][timeout:25];
+                [out:json][timeout:8];
                 nwr["amenity"~"restaurant|cafe|bar|pub|fast_food|bakery"](around:{min(radius,5000)},{lat},{lon});
                 out center tags 50;
                 """
@@ -279,7 +282,6 @@ def get_recommendations(lat: float, lon: float, radius: float, category: str, so
         osm_payload = osm_reco_provider.execute_overpass_query(query)
         if osm_payload.error:
             osm_error = osm_payload.error
-            logger.warning(f"OSM recommendations provider error: {osm_error}")
         else:
             osm_results = _parse_overpass(osm_payload.data or {}, origin)
 

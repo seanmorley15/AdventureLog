@@ -5,7 +5,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
-	import CollectionCard from './cards/CollectionCard.svelte';
+	import CollectionCard from '../cards/CollectionCard.svelte';
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
 

@@ -89,6 +89,41 @@ class BackupViewSet(viewsets.ViewSet):
         except InvalidOperation:
             return None
 
+    def _resolve_import_country(self, adv_data, region=None):
+        """
+        Resolve a location's Country during import without trusting raw Country PKs.
+
+        Country.id is an auto-increment integer that differs between installs (it
+        depends on the order the countries dataset was loaded), so a PK from a
+        backup can silently point at a different country (e.g. Germany -> Ghana).
+        Stable identifiers are used instead, in order of reliability:
+          1. the resolved region's country (region IDs are ISO 3166-2 strings),
+          2. the exported ISO 3166-1 alpha-2 `country_code`,
+          3. legacy backups only: the raw Country PK, as a last resort.
+        """
+        if region is not None and region.country_id:
+            return region.country
+
+        country_code = adv_data.get('country_code')
+        if isinstance(country_code, str) and country_code.strip():
+            country = Country.objects.filter(country_code=country_code.strip().upper()).first()
+            if country:
+                return country
+
+        # Legacy backups (no country_code): fall back to the city's/region's ISO
+        # prefix before trusting the raw PK.
+        for key in ('region', 'city'):
+            ref = adv_data.get(key)
+            if isinstance(ref, str) and '-' in ref:
+                country = Country.objects.filter(country_code=ref.split('-', 1)[0].upper()).first()
+                if country:
+                    return country
+
+        legacy_id = adv_data.get('country')
+        if legacy_id:
+            return Country.objects.filter(id=legacy_id).first()
+        return None
+
     def _parse_money(self, value, currency=None, default_currency='USD'):
         """Parse a backup money value and return schema-safe (amount, currency)."""
         parsed_currency = currency
@@ -416,6 +451,8 @@ class BackupViewSet(viewsets.ViewSet):
                 'city': location.city_id,
                 'region': location.region_id,
                 'country': location.country_id,
+                # Country PKs are not stable across installs; the ISO code is.
+                'country_code': location.country.country_code if location.country_id else None,
                 'category_name': location.category.name if location.category else None,
                 'collection_export_ids': [collection_name_to_id[col_name] for col_name in location.collections.values_list('name', flat=True) if col_name in collection_name_to_id],
                 'visits': [],
@@ -1102,12 +1139,7 @@ class BackupViewSet(viewsets.ViewSet):
                 except Region.DoesNotExist:
                     region = None
 
-            country = None
-            if adv_data.get('country'):
-                try:
-                    country = Country.objects.get(id=adv_data['country'])
-                except Country.DoesNotExist:
-                    country = None
+            country = self._resolve_import_country(adv_data, region)
 
             location = Location(
                 user=user,

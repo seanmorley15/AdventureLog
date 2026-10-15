@@ -83,10 +83,6 @@ export function indexedDays(collection: Collection): CollectionItineraryDay[] {
 		.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
 }
 
-export function isDayBased(collection: Collection): boolean {
-	return collection.type === 'trip' && Boolean(collection.day_count);
-}
-
 /** Every trip is planned by days. Folders are not. */
 export function showsDayPlanner(collection: Collection): boolean {
 	return collection.type === 'trip';

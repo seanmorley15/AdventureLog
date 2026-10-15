@@ -12,9 +12,22 @@
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { t } from 'svelte-i18n';
+	import { BarChart, PieChart } from 'layerchart';
 	// lodging icons and helpers
 	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import ChartBar from '~icons/mdi/chart-bar';
+	import MapMarker from '~icons/mdi/map-marker';
+	import MapMarkerCheck from '~icons/mdi/map-marker-check';
+	import ImageMultiple from '~icons/mdi/image-multiple';
+	import Earth from '~icons/mdi/earth';
+	import AccountGroup from '~icons/mdi/account-group';
+	import CalendarRange from '~icons/mdi/calendar-range';
+	import RoadVariant from '~icons/mdi/road-variant';
+	import Run from '~icons/mdi/run';
+	import NoteText from '~icons/mdi/note-text';
+	import Tag from '~icons/mdi/tag';
+	import Bed from '~icons/mdi/bed';
 
 	interface Props {
 		collection: Collection;
@@ -47,16 +60,16 @@
 		return user?.measurement_system === 'imperial' ? 'mi' : 'km';
 	}
 
-	function getDistanceUnitLong(): string {
-		return user?.measurement_system === 'imperial' ? 'miles' : 'kilometers';
-	}
-
 	function getElevationUnit(): string {
 		return user?.measurement_system === 'imperial' ? 'ft' : 'm';
 	}
 
-	function getElevationUnitLong(): string {
-		return user?.measurement_system === 'imperial' ? 'feet' : 'meters';
+	function hasPlacedCoordinates(latitude?: number | null, longitude?: number | null): boolean {
+		const lat = Number(latitude);
+		const lng = Number(longitude);
+		if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+		// 0,0 is the Gulf of Guinea and gets reverse-geocoded as a country such as Ghana.
+		return !(lat === 0 && lng === 0);
 	}
 
 	const numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
@@ -125,6 +138,7 @@
 		(() => {
 			const map = new Map<string, { name: string; code: string; flag?: string }>();
 			visitedLocations.forEach((loc) => {
+				if (!hasPlacedCoordinates(loc.latitude, loc.longitude)) return;
 				const country = loc.country;
 				if (!country) return;
 				const key = country.country_code || String(country.id) || country.name;
@@ -198,6 +212,7 @@
 		(() => {
 			const map = new Map<string, { name: string; country: string }>();
 			visitedLocations.forEach((loc) => {
+				if (!hasPlacedCoordinates(loc.latitude, loc.longitude)) return;
 				const region = loc.region;
 				if (!region) return;
 				const key = String(region.id || region.name);
@@ -212,6 +227,7 @@
 		(() => {
 			const map = new Map<string, { name: string; region: string }>();
 			visitedLocations.forEach((loc) => {
+				if (!hasPlacedCoordinates(loc.latitude, loc.longitude)) return;
 				const city = loc.city;
 				if (!city) return;
 				const key = String(city.id || city.name);
@@ -350,10 +366,6 @@
 		};
 	}
 
-	function getTransportIcon(type?: string | null) {
-		return getTransportMeta(type).icon;
-	}
-
 	function capitalize(text?: string | null) {
 		if (!text) return '';
 		const s = String(text);
@@ -435,6 +447,72 @@
 		})()
 	);
 
+	function coversDay(day: DateTime, startStr?: string | null, endStr?: string | null) {
+		if (!startStr) return false;
+		const start = DateTime.fromISO(startStr).startOf('day');
+		const end = (endStr ? DateTime.fromISO(endStr) : DateTime.fromISO(startStr)).startOf('day');
+		if (!start.isValid || !end.isValid) return false;
+		return day >= start && day <= end;
+	}
+
+	let plannedLocations = $derived(
+		(collection.locations || []).filter(
+			(loc) => !visitedLocations.some((visited) => visited.id === loc.id)
+		)
+	);
+
+	let dayActivity = $derived.by(() => {
+		if (!tripStart || !tripEnd) return [] as { label: string; visits: number; stays: number }[];
+		const start = tripStart.startOf('day');
+		const end = tripEnd.startOf('day');
+		const span = Math.floor(end.diff(start, 'days').days) + 1;
+		if (span < 1 || span > 60) return [];
+		const rows: { label: string; visits: number; stays: number }[] = [];
+		for (let i = 0; i < span; i++) {
+			const day = start.plus({ days: i });
+			rows.push({
+				label: String(i + 1),
+				visits: visitsInRange.filter((visit) => coversDay(day, visit.start_date, visit.end_date))
+					.length,
+				stays: lodgingStays.filter((stay) => coversDay(day, stay.check_in, stay.check_out)).length
+			});
+		}
+		return rows;
+	});
+
+	let dayActivityHasValues = $derived(dayActivity.some((row) => row.visits > 0 || row.stays > 0));
+
+	let itemMix = $derived(
+		[
+			{
+				key: 'locations',
+				label: $t('locations.locations'),
+				value: collection.locations?.length ?? 0
+			},
+			{ key: 'lodging', label: $t('adventures.lodging'), value: collection.lodging?.length ?? 0 },
+			{
+				key: 'transport',
+				label: $t('adventures.transportation'),
+				value: collection.transportations?.length ?? 0
+			},
+			{ key: 'notes', label: $t('adventures.notes'), value: collection.notes?.length ?? 0 },
+			{
+				key: 'checklists',
+				label: $t('adventures.checklists'),
+				value: collection.checklists?.length ?? 0
+			}
+		].filter((row) => row.value > 0)
+	);
+
+	const chartColors = [
+		'var(--color-primary)',
+		'var(--color-secondary)',
+		'var(--color-accent)',
+		'var(--color-info)',
+		'var(--color-success)',
+		'var(--color-warning)'
+	];
+
 	let totalAttachments = $derived(
 		(() => {
 			let total = 0;
@@ -446,433 +524,471 @@
 	);
 </script>
 
-<div class="space-y-6">
-	<!-- Hero Overview Card -->
-	<div
-		class="card bg-gradient-to-br from-primary/10 to-secondary/10 shadow-xl border border-primary/20"
-	>
-		<div class="card-body space-y-4">
-			<div class="flex flex-col gap-3">
+<div class="flex w-full flex-col gap-3 pb-6">
+	<section class="card bg-base-200 shadow-xl">
+		<div class="card-body gap-4 p-4 sm:p-5">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div class="flex min-w-0 items-center gap-3">
+					<ChartBar class="h-5 w-5 shrink-0 text-primary" />
+					<div class="min-w-0">
+						<h2 class="text-lg font-bold">{$t('collections.statistics')}</h2>
+						<p class="truncate text-sm text-base-content/70">
+							{windowLabel || $t('adventures.folder_view')}
+						</p>
+					</div>
+				</div>
 				<div class="flex flex-wrap items-center gap-2">
-					{#if countriesVisited.length}
-						{#each countriesVisited.slice(0, 3) as country}
-							{#if country.flag}
-								<img src={country.flag} alt={country.name} class="w-8 h-6 rounded-sm shadow-xs" />
-							{/if}
-						{/each}
+					{#each countriesVisited.slice(0, 4) as country (country.code || country.name)}
+						{#if country.flag}
+							<img src={country.flag} alt={country.name} class="h-4 w-6 rounded-sm" />
+						{/if}
+					{/each}
+					{#if scopeLabel}
+						<span class="badge badge-outline badge-sm">{scopeLabel}</span>
 					{/if}
-					<h2 class="text-3xl font-bold">{collection.name}</h2>
 				</div>
-
-				{#if windowLabel}
-					<div class="flex flex-wrap items-center gap-2 text-sm">
-						<span class="badge badge-lg badge-ghost">📅 {windowLabel}</span>
-						{#if scopeLabel}
-							<span class="badge badge-lg badge-primary">{scopeLabel}</span>
-						{/if}
-					</div>
-				{:else}
-					<p class="text-sm opacity-70">📁 {$t('adventures.folder_view')}</p>
-				{/if}
 			</div>
 
-			<!-- Key Stats Row -->
-			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-info/20">
-					<div class="stat-figure text-info text-3xl">📍</div>
-					<div class="stat-title text-xs">{$t('adventures.footprints')}</div>
-					<div class="stat-value text-info text-2xl">{visitedLocations.length}</div>
-					<div class="stat-desc">{$t('adventures.locations_visited')}</div>
+			<div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+				<div class="rounded-xl bg-base-100 p-3">
+					<div class="flex items-center gap-2 text-xs font-medium text-base-content/60">
+						<MapMarker class="h-4 w-4 text-primary" />
+						{$t('locations.locations')}
+					</div>
+					<p class="mt-2 text-2xl font-bold tabular-nums">{visitedLocations.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.locations_visited')}</p>
 				</div>
-
-				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-success/20">
-					<div class="stat-figure text-success text-3xl">📸</div>
-					<div class="stat-title text-xs">{$t('adventures.photos')}</div>
-					<div class="stat-value text-success text-2xl">
+				<div class="rounded-xl bg-base-100 p-3">
+					<div class="flex items-center gap-2 text-xs font-medium text-base-content/60">
+						<MapMarkerCheck class="h-4 w-4 text-primary" />
+						{$t('adventures.planned')}
+					</div>
+					<p class="mt-2 text-2xl font-bold tabular-nums">{plannedLocations.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('locations.locations')}</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-3">
+					<div class="flex items-center gap-2 text-xs font-medium text-base-content/60">
+						<ImageMultiple class="h-4 w-4 text-primary" />
+						{$t('adventures.photos')}
+					</div>
+					<p class="mt-2 text-2xl font-bold tabular-nums">
 						{compactFormatter.format(imagesInRange)}
-					</div>
-					<div class="stat-desc">{$t('adventures.images_captured')}</div>
+					</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.images_captured')}</p>
 				</div>
-
-				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-warning/20">
-					<div class="stat-figure text-warning text-3xl">🗺️</div>
-					<div class="stat-title text-xs">{$t('adventures.countries')}</div>
-					<div class="stat-value text-warning text-2xl">{countriesVisited.length}</div>
-					<div class="stat-desc">
+				<div class="rounded-xl bg-base-100 p-3">
+					<div class="flex items-center gap-2 text-xs font-medium text-base-content/60">
+						<Earth class="h-4 w-4 text-primary" />
+						{$t('adventures.countries')}
+					</div>
+					<p class="mt-2 text-2xl font-bold tabular-nums">{countriesVisited.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">
 						{regionsVisited.length}
-						{$t('adventures.regions')}, {citiesVisited.length}
-						{$t('adventures.cities')}
-					</div>
+						{$t('adventures.regions')}
+					</p>
 				</div>
-
-				<div class="stat bg-base-100 rounded-lg shadow-sm p-4 border border-accent/20">
-					<div class="stat-figure text-accent text-3xl">👥</div>
-					<div class="stat-title text-xs">{$t('adventures.travelers')}</div>
-					<div class="stat-value text-accent text-2xl">
+				<div class="rounded-xl bg-base-100 p-3">
+					<div class="flex items-center gap-2 text-xs font-medium text-base-content/60">
+						<Bed class="h-4 w-4 text-primary" />
+						{$t('adventures.nights')}
+					</div>
+					<p class="mt-2 text-2xl font-bold tabular-nums">{lodgingNights}</p>
+					<p class="mt-1 text-xs text-base-content/60">
+						{lodgingStays.length}
+						{$t('adventures.stays')}
+					</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-3">
+					<div class="flex items-center gap-2 text-xs font-medium text-base-content/60">
+						<AccountGroup class="h-4 w-4 text-primary" />
+						{$t('adventures.travelers')}
+					</div>
+					<p class="mt-2 text-2xl font-bold tabular-nums">
 						{collection.collaborators?.length || 0}
-					</div>
-					<div class="stat-desc">{$t('adventures.on_this_trip')}</div>
+					</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.on_this_trip')}</p>
 				</div>
 			</div>
 		</div>
-	</div>
+	</section>
 
-	<!-- Geographic Breakdown -->
-	<div class="card bg-base-200 shadow-xl">
-		<div class="card-body space-y-4">
-			<h3 class="card-title text-xl flex items-center gap-2">
-				<span class="text-2xl">🌎</span>
-				{$t('adventures.geographic_breakdown')}
-			</h3>
+	{#if dayActivityHasValues || itemMix.length > 1}
+		<div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
+			{#if dayActivityHasValues}
+				<section class="card bg-base-200 shadow-xl lg:col-span-2">
+					<div class="card-body gap-3 p-4 sm:p-5">
+						<div class="flex items-center gap-3">
+							<CalendarRange class="h-5 w-5 shrink-0 text-primary" />
+							<h3 class="text-lg font-bold">{$t('adventures.trip_timeline')}</h3>
+						</div>
+						<div class="h-56">
+							<BarChart
+								data={dayActivity}
+								x="label"
+								seriesLayout="stack"
+								series={[
+									{
+										key: 'visits',
+										value: 'visits',
+										label: $t('adventures.visits'),
+										color: 'var(--color-primary)'
+									},
+									{
+										key: 'stays',
+										value: 'stays',
+										label: $t('adventures.stays'),
+										color: 'var(--color-secondary)'
+									}
+								]}
+								bandPadding={0.28}
+								legend
+								class="h-full"
+								padding={{ top: 8, right: 8, bottom: 24, left: 28 }}
+							/>
+						</div>
+					</div>
+				</section>
+			{/if}
+			{#if itemMix.length > 1}
+				<section class="card bg-base-200 shadow-xl">
+					<div class="card-body gap-3 p-4 sm:p-5">
+						<div class="flex items-center gap-3">
+							<ChartBar class="h-5 w-5 shrink-0 text-primary" />
+							<h3 class="text-lg font-bold">{$t('collections.all_items')}</h3>
+						</div>
+						<div class="h-56">
+							<PieChart
+								data={itemMix}
+								innerRadius={0.62}
+								padAngle={0.02}
+								cRange={chartColors}
+								legend
+								class="h-full"
+							/>
+						</div>
+					</div>
+				</section>
+			{/if}
+		</div>
+	{/if}
 
-			{#if countriesVisited.length}
-				<div>
-					<h4 class="font-semibold mb-2 flex items-center gap-2">
-						<span>🏳️</span>
-						{$t('adventures.countries')} ({countriesVisited.length})
-					</h4>
-					<div class="flex flex-wrap gap-2">
-						{#each countriesVisited as country}
-							<div class="flex items-center gap-2 badge badge-lg badge-primary badge-outline p-3">
-								{#if country.flag}
-									<img src={country.flag} alt={country.name} class="w-6 h-4 rounded-sm" />
-								{/if}
-								<span class="font-medium">{country.name}</span>
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+		{#if countriesVisited.length || regionsVisited.length || citiesVisited.length}
+			<section class="card bg-base-200 shadow-xl">
+				<div class="card-body gap-4 p-4 sm:p-5">
+					<div class="flex items-center gap-3">
+						<Earth class="h-5 w-5 shrink-0 text-primary" />
+						<h3 class="text-lg font-bold">{$t('adventures.geographic_breakdown')}</h3>
+					</div>
+
+					{#if countriesVisited.length}
+						<div>
+							<p class="mb-2 text-xs font-medium text-base-content/60">
+								{$t('adventures.countries')} ({countriesVisited.length})
+							</p>
+							<div class="flex flex-wrap gap-2">
+								{#each countriesVisited as country (country.code || country.name)}
+									<span class="badge badge-outline gap-2">
+										{#if country.flag}
+											<img src={country.flag} alt="" class="h-3 w-5 rounded-sm" />
+										{/if}
+										{country.name}
+									</span>
+								{/each}
 							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
+						</div>
+					{/if}
 
-			{#if regionsVisited.length}
-				<div>
-					<h4 class="font-semibold mb-2 flex items-center gap-2">
-						<span>🗺️</span>
-						{$t('adventures.regions')} ({regionsVisited.length})
-					</h4>
-					<div class="flex flex-wrap gap-2">
-						{#each regionsVisited.slice(0, 15) as region}
-							<span class="badge badge-lg badge-secondary badge-outline">
-								{region.name}{#if region.country}, {region.country}{/if}
-							</span>
-						{/each}
-						{#if regionsVisited.length > 15}
-							<span class="badge badge-lg badge-ghost">+{regionsVisited.length - 15} more</span>
-						{/if}
-					</div>
-				</div>
-			{/if}
+					{#if regionsVisited.length}
+						<div>
+							<p class="mb-2 text-xs font-medium text-base-content/60">
+								{$t('adventures.regions')} ({regionsVisited.length})
+							</p>
+							<div class="flex flex-wrap gap-2">
+								{#each regionsVisited.slice(0, 15) as region (`${region.name}-${region.country}`)}
+									<span
+										class="inline-flex items-center rounded-full bg-base-300 px-3 py-1 text-sm font-medium"
+									>
+										{region.name}{#if region.country}, {region.country}{/if}
+									</span>
+								{/each}
+								{#if regionsVisited.length > 15}
+									<span
+										class="inline-flex items-center rounded-full bg-base-300 px-3 py-1 text-sm font-medium"
+									>
+										+{regionsVisited.length - 15}
+									</span>
+								{/if}
+							</div>
+						</div>
+					{/if}
 
-			{#if citiesVisited.length}
-				<div>
-					<h4 class="font-semibold mb-2 flex items-center gap-2">
-						<span>🏙️</span>
-						{$t('adventures.cities')} ({citiesVisited.length})
-					</h4>
-					<div class="flex flex-wrap gap-2">
-						{#each citiesVisited.slice(0, 20) as city}
-							<span class="badge badge-accent badge-outline">
-								{city.name}
-							</span>
-						{/each}
-						{#if citiesVisited.length > 20}
-							<span class="badge badge-ghost">+{citiesVisited.length - 20} more</span>
-						{/if}
-					</div>
+					{#if citiesVisited.length}
+						<div>
+							<p class="mb-2 text-xs font-medium text-base-content/60">
+								{$t('adventures.cities')} ({citiesVisited.length})
+							</p>
+							<div class="flex flex-wrap gap-2">
+								{#each citiesVisited.slice(0, 20) as city (`${city.name}-${city.region}`)}
+									<span
+										class="inline-flex items-center rounded-full bg-base-300 px-3 py-1 text-sm font-medium"
+									>
+										{city.name}
+									</span>
+								{/each}
+								{#if citiesVisited.length > 20}
+									<span
+										class="inline-flex items-center rounded-full bg-base-300 px-3 py-1 text-sm font-medium"
+									>
+										+{citiesVisited.length - 20}
+									</span>
+								{/if}
+							</div>
+						</div>
+					{/if}
 				</div>
-			{/if}
-		</div>
-	</div>
+			</section>
+		{/if}
 
-	<!-- Trip Timeline & Duration -->
-	<div class="card bg-base-200 shadow-xl">
-		<div class="card-body">
-			<h3 class="card-title text-xl flex items-center gap-2">
-				<span class="text-2xl">📆</span>
-				{$t('adventures.trip_timeline')}
-			</h3>
-			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				<div class="stat bg-primary/10 rounded-lg p-4">
-					<div class="stat-title text-xs">{$t('adventures.total_days')}</div>
-					<div class="stat-value text-primary text-2xl">{tripDurationDays ?? 'N/A'}</div>
-					<div class="stat-desc">{$t('adventures.trip_window')}</div>
+		<section
+			class="card bg-base-200 shadow-xl {countriesVisited.length ||
+			regionsVisited.length ||
+			citiesVisited.length
+				? ''
+				: 'lg:col-span-2'}"
+		>
+			<div class="card-body gap-4 p-4 sm:p-5">
+				<div class="flex items-center gap-3">
+					<CalendarRange class="h-5 w-5 shrink-0 text-primary" />
+					<h3 class="text-lg font-bold">{$t('adventures.trip_timeline')}</h3>
 				</div>
-				<div class="stat bg-success/10 rounded-lg p-4">
-					<div class="stat-title text-xs">{$t('adventures.active_days')}</div>
-					<div class="stat-value text-success text-2xl">{activeDayCount}</div>
-					<div class="stat-desc">{$t('adventures.with_activities')}</div>
-				</div>
-				<div class="stat bg-info/10 rounded-lg p-4">
-					<div class="stat-title text-xs">{$t('adventures.visits')}</div>
-					<div class="stat-value text-info text-2xl">{visitsInRange.length}</div>
-					<div class="stat-desc">{$t('adventures.total_visits')}</div>
-				</div>
-				<div class="stat bg-warning/10 rounded-lg p-4">
-					<div class="stat-title text-xs">{$t('adventures.nights')}</div>
-					<div class="stat-value text-warning text-2xl">{lodgingNights}</div>
-					<div class="stat-desc">{lodgingStays.length} {$t('adventures.stays')}</div>
+				<div class="grid grid-cols-2 gap-3">
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.total_days')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{tripDurationDays ?? '—'}</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.trip_window')}</p>
+					</div>
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.active_days')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{activeDayCount}</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.with_activities')}</p>
+					</div>
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.visits')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{visitsInRange.length}</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.total_visits')}</p>
+					</div>
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.nights')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{lodgingNights}</p>
+						<p class="mt-1 text-xs text-base-content/60">
+							{lodgingStays.length}
+							{$t('adventures.stays')}
+						</p>
+					</div>
 				</div>
 			</div>
-		</div>
+		</section>
 	</div>
 
-	<!-- Distance Breakdown -->
 	{#if totalDistance > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<h3 class="card-title text-xl flex items-center gap-2 mb-2">
-					<span class="text-2xl">🛣️</span>
-					{$t('adventures.distance_traveled')}
-				</h3>
-
-				<div
-					class="flex items-center justify-center p-6 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg mb-4"
-				>
-					<div class="text-center">
-						<div class="text-5xl font-bold text-primary">
-							{numberFormatter.format(totalDistance)}
-						</div>
-						<div class="text-sm opacity-70 mt-1">
-							{getDistanceUnitLong()}
-							{$t('adventures.traveled')}
-						</div>
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-4 p-4 sm:p-5">
+				<div class="flex flex-wrap items-center justify-between gap-3">
+					<div class="flex items-center gap-3">
+						<RoadVariant class="h-5 w-5 shrink-0 text-primary" />
+						<h3 class="text-lg font-bold">{$t('adventures.distance_traveled')}</h3>
 					</div>
+					<p class="text-2xl font-bold tabular-nums">
+						{numberFormatter.format(totalDistance)}
+						<span class="text-sm font-medium text-base-content/60">{getDistanceUnit()}</span>
+					</p>
 				</div>
 
 				{#if distanceByTransportType.length > 0}
-					<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-						{#each distanceByTransportType as type}
-							<div class="stat bg-base-300 rounded-lg p-3">
-								<div class="stat-figure text-3xl">{type.icon}</div>
-								<div class="stat-title text-xs">{type.label}</div>
-								<div class="stat-value text-lg">
-									{distanceFormatter.format(type.distance)}
-								</div>
-								<div class="stat-desc text-xs">{getDistanceUnitLong()}</div>
-							</div>
-						{/each}
+					<div style:height="{Math.max(120, distanceByTransportType.length * 44)}px">
+						<BarChart
+							data={distanceByTransportType}
+							x="distance"
+							y="label"
+							orientation="horizontal"
+							series={[{ key: 'distance', value: 'distance', color: 'var(--color-primary)' }]}
+							bandPadding={0.35}
+							legend={false}
+							padding={{ top: 4, right: 16, bottom: 20, left: 88 }}
+						/>
 					</div>
 				{/if}
 			</div>
-		</div>
+		</section>
 	{/if}
-	<!-- Activities Stats -->
-	{#if activitiesInRange.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<h3 class="card-title text-xl flex items-center gap-2 mb-2">
-					<span class="text-2xl">🏃</span>
-					{$t('adventures.physical_activities')}
-				</h3>
 
-				<div class="stats stats-vertical sm:stats-horizontal bg-base-100 shadow-sm mb-4">
-					<div class="stat bg-accent/10">
-						<div class="stat-figure text-accent text-3xl">🎯</div>
-						<div class="stat-title">{$t('adventures.activities')}</div>
-						<div class="stat-value text-accent">{activitiesInRange.length}</div>
-						<div class="stat-desc">{$t('adventures.total_recorded')}</div>
+	{#if activitiesInRange.length > 0}
+		<section class="card bg-base-200 shadow-xl">
+			<div class="card-body gap-4 p-4 sm:p-5">
+				<div class="flex items-center gap-3">
+					<Run class="h-5 w-5 shrink-0 text-primary" />
+					<h3 class="text-lg font-bold">{$t('adventures.physical_activities')}</h3>
+				</div>
+
+				<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60 capitalize">
+							{$t('adventures.activities_text')}
+						</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{activitiesInRange.length}</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.total_recorded')}</p>
 					</div>
-					<div class="stat bg-info/10">
-						<div class="stat-figure text-info text-3xl">📏</div>
-						<div class="stat-title">{$t('adventures.distance')}</div>
-						<div class="stat-value text-info">
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.distance')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">
 							{distanceFormatter.format(totalActivityDistance)}
-						</div>
-						<div class="stat-desc">{getDistanceUnitLong()}</div>
+						</p>
+						<p class="mt-1 text-xs text-base-content/60">{getDistanceUnit()}</p>
 					</div>
-					<div class="stat bg-success/10">
-						<div class="stat-figure text-success text-3xl">⛰️</div>
-						<div class="stat-title">{$t('adventures.elevation')}</div>
-						<div class="stat-value text-success">
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.elevation')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">
 							{numberFormatter.format(totalActivityElevation)}
-						</div>
-						<div class="stat-desc">{getElevationUnitLong()} {$t('adventures.gained')}</div>
+						</p>
+						<p class="mt-1 text-xs text-base-content/60">{getElevationUnit()}</p>
 					</div>
-					<div class="stat bg-warning/10">
-						<div class="stat-figure text-warning text-3xl">🔥</div>
-						<div class="stat-title">{$t('adventures.calories')}</div>
-						<div class="stat-value text-warning">
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.calories')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">
 							{compactFormatter.format(totalActivityCalories)}
-						</div>
-						<div class="stat-desc">{$t('adventures.burned')}</div>
+						</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.burned')}</p>
 					</div>
 				</div>
 
 				{#if sportTypes.length > 0}
-					<div>
-						<h4 class="font-semibold mb-2">Sport Types</h4>
+					<div class="flex flex-wrap gap-2">
+						{#each sportTypes as [sport, count] (sport)}
+							<span class="badge badge-outline gap-2">
+								{getActivityIcon(sport)}
+								{getSportLabel(sport)}
+								<span class="badge badge-ghost badge-xs">{count}</span>
+							</span>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</section>
+	{/if}
+
+	<section class="card bg-base-200 shadow-xl">
+		<div class="card-body gap-4 p-4 sm:p-5">
+			<div class="flex items-center gap-3">
+				<NoteText class="h-5 w-5 shrink-0 text-primary" />
+				<h3 class="text-lg font-bold">{$t('adventures.content_media')}</h3>
+			</div>
+
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+				<div class="rounded-xl bg-base-100 p-4">
+					<p class="text-xs font-medium text-base-content/60">{$t('adventures.photos')}</p>
+					<p class="mt-1 text-2xl font-bold tabular-nums">
+						{numberFormatter.format(imagesInRange)}
+					</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.images')}</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-4">
+					<p class="text-xs font-medium text-base-content/60">{$t('adventures.notes')}</p>
+					<p class="mt-1 text-2xl font-bold tabular-nums">{notesInRange.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.written')}</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-4">
+					<p class="text-xs font-medium text-base-content/60">{$t('adventures.checklists')}</p>
+					<p class="mt-1 text-2xl font-bold tabular-nums">{checklistsInRange.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.lists')}</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-4">
+					<p class="text-xs font-medium text-base-content/60">{$t('adventures.transportation')}</p>
+					<p class="mt-1 text-2xl font-bold tabular-nums">{transportSegments.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.segments')}</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-4">
+					<p class="text-xs font-medium text-base-content/60">{$t('adventures.lodging')}</p>
+					<p class="mt-1 text-2xl font-bold tabular-nums">{lodgingStays.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.places')}</p>
+				</div>
+				<div class="rounded-xl bg-base-100 p-4">
+					<p class="text-xs font-medium text-base-content/60">{$t('locations.locations')}</p>
+					<p class="mt-1 text-2xl font-bold tabular-nums">{visitedLocations.length}</p>
+					<p class="mt-1 text-xs text-base-content/60">{$t('adventures.visited')}</p>
+				</div>
+				{#if totalAttachments > 0}
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.attachments')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{totalAttachments}</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.files')}</p>
+					</div>
+				{/if}
+				{#if averageLocationRating > 0}
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.avg_rating')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{averageLocationRating.toFixed(1)}</p>
+						<p class="mt-1 text-xs text-base-content/60">{$t('adventures.of_locations')}</p>
+					</div>
+				{/if}
+				{#if checklistStats.total > 0}
+					<div class="rounded-xl bg-base-100 p-4">
+						<p class="text-xs font-medium text-base-content/60">{$t('adventures.tasks_done')}</p>
+						<p class="mt-1 text-2xl font-bold tabular-nums">{checklistStats.percentage}%</p>
+						<p class="mt-1 text-xs text-base-content/60">
+							{checklistStats.checked}/{checklistStats.total}
+							{$t('adventures.items')}
+						</p>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</section>
+
+	{#if categoriesWithIcons.length > 0 || lodgingTypeBreakdown.length > 1}
+		<div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+			{#if categoriesWithIcons.length > 0}
+				<section class="card bg-base-200 shadow-xl">
+					<div class="card-body gap-4 p-4 sm:p-5">
+						<div class="flex items-center gap-3">
+							<Tag class="h-5 w-5 shrink-0 text-primary" />
+							<h3 class="text-lg font-bold">{$t('adventures.categories')}</h3>
+						</div>
+						<div style:height="{Math.max(140, categoriesWithIcons.length * 36)}px">
+							<BarChart
+								data={categoriesWithIcons}
+								x="count"
+								y="name"
+								orientation="horizontal"
+								series={[{ key: 'count', value: 'count', color: 'var(--color-primary)' }]}
+								bandPadding={0.35}
+								legend={false}
+								padding={{ top: 4, right: 16, bottom: 20, left: 108 }}
+							/>
+						</div>
+					</div>
+				</section>
+			{/if}
+
+			{#if lodgingTypeBreakdown.length > 1}
+				<section class="card bg-base-200 shadow-xl">
+					<div class="card-body gap-4 p-4 sm:p-5">
+						<div class="flex items-center gap-3">
+							<Bed class="h-5 w-5 shrink-0 text-primary" />
+							<h3 class="text-lg font-bold">{$t('adventures.lodging_types')}</h3>
+						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each sportTypes as [sport, count]}
-								<div class="badge badge-lg badge-primary badge-outline p-3 flex items-center gap-2">
-									<span class="text-lg">{getActivityIcon(sport)}</span>
-									<span class="font-medium">{getSportLabel(sport)}</span>
-									<span class="badge badge-xs badge-primary ml-2">{count}</span>
-								</div>
+							{#each lodgingTypeBreakdown as [type, count] (type)}
+								<span class="badge badge-outline gap-2">
+									{getLodgingIcon(type)}
+									{capitalize(type)}
+									<span class="badge badge-ghost badge-xs">{count}</span>
+								</span>
 							{/each}
 						</div>
 					</div>
-				{/if}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Content & Media -->
-	<div class="card bg-base-200 shadow-xl">
-		<div class="card-body">
-			<h3 class="card-title text-xl flex items-center gap-2 mb-2">
-				<span class="text-2xl">📱</span>
-				{$t('adventures.content_media')}
-			</h3>
-
-			<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-				<div
-					class="stat bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg p-4 border border-primary/30"
-				>
-					<div class="stat-figure text-primary text-3xl">📸</div>
-					<div class="stat-title text-xs">{$t('adventures.photos')}</div>
-					<div class="stat-value text-primary text-2xl">
-						{numberFormatter.format(imagesInRange)}
-					</div>
-					<div class="stat-desc">{$t('adventures.images')}</div>
-				</div>
-
-				<div
-					class="stat bg-gradient-to-br from-secondary/20 to-secondary/5 rounded-lg p-4 border border-secondary/30"
-				>
-					<div class="stat-figure text-secondary text-3xl">📝</div>
-					<div class="stat-title text-xs">{$t('adventures.notes')}</div>
-					<div class="stat-value text-secondary text-2xl">{notesInRange.length}</div>
-					<div class="stat-desc">{$t('adventures.written')}</div>
-				</div>
-
-				<div
-					class="stat bg-gradient-to-br from-accent/20 to-accent/5 rounded-lg p-4 border border-accent/30"
-				>
-					<div class="stat-figure text-accent text-3xl">✅</div>
-					<div class="stat-title text-xs">{$t('adventures.checklists')}</div>
-					<div class="stat-value text-accent text-2xl">{checklistsInRange.length}</div>
-					<div class="stat-desc">{$t('adventures.lists')}</div>
-				</div>
-
-				<div
-					class="stat bg-gradient-to-br from-info/20 to-info/5 rounded-lg p-4 border border-info/30"
-				>
-					<div class="stat-figure text-info text-3xl">🚆</div>
-					<div class="stat-title text-xs">{$t('adventures.transportation')}</div>
-					<div class="stat-value text-info text-2xl">{transportSegments.length}</div>
-					<div class="stat-desc">{$t('adventures.segments')}</div>
-				</div>
-
-				<div
-					class="stat bg-gradient-to-br from-success/20 to-success/5 rounded-lg p-4 border border-success/30"
-				>
-					<div class="stat-figure text-success text-3xl">🏨</div>
-					<div class="stat-title text-xs">{$t('adventures.lodging')}</div>
-					<div class="stat-value text-success text-2xl">{lodgingStays.length}</div>
-					<div class="stat-desc">{$t('adventures.places')}</div>
-				</div>
-
-				<div
-					class="stat bg-gradient-to-br from-warning/20 to-warning/5 rounded-lg p-4 border border-warning/30"
-				>
-					<div class="stat-figure text-warning text-3xl">📍</div>
-					<div class="stat-title text-xs">{$t('locations.locations')}</div>
-					<div class="stat-value text-warning text-2xl">{visitedLocations.length}</div>
-					<div class="stat-desc">{$t('adventures.visited')}</div>
-				</div>
-
-				{#if totalAttachments > 0}
-					<div
-						class="stat bg-gradient-to-br from-error/20 to-error/5 rounded-lg p-4 border border-error/30"
-					>
-						<div class="stat-figure text-error text-3xl">📎</div>
-						<div class="stat-title text-xs">{$t('adventures.attachments')}</div>
-						<div class="stat-value text-error text-2xl">{totalAttachments}</div>
-						<div class="stat-desc">{$t('adventures.files')}</div>
-					</div>
-				{/if}
-			</div>
-
-			<!-- Additional Stats Row -->
-			{#if averageLocationRating > 0 || checklistStats.total > 0 || lodgingTypeBreakdown.length > 0}
-				<div class="divider">{$t('adventures.more_details')}</div>
-				<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-					{#if averageLocationRating > 0}
-						<div class="stat bg-base-300 rounded-lg p-4">
-							<div class="stat-figure text-2xl">⭐</div>
-							<div class="stat-title text-xs">{$t('adventures.avg_rating')}</div>
-							<div class="stat-value text-lg">{averageLocationRating.toFixed(1)}</div>
-							<div class="stat-desc text-xs">{$t('adventures.of_locations')}</div>
-						</div>
-					{/if}
-
-					{#if checklistStats.total > 0}
-						<div class="stat bg-base-300 rounded-lg p-4">
-							<div class="stat-figure text-2xl">✓</div>
-							<div class="stat-title text-xs">{$t('adventures.tasks_done')}</div>
-							<div class="stat-value text-lg">{checklistStats.percentage}%</div>
-							<div class="stat-desc text-xs">
-								{checklistStats.checked}/{checklistStats.total}
-								{$t('adventures.items')}
-							</div>
-						</div>
-					{/if}
-
-					{#if lodgingTypeBreakdown.length > 0}
-						<div class="stat bg-base-300 rounded-lg p-4">
-							<div class="stat-figure text-2xl">🛏️</div>
-							<div class="stat-title text-xs">{$t('adventures.lodging_types')}</div>
-							<div class="stat-value text-lg">{lodgingTypeBreakdown.length}</div>
-							<div class="stat-desc text-xs truncate">
-								{getLodgingIcon(lodgingTypeBreakdown[0][0])}
-								{capitalize(lodgingTypeBreakdown[0][0])}
-							</div>
-						</div>
-					{/if}
-				</div>
+				</section>
 			{/if}
-		</div>
-	</div>
-
-	<!-- Categories -->
-	{#if categoriesWithIcons.length > 0}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<h3 class="card-title text-xl flex items-center gap-2">
-					<span class="text-2xl">🏷️</span>
-					{$t('adventures.categories')}
-				</h3>
-				<div class="flex flex-wrap gap-2">
-					{#each categoriesWithIcons as category}
-						<div class="badge badge-lg badge-primary badge-outline p-3 flex items-center gap-2">
-							<span class="text-lg">{category.icon}</span>
-							<span class="font-medium">{category.name}</span>
-							<span class="badge badge-xs badge-primary">{category.count}</span>
-						</div>
-					{/each}
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Lodging Types Breakdown -->
-	{#if lodgingTypeBreakdown.length > 1}
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body">
-				<h3 class="card-title text-xl flex items-center gap-2">
-					<span class="text-2xl">🏨</span>
-					Lodging Types
-				</h3>
-				<div class="flex flex-wrap gap-2">
-					{#each lodgingTypeBreakdown as [type, count]}
-						<div class="badge badge-lg badge-success badge-outline p-3 flex items-center gap-2">
-							<span class="text-lg">{getLodgingIcon(type)}</span>
-							<span class="font-medium">{capitalize(type)}</span>
-							<span class="badge badge-xs badge-success ml-2">{count}</span>
-						</div>
-					{/each}
-				</div>
-			</div>
 		</div>
 	{/if}
 </div>
