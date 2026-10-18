@@ -1,15 +1,17 @@
 """Collection type (folder or trip) and backup schema versions.
 
 Schema 2 added ``type``. Schema 3 added the day plan: timezone, day indexes,
-placements, spans, optional flags, and local times. Import of an older schema
-runs each later step in order; see ``backup_needs_day_conversion``.
+placements, spans, optional flags, and local times. Schema 4 added day-owned
+trails, activities, and photos. Import of an older schema runs each later step
+in order. Import without the schema 4 keys still succeeds.
 """
 
 from datetime import date
 
 TYPE_SCHEMA = 2
 DAY_PLAN_SCHEMA = 3
-BACKUP_SCHEMA = DAY_PLAN_SCHEMA
+DAY_FILES_SCHEMA = 4
+BACKUP_SCHEMA = DAY_FILES_SCHEMA
 
 FOLDER = 'folder'
 TRIP = 'trip'

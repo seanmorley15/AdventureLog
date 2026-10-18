@@ -72,6 +72,13 @@ export type ContentImage = {
 	source_url?: string | null;
 	latitude?: number | null;
 	longitude?: number | null;
+	content_type?: string;
+	object_id?: string;
+};
+
+export type DayImage = ContentImage & {
+	content_type: string;
+	object_id: string;
 };
 
 export type Location = {
@@ -205,6 +212,9 @@ export type Collection = {
 	primary_image_id?: string | null;
 	itinerary: CollectionItineraryItem[];
 	itinerary_days: CollectionItineraryDay[]; // Day metadata (names/descriptions)
+	day_activities?: Activity[];
+	day_trails?: Trail[];
+	day_images?: DayImage[];
 	status: 'upcoming' | 'in_progress' | 'completed' | null;
 	days_until_start: number | null;
 };
@@ -457,7 +467,11 @@ export type Trail = {
 	id: string;
 	user: string;
 	name: string;
-	location: string; // UUID of the location
+	location: string | null; // UUID of the location, when the trail belongs to a place
+	day?: string | null;
+	collection?: string | null;
+	span_end_index?: number | null;
+	day_index?: number | null;
 	created_at: string; // ISO 8601 date string
 	link?: string | null; // Optional link to the trail
 	wanderer_id?: string | null;
@@ -526,7 +540,13 @@ export type StravaActivity = {
 export type Activity = {
 	id: string;
 	user: string;
-	visit: string;
+	visit: string | null;
+	day?: string | null;
+	collection?: string | null;
+	day_index?: number | null;
+	promoted_activity?: string | null;
+	promoted_visit?: string | null;
+	promoted_location?: string | null;
 	trail: string | null;
 	gpx_file: string | null;
 	geojson: any | undefined; // GeoJSON representation of the activity
@@ -761,6 +781,9 @@ export type DayPlanState = {
 	itinerary_days: CollectionItineraryDay[];
 	lodging: Lodging[];
 	transportations: Transportation[];
+	day_activities?: Activity[];
+	day_trails?: Trail[];
+	day_images?: DayImage[];
 };
 
 export type ActivityRecord = {

@@ -92,10 +92,13 @@ def _member_collection(request, collection_id):
 
 def plan_state(collection, context=None):
     """The day plan the planner renders, returned after structural changes."""
+    from adventures.utils.day_files import serialize_day_files
+
     collection.refresh_from_db()
     items = CollectionItineraryItem.objects.filter(collection=collection).select_related('day', 'content_type')
     days = CollectionItineraryDay.objects.filter(collection=collection).order_by('index', 'date')
-    return {
+    context = context or {}
+    state = {
         'collection': {
             'id': str(collection.id),
             'start_date': collection.start_date,
@@ -104,11 +107,13 @@ def plan_state(collection, context=None):
             'day_count': day_plan.day_count(collection) or None,
             'updated_at': collection.updated_at,
         },
-        'itinerary': CollectionItineraryItemSerializer(items, many=True, context=context or {}).data,
-        'itinerary_days': CollectionItineraryDaySerializer(days, many=True, context=context or {}).data,
-        'lodging': LodgingSerializer(collection.lodging_set.all(), many=True, context=context or {}).data,
-        'transportations': TransportationSerializer(collection.transportation_set.all(), many=True, context=context or {}).data,
+        'itinerary': CollectionItineraryItemSerializer(items, many=True, context=context).data,
+        'itinerary_days': CollectionItineraryDaySerializer(days, many=True, context=context).data,
+        'lodging': LodgingSerializer(collection.lodging_set.all(), many=True, context=context).data,
+        'transportations': TransportationSerializer(collection.transportation_set.all(), many=True, context=context).data,
     }
+    state.update(serialize_day_files(collection, context))
+    return state
 
 
 def _serialize_updated_object(obj, context):
@@ -576,10 +581,22 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         visit_date = _parse_day_date(request.data.get('date'))
         logged = day_plan.log_day(collection, day, visit_date)
         refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in logged]).select_related('day', 'content_type', 'logged_visit')
-        return Response({
+        from adventures.models import Activity
+        from adventures.utils.day_files import location_stops_on_day, serialize_day_files
+
+        needs_stop = []
+        if len(location_stops_on_day(day)) > 1:
+            needs_stop = [
+                str(activity.pk)
+                for activity in Activity.objects.filter(day=day, promoted_activity__isnull=True)
+            ]
+        body = {
             'items': self.get_serializer(refreshed, many=True).data,
             'visits': VisitSerializer([i.logged_visit for i in refreshed], many=True, context=self.get_serializer_context()).data,
-        }, status=status.HTTP_200_OK)
+            'activities_need_stop': needs_stop,
+        }
+        body.update(serialize_day_files(collection, self.get_serializer_context()))
+        return Response(body, status=status.HTTP_200_OK)
 
 
 class ItineraryDayViewSet(viewsets.ModelViewSet):

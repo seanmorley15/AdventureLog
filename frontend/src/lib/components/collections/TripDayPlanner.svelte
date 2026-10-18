@@ -43,6 +43,8 @@
 		type PlanRow
 	} from '$lib/collections/plan';
 	import DayPlanRow from './DayPlanRow.svelte';
+	import DayFileDialog from './DayFileDialog.svelte';
+	import DayFileRows from './DayFileRows.svelte';
 	import DayPlacementModal from './DayPlacementModal.svelte';
 	import type { LinkScope } from './LinkItemsModal.svelte';
 	import LocationModal from '$lib/components/locations/LocationModal.svelte';
@@ -373,10 +375,11 @@
 		collection.locations = (collection.locations ?? []).map((location) => {
 			const added = visits.filter((visit) => String(visit.location) === String(location.id));
 			if (!added.length) return location;
-			const known = new Set((location.visits ?? []).map((visit) => visit.id));
+			const byId = new Map((location.visits ?? []).map((visit) => [visit.id, visit]));
+			for (const visit of added) byId.set(visit.id, visit);
 			return {
 				...location,
-				visits: [...(location.visits ?? []), ...added.filter((visit) => !known.has(visit.id))],
+				visits: [...byId.values()],
 				is_visited:
 					location.is_visited || added.some((visit) => visit.start_date.slice(0, 10) <= today)
 			};
@@ -393,7 +396,10 @@
 			itinerary: state.itinerary,
 			itinerary_days: state.itinerary_days,
 			lodging: state.lodging,
-			transportations: state.transportations
+			transportations: state.transportations,
+			day_activities: state.day_activities ?? collection.day_activities,
+			day_trails: state.day_trails ?? collection.day_trails,
+			day_images: state.day_images ?? collection.day_images
 		};
 	}
 
@@ -768,14 +774,35 @@
 	let logDayDate = $state(today);
 	let loggingDay = $state<string | null>(null);
 
+	function locationStops(day: CollectionItineraryDay) {
+		return (collection.itinerary ?? []).filter((item) => {
+			if (placementType(item) !== 'location') return false;
+			if (item.day === day.id) return true;
+			return Boolean(
+				item.day_index &&
+				item.span_end_index &&
+				day.index &&
+				item.day_index <= day.index &&
+				day.index <= item.span_end_index
+			);
+		});
+	}
+
 	function loggableCount(day: CollectionItineraryDay): number {
-		return (zones[dayZone(day.id)] ?? []).filter(
+		const unloggedStops = (zones[dayZone(day.id)] ?? []).filter(
 			(row) =>
 				row.type === 'location' &&
 				row.item &&
 				!row.item.is_optional &&
 				!recordedVisitId(collection, row.item)
 		).length;
+		const stops = locationStops(day);
+		const unloggedActivities = stops.length
+			? (collection.day_activities ?? []).filter(
+					(activity) => activity.day === day.id && !activity.promoted_activity
+				).length
+			: 0;
+		return unloggedStops + unloggedActivities;
 	}
 
 	async function logDay(day: CollectionItineraryDay, date?: string) {
@@ -785,7 +812,12 @@
 		}
 		loggingDay = day.id;
 		try {
-			const res = await send<{ items: CollectionItineraryItem[]; visits: Visit[] }>(
+			const res = await send<{
+				items: CollectionItineraryItem[];
+				visits: Visit[];
+				day_activities?: Collection['day_activities'];
+				activities_need_stop?: string[];
+			}>(
 				'/api/itineraries/log-day/',
 				'POST',
 				{ collection: collection.id, day: day.id, ...(date ? { date } : {}) },
@@ -794,7 +826,11 @@
 			if (res.ok) {
 				upsertItems(res.data.items);
 				addVisits(res.data.visits);
+				if (res.data.day_activities) collection.day_activities = res.data.day_activities;
 				logDayPromptFor = null;
+				if (res.data.activities_need_stop?.length) {
+					addToast('info', $t('itinerary.activity_needs_stop'));
+				}
 				addToast(
 					'success',
 					res.data.visits.length
@@ -814,6 +850,15 @@
 	// ---------------------------------------------------------------- object modals
 
 	type CreateTarget = { dayIndex: number | null; isGlobal: boolean };
+	let fileDialog = $state<{
+		kind: 'trail' | 'activity' | 'photos';
+		day: CollectionItineraryDay;
+	} | null>(null);
+
+	function openFile(kind: 'trail' | 'activity' | 'photos', dayIndex: number | null) {
+		const day = days.find((entry) => entry.index === dayIndex);
+		if (day) fileDialog = { kind, day };
+	}
 
 	let openModal = $state<PlanObjectType | null>(null);
 	let createTarget = $state<CreateTarget | null>(null);
@@ -990,6 +1035,11 @@
 			<li class="menu-title">{$t('adventures.create_new')}</li>
 			{#if !target.isGlobal}
 				<li>
+					<button type="button" role="menuitem" onclick={() => startCreate('location', target)}>
+						{$t('adventures.location')}
+					</button>
+				</li>
+				<li>
 					<button type="button" role="menuitem" onclick={() => startCreate('lodging', target)}>
 						{$t('adventures.lodging')}
 					</button>
@@ -1014,6 +1064,28 @@
 					{$t('adventures.checklist')}
 				</button>
 			</li>
+			{#if target.dayIndex}
+				<li class="menu-title">{$t('itinerary.day_n', { values: { n: target.dayIndex } })}</li>
+				<li>
+					<button type="button" role="menuitem" onclick={() => openFile('trail', target.dayIndex)}>
+						{$t('itinerary.day_trail')}
+					</button>
+				</li>
+				<li>
+					<button
+						type="button"
+						role="menuitem"
+						onclick={() => openFile('activity', target.dayIndex)}
+					>
+						{$t('itinerary.day_activity')}
+					</button>
+				</li>
+				<li>
+					<button type="button" role="menuitem" onclick={() => openFile('photos', target.dayIndex)}>
+						{$t('itinerary.day_photos')}
+					</button>
+				</li>
+			{/if}
 		</ul>
 	</div>
 {/snippet}
@@ -1183,6 +1255,7 @@
 					{/if}
 				</div>
 				{@render zone('ideas', zones.ideas, false, $t('itinerary.ideas_empty'))}
+				<DayFileRows bind:collection day={null} {canModify} {readMode} {anchored} />
 				{#if unplaced.length > 0}
 					<div class="space-y-2 pt-2">
 						<h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">
@@ -1456,6 +1529,17 @@
 						anchored,
 						carried.length > 0 ? $t('itinerary.drop_plans_here') : $t('itinerary.no_plans_for_day')
 					)}
+					<DayFileRows
+						bind:collection
+						{day}
+						{canModify}
+						{readMode}
+						{anchored}
+						onLogged={(result) => {
+							if (result.item) upsertItems([result.item]);
+							if (result.visit) addVisits([result.visit]);
+						}}
+					/>
 				</div>
 			</section>
 		{/each}
@@ -1530,6 +1614,15 @@
 		</div>
 	{/if}
 </div>
+
+{#if fileDialog}
+	<DayFileDialog
+		bind:collection
+		day={fileDialog.day}
+		kind={fileDialog.kind}
+		onClose={() => (fileDialog = null)}
+	/>
+{/if}
 
 {#if destinationPrompt}
 	<div class="modal modal-open" role="dialog" aria-modal="true">

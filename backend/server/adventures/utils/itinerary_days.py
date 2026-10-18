@@ -746,6 +746,9 @@ def insert_day(collection, position=None, name=None, description=None):
         if position < 1 or position > count + 1:
             raise DayPlanError('Position is outside the trip.')
         before = _span_snapshot(collection)
+        from adventures.utils.day_files import extend_trail_spans
+
+        extend_trail_spans(collection, position)
 
         spans = _spanning_items(collection)
         for item in spans:
@@ -812,6 +815,9 @@ def move_day(collection, day_id, position):
         if position < 1 or position > len(days):
             raise DayPlanError('Position is outside the trip.')
         before = _span_snapshot(collection)
+        from adventures.utils.day_files import retarget_trail_spans, trail_span_lengths
+
+        trail_lengths = trail_span_lengths(collection)
         spans = _spanning_items(collection)
         lengths = {item.pk: item.span_end_index - item.day.index for item in spans}
 
@@ -823,6 +829,7 @@ def move_day(collection, day_id, position):
             item.day = by_pk[item.day_id]
             item.span_end_index = min(item.day.index + lengths[item.pk], len(days))
         _save_spans(spans)
+        retarget_trail_spans(trail_lengths, by_pk, len(days))
         sync_projection(collection, days)
         _rewrite_changed_spans(collection, before)
         return by_pk[day.pk]
@@ -855,14 +862,17 @@ def delete_day(collection, day_id, destination=None, target_day_id=None):
         day = _get_day(collection, day_id)
         if len(days) <= 1:
             raise DayPlanError('A trip needs at least one day.')
+        from adventures.utils.day_files import blocking_file_count, move_blocking_files, shrink_trail_spans
+
         blocking = _day_blocking_items(collection, day)
+        file_count = blocking_file_count(day)
         target_day = None
-        if blocking:
+        if blocking or file_count:
             if destination not in ('day', 'ideas'):
                 raise DayPlanError(
                     'This day has stops. Choose where they go.',
                     code='destination_required',
-                    extra={'item_count': len(blocking)},
+                    extra={'item_count': len(blocking) + file_count},
                 )
             if destination == 'day':
                 target_day = _get_day(collection, target_day_id)
@@ -892,6 +902,7 @@ def delete_day(collection, day_id, destination=None, target_day_id=None):
             CollectionItineraryItem.objects.bulk_update(spans, ['span_end_index'])
         if moved_starts:
             _place_after_existing(collection, next_day, moved_starts)
+        shrink_trail_spans(collection, removed, next_day)
 
         ideas_moves = []
         if blocking:
@@ -911,6 +922,8 @@ def delete_day(collection, day_id, destination=None, target_day_id=None):
                     item.order = order + offset
                     ideas_moves.append(item)
                 CollectionItineraryItem.objects.bulk_update(blocking, ['day', 'date', 'order'])
+        if file_count:
+            move_blocking_files(day, destination, target_day, collection)
 
         day.delete()
         _renumber(remaining)
@@ -969,8 +982,10 @@ def set_duration(collection, count, anchor=..., destination=None, target_day_id=
         days = indexed_days(collection)
         current = len(days)
         if count < current:
+            from adventures.utils.day_files import blocking_file_count
+
             trailing = days[count:]
-            blocked = [d for d in trailing if _day_blocking_items(collection, d)]
+            blocked = [d for d in trailing if _day_blocking_items(collection, d) or blocking_file_count(d)]
             if blocked and destination not in ('day', 'ideas'):
                 raise DayPlanError(
                     'The days being removed have stops. Choose where they go.',
@@ -1391,8 +1406,14 @@ def log_visited(item, visit_date=None):
 
 
 def log_day(collection, day, visit_date=None):
-    """Log every non-optional location stop on ``day`` that has no logged visit."""
+    """
+    Log every non-optional location stop on ``day`` that has no logged visit.
+
+    Day activities are copied onto the visit when the day has one location stop.
+    The day activity stays on the day.
+    """
     from adventures.models import CollectionItineraryItem
+    from adventures.utils.day_files import promote_ready_activities
 
     items = CollectionItineraryItem.objects.filter(
         collection=collection,
@@ -1401,13 +1422,18 @@ def log_day(collection, day, visit_date=None):
         logged_visit__isnull=True,
         content_type__model='location',
     ).select_related('day', 'content_type', 'collection').order_by('order')
-    if not items:
+    pending_activities = False
+    from adventures.models import Activity
+    if Activity.objects.filter(day=day, promoted_activity__isnull=True).exists():
+        pending_activities = True
+    if not items and not pending_activities:
         return []
-    if collection.start_date is None and visit_date is None:
+    if collection.start_date is None and visit_date is None and (items or pending_activities):
         raise DayPlanError('Choose the date you visited.', code='date_required')
     logged = []
     with transaction.atomic():
         for item in items:
             visit, _ = log_visited(item, visit_date)
             logged.append(item)
+        promote_ready_activities(day, visit_date)
     return logged

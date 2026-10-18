@@ -127,14 +127,28 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         user = request.user
         is_safe_method = request.method in permissions.SAFE_METHODS
 
+        # Day-owned activities and trails belong to the collection's members.
+        # Do not follow visit.location or trail.location when that parent is null,
+        # and do not treat a public collection as permission to read the file.
+        if type(obj).__name__ == 'Trail' and obj.location_id is None:
+            collection = obj.day.collection if obj.day_id else obj.collection
+            return self._day_file_member(collection, user)
+
+        if type(obj).__name__ == 'Activity' and obj.visit_id is None:
+            collection = obj.day.collection if obj.day_id else obj.collection
+            return self._day_file_member(collection, user)
+
+        if type(obj).__name__ == 'CollectionItineraryDay':
+            return self._day_file_member(obj.collection, user)
+
         # If the object has a location field, get that location and continue checking with that object, basically from the location's perspective. I am very proud of this line of code and that's why I am writing this comment.
 
         if type(obj).__name__ == 'Trail':
             obj = obj.location
 
         if type(obj).__name__ == 'Activity':
-            # If the object is an Activity, get its location
-            if hasattr(obj, 'visit') and hasattr(obj.visit, 'location'):
+            # Place activities are reached through the visit's location.
+            if obj.visit_id and getattr(obj.visit, 'location', None) is not None:
                 obj = obj.visit.location
 
         
@@ -172,6 +186,14 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         
         return False
     
+    def _day_file_member(self, collection, user):
+        """Owner and shared_with only. A public collection does not grant access."""
+        if collection is None or not user or not user.is_authenticated:
+            return False
+        if collection.user_id == user.id:
+            return True
+        return collection.shared_with.filter(id=user.id).exists()
+
     def _is_owner(self, obj, user):
         """
         Check if the user is the owner of the object.

@@ -1,4 +1,5 @@
 from adventures.models import Activity, ContentAttachment, ContentImage, Visit
+from adventures.utils.day_files import activity_collection, image_day_collection, is_member
 import posixpath
 
 PUBLIC_MEDIA_PATHS = ('profile-pics/', 'achievements/', 'flags/')
@@ -62,8 +63,14 @@ def checkFilePermission(fileId, user, mediaType):
         content_images = ContentImage.objects.filter(image=image_path)
         if not content_images.exists():
             return False
-        # Grant access if ANY associated content object permits it
+        # Grant access if ANY associated content object permits it.
+        # Day photos are members-only, including when the collection is public.
         for content_image in content_images:
+            day_collection = image_day_collection(content_image)
+            if day_collection is not None:
+                if is_member(day_collection, user):
+                    return True
+                continue
             content_object = content_image.content_object
             if content_object and _check_content_object_permission(content_object, user):
                 return True
@@ -82,7 +89,27 @@ def checkFilePermission(fileId, user, mediaType):
         if not activities.exists():
             return False
         for activity in activities:
-            if activity.visit and _check_content_object_permission(activity.visit, user):
+            if activity.visit_id:
+                if activity.visit and _check_content_object_permission(activity.visit, user):
+                    return True
+                continue
+            if is_member(activity_collection(activity), user):
                 return True
         return False
+    return False
+
+
+def is_day_owned_media(file_id, media_type):
+    """
+    True when every row for this file is a day-owned activity or photo.
+
+    A denied request for that file is 404, including for a public collection.
+    A location GPX that shares nothing with a day file keeps today's response.
+    """
+    if media_type == 'activities/':
+        activities = list(Activity.objects.filter(gpx_file=f'activities/{file_id}'))
+        return bool(activities) and all(activity.visit_id is None for activity in activities)
+    if media_type == 'images/':
+        images = list(ContentImage.objects.filter(image=f'images/{file_id}'))
+        return bool(images) and all(image_day_collection(image) is not None for image in images)
     return False

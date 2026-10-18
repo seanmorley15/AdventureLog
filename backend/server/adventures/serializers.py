@@ -212,11 +212,33 @@ class TrailSerializer(CustomModelSerializer):
     class Meta:
         model = Trail
         fields = [
-            'id', 'user', 'name', 'location', 'created_at', 'link',
+            'id', 'user', 'name', 'location', 'day', 'collection', 'span_end_index', 'day_index',
+            'created_at', 'link',
             'wanderer_id', 'wanderer_author_username', 'wanderer_author_domain',
             'provider', 'wanderer_data', 'wanderer_link', 'geojson',
         ]
-        read_only_fields = ['id', 'created_at', 'user', 'provider', 'wanderer_link']
+        read_only_fields = ['id', 'created_at', 'user', 'provider', 'wanderer_link', 'day_index']
+
+    day_index = serializers.SerializerMethodField()
+
+    def get_day_index(self, obj):
+        return obj.day.index if obj.day_id else None
+
+    def validate(self, attrs):
+        instance = getattr(self, 'instance', None)
+        location = attrs.get('location', getattr(instance, 'location', None) if instance else None)
+        day = attrs.get('day', getattr(instance, 'day', None) if instance else None)
+        collection = attrs.get('collection', getattr(instance, 'collection', None) if instance else None)
+        if sum(parent is not None for parent in (location, day, collection)) != 1:
+            raise serializers.ValidationError(
+                'A trail belongs to a location, a trip day, or Ideas.'
+            )
+        span = attrs.get('span_end_index', getattr(instance, 'span_end_index', None) if instance else None)
+        if span is not None and day is None:
+            raise serializers.ValidationError({'span_end_index': 'Only a trail on a day can span days.'})
+        if span is not None and day is not None and span < day.index:
+            raise serializers.ValidationError({'span_end_index': 'A span cannot end before it starts.'})
+        return attrs
 
     def _get_wanderer_integration(self, user):
         """Cache wanderer integration to avoid multiple database queries"""
@@ -446,17 +468,47 @@ class TrailSerializer(CustomModelSerializer):
     
 class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
     geojson = serializers.SerializerMethodField()
+    day_index = serializers.SerializerMethodField()
+    promoted_visit = serializers.SerializerMethodField()
+    promoted_location = serializers.SerializerMethodField()
     
     class Meta:
         model = Activity
         fields = [
-            'id', 'user', 'visit', 'trail', 'gpx_file', 'name', 'sport_type',
+            'id', 'user', 'visit', 'day', 'collection', 'trail', 'gpx_file', 'name', 'sport_type',
             'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
             'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
             'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',
-            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'geojson'
+            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'geojson',
+            'day_index', 'promoted_activity', 'promoted_visit', 'promoted_location',
         ]
-        read_only_fields = ['id', 'user']
+        read_only_fields = ['id', 'user', 'promoted_activity', 'day_index', 'promoted_visit', 'promoted_location']
+
+    def validate(self, attrs):
+        instance = getattr(self, 'instance', None)
+        visit = attrs.get('visit', getattr(instance, 'visit', None) if instance else None)
+        day = attrs.get('day', getattr(instance, 'day', None) if instance else None)
+        collection = attrs.get('collection', getattr(instance, 'collection', None) if instance else None)
+        if sum(parent is not None for parent in (visit, day, collection)) != 1:
+            raise serializers.ValidationError(
+                'An activity belongs to a visit, a trip day, or Ideas.'
+            )
+        return attrs
+
+    def get_day_index(self, obj):
+        return obj.day.index if obj.day_id else None
+
+    def get_promoted_visit(self, obj):
+        copy = obj.promoted_activity if obj.promoted_activity_id else None
+        if copy is None or not copy.visit_id:
+            return None
+        return str(copy.visit_id)
+
+    def get_promoted_location(self, obj):
+        copy = obj.promoted_activity if obj.promoted_activity_id else None
+        if copy is None or not copy.visit_id or not copy.visit.location_id:
+            return None
+        return str(copy.visit.location_id)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -1315,17 +1367,15 @@ class CollectionSerializer(CustomModelSerializer):
 
         if self.instance and not self._image_belongs_to_collection(primary_image, self.instance):
             raise serializers.ValidationError({
-                'primary_image_id': 'Cover image must come from a location in this collection.'
+                'primary_image_id': 'Cover image must come from a location or a day in this collection.'
             })
 
         return data
 
     def _image_belongs_to_collection(self, image, collection):
-        if ContentImage.objects.filter(id=image.id, location__collections=collection).exists():
-            return True
-        if ContentImage.objects.filter(id=image.id, visit__location__collections=collection).exists():
-            return True
-        return False
+        from adventures.utils.day_files import image_belongs_to_collection
+
+        return image_belongs_to_collection(image, collection)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

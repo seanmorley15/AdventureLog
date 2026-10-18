@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Attachment } from 'svelte/attachments';
 	import { DateTime } from 'luxon';
 	import { t } from 'svelte-i18n';
 	import type { Collection } from '$lib/types';
@@ -21,17 +20,6 @@
 	let timezoneMode = $state<CalendarTimezoneMode>('event');
 	let selectedEvent = $state<CalendarDisplayEvent | null>(null);
 	let showEvent = $state(false);
-	let frameHeight = $state(0);
-
-	const measureFrame: Attachment = (node) => {
-		const measure = () => {
-			frameHeight = node.clientHeight;
-		};
-		measure();
-		const observer = new ResizeObserver(measure);
-		observer.observe(node);
-		return () => observer.disconnect();
-	};
 
 	const labels = $derived({
 		eventTimezone: $t('collections.event_timezone'),
@@ -112,20 +100,15 @@
 				<p class="text-sm text-base-content/60">{$t('collections.no_calendar_events')}</p>
 			{/if}
 
-			<div
-				class="collection-calendar min-h-0 flex-1 overflow-hidden rounded-xl bg-base-100"
-				{@attach measureFrame}
-			>
-				{#if frameHeight > 0}
-					<CalendarComponent
-						{events}
-						{initialDate}
-						height="{frameHeight}px"
-						dayMaxEvents={2}
-						bare={true}
-						on:eventClick={(e) => openEvent(e.detail)}
-					/>
-				{/if}
+			<div class="collection-calendar min-h-0 flex-1 overflow-y-auto rounded-xl bg-base-100">
+				<CalendarComponent
+					{events}
+					{initialDate}
+					height="auto"
+					dayMaxEvents={5}
+					bare={true}
+					on:eventClick={(e) => openEvent(e.detail)}
+				/>
 			</div>
 		</div>
 	</section>
@@ -145,20 +128,7 @@
 		padding: 0.5rem 0.75rem !important;
 	}
 
-	.collection-calendar :global(.ec-body) {
-		overflow: hidden !important;
-	}
-
-	.collection-calendar :global(.ec-content) {
-		display: flex !important;
-		height: 100% !important;
-		flex-direction: column;
-	}
-
-	.collection-calendar :global(.ec-days) {
-		height: auto !important;
-		min-height: 0 !important;
-		flex: 1 1 0 !important;
-		overflow: hidden;
+	.collection-calendar :global(.ec-day-grid .ec-body .ec-day) {
+		min-height: 7rem;
 	}
 </style>

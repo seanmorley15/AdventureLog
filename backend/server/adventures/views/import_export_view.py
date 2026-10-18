@@ -154,6 +154,188 @@ class BackupViewSet(viewsets.ViewSet):
         text = str(value).strip()
         return text or None
 
+    def _export_day_files(self, export_data, collection, collection_export_id):
+        """Schema 4: trails, activities, and photos whose parent is a day or Ideas."""
+        from adventures.utils.day_files import day_file_activities, day_file_images, day_file_trails
+
+        trail_keys = {}
+        for trail in day_file_trails(collection):
+            export_id = len(export_data['day_trails'])
+            trail_keys[trail.id] = export_id
+            export_data['day_trails'].append({
+                'export_id': export_id,
+                'collection_export_id': collection_export_id,
+                'day_index': trail.day.index if trail.day_id else None,
+                'name': trail.name,
+                'link': trail.link,
+                'wanderer_id': trail.wanderer_id,
+                'wanderer_author_username': trail.wanderer_author_username,
+                'wanderer_author_domain': trail.wanderer_author_domain,
+                'span_end_index': trail.span_end_index,
+                'images': self._serialize_images(trail.images),
+            })
+        for activity in day_file_activities(collection):
+            gpx_filename = None
+            if activity.gpx_file:
+                gpx_filename = activity.gpx_file.name.split('/')[-1]
+            export_data['day_activities'].append({
+                'collection_export_id': collection_export_id,
+                'day_index': activity.day.index if activity.day_id else None,
+                'name': activity.name,
+                'sport_type': activity.sport_type,
+                'distance': float(activity.distance) if activity.distance else None,
+                'moving_time': activity.moving_time.total_seconds() if activity.moving_time else None,
+                'elapsed_time': activity.elapsed_time.total_seconds() if activity.elapsed_time else None,
+                'rest_time': activity.rest_time.total_seconds() if activity.rest_time else None,
+                'elevation_gain': float(activity.elevation_gain) if activity.elevation_gain else None,
+                'elevation_loss': float(activity.elevation_loss) if activity.elevation_loss else None,
+                'elev_high': float(activity.elev_high) if activity.elev_high else None,
+                'elev_low': float(activity.elev_low) if activity.elev_low else None,
+                'start_date': activity.start_date.isoformat() if activity.start_date else None,
+                'start_date_local': activity.start_date_local.isoformat() if activity.start_date_local else None,
+                'timezone': activity.timezone,
+                'average_speed': float(activity.average_speed) if activity.average_speed else None,
+                'max_speed': float(activity.max_speed) if activity.max_speed else None,
+                'average_cadence': float(activity.average_cadence) if activity.average_cadence else None,
+                'calories': float(activity.calories) if activity.calories else None,
+                'gpx_filename': gpx_filename,
+                'trail_export_id': trail_keys.get(activity.trail_id),
+                'images': self._serialize_images(activity.images),
+            })
+        day_ct = ContentType.objects.get_for_model(CollectionItineraryDay)
+        collection_ct = ContentType.objects.get_for_model(Collection)
+        for image in day_file_images(collection).select_related('content_type'):
+            if image.content_type_id not in (day_ct.id, collection_ct.id):
+                continue
+            entry = self._serialize_images(ContentImage.objects.filter(pk=image.pk))
+            if not entry:
+                continue
+            payload = entry[0]
+            payload['collection_export_id'] = collection_export_id
+            if image.content_type_id == day_ct.id:
+                day = CollectionItineraryDay.objects.filter(pk=image.object_id).first()
+                payload['day_index'] = day.index if day else None
+            else:
+                payload['day_index'] = None
+            export_data['day_images'].append(payload)
+
+    def _import_day_files(self, backup_data, zip_file, user, collection_map, day_map, summary):
+        """Restore schema 4 rows. A backup without these keys imports nothing extra."""
+        from datetime import timedelta
+        from django.core.files.base import ContentFile
+        from django.utils.dateparse import parse_datetime
+
+        trail_map = {}
+        content_type_trail = ContentType.objects.get_for_model(Trail)
+        content_type_activity = ContentType.objects.get_for_model(Activity)
+        content_type_day = ContentType.objects.get_for_model(CollectionItineraryDay)
+        content_type_collection = ContentType.objects.get_for_model(Collection)
+        for trail_data in backup_data.get('day_trails') or []:
+            collection = collection_map.get(trail_data.get('collection_export_id'))
+            if not collection:
+                continue
+            day_index = trail_data.get('day_index')
+            day = day_map.get((trail_data.get('collection_export_id'), day_index)) if day_index else None
+            if day_index and day is None:
+                continue
+            parsed = self._parse_trail_import(trail_data)
+            if not parsed:
+                summary['trails_skipped'] = summary.get('trails_skipped', 0) + 1
+                continue
+            trail = Trail.objects.create(
+                user=user,
+                location=None,
+                day=day,
+                collection=None if day else collection,
+                name=parsed['name'],
+                link=parsed['link'],
+                wanderer_id=parsed['wanderer_id'],
+                wanderer_author_username=parsed['wanderer_author_username'],
+                wanderer_author_domain=parsed['wanderer_author_domain'],
+                span_end_index=trail_data.get('span_end_index') if day else None,
+            )
+            trail_map[trail_data.get('export_id')] = trail
+            self._import_images(
+                trail_data.get('images') or [],
+                zip_file,
+                user,
+                content_type_trail,
+                trail.id,
+                summary,
+            )
+            summary['trails'] = summary.get('trails', 0) + 1
+
+        for activity_data in backup_data.get('day_activities') or []:
+            collection = collection_map.get(activity_data.get('collection_export_id'))
+            if not collection:
+                continue
+            day_index = activity_data.get('day_index')
+            day = day_map.get((activity_data.get('collection_export_id'), day_index)) if day_index else None
+            if day_index and day is None:
+                continue
+
+            def seconds(value):
+                return timedelta(seconds=float(value)) if value not in (None, '') else None
+
+            activity = Activity(
+                user=user,
+                visit=None,
+                day=day,
+                collection=None if day else collection,
+                trail=trail_map.get(activity_data.get('trail_export_id')),
+                name=activity_data.get('name') or 'Activity',
+                sport_type=activity_data.get('sport_type') or 'General',
+                distance=activity_data.get('distance'),
+                moving_time=seconds(activity_data.get('moving_time')),
+                elapsed_time=seconds(activity_data.get('elapsed_time')),
+                rest_time=seconds(activity_data.get('rest_time')),
+                elevation_gain=activity_data.get('elevation_gain'),
+                elevation_loss=activity_data.get('elevation_loss'),
+                elev_high=activity_data.get('elev_high'),
+                elev_low=activity_data.get('elev_low'),
+                start_date=parse_datetime(activity_data['start_date']) if activity_data.get('start_date') else None,
+                start_date_local=parse_datetime(activity_data['start_date_local']) if activity_data.get('start_date_local') else None,
+                timezone=activity_data.get('timezone'),
+                average_speed=activity_data.get('average_speed'),
+                max_speed=activity_data.get('max_speed'),
+                average_cadence=activity_data.get('average_cadence'),
+                calories=activity_data.get('calories'),
+            )
+            gpx_filename = activity_data.get('gpx_filename')
+            if gpx_filename:
+                try:
+                    gpx_content = zip_file.read(f'gpx/{gpx_filename}')
+                    activity.gpx_file.save(gpx_filename, ContentFile(gpx_content), save=False)
+                    summary['gpx_files'] = summary.get('gpx_files', 0) + 1
+                except KeyError:
+                    pass
+            activity.save()
+            self._import_images(
+                activity_data.get('images') or [],
+                zip_file,
+                user,
+                content_type_activity,
+                activity.id,
+                summary,
+            )
+            summary['activities'] = summary.get('activities', 0) + 1
+
+        for image_data in backup_data.get('day_images') or []:
+            collection = collection_map.get(image_data.get('collection_export_id'))
+            if not collection:
+                continue
+            day_index = image_data.get('day_index')
+            if day_index:
+                day = day_map.get((image_data.get('collection_export_id'), day_index))
+                if day is None:
+                    continue
+                parent_type = content_type_day
+                parent_id = day.id
+            else:
+                parent_type = content_type_collection
+                parent_id = collection.id
+            self._import_images([image_data], zip_file, user, parent_type, parent_id, summary)
+
     def _serialize_trail_export(self, trail):
         """Export trail data; author fields are optional for backward-compatible backups."""
         data = {
@@ -373,7 +555,10 @@ class BackupViewSet(viewsets.ViewSet):
             'visited_cities': [],
             'visited_regions': [],
             'itinerary_days': [],
-            'itinerary_items': []
+            'itinerary_items': [],
+            'day_trails': [],
+            'day_activities': [],
+            'day_images': [],
         }
         visit_id_to_export_ref = {}
 
@@ -425,6 +610,7 @@ class BackupViewSet(viewsets.ViewSet):
                     'name': day.name,
                     'description': day.description,
                 })
+            self._export_day_files(export_data, collection, idx)
         
         # Create collection name to export_id mapping
         collection_name_to_id = {col.name: idx for idx, col in enumerate(user.collection_set.all())}
@@ -848,6 +1034,34 @@ class BackupViewSet(viewsets.ViewSet):
                                     )
                                 except Exception as e:
                                     print(f"Error adding GPX file {activity.gpx_file.name}: {e}")
+
+                from adventures.utils.day_files import day_file_activities, day_file_images
+
+                for collection in user.collection_set.all():
+                    for activity in day_file_activities(collection):
+                        if activity.gpx_file and activity.gpx_file.name not in files_added:
+                            try:
+                                filename = activity.gpx_file.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    activity.gpx_file.name,
+                                    f'gpx/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding day GPX file {activity.gpx_file.name}: {e}")
+                    for image in day_file_images(collection):
+                        if image.image and image.image.name not in files_added:
+                            try:
+                                filename = image.image.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    image.image.name,
+                                    f'images/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding day image {image.image.name}: {e}")
 
                 # Add non-location content images/attachments
                 for transport in user.transportation_set.all():
@@ -1551,6 +1765,8 @@ class BackupViewSet(viewsets.ViewSet):
                 )
                 if day.index is not None:
                     day_map[(day_data.get('collection_export_id'), day.index)] = day
+
+            self._import_day_files(backup_data, zip_file, user, collection_map, day_map, summary)
 
         # Import Itinerary Items
         # Maps already created during import of each content type

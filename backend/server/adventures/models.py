@@ -316,9 +316,15 @@ class Collection(models.Model):
                 if not location.is_public:
                     raise ValidationError(f'Public collections cannot be associated with private locations. Collection: {self.name} Location: {location.name}')
 
+    def delete(self, *args, **kwargs):
+        from adventures.utils.day_files import purge_collection_day_files
+
+        purge_collection_day_files(self)
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.name
-    
+
 class Transportation(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
@@ -629,8 +635,25 @@ class Trail(models.Model):
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='trails')
+    # A trail has one parent: a location, a trip day, or the collection while it sits in Ideas.
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='trails', blank=True, null=True)
+    day = models.ForeignKey(
+        'CollectionItineraryDay',
+        on_delete=models.CASCADE,
+        related_name='trails',
+        blank=True,
+        null=True,
+    )
+    collection = models.ForeignKey(
+        'Collection',
+        on_delete=models.CASCADE,
+        related_name='idea_trails',
+        blank=True,
+        null=True,
+    )
     name = models.CharField(max_length=200)
+    # Listed on each day from ``day.index`` through this index. The card is a link, not a GPX file.
+    span_end_index = models.PositiveIntegerField(blank=True, null=True)
 
     # Either an external link (e.g., AllTrails, Trailforks) or a Wanderer ID
     link = models.URLField("External Trail Link", max_length=2083, blank=True, null=True)
@@ -651,11 +674,31 @@ class Trail(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    images = GenericRelation('ContentImage', related_query_name='trail')
+
     class Meta:
         verbose_name = "Trail"
         verbose_name_plural = "Trails"
+        constraints = [
+            models.CheckConstraint(
+                name='trail_exactly_one_parent',
+                check=(
+                    Q(location__isnull=False, day__isnull=True, collection__isnull=True)
+                    | Q(location__isnull=True, day__isnull=False, collection__isnull=True)
+                    | Q(location__isnull=True, day__isnull=True, collection__isnull=False)
+                ),
+            ),
+        ]
 
     def clean(self):
+        parents = sum(parent is not None for parent in (self.location_id, self.day_id, self.collection_id))
+        if parents != 1:
+            raise ValidationError('A trail belongs to a location, a trip day, or Ideas.')
+        if self.span_end_index is not None and self.day_id is None:
+            raise ValidationError({'span_end_index': 'Only a trail on a day can span days.'})
+        if self.day_id and self.span_end_index is not None and self.span_end_index < self.day.index:
+            raise ValidationError({'span_end_index': 'A span cannot end before it starts.'})
+
         has_link = bool(self.link and str(self.link).strip())
         has_wanderer_id = bool(self.wanderer_id and str(self.wanderer_id).strip())
 
@@ -674,8 +717,31 @@ class Trail(models.Model):
 class Activity(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
-    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name='activities')
+    # Exactly one parent: a visit (place log), a trip day, or the collection while it sits in Ideas.
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name='activities', blank=True, null=True)
+    day = models.ForeignKey(
+        'CollectionItineraryDay',
+        on_delete=models.CASCADE,
+        related_name='activities',
+        blank=True,
+        null=True,
+    )
+    collection = models.ForeignKey(
+        'Collection',
+        on_delete=models.CASCADE,
+        related_name='idea_activities',
+        blank=True,
+        null=True,
+    )
     trail = models.ForeignKey(Trail, on_delete=models.CASCADE, related_name='activities', blank=True, null=True)
+    # Set when Log visit has copied this day activity onto a visit. The day row stays.
+    promoted_activity = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        related_name='promoted_from',
+        blank=True,
+        null=True,
+    )
 
     # GPX File
     gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_file_extension], blank=True, null=True)
@@ -716,12 +782,24 @@ class Activity(models.Model):
     # Optional links
     external_service_id = models.CharField(max_length=100, blank=True, null=True)  # E.g., Strava ID
 
+    images = GenericRelation('ContentImage', related_query_name='activity')
+
     def __str__(self):
         return f"{self.name} ({self.sport_type})"
 
     class Meta:
         verbose_name = "Activity"
         verbose_name_plural = "Activities"
+        constraints = [
+            models.CheckConstraint(
+                name='activity_exactly_one_parent',
+                check=(
+                    Q(visit__isnull=False, day__isnull=True, collection__isnull=True)
+                    | Q(visit__isnull=True, day__isnull=False, collection__isnull=True)
+                    | Q(visit__isnull=True, day__isnull=True, collection__isnull=False)
+                ),
+            ),
+        ]
 
 class CollectionItineraryDay(models.Model):
     """
@@ -738,6 +816,8 @@ class CollectionItineraryDay(models.Model):
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    images = GenericRelation('ContentImage', related_query_name='itinerary_day')
     
     class Meta:
         ordering = ['index', 'date']

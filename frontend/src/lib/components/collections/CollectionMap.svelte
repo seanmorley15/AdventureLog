@@ -372,10 +372,19 @@
 	};
 
 	// Merge attachments/activity geojson into a single feature collection
+	function dayActivityMatches(activity: any, dayIndex: number | null, trails: any[]): boolean {
+		if (dayIndex == null) return true;
+		if (activity?.day_index === dayIndex) return true;
+		const trail = trails.find((entry) => entry.id === activity?.trail);
+		if (!trail?.day_index || !trail.span_end_index) return false;
+		return trail.day_index <= dayIndex && dayIndex <= trail.span_end_index;
+	}
+
 	function collectLinesGeojson(
 		coll: Collection,
 		dateWindow: { startDate: string; endDate: string },
-		scope: DayTrackScope | null
+		scope: DayTrackScope | null,
+		dayIndex: number | null
 	): { type: 'FeatureCollection'; features: any[] } | null {
 		if (!coll) return null;
 		const features: any[] = [];
@@ -424,6 +433,17 @@
 			}
 		}
 
+		// Day activities carry the GPX. A trail card is only a link.
+		for (const activity of coll.day_activities || []) {
+			if (!dayActivityMatches(activity, dayIndex, coll.day_trails || [])) continue;
+			if (!activity?.geojson) continue;
+			const color = getActivityColor(activity.sport_type || '');
+			pushGeoJson(activity.geojson, {
+				_color: color,
+				activity_type: activity.sport_type || null
+			});
+		}
+
 		// Transportations: attachments
 		for (const t of coll.transportations || []) {
 			if (!transportationMatches(t, filters)) continue;
@@ -439,9 +459,30 @@
 		return { type: 'FeatureCollection', features };
 	}
 
+	function appendTrailGeometry(features: any[], geojson: any) {
+		if (!geojson) return;
+		if (geojson.type === 'FeatureCollection' && Array.isArray(geojson.features)) {
+			for (const feature of geojson.features) {
+				const cloned = cloneFeature(feature);
+				if (cloned) features.push(cloned);
+			}
+		} else if (geojson.type === 'Feature') {
+			const cloned = cloneFeature(geojson);
+			if (cloned) features.push(cloned);
+		}
+	}
+
+	function dayTrailMatches(trail: any, dayIndex: number | null): boolean {
+		if (dayIndex == null) return true;
+		if (trail?.day_index === dayIndex) return true;
+		if (!trail?.day_index || !trail.span_end_index) return false;
+		return trail.day_index <= dayIndex && dayIndex <= trail.span_end_index;
+	}
+
 	function collectTrailGeojson(
 		coll: Collection,
-		scope: DayTrackScope | null
+		scope: DayTrackScope | null,
+		dayIndex: number | null
 	): { type: 'FeatureCollection'; features: any[] } | null {
 		if (!coll) return null;
 		const features: any[] = [];
@@ -450,18 +491,12 @@
 			if (!locationMatches(loc, filters)) continue;
 			if (scope && !scope.locationIds.has(String(loc.id))) continue;
 			if (!Array.isArray(loc.trails)) continue;
-			for (const trail of loc.trails) {
-				if (!trail?.geojson) continue;
-				if (trail.geojson.type === 'FeatureCollection' && Array.isArray(trail.geojson.features)) {
-					for (const f of trail.geojson.features) {
-						const cloned = cloneFeature(f);
-						if (cloned) features.push(cloned);
-					}
-				} else if (trail.geojson.type === 'Feature') {
-					const cloned = cloneFeature(trail.geojson);
-					if (cloned) features.push(cloned);
-				}
-			}
+			for (const trail of loc.trails) appendTrailGeometry(features, trail?.geojson);
+		}
+
+		for (const trail of coll.day_trails || []) {
+			if (!dayTrailMatches(trail, dayIndex)) continue;
+			appendTrailGeometry(features, trail?.geojson);
 		}
 
 		if (features.length === 0) return null;
@@ -665,7 +700,8 @@
 				startDate: startDateFilter || collection?.start_date || '',
 				endDate: endDateFilter || collection?.end_date || ''
 			},
-			trackScope
+			trackScope,
+			selectedDay
 		)
 	);
 	let transportationLinesGeoJson = $derived(
@@ -678,7 +714,7 @@
 				)
 			: null
 	);
-	let trailsGeoJson = $derived(collectTrailGeojson(collection, trackScope));
+	let trailsGeoJson = $derived(collectTrailGeojson(collection, trackScope, selectedDay));
 	let dayLinkGeoJson = $derived.by(() => {
 		if (selectedDay == null || !showDayLinks) return null;
 		const coordinates = dayStopPath(collection, selectedDay);
@@ -698,7 +734,7 @@
 		(collection?.locations || []).reduce(
 			(count, loc) => count + (loc.trails || []).filter((trail) => trail.geojson).length,
 			0
-		)
+		) + (collection?.day_trails || []).filter((trail) => trail.geojson).length
 	);
 	let matchedLocationIds = $derived(
 		new Set(
@@ -760,12 +796,22 @@
 				'|'
 			)}-${Array.from(filters.lodgingTypes).sort().join('|')}-${Array.from(filters.transportTypes).sort().join('|')}`
 	);
+	function firstTrackCoordinate(geojson: { features?: any[] } | null): [number, number] | null {
+		const coordinates = geojson?.features?.[0]?.geometry?.coordinates;
+		if (!Array.isArray(coordinates) || coordinates.length === 0) return null;
+		const first = Array.isArray(coordinates[0]) ? coordinates[0] : coordinates;
+		if (typeof first[0] !== 'number' || typeof first[1] !== 'number') return null;
+		return [first[0], first[1]];
+	}
+
 	let mapCenter = $derived(
 		mapCenterCoords[0] !== 0 || mapCenterCoords[1] !== 0
 			? mapCenterCoords
 			: markerGeoJson.features.length
 				? markerGeoJson.features[0].geometry.coordinates
-				: ([0, 0] as [number, number])
+				: (firstTrackCoordinate(linesGeoJson) ??
+					firstTrackCoordinate(trailsGeoJson) ??
+					([0, 0] as [number, number]))
 	);
 </script>
 

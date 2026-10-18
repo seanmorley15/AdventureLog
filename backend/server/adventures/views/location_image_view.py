@@ -7,7 +7,18 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.contrib.contenttypes.models import ContentType
-from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentImage
+from adventures.models import (
+    Activity,
+    Collection,
+    CollectionItineraryDay,
+    Location,
+    Transportation,
+    Note,
+    Lodging,
+    Visit,
+    ContentImage,
+    Trail,
+)
 from adventures.serializers import ContentImageSerializer, ImageMapPinSerializer
 from integrations.models import ImmichIntegration
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
@@ -38,7 +49,7 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             return ContentImage.objects.none()
         
         # Import here to avoid circular imports
-        from adventures.models import Location, Transportation, Note, Lodging, Visit
+        from adventures.models import Activity, Collection, CollectionItineraryDay, Location, Transportation, Note, Lodging, Trail, Visit
         
         # Build a single query with all conditions
         return ContentImage.objects.filter(
@@ -105,6 +116,36 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 # Visits - access through collections owned by user
                 Q(content_type=ContentType.objects.get_for_model(Visit)) &
                 Q(object_id__in=Visit.objects.filter(location__collections__user=self.request.user).values_list('id', flat=True))
+            ) |
+            (
+                Q(content_type=ContentType.objects.get_for_model(CollectionItineraryDay)) &
+                Q(object_id__in=CollectionItineraryDay.objects.filter(
+                    Q(collection__user=self.request.user) | Q(collection__shared_with=self.request.user)
+                ).values_list('id', flat=True))
+            ) |
+            (
+                Q(content_type=ContentType.objects.get_for_model(Activity)) &
+                Q(object_id__in=Activity.objects.filter(
+                    Q(day__collection__user=self.request.user)
+                    | Q(day__collection__shared_with=self.request.user)
+                    | Q(collection__user=self.request.user)
+                    | Q(collection__shared_with=self.request.user)
+                ).values_list('id', flat=True))
+            ) |
+            (
+                Q(content_type=ContentType.objects.get_for_model(Trail)) &
+                Q(object_id__in=Trail.objects.filter(
+                    Q(day__collection__user=self.request.user)
+                    | Q(day__collection__shared_with=self.request.user)
+                    | Q(collection__user=self.request.user)
+                    | Q(collection__shared_with=self.request.user)
+                ).values_list('id', flat=True))
+            ) |
+            (
+                Q(content_type=ContentType.objects.get_for_model(Collection)) &
+                Q(object_id__in=Collection.objects.filter(
+                    Q(user=self.request.user) | Q(shared_with=self.request.user)
+                ).values_list('id', flat=True))
             )
         ).distinct()
 
@@ -216,7 +257,7 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         if isinstance(content_object, Response):
             return content_object
 
-        owner = getattr(content_object, 'user', request.user)
+        owner = self._content_owner(content_object, request.user)
 
         explicit_source = request.data.get('source')
         import_summary = import_remote_images_for_object(
@@ -293,6 +334,9 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             'note': Note,
             'lodging': Lodging,
             'visit': Visit,
+            'collectionitineraryday': CollectionItineraryDay,
+            'activity': Activity,
+            'trail': Trail,
         }
         
         if content_type_name not in content_type_map:
@@ -330,6 +374,22 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_403_FORBIDDEN)
         
         return content_object
+
+    def _content_owner(self, content_object, fallback):
+        """Day photos belong to the collection owner, the same way lodging does."""
+        from adventures.utils.day_files import activity_collection, trail_collection
+
+        if isinstance(content_object, CollectionItineraryDay):
+            return content_object.collection.user
+        if isinstance(content_object, Activity):
+            parent = activity_collection(content_object)
+            if parent is not None:
+                return parent.user
+        if isinstance(content_object, Trail):
+            parent = trail_collection(content_object)
+            if parent is not None:
+                return parent.user
+        return getattr(content_object, 'user', fallback)
     
     def _handle_immich_image_creation(self, request, content_object, content_type, object_id):
         """Handle creation of image from Immich for shared users"""
@@ -419,7 +479,7 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         if not image_file and not immich_id:
             return Response({"error": "No image uploaded"}, status=status.HTTP_400_BAD_REQUEST)
 
-        owner = getattr(content_object, 'user', request.user)
+        owner = self._content_owner(content_object, request.user)
         explicit_source = request.data.get('source')
         source_url = request.data.get('source_url')
 

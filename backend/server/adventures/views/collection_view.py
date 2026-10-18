@@ -329,6 +329,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
         itinerary_days = CollectionItineraryDay.objects.filter(collection=collection)
         days_serializer = CollectionItineraryDaySerializer(itinerary_days, many=True)
         data['itinerary_days'] = days_serializer.data
+        from adventures.utils.day_files import serialize_day_files
+
+        data.update(serialize_day_files(collection, self.get_serializer_context()))
 
         return Response(data)
     

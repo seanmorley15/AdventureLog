@@ -2,12 +2,13 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from os import getenv
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.views.generic import RedirectView
 from django.views.static import serve
 from django.core.files.storage import default_storage
 from adventures.utils.file_permissions import (
     checkFilePermission,
+    is_day_owned_media,
     is_public_media_path,
     is_protected_media_path,
     normalize_media_request_path,
@@ -85,13 +86,18 @@ def serve_protected_media(request, path):
         return HttpResponseForbidden()
 
     user = _resolve_user(request)
-    if user is None:
-        return HttpResponseForbidden()
-
     media_type = path_parts[0] + '/'
     file_id = path_parts[1]
+    authenticated = bool(user and getattr(user, 'is_authenticated', False))
 
-    if checkFilePermission(file_id, user, media_type):
+    if authenticated and checkFilePermission(file_id, user, media_type):
+        return _serve_media_file(request, normalized_path)
+
+    if is_day_owned_media(file_id, media_type):
+        return HttpResponseNotFound()
+
+    # Location files that are public stay readable without an account.
+    if user is not None and checkFilePermission(file_id, user, media_type):
         return _serve_media_file(request, normalized_path)
 
     return HttpResponseForbidden()

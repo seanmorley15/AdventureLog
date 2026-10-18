@@ -25,7 +25,7 @@
 	import ImageManagement from '../ImageManagement.svelte';
 	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
-	import WandererCard from '../cards/WandererCard.svelte';
+	import TrailComposer from '../trails/TrailComposer.svelte';
 	import { page } from '$app/state';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
@@ -447,143 +447,22 @@
 					{$t('adventures.trails_management_description')}
 				</div>
 
-				<!-- Add Trail Form -->
-				{#if showAddTrailForm}
-					<div class="bg-accent/5 p-4 rounded-lg border border-accent/20 mb-6">
-						<h4 class="font-medium mb-3 text-accent">{$t('adventures.add_new_trail')}</h4>
-						<div class="grid gap-3">
-							<input
-								type="text"
-								bind:value={trailName}
-								class="input"
-								placeholder="Trail name"
-								disabled={isTrailLoading}
-							/>
-							<input
-								type="url"
-								bind:value={trailLink}
-								class="input"
-								placeholder={$t('adventures.external_link') + ' (AllTrails, Trailforks, etc.)'}
-								disabled={isTrailLoading}
-							/>
-							{#if trailError}
-								<div class="alert alert-error py-2">
-									<span class="text-sm">{trailError}</span>
-								</div>
-							{/if}
-							<div class="flex gap-2 justify-end">
-								<button
-									class="btn btn-ghost btn-sm"
-									disabled={isTrailLoading}
-									onclick={resetTrailForm}
-								>
-									{$t('adventures.cancel')}
-								</button>
-								<button
-									class="btn btn-accent btn-sm"
-									class:loading={isTrailLoading}
-									disabled={isTrailLoading || !trailName.trim() || !trailLink.trim()}
-									onclick={createTrail}
-								>
-									{$t('adventures.create_trail')}
-								</button>
-							</div>
-						</div>
-					</div>
-				{/if}
-
-				<!-- Wanderer Trails Form -->
-				{#if showWandererForm}
-					<div class="bg-accent/5 p-4 rounded-lg border border-accent/20 mb-6">
-						<h4 class="font-medium mb-3 text-accent">{$t('adventures.add_wanderer_trail')}</h4>
-						<div class="grid gap-3">
-							{#if isWandererEnabled}
-								<p class="text-sm text-base-content/60 mb-2">
-									{$t('adventures.select_wanderer_trail')}:
-								</p>
-
-								<!-- Search Box -->
-								<div class="relative">
-									<input
-										type="text"
-										placeholder={$t('adventures.search_trails_placeholder') + '...'}
-										class="input w-full pr-20"
-										bind:value={searchQuery}
-										oninput={debouncedSearch}
-										onkeydown={(e) => e.key === 'Enter' && handleSearch()}
-									/>
-									<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-										{#if searchQuery}
-											<button
-												class="btn btn-ghost btn-xs btn-circle"
-												onclick={clearSearch}
-												disabled={isSearching}
-												title="Clear search"
-											>
-												✕
-											</button>
-										{/if}
-										<button
-											class="btn btn-accent btn-xs"
-											class:loading={isSearching}
-											onclick={handleSearch}
-											disabled={isSearching}
-											title="Search"
-										>
-											{#if !isSearching}🔍{/if}
-										</button>
-									</div>
-								</div>
-
-								<!-- Search Status -->
-								{#if searchQuery && !isSearching}
-									<p class="text-xs text-base-content/50">
-										{wandererFetchedTrails.length}
-										{$t('adventures.trails_found_for')}{searchQuery}
-									</p>
-								{/if}
-
-								<!-- Trail Cards -->
-								<div class="max-h-96 overflow-y-auto">
-									{#if isSearching}
-										<div class="flex justify-center py-8">
-											<span class="loading loading-spinner loading-md"></span>
-										</div>
-									{:else if wandererFetchedTrails.length === 0}
-										<div class="text-center py-8 text-base-content/60">
-											{#if searchQuery}
-												{$t('adventures.no_trails_found_matching')} "{searchQuery}"
-											{:else}
-												{$t('adventures.no_trails_available')}
-											{/if}
-										</div>
-									{:else}
-										<div class="space-y-3">
-											{#each wandererFetchedTrails as trail (trail.id)}
-												<WandererCard {trail} on:link={linkWandererTrail} />
-											{/each}
-										</div>
-									{/if}
-								</div>
-							{:else}
-								<p class="text-sm text-base-content/60">
-									{$t('adventures.wanderer_integration_error')}
-								</p>
-							{/if}
-
-							<div class="flex gap-2 justify-end">
-								<button
-									class="btn btn-accent btn-sm"
-									onclick={() => {
-										showWandererForm = false;
-										showAddTrailForm = false;
-										searchQuery = ''; // Clear search when closing
-									}}
-								>
-									{$t('about.close')}
-								</button>
-							</div>
-						</div>
+				{#if showAddTrailForm || showWandererForm}
+					<div class="mb-6">
+						<TrailComposer
+							{userIsOwner}
+							locationId={itemId}
+							mode={showWandererForm ? 'wanderer' : 'link'}
+							onCreated={(trail) => {
+								trails = [...trails, trail];
+								showAddTrailForm = false;
+								showWandererForm = false;
+							}}
+							onCancel={() => {
+								showAddTrailForm = false;
+								showWandererForm = false;
+							}}
+						/>
 					</div>
 				{/if}
 

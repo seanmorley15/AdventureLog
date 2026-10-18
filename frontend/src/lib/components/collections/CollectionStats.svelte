@@ -14,7 +14,14 @@
 	import { t } from 'svelte-i18n';
 	import { BarChart, PieChart } from 'layerchart';
 	// lodging icons and helpers
-	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
+	import {
+		LODGING_TYPES_ICONS,
+		getActivityIcon,
+		SPORT_TYPE_CHOICES,
+		isAllDay,
+		isAllDayEnd,
+		allDayDatePart
+	} from '$lib';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import ChartBar from '~icons/mdi/chart-bar';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -82,6 +89,16 @@
 	let tripStart = $derived(collection.start_date ? DateTime.fromISO(collection.start_date) : null);
 	let tripEnd = $derived(collection.end_date ? DateTime.fromISO(collection.end_date) : null);
 
+	// All-day items (visits, transportation, lodging) are stored as date-only values at
+	// midnight UTC (e.g. 2025-07-07T00:00:00Z). Parsing those as a local instant shifts
+	// them to the previous evening in timezones west of UTC, which pushes them out of
+	// the trip window. Read all-day values by their calendar date, like the rest of the app.
+	function parseItemDate(value: string): DateTime {
+		return isAllDay(value) || isAllDayEnd(value)
+			? DateTime.fromISO(allDayDatePart(value))
+			: DateTime.fromISO(value);
+	}
+
 	function overlapsCollectionRange(
 		startStr: string | null | undefined,
 		endStr: string | null | undefined
@@ -89,13 +106,14 @@
 		if (!tripStart || !tripEnd) return true; // If no collection window, include everything
 		if (!startStr) return false;
 
-		const start = DateTime.fromISO(startStr);
+		const start = parseItemDate(startStr);
 		if (!start.isValid) return false;
 
-		const end = endStr ? DateTime.fromISO(endStr) : start;
+		const end = endStr ? parseItemDate(endStr) : start;
 		if (!end.isValid) return false;
 
-		return end >= tripStart && start <= tripEnd;
+		// The trip's last day runs until the end of that day, not its midnight.
+		return end >= tripStart.startOf('day') && start <= tripEnd.endOf('day');
 	}
 
 	function addRangeDays(
@@ -104,8 +122,8 @@
 		target: Set<string>
 	) {
 		if (!startStr) return;
-		const start = DateTime.fromISO(startStr);
-		const end = endStr ? DateTime.fromISO(endStr) : start;
+		const start = parseItemDate(startStr);
+		const end = endStr ? parseItemDate(endStr) : start;
 		if (!start.isValid || !end.isValid) return;
 
 		let cursor = start.startOf('day');
@@ -173,8 +191,8 @@
 	let lodgingNights = $derived(
 		lodgingStays.reduce((sum, stay) => {
 			if (!stay.check_in || !stay.check_out) return sum;
-			const start = DateTime.fromISO(stay.check_in);
-			const end = DateTime.fromISO(stay.check_out);
+			const start = parseItemDate(stay.check_in);
+			const end = parseItemDate(stay.check_out);
 			if (!start.isValid || !end.isValid) return sum;
 
 			const startDay = start.startOf('day');
@@ -449,8 +467,8 @@
 
 	function coversDay(day: DateTime, startStr?: string | null, endStr?: string | null) {
 		if (!startStr) return false;
-		const start = DateTime.fromISO(startStr).startOf('day');
-		const end = (endStr ? DateTime.fromISO(endStr) : DateTime.fromISO(startStr)).startOf('day');
+		const start = parseItemDate(startStr).startOf('day');
+		const end = (endStr ? parseItemDate(endStr) : parseItemDate(startStr)).startOf('day');
 		if (!start.isValid || !end.isValid) return false;
 		return day >= start && day <= end;
 	}
