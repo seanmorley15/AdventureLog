@@ -122,6 +122,7 @@
 		defaultSearchTerm?: string;
 		immichIntegration?: boolean;
 		copyImmichLocally?: boolean;
+		defaultDate?: string;
 		/** Google photo URLs from place search; imported only when the user chooses. */
 		pendingGooglePhotoUrls?: string[];
 		// Import temporary recommendation images (id starting with 'rec-') once objectId is available
@@ -135,6 +136,7 @@
 		defaultSearchTerm = '',
 		immichIntegration = false,
 		copyImmichLocally = false,
+		defaultDate = '',
 		pendingGooglePhotoUrls = $bindable([]),
 		importInProgress = $bindable(false)
 	}: Props = $props();
@@ -640,6 +642,7 @@
 						{objectId}
 						{contentType}
 						{copyImmichLocally}
+						{defaultDate}
 						on:localImage={handleImmichLocalImage}
 						on:remoteImmichSaved={handleImmichImageSaved}
 					/>

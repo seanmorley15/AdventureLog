@@ -64,6 +64,15 @@
 	// Derive edit mode immediately so the first paint never mounts Quick Start when editing
 	let isEditMode = $derived(Boolean(locationToEdit?.id));
 
+	let immichDefaultDate = $derived.by(() => {
+		const latest = (location.visits ?? [])
+			.map((visit) => new Date(visit.end_date || visit.start_date))
+			.filter((date) => !Number.isNaN(date.getTime()))
+			.sort((a, b) => +b - +a)[0];
+		if (latest) return latest.toISOString().split('T')[0];
+		return storedInitialVisitDate?.split('T')[0] ?? '';
+	});
+
 	function resolveInitialStepIndex(): number {
 		if (locationToEdit?.id && initialStep === 'visits') return 3;
 		if (locationToEdit?.id) return 1;
@@ -450,6 +459,7 @@
 					itemId={location.id}
 					on:next={() => setStep(3)}
 					measurementSystem={user?.measurement_system || 'metric'}
+					defaultDate={immichDefaultDate}
 				/>
 			{/if}
 			{#if steps[3].selected}
