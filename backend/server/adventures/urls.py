@@ -30,6 +30,8 @@ router.register(r'visits', VisitViewSet, basename='visits')
 router.register(r'calendar', CalendarViewSet, basename='calendar')
 router.register(r'itineraries', ItineraryViewSet, basename='itineraries')
 router.register(r'itinerary-days', ItineraryDayViewSet, basename='itinerary-days')
+router.register(r'collection-comments', CollectionCommentViewSet, basename='collection-comments')
+router.register(r'collection-activity', CollectionActivityViewSet, basename='collection-activity')
 
 urlpatterns = [
     # Include the router under the 'api/' prefix

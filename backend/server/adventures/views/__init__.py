@@ -20,3 +20,4 @@ from .activity_view import *
 from .visit_view import *
 from .calendar_view import *
 from .itinerary_view import *
+from .discussion_view import *

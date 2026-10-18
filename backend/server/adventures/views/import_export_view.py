@@ -31,6 +31,7 @@ from adventures.utils.collection_type import (
     BACKUP_SCHEMA,
     UnsupportedBackupSchema,
     backup_has_day_plan,
+    backup_has_comments,
     ensure_backup_schema_supported,
     imported_story_groups,
     imported_visibility,
@@ -459,6 +460,64 @@ class BackupViewSet(viewsets.ViewSet):
             zip_file.writestr(arcname, storage_file.read())
         files_added.add(storage_name)
 
+    def _export_comments(self, collection):
+        """Both threads, oldest first. A reply names its parent by position."""
+        comments = list(
+            collection.comments.select_related('author_user', 'author_guest', 'day').prefetch_related('mentions')
+        )
+        position = {comment.pk: i for i, comment in enumerate(comments)}
+        return [
+            {
+                'export_id': i,
+                'parent_export_id': position.get(comment.parent_id),
+                'is_story': comment.is_story,
+                'day_index': comment.day.index if comment.day_id else None,
+                'body': comment.body,
+                'author_user_uuid': str(comment.author_user.uuid) if comment.author_user_id else None,
+                'author_guest_token': comment.author_guest.token if comment.author_guest_id else None,
+                'author_name': comment.author_name,
+                'mention_uuids': [str(user.uuid) for user in comment.mentions.all()],
+                'created_at': comment.created_at.isoformat(),
+                'edited_at': comment.edited_at.isoformat() if comment.edited_at else None,
+            }
+            for i, comment in enumerate(comments)
+        ]
+
+    def _import_comments(self, collection, col_data, day_map):
+        """Restore both threads. Authors who no longer exist keep their name."""
+        from django.utils.dateparse import parse_datetime
+        from adventures.models import CollectionComment
+
+        created = {}
+        export_id = col_data.get('export_id')
+        for data in sorted(col_data.get('comments') or [], key=lambda c: c.get('export_id', 0)):
+            body = (data.get('body') or '').strip()
+            if not body:
+                continue
+            author_user = None
+            if data.get('author_user_uuid'):
+                author_user = User.objects.filter(uuid=data['author_user_uuid']).first()
+            author_guest = None
+            if data.get('author_guest_token'):
+                author_guest = collection.guest_links.filter(token=data['author_guest_token']).first()
+            comment = CollectionComment.objects.create(
+                collection=collection,
+                is_story=bool(data.get('is_story')),
+                parent=created.get(data.get('parent_export_id')),
+                day=day_map.get((export_id, data.get('day_index'))) if data.get('day_index') else None,
+                author_user=author_user,
+                author_guest=author_guest,
+                author_name=(data.get('author_name') or '')[:150],
+                body=body[:4000],
+                edited_at=parse_datetime(data['edited_at']) if data.get('edited_at') else None,
+            )
+            if data.get('created_at') and parse_datetime(data['created_at']):
+                CollectionComment.objects.filter(pk=comment.pk).update(created_at=parse_datetime(data['created_at']))
+            mentions = User.objects.filter(uuid__in=data.get('mention_uuids') or [])
+            if mentions:
+                comment.mentions.set(mentions)
+            created[data.get('export_id')] = comment
+
     def _import_sharing(self, collection, col_data):
         """Roles for restored members, and guest links. A taken token gets a new one."""
         from django.utils.dateparse import parse_datetime
@@ -632,6 +691,8 @@ class BackupViewSet(viewsets.ViewSet):
                 'shared_with_user_ids': [str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True)],
                 'visibility': collection.visibility,
                 'story_groups': {name: True for name in Collection.STORY_GROUPS if collection.story_group(name)},
+                'comment_access': collection.comment_access,
+                'comments': self._export_comments(collection),
                 'members': [
                     {'user_uuid': str(member.user.uuid), 'role': member.role}
                     for member in collection.members.select_related('user')
@@ -1347,6 +1408,13 @@ class BackupViewSet(viewsets.ViewSet):
                 name=col_data['name'],
                 description=col_data.get('description', ''),
                 visibility=imported_visibility(backup_data.get('backup_schema'), col_data),
+                # Comments stay off unless a schema 6 file turned them on.
+                comment_access=(
+                    col_data.get('comment_access')
+                    if backup_has_comments(backup_data.get('backup_schema'))
+                    and col_data.get('comment_access') in Collection.CommentAccess.values
+                    else Collection.CommentAccess.OFF
+                ),
                 story_groups=imported_story_groups(
                     backup_data.get('backup_schema'), col_data, Collection.STORY_GROUPS
                 ),
@@ -1878,6 +1946,12 @@ class BackupViewSet(viewsets.ViewSet):
                     **placement,
                 )
                 summary['itinerary_items'] += 1
+
+        if backup_has_comments(backup_data.get('backup_schema')):
+            for col_data in backup_data.get('collections', []):
+                collection = collection_map.get(col_data.get('export_id'))
+                if collection is not None:
+                    self._import_comments(collection, col_data, day_map)
 
         # Schema 2 and older: run the day-plan conversion once per trip.
         if not has_day_plan:

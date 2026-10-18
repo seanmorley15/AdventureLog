@@ -450,7 +450,7 @@ class BackupTests(AudienceTestBase):
         CollectionGuestLink.objects.create(collection=self.trip, role='editor', label='Family')
         note = Note.objects.create(user=self.owner, name='Codes', collection=self.trip, is_private=True)
         data = self._export()
-        self.assertEqual(data['backup_schema'], 5)
+        self.assertGreaterEqual(data['backup_schema'], 5)
         response = self._import(data)
         self.assertEqual(response.status_code, 200, response.content)
 

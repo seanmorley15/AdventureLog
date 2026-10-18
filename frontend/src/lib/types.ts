@@ -63,6 +63,65 @@ export type Collaborator = {
 };
 
 export type CollectionVisibility = 'private' | 'unlisted' | 'public';
+/** Who may comment on the published story. Members comment on the plan by role. */
+export type CommentAccess = 'off' | 'signed_in' | 'link_holders';
+export type CommentThread = 'plan' | 'story';
+
+export type CollectionComment = {
+	id: string;
+	is_story: boolean;
+	parent: string | null;
+	day?: string | null;
+	day_index: number | null;
+	placement?: string | null;
+	body: string;
+	created_at: string;
+	edited_at: string | null;
+	author: {
+		name: string;
+		username: string | null;
+		uuid: string | null;
+		profile_pic: string | null;
+		is_guest: boolean;
+	};
+	mentions?: string[];
+	can_edit: boolean;
+	can_delete: boolean;
+	replies?: CollectionComment[];
+};
+
+export type CommentThreadResponse = {
+	thread: CommentThread;
+	comment_access: CommentAccess;
+	can_post: boolean;
+	comments: CollectionComment[];
+};
+
+export type CommentInboxItem = {
+	id: string;
+	collection: { id: string; name: string };
+	thread: CommentThread;
+	day_index: number | null;
+	author_name: string;
+	excerpt: string;
+	created_at: string;
+	mentions_me: boolean;
+	unread: boolean;
+};
+
+export type CollectionActivityEvent = {
+	id: string;
+	verb:
+		| 'day_moved'
+		| 'item_moved'
+		| 'anchor_changed'
+		| 'comment_added'
+		| 'member_added'
+		| 'member_removed';
+	actor_name: string;
+	data: Record<string, any>;
+	created_at: string;
+};
 export type CollectionRole = 'owner' | 'editor' | 'viewer';
 export type StoryGroup =
 	| 'place_details'
@@ -112,6 +171,7 @@ export type CollectionSharing = {
 	guest_links: CollectionGuestLink[];
 	visibility: CollectionVisibility;
 	story_groups: Record<StoryGroup, boolean>;
+	comment_access: CommentAccess;
 	share_secret: string;
 	allow_public_links: boolean;
 	is_admin?: boolean;
@@ -250,6 +310,7 @@ export type Collection = {
 	is_public: boolean;
 	visibility?: CollectionVisibility;
 	story_groups?: Partial<Record<StoryGroup, boolean>>;
+	comment_access?: CommentAccess;
 	audience?: CollectionAudience | null;
 	allow_public_links?: boolean;
 	share_secret?: string;

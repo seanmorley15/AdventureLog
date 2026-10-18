@@ -59,6 +59,8 @@
 	import CollectionStory from '$lib/components/collections/story/CollectionStory.svelte';
 	import CollectionStoryTab from '$lib/components/collections/story/CollectionStoryTab.svelte';
 	import BookOpenPageVariant from '~icons/mdi/book-open-page-variant';
+	import CommentMultipleOutline from '~icons/mdi/comment-multiple-outline';
+	import CollectionDiscussion from '$lib/components/collections/discussion/CollectionDiscussion.svelte';
 	import ShareVariant from '~icons/mdi/share-variant';
 	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '$lib/toasts';
@@ -217,6 +219,7 @@
 		| 'plan'
 		| 'read'
 		| 'story'
+		| 'discussion'
 		| 'map'
 		| 'calendar'
 		| 'recommendations'
@@ -674,6 +677,7 @@
 			currentView === 'map' ||
 			currentView === 'calendar' ||
 			currentView === 'story' ||
+			currentView === 'discussion' ||
 			currentView === 'recommendations' ||
 			(currentView === 'all' && dayPlanner)
 	);
@@ -685,6 +689,7 @@
 			currentView !== 'plan' &&
 			currentView !== 'calendar' &&
 			currentView !== 'story' &&
+			currentView !== 'discussion' &&
 			currentView !== 'recommendations'
 	);
 	let availableViews = $derived({
@@ -693,6 +698,8 @@
 		read: dayPlanner,
 		// Members preview the published story here. Readers get it as the whole page.
 		story: !storyMode,
+		// Plan comments for members; editors and the owner also get the activity feed.
+		discussion: !storyMode && !!collection?.audience?.is_member,
 		map:
 			!dayPlanner &&
 			!isFolderView &&
@@ -726,6 +733,7 @@
 			add('all', $t('collections.all_items'), FormatListBulleted);
 		}
 		add('story', $t('story.tab'), BookOpenPageVariant);
+		add('discussion', $t('comments.tab'), CommentMultipleOutline);
 		if (availableViews.calendar) add('calendar', $t('navbar.calendar'), Calendar);
 		if (availableViews.recommendations) {
 			add('recommendations', $t('recomendations.recommendations'), Lightbulb);
@@ -756,6 +764,7 @@
 				'plan',
 				'read',
 				'story',
+				'discussion',
 				'map',
 				'calendar',
 				'recommendations',
@@ -1063,7 +1072,14 @@
 			</div>
 		{/if}
 		<div class="min-h-0 flex-1">
-			<CollectionStory {collection} {dateFormat} shareUrl={storyShareUrl} />
+			<CollectionStory
+				{collection}
+				{dateFormat}
+				shareUrl={storyShareUrl}
+				signInHref={data.user
+					? null
+					: `/login?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`}
+			/>
 		</div>
 	</div>
 {:else if collection}
@@ -1378,6 +1394,12 @@
 								{isOwner}
 								onOpenShare={() => openShareSheet('story')}
 							/>
+						</div>
+					{/if}
+
+					{#if currentView === 'discussion'}
+						<div class="h-full min-h-0 pt-1">
+							<CollectionDiscussion {collection} canEdit={!!collection.audience?.can_edit} />
 						</div>
 					{/if}
 

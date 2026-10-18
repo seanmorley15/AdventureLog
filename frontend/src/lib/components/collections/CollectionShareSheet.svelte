@@ -10,6 +10,7 @@
 		CollectionSharing,
 		CollectionSharingPerson,
 		CollectionVisibility,
+		CommentAccess,
 		StoryGroup,
 		User
 	} from '$lib/types';
@@ -32,6 +33,7 @@
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import Plus from '~icons/mdi/plus';
 	import Check from '~icons/mdi/check';
+	import CommentMultiple from '~icons/mdi/comment-multiple-outline';
 	import BookOpenPageVariant from '~icons/mdi/book-open-page-variant-outline';
 
 	/** Works with the full collection page payload and with list cards. */
@@ -41,6 +43,7 @@
 	> & {
 		visibility?: CollectionVisibility;
 		story_groups?: Collection['story_groups'];
+		comment_access?: CommentAccess;
 	};
 
 	interface Props {
@@ -130,7 +133,11 @@
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok) {
 				const message =
-					data?.error || data?.visibility?.[0] || data?.visibility || $t('share.update_failed');
+					data?.error ||
+					data?.visibility?.[0] ||
+					data?.visibility ||
+					data?.comment_access?.[0] ||
+					$t('share.update_failed');
 				addToast('error', String(message));
 				return null;
 			}
@@ -291,6 +298,20 @@
 			collection.visibility = data.visibility;
 			collection.is_public = data.is_public;
 			addToast('success', $t(`share.visibility_changed_${data.visibility}`));
+		}
+	}
+
+	const COMMENT_CHOICES: CommentAccess[] = ['off', 'signed_in', 'link_holders'];
+
+	async function setCommentAccess(next: CommentAccess) {
+		if (!sharing || next === sharing.comment_access) return;
+		const data = await request(`/api/collections/${collection.id}/`, 'PATCH', {
+			comment_access: next
+		});
+		if (data) {
+			sharing = { ...sharing, comment_access: data.comment_access };
+			collection.comment_access = data.comment_access;
+			addToast('success', $t(`share.comments_changed_${data.comment_access}`));
 		}
 	}
 
@@ -878,6 +899,50 @@
 							<InformationOutline class="mt-0.5 h-4 w-4 shrink-0" />
 							{$t('share.story_always_private')}
 						</p>
+					</div>
+				</div>
+
+				<div class="card border border-base-300 bg-base-100">
+					<div class="card-body gap-4 p-4 md:p-6">
+						{@render sectionHeading(
+							CommentMultiple,
+							$t('share.comments_title'),
+							visibility === 'private' ? $t('share.comments_need_story') : $t('share.comments_hint')
+						)}
+						<div
+							class="grid gap-2 sm:grid-cols-3"
+							role="radiogroup"
+							aria-label={$t('share.comments_title')}
+						>
+							{#each COMMENT_CHOICES as choice (choice)}
+								{@const current = sharing.comment_access === choice}
+								{@const available = choice === 'off' || visibility !== 'private'}
+								<button
+									type="button"
+									role="radio"
+									aria-checked={current}
+									aria-disabled={!available}
+									class="flex flex-col items-start gap-1 rounded-xl border-2 p-3 text-left transition-colors {current
+										? 'border-primary bg-primary/10'
+										: available
+											? 'border-base-300 hover:border-primary/50 hover:bg-base-200'
+											: 'cursor-not-allowed border-base-300 opacity-50'}"
+									disabled={busy || !available}
+									onclick={() => setCommentAccess(choice)}
+								>
+									<span class="font-semibold">{$t(`share.comments_${choice}`)}</span>
+									<span class="text-xs text-base-content/70"
+										>{$t(`share.comments_${choice}_hint`)}</span
+									>
+								</button>
+							{/each}
+						</div>
+						{#if sharing.comment_access !== 'off'}
+							<p class="field-hint flex items-start gap-2">
+								<InformationOutline class="mt-0.5 h-4 w-4 shrink-0" />
+								{$t('share.comments_public_note')}
+							</p>
+						{/if}
 					</div>
 				</div>
 			{/if}

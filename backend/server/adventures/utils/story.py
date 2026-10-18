@@ -23,7 +23,8 @@ from __future__ import annotations
 
 COLLECTION_FIELDS = (
     'id', 'name', 'description', 'type', 'start_date', 'end_date', 'timezone', 'day_count',
-    'status', 'days_until_start', 'link', 'visibility', 'is_public', 'created_at', 'updated_at',
+    'status', 'days_until_start', 'link', 'visibility', 'is_public', 'comment_access', 'created_at',
+    'updated_at',
     'is_archived',
 )
 IMAGE_FIELDS = ('id', 'image', 'is_primary', 'source', 'content_type', 'object_id')

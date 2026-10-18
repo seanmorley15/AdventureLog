@@ -294,6 +294,13 @@ class Collection(models.Model):
         UNLISTED = 'unlisted', 'Unlisted'
         PUBLIC = 'public', 'Public'
 
+    class CommentAccess(models.TextChoices):
+        # Who may comment on the published story. Members comment on the private plan
+        # by role instead; this never opens the plan to anyone.
+        OFF = 'off', 'Off'
+        SIGNED_IN = 'signed_in', 'Signed-in readers'
+        LINK_HOLDERS = 'link_holders', 'Signed-in readers and guest links'
+
     # Story groups a public reader may see. Every group is off until the owner turns it on.
     STORY_GROUPS = (
         'place_details',
@@ -326,6 +333,7 @@ class Collection(models.Model):
     # Secret for an unlisted story link.
     share_secret = models.CharField(max_length=64, default=generate_share_secret, editable=False)
     story_groups = models.JSONField(default=default_story_groups, blank=True)
+    comment_access = models.CharField(max_length=20, choices=CommentAccess.choices, default=CommentAccess.OFF)
     # Members. Each one has a role in CollectionMember; a member with no row is an editor.
     shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
@@ -440,6 +448,84 @@ class CollectionGuestLink(models.Model):
 
     def __str__(self):
         return f"Guest link for {self.collection} ({self.role})"
+
+class CollectionComment(models.Model):
+    """
+    A comment on the private plan (members) or on the published story (readers).
+
+    The two threads never mix: a story response only ever reads ``is_story=True``.
+    Replies are one level deep. The author is a user or a guest link; the name is kept
+    so a comment still reads correctly after its guest link is gone.
+    """
+
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='comments')
+    is_story = models.BooleanField(default=False)
+    day = models.ForeignKey(
+        'CollectionItineraryDay', on_delete=models.SET_NULL, related_name='comments', blank=True, null=True
+    )
+    placement = models.ForeignKey(
+        'CollectionItineraryItem', on_delete=models.SET_NULL, related_name='comments', blank=True, null=True
+    )
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name='replies', blank=True, null=True)
+    author_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, related_name='collection_comments', blank=True, null=True
+    )
+    author_guest = models.ForeignKey(
+        CollectionGuestLink, on_delete=models.SET_NULL, related_name='comments', blank=True, null=True
+    )
+    author_name = models.CharField(max_length=150, blank=True, default='')
+    body = models.TextField(max_length=4000)
+    mentions = models.ManyToManyField(User, related_name='collection_comment_mentions', blank=True)
+    edited_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [models.Index(fields=['collection', 'is_story', 'created_at'])]
+
+    def __str__(self):
+        return f"{self.author_name or 'Comment'} on {self.collection}"
+
+
+class CollectionActivity(models.Model):
+    """What changed in a collection, for owners and editors. Never part of the story."""
+
+    class Verb(models.TextChoices):
+        DAY_MOVED = 'day_moved', 'Day moved'
+        ITEM_MOVED = 'item_moved', 'Item moved'
+        ANCHOR_CHANGED = 'anchor_changed', 'Dates changed'
+        COMMENT_ADDED = 'comment_added', 'Comment added'
+        MEMBER_ADDED = 'member_added', 'Member added'
+        MEMBER_REMOVED = 'member_removed', 'Member removed'
+
+    # Membership changes are shown to the owner only.
+    OWNER_ONLY_VERBS = (Verb.MEMBER_ADDED, Verb.MEMBER_REMOVED)
+
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, related_name='activity')
+    verb = models.CharField(max_length=20, choices=Verb.choices)
+    actor_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, related_name='collection_activity', blank=True, null=True
+    )
+    actor_name = models.CharField(max_length=150, blank=True, default='')
+    data = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['collection', '-created_at'])]
+
+    def __str__(self):
+        return f"{self.verb} in {self.collection}"
+
+
+class CommentInboxState(models.Model):
+    """When a user last looked at their new comments."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='comment_inbox')
+    seen_at = models.DateTimeField()
+
 
 class Transportation(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)

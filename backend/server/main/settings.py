@@ -419,6 +419,10 @@ else:
     EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
 
+# True only when real SMTP is set up. Optional mail (comment mentions) checks this flag
+# rather than EMAIL_HOST, which Django defaults to 'localhost'.
+SMTP_CONFIGURED = EMAIL_BACKEND.endswith('smtp.EmailBackend') and bool(getenv('EMAIL_HOST'))
+
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.resend.com'
 # EMAIL_USE_TLS = False

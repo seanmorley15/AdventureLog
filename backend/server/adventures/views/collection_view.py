@@ -18,7 +18,8 @@ import json
 import zipfile
 import tempfile
 import logging
-from adventures.models import CollectionGuestLink, CollectionMember
+from adventures.models import CollectionActivity, CollectionGuestLink, CollectionMember
+from adventures.utils.activity import record_activity
 from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
 from adventures.permissions import CollectionShared
 from adventures.utils.audience import audience_for_request, readable_collections_q
@@ -164,6 +165,7 @@ def _sharing_state(collection, request):
         'guest_links': guest_links,
         'visibility': collection.visibility,
         'story_groups': {name: collection.story_group(name) for name in Collection.STORY_GROUPS},
+        'comment_access': collection.comment_access,
         'share_secret': collection.share_secret,
         'allow_public_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
         # Admins see how to turn public links on; everyone else is told to ask one.
@@ -520,6 +522,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
         CollectionMember.objects.update_or_create(
             collection=collection, user=request.user, defaults={'role': invite.role}
         )
+        record_activity(
+            collection, request, CollectionActivity.Verb.MEMBER_ADDED,
+            username=request.user.username, role=invite.role,
+        )
         
         # Delete the invite
         invite.delete()
@@ -619,6 +625,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         # owner and stay. A place the member already owned stays theirs and stays linked.
         collection.shared_with.remove(user)
         collection.save()
+        record_activity(collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=user.username)
         
         return Response({"success": f"Unshared with {user.username}"})
     
@@ -639,6 +646,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
         # Remove the user from shared_with. Their own places stay theirs and stay linked.
         collection.shared_with.remove(request.user)
         collection.save()
+        record_activity(
+            collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=request.user.username, left=True
+        )
         
         return Response({"success": f"You have left the collection: {collection.name}"})
 
@@ -1507,6 +1517,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        if serializer.instance.start_date != old_start_date:
+            record_activity(
+                serializer.instance, request, CollectionActivity.Verb.ANCHOR_CHANGED,
+                from_date=old_start_date.isoformat() if old_start_date else None,
+                to_date=serializer.instance.start_date.isoformat() if serializer.instance.start_date else None,
+            )
         
         if old_type != serializer.instance.type:
             day_plan.apply_type_change(serializer.instance, old_type)

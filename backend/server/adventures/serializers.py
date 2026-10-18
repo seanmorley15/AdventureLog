@@ -1116,6 +1116,7 @@ class CollectionSerializer(CustomModelSerializer):
             'is_public',
             'visibility',
             'story_groups',
+            'comment_access',
             'locations',
             'created_at',
             'start_date',
@@ -1176,6 +1177,18 @@ class CollectionSerializer(CustomModelSerializer):
                 'visibility': 'Unlisted and public links are turned off on this server.'
             })
         data['visibility'] = requested
+        return data
+
+    def _apply_comment_access(self, data):
+        """Story comments need a story: they stay off while the collection is private."""
+        access = data.get('comment_access')
+        if access is None or access == Collection.CommentAccess.OFF:
+            return data
+        visibility = data.get('visibility') or (self.instance.visibility if self.instance else None)
+        if visibility in (None, Collection.Visibility.PRIVATE):
+            raise serializers.ValidationError({
+                'comment_access': 'Publish the story before turning comments on.'
+            })
         return data
 
     def validate_link(self, value):
@@ -1392,6 +1405,7 @@ class CollectionSerializer(CustomModelSerializer):
         data = self._apply_collection_type(data)
         data = self._apply_day_count(data)
         data = self._apply_visibility(data)
+        data = self._apply_comment_access(data)
 
         # Only validate primary image when explicitly provided
         if 'primary_image' not in data:

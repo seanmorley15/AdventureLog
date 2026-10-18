@@ -17,6 +17,8 @@
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import StoryEntryCard from './StoryEntryCard.svelte';
 	import StoryMap from './StoryMap.svelte';
+	import CommentThread from '../discussion/CommentThread.svelte';
+	import CommentMultiple from '~icons/mdi/comment-multiple-outline';
 	import ShareVariant from '~icons/mdi/share-variant';
 	import ContentCopy from '~icons/mdi/content-copy';
 	import MapIcon from '~icons/mdi/map-outline';
@@ -32,9 +34,20 @@
 		shareUrl?: string | null;
 		/** Inside the collection workspace: a shorter cover. The parent sets the height. */
 		embedded?: boolean;
+		/** Where a signed-out reader goes to sign in before commenting. */
+		signInHref?: string | null;
 	}
 
-	let { collection, dateFormat, shareUrl = null, embedded = false }: Props = $props();
+	let {
+		collection,
+		dateFormat,
+		shareUrl = null,
+		embedded = false,
+		signInHref = null
+	}: Props = $props();
+
+	// The story's own thread. It never contains the private plan's comments.
+	let commentsOn = $derived(!!collection.comment_access && collection.comment_access !== 'off');
 
 	let story = $derived(buildStory(collection));
 	let cover = $derived(collection.primary_image ?? story.photos[0] ?? null);
@@ -436,6 +449,17 @@
 				</section>
 			{/each}
 		</div>
+
+		{#if commentsOn}
+			<section data-chapter="" class="border-t border-base-300 px-5 py-10 sm:px-8">
+				<h2 class="mb-1 flex items-center gap-2 text-2xl font-bold">
+					<CommentMultiple class="h-6 w-6 text-primary" />
+					{$t('comments.story_title')}
+				</h2>
+				<p class="mb-5 text-sm text-base-content/60">{$t('comments.story_subtitle')}</p>
+				<CommentThread collectionId={collection.id} thread="story" {signInHref} />
+			</section>
+		{/if}
 
 		<footer data-chapter="" class="border-t border-base-300 bg-base-200/60">
 			<div class="flex flex-col items-center gap-4 px-5 py-12 text-center">

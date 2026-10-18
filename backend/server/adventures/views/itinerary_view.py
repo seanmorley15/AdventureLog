@@ -18,6 +18,8 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.utils.audience import can_edit, member_collections_q
+from adventures.utils.activity import record_activity
+from adventures.models import CollectionActivity
 from django.db.models import Q
 from django.db import transaction
 
@@ -90,6 +92,31 @@ def _member_collection(request, collection_id):
     if not _is_member(request, collection):
         raise PermissionDenied('You do not have permission to modify this collection.')
     return collection
+
+
+def _record_item_move(request, item):
+    record_activity(
+        item.collection,
+        request,
+        CollectionActivity.Verb.ITEM_MOVED,
+        item=str(item.pk),
+        name=getattr(item.item, 'name', None),
+        kind=item.content_type.model,
+        day_index=item.day.index if item.day_id else None,
+        is_global=item.is_global,
+    )
+
+
+def _record_anchor_change(request, collection, before):
+    collection.refresh_from_db(fields=['start_date'])
+    if collection.start_date != before:
+        record_activity(
+            collection,
+            request,
+            CollectionActivity.Verb.ANCHOR_CHANGED,
+            from_date=before.isoformat() if before else None,
+            to_date=collection.start_date.isoformat() if collection.start_date else None,
+        )
 
 
 def plan_state(collection, context=None):
@@ -333,6 +360,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                 span_given='span_end_index' in data,
             )
             instance.refresh_from_db()
+            _record_item_move(request, instance)
 
         changes = {}
         for key in self.PLACEMENT_FIELDS:
@@ -403,6 +431,9 @@ class ItineraryViewSet(viewsets.ModelViewSet):
             if not _is_member(request, first.collection):
                 raise PermissionDenied('You do not have permission to modify this collection.')
             items, updated_objects = day_plan.reorder_day_plan(first.collection, items_data)
+            record_activity(
+                first.collection, request, CollectionActivity.Verb.ITEM_MOVED, count=len(items)
+            )
             refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in items]).select_related('day', 'content_type')
             by_pk = {item.pk: item for item in refreshed}
             context = self.get_serializer_context()
@@ -511,7 +542,15 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         position = request.data.get('position')
         if position in (None, ''):
             raise day_plan.DayPlanError('position is required.')
-        day_plan.move_day(collection, request.data.get('day'), int(position))
+        day = day_plan._get_day(collection, request.data.get('day'))
+        from_index = day.index
+        day_plan.move_day(collection, day.pk, int(position))
+        day.refresh_from_db()
+        if day.index != from_index:
+            record_activity(
+                collection, request, CollectionActivity.Verb.DAY_MOVED,
+                day=str(day.pk), name=day.name, from_index=from_index, to_index=day.index,
+            )
         return self._state_response(collection)
 
     @action(detail=False, methods=['post'], url_path='days/delete')
@@ -545,6 +584,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                 raise day_plan.DayPlanError(
                     'end_date is derived from the start date and the day count. Send day_count instead.'
                 )
+        before = collection.start_date
         day_plan.set_duration(
             collection,
             count,
@@ -553,6 +593,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
             target_day_id=request.data.get('target_day'),
             timezone_name=request.data.get('timezone') or None,
         )
+        _record_anchor_change(request, collection, before)
         return self._state_response(collection)
 
     @action(detail=False, methods=['post'], url_path='shift')
@@ -566,7 +607,9 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         days = request.data.get('days')
         if start_date is None and days in (None, ''):
             raise day_plan.DayPlanError('Send days or start_date.')
+        before = collection.start_date
         day_plan.shift_anchor(collection, days=days, start_date=start_date)
+        _record_anchor_change(request, collection, before)
         return self._state_response(collection)
 
     @action(detail=True, methods=['post'], url_path='log-visited')

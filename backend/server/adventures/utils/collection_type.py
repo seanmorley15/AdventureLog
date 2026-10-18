@@ -3,8 +3,8 @@
 Schema 2 added ``type``. Schema 3 added the day plan: timezone, day indexes,
 placements, spans, optional flags, and local times. Schema 4 added day-owned
 trails, activities, and photos. Schema 5 added visibility, member roles, guest
-links, story groups, and private notes and checklist items. Import of an older
-schema runs each later step in order. Import without the schema 4 or 5 keys still
+links, story groups, and private notes and checklist items. Schema 6 added comments
+and ``comment_access``. Import of an older schema runs each later step in order. Import without the schema 4 or 5 keys still
 succeeds: a collection without ``visibility`` is public only if it was
 ``is_public``, and its story groups are off.
 """
@@ -15,7 +15,8 @@ TYPE_SCHEMA = 2
 DAY_PLAN_SCHEMA = 3
 DAY_FILES_SCHEMA = 4
 VISIBILITY_SCHEMA = 5
-BACKUP_SCHEMA = VISIBILITY_SCHEMA
+COMMENTS_SCHEMA = 6
+BACKUP_SCHEMA = COMMENTS_SCHEMA
 
 FOLDER = 'folder'
 TRIP = 'trip'
@@ -99,6 +100,12 @@ def imported_story_groups(backup_schema, col_data, known_groups):
     if not isinstance(groups, dict):
         return {}
     return {name: True for name in known_groups if groups.get(name) is True}
+
+
+def backup_has_comments(backup_schema):
+    """True when the file stores comments and comment_access (schema 6 or later)."""
+    schema = parse_backup_schema(backup_schema)
+    return schema is not None and schema >= COMMENTS_SCHEMA
 
 
 def collection_lifecycle_status(collection, today=None):

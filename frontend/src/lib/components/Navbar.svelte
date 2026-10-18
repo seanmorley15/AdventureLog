@@ -16,6 +16,7 @@
 	import Map from '~icons/mdi/map';
 	import Menu from '~icons/mdi/menu';
 	import Avatar from './Avatar.svelte';
+	import CommentInbox from './CommentInbox.svelte';
 	import { page } from '$app/stores';
 	import { t, locale, locales } from 'svelte-i18n';
 	import { themes } from '$lib';
@@ -340,6 +341,11 @@
 					{$t('auth.signup')}
 				</button>
 			</div>
+		{/if}
+
+		<!-- New comments on the collections you belong to -->
+		{#if data.user}
+			<CommentInbox />
 		{/if}
 
 		<!-- User Avatar -->
