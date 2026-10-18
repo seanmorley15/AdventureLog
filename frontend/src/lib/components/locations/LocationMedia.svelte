@@ -39,6 +39,7 @@
 		measurementSystem?: 'metric' | 'imperial';
 		userIsOwner?: boolean;
 		pendingGooglePhotoUrls?: string[];
+		defaultDate?: string;
 	}
 
 	let {
@@ -49,7 +50,8 @@
 		itemId = '',
 		measurementSystem = 'metric',
 		userIsOwner = false,
-		pendingGooglePhotoUrls = $bindable([])
+		pendingGooglePhotoUrls = $bindable([]),
+		defaultDate = ''
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
@@ -396,6 +398,7 @@
 			defaultSearchTerm={itemName}
 			{immichIntegration}
 			{copyImmichLocally}
+			{defaultDate}
 			on:imagesUpdated={handleImagesUpdated}
 			bind:importInProgress
 		/>
