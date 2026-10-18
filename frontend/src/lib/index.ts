@@ -678,8 +678,6 @@ export function getIsDarkMode() {
 }
 
 const OPENFREEMAP_LIBERTY_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
-// OpenFreeMap Dark is the keyless fork of the dark-matter style the default used before.
-const OPENFREEMAP_DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark';
 
 const CARTO_RASTER_BASEMAPS = new Set([
 	'terrain-3d',
@@ -1000,7 +998,7 @@ export function getBasemapUrl(type = 'default'): any {
 			return OPENFREEMAP_LIBERTY_STYLE;
 
 		default:
-			return getIsDarkMode() ? OPENFREEMAP_DARK_STYLE : OPENFREEMAP_LIBERTY_STYLE;
+			return OPENFREEMAP_LIBERTY_STYLE;
 	}
 }
 
