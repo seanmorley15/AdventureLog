@@ -558,6 +558,20 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         )
         return self._state_response(collection)
 
+    @action(detail=False, methods=['post'], url_path='shift')
+    def shift(self, request):
+        """
+        Shift an anchored trip by ``days`` (civil days, may be negative) or to a new
+        ``start_date``. Indexes, order, and clock faces stay; visits do not move.
+        """
+        collection = _member_collection(request, request.data.get('collection'))
+        start_date = _parse_day_date(request.data.get('start_date'))
+        days = request.data.get('days')
+        if start_date is None and days in (None, ''):
+            raise day_plan.DayPlanError('Send days or start_date.')
+        day_plan.shift_anchor(collection, days=days, start_date=start_date)
+        return self._state_response(collection)
+
     @action(detail=True, methods=['post'], url_path='log-visited')
     def log_visited(self, request, pk=None):
         """Create one visit for this stop, or return the visit it already logged."""

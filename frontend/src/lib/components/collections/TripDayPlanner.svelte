@@ -24,7 +24,9 @@
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 	import { createEmptyLocation } from '$lib/location-draft';
 	import {
+		addDays,
 		browserTimezone,
+		daysBetween,
 		errorMessage,
 		findObject,
 		dayPinColor,
@@ -59,6 +61,7 @@
 	import Lightbulb from '~icons/mdi/lightbulb-outline';
 	import Earth from '~icons/mdi/earth';
 	import CalendarEdit from '~icons/mdi/calendar-edit';
+	import CalendarArrowRight from '~icons/mdi/calendar-arrow-right';
 	import CheckAll from '~icons/mdi/check-all';
 	import Close from '~icons/mdi/close';
 
@@ -693,7 +696,44 @@
 	function openDuration() {
 		durationCount = dayCount;
 		durationStart = collection.start_date ?? '';
+		shiftingDates = false;
 		editingDuration = true;
+	}
+
+	// Shift moves the anchor by whole days. Indexes and clock faces stay on the server.
+	let shiftingDates = $state(false);
+	let shiftDays = $state(0);
+	let shiftStart = $state('');
+
+	function openShift() {
+		shiftDays = 0;
+		shiftStart = collection.start_date ?? '';
+		editingDuration = false;
+		shiftingDates = true;
+	}
+
+	function setShiftDays(value: number) {
+		shiftDays = Number.isFinite(value) ? Math.trunc(value) : 0;
+		if (collection.start_date) shiftStart = addDays(collection.start_date, shiftDays);
+	}
+
+	function setShiftStart(value: string) {
+		shiftStart = value;
+		shiftDays = daysBetween(collection.start_date, value);
+	}
+
+	async function applyShift(event: SubmitEvent) {
+		event.preventDefault();
+		if (!shiftDays) {
+			shiftingDates = false;
+			return;
+		}
+		const res = await dayAction('shift', { days: shiftDays }, true);
+		if (res.ok) {
+			shiftingDates = false;
+		} else if (res.status !== 409) {
+			addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
+		}
 	}
 
 	async function applyDuration(event: SubmitEvent) {
@@ -1167,6 +1207,22 @@
 					{#if saving}
 						<span class="loading loading-spinner loading-xs opacity-70"></span>
 					{/if}
+					{#if planning && anchored}
+						<button
+							type="button"
+							class="btn btn-sm btn-square btn-ghost tooltip tooltip-bottom"
+							aria-label={$t('itinerary.shift_dates')}
+							aria-expanded={shiftingDates}
+							data-tip={$t('itinerary.shift_dates')}
+							onclick={() => (shiftingDates ? (shiftingDates = false) : openShift())}
+						>
+							{#if shiftingDates}
+								<Close class="h-4 w-4" />
+							{:else}
+								<CalendarArrowRight class="h-4 w-4" />
+							{/if}
+						</button>
+					{/if}
 					{#if planning}
 						<button
 							type="button"
@@ -1208,6 +1264,38 @@
 					<button type="submit" class="btn btn-xs btn-primary" disabled={saving}>
 						{$t('itinerary.apply')}
 					</button>
+				</form>
+			{/if}
+
+			{#if shiftingDates}
+				<form
+					class="mt-1.5 flex flex-wrap items-end gap-2 border-t border-base-300/70 pt-2"
+					onsubmit={applyShift}
+				>
+					<label class="flex flex-col gap-1">
+						<span class="text-xs text-base-content/60">{$t('itinerary.shift_by_days')}</span>
+						<input
+							type="number"
+							class="input input-xs w-20 bg-base-100"
+							step="1"
+							value={shiftDays}
+							oninput={(e) => setShiftDays(e.currentTarget.valueAsNumber)}
+						/>
+					</label>
+					<label class="flex flex-col gap-1">
+						<span class="text-xs text-base-content/60">{$t('itinerary.new_start_date')}</span>
+						<input
+							type="date"
+							class="input input-xs w-40 bg-base-100"
+							value={shiftStart}
+							required
+							oninput={(e) => setShiftStart(e.currentTarget.value)}
+						/>
+					</label>
+					<button type="submit" class="btn btn-xs btn-primary" disabled={saving || !shiftDays}>
+						{$t('itinerary.shift')}
+					</button>
+					<p class="w-full text-xs text-base-content/60">{$t('itinerary.shift_dates_hint')}</p>
 				</form>
 			{/if}
 		</div>

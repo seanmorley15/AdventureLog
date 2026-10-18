@@ -120,6 +120,24 @@ def move_to_date(existing, new_day, tz_name=None, fallback_time=None):
     return _all_day(new_day)
 
 
+def shift_datetime(value, days, tz_name=None):
+    """
+    Move a stored datetime by ``days`` civil days, keeping its local clock face.
+
+    The local wall time in ``tz_name`` is kept across DST changes; an ambiguous
+    fall-back hour takes the first offset. UTC midnight stays a date-only value.
+    """
+    if value is None or not days:
+        return value
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=datetime.timezone.utc)
+    if _is_all_day(value):
+        return value + datetime.timedelta(days=days)
+    tz = _tzinfo(tz_name)
+    local = value.astimezone(tz).replace(tzinfo=None) + datetime.timedelta(days=days)
+    return local.replace(tzinfo=tz, fold=0).astimezone(datetime.timezone.utc)
+
+
 def projected_date(anchor, index):
     if anchor is None or index is None:
         return None
@@ -599,10 +617,15 @@ def write_object_dates(item, anchor):
         obj.save(update_fields=['check_in', 'check_out', 'updated_at'])
         return obj
 
+    arrival_zone = obj.end_timezone or obj.start_timezone
+    if end_index == start_index and obj.date is not None and obj.end_date is not None:
+        # An overnight leg on one day keeps its own day gap, read in each end's zone.
+        gap = (local_date(obj.end_date, arrival_zone) - local_date(obj.date, obj.start_timezone)).days
+        end_day = end_day + datetime.timedelta(days=max(gap, 0))
     departure = move_to_date(obj.date, start_day, obj.start_timezone, item.start_time)
     arrival = obj.end_date
     if obj.end_date is not None or end_index != start_index or item.end_time is not None:
-        arrival = move_to_date(obj.end_date, end_day, obj.end_timezone or obj.start_timezone, item.end_time)
+        arrival = move_to_date(obj.end_date, end_day, arrival_zone, item.end_time)
         if arrival < departure:
             arrival = departure
     if obj.date == departure and obj.end_date == arrival:
@@ -630,6 +653,46 @@ def clear_object_dates(item):
         obj.end_date = None
         obj.save(update_fields=['date', 'end_date', 'updated_at'])
     return obj
+
+
+def shift_object_dates(item, days):
+    """
+    Shift lodging or transport clocks by ``days`` civil days in their own zones.
+
+    Lodging moves in its timezone; transport departure in ``start_timezone`` and
+    arrival in ``end_timezone``. Rows with no dates yet are filled from the day.
+    """
+    obj = item.item
+    item_type = _item_type(item)
+    if obj is None or item_type not in SPAN_TYPES or not days:
+        return None
+    if item_type == 'lodging':
+        if obj.check_in is None and obj.check_out is None:
+            return write_object_dates(item, item.collection.start_date)
+        obj.check_in = shift_datetime(obj.check_in, days, obj.timezone)
+        obj.check_out = shift_datetime(obj.check_out, days, obj.timezone)
+        obj.save(update_fields=['check_in', 'check_out', 'updated_at'])
+        return obj
+    if obj.date is None and obj.end_date is None:
+        return write_object_dates(item, item.collection.start_date)
+    obj.date = shift_datetime(obj.date, days, obj.start_timezone)
+    obj.end_date = shift_datetime(obj.end_date, days, obj.end_timezone or obj.start_timezone)
+    obj.save(update_fields=['date', 'end_date', 'updated_at'])
+    return obj
+
+
+def _shift_spans(collection, days):
+    from adventures.models import CollectionItineraryItem
+
+    updated = []
+    items = CollectionItineraryItem.objects.filter(
+        collection=collection, day__isnull=False
+    ).select_related('day', 'content_type', 'collection')
+    for item in items:
+        obj = shift_object_dates(item, days)
+        if obj is not None:
+            updated.append(obj)
+    return updated
 
 
 def _span_snapshot(collection):
@@ -1017,6 +1080,7 @@ def set_anchor(collection, anchor, timezone_name=None):
         collection = _lock(collection)
         _require_day_based(collection)
         fields = []
+        previous = collection.start_date
         if collection.start_date != anchor:
             collection.start_date = anchor
             fields.append('start_date')
@@ -1035,7 +1099,39 @@ def set_anchor(collection, anchor, timezone_name=None):
             collection.save(update_fields=fields + ['updated_at'])
         sync_projection(collection)
         if 'start_date' in fields:
-            _rewrite_changed_spans(collection, {}, force=True)
+            if previous is not None and anchor is not None:
+                # Moving an existing anchor is a shift: clocks keep their faces.
+                _shift_spans(collection, (anchor - previous).days)
+            else:
+                _rewrite_changed_spans(collection, {}, force=True)
+        return collection
+
+
+def shift_anchor(collection, days=None, start_date=None):
+    """
+    Move an anchored trip by a civil-day delta, or to a new ``start_date``.
+
+    Day indexes, order, and spans stay. Lodging and transport clocks move with
+    their days in their own timezones. Visits are not touched. This never runs
+    the out-of-range cleanup that a collection PATCH runs.
+    """
+    with transaction.atomic():
+        collection = _lock(collection)
+        _require_day_based(collection)
+        if collection.start_date is None:
+            raise DayPlanError('Set a start date before shifting the trip.', code='no_anchor')
+        if start_date is not None:
+            days = (start_date - collection.start_date).days
+        try:
+            days = int(days)
+        except (TypeError, ValueError):
+            raise DayPlanError('Send a whole number of days or a start date.')
+        if days == 0:
+            return collection
+        collection.start_date = collection.start_date + datetime.timedelta(days=days)
+        collection.save(update_fields=['start_date', 'updated_at'])
+        sync_projection(collection)
+        _shift_spans(collection, days)
         return collection
 
 

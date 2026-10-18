@@ -632,7 +632,8 @@
 						(t.destination_latitude && t.destination_longitude)
 				) ||
 				false),
-		calendar: !isFolderView,
+		// Only an anchored, unarchived trip has calendar dates to show.
+		calendar: !isFolderView && !!collection?.start_date && !collection?.is_archived,
 		recommendations: canModifyCollection,
 		stats: true,
 		budget: !isFolderView

@@ -5,6 +5,8 @@ export type CalendarEventType =
 	| 'collection'
 	| 'note'
 	| 'checklist'
+	| 'stop'
+	| 'activity'
 	| 'location';
 
 export type CalendarTimezoneMode = 'event' | 'local';

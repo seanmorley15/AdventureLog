@@ -46,7 +46,7 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
             event.add('summary', f"{item.get('icon', '')} {item.get('title', 'Event')}".strip())
             event.add('dtstamp', datetime.now())
             event.add('transp', 'TRANSPARENT')
-            event.add('class', 'PUBLIC')
+            event.add('class', 'PRIVATE')
             event.add('created', datetime.now())
             event.add('last-modified', datetime.now())
 
