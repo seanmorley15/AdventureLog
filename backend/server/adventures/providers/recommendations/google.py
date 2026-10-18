@@ -3,6 +3,10 @@ from typing import Dict, List
 import requests
 
 from adventures.providers.base import ProviderResult
+from django.conf import settings
+from adventures.services.external_cache import cached_provider, coordinate_key
+
+GOOGLE_CACHE_TIMEOUT = getattr(settings, 'GOOGLE_API_CACHE_TIMEOUT', 60 * 60 * 24)
 
 NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 
@@ -28,6 +32,17 @@ FIELD_MASK = (
 )
 
 
+@cached_provider(
+    'google_recommendations',
+    lambda lat, lon, radius, api_key=None, included_types=(), max_results=20, *a, **k: (
+        coordinate_key(lat, 3),
+        coordinate_key(lon, 3),
+        radius,
+        ','.join(sorted(included_types or [])),
+        max_results,
+    ),
+    GOOGLE_CACHE_TIMEOUT,
+)
 def search_nearby(
     lat: float,
     lon: float,

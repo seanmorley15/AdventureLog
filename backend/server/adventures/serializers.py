@@ -1,11 +1,11 @@
 from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
 from rest_framework import serializers
-from main.utils import CustomModelSerializer, build_media_url, get_public_url
+from main.utils import CustomModelSerializer, build_media_url, get_public_url, memoized_count
 from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
-from adventures.utils.geojson import gpx_to_geojson
+from adventures.utils.geojson import cached_gpx_geojson, gpx_to_geojson
 from adventures.utils.geo import point_to_lat_lon
 from adventures.utils.datetime_utils import ensure_aware_utc, normalize_all_day_visit_dates
 from adventures.utils.collection_type import assign_collection_type_from_dates, collection_lifecycle_status
@@ -32,10 +32,8 @@ def _build_profile_pic_url(user):
 def _member_roles(collection):
     from adventures.models import CollectionMember
 
-    return {
-        user_id: role
-        for user_id, role in CollectionMember.objects.filter(collection=collection).values_list('user_id', 'role')
-    }
+    # Read through the relation so a prefetch of ``members`` is used when present.
+    return {member.user_id: member.role for member in collection.members.all()}
 
 
 def _serialize_collaborator(user, owner_id=None, request_user=None, role=None):
@@ -179,8 +177,11 @@ class AttachmentSerializer(CustomModelSerializer):
         return representation
 
     def get_geojson(self, obj):
+        # The story payload never carries attachment GeoJSON, so skip the work.
+        if self.context.get('story'):
+            return None
         if obj.file and obj.file.name.endswith('.gpx'):
-            return gpx_to_geojson(obj.file)
+            return cached_gpx_geojson(obj.file)
         return None
     
 class CategorySerializer(serializers.ModelSerializer):
@@ -207,7 +208,21 @@ class CategorySerializer(serializers.ModelSerializer):
         return instance
     
     def get_num_locations(self, obj):
-        return Location.objects.filter(category=obj, user=obj.user).count()
+        # Locations nest their category, so this runs once per row. Count per category
+        # for the whole owner in one query instead, and reuse it for every row.
+        if hasattr(obj, 'num_locations_annotated'):
+            return obj.num_locations_annotated
+
+        def counts():
+            from django.db.models import Count
+
+            return dict(
+                Location.objects.filter(user_id=obj.user_id)
+                .values_list('category')
+                .annotate(total=Count('id'))
+            )
+
+        return memoized_count(self, 'category_counts', obj.user_id, counts).get(obj.pk, 0)
     
 class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
@@ -342,7 +357,8 @@ class TrailSerializer(CustomModelSerializer):
         return 'External Link'
     
     def get_wanderer_data(self, obj):
-        if not obj.wanderer_id:
+        # The published story shows a trail's name and link, never Wanderer's own data.
+        if not obj.wanderer_id or self.context.get('story'):
             return None
 
         integration = self._get_wanderer_integration(obj.user)
@@ -382,7 +398,7 @@ class TrailSerializer(CustomModelSerializer):
         return self._build_wanderer_link(obj, integration)
 
     def get_geojson(self, obj):
-        if not obj.wanderer_id:
+        if not obj.wanderer_id or self.context.get('story'):
             return None
 
         integration = self._get_wanderer_integration(obj.user)
@@ -527,7 +543,10 @@ class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
         return representation
     
     def get_geojson(self, obj):
-        return gpx_to_geojson(obj.gpx_file)
+        # In the story, tracks are shown only when the owner turned the GPX group on.
+        if self.context.get('story') and not self.context.get('story_gpx'):
+            return None
+        return cached_gpx_geojson(obj.gpx_file)
 
 class VisitSerializer(serializers.ModelSerializer):
 
@@ -673,7 +692,13 @@ class LocationSerializer(CoordinateSerializerMixin, CustomModelSerializer):
 
         if not is_nested:
             # Full representation for standalone locations
-            representation['user'] = CustomUserDetailsSerializer(instance.user, context=self.context).data
+            # The same owner repeats on every place in a list: build their payload once.
+            representation['user'] = memoized_count(
+                self,
+                'user_details',
+                instance.user_id,
+                lambda: CustomUserDetailsSerializer(instance.user, context=self.context).data,
+            )
         else:
             # Slim representation for nested contexts, but keep allowed fields
             fields_to_remove = [
@@ -1460,6 +1485,21 @@ class CollectionSerializer(CustomModelSerializer):
         
         return representation
     
+def _load_collection_images(collection_ids):
+    """{collection id: [ContentImage]} for the places in those collections, one query."""
+    from django.db.models import F
+
+    grouped = {}
+    rows = (
+        ContentImage.objects.filter(location__collections__in=collection_ids)
+        .select_related('user')
+        .annotate(collection_pk=F('location__collections'))
+    )
+    for image in rows:
+        grouped.setdefault(image.collection_pk, []).append(image)
+    return grouped
+
+
 class CollectionInviteSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='collection.name', read_only=True)
     collection_owner_username = serializers.CharField(source='collection.user.username', read_only=True)
@@ -1520,13 +1560,31 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
 
         return collaborators
 
+    def _images_for(self, obj):
+        """
+        Photos of this collection's places. Serializing a page calls this once per
+        collection, so the images of every collection on the page load in one query.
+        """
+        parent = getattr(self, 'parent', None)
+        instances = getattr(parent, 'instance', None) if isinstance(parent, serializers.ListSerializer) else None
+        try:
+            ids = [c.pk for c in instances] if instances is not None else [obj.pk]
+        except TypeError:
+            ids = [obj.pk]
+        if obj.pk not in ids:
+            ids.append(obj.pk)
+        context = self.context
+        if not isinstance(context, dict) or not hasattr(self.root, '_context'):
+            return _load_collection_images([obj.pk]).get(obj.pk, [])
+        memo = context.setdefault('_count_memo', {})
+        key = ('collection_location_images', tuple(sorted(ids, key=str)))
+        if key not in memo:
+            memo[key] = _load_collection_images(ids)
+        return memo[key].get(obj.pk, [])
+
     def get_location_images(self, obj):
         """Get primary images from locations in this collection, optimized with select_related"""
-        # Filter first, then slice (removed slicing)
-        images = list(
-            ContentImage.objects.filter(location__collections=obj)
-            .select_related('user')
-        )
+        images = list(self._images_for(obj))
 
         def sort_key(image):
             if obj.primary_image and image.id == obj.primary_image.id:
@@ -1547,7 +1605,8 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
 
     def get_location_count(self, obj):
         """Get count of locations in this collection"""
-        # This uses the cached count if available, or does a simple count query
+        if hasattr(obj, 'location_count_annotated'):
+            return obj.location_count_annotated
         return obj.locations.count()
 
     def get_status(self, obj):

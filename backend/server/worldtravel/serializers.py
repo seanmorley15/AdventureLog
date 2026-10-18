@@ -1,6 +1,6 @@
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from rest_framework import serializers
-from main.utils import CustomModelSerializer, build_media_url
+from main.utils import CustomModelSerializer, build_media_url, memoized_count
 from adventures.utils.geo import point_to_lat_lon
 
 
@@ -25,15 +25,25 @@ class CountrySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
         return build_media_url(flag_path)
     
     def get_num_regions(self, obj):
-        # get the number of regions in the country
-        return Region.objects.filter(country=obj).count()
+        # Annotated by the viewsets that list countries; per-row count otherwise.
+        if hasattr(obj, 'num_regions_annotated'):
+            return obj.num_regions_annotated
+        return memoized_count(self, 'country_regions', obj.pk, lambda: Region.objects.filter(country=obj).count())
     
     def get_num_visits(self, obj):
         request = self.context.get('request')
         user = getattr(request, 'user', None)
         
+        if hasattr(obj, 'num_visits_annotated'):
+            return obj.num_visits_annotated
+
         if user and user.is_authenticated:
-            return VisitedRegion.objects.filter(region__country=obj, user=user).count()
+            return memoized_count(
+                self,
+                'country_visits',
+                (obj.pk, user.pk),
+                lambda: VisitedRegion.objects.filter(region__country=obj, user=user).count(),
+            )
         
         return 0
 
@@ -52,7 +62,9 @@ class RegionSerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
         read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name']
 
     def get_num_cities(self, obj):
-        return City.objects.filter(region=obj).count()
+        if hasattr(obj, 'num_cities_annotated'):
+            return obj.num_cities_annotated
+        return memoized_count(self, 'region_cities', obj.pk, lambda: City.objects.filter(region=obj).count())
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

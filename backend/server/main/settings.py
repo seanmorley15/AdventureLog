@@ -112,13 +112,55 @@ MIDDLEWARE = (
 # ---------------------------------------------------------------------------
 # Caching
 # ---------------------------------------------------------------------------
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': '127.0.0.1:11211',
-        'TIMEOUT': 60 * 60 * 24,  # Optional: 1 day cache
+def _build_caches():
+    """
+    The cache backend, chosen by CACHE_BACKEND.
+
+    - memcached (default): the memcached bundled in the Docker image.
+    - redis: an external Redis (REDIS_URL), for advanced deployments.
+    - locmem / dummy: per-process memory, or no caching, for debugging.
+    Unknown values fall back to memcached.
+    """
+    backend = getenv('CACHE_BACKEND', 'memcached').strip().lower()
+    timeout = 60 * 60 * 24
+    prefix = getenv('CACHE_KEY_PREFIX', '').strip()
+    base = {'TIMEOUT': timeout, 'KEY_PREFIX': prefix}
+
+    if backend == 'redis':
+        return {
+            'default': {
+                **base,
+                'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+                'LOCATION': getenv('REDIS_URL', 'redis://127.0.0.1:6379/0'),
+            }
+        }
+    if backend == 'locmem':
+        return {'default': {**base, 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+    if backend == 'dummy':
+        return {'default': {**base, 'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+    if backend != 'memcached':
+        print(f"Unknown CACHE_BACKEND '{backend}', using memcached.")
+    return {
+        'default': {
+            **base,
+            'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+            'LOCATION': getenv('MEMCACHED_LOCATION', '127.0.0.1:11211'),
+            'OPTIONS': {
+                # A memcached outage is a cache miss, not a 500.
+                'ignore_exc': True,
+                'no_delay': True,
+                'use_pooling': True,
+            },
+        }
     }
-}
+
+
+CACHES = _build_caches()
+
+# Sessions read from the cache first and fall back to the database, which stays the
+# source of truth. The cached copy is short-lived (see main/sessions.py).
+SESSION_ENGINE = 'main.sessions'
+SESSION_CACHE_SECONDS = int(getenv('SESSION_CACHE_SECONDS', '300'))
 
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
@@ -376,6 +418,8 @@ SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60
 WIKIPEDIA_DESC_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_DESC_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
+# Google Maps Platform results are cached for at most this long (their terms limit caching).
+GOOGLE_API_CACHE_TIMEOUT = min(int(getenv('GOOGLE_API_CACHE_TIMEOUT', str(60 * 60 * 24))), 60 * 60 * 24 * 30)
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 

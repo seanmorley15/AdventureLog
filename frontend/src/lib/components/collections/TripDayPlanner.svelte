@@ -431,7 +431,7 @@
 
 	function handleVisibilityChange() {
 		if (document.visibilityState !== 'visible' || dragging || saving) return;
-		if (Date.now() - lastFetchAt > 15_000) void refetch(true);
+		if (Date.now() - lastFetchAt > 60_000) void refetch(true);
 	}
 
 	async function send<T = any>(

@@ -1,5 +1,5 @@
 from datetime import date, datetime, timezone as dt_timezone
-from django.db.models import Q, Prefetch
+from django.db.models import Count, Q, Prefetch
 from django.db.models.functions import Lower
 from django.db import transaction
 from rest_framework import viewsets
@@ -23,6 +23,7 @@ from adventures.utils.activity import record_activity
 from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
 from adventures.permissions import CollectionShared
 from adventures.utils.audience import audience_for_request, readable_collections_q
+from adventures.utils.query_optimization import media_prefetches, optimize_locations
 from adventures.utils.story import build_story_payload
 from adventures.serializers import _build_profile_pic_url
 from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
@@ -237,6 +238,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+    @staticmethod
+    def _for_listing(queryset):
+        """Counts and relations the list serializer reads, loaded with the page."""
+        return queryset.select_related('user', 'primary_image').annotate(
+            day_count_annotated=Count('itinerary_days', filter=Q(itinerary_days__index__isnull=False), distinct=True),
+            location_count_annotated=Count('locations', distinct=True),
+        ).prefetch_related('shared_with', 'members')
+
     def apply_type_filter(self, queryset):
         """Filter by collection type. type=folder replaces the old status=folder list filter."""
         type_filter = self.request.query_params.get('type')
@@ -302,6 +311,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
         elif self.action in ('retrieve', 'export_pdf', 'share_image'):
             # Members, guest links, and readers of a public or unlisted story.
             queryset = Collection.objects.filter(readable_collections_q(self.request)).distinct()
+            if self.action == 'retrieve':
+                queryset = queryset.prefetch_related(*self._detail_prefetches())
         else:
             # For list action and default base queryset, return collections owned by the user (exclude shared)
             queryset = Collection.objects.filter(
@@ -309,6 +320,28 @@ class CollectionViewSet(viewsets.ModelViewSet):
             ).distinct()
 
         return queryset.select_related('primary_image').prefetch_related('shared_with')
+
+    @staticmethod
+    def _detail_prefetches():
+        """Everything CollectionSerializer reads, loaded in a fixed number of queries."""
+        locations = optimize_locations(Location.objects.all())
+        return [
+            Prefetch('locations', queryset=locations),
+            Prefetch(
+                'transportation_set',
+                queryset=Transportation.objects.select_related('user').prefetch_related(*media_prefetches()),
+            ),
+            Prefetch(
+                'lodging_set',
+                queryset=Lodging.objects.select_related('user').prefetch_related(*media_prefetches()),
+            ),
+            Prefetch('note_set', queryset=Note.objects.select_related('user')),
+            Prefetch(
+                'checklist_set',
+                queryset=Checklist.objects.select_related('user').prefetch_related('checklistitem_set'),
+            ),
+            'members',
+        ]
 
     def get_queryset(self):
         """Get queryset with optimizations for list actions"""
@@ -333,6 +366,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             )
         )
         
+        queryset = self._for_listing(queryset)
         queryset = self.apply_type_filter(queryset)
         queryset = self.apply_status_filter(queryset)
         queryset = self.apply_sorting(queryset)
@@ -353,7 +387,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             )
         )
         
-        queryset = self.apply_sorting(queryset)
+        queryset = self.apply_sorting(self._for_listing(queryset))
         serializer = self.get_serializer(queryset, many=True)
        
         return Response(serializer.data)
@@ -373,7 +407,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             )
         )
         
-        queryset = self.apply_sorting(queryset)
+        queryset = self.apply_sorting(self._for_listing(queryset))
         serializer = self.get_serializer(queryset, many=True)
        
         return Response(serializer.data)
@@ -387,11 +421,22 @@ class CollectionViewSet(viewsets.ModelViewSet):
         """
         collection = self.get_object()
         audience = audience_for_request(request, collection)
-        serializer = self.get_serializer(collection)
+        story_mode = audience.is_public_reader or request.query_params.get('as') == 'story'
+        context = self.get_serializer_context()
+        if story_mode:
+            # The story whitelist drops most of the member payload. Skip building the
+            # expensive parts (Wanderer lookups, GeoJSON) rather than build and discard.
+            context = {**context, 'story': True, 'story_gpx': collection.story_group('gpx')}
+        serializer = CollectionSerializer(collection, context=context)
         data = serializer.data
 
         # Include itinerary items inline with collection details
-        itinerary_items = CollectionItineraryItem.objects.filter(collection=collection).select_related('day', 'content_type')
+        # prefetch_related('item') resolves each placement's target with one query per type.
+        itinerary_items = (
+            CollectionItineraryItem.objects.filter(collection=collection)
+            .select_related('day', 'content_type')
+            .prefetch_related('item')
+        )
         itinerary_serializer = CollectionItineraryItemSerializer(itinerary_items, many=True)
         data['itinerary'] = itinerary_serializer.data
         
@@ -401,9 +446,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
         data['itinerary_days'] = days_serializer.data
         from adventures.utils.day_files import serialize_day_files
 
-        data.update(serialize_day_files(collection, self.get_serializer_context()))
+        data.update(serialize_day_files(collection, context))
 
-        if audience.is_public_reader or request.query_params.get('as') == 'story':
+        if story_mode:
             story = build_story_payload(data, collection)
             story['audience'] = audience.as_dict()
             story['story_preview'] = not audience.is_public_reader
@@ -426,7 +471,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             )
         )
         
-        queryset = self.apply_sorting(queryset)
+        queryset = self.apply_sorting(self._for_listing(queryset))
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     

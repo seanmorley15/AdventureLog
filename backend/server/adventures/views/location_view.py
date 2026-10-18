@@ -15,6 +15,7 @@ from adventures.models import Location, Category, Collection, CollectionItinerar
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.utils.audience import can_edit
+from adventures.utils.query_optimization import optimize_locations
 from adventures.serializers import (
     CalendarLocationSerializer,
     CollectionItineraryItemSerializer,
@@ -90,12 +91,16 @@ class LocationViewSet(viewsets.ModelViewSet):
             return Location.objects.none()
 
         include_public = self.action in public_allowed_actions
-        return Location.objects.retrieve_locations(
+        queryset = Location.objects.retrieve_locations(
             user,
             include_public=include_public,
             include_owned=True,
             include_shared=True
         ).order_by('-updated_at')
+        # Lists serialize many places; load what they read in a fixed number of queries.
+        if self.action == 'list':
+            queryset = optimize_locations(queryset)
+        return queryset
 
     # ==================== SORTING & FILTERING ====================
 
@@ -437,7 +442,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         else:
             queryset = Location.objects.filter(base_filter, collections__isnull=True)
 
-        queryset = self.apply_sorting(queryset)
+        queryset = optimize_locations(self.apply_sorting(queryset))
         serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields})
         return Response(serializer.data)
 
@@ -641,8 +646,12 @@ class LocationViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
 
-        locations = Location.objects.filter(user=request.user)
-        serializer = MapPinSerializer(locations, many=True)
+        locations = (
+            Location.objects.filter(user=request.user)
+            .select_related('category__user')
+            .prefetch_related('visits')
+        )
+        serializer = MapPinSerializer(locations, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='suggest')

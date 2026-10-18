@@ -3,10 +3,12 @@ from typing import Dict, List
 import requests
 
 from adventures.providers.base import ProviderResult
+from adventures.services.external_cache import cached_provider, coordinate_key
 
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 
 
+@cached_provider('osm_search', lambda query, limit=20, *a, **k: (query, limit), 60 * 60 * 24)
 def search_places(query: str, limit: int = 20, user_agent: str = "AdventureLog Server") -> ProviderResult[List[Dict]]:
     headers = {"User-Agent": user_agent}
     params = {

@@ -6,6 +6,7 @@ import time
 import requests
 
 from adventures.providers.base import ProviderResult
+from adventures.services.external_cache import cached_provider
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,8 @@ COOLDOWN_SECONDS = 120
 _unavailable_until = 0.0
 
 
+# An identical query (same area, same filters) gives the same places for hours.
+@cached_provider('overpass', lambda query, *a, **k: (query,), 60 * 60 * 6)
 def execute_overpass_query(query: str, timeout: int = 12) -> ProviderResult[Dict]:
     global _unavailable_until
     now = time.monotonic()

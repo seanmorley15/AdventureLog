@@ -23,6 +23,7 @@ from adventures.utils.comments import (
     can_moderate,
     can_post,
     can_read_thread,
+    inbox_queryset,
     is_author,
     notify_mentions,
     resolve_mentions,
@@ -183,15 +184,8 @@ class CollectionCommentViewSet(viewsets.ViewSet):
         user = request.user
         state = CommentInboxState.objects.filter(user=user).first()
         seen_at = state.seen_at if state else None
-        member_of = Collection.objects.filter(shared_with=user).values('pk')
-        owned = Collection.objects.filter(user=user).values('pk')
-        from django.db.models import Q
-
         qs = (
-            CollectionComment.objects.filter(
-                Q(collection__in=owned) | Q(collection__in=member_of, is_story=False)
-            )
-            .exclude(author_user=user)
+            inbox_queryset(user)
             .select_related('collection', 'author_user', 'day')
             .prefetch_related('mentions')
             .order_by('-created_at')

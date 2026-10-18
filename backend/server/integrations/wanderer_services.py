@@ -18,7 +18,10 @@ class IntegrationError(Exception):
         self.status_code = status_code
 
 
-TRAIL_CACHE_TIMEOUT = getattr(settings, 'WANDERER_TRAIL_CACHE_TIMEOUT', 60 * 15)
+# Trails change rarely and are revalidated with ETags, so a long positive TTL is safe.
+TRAIL_CACHE_TIMEOUT = getattr(settings, 'WANDERER_TRAIL_CACHE_TIMEOUT', 60 * 60 * 6)
+# A trail that failed (404, revoked key, timeout) is not retried on every page load.
+TRAIL_FAILURE_CACHE_TIMEOUT = getattr(settings, 'WANDERER_TRAIL_FAILURE_CACHE_TIMEOUT', 60 * 10)
 TRAIL_CACHE_PREFIX = 'wanderer_trail_v3'
 # PocketBase / wanderer.to uses singular /trail; newer builds may also expose plural /trails
 TRAILS_LIST_PATHS = ('/api/v1/trail', '/api/v1/trails')
@@ -171,6 +174,23 @@ def make_wanderer_request(
         raise IntegrationError('Unable to communicate with Wanderer server.') from exc
 
 
+def _failure_cache_key(integration_id, trail_id: str) -> str:
+    return f"{_get_cache_key(integration_id, trail_id)}:failed"
+
+
+def _remember_failure(integration_id, trail_id: str, exc: Exception) -> None:
+    status_code = getattr(exc, 'status_code', None)
+    message = getattr(exc, 'user_message', None) or 'Unable to communicate with Wanderer server.'
+    try:
+        cache.set(
+            _failure_cache_key(integration_id, trail_id),
+            {'message': message, 'status_code': status_code},
+            TRAIL_FAILURE_CACHE_TIMEOUT,
+        )
+    except Exception:  # pragma: no cover - a cache outage only means we retry next time
+        logger.debug("Could not cache Wanderer failure for trail %s", trail_id)
+
+
 def fetch_trail_by_id(
     integration: WandererIntegration,
     trail_id: str,
@@ -184,6 +204,10 @@ def fetch_trail_by_id(
         if cached_data:
             logger.debug("Trail %s found in cache", trail_id)
             return cached_data
+        failure = cache.get(_failure_cache_key(integration.id, trail_id))
+        if failure:
+            logger.debug("Trail %s failed recently; not retrying yet", trail_id)
+            raise IntegrationError(failure.get('message'), status_code=failure.get('status_code'))
 
     headers = {}
     if use_cache:
@@ -230,7 +254,9 @@ def fetch_trail_by_id(
 
         return trail_data
 
-    except IntegrationError:
+    except IntegrationError as exc:
+        if use_cache:
+            _remember_failure(integration.id, trail_id, exc)
         raise
     except requests.RequestException as exc:
         if use_cache:
@@ -242,6 +268,7 @@ def fetch_trail_by_id(
                     exc,
                 )
                 return cached_data
+            _remember_failure(integration.id, trail_id, exc)
         raise
 
 
@@ -256,6 +283,18 @@ def fetch_trail_gpx(
     endpoint = GPX_FILES_PATH.format(trail_id=trail_id, gpx_filename=gpx_filename)
     response = make_wanderer_request(integration, endpoint)
     return response.content
+
+
+GPX_FAILED_MARKER = {'_failed': True}
+
+
+def _remember_gpx_failure(cache_key: str, use_cache: bool) -> None:
+    if not use_cache:
+        return
+    try:
+        cache.set(cache_key, GPX_FAILED_MARKER, TRAIL_FAILURE_CACHE_TIMEOUT)
+    except Exception:  # pragma: no cover
+        pass
 
 
 def fetch_trail_geojson(
@@ -288,16 +327,19 @@ def fetch_trail_geojson(
         cached_geojson = cache.get(cache_key)
         if cached_geojson is not None:
             logger.debug("GeoJSON for trail %s found in cache", trail_id)
-            return cached_geojson
+            # A failed download is remembered briefly so it is not retried on every load.
+            return None if cached_geojson == GPX_FAILED_MARKER else cached_geojson
 
     try:
         gpx_content = fetch_trail_gpx(integration, trail_id, gpx_filename)
         geojson_data = gpx_bytes_to_geojson(gpx_content)
     except IntegrationError as exc:
         logger.warning("Could not download GPX for trail %s: %s", trail_id, exc)
+        _remember_gpx_failure(cache_key, use_cache)
         return None
     except Exception as exc:
         logger.warning("Could not convert GPX for trail %s: %s", trail_id, exc)
+        _remember_gpx_failure(cache_key, use_cache)
         return None
 
     if not geojson_data or isinstance(geojson_data, dict) and geojson_data.get('error'):
@@ -306,6 +348,7 @@ def fetch_trail_geojson(
             trail_id,
             geojson_data.get('message') if isinstance(geojson_data, dict) else 'unknown error',
         )
+        _remember_gpx_failure(cache_key, use_cache)
         return None
 
     if use_cache:
@@ -358,7 +401,7 @@ def invalidate_trail_cache(integration_id, trail_id: str = None):
         cache_key = _get_cache_key(integration_id, trail_id)
         etag_cache_key = _get_etag_cache_key(integration_id, trail_id)
         cached_trail = cache.get(cache_key)
-        keys_to_delete = [cache_key, etag_cache_key]
+        keys_to_delete = [cache_key, etag_cache_key, _failure_cache_key(integration_id, trail_id)]
         if isinstance(cached_trail, dict):
             gpx_filename = cached_trail.get('gpx')
             if gpx_filename:

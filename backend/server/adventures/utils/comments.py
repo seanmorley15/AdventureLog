@@ -141,6 +141,31 @@ def notify_mentions(comment, users, page_url=None):
     return sent
 
 
+def inbox_queryset(user):
+    """
+    Comments a user may want to see: the private plans they belong to and the stories
+    they own. Their own comments are left out.
+    """
+    from django.db.models import Q
+
+    from adventures.models import Collection, CollectionComment
+
+    member_of = Collection.objects.filter(shared_with=user).values('pk')
+    owned = Collection.objects.filter(user=user).values('pk')
+    return CollectionComment.objects.filter(
+        Q(collection__in=owned) | Q(collection__in=member_of, is_story=False)
+    ).exclude(author_user=user)
+
+
+def unread_comment_count(user):
+    """How many inbox comments are newer than the user's last visit to the inbox."""
+    from adventures.models import CommentInboxState
+
+    seen_at = CommentInboxState.objects.filter(user=user).values_list('seen_at', flat=True).first()
+    qs = inbox_queryset(user)
+    return qs.filter(created_at__gt=seen_at).count() if seen_at else qs.count()
+
+
 def serialize_comment(comment, request, *, story=False):
     """
     A comment as the client sees it. On the story, an author's username and picture

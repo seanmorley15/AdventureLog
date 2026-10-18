@@ -60,7 +60,22 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `DJANGO_ADMIN_PASSWORD` | Yes | First-boot superuser password. | `admin` |
 | `DJANGO_ADMIN_EMAIL` | Yes | First-boot superuser email. | `admin@example.com` |
 | `GUNICORN_WORKERS` | No | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers. | `2` |
+| `GUNICORN_THREADS` | No | Threads per Gunicorn worker. Each thread holds its own database connection. | `4` |
 | `SKIP_WORLD_DATA` | No | Set to `1` to skip the first-boot `download-countries` import (saves RAM; world travel data loads later). | unset |
+
+## Caching
+
+See [Caching](caching.md) for what is cached and how to use Redis.
+
+| Variable | Required | Description | Default |
+| -------- | -------- | ----------- | ------- |
+| `CACHE_BACKEND` | No | `memcached` (bundled in the image), `redis`, `locmem`, or `dummy`. | `memcached` |
+| `MEMCACHED_LOCATION` | No | Memcached address when `CACHE_BACKEND=memcached`. | `127.0.0.1:11211` |
+| `REDIS_URL` | With Redis | Redis connection URL when `CACHE_BACKEND=redis`. | `redis://127.0.0.1:6379/0` |
+| `CACHE_KEY_PREFIX` | No | Prefix for cache keys. Set it if several apps share one cache server. | empty |
+| `EXTERNAL_API_CACHE_TIMEOUT` | No | Seconds that geocoding, places and similar lookups are cached. | `86400` |
+| `GOOGLE_API_CACHE_TIMEOUT` | No | Seconds that Google Maps results are cached. Capped at 30 days. | `86400` |
+| `SESSION_CACHE_SECONDS` | No | How long a login session is kept in the cache before it is read from the database again. | `300` |
 
 ## Registration and authentication
 

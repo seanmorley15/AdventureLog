@@ -33,6 +33,9 @@ declare global {
 			} | null;
 			hasAccess: boolean;
 			cloudMode: boolean;
+			/** Navbar badges, read from /auth/current-user/ with the rest of the session. */
+			pendingInviteCount?: number;
+			unreadCommentCount?: number;
 			locale: string;
 		}
 		// interface PageData {}

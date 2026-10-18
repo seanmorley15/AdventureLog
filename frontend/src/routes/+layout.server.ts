@@ -1,31 +1,6 @@
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-
-async function fetchPendingInviteCount(event: Parameters<LayoutServerLoad>[0]): Promise<number> {
-	const sessionId = event.cookies.get('sessionid');
-	if (!sessionId) {
-		return 0;
-	}
-
-	try {
-		const res = await event.fetch(`${serverEndpoint}/api/collections/invites/`, {
-			headers: { Cookie: `sessionid=${sessionId}` }
-		});
-
-		if (!res.ok) {
-			return 0;
-		}
-
-		const invites = await res.json();
-		return Array.isArray(invites) ? invites.length : 0;
-	} catch {
-		return 0;
-	}
-}
-
 export const load: LayoutServerLoad = async (event) => {
 	const cloudMode = event.locals.cloudMode ?? false;
 	const hasAccess = event.locals.hasAccess ?? true;
@@ -44,7 +19,9 @@ export const load: LayoutServerLoad = async (event) => {
 		throw redirect(302, '/subscribe');
 	}
 
-	const pendingInviteCount = event.locals.user ? await fetchPendingInviteCount(event) : 0;
+	// Both badge counts arrive with the session lookup in the auth hook: no extra requests.
+	const pendingInviteCount = event.locals.user ? (event.locals.pendingInviteCount ?? 0) : 0;
+	const unreadCommentCount = event.locals.user ? (event.locals.unreadCommentCount ?? 0) : 0;
 
 	if (event.locals.user) {
 		return {
@@ -53,7 +30,8 @@ export const load: LayoutServerLoad = async (event) => {
 			hasAccess,
 			cloudMode,
 			locale: event.locals.locale,
-			pendingInviteCount
+			pendingInviteCount,
+			unreadCommentCount
 		};
 	}
 	return {
@@ -62,6 +40,7 @@ export const load: LayoutServerLoad = async (event) => {
 		hasAccess,
 		cloudMode,
 		locale: event.locals.locale,
-		pendingInviteCount
+		pendingInviteCount,
+		unreadCommentCount
 	};
 };

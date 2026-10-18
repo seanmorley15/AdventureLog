@@ -16,9 +16,11 @@ export const load = (async (event) => {
 			signal: event.request.signal
 		};
 
-		let pinFetch = await event.fetch(`${endpoint}/api/locations/pins/`, fetchOptions);
-
-		let visitedRegionsFetch = await event.fetch(`${endpoint}/api/visitedregion/`, fetchOptions);
+		// The two requests do not depend on each other: run them together.
+		const [pinFetch, visitedRegionsFetch] = await Promise.all([
+			event.fetch(`${endpoint}/api/locations/pins/`, fetchOptions),
+			event.fetch(`${endpoint}/api/visitedregion/`, fetchOptions)
+		]);
 
 		let visitedRegions = (await visitedRegionsFetch.json()) as VisitedRegion[];
 		let pins = (await pinFetch.json()) as Pin[];

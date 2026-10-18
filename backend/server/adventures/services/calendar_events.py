@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 from typing import Iterable
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, prefetch_related_objects
 from django.utils import timezone
 
 from adventures.models import (
@@ -200,7 +200,8 @@ def _visit_events(
     )
 
     for location in locations:
-        collection = location.collections.first()
+        # .first() would bypass the prefetch and query once per place; pick by pk in memory.
+        collection = min(location.collections.all(), key=lambda c: c.pk, default=None)
         collection_id = str(collection.id) if collection else None
         collection_name = collection.name if collection else None
         category_name = location.category.name if location.category else 'Adventure'
@@ -469,7 +470,13 @@ def _plan_events(user, range_start: date | None, range_end: date | None) -> list
             is_optional=False,
         )
         .select_related('day', 'content_type')
+        .prefetch_related('item')
         .order_by('day__index', 'order')
+    )
+    # Each stop reads its place's category: load them for every place at once.
+    prefetch_related_objects(
+        [i.item for i in items if i.content_type.model == 'location' and i.item is not None],
+        'category',
     )
     location_ids = [i.object_id for i in items if i.content_type.model == 'location']
     visit_days = _owner_visit_days(user, location_ids) if location_ids else set()

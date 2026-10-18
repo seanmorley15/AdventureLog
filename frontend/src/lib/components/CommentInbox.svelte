@@ -1,16 +1,28 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { CommentInboxItem } from '$lib/types';
 	import CommentTextMultiple from '~icons/mdi/comment-text-multiple-outline';
 	import CheckAll from '~icons/mdi/check-all';
 
+	interface Props {
+		/** Unread count from the session lookup, so the badge needs no request of its own. */
+		initialUnread?: number;
+	}
+
+	let { initialUnread = 0 }: Props = $props();
+
+	// Window focus refreshes the badge, at most once a minute.
+	const FOCUS_REFRESH_MS = 60_000;
+	let lastLoad = Date.now();
+
 	let open = $state(false);
-	let unread = $state(0);
+	let unread = $state(untrack(() => initialUnread));
 	let items = $state<CommentInboxItem[] | null>(null);
 	let root: HTMLDivElement | undefined = $state();
 
 	async function load() {
+		lastLoad = Date.now();
 		try {
 			const res = await fetch('/api/collection-comments/inbox/?limit=20');
 			if (!res.ok) return;
@@ -50,8 +62,9 @@
 	}
 
 	onMount(() => {
-		void load();
-		const onFocus = () => void load();
+		const onFocus = () => {
+			if (Date.now() - lastLoad >= FOCUS_REFRESH_MS) void load();
+		};
 		const onClick = (event: MouseEvent) => {
 			if (open && root && !root.contains(event.target as Node)) open = false;
 		};

@@ -62,3 +62,42 @@ def get_or_fetch_cached(
     if value is not None:
         set_cached(prefix, *parts, value=value, timeout=timeout)
     return value
+
+
+def cached_provider(prefix: str, key_fn: Callable[..., tuple], timeout: Optional[int] = None):
+    """
+    Cache a provider call that returns a ``ProviderResult``.
+
+    Only a successful result (``data`` present, no error) is stored, so a timeout or
+    a provider error is retried on the next request. ``key_fn`` receives the call's
+    arguments and returns the key parts; it must not include API keys or user ids, so
+    the cached data is the same for everyone. Never use this for user-scoped
+    integrations (Immich, Strava).
+    """
+    import functools
+
+    from adventures.providers.base import ProviderResult
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            parts = tuple(str(part) for part in key_fn(*args, **kwargs))
+            cached = get_cached(prefix, *parts)
+            if cached is not None:
+                return ProviderResult(data=cached)
+            result = func(*args, **kwargs)
+            if getattr(result, 'error', None) is None and getattr(result, 'data', None) not in (None, {}, []):
+                set_cached(prefix, *parts, value=result.data, timeout=timeout)
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+def coordinate_key(value, places: int) -> str:
+    """A coordinate rounded for a cache key (5 places is about 1 m, 3 about 100 m)."""
+    try:
+        return f'{float(value):.{places}f}'
+    except (TypeError, ValueError):
+        return str(value)

@@ -192,6 +192,9 @@ def indexed_days(collection, registry=None):
 
 
 def day_count(collection, registry=None):
+    # List endpoints annotate this to avoid one count query per collection.
+    if hasattr(collection, 'day_count_annotated'):
+        return collection.day_count_annotated
     reg = registry or _Registry()
     return reg.Day.objects.filter(collection_id=collection.pk, index__isnull=False).count()
 

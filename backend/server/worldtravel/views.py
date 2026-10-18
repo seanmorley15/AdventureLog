@@ -1,3 +1,4 @@
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer
@@ -12,7 +13,12 @@ from adventures.models import Location
 @permission_classes([IsAuthenticated])
 def regions_by_country(request, country_code):
     country = get_object_or_404(Country, country_code=country_code)
-    regions = Region.objects.filter(country=country).select_related('country').order_by('name')
+    regions = (
+        Region.objects.filter(country=country)
+        .select_related('country')
+        .annotate(num_cities_annotated=Count('city', distinct=True))
+        .order_by('name')
+    )
     serializer = RegionSerializer(regions, many=True)
     return Response(serializer.data)
 
@@ -28,7 +34,7 @@ def visits_by_country(request, country_code):
 @permission_classes([IsAuthenticated])
 def cities_by_region(request, region_id):
     region = get_object_or_404(Region, id=region_id)
-    cities = City.objects.filter(region=region).order_by('name')
+    cities = City.objects.filter(region=region).select_related('region__country').order_by('name')
     serializer = CitySerializer(cities, many=True)
     return Response(serializer.data)
 
@@ -36,7 +42,7 @@ def cities_by_region(request, region_id):
 @permission_classes([IsAuthenticated])
 def visits_by_region(request, region_id):
     region = get_object_or_404(Region, id=region_id)
-    visits = VisitedCity.objects.filter(city__region=region, user=request.user.id)
+    visits = VisitedCity.objects.filter(city__region=region, user=request.user.id).select_related('user', 'city')
     serializer = VisitedCitySerializer(visits, many=True)
     return Response(serializer.data)
 
@@ -65,6 +71,17 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all().order_by('name')
     serializer_class = CountrySerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Region and visit counts come from the same query instead of two per country.
+        return Country.objects.annotate(
+            num_regions_annotated=Count('region', distinct=True),
+            num_visits_annotated=Count(
+                'region__visitedregion',
+                filter=Q(region__visitedregion__user=self.request.user.id),
+                distinct=True,
+            ),
+        ).order_by('name')
 
     @action(detail=False, methods=['get'])
     def check_point_in_region(self, request):
@@ -96,7 +113,9 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({'regions_visited': count})
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Region.objects.select_related('country').all()
+    queryset = Region.objects.select_related('country').annotate(
+        num_cities_annotated=Count('city', distinct=True)
+    )
     serializer_class = RegionSerializer
     permission_classes = [IsAuthenticated]
 

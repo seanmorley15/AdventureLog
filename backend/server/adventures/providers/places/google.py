@@ -3,6 +3,10 @@ from typing import Dict, List
 import requests
 
 from adventures.providers.base import ProviderResult
+from django.conf import settings
+from adventures.services.external_cache import cached_provider, coordinate_key
+
+GOOGLE_CACHE_TIMEOUT = getattr(settings, 'GOOGLE_API_CACHE_TIMEOUT', 60 * 60 * 24)
 
 SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
 DETAILS_URL = "https://places.googleapis.com/v1/places/{place_id}"
@@ -24,6 +28,11 @@ DETAILS_FIELD_MASK = (
 NEARBY_FIELD_MASK = "places.displayName.text,places.formattedAddress,places.types"
 
 
+@cached_provider(
+    'google_places_search',
+    lambda query, api_key=None, max_results=20, *a, **k: (query, max_results),
+    GOOGLE_CACHE_TIMEOUT,
+)
 def search_places(query: str, api_key: str, max_results: int = 20) -> ProviderResult[List[Dict]]:
     if not api_key:
         return ProviderResult(error="Google Maps API key not configured")
@@ -50,6 +59,7 @@ def search_places(query: str, api_key: str, max_results: int = 20) -> ProviderRe
     return ProviderResult(data=data.get("places", []))
 
 
+@cached_provider('google_place_details', lambda place_id, *a, **k: (place_id,), GOOGLE_CACHE_TIMEOUT)
 def fetch_place_details(place_id: str, api_key: str) -> ProviderResult[Dict]:
     if not api_key:
         return ProviderResult(error="Google Maps API key not configured")
@@ -74,6 +84,15 @@ def fetch_place_details(place_id: str, api_key: str) -> ProviderResult[Dict]:
     return ProviderResult(data=response.json() or {})
 
 
+@cached_provider(
+    'google_places_nearby',
+    lambda lat, lon, api_key=None, radius=45.0, *a, **k: (
+        coordinate_key(lat, 4),
+        coordinate_key(lon, 4),
+        radius,
+    ),
+    GOOGLE_CACHE_TIMEOUT,
+)
 def search_nearby(lat: float, lon: float, api_key: str, radius: float = 45.0) -> ProviderResult[List[Dict]]:
     if not api_key:
         return ProviderResult(error="Google Maps API key not configured")
