@@ -3,7 +3,6 @@
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import { addToast } from '$lib/toasts';
-	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
 	import DateInput from '../shared/DateInput.svelte';
 	import { addDays, browserTimezone } from '$lib/collections/plan';
@@ -239,7 +238,6 @@
 			description: collection.description,
 			start_date: collection.start_date,
 			type: collection.type,
-			is_public: collection.is_public,
 			link: collection.link,
 			primary_image_id: coverImageId
 		};
@@ -559,25 +557,6 @@
 										/>
 									</div>
 								{/if}
-
-								<!-- Public Toggle -->
-								<div class="flex flex-col">
-									<label class="field-toggle">
-										<input
-											type="checkbox"
-											class="toggle toggle-primary"
-											id="is_public"
-											name="is_public"
-											bind:checked={collection.is_public}
-										/>
-										<span>
-											<span class="font-semibold text-base-content"
-												>{$t('collection.public_collection')}</span
-											>
-											<p class="field-hint">{$t('collection.public_collection_description')}</p>
-										</span>
-									</label>
-								</div>
 							</div>
 						</div>
 					</div>
@@ -712,40 +691,6 @@
 									</button>
 								</div>
 							{/if}
-						</div>
-					</div>
-				{/if}
-
-				<!-- Share Link Section (only if public and has ID) -->
-				{#if collection.is_public && collection.id}
-					<div class="card bg-base-100 border border-base-300">
-						<div class="card-body p-6">
-							<h3 class="font-semibold text-lg mb-3">{$t('adventures.share_collection')}</h3>
-							<div class="flex items-center gap-3">
-								<input
-									type="text"
-									value="{window.location.origin}/collections/{collection.id}"
-									readonly
-									class="input flex-1 font-mono text-sm"
-								/>
-								<button
-									type="button"
-									onclick={async () => {
-										try {
-											await copyToClipboard(
-												`${window.location.origin}/collections/${collection.id}`
-											);
-											addToast('success', $t('adventures.link_copied'));
-										} catch {
-											addToast('error', $t('adventures.copy_failed') || 'Copy failed');
-										}
-									}}
-									class="btn btn-primary gap-2"
-								>
-									<LinkIcon class="w-4 h-4" />
-									{$t('adventures.copy_link')}
-								</button>
-							</div>
 						</div>
 					</div>
 				{/if}

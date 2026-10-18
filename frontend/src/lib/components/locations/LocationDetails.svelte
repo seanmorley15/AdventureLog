@@ -395,7 +395,8 @@
 						</div>
 
 						<!-- Public Toggle -->
-						{#if !locationToEdit || (locationToEdit.collections && locationToEdit.collections.length === 0)}
+						<!-- The place's own flag. It does not follow any collection. -->
+						{#if !ownerUser || (user && user.uuid == ownerUser.uuid)}
 							<div class="flex flex-col">
 								<label class="field-toggle" for="is_public">
 									<input
@@ -409,7 +410,7 @@
 											>{$t('adventures.public_location')}</span
 										>
 										<p class="field-hint">
-											{$t('adventures.public_location_description')}
+											{$t('adventures.public_location_profile_hint')}
 										</p>
 									</span>
 								</label>

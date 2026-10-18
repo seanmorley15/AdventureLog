@@ -3,7 +3,8 @@ from django.db.models import Q
 from adventures.models import Trail
 from adventures.serializers import TrailSerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.utils.day_files import is_member, trail_collection
+from adventures.utils.audience import can_edit, has_guest_token, member_collections_q
+from adventures.utils.day_files import trail_collection
 from adventures.utils import itinerary_days as day_plan
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
@@ -21,15 +22,18 @@ class TrailViewSet(viewsets.ModelViewSet):
         - The location is in a collection that the user owns
         """
         user = self.request.user
-        
-        if not user or not user.is_authenticated:
-            raise PermissionDenied("You must be authenticated to view trails.")
+        authenticated = bool(user and user.is_authenticated)
+
+        day_filter = member_collections_q(self.request, 'day__collection__')
+        day_filter |= member_collections_q(self.request, 'collection__')
+        if not authenticated:
+            if not has_guest_token(self.request):
+                raise PermissionDenied("You must be authenticated to view trails.")
+            return Trail.objects.filter(day_filter).distinct()
 
         location_filter = Q(location__user=user)
         location_filter |= Q(location__collections__shared_with=user)
         location_filter |= Q(location__collections__user=user)
-        day_filter = Q(day__collection__user=user) | Q(day__collection__shared_with=user)
-        day_filter |= Q(collection__user=user) | Q(collection__shared_with=user)
 
         return Trail.objects.filter(location_filter | day_filter).distinct()
 
@@ -46,7 +50,7 @@ class TrailViewSet(viewsets.ModelViewSet):
         ideas = serializer.validated_data.get('collection')
         parent = self._owner_collection(location, day, ideas)
         if parent is not None:
-            if not is_member(parent, self.request.user):
+            if not can_edit(self.request, parent):
                 raise PermissionDenied("You do not have permission to add a trail to this day.")
             owner = parent.user
             span = serializer.validated_data.get('span_end_index')
@@ -80,7 +84,7 @@ class TrailViewSet(viewsets.ModelViewSet):
 
         parent = trail_collection(instance)
         if parent is not None:
-            if not is_member(parent, self.request.user):
+            if not can_edit(self.request, parent):
                 raise PermissionDenied("You do not have permission to update this trail.")
             span = serializer.validated_data.get('span_end_index', instance.span_end_index)
             if instance.day_id and span is not None and span > day_plan.day_count(parent):
@@ -93,7 +97,7 @@ class TrailViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         parent = trail_collection(instance)
         if parent is not None:
-            if not is_member(parent, self.request.user):
+            if not can_edit(self.request, parent):
                 raise PermissionDenied("You do not have permission to delete this trail.")
         elif not instance.location_id or not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, instance.location):
             raise PermissionDenied("You do not have permission to delete this trail.")

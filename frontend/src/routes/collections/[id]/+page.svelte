@@ -3,7 +3,14 @@
 	import { untrack } from 'svelte';
 	import type { Component } from 'svelte';
 
-	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '$lib/types';
+	import type {
+		Collection,
+		ContentImage,
+		Location,
+		Collaborator,
+		Lodging,
+		StoryGroup
+	} from '$lib/types';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -45,6 +52,15 @@
 	import TextBoxOutline from '~icons/mdi/text-box-outline';
 	import CheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
+	import CollectionShareSheet, {
+		type ShareSheetTab
+	} from '$lib/components/collections/CollectionShareSheet.svelte';
+	import { STORY_GROUP_NAMES } from '$lib/collections/story';
+	import CollectionStory from '$lib/components/collections/story/CollectionStory.svelte';
+	import CollectionStoryTab from '$lib/components/collections/story/CollectionStoryTab.svelte';
+	import BookOpenPageVariant from '~icons/mdi/book-open-page-variant';
+	import ShareVariant from '~icons/mdi/share-variant';
+	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '$lib/toasts';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -200,6 +216,7 @@
 		| 'all'
 		| 'plan'
 		| 'read'
+		| 'story'
 		| 'map'
 		| 'calendar'
 		| 'recommendations'
@@ -237,7 +254,10 @@
 		if (!collection || isExportingPdf) return;
 		isExportingPdf = true;
 		try {
-			const res = await fetch(`/api/collections/${collection.id}/export-pdf/`);
+			const secret = $page.url.searchParams.get('s');
+			const res = await fetch(
+				`/api/collections/${collection.id}/export-pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
+			);
 			if (!res.ok) {
 				addToast('error', $t('adventures.export_pdf_failed'));
 				return;
@@ -280,6 +300,7 @@
 		isImageModalOpen = false;
 		linkScope = null;
 		isSocialShareModalOpen = false;
+		isShareSheetOpen = false;
 	}
 
 	function applyCollectionPageData(collectionData: Collection | null | undefined) {
@@ -355,6 +376,13 @@
 	function formatDate(dateString: string | null) {
 		if (!dateString) return '';
 		return formatDisplayDate(dateString, dateFormat);
+	}
+
+	function collaboratorLabel(person: Collaborator): string {
+		const role = person.is_owner ? 'owner' : person.role;
+		return role
+			? `${collaboratorDisplayName(person)} · ${$t(`share.role_${role}`)}`
+			: collaboratorDisplayName(person);
 	}
 
 	function collaboratorDisplayName(person: Collaborator | null | undefined): string {
@@ -567,11 +595,18 @@
 			});
 		})();
 	});
-	// Determine whether current user can modify the collection (owner or shared user)
+	// A public reader, or the owner previewing the story, sees the read-only story.
+	let storyMode = $derived(
+		!!collection && (collection.audience?.role === 'public' || !!collection.story_preview)
+	);
+	let isOwner = $derived(!!collection?.audience?.is_owner && !storyMode);
+	// Owner, editor, or guest editor. Viewers and story readers change nothing.
 	let canModifyCollection = $derived(
 		(() => {
+			if (!collection || storyMode) return false;
+			if (collection.audience) return collection.audience.can_edit;
 			const u = data.user as any;
-			if (!u || !collection) return false;
+			if (!u) return false;
 
 			const userUuid = u.uuid || null;
 			const username = u.username || null;
@@ -593,8 +628,41 @@
 			return false;
 		})()
 	);
-	// Public collections: anyone can export/share; private: owner or shared users only
-	let canExportCollection = $derived(!!collection?.is_public || canModifyCollection);
+	// Anyone who can open the collection can export it. A story reader's PDF follows the story groups.
+	let canExportCollection = $derived(!!collection?.audience || canModifyCollection);
+	let visibility = $derived(
+		collection?.visibility ?? (collection?.is_public ? 'public' : 'private')
+	);
+	let isShareSheetOpen = $state(false);
+	let shareSheetTab = $state<ShareSheetTab>('people');
+
+	function openShareSheet(tab: ShareSheetTab) {
+		shareSheetTab = tab;
+		isShareSheetOpen = true;
+	}
+	// The link a reader shares: this page, keeping an unlisted story's secret.
+	let storyShareUrl = $derived.by(() => {
+		if (!collection || visibility === 'private') return null;
+		const url = new URL(`/collections/${collection.id}`, $page.url.origin);
+		const secret = $page.url.searchParams.get('s');
+		if (visibility === 'unlisted') {
+			if (!secret) return null;
+			url.searchParams.set('s', secret);
+		}
+		return url.toString();
+	});
+	// Story groups the owner has not turned on, for the preview bar.
+	let hiddenStoryGroups = $derived(
+		STORY_GROUP_NAMES.filter((group) => !collection?.story_groups?.[group]).map((group) =>
+			$t(`share.group_${group}`)
+		)
+	);
+	// Publishing no longer flips place flags. Places that are public stay on the owner's profile.
+	let publicLinkedPlaces = $derived(
+		(collection?.locations ?? []).filter(
+			(place) => place.is_public && (!place.user || place.user.uuid === collection?.user)
+		)
+	);
 	// Define available views based on collection type
 	let dayPlanner = $derived(collection ? showsDayPlanner(collection) : false);
 	// Folders keep the catalog sidebar. Trip all-items uses the planner workspace chrome.
@@ -605,6 +673,7 @@
 			currentView === 'read' ||
 			currentView === 'map' ||
 			currentView === 'calendar' ||
+			currentView === 'story' ||
 			currentView === 'recommendations' ||
 			(currentView === 'all' && dayPlanner)
 	);
@@ -615,12 +684,15 @@
 			currentView !== 'read' &&
 			currentView !== 'plan' &&
 			currentView !== 'calendar' &&
+			currentView !== 'story' &&
 			currentView !== 'recommendations'
 	);
 	let availableViews = $derived({
 		all: true,
-		plan: dayPlanner,
+		plan: dayPlanner && !storyMode,
 		read: dayPlanner,
+		// Members preview the published story here. Readers get it as the whole page.
+		story: !storyMode,
 		map:
 			!dayPlanner &&
 			!isFolderView &&
@@ -633,10 +705,10 @@
 				) ||
 				false),
 		// Only an anchored, unarchived trip has calendar dates to show.
-		calendar: !isFolderView && !!collection?.start_date && !collection?.is_archived,
+		calendar: !isFolderView && !!collection?.start_date && !collection?.is_archived && !storyMode,
 		recommendations: canModifyCollection,
-		stats: true,
-		budget: !isFolderView
+		stats: !storyMode,
+		budget: !isFolderView && !storyMode
 	});
 	let viewTabs = $derived.by(() => {
 		const tabs: ViewTab[] = [];
@@ -644,7 +716,7 @@
 			if (availableViews[id]) tabs.push({ id, label, icon });
 		};
 
-		if (availableViews.plan) {
+		if (dayPlanner) {
 			add('plan', $t('collection.plan'), Timeline);
 			add('read', $t('collection.read'), BookOpenVariant);
 			add('all', $t('collections.all_items'), FormatListBulleted);
@@ -653,6 +725,7 @@
 		if (isFolderView && !tabs.some((tab) => tab.id === 'all')) {
 			add('all', $t('collections.all_items'), FormatListBulleted);
 		}
+		add('story', $t('story.tab'), BookOpenPageVariant);
 		if (availableViews.calendar) add('calendar', $t('navbar.calendar'), Calendar);
 		if (availableViews.recommendations) {
 			add('recommendations', $t('recomendations.recommendations'), Lightbulb);
@@ -670,7 +743,7 @@
 	);
 	let coverImage = $derived(heroImages[slideIndex] ?? null);
 	run(() => {
-		defaultView = (dayPlanner ? 'plan' : 'all') as ViewType;
+		defaultView = (dayPlanner ? (storyMode ? 'read' : 'plan') : 'all') as ViewType;
 	});
 	// Read view from URL params and validate it's available
 	run(() => {
@@ -678,9 +751,17 @@
 		const view = (requested === 'itinerary' ? 'plan' : requested) as ViewType;
 		if (
 			view &&
-			['all', 'plan', 'read', 'map', 'calendar', 'recommendations', 'stats', 'budget'].includes(
-				view
-			) &&
+			[
+				'all',
+				'plan',
+				'read',
+				'story',
+				'map',
+				'calendar',
+				'recommendations',
+				'stats',
+				'budget'
+			].includes(view) &&
 			availableViews[view]
 		) {
 			currentView = view;
@@ -759,6 +840,15 @@
 		{#if collection.is_archived}
 			<span class="badge badge-neutral badge-sm font-medium">{$t('adventures.archived')}</span>
 		{/if}
+		{#if !storyMode}
+			<span
+				class="badge badge-sm font-medium {visibility === 'private'
+					? 'badge-ghost'
+					: 'badge-secondary'}"
+			>
+				{$t(`share.visibility_${visibility}`)}
+			</span>
+		{/if}
 	{/if}
 {/snippet}
 
@@ -796,6 +886,14 @@
 		initialIndex={modalInitialIndex}
 		name={collection.name}
 		on:close={closeImageModal}
+	/>
+{/if}
+
+{#if isShareSheetOpen && collection && isOwner}
+	<CollectionShareSheet
+		bind:collection
+		initialTab={shareSheetTab}
+		onClose={() => (isShareSheetOpen = false)}
 	/>
 {/if}
 
@@ -940,7 +1038,35 @@
 	</div>
 {/if}
 
-{#if collection}
+{#if collection && storyMode}
+	<!-- Same height as the workspace, so the story column scrolls and the map stays. -->
+	<div class="flex h-[calc(100dvh-4.75rem)] min-h-0 flex-col">
+		{#if collection.story_preview}
+			<div
+				class="relative z-30 flex shrink-0 flex-wrap items-center gap-2 border-b border-base-300 bg-info/15 px-4 py-2 text-sm"
+				role="status"
+			>
+				<EyeOutline class="h-4 w-4 shrink-0" />
+				<span class="font-medium">{$t('share.story_preview_bar')}</span>
+				{#if hiddenStoryGroups.length > 0}
+					<span class="text-base-content/70">
+						{$t('share.story_hidden_groups', { values: { groups: hiddenStoryGroups.join(', ') } })}
+					</span>
+				{/if}
+				<a
+					class="btn btn-ghost btn-xs ml-auto"
+					href={`/collections/${collection.id}`}
+					data-sveltekit-reload
+				>
+					{$t('share.back_to_plan')}
+				</a>
+			</div>
+		{/if}
+		<div class="min-h-0 flex-1">
+			<CollectionStory {collection} {dateFormat} shareUrl={storyShareUrl} />
+		</div>
+	</div>
+{:else if collection}
 	<div
 		class={catalogView
 			? 'min-h-screen bg-gradient-to-b from-base-200 via-base-100 to-base-200'
@@ -1009,13 +1135,13 @@
 										<a
 											href={`/profile/${person.username}`}
 											class="avatar tooltip"
-											data-tip={collaboratorDisplayName(person)}
-											title={collaboratorDisplayName(person)}
+											data-tip={collaboratorLabel(person)}
+											title={collaboratorLabel(person)}
 										>
 											{@render collaboratorAvatar(person)}
 										</a>
 									{:else}
-										<div class="avatar tooltip" data-tip={collaboratorDisplayName(person)}>
+										<div class="avatar tooltip" data-tip={collaboratorLabel(person)}>
 											{@render collaboratorAvatar(person)}
 										</div>
 									{/if}
@@ -1026,6 +1152,12 @@
 				</div>
 				{#if canExportCollection}
 					<div class="flex shrink-0 gap-2">
+						{#if isOwner}
+							<button class="btn btn-primary btn-sm gap-2" onclick={() => openShareSheet('people')}>
+								<ShareVariant class="h-4 w-4" />
+								<span class="hidden lg:inline">{$t('adventures.share')}</span>
+							</button>
+						{/if}
 						<button
 							class="btn btn-outline btn-primary btn-sm gap-2"
 							onclick={() => (isSocialShareModalOpen = true)}
@@ -1133,6 +1265,19 @@
 				</div>
 			</nav>
 		</header>
+		{#if isOwner && publicLinkedPlaces.length > 0}
+			<div role="note" class="alert alert-info mx-3 mb-2 py-2 text-sm sm:mx-4">
+				<InformationOutline class="h-5 w-5 shrink-0" />
+				<span>
+					{$t('share.public_places_notice', {
+						values: {
+							count: publicLinkedPlaces.length,
+							names: publicLinkedPlaces.map((place) => place.name).join(', ')
+						}
+					})}
+				</span>
+			</div>
+		{/if}
 
 		<!-- Main Content -->
 		<div
@@ -1225,6 +1370,17 @@
 					{/if}
 
 					<!-- Stats View -->
+					{#if currentView === 'story'}
+						<div class="h-full min-h-0">
+							<CollectionStoryTab
+								{collection}
+								{dateFormat}
+								{isOwner}
+								onOpenShare={() => openShareSheet('story')}
+							/>
+						</div>
+					{/if}
+
 					{#if currentView === 'stats'}
 						<CollectionStats {collection} user={data.user} />
 					{/if}
@@ -1362,14 +1518,14 @@
 														<a
 															href={`/profile/${person.username}`}
 															class="avatar tooltip"
-															data-tip={collaboratorDisplayName(person)}
-															title={collaboratorDisplayName(person)}
+															data-tip={collaboratorLabel(person)}
+															title={collaboratorLabel(person)}
 															tabindex="0"
 														>
 															{@render collaboratorAvatar(person)}
 														</a>
 													{:else}
-														<div class="avatar tooltip" data-tip={collaboratorDisplayName(person)}>
+														<div class="avatar tooltip" data-tip={collaboratorLabel(person)}>
 															{@render collaboratorAvatar(person)}
 														</div>
 													{/if}

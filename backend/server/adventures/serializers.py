@@ -29,11 +29,21 @@ def _build_profile_pic_url(user):
     return build_media_url(user.profile_pic.name)
 
 
-def _serialize_collaborator(user, owner_id=None, request_user=None):
+def _member_roles(collection):
+    from adventures.models import CollectionMember
+
+    return {
+        user_id: role
+        for user_id, role in CollectionMember.objects.filter(collection=collection).values_list('user_id', 'role')
+    }
+
+
+def _serialize_collaborator(user, owner_id=None, request_user=None, role=None):
     if not user:
         return None
 
     return {
+        'role': 'owner' if owner_id == user.id else (role or 'editor'),
         'uuid': str(user.uuid),
         'username': user.username,
         'first_name': user.first_name,
@@ -990,7 +1000,7 @@ class NoteSerializer(CustomModelSerializer):
         model = Note
         fields = [
             'id', 'user', 'name', 'content', 'date', 'links', 
-            'is_public', 'collection', 'created_at', 'updated_at'
+            'is_public', 'is_private', 'collection', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
     
@@ -998,7 +1008,7 @@ class ChecklistItemSerializer(CustomModelSerializer):
         class Meta:
             model = ChecklistItem
             fields = [
-                'id', 'user', 'name', 'is_checked', 'checklist', 'created_at', 'updated_at'
+                'id', 'user', 'name', 'is_checked', 'is_private', 'checklist', 'created_at', 'updated_at'
             ]
             read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'checklist']
   
@@ -1074,16 +1084,6 @@ class ChecklistSerializer(CustomModelSerializer):
         
         return instance
 
-    def validate(self, data):
-        # Check if the collection is public and the checklist is not
-        collection = data.get('collection')
-        is_public = data.get('is_public', False)
-        if collection and collection.is_public and not is_public:
-            raise serializers.ValidationError(
-                'Checklists associated with a public collection must be public.'
-            )
-        return data
-
 class CollectionSerializer(CustomModelSerializer):
     collaborators = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
@@ -1114,6 +1114,8 @@ class CollectionSerializer(CustomModelSerializer):
             'user',
             'name',
             'is_public',
+            'visibility',
+            'story_groups',
             'locations',
             'created_at',
             'start_date',
@@ -1140,6 +1142,42 @@ class CollectionSerializer(CustomModelSerializer):
             'type': {'required': False},
         }
 
+    def validate_story_groups(self, value):
+        if value in (None, ''):
+            return {}
+        if not isinstance(value, dict):
+            raise serializers.ValidationError('story_groups must be an object of switches.')
+        unknown = set(value) - set(Collection.STORY_GROUPS)
+        if unknown:
+            raise serializers.ValidationError(f'Unknown story groups: {", ".join(sorted(unknown))}')
+        return {name: bool(value.get(name)) for name in Collection.STORY_GROUPS if value.get(name)}
+
+    def _apply_visibility(self, data):
+        """
+        ``visibility`` is the switch; ``is_public`` from an old client maps onto it.
+        Unlisted and Public need ALLOW_PUBLIC_COLLECTION_LINKS, except that a
+        collection that is already public may stay public or turn private.
+        """
+        from django.conf import settings
+
+        current = self.instance.visibility if self.instance else Collection.Visibility.PRIVATE
+        requested = data.get('visibility')
+        legacy = data.pop('is_public', None)
+        if requested is None and legacy is not None:
+            if legacy:
+                requested = Collection.Visibility.PUBLIC
+            elif current == Collection.Visibility.PUBLIC:
+                requested = Collection.Visibility.PRIVATE
+        if requested is None or requested == current:
+            data.pop('visibility', None)
+            return data
+        if requested != Collection.Visibility.PRIVATE and not settings.ALLOW_PUBLIC_COLLECTION_LINKS:
+            raise serializers.ValidationError({
+                'visibility': 'Unlisted and public links are turned off on this server.'
+            })
+        data['visibility'] = requested
+        return data
+
     def validate_link(self, value):
         """Convert empty or invalid URLs to None so Django doesn't reject them."""
         if not value or not value.strip():
@@ -1161,6 +1199,7 @@ class CollectionSerializer(CustomModelSerializer):
         if obj.user:
             users.append(obj.user)
         users.extend(list(obj.shared_with.all()))
+        roles = _member_roles(obj)
 
         collaborators = []
         seen = set()
@@ -1171,7 +1210,9 @@ class CollectionSerializer(CustomModelSerializer):
             if key in seen:
                 continue
             seen.add(key)
-            serialized = _serialize_collaborator(user, owner_id=obj.user_id, request_user=request_user)
+            serialized = _serialize_collaborator(
+                user, owner_id=obj.user_id, request_user=request_user, role=roles.get(user.id)
+            )
             if serialized:
                 collaborators.append(serialized)
 
@@ -1350,6 +1391,7 @@ class CollectionSerializer(CustomModelSerializer):
         data = super().validate(attrs)
         data = self._apply_collection_type(data)
         data = self._apply_day_count(data)
+        data = self._apply_visibility(data)
 
         # Only validate primary image when explicitly provided
         if 'primary_image' not in data:
@@ -1378,8 +1420,17 @@ class CollectionSerializer(CustomModelSerializer):
         return image_belongs_to_collection(image, collection)
 
     def to_representation(self, instance):
+        from django.conf import settings
+        from adventures.utils.audience import audience_for_request
+
         representation = super().to_representation(instance)
         representation['day_count'] = day_plan.day_count(instance) or None
+        representation['allow_public_links'] = settings.ALLOW_PUBLIC_COLLECTION_LINKS
+        request = self.context.get('request')
+        audience = audience_for_request(request, instance) if request is not None else None
+        representation['audience'] = audience.as_dict() if audience else None
+        if audience and audience.is_owner:
+            representation['share_secret'] = instance.share_secret
         
         # Make it display the user uuid for the shared users instead of the PK
         shared_uuids = []
@@ -1403,7 +1454,7 @@ class CollectionInviteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CollectionInvite
-        fields = ['id', 'collection', 'created_at', 'name', 'collection_owner_username', 'collection_user_first_name', 'collection_user_last_name']
+        fields = ['id', 'collection', 'role', 'created_at', 'name', 'collection_owner_username', 'collection_user_first_name', 'collection_user_last_name']
         read_only_fields = ['id', 'created_at']
 
 class UltraSlimCollectionSerializer(serializers.ModelSerializer):
@@ -1421,7 +1472,7 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = [
-            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 'type',
+            'id', 'user', 'name', 'description', 'is_public', 'visibility', 'start_date', 'end_date', 'type',
             'timezone', 'day_count',
             'is_archived', 'link', 'created_at', 'updated_at', 'location_images', 
             'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image'
@@ -1436,6 +1487,7 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
         if obj.user:
             users.append(obj.user)
         users.extend(list(obj.shared_with.all()))
+        roles = _member_roles(obj)
 
         collaborators = []
         seen = set()
@@ -1446,7 +1498,9 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
             if key in seen:
                 continue
             seen.add(key)
-            serialized = _serialize_collaborator(user, owner_id=obj.user_id, request_user=request_user)
+            serialized = _serialize_collaborator(
+                user, owner_id=obj.user_id, request_user=request_user, role=roles.get(user.id)
+            )
             if serialized:
                 collaborators.append(serialized)
 

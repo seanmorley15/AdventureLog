@@ -2,8 +2,11 @@
 
 Schema 2 added ``type``. Schema 3 added the day plan: timezone, day indexes,
 placements, spans, optional flags, and local times. Schema 4 added day-owned
-trails, activities, and photos. Import of an older schema runs each later step
-in order. Import without the schema 4 keys still succeeds.
+trails, activities, and photos. Schema 5 added visibility, member roles, guest
+links, story groups, and private notes and checklist items. Import of an older
+schema runs each later step in order. Import without the schema 4 or 5 keys still
+succeeds: a collection without ``visibility`` is public only if it was
+``is_public``, and its story groups are off.
 """
 
 from datetime import date
@@ -11,7 +14,8 @@ from datetime import date
 TYPE_SCHEMA = 2
 DAY_PLAN_SCHEMA = 3
 DAY_FILES_SCHEMA = 4
-BACKUP_SCHEMA = DAY_FILES_SCHEMA
+VISIBILITY_SCHEMA = 5
+BACKUP_SCHEMA = VISIBILITY_SCHEMA
 
 FOLDER = 'folder'
 TRIP = 'trip'
@@ -74,6 +78,27 @@ def backup_has_day_plan(backup_schema):
     """True when the file stores days and placements (schema 3 or later)."""
     schema = parse_backup_schema(backup_schema)
     return schema is not None and schema >= DAY_PLAN_SCHEMA
+
+
+def imported_visibility(backup_schema, col_data):
+    """Schema 5 stores visibility. An older file is public only if it was is_public."""
+    schema = parse_backup_schema(backup_schema)
+    if schema is not None and schema >= VISIBILITY_SCHEMA and col_data.get('visibility') in (
+        'private', 'unlisted', 'public'
+    ):
+        return col_data['visibility']
+    return 'public' if col_data.get('is_public') else 'private'
+
+
+def imported_story_groups(backup_schema, col_data, known_groups):
+    """Story groups are off unless a schema 5 file turned them on."""
+    schema = parse_backup_schema(backup_schema)
+    if schema is None or schema < VISIBILITY_SCHEMA:
+        return {}
+    groups = col_data.get('story_groups') or {}
+    if not isinstance(groups, dict):
+        return {}
+    return {name: True for name in known_groups if groups.get(name) is True}
 
 
 def collection_lifecycle_status(collection, today=None):

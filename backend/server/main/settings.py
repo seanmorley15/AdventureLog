@@ -287,6 +287,8 @@ ALLAUTH_UI_THEME = "dim"
 # Authentication & Accounts
 # ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
+# New unlisted and public collection links. Collections that are already public stay readable either way.
+ALLOW_PUBLIC_COLLECTION_LINKS = getenv('ALLOW_PUBLIC_COLLECTION_LINKS', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 TERMS_OF_SERVICE_URL = getenv('TERMS_OF_SERVICE_URL', '').strip()
 PRIVACY_POLICY_URL = getenv('PRIVACY_POLICY_URL', '').strip()

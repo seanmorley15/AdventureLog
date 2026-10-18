@@ -17,6 +17,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from adventures.utils.audience import can_edit, member_collections_q
 from django.db.models import Q
 from django.db import transaction
 
@@ -72,8 +73,9 @@ def _parse_clock(value):
     return parsed
 
 
-def _is_member(user, collection):
-    return collection.user_id == user.id or collection.shared_with.filter(id=user.id).exists()
+def _is_member(request, collection):
+    """Owner, editor, or guest editor. Viewers read the plan and change nothing."""
+    return can_edit(request, collection)
 
 
 def _member_collection(request, collection_id):
@@ -85,7 +87,7 @@ def _member_collection(request, collection_id):
         raise day_plan.DayPlanError('Collection not found.', code='not_found')
     except Exception:
         raise day_plan.DayPlanError('Collection not found.', code='not_found')
-    if not _is_member(request.user, collection):
+    if not _is_member(request, collection):
         raise PermissionDenied('You do not have permission to modify this collection.')
     return collection
 
@@ -131,14 +133,9 @@ class ItineraryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrSharedWithFullAccess]
 
     def get_queryset(self):
-        user = self.request.user
-        
-        if not user.is_authenticated:
-            return CollectionItineraryItem.objects.none()
-        
-        # Return itinerary items from collections the user owns or is shared with
+        # Itinerary items from collections the requester is a member of or holds a guest link to
         return CollectionItineraryItem.objects.filter(
-            Q(collection__user=user) | Q(collection__shared_with=user)
+            member_collections_q(self.request, 'collection__')
         ).distinct().select_related('collection', 'collection__user', 'day', 'content_type').order_by('date', 'order')
 
     def handle_exception(self, exc):
@@ -215,7 +212,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def _create_day_placement(self, request, collection, data, content_object, content_type_val):
-        if not _is_member(request.user, collection):
+        if not _is_member(request, collection):
             raise PermissionDenied('You do not have permission to modify this collection.')
         if content_object is None:
             content_type = ContentType.objects.filter(pk=data.get('content_type')).first()
@@ -403,7 +400,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
         first = CollectionItineraryItem.objects.filter(id=items_data[0].get('id')).select_related('collection').first()
         if first is not None and day_plan.is_day_based(first.collection):
-            if not _is_member(request.user, first.collection):
+            if not _is_member(request, first.collection):
                 raise PermissionDenied('You do not have permission to modify this collection.')
             items, updated_objects = day_plan.reorder_day_plan(first.collection, items_data)
             refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in items]).select_related('day', 'content_type')
@@ -416,7 +413,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
         # Delegate to reusable helper which handles validation, permission checks
         # and the two-phase update to avoid unique constraint races.
-        updated_items = reorder_itinerary_items(request.user, items_data)
+        updated_items = reorder_itinerary_items(request, items_data)
 
         serializer = self.get_serializer(updated_items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -445,7 +442,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        if not _is_member(request.user, collection):
+        if not _is_member(request, collection):
             return Response(
                 {"error": "You do not have permission to modify this collection"},
                 status=status.HTTP_403_FORBIDDEN
@@ -576,7 +573,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
     def log_visited(self, request, pk=None):
         """Create one visit for this stop, or return the visit it already logged."""
         item = self.get_object()
-        if not _is_member(request.user, item.collection):
+        if not _is_member(request, item.collection):
             raise PermissionDenied('You do not have permission to modify this collection.')
         visit_date = _parse_day_date(request.data.get('date'))
         visit, created = day_plan.log_visited(item, visit_date)
@@ -619,14 +616,9 @@ class ItineraryDayViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrSharedWithFullAccess]
 
     def get_queryset(self):
-        user = self.request.user
-        
-        if not user.is_authenticated:
-            return CollectionItineraryDay.objects.none()
-        
-        # Return day metadata from collections the user owns or is shared with
+        # Day metadata from collections the requester is a member of or holds a guest link to
         return CollectionItineraryDay.objects.filter(
-            Q(collection__user=user) | Q(collection__shared_with=user)
+            member_collections_q(self.request, 'collection__')
         ).distinct().select_related('collection', 'collection__user').order_by('index', 'date')
 
     def perform_create(self, serializer):
@@ -637,8 +629,7 @@ class ItineraryDayViewSet(viewsets.ModelViewSet):
             raise ValidationError("Collection is required")
         
         # Check if user has permission to modify this collection
-        if not (collection.user == self.request.user or 
-                collection.shared_with.filter(id=self.request.user.id).exists()):
+        if not can_edit(self.request, collection):
             raise PermissionDenied("You do not have permission to modify this collection")
         
         serializer.save()
@@ -649,8 +640,7 @@ class ItineraryDayViewSet(viewsets.ModelViewSet):
         collection = instance.collection
         
         # Check if user has permission to modify this collection
-        if not (collection.user == self.request.user or 
-                collection.shared_with.filter(id=self.request.user.id).exists()):
+        if not can_edit(self.request, collection):
             raise PermissionDenied("You do not have permission to modify this collection")
         
         serializer.save()
@@ -660,8 +650,7 @@ class ItineraryDayViewSet(viewsets.ModelViewSet):
         collection = instance.collection
         
         # Check if user has permission to modify this collection
-        if not (collection.user == self.request.user or 
-                collection.shared_with.filter(id=self.request.user.id).exists()):
+        if not can_edit(self.request, collection):
             raise PermissionDenied("You do not have permission to modify this collection")
         if instance.index is not None:
             raise ValidationError("Delete a trip day with the itinerary day actions.")

@@ -6,16 +6,18 @@ from adventures.models import Checklist, CollectionItineraryItem
 from adventures.serializers import ChecklistSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from rest_framework.permissions import IsAuthenticated
+from adventures.utils.audience import can_edit, member_collections_q
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
 class ChecklistViewSet(viewsets.ModelViewSet):
     serializer_class = ChecklistSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrSharedWithFullAccess]
+    permission_classes = [IsOwnerOrSharedWithFullAccess]
     filterset_fields = ['is_public', 'collection']
 
     def list(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_403_FORBIDDEN)
         queryset = Checklist.objects.filter(
             Q(user=request.user)
         )
@@ -23,23 +25,15 @@ class ChecklistViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def get_queryset(self):
-        # if the user is not authenticated return only public checklists for  retrieve action
-        if not self.request.user.is_authenticated:
-            if self.action == 'retrieve':
-                return Checklist.objects.filter(is_public=True).distinct().order_by('-updated_at')
-            return Checklist.objects.none()
-
-        
+        user = self.request.user
+        # Owned rows and rows in collections the requester is a member of or holds a
+        # guest link to. A row's own is_public opens it only when no collection owns it.
+        scope = member_collections_q(self.request, 'collection__')
+        if user.is_authenticated:
+            scope |= Q(user=user.id)
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public locations
-            return Checklist.objects.filter(
-                Q(is_public=True) | Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
-            ).distinct().order_by('-updated_at')
-        else:
-            # For other actions, include user's own locations and shared locations
-            return Checklist.objects.filter(
-                Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
-            ).distinct().order_by('-updated_at')
+            scope |= Q(is_public=True, collection__isnull=True)
+        return Checklist.objects.filter(scope).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
         # Retrieve the current object
@@ -94,9 +88,8 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 
         # Check if a collection is provided
         if collection:
-            user = self.request.user
-            # Check if the user is the owner or is in the shared_with list
-            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
+            # Owner, editor, or guest editor. Viewers cannot add records.
+            if not can_edit(self.request, collection):
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
             # if collection the owner of the adventure is the owner of the collection
@@ -104,4 +97,6 @@ class ChecklistViewSet(viewsets.ModelViewSet):
             return
 
         # Save the adventure with the current user as the owner
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied("A guest link can only add records to its collection.")
         serializer.save(user=self.request.user)

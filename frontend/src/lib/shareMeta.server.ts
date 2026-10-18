@@ -41,13 +41,16 @@ export function buildCollectionShareMeta(
 		name: string;
 		description?: string | null;
 		is_public?: boolean;
+		visibility?: string;
 		start_date?: string | null;
 		end_date?: string | null;
 		locations?: unknown[] | null;
 	},
 	origin: string
 ): ShareMeta | null {
-	if (!collection?.is_public) return null;
+	// Only a public story gets a share card; an unlisted link stays out of crawlers.
+	const visibility = collection?.visibility ?? (collection?.is_public ? 'public' : 'private');
+	if (visibility !== 'public') return null;
 
 	const locCount = collection.locations?.length ?? 0;
 	let description = stripMarkdown(collection.description);

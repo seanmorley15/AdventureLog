@@ -13,6 +13,9 @@ export const fetchCSRFToken = async () => {
 	return null;
 };
 
+/** Cookie holding the token of a collection guest link the visitor opened. */
+export const GUEST_COOKIE = 'adventurelog_guest';
+
 type ProxyBasePath = 'api' | 'auth';
 
 type ProxyOptions = {
@@ -121,6 +124,8 @@ export async function proxyToDjango(
 
 	const sessionId = cookies.get('sessionid');
 	const cookieHeader = `csrftoken=${csrfToken}${sessionId ? `; sessionid=${sessionId}` : ''}`;
+	// Someone who opened a guest link has no session; the link's token rides along instead.
+	const guestToken = cookies.get(GUEST_COOKIE);
 
 	try {
 		const response = await fetch(targetUrl, {
@@ -128,6 +133,7 @@ export async function proxyToDjango(
 			headers: {
 				...sanitizeProxyRequestHeaders(headers),
 				'X-CSRFToken': csrfToken,
+				...(guestToken ? { 'X-Guest-Token': guestToken } : {}),
 				Cookie: cookieHeader
 			},
 			// Bytes, not text: request.text() UTF-8-decodes and corrupts binary uploads.

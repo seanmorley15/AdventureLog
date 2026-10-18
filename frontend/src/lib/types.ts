@@ -59,6 +59,62 @@ export type Collaborator = {
 	public_profile?: boolean;
 	is_owner: boolean;
 	is_current_user?: boolean;
+	role?: CollectionRole;
+};
+
+export type CollectionVisibility = 'private' | 'unlisted' | 'public';
+export type CollectionRole = 'owner' | 'editor' | 'viewer';
+export type StoryGroup =
+	| 'place_details'
+	| 'costs'
+	| 'reservations'
+	| 'attachments'
+	| 'lodging_address'
+	| 'coordinates'
+	| 'gpx'
+	| 'note_text'
+	| 'checklist_text';
+
+/** Who is looking at a collection. `public` readers get the story payload only. */
+export type CollectionAudience = {
+	role: CollectionRole | 'public';
+	is_owner: boolean;
+	can_edit: boolean;
+	is_member: boolean;
+	is_guest: boolean;
+};
+
+export type CollectionGuestLink = {
+	id: string;
+	token: string;
+	role: 'editor' | 'viewer';
+	label: string;
+	expires_at: string | null;
+	revoked_at: string | null;
+	created_at: string;
+	is_active: boolean;
+};
+
+export type CollectionSharingPerson = {
+	uuid: string;
+	username: string;
+	first_name: string | null;
+	last_name: string | null;
+	profile_pic?: string | null;
+	role: 'editor' | 'viewer';
+};
+
+/** The owner's Share sheet state from `/api/collections/<id>/sharing/`. */
+export type CollectionSharing = {
+	owner: Omit<CollectionSharingPerson, 'role'>;
+	members: CollectionSharingPerson[];
+	invites: CollectionSharingPerson[];
+	guest_links: CollectionGuestLink[];
+	visibility: CollectionVisibility;
+	story_groups: Record<StoryGroup, boolean>;
+	share_secret: string;
+	allow_public_links: boolean;
+	is_admin?: boolean;
 };
 
 export type ImageSource = 'upload' | 'google' | 'wikipedia' | 'url' | 'immich';
@@ -192,6 +248,12 @@ export type Collection = {
 	name: string;
 	description: string;
 	is_public: boolean;
+	visibility?: CollectionVisibility;
+	story_groups?: Partial<Record<StoryGroup, boolean>>;
+	audience?: CollectionAudience | null;
+	allow_public_links?: boolean;
+	share_secret?: string;
+	story_preview?: boolean;
 	locations: Location[];
 	created_at?: string | null;
 	updated_at?: string | null;
@@ -225,6 +287,7 @@ export type SlimCollection = {
 	name: string;
 	description: string;
 	is_public: boolean;
+	visibility?: CollectionVisibility;
 	start_date: string | null;
 	end_date: string | null;
 	type: 'folder' | 'trip';
@@ -297,6 +360,7 @@ export type Note = {
 	links: string[] | null;
 	date: string | null; // ISO 8601 date string
 	is_public: boolean;
+	is_private?: boolean; // Hidden from the published story
 	collection: number | null;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
@@ -319,6 +383,7 @@ export type ChecklistItem = {
 	user: string;
 	name: string;
 	is_checked: boolean;
+	is_private?: boolean; // Hidden from the published story
 	checklist: number;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string

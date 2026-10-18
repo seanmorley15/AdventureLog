@@ -1,5 +1,6 @@
-from adventures.models import Activity, ContentAttachment, ContentImage, Visit
-from adventures.utils.day_files import activity_collection, image_day_collection, is_member
+from adventures.models import Activity, Collection, ContentAttachment, ContentImage, Visit
+from adventures.utils.audience import is_member
+from adventures.utils.day_files import activity_collection, image_day_collection
 import posixpath
 
 PUBLIC_MEDIA_PATHS = ('profile-pics/', 'achievements/', 'flags/')
@@ -25,35 +26,55 @@ def is_protected_media_path(path):
     return path.startswith(PROTECTED_MEDIA_PATHS)
 
 
-def _check_content_object_permission(content_object, user):
-    """Check if user has permission to access a content object."""
+def _authenticated(user):
+    return user is not None and getattr(user, 'is_authenticated', False)
+
+
+def _collection_allows(collection, user, request=None, story_group=None):
+    """
+    Members and guest links read every file. A reader of a public or unlisted
+    story reads photos, and reads attachments or GPX only when that group is on.
+    Unlisted media has no secret in its URL; the file names are random.
+    """
+    if collection is None:
+        return False
+    if _authenticated(user) and is_member(user, collection):
+        return True
+    if request is not None and is_member(request, collection):
+        return True
+    if collection.visibility in (Collection.Visibility.PUBLIC, Collection.Visibility.UNLISTED):
+        return story_group is None or collection.story_group(story_group)
+    return False
+
+
+def _check_content_object_permission(content_object, user, request=None, story_group=None):
+    """Check if the requester may read a file attached to ``content_object``."""
     # handle differently when content_object is a Visit, get the location instead
     if isinstance(content_object, Visit):
         if content_object.location:
             content_object = content_object.location
 
-    # Check if content object is public
-    if hasattr(content_object, 'is_public') and content_object.is_public:
-        return True
-
     # Check if user owns the content object
-    if hasattr(content_object, 'user') and content_object.user == user:
+    if _authenticated(user) and getattr(content_object, 'user', None) == user:
         return True
 
-    # Check collection-based permissions
-    if hasattr(content_object, 'collections') and content_object.collections.exists():
-        for collection in content_object.collections.all():
-            if collection.user == user or collection.shared_with.filter(id=user.id).exists():
-                return True
-        return False
-    elif hasattr(content_object, 'collection') and content_object.collection:
-        if content_object.collection.user == user or content_object.collection.shared_with.filter(id=user.id).exists():
+    # A location's own public flag publishes its files, as before.
+    if hasattr(content_object, 'collections'):
+        if getattr(content_object, 'is_public', False):
             return True
-        return False
-    else:
-        return False
+        return any(
+            _collection_allows(collection, user, request, story_group)
+            for collection in content_object.collections.all()
+        )
 
-def checkFilePermission(fileId, user, mediaType):
+    # Lodging, transport, and notes in a collection follow that collection, not their own flag.
+    collection = getattr(content_object, 'collection', None)
+    if collection is not None:
+        return _collection_allows(collection, user, request, story_group)
+    return bool(getattr(content_object, 'is_public', False))
+
+
+def checkFilePermission(fileId, user, mediaType, request=None):
     if mediaType not in PROTECTED_MEDIA_PATHS:
         return False
     if mediaType == 'images/':
@@ -64,15 +85,14 @@ def checkFilePermission(fileId, user, mediaType):
         if not content_images.exists():
             return False
         # Grant access if ANY associated content object permits it.
-        # Day photos are members-only, including when the collection is public.
         for content_image in content_images:
             day_collection = image_day_collection(content_image)
             if day_collection is not None:
-                if is_member(day_collection, user):
+                if _collection_allows(day_collection, user, request):
                     return True
                 continue
             content_object = content_image.content_object
-            if content_object and _check_content_object_permission(content_object, user):
+            if content_object and _check_content_object_permission(content_object, user, request):
                 return True
         return False
     elif mediaType == 'attachments/':
@@ -80,7 +100,9 @@ def checkFilePermission(fileId, user, mediaType):
             attachment_path = f"attachments/{fileId}"
             content_attachment = ContentAttachment.objects.get(file=attachment_path)
             content_object = content_attachment.content_object
-            return _check_content_object_permission(content_object, user) if content_object else False
+            if not content_object:
+                return False
+            return _check_content_object_permission(content_object, user, request, story_group='attachments')
         except ContentAttachment.DoesNotExist:
             return False
     elif mediaType == 'activities/':
@@ -90,10 +112,10 @@ def checkFilePermission(fileId, user, mediaType):
             return False
         for activity in activities:
             if activity.visit_id:
-                if activity.visit and _check_content_object_permission(activity.visit, user):
+                if activity.visit and _check_content_object_permission(activity.visit, user, request, story_group='gpx'):
                     return True
                 continue
-            if is_member(activity_collection(activity), user):
+            if _collection_allows(activity_collection(activity), user, request, story_group='gpx'):
                 return True
         return False
     return False

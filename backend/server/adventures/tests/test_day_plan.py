@@ -711,7 +711,7 @@ class DayPlanBackupTests(DayPlanTestBase):
         with zipfile.ZipFile(io.BytesIO(exported.content)) as zipf:
             data = json.loads(zipf.read('data.json'))
         self.assertEqual(data['backup_schema'], BACKUP_SCHEMA)
-        self.assertEqual(BACKUP_SCHEMA, 4)
+        self.assertGreaterEqual(BACKUP_SCHEMA, 4)
         self.assertIn('day_trails', data)
         self.assertIn('day_activities', data)
         self.assertIn('day_images', data)

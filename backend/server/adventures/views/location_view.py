@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from adventures.utils.audience import can_edit
 from adventures.serializers import (
     CalendarLocationSerializer,
     CollectionItineraryItemSerializer,
@@ -53,6 +54,14 @@ from .quick_add_utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+# Fields of a place record that only its owner changes. They appear in every
+# collection the place is linked to, so a collaborator edit would leak across trips.
+OWNER_ONLY_LOCATION_FIELDS = (
+    'name', 'description', 'category', 'is_public', 'location',
+    'latitude', 'longitude', 'coordinates',
+)
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
@@ -167,6 +176,12 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
+
+        # The place record belongs to its owner and shows up in every collection.
+        # A collaborator changes placements, visits, and photos, not these fields.
+        if instance.user_id != request.user.id:
+            for field in OWNER_ONLY_LOCATION_FIELDS:
+                serializer.validated_data.pop(field, None)
 
         # Validate collection permissions if collections are being updated
         if 'collections' in serializer.validated_data:
@@ -495,10 +510,7 @@ class LocationViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_404_NOT_FOUND,
                         )
 
-                    user_can_link_to_collection = (
-                        target_collection.user == request.user
-                        or target_collection.shared_with.filter(uuid=request.user.uuid).exists()
-                    )
+                    user_can_link_to_collection = can_edit(request, target_collection)
                     if not user_can_link_to_collection:
                         return Response(
                             {"error": "You do not have permission to add locations to this collection."},
@@ -703,12 +715,10 @@ class LocationViewSet(viewsets.ModelViewSet):
         # Validate permissions for collections being added
         for collection in collections_to_add:
             # Standard validation for adding collections
-            if collection.user != self.request.user:
-                # Check if user has shared access to the collection
-                if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
-                    raise PermissionDenied(
-                        f"You don't have permission to add location to collection '{collection.name}'"
-                    )
+            if not can_edit(self.request, collection):
+                raise PermissionDenied(
+                    f"You don't have permission to add location to collection '{collection.name}'"
+                )
         
         # For collections being removed, allow if:
         # 1. User owns the location, OR
@@ -718,8 +728,8 @@ class LocationViewSet(viewsets.ModelViewSet):
             user_owns_collection = collection.user == self.request.user
             
             if not (user_owns_location or user_owns_collection):
-                # Check if user has shared access to the collection
-                if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
+                # Editors may unlink; viewers may not
+                if not can_edit(self.request, collection):
                     raise PermissionDenied(
                         f"You don't have permission to remove this location from one of the collections it's linked to.'"
                     )
@@ -746,12 +756,10 @@ class LocationViewSet(viewsets.ModelViewSet):
     def _validate_collection_permissions(self, collections):
         """Validate permissions for all collections (used in create)."""
         for collection in collections:
-            if collection.user != self.request.user:
-                # Check if user has shared access to the collection
-                if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
-                    raise PermissionDenied(
-                        f"You don't have permission to add location to collection '{collection.name}'"
-                    )
+            if not can_edit(self.request, collection):
+                raise PermissionDenied(
+                    f"You don't have permission to add location to collection '{collection.name}'"
+                )
 
     def _resolve_quick_add_collection(self, collection_id):
         return resolve_quick_add_collection(

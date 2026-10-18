@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
 from allauth.socialaccount.models import SocialApp
-from adventures.serializers import LocationSerializer, CollectionSerializer
+from adventures.serializers import LocationSerializer, UltraSlimCollectionSerializer
 from adventures.models import Location, Collection
 from allauth.socialaccount.models import SocialAccount
 from .models import APIKey
@@ -124,10 +124,12 @@ class PublicUserDetailView(APIView):
         serializer.data.pop('has_password', None)
         
         # Get the users adventures and collections to include in the response
+        # A location is listed by its own flag. A collection is listed only when its
+        # visibility is public, and as a card: the private plan is not part of a profile.
         adventures = Location.objects.filter(user=user, is_public=True)
-        collections = Collection.objects.filter(user=user, is_public=True)
+        collections = Collection.objects.filter(user=user, visibility=Collection.Visibility.PUBLIC)
         adventure_serializer = LocationSerializer(adventures, many=True)
-        collection_serializer = CollectionSerializer(collections, many=True)
+        collection_serializer = UltraSlimCollectionSerializer(collections, many=True, context={'request': request})
 
         return Response({
             'user': serializer.data,

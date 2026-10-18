@@ -3,6 +3,7 @@ from django.db import transaction
 from django.utils.dateparse import parse_date, parse_datetime
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from adventures.models import CollectionItineraryItem
+from adventures.utils.audience import can_edit
 
 
 @transaction.atomic
@@ -10,7 +11,7 @@ def reorder_itinerary_items(user, items_data: List[dict]):
     """Reorder itinerary items in bulk.
 
     Args:
-        user: requesting user (for permission checks)
+        user: the request or requesting user (for permission checks)
         items_data: list of dicts with keys `id`, `date`, `order`
 
     Returns:
@@ -34,14 +35,14 @@ def reorder_itinerary_items(user, items_data: List[dict]):
 
     items_map = {str(it.id): it for it in items_qs}
 
-    # Permission checks: user must be collection owner or in shared_with
+    # Permission checks: owner, editor, or guest editor
     for item_id in item_ids:
         item = items_map.get(item_id)
         if not item:
             continue
 
         collection = item.collection
-        if not (collection.user == user or collection.shared_with.filter(id=user.id).exists()):
+        if not can_edit(user, collection):
             raise PermissionDenied("You do not have permission to modify items in this collection.")
 
     # Two-phase update to avoid unique constraint races:

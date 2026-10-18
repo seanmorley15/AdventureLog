@@ -1,10 +1,12 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone as dt_timezone
 from django.db.models import Q, Prefetch
 from django.db.models.functions import Lower
 from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from django.utils import timezone
 from rest_framework.parsers import MultiPartParser
 from rest_framework import status
 from django.http import HttpResponse
@@ -16,8 +18,12 @@ import json
 import zipfile
 import tempfile
 import logging
+from adventures.models import CollectionGuestLink, CollectionMember
 from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
 from adventures.permissions import CollectionShared
+from adventures.utils.audience import audience_for_request, readable_collections_q
+from adventures.utils.story import build_story_payload
+from adventures.serializers import _build_profile_pic_url
 from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
@@ -30,7 +36,6 @@ from adventures.utils.collection_type import (
     resolve_imported_collection_type,
 )
 from adventures.services.locations.duplicates import find_best_duplicate_location
-from users.serializers import CustomUserDetailsSerializer as UserSerializer
 from adventures.services.collection_pdf import (
     build_collection_pdf,
     get_collection_for_pdf,
@@ -101,6 +106,69 @@ def _parse_money(amount, currency=None, default_currency='USD'):
     else:
         normalized = default_currency
     return amount, normalized
+
+
+def _parse_role(value):
+    value = (value or CollectionMember.Role.EDITOR)
+    return value if value in CollectionMember.Role.values else None
+
+
+def _sharing_state(collection, request):
+    """What the owner's Share sheet shows."""
+    roles = {
+        user_id: role
+        for user_id, role in CollectionMember.objects.filter(collection=collection).values_list('user_id', 'role')
+    }
+    members = []
+    for user in collection.shared_with.all().order_by('username'):
+        members.append({
+            'uuid': str(user.uuid),
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'profile_pic': _build_profile_pic_url(user),
+            'role': roles.get(user.id, CollectionMember.Role.EDITOR),
+        })
+    invites = [
+        {
+            'uuid': str(invite.invited_user.uuid),
+            'username': invite.invited_user.username,
+            'first_name': invite.invited_user.first_name,
+            'last_name': invite.invited_user.last_name,
+            'role': invite.role,
+        }
+        for invite in CollectionInvite.objects.filter(collection=collection).select_related('invited_user')
+    ]
+    guest_links = [
+        {
+            'id': str(link.id),
+            'token': link.token,
+            'role': link.role,
+            'label': link.label,
+            'expires_at': link.expires_at,
+            'revoked_at': link.revoked_at,
+            'created_at': link.created_at,
+            'is_active': link.is_active,
+        }
+        for link in collection.guest_links.all()
+    ]
+    return {
+        'owner': {
+            'uuid': str(collection.user.uuid),
+            'username': collection.user.username,
+            'first_name': collection.user.first_name,
+            'last_name': collection.user.last_name,
+        },
+        'members': members,
+        'invites': invites,
+        'guest_links': guest_links,
+        'visibility': collection.visibility,
+        'story_groups': {name: collection.story_group(name) for name in Collection.STORY_GROUPS},
+        'share_secret': collection.share_secret,
+        'allow_public_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+        # Admins see how to turn public links on; everyone else is told to ask one.
+        'is_admin': bool(getattr(request.user, 'is_staff', False)),
+    }
 
 
 class CollectionViewSet(viewsets.ModelViewSet):
@@ -230,14 +298,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     | Q(invites__invited_user=self.request.user)
                 ).distinct()
         elif self.action in ('retrieve', 'export_pdf', 'share_image'):
-            if not self.request.user.is_authenticated:
-                queryset = Collection.objects.filter(is_public=True)
-            else:
-                queryset = Collection.objects.filter(
-                    Q(is_public=True)
-                    | Q(user=self.request.user.id)
-                    | Q(shared_with=self.request.user)
-                ).distinct()
+            # Members, guest links, and readers of a public or unlisted story.
+            queryset = Collection.objects.filter(readable_collections_q(self.request)).distinct()
         else:
             # For list action and default base queryset, return collections owned by the user (exclude shared)
             queryset = Collection.objects.filter(
@@ -315,8 +377,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def retrieve(self, request, pk=None):
-        """Retrieve a collection and include itinerary items and day metadata in the response."""
+        """
+        Retrieve a collection and include itinerary items and day metadata in the response.
+
+        A public reader gets the story payload only. A member can ask for the same
+        payload with ``?as=story`` to preview what people with the link see.
+        """
         collection = self.get_object()
+        audience = audience_for_request(request, collection)
         serializer = self.get_serializer(collection)
         data = serializer.data
 
@@ -333,6 +401,11 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         data.update(serialize_day_files(collection, self.get_serializer_context()))
 
+        if audience.is_public_reader or request.query_params.get('as') == 'story':
+            story = build_story_payload(data, collection)
+            story['audience'] = audience.as_dict()
+            story['story_preview'] = not audience.is_public_reader
+            return Response(story)
         return Response(data)
     
     # make an action to retreive all locations that are shared with the user
@@ -378,10 +451,15 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if CollectionInvite.objects.filter(collection=collection, invited_user=user).exists():
             return Response({"error": "Invite already sent to this user"}, status=400)
         
+        role = _parse_role(request.data.get('role'))
+        if role is None:
+            return Response({"error": "Role must be editor or viewer"}, status=400)
+
         # Create the invite instead of directly sharing
         invite = CollectionInvite.objects.create(
             collection=collection,
-            invited_user=user
+            invited_user=user,
+            role=role,
         )
         
         return Response({"success": f"Invite sent to {user.username}"})
@@ -437,8 +515,11 @@ class CollectionViewSet(viewsets.ModelViewSet):
         except CollectionInvite.DoesNotExist:
             return Response({"error": "No pending invite found for this collection"}, status=404)
         
-        # Add user to collection's shared_with
+        # Add user to collection's shared_with with the invited role
         collection.shared_with.add(request.user)
+        CollectionMember.objects.update_or_create(
+            collection=collection, user=request.user, defaults={'role': invite.role}
+        )
         
         # Delete the invite
         invite.delete()
@@ -463,34 +544,55 @@ class CollectionViewSet(viewsets.ModelViewSet):
     # Action to list all users a collection **can** be shared with, excluding those already shared with and those with pending invites
     @action(detail=True, methods=['get'], url_path='can-share')
     def can_share(self, request, pk=None):
+        """
+        People the owner can invite: public profiles that are not the owner, a
+        member, or already invited. Search with ``q`` (name or username, at
+        least 2 characters). At most ``limit`` rows (default 20, max 50), so
+        the Share sheet stays fast on servers with thousands of users.
+        """
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
         
         collection = self.get_object()
-        
-        # Get users with pending invites and users already shared with
-        users_with_pending_invites = set(str(uuid) for uuid in CollectionInvite.objects.filter(collection=collection).values_list('invited_user__uuid', flat=True))
-        users_already_shared = set(str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True))
 
-        # Get all users with public profiles excluding only the owner
-        all_users = User.objects.filter(public_profile=True).exclude(id=request.user.id)
-        
-        # Return fully serialized user data with status
-        serializer = UserSerializer(all_users, many=True)
-        result_data = []
-        for user_data in serializer.data:
-            user_data.pop('has_password', None)
-            user_data.pop('disable_password', None)
-            # Add status field
-            if user_data['uuid'] in users_with_pending_invites:
-                user_data['status'] = 'pending'
-            elif user_data['uuid'] in users_already_shared:
-                user_data['status'] = 'shared'
-            else:
-                user_data['status'] = 'available'
-            result_data.append(user_data)
-        
-        return Response(result_data)
+        query = (request.query_params.get('q') or '').strip()
+        try:
+            limit = max(1, min(int(request.query_params.get('limit', 20)), 50))
+        except (TypeError, ValueError):
+            limit = 20
+
+        candidates = (
+            User.objects.filter(public_profile=True)
+            .exclude(id=collection.user_id)
+            .exclude(id__in=collection.shared_with.values('id'))
+            .exclude(id__in=CollectionInvite.objects.filter(collection=collection).values('invited_user_id'))
+        )
+        if query:
+            if len(query) < 2:
+                return Response([])
+            terms = Q()
+            for word in query.split()[:3]:
+                terms &= (
+                    Q(username__icontains=word)
+                    | Q(first_name__icontains=word)
+                    | Q(last_name__icontains=word)
+                )
+            candidates = candidates.filter(terms)
+
+        users = candidates.order_by('username').only(
+            'uuid', 'username', 'first_name', 'last_name', 'profile_pic'
+        )[:limit]
+        return Response([
+            {
+                'uuid': str(user.uuid),
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'profile_pic': _build_profile_pic_url(user),
+                'status': 'available',
+            }
+            for user in users
+        ])
 
     @action(detail=True, methods=['post'], url_path='unshare/(?P<uuid>[^/.]+)')
     def unshare(self, request, pk=None, uuid=None):
@@ -513,25 +615,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if not collection.shared_with.filter(id=user.id).exists():
             return Response({"error": "Collection is not shared with this user"}, status=400)
         
-        # Remove user from shared_with
+        # Remove user from shared_with. Places created in the collection belong to its
+        # owner and stay. A place the member already owned stays theirs and stays linked.
         collection.shared_with.remove(user)
-        
-        # Handle locations owned by the unshared user that are in this collection
-        # These locations should be removed from the collection since they lose access
-        locations_to_remove = collection.locations.filter(user=user)
-        removed_count = locations_to_remove.count()
-        
-        if locations_to_remove.exists():
-            # Remove these locations from the collection
-            collection.locations.remove(*locations_to_remove)
-        
         collection.save()
         
-        success_message = f"Unshared with {user.username}"
-        if removed_count > 0:
-            success_message += f" and removed {removed_count} location(s) they owned from the collection"
-        
-        return Response({"success": success_message})
+        return Response({"success": f"Unshared with {user.username}"})
     
     # Action for a shared user to leave a collection
     @action(detail=True, methods=['post'], url_path='leave')
@@ -547,32 +636,95 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if not collection.shared_with.filter(id=request.user.id).exists():
             return Response({"error": "You are not a member of this collection"}, status=400)
         
-        # Remove the user from shared_with
+        # Remove the user from shared_with. Their own places stay theirs and stay linked.
         collection.shared_with.remove(request.user)
-        
-        # Handle locations owned by the user that are in this collection
-        locations_to_remove = collection.locations.filter(user=request.user)
-        removed_count = locations_to_remove.count()
-        
-        if locations_to_remove.exists():
-            # Remove these locations from the collection
-            collection.locations.remove(*locations_to_remove)
-        
         collection.save()
         
-        success_message = f"You have left the collection: {collection.name}"
-        if removed_count > 0:
-            success_message += f" and removed {removed_count} location(s) you owned from the collection"
-        
-        return Response({"success": success_message})
+        return Response({"success": f"You have left the collection: {collection.name}"})
+
+    # -- Sharing (owner only) -------------------------------------------------
+
+    def _owned_collection(self, request, pk):
+        collection = Collection.objects.filter(pk=pk, user=request.user.id).first()
+        if collection is None:
+            raise NotFound('Collection not found.')
+        return collection
+
+    @action(detail=True, methods=['get'], url_path='sharing')
+    def sharing(self, request, pk=None):
+        """Members with roles, pending invites, guest links, and story settings."""
+        if not request.user.is_authenticated:
+            raise NotFound('Collection not found.')
+        collection = self._owned_collection(request, pk)
+        return Response(_sharing_state(collection, request))
+
+    @action(detail=True, methods=['post'], url_path='members/(?P<uuid>[^/.]+)/role')
+    def member_role(self, request, pk=None, uuid=None):
+        if not request.user.is_authenticated:
+            raise NotFound('Collection not found.')
+        collection = self._owned_collection(request, pk)
+        role = _parse_role(request.data.get('role'))
+        if role is None:
+            return Response({"error": "Role must be editor or viewer"}, status=400)
+        user = collection.shared_with.filter(uuid=uuid).first()
+        if user is None:
+            invite = CollectionInvite.objects.filter(collection=collection, invited_user__uuid=uuid).first()
+            if invite is None:
+                return Response({"error": "That person is not a member of this collection"}, status=404)
+            invite.role = role
+            invite.save(update_fields=['role', 'updated_at'])
+        else:
+            CollectionMember.objects.update_or_create(collection=collection, user=user, defaults={'role': role})
+        return Response(_sharing_state(collection, request))
+
+    @action(detail=True, methods=['post'], url_path='guest-links')
+    def create_guest_link(self, request, pk=None):
+        """Create a guest link with a role and an optional expiry. The owner can create several."""
+        if not request.user.is_authenticated:
+            raise NotFound('Collection not found.')
+        collection = self._owned_collection(request, pk)
+        role = _parse_role(request.data.get('role') or CollectionMember.Role.VIEWER)
+        if role is None:
+            return Response({"error": "Role must be editor or viewer"}, status=400)
+        expires_at = None
+        if request.data.get('expires_at'):
+            expires_at = _parse_datetime(request.data.get('expires_at'))
+            if expires_at is None:
+                return Response({"error": "Use an ISO date and time for expires_at"}, status=400)
+            if timezone.is_naive(expires_at):
+                expires_at = timezone.make_aware(expires_at, dt_timezone.utc)
+            if expires_at <= timezone.now():
+                return Response({"error": "The expiry must be in the future"}, status=400)
+        CollectionGuestLink.objects.create(
+            collection=collection,
+            role=role,
+            label=(request.data.get('label') or '')[:100],
+            expires_at=expires_at,
+        )
+        return Response(_sharing_state(collection, request), status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='guest-links/(?P<link_id>[^/.]+)/revoke')
+    def revoke_guest_link(self, request, pk=None, link_id=None):
+        if not request.user.is_authenticated:
+            raise NotFound('Collection not found.')
+        collection = self._owned_collection(request, pk)
+        link = CollectionGuestLink.objects.filter(collection=collection, pk=link_id).first()
+        if link is None:
+            return Response({"error": "Guest link not found"}, status=404)
+        if link.revoked_at is None:
+            link.revoked_at = timezone.now()
+            link.save(update_fields=['revoked_at'])
+        return Response(_sharing_state(collection, request))
 
     @action(detail=True, methods=['get'], url_path='export-pdf')
     def export_pdf(self, request, pk=None):
         """Export collection as a printable day-by-day itinerary PDF."""
         collection = self.get_object()
+        audience = audience_for_request(request, collection)
         try:
             collection = get_collection_for_pdf(collection.id)
-            pdf_bytes = build_collection_pdf(collection)
+            # A public reader gets the story groups. Members get the full plan.
+            pdf_bytes = build_collection_pdf(collection, story=audience.is_public_reader)
         except Exception:
             logger.exception('Failed to generate PDF for collection %s', collection.id)
             return Response(
@@ -1338,20 +1490,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
     
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        """Override update to handle is_public cascading and clean up out-of-range itinerary items when dates change."""
+        """
+        Update the collection and clean up out-of-range itinerary items when dates change.
+
+        Visibility does not cascade. Publishing a collection does not change
+        ``is_public`` on its locations, lodging, transport, notes, or checklists,
+        and making it private does not change them either.
+        """
         instance = self.get_object()
-        if 'is_public' in request.data and instance.user_id != request.user.id:
-            raw_is_public = request.data.get('is_public')
-            if isinstance(raw_is_public, str):
-                desired_is_public = raw_is_public.strip().lower() in ['true', '1', 't', 'yes', 'y']
-            else:
-                desired_is_public = bool(raw_is_public)
-            if desired_is_public != instance.is_public:
-                return Response(
-                    {"error": "Only the collection owner can change publicity."},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-        old_is_public = instance.is_public
         old_start_date = instance.start_date
         old_end_date = instance.end_date
         old_type = instance.type
@@ -1361,59 +1507,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        
-        # Check if is_public changed
-        new_is_public = serializer.instance.is_public
-        is_public_changed = old_is_public != new_is_public
-        
-        # Handle is_public cascading
-        if is_public_changed:
-            if new_is_public:
-                # Collection is being made public, update all linked items to public
-                serializer.instance.locations.filter(is_public=False).update(is_public=True)
-                serializer.instance.transportation_set.filter(is_public=False).update(is_public=True)
-                serializer.instance.note_set.filter(is_public=False).update(is_public=True)
-                serializer.instance.checklist_set.filter(is_public=False).update(is_public=True)
-                serializer.instance.lodging_set.filter(is_public=False).update(is_public=True)
-            else:
-                # Collection is being made private, check each linked item
-                # Only set an item to private if it doesn't belong to any other public collection
-                
-                # Handle locations (many-to-many relationship)
-                locations_in_collection = serializer.instance.locations.filter(is_public=True)
-                for location in locations_in_collection:
-                    # Check if this location belongs to any other public collection
-                    has_other_public_collection = location.collections.filter(
-                        is_public=True
-                    ).exclude(id=serializer.instance.id).exists()
-                    if not has_other_public_collection:
-                        location.is_public = False
-                        location.save(update_fields=['is_public'])
-                
-                # Handle transportations, notes, checklists, lodging (foreign key relationships)
-                # Transportation
-                transportations_to_check = serializer.instance.transportation_set.filter(is_public=True)
-                for transportation in transportations_to_check:
-                    transportation.is_public = False
-                    transportation.save(update_fields=['is_public'])
-                
-                # Notes
-                notes_to_check = serializer.instance.note_set.filter(is_public=True)
-                for note in notes_to_check:
-                    note.is_public = False
-                    note.save(update_fields=['is_public'])
-                
-                # Checklists
-                checklists_to_check = serializer.instance.checklist_set.filter(is_public=True)
-                for checklist in checklists_to_check:
-                    checklist.is_public = False
-                    checklist.save(update_fields=['is_public'])
-                
-                # Lodging
-                lodging_to_check = serializer.instance.lodging_set.filter(is_public=True)
-                for lodging in lodging_to_check:
-                    lodging.is_public = False
-                    lodging.save(update_fields=['is_public'])
         
         if old_type != serializer.instance.type:
             day_plan.apply_type_change(serializer.instance, old_type)

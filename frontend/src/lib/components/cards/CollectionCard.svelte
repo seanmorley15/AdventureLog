@@ -22,7 +22,7 @@
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from '../DeleteWarning.svelte';
-	import ShareModal from '../ShareModal.svelte';
+	import CollectionShareSheet from '../collections/CollectionShareSheet.svelte';
 	import SocialShareModal from '../SocialShareModal.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
 	import ExitRun from '~icons/mdi/exit-run';
@@ -166,6 +166,7 @@
 		readOnly = false,
 		collection
 	}: Props = $props();
+	let visibility = $derived(collection.visibility ?? (collection.is_public ? 'public' : 'private'));
 
 	let location_images: ContentImage[] = $state([]);
 	run(() => {
@@ -223,7 +224,7 @@
 {/if}
 
 {#if isShareModalOpen}
-	<ShareModal {collection} on:close={() => (isShareModalOpen = false)} />
+	<CollectionShareSheet {collection} onClose={() => (isShareModalOpen = false)} />
 {/if}
 
 {#if isSocialShareModalOpen}
@@ -283,18 +284,17 @@
 
 		<!-- Privacy Indicator -->
 		<div class="absolute top-2 right-4">
-			<div
-				class="tooltip tooltip-left"
-				data-tip={collection.is_public ? $t('adventures.public') : $t('adventures.private')}
-			>
+			<div class="tooltip tooltip-left" data-tip={$t(`share.visibility_${visibility}`)}>
 				<div
-					class="badge badge-sm {collection.is_public
-						? 'badge-secondary'
-						: 'badge-ghost'} shadow-lg"
-					aria-label={collection.is_public ? $t('adventures.public') : $t('adventures.private')}
+					class="badge badge-sm {visibility === 'private'
+						? 'badge-ghost'
+						: 'badge-secondary'} shadow-lg"
+					aria-label={$t(`share.visibility_${visibility}`)}
 				>
-					{#if collection.is_public}
+					{#if visibility === 'public'}
 						<Eye class="w-4 h-4" />
+					{:else if visibility === 'unlisted'}
+						<LinkIcon class="w-4 h-4" />
 					{:else}
 						<EyeOff class="w-4 h-4" />
 					{/if}
@@ -433,7 +433,7 @@
 												{$t('social_share.share_externally')}
 											</button>
 										</li>
-										{#if collection.is_public}
+										{#if visibility === 'public'}
 											<li>
 												<button onclick={copyLink} class="flex items-center gap-2">
 													{#if copied}

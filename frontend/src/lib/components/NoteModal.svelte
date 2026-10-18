@@ -79,7 +79,8 @@
 		date: null as string | null | undefined,
 		links: [] as string[],
 		collection: '',
-		is_public: false
+		is_public: false,
+		is_private: false
 	});
 	let previousNoteId: string | null | undefined = undefined;
 
@@ -94,7 +95,9 @@
 			date: getSeedDate() || null,
 			links: note?.links || [],
 			collection: collection.id,
-			is_public: collection.is_public
+			// A collection's visibility no longer sets its notes' own flag.
+			is_public: note?.is_public ?? false,
+			is_private: note?.is_private ?? false
 		};
 	});
 
@@ -405,11 +408,21 @@
 							</div>
 						{/if}
 
-						{#if collection.is_public}
-							<div role="alert" class="alert alert-info rounded-xl border border-info/20">
-								<InfoIcon class="h-6 w-6 shrink-0" />
-								<span class="font-medium">{$t('notes.note_public')}</span>
-							</div>
+						{#if !isReadOnly}
+							<label class="field-toggle">
+								<input
+									type="checkbox"
+									class="toggle toggle-primary toggle-sm"
+									name="is_private"
+									bind:checked={newNote.is_private}
+								/>
+								<span>
+									<span class="font-semibold text-base-content"
+										>{$t('share.private_from_story')}</span
+									>
+									<span class="field-hint block">{$t('notes.private_from_story_hint')}</span>
+								</span>
+							</label>
 						{/if}
 					</div>
 				</div>

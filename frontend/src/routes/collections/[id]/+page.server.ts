@@ -7,10 +7,35 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
+
+	// A guest link: keep its token in a cookie so later API and media requests carry it,
+	// then drop it from the address bar.
+	const guestParam = event.url.searchParams.get('guest');
+	if (guestParam) {
+		event.cookies.set(GUEST_COOKIE, guestParam, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: event.url.protocol === 'https:',
+			maxAge: 60 * 60 * 24 * 30
+		});
+		const clean = new URL(event.url);
+		clean.searchParams.delete('guest');
+		redirect(303, `${clean.pathname}${clean.search}`);
+	}
+
 	let sessionid = event.cookies.get('sessionid');
-	let request = await fetch(`${endpoint}/api/collections/${id.id}/`, {
+	const guestToken = event.cookies.get(GUEST_COOKIE);
+	const query = new URLSearchParams();
+	const secret = event.url.searchParams.get('s');
+	if (secret) query.set('s', secret);
+	// The owner's preview of what people with the link see.
+	if (event.url.searchParams.get('preview') === 'story') query.set('as', 'story');
+	const search = query.toString() ? `?${query.toString()}` : '';
+	let request = await fetch(`${endpoint}/api/collections/${id.id}/${search}`, {
 		headers: {
-			Cookie: `sessionid=${sessionid}`
+			Cookie: `sessionid=${sessionid}`,
+			...(guestToken ? { 'X-Guest-Token': guestToken } : {})
 		}
 	});
 	if (!request.ok) {
@@ -35,6 +60,7 @@ export const load = (async (event) => {
 
 import type { Actions } from '@sveltejs/kit';
 import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
+import { GUEST_COOKIE } from '$lib/server/django-proxy';
 
 export const actions: Actions = {
 	delete: async (event) => {

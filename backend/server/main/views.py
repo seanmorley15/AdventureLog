@@ -19,7 +19,10 @@ def get_csrf_token(request):
     return JsonResponse({'csrfToken': csrf_token})
 
 def get_public_url(request):
-    return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
+    return JsonResponse({
+        'PUBLIC_URL': getenv('PUBLIC_URL'),
+        'ALLOW_PUBLIC_COLLECTION_LINKS': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+    })
 
 def health_check(request):
     from django.db import connection
@@ -90,14 +93,11 @@ def serve_protected_media(request, path):
     file_id = path_parts[1]
     authenticated = bool(user and getattr(user, 'is_authenticated', False))
 
-    if authenticated and checkFilePermission(file_id, user, media_type):
+    # Owners and members, guest links (cookie), and story readers. See checkFilePermission.
+    if checkFilePermission(file_id, user if authenticated else None, media_type, request):
         return _serve_media_file(request, normalized_path)
 
     if is_day_owned_media(file_id, media_type):
         return HttpResponseNotFound()
-
-    # Location files that are public stay readable without an account.
-    if user is not None and checkFilePermission(file_id, user, media_type):
-        return _serve_media_file(request, normalized_path)
 
     return HttpResponseForbidden()

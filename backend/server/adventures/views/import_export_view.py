@@ -23,7 +23,7 @@ from users.services.account_deletion import clear_user_adventure_data
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
     ContentImage, ContentAttachment, Category, Lodging, Visit, Trail, Activity,
-    CollectionItineraryItem, CollectionItineraryDay
+    CollectionItineraryItem, CollectionItineraryDay, CollectionGuestLink, CollectionMember
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 from adventures.utils.geo import make_point, point_to_lat_lon
@@ -32,6 +32,8 @@ from adventures.utils.collection_type import (
     UnsupportedBackupSchema,
     backup_has_day_plan,
     ensure_backup_schema_supported,
+    imported_story_groups,
+    imported_visibility,
     resolve_imported_collection_type,
 )
 from adventures.utils.itinerary_days import convert_collection
@@ -457,6 +459,33 @@ class BackupViewSet(viewsets.ViewSet):
             zip_file.writestr(arcname, storage_file.read())
         files_added.add(storage_name)
 
+    def _import_sharing(self, collection, col_data):
+        """Roles for restored members, and guest links. A taken token gets a new one."""
+        from django.utils.dateparse import parse_datetime
+
+        for member in col_data.get('members') or []:
+            role = member.get('role')
+            if role not in CollectionMember.Role.values:
+                continue
+            CollectionMember.objects.filter(
+                collection=collection, user__uuid=member.get('user_uuid')
+            ).update(role=role)
+        for link in col_data.get('guest_links') or []:
+            role = link.get('role')
+            if role not in CollectionMember.Role.values:
+                continue
+            fields = {
+                'collection': collection,
+                'role': role,
+                'label': (link.get('label') or '')[:100],
+                'expires_at': parse_datetime(link['expires_at']) if link.get('expires_at') else None,
+                'revoked_at': parse_datetime(link['revoked_at']) if link.get('revoked_at') else None,
+            }
+            token = link.get('token')
+            if token and not CollectionGuestLink.objects.filter(token=token).exists():
+                fields['token'] = token
+            CollectionGuestLink.objects.create(**fields)
+
     def _import_images(self, images_data, zip_file, user, content_type, object_id, summary):
         created = []
         for img_data in images_data or []:
@@ -600,7 +629,23 @@ class BackupViewSet(viewsets.ViewSet):
                 'timezone': collection.timezone,
                 'is_archived': collection.is_archived,
                 'link': collection.link,
-                'shared_with_user_ids': [str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True)]
+                'shared_with_user_ids': [str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True)],
+                'visibility': collection.visibility,
+                'story_groups': {name: True for name in Collection.STORY_GROUPS if collection.story_group(name)},
+                'members': [
+                    {'user_uuid': str(member.user.uuid), 'role': member.role}
+                    for member in collection.members.select_related('user')
+                ],
+                'guest_links': [
+                    {
+                        'token': link.token,
+                        'role': link.role,
+                        'label': link.label,
+                        'expires_at': link.expires_at.isoformat() if link.expires_at else None,
+                        'revoked_at': link.revoked_at.isoformat() if link.revoked_at else None,
+                    }
+                    for link in collection.guest_links.all()
+                ],
             })
             for day in collection.itinerary_days.all().order_by('index', 'date'):
                 export_data['itinerary_days'].append({
@@ -819,6 +864,7 @@ class BackupViewSet(viewsets.ViewSet):
                 'links': note.links,
                 'date': note.date.isoformat() if note.date else None,
                 'is_public': note.is_public,
+                'is_private': note.is_private,
                 'collection_export_id': collection_export_id,
                 'images': self._serialize_images(note.images),
                 'attachments': self._serialize_attachments(note.attachments),
@@ -853,7 +899,8 @@ class BackupViewSet(viewsets.ViewSet):
             for item in checklist.checklistitem_set.all():
                 checklist_data['items'].append({
                     'name': item.name,
-                    'is_checked': item.is_checked
+                    'is_checked': item.is_checked,
+                    'is_private': item.is_private,
                 })
             
             export_data['checklists'].append(checklist_data)
@@ -1299,7 +1346,10 @@ class BackupViewSet(viewsets.ViewSet):
                 user=user,
                 name=col_data['name'],
                 description=col_data.get('description', ''),
-                is_public=col_data.get('is_public', False),
+                visibility=imported_visibility(backup_data.get('backup_schema'), col_data),
+                story_groups=imported_story_groups(
+                    backup_data.get('backup_schema'), col_data, Collection.STORY_GROUPS
+                ),
                 start_date=col_data.get('start_date'),
                 end_date=col_data.get('end_date'),
                 type=resolve_imported_collection_type(
@@ -1323,6 +1373,7 @@ class BackupViewSet(viewsets.ViewSet):
                         collection.shared_with.add(shared_user)
                 except User.DoesNotExist:
                     pass
+            self._import_sharing(collection, col_data)
 
             # Defer primary image assignment until images are created
             if col_data.get('primary_image'):
@@ -1586,6 +1637,7 @@ class BackupViewSet(viewsets.ViewSet):
                 links=note_data.get('links', []),
                 date=note_data.get('date'),
                 is_public=note_data.get('is_public', False),
+                is_private=bool(note_data.get('is_private', False)),
                 collection=collection
             )
 
@@ -1636,7 +1688,8 @@ class BackupViewSet(viewsets.ViewSet):
                     user=user,
                     checklist=checklist,
                     name=item_data['name'],
-                    is_checked=item_data.get('is_checked', False)
+                    is_checked=item_data.get('is_checked', False),
+                    is_private=bool(item_data.get('is_private', False)),
                 )
                 summary['checklist_items'] += 1
             

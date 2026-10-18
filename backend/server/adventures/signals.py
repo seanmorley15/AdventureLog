@@ -2,31 +2,30 @@ from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 
-from adventures.models import Location
+from adventures.models import Collection
 
 
-@receiver(m2m_changed, sender=Location.collections.through)
-def update_adventure_publicity(sender, instance, action, **kwargs):
+@receiver(m2m_changed, sender=Collection.shared_with.through)
+def sync_collection_members(sender, instance, action, pk_set=None, **kwargs):
     """
-    Signal handler to update adventure publicity when collections are added/removed
-    This function checks if the adventure's collections contain any public collection.
+    Keep one CollectionMember role row per shared_with user.
+
+    Linking a location to a collection no longer changes ``location.is_public``,
+    and publishing a collection no longer changes its children.
     """
-    if not isinstance(instance, Location):
+    if not isinstance(instance, Collection):
         return
-    # Only process when collections are added or removed
-    if action in ('post_add', 'post_remove', 'post_clear'):
-        collections = instance.collections.all()
-        
-        if collections.exists():
-            # If any collection is public, make the adventure public
-            has_public_collection = collections.filter(is_public=True).exists()
-            
-            if has_public_collection and not instance.is_public:
-                instance.is_public = True
-                instance.save(update_fields=['is_public'])
-            elif not has_public_collection and instance.is_public:
-                instance.is_public = False
-                instance.save(update_fields=['is_public'])
+    from adventures.models import CollectionMember
+
+    if action == 'post_add' and pk_set:
+        CollectionMember.objects.bulk_create(
+            [CollectionMember(collection=instance, user_id=pk) for pk in pk_set],
+            ignore_conflicts=True,
+        )
+    elif action == 'post_remove' and pk_set:
+        CollectionMember.objects.filter(collection=instance, user_id__in=pk_set).delete()
+    elif action == 'post_clear':
+        CollectionMember.objects.filter(collection=instance).delete()
 
 
 @receiver(post_delete)

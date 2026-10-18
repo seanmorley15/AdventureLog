@@ -5,6 +5,7 @@ from adventures.models import Transportation
 from adventures.serializers import TransportationSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from adventures.utils.audience import can_edit, member_collections_q
 
 class TransportationViewSet(viewsets.ModelViewSet):
     queryset = Transportation.objects.all()
@@ -22,15 +23,14 @@ class TransportationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        # Owned rows and rows in collections the requester is a member of or holds a
+        # guest link to. A row's own is_public opens it only when no collection owns it.
+        scope = member_collections_q(self.request, 'collection__')
+        if user.is_authenticated:
+            scope |= Q(user=user.id)
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public locations, user's own locations and shared locations
-            return Transportation.objects.filter(
-                Q(is_public=True) | Q(user=user.id) | Q(collection__shared_with=user.id)
-            ).distinct().order_by('-updated_at')
-        # For other actions, include user's own locations and shared locations
-        return Transportation.objects.filter(
-            Q(user=user.id) | Q(collection__shared_with=user.id)
-        ).distinct().order_by('-updated_at')
+            scope |= Q(is_public=True, collection__isnull=True)
+        return Transportation.objects.filter(scope).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
         # Retrieve the current object
@@ -69,9 +69,8 @@ class TransportationViewSet(viewsets.ModelViewSet):
 
         # Check if a collection is provided
         if collection:
-            user = self.request.user
-            # Check if the user is the owner or is in the shared_with list
-            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
+            # Owner, editor, or guest editor. Viewers cannot add records.
+            if not can_edit(self.request, collection):
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
             # if collection the owner of the adventure is the owner of the collection
@@ -79,4 +78,6 @@ class TransportationViewSet(viewsets.ModelViewSet):
             return
 
         # Save the adventure with the current user as the owner
+        if not self.request.user.is_authenticated:
+            raise PermissionDenied("A guest link can only add records to its collection.")
         serializer.save(user=self.request.user)

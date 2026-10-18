@@ -378,7 +378,9 @@ def _location_paragraphs(location: Location, styles) -> List:
     if geo_bits:
         flowables.append(Paragraph(pdf_markup(', '.join(geo_bits)), styles['ItemMeta']))
 
-    for visit in location.visits.all().order_by('start_date'):
+    # Visits are the place's own log and are not part of a published story.
+    visits = [] if getattr(location, '_story_hide_visits', False) else location.visits.all().order_by('start_date')
+    for visit in visits:
         start = visit.start_date.date() if visit.start_date else None
         end = visit.end_date.date() if visit.end_date else None
         if start and end and end != start:
@@ -664,8 +666,77 @@ def _folder_sections(
     return story
 
 
-def build_collection_pdf(collection: Collection) -> bytes:
-    """Return PDF bytes for the given collection."""
+def _replace_prefetched(obj, name, items) -> None:
+    cache = getattr(obj, '_prefetched_objects_cache', {})
+    if name in cache:
+        cache[name]._result_cache = list(items)
+
+
+def _apply_story_groups(collection: Collection) -> None:
+    """
+    Redact the loaded records in memory for a public reader. Nothing is saved.
+
+    Uses the same groups as the story payload: costs, reservations, lodging
+    address, coordinates, note text, and checklist text, all off until the
+    owner turns them on. Private notes and checklist items stay hidden.
+    """
+    def on(name):
+        return collection.story_group(name)
+
+    for location in collection.locations.all():
+        location._story_hide_visits = True
+        location.category = None
+        if not location.is_public and not on('place_details'):
+            location.description = None
+            location.link = None
+            location.rating = None
+        if not on('coordinates'):
+            location.location = None
+            location.city = None
+            location.region = None
+            location.country = None
+        if not on('costs'):
+            location.price = None
+    for transport in collection.transportation_set.all():
+        if not on('reservations'):
+            transport.flight_number = None
+            transport.link = None
+        if not on('costs'):
+            transport.price = None
+        if not on('note_text'):
+            transport.description = None
+    for lodging in collection.lodging_set.all():
+        if not on('reservations'):
+            lodging.reservation_number = None
+            lodging.link = None
+        if not on('costs'):
+            lodging.price = None
+        if not on('note_text'):
+            lodging.description = None
+        if not on('lodging_address'):
+            lodging.location = None
+    notes = [note for note in collection.note_set.all() if not note.is_private]
+    for note in notes:
+        if not on('note_text'):
+            note.content = None
+            note.links = None
+    _replace_prefetched(collection, 'note_set', notes)
+    for checklist in collection.checklist_set.all():
+        items = [] if not on('checklist_text') else [
+            item for item in checklist.checklistitem_set.all() if not item.is_private
+        ]
+        _replace_prefetched(checklist, 'checklistitem_set', items)
+
+
+def build_collection_pdf(collection: Collection, story: bool = False) -> bytes:
+    """
+    Return PDF bytes for the given collection.
+
+    Members get the full plan, including prices and confirmation numbers.
+    ``story=True`` is the public reader's copy and follows the story groups.
+    """
+    if story:
+        _apply_story_groups(collection)
     body_font, emoji_font = ensure_pdf_fonts()
 
     buffer = io.BytesIO()

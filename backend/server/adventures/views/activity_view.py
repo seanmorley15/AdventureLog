@@ -5,7 +5,8 @@ from django.db.models import Q
 from adventures.models import Activity, CollectionItineraryItem
 from adventures.serializers import ActivitySerializer, VisitSerializer, CollectionItineraryItemSerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.utils.day_files import activity_collection, is_member, promote_day_activity
+from adventures.utils.audience import can_edit, member_collections_q
+from adventures.utils.day_files import activity_collection, promote_day_activity
 from adventures.utils.itinerary_days import DayPlanError
 from rest_framework.exceptions import PermissionDenied, ValidationError
 import gpxpy
@@ -31,17 +32,18 @@ class ActivityViewSet(viewsets.ModelViewSet):
         - The location is in a collection that the user owns
         """
         user = self.request.user
-        
-        if not user or not user.is_authenticated:
-            return Activity.objects.none()
-        
+        authenticated = bool(user and user.is_authenticated)
+
+        # Day activities and Ideas activities, through the collection's members and guest links.
+        day_filter = member_collections_q(self.request, 'day__collection__')
+        day_filter |= member_collections_q(self.request, 'collection__')
+        if not authenticated:
+            return Activity.objects.filter(day_filter).distinct()
+
         # Place activities, through the visit's location.
         location_filter = Q(visit__location__user=user)
         location_filter |= Q(visit__location__collections__shared_with=user)
         location_filter |= Q(visit__location__collections__user=user)
-        # Day activities and Ideas activities, through the collection's members.
-        day_filter = Q(day__collection__user=user) | Q(day__collection__shared_with=user)
-        day_filter |= Q(collection__user=user) | Q(collection__shared_with=user)
 
         return Activity.objects.filter(location_filter | day_filter).distinct()
 
@@ -54,11 +56,11 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
     def _assert_parent_access(self, visit, day, ideas):
         if day is not None:
-            if not is_member(day.collection, self.request.user):
+            if not can_edit(self.request, day.collection):
                 raise PermissionDenied("You do not have permission to add an activity to this day.")
             return
         if ideas is not None:
-            if not is_member(ideas, self.request.user):
+            if not can_edit(self.request, ideas):
                 raise PermissionDenied("You do not have permission to add an activity to this collection.")
             return
         if visit is None or visit.location is None:
@@ -131,7 +133,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
         parent_collection = activity_collection(instance)
         location = instance.visit.location if instance.visit_id else None
         if parent_collection is not None:
-            if not is_member(parent_collection, self.request.user):
+            if not can_edit(self.request, parent_collection):
                 raise PermissionDenied("You do not have permission to update this activity.")
             owner = parent_collection.user
         elif location is not None:
@@ -161,7 +163,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         parent_collection = activity_collection(instance)
         if parent_collection is not None:
-            if not is_member(parent_collection, self.request.user):
+            if not can_edit(self.request, parent_collection):
                 raise PermissionDenied("You do not have permission to delete this activity.")
         else:
             location = instance.visit.location if instance.visit_id else None
@@ -178,7 +180,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     def log_visited(self, request, pk=None):
         """Copy this day activity onto one location stop's visit. The day activity stays."""
         activity = self.get_object()
-        if not is_member(activity_collection(activity), request.user):
+        if not can_edit(request, activity_collection(activity)):
             raise PermissionDenied("You do not have permission to log this activity.")
         placement = None
         placement_id = request.data.get('placement')

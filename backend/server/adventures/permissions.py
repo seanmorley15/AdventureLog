@@ -1,5 +1,7 @@
 from rest_framework import permissions
 
+from adventures.utils.audience import audience_for_request, can_edit, has_guest_token, is_member
+
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
     Owners can edit, others have read-only access.
@@ -23,22 +25,12 @@ class IsPublicReadOnly(permissions.BasePermission):
 
 class CollectionShared(permissions.BasePermission):
     """
-    Permission class for collection sharing functionality.
-    
-    This permission handles access control for collections and objects that are shared
-    through collections. It supports:
-    
-    - Collection invite acceptance/declining for users with pending invites
-    - Full access for collection owners and shared users
-    - Read-only access for public objects (anonymous and authenticated users)
-    - Write access for owners and users shared via collections
-    
-    Access Rules:
-    - Anonymous users: read-only access to public objects
-    - Invited users: can accept/decline invites for collections they're invited to
-    - Collection owners: full access to their collections and related objects
-    - Shared users: full access to collections they're shared with and related objects
-    - Public access: read-only for objects marked as public
+    Access to a collection itself.
+
+    Reads follow the audience: members and guest links see the plan, and a
+    public reader sees the story. Changing the collection record (visibility,
+    members, delete) is owner-only. Members may leave, and invited users may
+    accept or decline.
     """
     def has_permission(self, request, view):
         return (request.user and request.user.is_authenticated) or \
@@ -46,102 +38,58 @@ class CollectionShared(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if not user or not user.is_authenticated:
-            # Anonymous: only read public
-            return request.method in permissions.SAFE_METHODS and getattr(obj, 'is_public', False)
-
-        # Special case for accept_invite and decline_invite actions
-        # Allow access if user has a pending invite for this collection
-        if hasattr(view, 'action') and view.action in ['accept_invite', 'decline_invite']:
-            if hasattr(obj, 'invites'):
-                if obj.invites.filter(invited_user=user).exists():
-                    return True
-
-        # If obj is a Collection, shared users are read-only.
-        if obj.__class__.__name__ == 'Collection':
-            if obj.user == user:
-                return True
-            if request.method in permissions.SAFE_METHODS:
-                return obj.shared_with.filter(id=user.id).exists() or getattr(obj, 'is_public', False)
+        if obj.__class__.__name__ != 'Collection':
             return False
 
-        # Check if user is in shared_with of any collections related to the obj
-        if hasattr(obj, 'shared_with'):
-            if obj.shared_with.filter(id=user.id).exists():
-                return True
-
-        # If obj is a Location (has collections M2M)
-        if hasattr(obj, 'collections'):
-            # Check if user is in shared_with of any related collection
-            shared_collections = obj.collections.filter(shared_with=user)
-            if shared_collections.exists():
-                return True
-
-        # Read permission if public or owner
         if request.method in permissions.SAFE_METHODS:
-            return getattr(obj, 'is_public', False) or getattr(obj, 'user', None) == user
+            return audience_for_request(request, obj) is not None
 
-        # Write permission only if owner or shared user via collections
-        if getattr(obj, 'user', None) == user:
-            return True
+        if not user or not user.is_authenticated:
+            return False
 
-        if hasattr(obj, 'collections'):
-            if obj.collections.filter(shared_with=user).exists():
-                return True
-
-        # Default deny
-        return False
+        action = getattr(view, 'action', None)
+        if action in ('accept_invite', 'decline_invite'):
+            return obj.invites.filter(invited_user=user).exists()
+        if action == 'leave':
+            return is_member(request, obj)
+        return obj.user_id == user.id
 
 
 class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
     """
-    Permission class that provides access control based on ownership and sharing.
-    
-    Access Rules:
-    - Object owners have full access (read/write)
-    - Users shared via collections have full access (read/write)
-    - Collection owners have full access to objects in their collections
-    - Users with direct sharing have full access
-    - Anonymous users get read-only access to public objects
-    - Authenticated users get read-only access to public objects
-    
-    Supports multiple sharing patterns:
-    - obj.collections (many-to-many collections)
-    - obj.collection (single collection foreign key)
-    - obj.shared_with (direct sharing many-to-many)
-    - obj.is_public (public access flag)
+    Records reached through a collection follow that collection's audience.
+
+    - Owners of the record have full access.
+    - Collection owners, editors, and guest editors can change records in it.
+    - Viewers and guest viewers can read them and change nothing.
+    - ``is_public`` still opens a location (its own page) and records that are
+      not in a collection. It does not open lodging, transport, notes, or
+      checklists that belong to a collection, and it never grants a write.
     """
-    
+
     def has_object_permission(self, request, view, obj):
-        """
-        Check if the user has permission to access the object.
-        
-        Args:
-            request: The HTTP request
-            view: The view being accessed
-            obj: The object being accessed
-            
-        Returns:
-            bool: True if access is granted, False otherwise
-        """
         user = request.user
         is_safe_method = request.method in permissions.SAFE_METHODS
+
+        def collection_allows(collection):
+            if collection is None:
+                return False
+            return is_member(request, collection) if is_safe_method else can_edit(request, collection)
 
         # Day-owned activities and trails belong to the collection's members.
         # Do not follow visit.location or trail.location when that parent is null,
         # and do not treat a public collection as permission to read the file.
         if type(obj).__name__ == 'Trail' and obj.location_id is None:
-            collection = obj.day.collection if obj.day_id else obj.collection
-            return self._day_file_member(collection, user)
+            return collection_allows(obj.day.collection if obj.day_id else obj.collection)
 
         if type(obj).__name__ == 'Activity' and obj.visit_id is None:
-            collection = obj.day.collection if obj.day_id else obj.collection
-            return self._day_file_member(collection, user)
+            return collection_allows(obj.day.collection if obj.day_id else obj.collection)
 
         if type(obj).__name__ == 'CollectionItineraryDay':
-            return self._day_file_member(obj.collection, user)
+            return collection_allows(obj.collection)
 
-        # If the object has a location field, get that location and continue checking with that object, basically from the location's perspective. I am very proud of this line of code and that's why I am writing this comment.
+        if type(obj).__name__ == 'CollectionItineraryItem':
+            return collection_allows(obj.collection)
 
         if type(obj).__name__ == 'Trail':
             obj = obj.location
@@ -151,130 +99,54 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
             if obj.visit_id and getattr(obj.visit, 'location', None) is not None:
                 obj = obj.visit.location
 
-        
         if type(obj).__name__ == 'Visit':
-            # print("Checking permissions for Visit object", obj)
-            # If the object is a Visit, get its location
             if hasattr(obj, 'location'):
                 obj = obj.location
 
-        if type(obj).__name__ == 'CollectionItineraryItem':
-            # print("Checking permissions for CollectionItineraryItem object", obj)
-            if hasattr(obj, 'object_id') and hasattr(obj, 'content_type'):
-                content_object = obj.content_type.get_object_for_this_type(id=obj.object_id)
-                obj = content_object
+        authenticated = bool(user and user.is_authenticated)
 
-        # Anonymous users only get read access to public objects
-        if not user or not user.is_authenticated:
-            return is_safe_method and getattr(obj, 'is_public', False)
-        
         # Owner always has full access
-        if self._is_owner(obj, user):
+        if authenticated and self._is_owner(obj, user):
             return True
-        
-        # Check collection-based access (both ownership and sharing)
-        if self._has_collection_access(obj, user):
+
+        # Collection-based access (owner, members, guest links)
+        if self._has_collection_access(request, obj, is_safe_method):
             return True
-        
+
         # Check direct sharing
-        if self._has_direct_sharing_access(obj, user):
+        if authenticated and self._has_direct_sharing_access(obj, user):
             return True
-        
-        # For safe methods, check if object is public
+
+        # A record's own public flag opens it for reading, unless a collection owns it.
         if is_safe_method and getattr(obj, 'is_public', False):
-            return True
-        
+            return getattr(obj, 'collection_id', None) is None
+
         return False
-    
-    def _day_file_member(self, collection, user):
-        """Owner and shared_with only. A public collection does not grant access."""
-        if collection is None or not user or not user.is_authenticated:
-            return False
-        if collection.user_id == user.id:
-            return True
-        return collection.shared_with.filter(id=user.id).exists()
 
     def _is_owner(self, obj, user):
-        """
-        Check if the user is the owner of the object.
-        
-        Args:
-            obj: The object to check
-            user: The user to check ownership for
-            
-        Returns:
-            bool: True if user owns the object
-        """
         return hasattr(obj, 'user') and obj.user == user
-    
-    def _has_collection_access(self, obj, user):
-        """
-        Check if user has access via collections (either as owner or shared user).
-        
-        Handles both many-to-many collections and single collection foreign keys.
-        
-        Args:
-            obj: The object to check
-            user: The user to check access for
-            
-        Returns:
-            bool: True if user has collection-based access
-        """
-        # Check many-to-many collections (obj.collections)
+
+    def _has_collection_access(self, request, obj, is_safe_method):
+        check = is_member if is_safe_method else can_edit
         if hasattr(obj, 'collections'):
-            collections = obj.collections.all()
-            if collections.exists():
-                # User is shared with any collection containing this object
-                if collections.filter(shared_with=user).exists():
+            for collection in obj.collections.all():
+                if check(request, collection):
                     return True
-                # User owns any collection containing this object
-                if collections.filter(user=user).exists():
-                    return True
-        
-        # Check single collection foreign key (obj.collection)
         if hasattr(obj, 'collection') and obj.collection:
-            collection = obj.collection
-            # User is shared with the collection
-            if hasattr(collection, 'shared_with') and collection.shared_with.filter(id=user.id).exists():
+            if check(request, obj.collection):
                 return True
-            # User owns the collection
-            if hasattr(collection, 'user') and collection.user == user:
-                return True
-        
         return False
-    
+
     def _has_direct_sharing_access(self, obj, user):
-        """
-        Check if user has direct sharing access to the object.
-        
-        Args:
-            obj: The object to check
-            user: The user to check access for
-            
-        Returns:
-            bool: True if user has direct sharing access
-        """
-        return (hasattr(obj, 'shared_with') and 
+        return (obj.__class__.__name__ != 'Collection' and hasattr(obj, 'shared_with') and
                 obj.shared_with.filter(id=user.id).exists())
-    
+
     def has_permission(self, request, view):
-        """
-        Check if the user has permission to access the view.
-        
-        This is called before has_object_permission and provides a way to
-        deny access at the view level (e.g., for unauthenticated users).
-        
-        Args:
-            request: The HTTP request
-            view: The view being accessed
-            
-        Returns:
-            bool: True if access is granted at the view level
-        """
-        # Allow authenticated users and anonymous users for safe methods
-        # Individual object permissions are handled in has_object_permission
+        # Authenticated users, anonymous reads, and requests carrying a live guest link.
+        # Object permissions decide the rest.
         return (request.user and request.user.is_authenticated) or \
-               request.method in permissions.SAFE_METHODS
+               request.method in permissions.SAFE_METHODS or \
+               has_guest_token(request)
     
 
 class ContentImagePermission(IsOwnerOrSharedWithFullAccess):
