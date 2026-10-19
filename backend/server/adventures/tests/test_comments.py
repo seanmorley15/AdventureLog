@@ -297,3 +297,37 @@ class CommentBackupTests(CommentTestBase):
         self.assertTrue(Collection.objects.filter(user=self.owner, name='Lofoten', type='trip').exists())
         data['backup_schema'] = 7
         self.assertEqual(self.restore(data).status_code, 400)
+
+
+class ProfileLinkTests(CommentTestBase):
+    def test_authors_carry_profile_details_and_visibility_of_the_link(self):
+        private = make_user('private-person')
+        private.public_profile = False
+        private.save()
+        self.trip.shared_with.add(private)
+        self.as_user(private)
+        self.post(body='from a private profile')
+        self.as_user(self.editor)
+        self.post(body='from a public profile')
+
+        author = {c['body']: c['author'] for c in self.thread().json()['comments']}
+        self.assertEqual(author['from a public profile']['username'], 'editor')
+        self.assertTrue(author['from a public profile']['can_view_profile'])
+        # Members see who wrote it, but a private profile has no page to open.
+        self.assertEqual(author['from a private profile']['username'], 'private-person')
+        self.assertFalse(author['from a private profile']['can_view_profile'])
+
+        # People always can open their own.
+        self.as_user(private)
+        own = {c['body']: c['author'] for c in self.thread().json()['comments']}
+        self.assertTrue(own['from a private profile']['can_view_profile'])
+
+    def test_activity_and_inbox_name_the_person(self):
+        self.as_user(self.editor)
+        self.post(body='hello @owner')
+        self.as_user(self.owner)
+        feed = self.client.get('/api/collection-activity/', {'collection': str(self.trip.id)}).json()
+        self.assertEqual(feed[0]['actor']['username'], 'editor')
+        self.assertTrue(feed[0]['actor']['can_view_profile'])
+        inbox = self.client.get(f'{COMMENTS}inbox/').json()['comments'][0]
+        self.assertEqual(inbox['author']['username'], 'editor')

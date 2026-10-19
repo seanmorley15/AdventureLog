@@ -82,6 +82,7 @@ export type CollectionComment = {
 		username: string | null;
 		uuid: string | null;
 		profile_pic: string | null;
+		can_view_profile?: boolean;
 		is_guest: boolean;
 	};
 	mentions?: string[];
@@ -103,6 +104,12 @@ export type CommentInboxItem = {
 	thread: CommentThread;
 	day_index: number | null;
 	author_name: string;
+	author?: {
+		name: string;
+		username: string | null;
+		profile_pic: string | null;
+		can_view_profile: boolean;
+	};
 	excerpt: string;
 	created_at: string;
 	mentions_me: boolean;
@@ -119,6 +126,11 @@ export type CollectionActivityEvent = {
 		| 'member_added'
 		| 'member_removed';
 	actor_name: string;
+	actor?: {
+		username: string | null;
+		profile_pic: string | null;
+		can_view_profile: boolean;
+	};
 	data: Record<string, any>;
 	created_at: string;
 };

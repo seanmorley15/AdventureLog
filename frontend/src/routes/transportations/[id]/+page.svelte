@@ -1,40 +1,45 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import type { Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
-	import Lost from '$lib/assets/undraw_lost.svg';
-	import FullMap from '$lib/components/map/FullMap.svelte';
-	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import { GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 
-	import ClipboardList from '~icons/mdi/clipboard-list';
+	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import TextBoxOutline from '~icons/mdi/text-box-outline';
+	import ImageMultiple from '~icons/mdi/image-multiple-outline';
+	import Paperclip from '~icons/mdi/paperclip';
+	import ClockOutline from '~icons/mdi/clock-outline';
+	import RouteIcon from '~icons/mdi/routes';
+	import TicketConfirmation from '~icons/mdi/ticket-confirmation-outline';
+	import DetailHeader from '$lib/components/detail/DetailHeader.svelte';
+	import DetailCard from '$lib/components/detail/DetailCard.svelte';
+	import DetailFact from '$lib/components/detail/DetailFact.svelte';
+	import DetailDateTime from '$lib/components/detail/DetailDateTime.svelte';
+	import DetailPhotos from '$lib/components/detail/DetailPhotos.svelte';
+	import DetailMapPanel from '$lib/components/detail/DetailMapPanel.svelte';
+	import DetailMapPin from '$lib/components/detail/DetailMapPin.svelte';
+	import DetailMapPopup from '$lib/components/detail/DetailMapPopup.svelte';
+	import DetailVisibilityBadge from '$lib/components/detail/DetailVisibilityBadge.svelte';
+	import DetailNotFound from '$lib/components/detail/DetailNotFound.svelte';
+	import DetailLoading from '$lib/components/detail/DetailLoading.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '$lib';
-	import Star from '~icons/mdi/star';
-	import StarOutline from '~icons/mdi/star-outline';
 	import MapMarker from '~icons/mdi/map-marker';
-	import CalendarRange from '~icons/mdi/calendar-range';
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
-	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
 	import { dateFormatFromUser } from '$lib/dateFormat';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
+	import { routeLine, type LngLat } from '$lib/map/routeArc';
 	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 
 	const renderMarkdown = (markdown: string) => {
@@ -47,44 +52,22 @@
 
 	let { data }: Props = $props();
 	const dateFormat = $derived(dateFormatFromUser(data.user));
-	$effect(() => {
-		console.log(data);
-	});
-
 	let transportation = $state<Transportation | undefined>(undefined);
-	let currentSlide = $state(0);
-
-	function goToSlide(index: number) {
-		currentSlide = index;
-	}
 
 	let notFound: boolean = $state(false);
-	let mapCenter: [number, number] | null = $state(null);
-	let attachmentGeojson: any = $state(null);
 	let modalInitialIndex: number = $state(0);
 	let isImageModalOpen: boolean = $state(false);
 	let isEditModalOpen: boolean = $state(false);
-	let localTravelWindow: string | null = $state(null);
-	let showLocalTripTime: boolean = $state(false);
 	let mapBasemapType = $state(normalizeBasemapType(undefined));
 	$effect.pre(() => {
 		mapBasemapType = normalizeBasemapType(data.user?.map_style);
 	});
-	let showImagePins = $state(true);
 
 	function getTransportationIcon(type: string) {
 		if (type in TRANSPORTATION_TYPES_ICONS) {
 			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
 		}
 		return '🚗';
-	}
-
-	function renderStars(rating: number) {
-		const stars = [];
-		for (let i = 1; i <= 5; i++) {
-			stars.push(i <= rating);
-		}
-		return stars;
 	}
 
 	onMount(async () => {
@@ -119,32 +102,6 @@
 			return `${transportation.from_location} → ${transportation.to_location}`;
 		}
 		return transportation.from_location ?? transportation.to_location ?? '';
-	}
-
-	function formatTravelWindow(
-		start: string | null,
-		end: string | null,
-		startTimezone: string | null,
-		endTimezone: string | null
-	) {
-		if (!start && !end) return null;
-
-		const formatDate = (date: string | null, timezone: string | null) => {
-			if (!date) return '';
-			if (isAllDay(date)) {
-				return formatAllDayDate(date, dateFormat);
-			}
-			return formatDateInTimezone(date, timezone, dateFormat);
-		};
-
-		if (start && end) {
-			return `${formatDate(start, startTimezone)} → ${formatDate(end, endTimezone ?? startTimezone)}`;
-		} else if (start) {
-			return `${$t('adventures.start') ?? 'Start'}: ${formatDate(start, startTimezone)}`;
-		} else if (end) {
-			return `${$t('adventures.end') ?? 'End'}: ${formatDate(end, endTimezone)}`;
-		}
-		return null;
 	}
 
 	function calculateDuration(
@@ -227,7 +184,7 @@
 		}
 	}
 
-	function collectAttachmentGeojson(item: Transportation) {
+	function collectAttachmentGeojson(item: Transportation): any {
 		if (!item.attachments || item.attachments.length === 0) return null;
 		const features: any[] = [];
 		for (const a of item.attachments) {
@@ -248,18 +205,6 @@
 	}
 
 	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-	const getTimezoneLabel = (zone?: string | null) => zone ?? localTimeZone;
-	const getTimezoneTip = (zone?: string | null) => {
-		const label = getTimezoneLabel(zone);
-		return label === localTimeZone
-			? null
-			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${label}. ${
-					$t('adventures.your_time') ?? 'Your time'
-				}: ${localTimeZone}.`;
-	};
-	const shouldShowTzBadge = (zone?: string | null) =>
-		!!zone && getTimezoneLabel(zone) !== localTimeZone;
-
 	function formatLocalTravelWindow(
 		start: string | null,
 		end: string | null,
@@ -286,12 +231,6 @@
 	const primaryTripTimezone = (startTimezone: string | null, endTimezone: string | null) =>
 		startTimezone ?? endTimezone ?? null;
 
-	function shouldShowTripTimezone(startTimezone: string | null, endTimezone: string | null) {
-		const tz = primaryTripTimezone(startTimezone, endTimezone);
-		if (!tz) return false;
-		return tz !== localTimeZone;
-	}
-
 	let imagePinGeoJson = $derived(
 		transportation
 			? contentImagesToGeoJson(transportation.images, {
@@ -301,7 +240,6 @@
 				})
 			: EMPTY_IMAGE_PIN_GEOJSON
 	);
-	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
 	let transportationPriceLabel = $derived(
 		transportation
 			? formatMoney(
@@ -313,46 +251,63 @@
 				)
 			: null
 	);
-	run(() => {
-		mapCenter = transportation ? getMapCenter(transportation) : null;
+	// Both ends of the route, when known: drawn as a line and zoomed to so both are visible.
+	let routeEnds = $derived.by((): [LngLat, LngLat] | null => {
+		if (!transportation || !hasOriginCoordinates(transportation)) return null;
+		if (!hasDestinationCoordinates(transportation)) return null;
+		return [
+			[Number(transportation.origin_longitude), Number(transportation.origin_latitude)],
+			[Number(transportation.destination_longitude), Number(transportation.destination_latitude)]
+		];
 	});
-	run(() => {
-		attachmentGeojson = transportation ? collectAttachmentGeojson(transportation) : null;
-	});
-	run(() => {
-		localTravelWindow = transportation
+	let routeFeature = $derived(
+		routeEnds && transportation
+			? routeLine(routeEnds[0], routeEnds[1], transportation.type === 'plane')
+			: null
+	);
+	let mapCenter = $derived(transportation ? getMapCenter(transportation) : null);
+	let attachmentGeojson = $derived(
+		transportation ? collectAttachmentGeojson(transportation) : null
+	);
+	let localTravelWindow = $derived(
+		transportation
 			? formatLocalTravelWindow(
 					transportation.date,
 					transportation.end_date,
 					transportation.start_timezone,
 					transportation.end_timezone
 				)
-			: null;
-	});
-	run(() => {
-		showLocalTripTime = Boolean(
+			: null
+	);
+	let showLocalTripTime = $derived(
+		Boolean(
 			localTravelWindow &&
 			primaryTripTimezone(
 				transportation?.start_timezone ?? null,
 				transportation?.end_timezone ?? null
 			) !== localTimeZone
-		);
-	});
+		)
+	);
+	let duration = $derived(
+		transportation
+			? calculateDuration(
+					transportation.date,
+					transportation.end_date,
+					transportation.start_timezone,
+					transportation.end_timezone
+				)
+			: null
+	);
+	let isOwner = $derived(
+		Boolean(data.user?.uuid && transportation?.user && data.user.uuid === transportation.user)
+	);
 </script>
 
 {#if notFound}
-	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
-		<div class="hero-content text-center">
-			<div class="max-w-md">
-				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">Transportation not found</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
-				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
-					{$t('adventures.homepage')}
-				</button>
-			</div>
-		</div>
-	</div>
+	<DetailNotFound
+		title={$t('adventures.transportation_not_found')}
+		description={$t('adventures.location_not_found_desc')}
+	/>
 {/if}
 
 {#if isEditModalOpen}
@@ -374,575 +329,253 @@
 {/if}
 
 {#if !transportation && !notFound}
-	<div class="hero min-h-screen overflow-x-hidden">
-		<div class="hero-content">
-			<span class="loading loading-spinner w-24 h-24 text-primary"></span>
-		</div>
-	</div>
+	<DetailLoading />
 {/if}
 
-{#if transportation}
-	{#if data.user?.uuid && transportation.user && data.user.uuid === transportation.user}
-		<div class="fixed bottom-6 right-6 z-50">
-			<button
-				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-				onclick={() => (isEditModalOpen = true)}
-			>
-				<ClipboardList class="w-8 h-8" />
-			</button>
-		</div>
-	{/if}
-
-	<!-- Hero Section -->
-	<div class="relative">
-		<div
-			class="hero min-h-[60vh] relative overflow-hidden"
-			class:min-h-[30vh]={!transportation.images || transportation.images.length === 0}
+<!-- One map marker per end of the route -->
+{#snippet endpoint(kind: 'from' | 'to', lng: number, lat: number)}
+	{#if transportation}
+		<DetailMapPin
+			lngLat={[lng, lat]}
+			icon={getTransportationIcon(transportation.type)}
+			tone="transportation"
+			label={$t(kind === 'from' ? 'detail.route_from' : 'detail.route_to')}
 		>
-			<!-- Background: Images or Gradient -->
-			{#if transportation.images && transportation.images.length > 0}
-				<div class="hero-overlay bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-				{#each transportation.images as image, i}
-					<div
-						class="absolute inset-0 transition-opacity duration-500"
-						class:opacity-100={i === currentSlide}
-						class:opacity-0={i !== currentSlide}
-					>
-						<button
-							class="w-full h-full p-0 bg-transparent border-0"
-							onclick={() => openImageModal(i)}
-							aria-label={`View full image of ${transportation.name}`}
-						>
-							<ImageFrame source={image.source} className="w-full h-full">
-								<img
-									src={image.image}
-									class="w-full h-full object-cover"
-									alt={transportation.name}
-								/>
-							</ImageFrame>
-						</button>
-					</div>
-				{/each}
-			{:else}
-				<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
+			<DetailMapPopup
+				title={transportation.name}
+				subtitle={`${$t(`transportation.${kind}_location`)} ${getTransportationIcon(transportation.type)}`}
+				rating={transportation.rating}
+				address={kind === 'from' ? transportation.from_location : transportation.to_location}
+			/>
+		</DetailMapPin>
+	{/if}
+{/snippet}
+
+{#if transportation}
+	<DetailHeader
+		title={transportation.name}
+		emoji={getTransportationIcon(transportation.type)}
+		rating={transportation.rating}
+		images={transportation.images ?? []}
+		onOpenImage={openImageModal}
+	>
+		{#snippet chips()}
+			{#if transportation?.type}
+				<span class="badge badge-primary">{$t(`transportation.modes.${transportation.type}`)}</span>
 			{/if}
+			{#if transportation && (transportation.from_location || transportation.to_location)}
+				<span class="badge badge-neutral gap-1">
+					<MapMarker class="h-3.5 w-3.5" />
+					{getRouteLabel()}
+				</span>
+			{/if}
+			{#if transportation && getRouteCodes(transportation)}
+				<span class="badge badge-outline font-mono">{getRouteCodes(transportation)}</span>
+			{/if}
+			<DetailVisibilityBadge isPublic={Boolean(transportation?.is_public)} />
+		{/snippet}
+		{#snippet actions()}
+			{#if isOwner}
+				<button class="btn btn-primary btn-sm gap-2" onclick={() => (isEditModalOpen = true)}>
+					<FileDocumentEdit class="h-4 w-4" />
+					{$t('detail.edit')}
+				</button>
+			{/if}
+		{/snippet}
+	</DetailHeader>
 
-			<!-- Content -->
-			<div
-				class="hero-content relative z-10 text-center"
-				class:text-white={transportation.images?.length > 0}
-			>
-				<div class="max-w-4xl">
-					<div class="flex justify-center items-center gap-3 mb-4">
-						<span class="text-5xl">{getTransportationIcon(transportation.type)}</span>
-						<h1 class="text-6xl font-bold drop-shadow-lg">{transportation.name}</h1>
-					</div>
-
-					<!-- Rating -->
-					{#if transportation.rating !== undefined && transportation.rating !== null}
-						<div class="flex justify-center mb-6">
-							<div class="rating rating-lg">
-								{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-									<input
-										type="radio"
-										name="rating-hero"
-										class="mask mask-star-2 bg-warning"
-										checked={star <= transportation.rating}
-										disabled
-									/>
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					<!-- Quick Info Badges -->
-					<div class="flex flex-wrap justify-center gap-4 mb-6">
-						{#if transportation.type}
-							<div class="badge badge-lg badge-primary font-semibold px-4 py-3">
-								{$t(`transportation.modes.${transportation.type}`)}
-							</div>
-						{/if}
-						{#if transportation.from_location}
-							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
-								🚩 {transportation.from_location}
-							</div>
-						{/if}
-						{#if transportation.to_location}
-							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
-								🏁 {transportation.to_location}
-							</div>
-						{/if}
-						{#if getRouteCodes(transportation)}
-							<div class="badge badge-lg badge-outline font-semibold px-4 py-3 gap-2">
-								✈️ {getRouteCodes(transportation)}
-							</div>
-						{/if}
-						{#if transportation.is_public}
-							<div class="badge badge-lg badge-accent font-semibold px-4 py-3">
-								👁️ {$t('adventures.public')}
-							</div>
-						{:else}
-							<div class="badge badge-lg badge-ghost font-semibold px-4 py-3">
-								🔒 {$t('adventures.private')}
-							</div>
-						{/if}
-					</div>
-
-					<!-- Image Navigation (only shown when multiple images exist) -->
-					{#if transportation.images && transportation.images.length > 1}
-						<div class="w-full max-w-md mx-auto">
-							<!-- Navigation arrows and current position -->
-							<div class="flex items-center justify-center gap-4 mb-3">
-								<button
-									onclick={() =>
-										goToSlide(
-											currentSlide > 0 ? currentSlide - 1 : (transportation?.images.length ?? 1) - 1
-										)}
-									class="btn btn-circle btn-sm btn-primary"
-									aria-label={$t('adventures.previous_image')}
-								>
-									❮
-								</button>
-
-								<div class="text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
-									{currentSlide + 1} / {transportation.images.length}
-								</div>
-
-								<button
-									onclick={() =>
-										goToSlide(
-											currentSlide < (transportation?.images.length ?? 1) - 1 ? currentSlide + 1 : 0
-										)}
-									class="btn btn-circle btn-sm btn-primary"
-									aria-label={$t('adventures.next_image')}
-								>
-									❯
-								</button>
-							</div>
-
-							<!-- Dot navigation -->
-							{#if transportation.images.length <= 12}
-								<div class="flex justify-center gap-2 flex-wrap">
-									{#each transportation.images as _, i}
-										<button
-											onclick={() => goToSlide(i)}
-											class="btn btn-circle btn-xs transition-all duration-200"
-											class:btn-primary={i === currentSlide}
-											class:btn-outline={i !== currentSlide}
-											class:opacity-50={i !== currentSlide}
-										>
-											{i + 1}
-										</button>
-									{/each}
-								</div>
-							{:else}
-								<div class="relative">
-									<div
-										class="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-black/30 to-transparent pointer-events-none"
-									></div>
-									<div
-										class="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-black/30 to-transparent pointer-events-none"
-									></div>
-								</div>
-							{/if}
-						</div>
-					{/if}
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Main Content -->
-	<div class="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-7xl">
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-			<!-- Left Column - Main Content -->
-			<div class="lg:col-span-2 space-y-6 sm:space-y-8">
-				<!-- Description Card -->
+	<div class="container mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-6">
+		<div class="grid grid-cols-1 items-start gap-4 sm:gap-6 lg:grid-cols-3">
+			<!-- Main column -->
+			<div class="space-y-4 sm:space-y-6 lg:col-span-2">
 				{#if transportation.description}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">📝 {$t('adventures.description')}</h2>
-							<article class="prose max-w-none">
-								{@html DOMPurify.sanitize(renderMarkdown(transportation.description))}
-							</article>
-						</div>
-					</div>
+					<DetailCard title={$t('adventures.description')} icon={TextBoxOutline}>
+						<article class="prose max-w-none">
+							{@html DOMPurify.sanitize(renderMarkdown(transportation.description))}
+						</article>
+					</DetailCard>
 				{/if}
 
-				<!-- Map Section -->
 				{#if mapCenter}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.transportation')}</h2>
-							<div class="rounded-lg overflow-hidden shadow-lg">
-								<FullMap
-									bind:basemapType={mapBasemapType}
-									mapClass="w-full h-96"
-									center={mapCenter}
-									zoom={13}
-								>
-									{#snippet overlayControls({ map, fullscreenTarget })}
-										<div class="pointer-events-none absolute inset-0 z-20">
-											<MapTrackLayerControls bind:showImagePins {hasImagePins} />
-											<MapFloatingControls
-												{map}
-												{fullscreenTarget}
-												bind:basemapType={mapBasemapType}
-											/>
-										</div>
-									{/snippet}
+					<DetailMapPanel
+						title={$t('detail.route')}
+						hint={getRouteLabel() || $t('detail.map_hint')}
+						bind:basemapType={mapBasemapType}
+						center={mapCenter}
+						fitPoints={routeFeature
+							? (routeFeature.geometry.coordinates as [number, number][])
+							: undefined}
+						{imagePinGeoJson}
+					>
+						{#if routeFeature && !attachmentGeojson}
+							<!-- A sketch of the route: a flight arcs, other modes run straight and dashed -->
+							<GeoJSON data={routeFeature}>
+								<LineLayer
+									id="transportation-route-sketch"
+									layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+									paint={{
+										'line-color': '#f59e0b',
+										'line-width': 3,
+										'line-opacity': 0.9,
+										...(transportation.type === 'plane' ? {} : { 'line-dasharray': [2, 2] })
+									}}
+								/>
+							</GeoJSON>
+						{/if}
+						{#if hasOriginCoordinates(transportation)}
+							{@render endpoint(
+								'from',
+								Number(transportation.origin_longitude),
+								Number(transportation.origin_latitude)
+							)}
+						{/if}
+						{#if hasDestinationCoordinates(transportation)}
+							{@render endpoint(
+								'to',
+								Number(transportation.destination_longitude),
+								Number(transportation.destination_latitude)
+							)}
+						{/if}
+						{#if attachmentGeojson}
+							<!-- Attachment GeoJSON, e.g. a GPX track -->
+							<GeoJSON data={attachmentGeojson}>
+								<LineLayer
+									id="transportation-route"
+									paint={{ 'line-color': '#60a5fa', 'line-width': 4, 'line-opacity': 0.9 }}
+								/>
+							</GeoJSON>
+						{/if}
+						{#snippet footer()}
+							{#each [{ kind: 'from', place: transportation?.from_location }, { kind: 'to', place: transportation?.to_location }] as end}
+								{#if end.place}
+									<div class="flex flex-wrap items-center justify-between gap-2">
+										<span class="flex min-w-0 items-center gap-2 text-sm">
+											<MapMarker class="h-4 w-4 shrink-0 text-primary" />
+											<span class="text-base-content/60"
+												>{$t(`transportation.${end.kind}_location`)}</span
+											>
+											<span class="font-medium">{end.place}</span>
+										</span>
+										<ExternalMapLinks placeName={end.place} showLabel={false} />
+									</div>
+								{/if}
+							{/each}
+						{/snippet}
+					</DetailMapPanel>
+				{/if}
 
-									{#if hasOriginCoordinates(transportation)}
-										<DefaultMarker
-											lngLat={[
-												Number(transportation.origin_longitude),
-												Number(transportation.origin_latitude)
-											]}
-										>
-											<Popup openOn="click" offset={[0, -10]}>
-												<div class="p-2">
-													<div class="text-lg font-bold text-black mb-1">{transportation.name}</div>
-													<p class="font-semibold text-black text-sm mb-2">
-														{$t('transportation.from_location')}
-														{getTransportationIcon(transportation.type)}
-													</p>
-													{#if transportation.rating}
-														<div class="flex items-center gap-1 mb-2">
-															{#each renderStars(transportation.rating) as filled}
-																{#if filled}
-																	<Star class="w-4 h-4 text-warning fill-current" />
-																{:else}
-																	<StarOutline class="w-4 h-4 text-gray-400" />
-																{/if}
-															{/each}
-															<span class="text-xs text-black ml-1">
-																({transportation.rating}/5)
-															</span>
-														</div>
-													{/if}
-													{#if transportation.from_location}
-														<div class="text-xs text-black">
-															📍 {transportation.from_location}
-														</div>
-													{/if}
-												</div>
-											</Popup>
-										</DefaultMarker>
-									{/if}
-
-									{#if hasDestinationCoordinates(transportation)}
-										<DefaultMarker
-											lngLat={[
-												Number(transportation.destination_longitude),
-												Number(transportation.destination_latitude)
-											]}
-										>
-											<Popup openOn="click" offset={[0, -10]}>
-												<div class="p-2">
-													<div class="text-lg font-bold text-black mb-1">{transportation.name}</div>
-													<p class="font-semibold text-black text-sm mb-2">
-														{$t('transportation.to_location')}
-														{getTransportationIcon(transportation.type)}
-													</p>
-													{#if transportation.rating}
-														<div class="flex items-center gap-1 mb-2">
-															{#each renderStars(transportation.rating) as filled}
-																{#if filled}
-																	<Star class="w-4 h-4 text-warning fill-current" />
-																{:else}
-																	<StarOutline class="w-4 h-4 text-gray-400" />
-																{/if}
-															{/each}
-															<span class="text-xs text-black ml-1">
-																({transportation.rating}/5)
-															</span>
-														</div>
-													{/if}
-													{#if transportation.to_location}
-														<div class="text-xs text-black">
-															📍 {transportation.to_location}
-														</div>
-													{/if}
-												</div>
-											</Popup>
-										</DefaultMarker>
-									{/if}
-
-									{#if attachmentGeojson}
-										<!-- Render attachment GeoJSON (e.g., GPX converted to GeoJSON) -->
-										<GeoJSON data={attachmentGeojson}>
-											<LineLayer
-												id="transportation-route"
-												paint={{ 'line-color': '#60a5fa', 'line-width': 4, 'line-opacity': 0.9 }}
-											/>
-										</GeoJSON>
-									{/if}
-
-									<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
-								</FullMap>
-							</div>
-							{#if transportation.from_location || transportation.to_location}
-								<p class="mt-4 text-base-content/70 flex items-center gap-2">
-									<MapMarker class="w-5 h-5" />
-									{getRouteLabel()}
-								</p>
-
-								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-									{#if transportation.from_location}
-										<div class="rounded-lg p-3 bg-gradient-to-br from-primary/10 to-secondary/10">
-											<p class="flex items-center gap-2 text-sm mb-2">
-												<MapMarker class="w-4 h-4" />
-												{transportation.from_location}
-											</p>
-											<ExternalMapLinks placeName={transportation.from_location} />
-										</div>
-									{/if}
-
-									{#if transportation.to_location}
-										<div class="rounded-lg p-3 bg-gradient-to-br from-primary/10 to-secondary/10">
-											<p class="flex items-center gap-2 text-sm mb-2">
-												<MapMarker class="w-4 h-4" />
-												{transportation.to_location}
-											</p>
-											<ExternalMapLinks placeName={transportation.to_location} />
-										</div>
-									{/if}
-								</div>
-							{/if}
-						</div>
-					</div>
+				{#if transportation.images && transportation.images.length > 1}
+					<DetailCard
+						title={$t('detail.photos')}
+						hint={$t('detail.photos_hint')}
+						icon={ImageMultiple}
+					>
+						{#snippet actions()}
+							<span class="badge badge-ghost">{transportation?.images.length}</span>
+						{/snippet}
+						<DetailPhotos
+							images={transportation.images}
+							name={transportation.name}
+							onOpen={openImageModal}
+						/>
+					</DetailCard>
 				{/if}
 			</div>
 
-			<!-- Right Column - Sidebar -->
+			<!-- Sidebar -->
 			<div class="space-y-4 sm:space-y-6">
-				<!-- Quick Info Card -->
-				<div class="card bg-base-200 shadow-xl">
-					<div class="card-body">
-						<h2 class="card-title text-xl mb-4">ℹ️ {$t('adventures.details')}</h2>
-						<div class="space-y-4">
-							<!-- Departure/Arrival -->
-							{#if transportation.date || transportation.end_date}
-								<div class="flex items-start gap-3">
-									<CalendarRange class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div class="w-full space-y-2">
-										<p class="font-semibold text-sm opacity-70">{$t('adventures.dates')}</p>
-										<div class="space-y-2">
-											{#if transportation.date}
-												<div class="flex items-start justify-between gap-3 text-sm">
-													<div class="space-y-1">
-														<p class="text-xs uppercase tracking-wide opacity-60">
-															{$t('adventures.start') ?? 'Start'}
-														</p>
-														<p class="text-base font-semibold">
-															{#if isAllDay(transportation.date)}
-																{formatAllDayDate(transportation.date, dateFormat)}
-															{:else}
-																{formatDateInTimezone(
-																	transportation.date,
-																	transportation.start_timezone,
-																	dateFormat
-																)}
-															{/if}
-														</p>
-													</div>
-													{#if transportation.date && !isAllDay(transportation.date)}
-														<span
-															class="badge badge-ghost badge-xs"
-															class:tooltip={Boolean(getTimezoneTip(transportation.start_timezone))}
-															data-tip={getTimezoneTip(transportation.start_timezone) ?? undefined}
-														>
-															{#if shouldShowTzBadge(transportation.start_timezone)}
-																{getTimezoneLabel(transportation.start_timezone)}
-															{:else}
-																{$t('adventures.local') ?? 'Local'}
-															{/if}
-														</span>
-													{/if}
-												</div>
-											{/if}
+				<DetailCard title={$t('detail.details')} icon={ClockOutline}>
+					<div class="space-y-4">
+						{#if transportation.date}
+							<DetailDateTime
+								label={$t('adventures.start') ?? 'Start'}
+								value={transportation.date}
+								timezone={transportation.start_timezone}
+								{dateFormat}
+							/>
+						{/if}
+						{#if transportation.end_date}
+							<DetailDateTime
+								label={$t('adventures.end') ?? 'End'}
+								value={transportation.end_date}
+								timezone={transportation.end_timezone ?? transportation.start_timezone}
+								{dateFormat}
+							/>
+						{/if}
+						{#if duration || showLocalTripTime}
+							<p class="-mt-1 pl-12 text-sm text-base-content/70">
+								{duration ?? ''}
+								{#if showLocalTripTime}
+									{duration ? ' · ' : ''}{$t('adventures.local_time') ?? 'Local time'}: {localTravelWindow}
+								{/if}
+							</p>
+						{/if}
 
-											{#if transportation.end_date}
-												<div class="flex items-start justify-between gap-3 text-sm">
-													<div class="space-y-1">
-														<p class="text-xs uppercase tracking-wide opacity-60">
-															{$t('adventures.end') ?? 'End'}
-														</p>
-														<p class="text-base font-semibold">
-															{#if isAllDay(transportation.end_date)}
-																{formatAllDayDate(transportation.end_date, dateFormat)}
-															{:else}
-																{formatDateInTimezone(
-																	transportation.end_date,
-																	transportation.end_timezone ?? transportation.start_timezone,
-																	dateFormat
-																)}
-															{/if}
-														</p>
-													</div>
-													{#if transportation.end_date && !isAllDay(transportation.end_date)}
-														<span
-															class="badge badge-ghost badge-xs"
-															class:tooltip={Boolean(
-																getTimezoneTip(
-																	transportation.end_timezone ?? transportation.start_timezone
-																)
-															)}
-															data-tip={getTimezoneTip(
-																transportation.end_timezone ?? transportation.start_timezone
-															) ?? undefined}
-														>
-															{#if shouldShowTzBadge(transportation.end_timezone ?? transportation.start_timezone)}
-																{getTimezoneLabel(
-																	transportation.end_timezone ?? transportation.start_timezone
-																)}
-															{:else}
-																{$t('adventures.local') ?? 'Local'}
-															{/if}
-														</span>
-													{/if}
-												</div>
-											{/if}
+						<DetailFact
+							label={$t('transportation.type')}
+							emoji={getTransportationIcon(transportation.type)}
+						>
+							{$t(`transportation.modes.${transportation.type}`)}
+						</DetailFact>
 
-											{#if showLocalTripTime}
-												<p class="text-sm text-base-content/70">
-													{$t('adventures.local_time') ?? 'Local time'}: {localTravelWindow}
-												</p>
-											{/if}
-										</div>
-										{#if calculateDuration(transportation.date, transportation.end_date, transportation.start_timezone, transportation.end_timezone)}
-											<p class="text-sm opacity-70">
-												{calculateDuration(
-													transportation.date,
-													transportation.end_date,
-													transportation.start_timezone,
-													transportation.end_timezone
-												)}
-											</p>
-										{/if}
-									</div>
-								</div>
-							{/if}
+						{#if transportation.flight_number}
+							<DetailFact label={$t('transportation.flight_number')} icon={CardAccountDetails} mono>
+								{transportation.flight_number}
+							</DetailFact>
+						{/if}
 
-							<!-- Type -->
-							<div class="flex items-start gap-3">
-								<span class="text-xl mt-1 shrink-0"
-									>{getTransportationIcon(transportation.type)}</span
+						{#if getRouteCodes(transportation)}
+							<DetailFact
+								label={$t('transportation.codes') ?? 'Codes'}
+								icon={TicketConfirmation}
+								mono
+							>
+								{getRouteCodes(transportation)}
+							</DetailFact>
+						{/if}
+
+						{#if transportation.distance}
+							<DetailFact
+								label={$t('adventures.distance') ?? 'Distance'}
+								icon={MapMarkerDistanceIcon}
+							>
+								{formatDistance(transportation.distance)}
+							</DetailFact>
+						{/if}
+
+						{#if transportationPriceLabel}
+							<DetailFact label={$t('adventures.price')} icon={CashMultiple}>
+								<span class="font-semibold">{transportationPriceLabel}</span>
+							</DetailFact>
+						{/if}
+
+						{#if transportation.link}
+							<DetailFact label={$t('adventures.link')} icon={OpenInNew}>
+								<a
+									href={transportation.link}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="link link-primary break-all"
 								>
-								<div>
-									<p class="font-semibold text-sm opacity-70">{$t('transportation.type')}</p>
-									<p class="text-base">{$t(`transportation.modes.${transportation.type}`)}</p>
-								</div>
-							</div>
-
-							<!-- Flight Number -->
-							{#if transportation.flight_number}
-								<div class="flex items-start gap-3">
-									<CardAccountDetails class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div>
-										<p class="font-semibold text-sm opacity-70">
-											{$t('transportation.flight_number')}
-										</p>
-										<p class="text-base font-mono">{transportation.flight_number}</p>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Route Codes -->
-							{#if getRouteCodes(transportation)}
-								<div class="flex items-start gap-3">
-									<MapMarker class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div>
-										<p class="font-semibold text-sm opacity-70">
-											{$t('transportation.codes') ?? 'Codes'}
-										</p>
-										<p class="text-base font-mono">{getRouteCodes(transportation)}</p>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Distance -->
-							{#if transportation.distance}
-								<div class="flex items-start gap-3">
-									<MapMarkerDistanceIcon class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div>
-										<p class="font-semibold text-sm opacity-70">
-											{$t('adventures.distance') ?? 'Distance'}
-										</p>
-										<p class="text-base">{formatDistance(transportation.distance)}</p>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Price -->
-							{#if transportationPriceLabel}
-								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div>
-										<p class="font-semibold text-sm opacity-70">{$t('adventures.price')}</p>
-										<p class="text-base font-semibold">{transportationPriceLabel}</p>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Link -->
-							{#if transportation.link}
-								<div class="flex items-start gap-3">
-									<OpenInNew class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div class="flex-1">
-										<p class="font-semibold text-sm opacity-70 mb-1">{$t('adventures.link')}</p>
-										<a
-											href={transportation.link}
-											target="_blank"
-											rel="noopener noreferrer"
-											class="link link-primary text-base break-all"
-										>
-											{transportation.link}
-										</a>
-									</div>
-								</div>
-							{/if}
-						</div>
+									{transportation.link}
+								</a>
+							</DetailFact>
+						{/if}
 					</div>
-				</div>
+				</DetailCard>
 
-				<!-- Additional Images -->
-				{#if transportation.images && transportation.images.length > 0}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-xl mb-4">🖼️ {$t('adventures.images')}</h2>
-							<div class="grid grid-cols-2 gap-2">
-								{#each transportation.images as image, i}
-									<button
-										class="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity w-full"
-										onclick={() => openImageModal(i)}
-									>
-										<ImageFrame source={image.source} className="w-full h-full">
-											<img
-												src={image.image}
-												alt={`${transportation.name} - ${i + 1}`}
-												class="w-full h-full object-cover"
-											/>
-										</ImageFrame>
-									</button>
-								{/each}
-							</div>
-						</div>
-					</div>
-				{/if}
-
-				<!-- Attachments -->
 				{#if transportation.attachments && transportation.attachments.length > 0}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-xl mb-4">📎 {$t('adventures.attachments')}</h2>
-							<div class="space-y-2">
-								{#each transportation.attachments as attachment}
-									<AttachmentCard {attachment} />
-								{/each}
-							</div>
+					<DetailCard
+						title={$t('adventures.attachments')}
+						hint={$t('detail.files_hint')}
+						icon={Paperclip}
+					>
+						<div class="space-y-2">
+							{#each transportation.attachments as attachment}
+								<AttachmentCard {attachment} />
+							{/each}
 						</div>
-					</div>
+					</DetailCard>
 				{/if}
 			</div>
 		</div>

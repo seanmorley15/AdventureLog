@@ -6,6 +6,8 @@
 	import ActivityFeed from './ActivityFeed.svelte';
 	import CommentMultiple from '~icons/mdi/comment-multiple-outline';
 	import History from '~icons/mdi/history';
+	import ChevronLeft from '~icons/mdi/chevron-left';
+	import ChevronRight from '~icons/mdi/chevron-right';
 
 	interface Props {
 		collection: Collection;
@@ -15,12 +17,22 @@
 
 	let { collection, canEdit }: Props = $props();
 
-	let dayFilter = $state<string | null>(null);
+	// '' means every day; otherwise the id of the day being read and commented on.
+	let selectedDay = $state('');
+	let dayFilter = $derived(selectedDay || null);
 	let refreshKey = $state(0);
 
 	let days = $derived(
 		indexedDays(collection).map((day) => ({ id: day.id, index: day.index ?? 0, name: day.name }))
 	);
+	let dayPosition = $derived(days.findIndex((day) => day.id === selectedDay));
+
+	// Previous from "all days" goes to the first day, next from it to the first day too.
+	function step(direction: -1 | 1) {
+		const next = dayPosition < 0 ? (direction === 1 ? 0 : -1) : dayPosition + direction;
+		if (next >= 0 && next < days.length) selectedDay = days[next].id;
+	}
+
 	let members = $derived(
 		(collection.collaborators ?? []).map((person) => ({
 			username: person.username,
@@ -50,24 +62,41 @@
 				</div>
 			</div>
 
+			<!-- One day control for both reading and writing: it filters the list and is the
+			     day a new comment is about. A dropdown with step buttons stays tidy at any
+			     number of days. -->
 			{#if days.length}
-				<div class="tabs tabs-box w-full max-w-full flex-nowrap overflow-x-auto bg-base-200">
+				<div class="join w-full">
 					<button
 						type="button"
-						class="tab tab-sm shrink-0 {dayFilter === null ? 'tab-active' : ''}"
-						onclick={() => (dayFilter = null)}
+						class="btn btn-square join-item"
+						aria-label={$t('comments.previous_day')}
+						disabled={dayPosition <= 0}
+						onclick={() => step(-1)}
 					>
-						{$t('comments.all')}
+						<ChevronLeft class="h-5 w-5" />
 					</button>
-					{#each days as day (day.id)}
-						<button
-							type="button"
-							class="tab tab-sm shrink-0 {dayFilter === day.id ? 'tab-active' : ''}"
-							onclick={() => (dayFilter = day.id)}
-						>
-							{$t('story.day_n', { values: { n: day.index } })}
-						</button>
-					{/each}
+					<select
+						class="select join-item min-w-0 flex-1"
+						aria-label={$t('comments.about')}
+						bind:value={selectedDay}
+					>
+						<option value="">{$t('comments.all_days')}</option>
+						{#each days as day (day.id)}
+							<option value={day.id}>
+								{$t('story.day_n', { values: { n: day.index } })}{day.name ? ` · ${day.name}` : ''}
+							</option>
+						{/each}
+					</select>
+					<button
+						type="button"
+						class="btn btn-square join-item"
+						aria-label={$t('comments.next_day')}
+						disabled={dayPosition >= days.length - 1}
+						onclick={() => step(1)}
+					>
+						<ChevronRight class="h-5 w-5" />
+					</button>
 				</div>
 			{/if}
 

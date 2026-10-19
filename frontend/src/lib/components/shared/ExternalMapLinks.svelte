@@ -1,12 +1,25 @@
 <script lang="ts">
+	import { t } from 'svelte-i18n';
+	import Apple from '~icons/mdi/apple';
+	import GoogleMaps from '~icons/mdi/google-maps';
+	import MapOutline from '~icons/mdi/map-outline';
+
 	interface Props {
 		placeName?: string | null;
 		latitude?: number | null;
 		longitude?: number | null;
 		className?: string;
+		/** Hide the "Open in" label, e.g. where the context is already clear. */
+		showLabel?: boolean;
 	}
 
-	let { placeName = null, latitude = null, longitude = null, className = '' }: Props = $props();
+	let {
+		placeName = null,
+		latitude = null,
+		longitude = null,
+		className = '',
+		showLabel = true
+	}: Props = $props();
 
 	const normalize = (value: string | null | undefined) => value?.trim() || null;
 
@@ -36,48 +49,34 @@
 				)}&mlat=${latitude}&mlon=${longitude}`
 			: `https://www.openstreetmap.org/search?query=${encodeURIComponent(baseQuery)}`
 	);
+
+	const LINKS = $derived([
+		{ name: 'Apple Maps', short: 'Apple', href: appleMapsUrl, icon: Apple },
+		{ name: 'Google Maps', short: 'Google', href: googleMapsUrl, icon: GoogleMaps },
+		{ name: 'OpenStreetMap', short: 'OSM', href: osmMapsUrl, icon: MapOutline }
+	]);
 </script>
 
+<!-- One compact segmented control: no card, no repeated place name. -->
 {#if displayName || hasCoords}
-	<div
-		class={`rounded-lg p-3 bg-gradient-to-br from-primary/10 to-secondary/10 border border-base-300/60 shadow-xs ${className}`}
-	>
-		<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-			<div class="flex items-center gap-2">
-				<span class="badge badge-primary badge-outline">Open in maps</span>
-				{#if displayName}
-					<span class="text-sm font-semibold">{displayName}</span>
-				{/if}
-			</div>
-			{#if coordsLabel}
-				<span class="badge badge-ghost badge-sm">{coordsLabel}</span>
-			{/if}
-		</div>
-		<div class="grid grid-cols-3 gap-2">
-			<a
-				class="btn btn-sm btn-outline hover:btn-neutral"
-				href={appleMapsUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				🍎 Apple
-			</a>
-			<a
-				class="btn btn-sm btn-outline hover:btn-accent"
-				href={googleMapsUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				🌍 Google
-			</a>
-			<a
-				class="btn btn-sm btn-outline hover:btn-primary"
-				href={osmMapsUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-			>
-				🗺️ OSM
-			</a>
+	<div class="flex flex-wrap items-center gap-2 {className}">
+		{#if showLabel}
+			<span class="text-sm text-base-content/60">{$t('detail.open_in')}</span>
+		{/if}
+		<div class="join">
+			{#each LINKS as link (link.name)}
+				<a
+					class="btn btn-sm join-item gap-1.5"
+					href={link.href}
+					target="_blank"
+					rel="noopener noreferrer"
+					title={link.name}
+					aria-label={`${$t('detail.open_in')} ${link.name}`}
+				>
+					<link.icon class="h-4 w-4" />
+					{link.short}
+				</a>
+			{/each}
 		</div>
 	</div>
 {/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import type { CollectionActivityEvent } from '$lib/types';
+	import PersonAvatar from './PersonAvatar.svelte';
 	import CalendarArrowRight from '~icons/mdi/calendar-arrow-right';
 	import SwapVertical from '~icons/mdi/swap-vertical';
 	import CursorMove from '~icons/mdi/cursor-move';
@@ -106,9 +107,23 @@
 		{#each events as event (event.id)}
 			{@const Icon = ICONS[event.verb] ?? History}
 			<li class="flex items-start gap-3">
-				<div class="mt-0.5 shrink-0 self-start rounded-lg bg-primary/10 p-1.5">
-					<Icon class="h-4 w-4 text-primary" />
-				</div>
+				{#if event.actor?.username}
+					<div class="mt-0.5 shrink-0">
+						<PersonAvatar
+							person={{
+								name: event.actor_name,
+								username: event.actor.username,
+								profile_pic: event.actor.profile_pic,
+								can_view_profile: event.actor.can_view_profile
+							}}
+							size="sm"
+						/>
+					</div>
+				{:else}
+					<div class="mt-0.5 shrink-0 self-start rounded-lg bg-primary/10 p-1.5">
+						<Icon class="h-4 w-4 text-primary" />
+					</div>
+				{/if}
 				<div class="min-w-0">
 					<p class="text-sm">{describe(event)}</p>
 					{#if event.verb === 'comment_added' && event.data?.excerpt}

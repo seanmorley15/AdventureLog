@@ -53,9 +53,16 @@
 		const arr = (collection as any)[type];
 		if (!arr || !Array.isArray(arr)) return;
 
+		// The server removes the item's itinerary placements with it, so drop them here too.
+		// Otherwise the plan keeps a placement for something that no longer exists.
+		const itinerary = (collection.itinerary ?? []).filter(
+			(placement) => String(placement.object_id) !== String(id)
+		);
+
 		(collection as any) = {
 			...(collection as any),
-			[type]: arr.filter((item: any) => String(item.id) !== String(id))
+			[type]: arr.filter((item: any) => String(item.id) !== String(id)),
+			itinerary
 		};
 	}
 

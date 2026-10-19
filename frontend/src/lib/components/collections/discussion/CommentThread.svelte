@@ -4,13 +4,13 @@
 	import { t } from 'svelte-i18n';
 	import type { CollectionComment, CommentThread, CommentThreadResponse } from '$lib/types';
 	import { addToast } from '$lib/toasts';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import PersonAvatar from './PersonAvatar.svelte';
+	import PersonName from './PersonName.svelte';
 	import CommentOutline from '~icons/mdi/comment-outline';
 	import Send from '~icons/mdi/send';
 	import Reply from '~icons/mdi/reply';
 	import Pencil from '~icons/mdi/pencil-outline';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
-	import LinkVariant from '~icons/mdi/link-variant';
 
 	type DayOption = { id: string; index: number; name?: string | null };
 	type Member = { username: string; name: string };
@@ -42,7 +42,6 @@
 	let failed = $state(false);
 	let posting = $state(false);
 	let body = $state('');
-	let composerDay = $state<string>('');
 	let replyTo = $state<CollectionComment | null>(null);
 	let replyBody = $state('');
 	let editingId = $state<string | null>(null);
@@ -66,9 +65,10 @@
 					.slice(0, 6)
 	);
 
-	$effect(() => {
-		// A new day filter is also the default day for the next comment.
-		composerDay = dayFilter ?? '';
+	// A new comment is about the day being viewed, or the whole trip when viewing all days.
+	let postingTo = $derived.by(() => {
+		const day = days.find((d) => d.id === dayFilter);
+		return day ? $t('story.day_n', { values: { n: day.index } }) : $t('comments.whole_trip');
 	});
 
 	// An unlisted story is readable only with its link secret. Readers carry it in
@@ -121,7 +121,7 @@
 			collection: collectionId,
 			thread,
 			body,
-			...(thread === 'plan' && composerDay ? { day: composerDay } : {})
+			...(thread === 'plan' && dayFilter ? { day: dayFilter } : {})
 		});
 		if (ok) body = '';
 	}
@@ -215,36 +215,11 @@
 
 {#snippet comment(item: CollectionComment, isReply: boolean)}
 	<div class="flex gap-3">
-		<!-- A fixed-size circle, as elsewhere in the app; UserAvatar fills its parent. -->
-		<div
-			class="flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-base-300 {isReply
-				? 'h-7 w-7'
-				: 'h-9 w-9'}"
-		>
-			{#if item.author.username}
-				<UserAvatar
-					user={{
-						username: item.author.username,
-						first_name: item.author.name,
-						last_name: '',
-						profile_pic: item.author.profile_pic
-					}}
-					alt={item.author.name}
-					className="h-full w-full rounded-full"
-					textClass="text-xs"
-				/>
-			{:else if item.author.is_guest}
-				<LinkVariant class="h-4 w-4 opacity-70" aria-hidden="true" />
-			{:else}
-				<span class="text-xs font-semibold" aria-hidden="true">
-					{(item.author.name || '?').slice(0, 1).toUpperCase()}
-				</span>
-			{/if}
-		</div>
+		<PersonAvatar person={item.author} size={isReply ? 'sm' : 'md'} />
 		<div class="min-w-0 flex-1">
 			<div class="rounded-2xl bg-base-200 px-3 py-2">
 				<div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
-					<span class="font-semibold">{item.author.name || $t('comments.someone')}</span>
+					<PersonName person={item.author} fallback={$t('comments.someone')} />
 					{#if item.author.is_guest}
 						<span class="badge badge-ghost badge-xs">{$t('comments.guest')}</span>
 					{/if}
@@ -364,18 +339,8 @@
 			{/if}
 			<div class="flex flex-wrap items-center gap-2">
 				{#if thread === 'plan' && days.length}
-					<select
-						class="select select-sm w-auto"
-						aria-label={$t('comments.about')}
-						bind:value={composerDay}
-					>
-						<option value="">{$t('comments.whole_trip')}</option>
-						{#each days as day (day.id)}
-							<option value={day.id}>
-								{$t('story.day_n', { values: { n: day.index } })}{day.name ? ` · ${day.name}` : ''}
-							</option>
-						{/each}
-					</select>
+					<!-- The day comes from the selector above the list. -->
+					<span class="badge badge-outline gap-1">{postingTo}</span>
 				{/if}
 				<span class="hidden text-xs text-base-content/50 sm:inline">
 					{thread === 'plan' ? $t('comments.mention_hint') : $t('comments.story_public_hint')}

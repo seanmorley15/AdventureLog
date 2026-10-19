@@ -141,6 +141,30 @@ def notify_mentions(comment, users, page_url=None):
     return sent
 
 
+def person_summary(user, viewer=None, *, only_public=False):
+    """
+    How a signed-in person is shown next to a comment or activity entry.
+
+    ``can_view_profile`` is true when their profile page opens for the viewer: it is
+    public, or it is the viewer's own. ``only_public`` hides the username and picture of
+    people whose profile is private (used on the public story).
+    """
+    from adventures.serializers import _build_profile_pic_url
+
+    if user is None:
+        return {'username': None, 'uuid': None, 'profile_pic': None, 'can_view_profile': False}
+    is_public = bool(getattr(user, 'public_profile', False))
+    is_me = bool(viewer is not None and getattr(viewer, 'is_authenticated', False) and viewer.pk == user.pk)
+    if only_public and not is_public:
+        return {'username': None, 'uuid': None, 'profile_pic': None, 'can_view_profile': False}
+    return {
+        'username': user.username,
+        'uuid': str(user.uuid),
+        'profile_pic': _build_profile_pic_url(user),
+        'can_view_profile': is_public or is_me,
+    }
+
+
 def inbox_queryset(user):
     """
     Comments a user may want to see: the private plans they belong to and the stories
@@ -171,10 +195,9 @@ def serialize_comment(comment, request, *, story=False):
     A comment as the client sees it. On the story, an author's username and picture
     show only when their profile is public, and the comment's day stays a number.
     """
-    from adventures.serializers import _build_profile_pic_url
-
     user = comment.author_user
-    public_author = bool(user and (not story or getattr(user, 'public_profile', False)))
+    viewer = getattr(request, 'user', None)
+    person = person_summary(user, viewer, only_public=story)
     data = {
         'id': str(comment.id),
         'is_story': comment.is_story,
@@ -185,9 +208,7 @@ def serialize_comment(comment, request, *, story=False):
         'edited_at': comment.edited_at,
         'author': {
             'name': comment.author_name,
-            'username': user.username if public_author else None,
-            'uuid': str(user.uuid) if public_author else None,
-            'profile_pic': _build_profile_pic_url(user) if public_author else None,
+            **person,
             'is_guest': user is None,
         },
         'can_edit': is_author(request, comment),

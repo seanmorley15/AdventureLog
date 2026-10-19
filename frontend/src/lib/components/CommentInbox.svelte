@@ -3,6 +3,7 @@
 	import { t } from 'svelte-i18n';
 	import type { CommentInboxItem } from '$lib/types';
 	import CommentTextMultiple from '~icons/mdi/comment-text-multiple-outline';
+	import PersonAvatar from './collections/discussion/PersonAvatar.svelte';
 	import CheckAll from '~icons/mdi/check-all';
 
 	interface Props {
@@ -130,6 +131,10 @@
 											class="h-2 w-2 shrink-0 rounded-full bg-primary"
 											aria-label={$t('comments.unread')}
 										></span>
+									{/if}
+									{#if item.author?.username}
+										<!-- The whole entry is a link, so the avatar is not one. -->
+										<PersonAvatar person={item.author} size="xs" linked={false} />
 									{/if}
 									<span class="truncate text-sm font-semibold">{item.author_name}</span>
 									{#if item.mentions_me}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 
 	import { createEmptyLocation } from '$lib/location-draft';
 	import type { Location } from '$lib/types';
@@ -8,9 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { openLocationDrawer } from '$lib/location-drawer.svelte';
-	import Lost from '$lib/assets/undraw_lost.svg';
-	import FullMap from '$lib/components/map/FullMap.svelte';
-	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import { GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
@@ -19,13 +17,8 @@
 	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
 	import { dateFormatFromUser } from '$lib/dateFormat';
 
-	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
-	import ClipboardList from '~icons/mdi/clipboard-list';
-	import ContentCopy from '~icons/mdi/content-copy';
-	import DotsVertical from '~icons/mdi/dots-vertical';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
 	import { googleContentImage } from '$lib/images';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { addToast } from '$lib/toasts';
@@ -36,13 +29,45 @@
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
 	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 	import ImageOutline from '~icons/mdi/image-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import ContentCopy from '~icons/mdi/content-copy';
+	import DotsHorizontal from '~icons/mdi/dots-horizontal';
+	import TextBoxOutline from '~icons/mdi/text-box-outline';
+	import Hiking from '~icons/mdi/hiking';
+	import CalendarCheck from '~icons/mdi/calendar-check-outline';
+	import MapMarker from '~icons/mdi/map-marker';
+	import MapOutline from '~icons/mdi/map-outline';
+	import ImageMultiple from '~icons/mdi/image-multiple-outline';
+	import Paperclip from '~icons/mdi/paperclip';
+	import AccountOutline from '~icons/mdi/account-outline';
+	import Run from '~icons/mdi/run';
+	import Tag from '~icons/mdi/tag-outline';
+	import LinkVariant from '~icons/mdi/link-variant';
+	import InformationOutline from '~icons/mdi/information-outline';
+	import CheckCircle from '~icons/mdi/check-circle';
+	import ClockOutline from '~icons/mdi/clock-outline';
+	import ClockTimeFour from '~icons/mdi/clock-time-four-outline';
+	import CityVariant from '~icons/mdi/city-variant-outline';
+	import Folder from '~icons/mdi/folder-outline';
+	import Speedometer from '~icons/mdi/map-marker-distance';
+	import TrendingUp from '~icons/mdi/trending-up';
+	import DetailHeader from '$lib/components/detail/DetailHeader.svelte';
+	import DetailCard from '$lib/components/detail/DetailCard.svelte';
+	import DetailFact from '$lib/components/detail/DetailFact.svelte';
+	import DetailStat from '$lib/components/detail/DetailStat.svelte';
+	import DetailTabs, { type DetailTab } from '$lib/components/detail/DetailTabs.svelte';
+	import DetailPhotos from '$lib/components/detail/DetailPhotos.svelte';
+	import DetailMapPanel from '$lib/components/detail/DetailMapPanel.svelte';
+	import CountryFlag from '$lib/components/shared/CountryFlag.svelte';
+	import DetailMapPin from '$lib/components/detail/DetailMapPin.svelte';
+	import DetailMapPopup from '$lib/components/detail/DetailMapPopup.svelte';
+	import DetailVisibilityBadge from '$lib/components/detail/DetailVisibilityBadge.svelte';
+	import DetailNotFound from '$lib/components/detail/DetailNotFound.svelte';
+	import DetailLoading from '$lib/components/detail/DetailLoading.svelte';
 	import LocationPageHead from '$lib/components/locations/LocationPageHead.svelte';
 
 	const renderMarkdown = (markdown: string) => {
@@ -62,14 +87,18 @@
 
 	let adventure: Location | undefined = $state();
 
+	// A link to one visit opens the Visits tab, then scrolls to it.
 	$effect(() => {
 		const hash = embedded ? scrollHash : $page.url.hash;
 		if (!hash.startsWith('#visit-') || !adventure) return;
-		document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'center' });
+		tab = 'visits';
+		void tick().then(() =>
+			document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'center' })
+		);
 	});
 	let visitSunriseSunset: Record<string, SunriseSunset> = $state({});
 	let sunriseSunsetLoading: Record<string, boolean> = $state({});
-	let currentSlide = $state(0);
+	let tab = $state('overview');
 
 	let adventurePriceLabel = $derived(
 		adventure
@@ -83,15 +112,10 @@
 			: null
 	);
 
-	function goToSlide(index: number) {
-		currentSlide = index;
-	}
-
 	let notFound: boolean = $state(false);
 	let isEditModalOpen: boolean = $state(false);
 	let locationDraft = $state(createEmptyLocation());
 	let isSocialShareModalOpen: boolean = $state(false);
-	let adventure_images: { image: string; adventure: Location | null }[] = [];
 	let modalInitialIndex: number = $state(0);
 	let isImageModalOpen: boolean = $state(false);
 	let mapBasemapType = $state(normalizeBasemapType(undefined));
@@ -100,7 +124,6 @@
 	});
 	let showActivityTracks = $state(true);
 	let showTrailTracks = $state(true);
-	let showImagePins = $state(true);
 
 	async function loadSunriseSunsetForDate(date: string) {
 		if (!adventure?.id || sunriseSunsetLoading[date] || visitSunriseSunset[date]) {
@@ -132,7 +155,7 @@
 			adventure = undefined;
 			visitSunriseSunset = {};
 			sunriseSunsetLoading = {};
-			currentSlide = 0;
+			tab = 'overview';
 			isImageModalOpen = false;
 			isEditModalOpen = false;
 			isSocialShareModalOpen = false;
@@ -165,7 +188,7 @@
 
 		visitSunriseSunset = {};
 		sunriseSunsetLoading = {};
-		currentSlide = 0;
+		tab = 'overview';
 		isImageModalOpen = false;
 		isEditModalOpen = false;
 		isSocialShareModalOpen = false;
@@ -187,7 +210,6 @@
 				})
 			: EMPTY_IMAGE_PIN_GEOJSON
 	);
-	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
 
 	function hasActivityGeojson(adventure: Location) {
 		return adventure.visits.some((visit) => visit.activities.some((activity) => activity.geojson));
@@ -297,44 +319,23 @@
 	}
 
 	function openImageModal(imageIndex: number) {
-		const current = adventure;
-		if (!current) return;
-		adventure_images = current.images.map((img) => ({
-			image: img.image,
-			adventure: current
-		}));
+		if (!adventure) return;
 		modalInitialIndex = imageIndex;
 		isImageModalOpen = true;
 	}
 
-	function goToPreviousImage() {
-		if (!adventure?.images?.length) return;
-		goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1);
-	}
-
-	function goToNextImage() {
-		if (!adventure?.images?.length) return;
-		goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0);
-	}
-
-	function navigateToWorldTravelRegion() {
-		if (!adventure?.country) return;
-		if (adventure.region) {
-			goto(`/worldtravel/${adventure.country.country_code}/${adventure.region.id}`);
-		} else {
-			goto(`/worldtravel/${adventure.country.country_code}`);
-		}
-	}
-
-	function navigateToWorldTravelCountry() {
-		if (!adventure?.country?.country_code) return;
-		goto(`/worldtravel/${adventure.country.country_code}`);
+	// A city or region links to its region page; with no region, to the country.
+	function regionHref(place: Location) {
+		const code = place.country?.country_code;
+		if (!code) return '#';
+		return place.region ? `/worldtravel/${code}/${place.region.id}` : `/worldtravel/${code}`;
 	}
 
 	async function copyAdventureCoordinates() {
 		if (!adventure) return;
 		try {
 			await copyToClipboard(`${adventure.latitude}, ${adventure.longitude}`);
+			addToast('success', $t('detail.coordinates_copied'));
 		} catch {
 			addToast('error', $t('adventures.copy_failed'));
 		}
@@ -346,25 +347,68 @@
 			await copyToClipboard(
 				`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
 			);
+			addToast('success', $t('adventures.link_copied'));
 		} catch {
 			addToast('error', $t('adventures.copy_failed'));
 		}
 	}
+
+	let isOwner = $derived(
+		Boolean(
+			!embedded &&
+			data.user?.uuid &&
+			adventure?.user?.uuid &&
+			data.user.uuid === adventure.user.uuid
+		)
+	);
+	let hasMapContent = $derived(
+		adventure
+			? Boolean(
+					(adventure.longitude && adventure.latitude) ||
+					hasAttachmentGeojson(adventure) ||
+					hasActivityGeojson(adventure)
+				)
+			: false
+	);
+	let tabs = $derived.by((): DetailTab[] => {
+		if (!adventure) return [];
+		const list: DetailTab[] = [
+			{ id: 'overview', label: $t('detail.overview'), icon: InformationOutline }
+		];
+		if (adventure.visits.length > 0) {
+			list.push({
+				id: 'visits',
+				label: $t('adventures.visits'),
+				icon: CalendarCheck,
+				count: adventure.visits.length
+			});
+		}
+		if (hasMapContent) list.push({ id: 'map', label: $t('navbar.map'), icon: MapOutline });
+		const media = adventure.images.length + adventure.attachments.length;
+		if (media > 0) {
+			list.push({
+				id: 'media',
+				label: $t('detail.photos_and_files'),
+				icon: ImageMultiple,
+				count: media
+			});
+		}
+		return list;
+	});
+	// A tab that has gone away (e.g. the last visit was deleted) falls back to Overview.
+	let activeTab = $derived(tabs.some((item) => item.id === tab) ? tab : 'overview');
+	let measurementUnits = $derived(
+		measurementSystem === 'imperial'
+			? { distance: 'mi', elevation: 'ft' }
+			: { distance: 'km', elevation: 'm' }
+	);
 </script>
 
 {#if notFound}
-	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
-		<div class="hero-content text-center">
-			<div class="max-w-md">
-				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.location_not_found')}</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
-				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
-					{$t('adventures.homepage')}
-				</button>
-			</div>
-		</div>
-	</div>
+	<DetailNotFound
+		title={$t('adventures.location_not_found')}
+		description={$t('adventures.location_not_found_desc')}
+	/>
 {/if}
 
 {#if isEditModalOpen}
@@ -395,287 +439,120 @@
 {/if}
 
 {#if !adventure && !notFound}
-	<div class="hero min-h-screen overflow-x-hidden">
-		<div class="hero-content">
-			<span class="loading loading-spinner w-24 h-24 text-primary"></span>
-		</div>
-	</div>
+	<DetailLoading />
 {/if}
 
 {#if adventure}
-	{#if !embedded && data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
-		<div class="fixed bottom-6 right-6 z-50">
-			<div class="dropdown dropdown-top dropdown-end" class:dropdown-open={isFabMenuOpen}>
-				<button
-					class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-					onclick={() => (isFabMenuOpen = !isFabMenuOpen)}
+	<DetailHeader
+		title={adventure.name}
+		emoji={adventure.category?.icon}
+		rating={adventure.rating}
+		images={adventure.images ?? []}
+		onOpenImage={openImageModal}
+	>
+		{#snippet chips()}
+			{#if adventure?.category}
+				<a
+					href="/locations?types={adventure.category.name}"
+					class="badge badge-primary transition-all hover:brightness-110"
 				>
-					<DotsVertical class="w-8 h-8" />
-				</button>
-				<ul
-					tabindex="-1"
-					class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2"
-				>
-					<li>
-						<button
-							onclick={() => {
-								isFabMenuOpen = false;
-								isEditModalOpen = true;
-							}}
-							class="flex items-center gap-2"
-						>
-							<ClipboardList class="w-5 h-5" />
-							{$t('adventures.edit_location')}
-						</button>
-					</li>
-					<li>
-						<button
-							onclick={() => {
-								isFabMenuOpen = false;
-								isSocialShareModalOpen = true;
-							}}
-							class="flex items-center gap-2"
-						>
-							<ImageOutline class="w-5 h-5" />
-							{$t('social_share.share_externally')}
-						</button>
-					</li>
-					<li>
-						<button
-							onclick={duplicateAdventure}
-							class="flex items-center gap-2"
-							disabled={isDuplicating}
-						>
-							<ContentCopy class="w-5 h-5" />
-							{isDuplicating ? '...' : $t('adventures.duplicate_location')}
-						</button>
-					</li>
-				</ul>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Hero Section -->
-	<div class="relative">
-		<div
-			class="hero min-h-[60vh] relative overflow-hidden"
-			class:min-h-[30vh]={!adventure.images || adventure.images.length === 0}
-		>
-			<!-- Background: Images or Gradient -->
-			{#if adventure.images && adventure.images.length > 0}
-				<div class="hero-overlay bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-				{#each adventure.images as image, i}
-					<div
-						class="absolute inset-0 transition-opacity duration-500"
-						class:opacity-100={i === currentSlide}
-						class:opacity-0={i !== currentSlide}
-					>
-						<button
-							class="w-full h-full p-0 bg-transparent border-0"
-							onclick={() => openImageModal(i)}
-							aria-label={`View full image of ${adventure.name}`}
-						>
-							<ImageFrame source={image.source} showSourceBadge className="w-full h-full">
-								<img src={image.image} class="w-full h-full object-cover" alt={adventure.name} />
-							</ImageFrame>
-						</button>
-					</div>
-				{/each}
-			{:else}
-				<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
+					{adventure.category.display_name}
+				</a>
 			{/if}
-
-			<!-- Content -->
-			<div
-				class="hero-content relative z-10 text-center"
-				class:text-white={adventure.images?.length > 0}
-			>
-				<div class="max-w-4xl">
-					<h1 class="text-6xl font-bold mb-4 drop-shadow-lg">{adventure.name}</h1>
-
-					<!-- Rating -->
-					{#if adventure.rating !== undefined && adventure.rating !== null}
-						<div class="flex justify-center mb-6">
-							<div class="rating rating-lg">
-								{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-									<input
-										type="radio"
-										name="rating-hero"
-										class="mask mask-star-2 bg-warning"
-										checked={star <= adventure.rating}
-										disabled
-									/>
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					<!-- Quick Info Badges -->
-					<div class="flex flex-wrap justify-center gap-4 mb-6">
-						<a
-							href="/locations?types={adventure.category?.name}"
-							class="badge badge-lg badge-primary font-semibold px-4 py-3 cursor-pointer hover:brightness-110 transition-all"
-						>
-							{adventure.category?.display_name}
-							{adventure.category?.icon}
-						</a>
-						{#if adventure.location}
-							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
-								📍 {adventure.location}
-							</div>
-						{/if}
-						{#if adventure.visits.length > 0}
-							<div class="badge badge-lg badge-accent font-semibold px-4 py-3">
-								🎯 {adventure.visits.length}
-								{adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}
-							</div>
-						{/if}
-						{#if adventure.is_visited}
-							<div class="badge badge-lg badge-success font-semibold px-4 py-3">
-								✅ {$t('adventures.visited')}
-							</div>
-						{:else}
-							<div class="badge badge-lg badge-warning font-semibold px-4 py-3">
-								⏳ {$t('adventures.not_visited')}
-							</div>
-						{/if}
-						{#if adventure.trails && adventure.trails.length > 0}
-							<div class="badge badge-lg badge-info font-semibold px-4 py-3">
-								🥾 {adventure.trails.length} Trail{adventure.trails.length === 1 ? '' : 's'}
-							</div>
-						{/if}
-					</div>
-
-					<!-- Image Navigation (only shown when multiple images exist) -->
-					{#if adventure.images && adventure.images.length > 1}
-						<div class="w-full max-w-md mx-auto">
-							<!-- Navigation arrows and current position -->
-							<div class="flex items-center justify-center gap-4 mb-3">
-								<button
-									onclick={goToPreviousImage}
-									class="btn btn-circle btn-sm btn-primary"
-									aria-label={$t('adventures.previous_image')}
-								>
-									❮
-								</button>
-
-								<div class="text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
-									{currentSlide + 1} / {adventure.images.length}
-								</div>
-
-								<button
-									onclick={goToNextImage}
-									class="btn btn-circle btn-sm btn-primary"
-									aria-label={$t('adventures.next_image')}
-								>
-									❯
-								</button>
-							</div>
-
-							<!-- Dot navigation -->
-							{#if adventure.images.length <= 12}
-								<div class="flex justify-center gap-2 flex-wrap">
-									{#each adventure.images as _, i}
-										<button
-											onclick={() => goToSlide(i)}
-											class="btn btn-circle btn-xs transition-all duration-200"
-											class:btn-primary={i === currentSlide}
-											class:btn-outline={i !== currentSlide}
-											class:opacity-50={i !== currentSlide}
-										>
-											{i + 1}
-										</button>
-									{/each}
-								</div>
-							{:else}
-								<div class="relative">
-									<div
-										class="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-black/30 to-transparent pointer-events-none"
-									></div>
-									<div
-										class="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-black/30 to-transparent pointer-events-none"
-									></div>
-								</div>
-							{/if}
-						</div>
-					{/if}
+			{#if adventure?.location}
+				<span class="badge badge-neutral gap-1">
+					<MapMarker class="h-3.5 w-3.5" />
+					{adventure.location}
+				</span>
+			{/if}
+			{#if adventure?.is_visited}
+				<span class="badge badge-success gap-1">
+					<CheckCircle class="h-3.5 w-3.5" />
+					{$t('adventures.visited')}
+				</span>
+			{:else}
+				<span class="badge badge-warning gap-1">
+					<ClockOutline class="h-3.5 w-3.5" />
+					{$t('adventures.not_visited')}
+				</span>
+			{/if}
+			{#if adventure && adventure.visits.length > 0}
+				<span class="badge badge-accent gap-1">
+					<CalendarCheck class="h-3.5 w-3.5" />
+					{adventure.visits.length}
+					{adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}
+				</span>
+			{/if}
+			{#if adventure?.trails && adventure.trails.length > 0}
+				<span class="badge badge-info gap-1">
+					<Hiking class="h-3.5 w-3.5" />
+					{adventure.trails.length}
+					{adventure.trails.length === 1 ? $t('adventures.trail') : $t('adventures.trails')}
+				</span>
+			{/if}
+			<DetailVisibilityBadge isPublic={Boolean(adventure?.is_public)} />
+		{/snippet}
+		{#snippet actions()}
+			{#if isOwner}
+				<button class="btn btn-primary btn-sm gap-2" onclick={() => (isEditModalOpen = true)}>
+					<FileDocumentEdit class="h-4 w-4" />
+					{$t('detail.edit')}
+				</button>
+				<button
+					class="btn btn-outline btn-primary btn-sm gap-2"
+					onclick={() => (isSocialShareModalOpen = true)}
+				>
+					<ImageOutline class="h-4 w-4" />
+					<span class="hidden sm:inline">{$t('social_share.share_externally')}</span>
+				</button>
+				<div class="dropdown dropdown-end">
+					<button
+						type="button"
+						tabindex="0"
+						class="btn btn-ghost btn-sm btn-square"
+						aria-label={$t('detail.more')}
+					>
+						<DotsHorizontal class="h-5 w-5" />
+					</button>
+					<ul
+						tabindex="-1"
+						class="dropdown-content menu z-10 mt-1 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+					>
+						<li>
+							<button
+								onclick={duplicateAdventure}
+								class="flex items-center gap-2"
+								disabled={isDuplicating}
+							>
+								<ContentCopy class="h-4 w-4" />
+								{isDuplicating ? '...' : $t('adventures.duplicate_location')}
+							</button>
+						</li>
+					</ul>
 				</div>
-			</div>
+			{/if}
+		{/snippet}
+	</DetailHeader>
+
+	<div class="container mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-6">
+		<div class="mb-4 sm:mb-6">
+			<DetailTabs {tabs} value={activeTab} onChange={(id) => (tab = id)} label={adventure.name} />
 		</div>
-	</div>
 
-	<!-- Main Content -->
-	<div class="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-7xl">
-		<div class={['grid grid-cols-1 gap-4 sm:gap-8', !embedded && 'lg:grid-cols-3']}>
-			<!-- Left Column - Main Content -->
-			<div class={['space-y-6 sm:space-y-8', !embedded && 'lg:col-span-2']}>
-				<!-- Author Info Card -->
-				{#if adventure.user}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<div class="flex items-center gap-4">
-								<div class="avatar shrink-0">
-									<div
-										class="w-16 overflow-hidden rounded-full ring-3 ring-neutral ring-offset-base-100 ring-offset-2"
-									>
-										<UserAvatar
-											user={adventure.user}
-											alt={adventure.user.first_name && adventure.user.last_name
-												? `${adventure.user.first_name} ${adventure.user.last_name}`
-												: adventure.user.username}
-											className="w-16 h-16 rounded-full"
-											textClass="text-xl"
-										/>
-									</div>
-								</div>
-								<div class="flex-1">
-									<div class="text-lg font-bold">
-										{#if adventure.user.public_profile}
-											<a href={`/profile/${adventure.user.username}`} class="link link-hover">
-												{adventure.user.first_name || adventure.user.username}
-												{adventure.user.last_name || ''}
-											</a>
-										{:else}
-											{adventure.user.first_name || adventure.user.username}
-											{adventure.user.last_name || ''}
-										{/if}
-									</div>
-									<div class="flex items-center gap-2 text-sm opacity-70 mt-1">
-										<div class="badge badge-sm">
-											{adventure.is_public
-												? `🌍 ${$t('adventures.public')}`
-												: `🔒 ${$t('adventures.private')}`}
-										</div>
-										{#if adventure.collections && adventure.collections.length > 0}
-											<div class="badge badge-sm badge-outline">
-												📚
-												<p>{adventure.collections.length} {$t('navbar.collections')}</p>
-											</div>
-										{/if}
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				{/if}
-
-				<!-- Description Card -->
-				{#if adventure.description}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">📝 {$t('adventures.description')}</h2>
+		<div class={['grid grid-cols-1 items-start gap-4 sm:gap-6', !embedded && 'lg:grid-cols-3']}>
+			<!-- Tab content -->
+			<div class={['min-w-0 space-y-4 sm:space-y-6', !embedded && 'lg:col-span-2']}>
+				{#if activeTab === 'overview'}
+					{#if adventure.description}
+						<DetailCard title={$t('adventures.description')} icon={TextBoxOutline}>
 							<article class="prose max-w-none">
 								{@html DOMPurify.sanitize(renderMarkdown(adventure.description))}
 							</article>
-						</div>
-					</div>
-				{/if}
+						</DetailCard>
+					{/if}
 
-				<!-- Trails Section -->
-				{#if adventure.trails && adventure.trails.length > 0}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-6">🥾 {$t('adventures.trails')}</h2>
+					{#if adventure.trails && adventure.trails.length > 0}
+						<DetailCard title={$t('adventures.trails')} icon={Hiking}>
 							<div class="grid gap-4">
 								{#each adventure.trails as trail}
 									<TrailCard
@@ -684,489 +561,440 @@
 									/>
 								{/each}
 							</div>
-						</div>
-					</div>
+						</DetailCard>
+					{/if}
+
+					{#if !adventure.description && !(adventure.trails && adventure.trails.length > 0)}
+						<DetailCard title={$t('detail.overview')} icon={InformationOutline}>
+							<p class="text-sm text-base-content/60">{$t('detail.nothing_here_yet')}</p>
+						</DetailCard>
+					{/if}
 				{/if}
 
-				<!-- Visits Timeline -->
-				{#if adventure.visits.length > 0}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-6">🎯 {$t('adventures.visits')}</h2>
-							<div class="space-y-4">
-								{#each adventure.visits as visit, index}
-									{@const visitDate = visitDateKey(visit.start_date)}
-									<div class="flex gap-4" id="visit-{visit.id}">
-										<div class="flex flex-col items-center">
-											<div class="w-4 h-4 bg-primary rounded-full"></div>
-											{#if index < adventure.visits.length - 1}
-												<div class="w-0.5 bg-primary/30 h-full min-h-12"></div>
-											{/if}
-										</div>
-										<div class="flex-1 pb-4">
-											<div class="card bg-base-100 shadow-sm">
-												<div class="card-body p-4">
-													<div class="flex gap-2">
-														<div class="flex-1 min-w-0">
-															{#if isVisitAllDay(visit.start_date, visit.end_date)}
-																<div class="flex items-center gap-2 mb-2">
-																	<span class="badge badge-primary">All Day</span>
-																	<span class="font-semibold">
-																		{formatAllDayDate(visit.start_date, dateFormat)} – {formatAllDayDate(
-																			visit.end_date,
-																			dateFormat
-																		)}
-																	</span>
-																</div>
-															{:else}
-																<div class="space-y-2">
-																	<div class="flex items-center gap-2">
-																		<span class="badge badge-primary"
-																			>🕓 {$t('adventures.timed')}</span
-																		>
-																		{#if visit.timezone}
-																			<span class="badge badge-outline">{visit.timezone}</span>
-																		{/if}
-																	</div>
-																	<div class="text-sm">
-																		<strong>{$t('adventures.start')}:</strong>
+				{#if activeTab === 'visits'}
+					<DetailCard title={$t('adventures.visits')} icon={CalendarCheck}>
+						{#snippet actions()}
+							<span class="badge badge-ghost">{adventure?.visits.length}</span>
+						{/snippet}
+						<div class="space-y-4">
+							{#each adventure.visits as visit, index}
+								{@const visitDate = visitDateKey(visit.start_date)}
+								<div class="flex gap-3 sm:gap-4" id="visit-{visit.id}">
+									<div class="flex flex-col items-center pt-1.5">
+										<div class="h-3.5 w-3.5 shrink-0 rounded-full bg-primary"></div>
+										{#if index < adventure.visits.length - 1}
+											<div class="min-h-12 w-0.5 flex-1 bg-primary/30"></div>
+										{/if}
+									</div>
+									<div class="min-w-0 flex-1 pb-2">
+										<div class="rounded-xl border border-base-300 bg-base-100 p-4">
+											<div class="flex gap-2">
+												<div class="min-w-0 flex-1">
+													{#if isVisitAllDay(visit.start_date, visit.end_date)}
+														<div class="flex flex-wrap items-center gap-2">
+															<span class="badge badge-primary gap-1">
+																<CalendarCheck class="h-3.5 w-3.5" />
+																{$t('adventures.all_day')}
+															</span>
+															<span class="font-semibold">
+																{formatAllDayDate(visit.start_date, dateFormat)} – {formatAllDayDate(
+																	visit.end_date,
+																	dateFormat
+																)}
+															</span>
+														</div>
+													{:else}
+														<div class="space-y-2">
+															<div class="flex flex-wrap items-center gap-2">
+																<span class="badge badge-primary gap-1">
+																	<ClockTimeFour class="h-3.5 w-3.5" />
+																	{$t('adventures.timed')}
+																</span>
+																{#if visit.timezone}
+																	<span class="badge badge-outline">{visit.timezone}</span>
+																{/if}
+															</div>
+															<div class="space-y-0.5 text-sm">
+																<p>
+																	<span class="text-base-content/60">{$t('adventures.start')}:</span
+																	>
+																	<span class="font-medium">
 																		{formatDateInTimezone(
 																			visit.start_date,
 																			visit.timezone,
 																			dateFormat
-																		)}<br />
-																		<strong>{$t('adventures.end')}:</strong>
+																		)}
+																	</span>
+																</p>
+																<p>
+																	<span class="text-base-content/60">{$t('adventures.end')}:</span>
+																	<span class="font-medium">
 																		{formatDateInTimezone(
 																			visit.end_date,
 																			visit.timezone,
 																			dateFormat
 																		)}
-																	</div>
-																</div>
-															{/if}
-															{#if visit.notes}
-																<div class="mt-3 p-3 bg-base-200 rounded-lg">
-																	<p class="text-sm italic">"{visit.notes}"</p>
-																</div>
-															{/if}
-
-															<!-- Activities Section -->
-															{#if visit.activities && visit.activities.length > 0}
-																<div class="mt-4">
-																	<h4 class="font-semibold mb-3 flex items-center gap-2">
-																		🏃‍♂️ Activities ({visit.activities.length})
-																	</h4>
-																	<div class="space-y-3">
-																		{#each visit.activities as activity}
-																			<ActivityCard
-																				{activity}
-																				readOnly={true}
-																				trails={adventure.trails}
-																				{visit}
-																				measurementSystem={data.user?.measurement_system ||
-																					'metric'}
-																			/>
-																		{/each}
-																	</div>
-																</div>
-															{/if}
-														</div>
-
-														{#if visitDate && adventure.latitude && adventure.longitude}
-															<div class="shrink-0 self-start pt-0.5">
-																{#if visitSunriseSunset[visitDate]}
-																	{@const sunriseSunset = visitSunriseSunset[visitDate]}
-																	<div
-																		class="tooltip tooltip-left"
-																		data-tip="{$t(
-																			'adventures.sunrise'
-																		)}: {sunriseSunset.sunrise} • {$t(
-																			'adventures.sunset'
-																		)}: {sunriseSunset.sunset}"
-																	>
-																		<button
-																			class="btn btn-circle btn-ghost btn-sm text-warning"
-																			type="button"
-																			aria-label="{$t(
-																				'adventures.sunrise'
-																			)}: {sunriseSunset.sunrise}, {$t(
-																				'adventures.sunset'
-																			)}: {sunriseSunset.sunset}"
-																		>
-																			<WeatherSunset class="w-5 h-5" />
-																		</button>
-																	</div>
-																{:else if sunriseSunsetLoading[visitDate]}
-																	<button
-																		class="btn btn-circle btn-ghost btn-sm"
-																		type="button"
-																		disabled
-																		aria-label={$t('adventures.loading_sunrise_sunset')}
-																	>
-																		<span class="loading loading-spinner loading-xs"></span>
-																	</button>
-																{:else}
-																	<div
-																		class="tooltip tooltip-left"
-																		data-tip={$t('adventures.show_sunrise_sunset')}
-																	>
-																		<button
-																			class="btn btn-circle btn-ghost btn-sm opacity-60 hover:opacity-100"
-																			type="button"
-																			aria-label={$t('adventures.show_sunrise_sunset')}
-																			onclick={() => loadSunriseSunsetForDate(visitDate)}
-																		>
-																			<WeatherSunset class="w-5 h-5" />
-																		</button>
-																	</div>
-																{/if}
+																	</span>
+																</p>
 															</div>
-														{/if}
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-								{/each}
-							</div>
-						</div>
-					</div>
-				{/if}
+														</div>
+													{/if}
+													{#if visit.notes}
+														<div class="mt-3 rounded-lg bg-base-200 p-3">
+															<p class="text-sm italic">"{visit.notes}"</p>
+														</div>
+													{/if}
 
-				<!-- Map Section -->
-				{#if (adventure.longitude && adventure.latitude) || hasAttachmentGeojson(adventure) || hasActivityGeojson(adventure)}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.location')}</h2>
-
-							{#if adventure.longitude && adventure.latitude}
-								<!-- Compact Coordinates Card -->
-								<div
-									class="card bg-gradient-to-br from-primary/5 to-secondary/5 shadow-lg mb-4 border border-primary/10"
-								>
-									<div class="card-body p-4">
-										<div class="flex items-center justify-between mb-3">
-											<h3 class="text-lg font-bold flex items-center gap-2">
-												🎯 {$t('adventures.coordinates')}
-											</h3>
-										</div>
-
-										<div class="grid grid-cols-2 gap-3 mb-4">
-											<div
-												class="text-center p-2 bg-base-200/70 rounded-sm border border-primary/10"
-											>
-												<div class="text-xs text-primary/70 uppercase tracking-wide">
-													{$t('adventures.latitude')}
-												</div>
-												<div class="text-lg font-bold text-primary">{adventure.latitude}°</div>
-											</div>
-											<div
-												class="text-center p-2 bg-base-200/70 rounded-sm border border-secondary/10"
-											>
-												<div class="text-xs text-secondary/70 uppercase tracking-wide">
-													{$t('adventures.longitude')}
-												</div>
-												<div class="text-lg font-bold text-secondary">{adventure.longitude}°</div>
-											</div>
-										</div>
-
-										<!-- Location Info (individual clickable items) -->
-										{#if adventure.city || adventure.region || adventure.country}
-											<div class="flex flex-wrap justify-center gap-2 mb-4">
-												{#if adventure.city}
-													<button
-														class="btn btn-xs btn-outline hover:btn-info"
-														onclick={navigateToWorldTravelRegion}
-													>
-														🏙️ {adventure.city.name}
-													</button>
-												{/if}
-												{#if adventure.region}
-													<button
-														class="btn btn-xs btn-outline hover:btn-warning"
-														onclick={navigateToWorldTravelRegion}
-													>
-														🗺️ {adventure.region.name}
-													</button>
-												{/if}
-												{#if adventure.country}
-													<button
-														class="btn btn-xs btn-outline hover:btn-success"
-														onclick={navigateToWorldTravelCountry}
-													>
-														{#if adventure.country.flag_url}
-															<img
-																src={adventure.country.flag_url}
-																alt={adventure.country.name}
-																class="w-4 h-3 rounded-sm"
-															/>
-														{:else}
-															🌎
-														{/if}
-														{adventure.country.name}
-													</button>
-												{/if}
-											</div>
-										{/if}
-
-										<!-- External Maps Links -->
-										<ExternalMapLinks
-											className="mb-3"
-											placeName={adventure.name}
-											latitude={adventure.latitude}
-											longitude={adventure.longitude}
-										/>
-
-										<!-- Quick Copy Actions -->
-										<div class="flex gap-2">
-											<button
-												class="btn btn-xs btn-ghost flex-1 text-xs"
-												onclick={copyAdventureCoordinates}
-											>
-												📋 {$t('adventures.copy_coordinates')}
-											</button>
-											<button
-												class="btn btn-xs btn-ghost flex-1 text-xs"
-												onclick={copyAdventureGoogleMapsLink}
-											>
-												🔗 {$t('adventures.copy_link')}
-											</button>
-										</div>
-									</div>
-								</div>
-							{/if}
-
-							<div class="rounded-lg overflow-hidden shadow-lg">
-								<FullMap
-									bind:basemapType={mapBasemapType}
-									mapClass="w-full h-96"
-									center={[adventure.longitude || 0, adventure.latitude || 0]}
-									zoom={adventure.longitude ? 12 : 1}
-								>
-									{#snippet overlayControls({ map, fullscreenTarget })}
-										<div class="pointer-events-none absolute inset-0 z-20">
-											<MapTrackLayerControls
-												bind:showActivities={showActivityTracks}
-												bind:showTrails={showTrailTracks}
-												bind:showImagePins
-												hasActivities={adventure ? hasActivityGeojson(adventure) : false}
-												hasTrails={adventure ? hasTrailGeojson(adventure) : false}
-												{hasImagePins}
-											/>
-											<MapFloatingControls
-												{map}
-												{fullscreenTarget}
-												bind:basemapType={mapBasemapType}
-											/>
-										</div>
-									{/snippet}
-
-									<!-- Activity GPS tracks -->
-									{#if showActivityTracks}
-										{#each adventure.visits as visit}
-											{#each visit.activities as activity}
-												{#if activity.geojson}
-													<GeoJSON data={activity.geojson}>
-														<LineLayer
-															paint={{
-																'line-color': getActivityColor(activity.sport_type),
-																'line-width': 3,
-																'line-opacity': 0.8
-															}}
-														/>
-													</GeoJSON>
-												{/if}
-											{/each}
-										{/each}
-									{/if}
-
-									{#each adventure.attachments as attachment}
-										{#if attachment.geojson}
-											<GeoJSON data={attachment.geojson}>
-												<LineLayer
-													paint={{
-														'line-color': '#00FF00',
-														'line-width': 2,
-														'line-opacity': 0.6
-													}}
-												/>
-											</GeoJSON>
-										{/if}
-									{/each}
-
-									{#if showTrailTracks}
-										{#each adventure.trails as trail}
-											{#if trail.geojson}
-												<GeoJSON data={trail.geojson}>
-													<LineLayer
-														paint={{
-															'line-color': '#a855f7',
-															'line-width': 3,
-															'line-opacity': 0.85
-														}}
-													/>
-												</GeoJSON>
-											{/if}
-										{/each}
-									{/if}
-
-									{#if adventure.longitude && adventure.latitude}
-										<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-											<Popup openOn="click" offset={[0, -10]}>
-												<div class="p-2">
-													<div class="text-lg font-bold text-black mb-1">{adventure.name}</div>
-													<p class="font-semibold text-black text-sm mb-2">
-														{adventure.category?.display_name + ' ' + adventure.category?.icon}
-													</p>
-													{#if adventure.visits.length > 0}
-														<div class="text-xs text-black">
-															{adventure.visits.length}
-															{$t('adventures.visit')}{adventure.visits.length !== 1 ? 's' : ''}
+													{#if visit.activities && visit.activities.length > 0}
+														<div class="mt-4">
+															<h4 class="mb-3 flex items-center gap-2 font-semibold">
+																<Run class="h-4 w-4 text-primary" />
+																{$t('detail.activities')}
+																<span class="badge badge-ghost badge-sm"
+																	>{visit.activities.length}</span
+																>
+															</h4>
+															<div class="space-y-3">
+																{#each visit.activities as activity}
+																	<ActivityCard
+																		{activity}
+																		readOnly={true}
+																		trails={adventure.trails}
+																		{visit}
+																		measurementSystem={data.user?.measurement_system || 'metric'}
+																	/>
+																{/each}
+															</div>
 														</div>
 													{/if}
 												</div>
-											</Popup>
-										</DefaultMarker>
+
+												{#if visitDate && adventure.latitude && adventure.longitude}
+													<div class="shrink-0 self-start">
+														{#if visitSunriseSunset[visitDate]}
+															{@const sunriseSunset = visitSunriseSunset[visitDate]}
+															<div
+																class="tooltip tooltip-left"
+																data-tip="{$t('adventures.sunrise')}: {sunriseSunset.sunrise} • {$t(
+																	'adventures.sunset'
+																)}: {sunriseSunset.sunset}"
+															>
+																<button
+																	class="btn btn-circle btn-ghost btn-sm text-warning"
+																	type="button"
+																	aria-label="{$t(
+																		'adventures.sunrise'
+																	)}: {sunriseSunset.sunrise}, {$t(
+																		'adventures.sunset'
+																	)}: {sunriseSunset.sunset}"
+																>
+																	<WeatherSunset class="h-5 w-5" />
+																</button>
+															</div>
+														{:else if sunriseSunsetLoading[visitDate]}
+															<button
+																class="btn btn-circle btn-ghost btn-sm"
+																type="button"
+																disabled
+																aria-label={$t('adventures.loading_sunrise_sunset')}
+															>
+																<span class="loading loading-spinner loading-xs"></span>
+															</button>
+														{:else}
+															<div
+																class="tooltip tooltip-left"
+																data-tip={$t('adventures.show_sunrise_sunset')}
+															>
+																<button
+																	class="btn btn-circle btn-ghost btn-sm opacity-60 hover:opacity-100"
+																	type="button"
+																	aria-label={$t('adventures.show_sunrise_sunset')}
+																	onclick={() => loadSunriseSunsetForDate(visitDate)}
+																>
+																	<WeatherSunset class="h-5 w-5" />
+																</button>
+															</div>
+														{/if}
+													</div>
+												{/if}
+											</div>
+										</div>
+									</div>
+								</div>
+							{/each}
+						</div>
+					</DetailCard>
+				{/if}
+
+				{#if activeTab === 'map'}
+					<DetailMapPanel
+						title={$t('navbar.map')}
+						hint={adventure.location ?? ''}
+						bind:basemapType={mapBasemapType}
+						bind:showActivities={showActivityTracks}
+						bind:showTrails={showTrailTracks}
+						center={[adventure.longitude || 0, adventure.latitude || 0]}
+						zoom={adventure.longitude ? 12 : 1}
+						{imagePinGeoJson}
+						hasActivities={hasActivityGeojson(adventure)}
+						hasTrails={hasTrailGeojson(adventure)}
+					>
+						{#if showActivityTracks}
+							{#each adventure.visits as visit}
+								{#each visit.activities as activity}
+									{#if activity.geojson}
+										<GeoJSON data={activity.geojson}>
+											<LineLayer
+												paint={{
+													'line-color': getActivityColor(activity.sport_type),
+													'line-width': 3,
+													'line-opacity': 0.8
+												}}
+											/>
+										</GeoJSON>
 									{/if}
+								{/each}
+							{/each}
+						{/if}
 
-									<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
-								</FullMap>
-							</div>
-						</div>
-					</div>
-				{/if}
-			</div>
+						{#each adventure.attachments as attachment}
+							{#if attachment.geojson}
+								<GeoJSON data={attachment.geojson}>
+									<LineLayer
+										paint={{ 'line-color': '#00FF00', 'line-width': 2, 'line-opacity': 0.6 }}
+									/>
+								</GeoJSON>
+							{/if}
+						{/each}
 
-			<!-- Right Column - Sidebar -->
-			<div class="space-y-4 sm:space-y-6">
-				<!-- Quick Info Card -->
-				<div class="card bg-base-200 shadow-xl">
-					<div class="card-body">
-						<h3 class="card-title text-lg mb-4">ℹ️ {$t('adventures.basic_information')}</h3>
-						<div class="space-y-3">
-							{#if adventurePriceLabel}
-								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
-									<div>
-										<div class="text-sm opacity-70 mb-0.5">{$t('adventures.price')}</div>
-										<div class="text-base font-semibold">{adventurePriceLabel}</div>
-									</div>
+						{#if showTrailTracks}
+							{#each adventure.trails as trail}
+								{#if trail.geojson}
+									<GeoJSON data={trail.geojson}>
+										<LineLayer
+											paint={{ 'line-color': '#a855f7', 'line-width': 3, 'line-opacity': 0.85 }}
+										/>
+									</GeoJSON>
+								{/if}
+							{/each}
+						{/if}
+
+						{#if adventure.longitude && adventure.latitude}
+							<DetailMapPin
+								lngLat={[adventure.longitude, adventure.latitude]}
+								icon={adventure.category?.icon || '📍'}
+								tone={adventure.is_visited ? 'visited' : 'planned'}
+							>
+								<DetailMapPopup
+									title={adventure.name}
+									subtitle={adventure.category
+										? `${adventure.category.display_name} ${adventure.category.icon}`
+										: ''}
+									address={adventure.visits.length > 0
+										? `${adventure.visits.length} ${adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}`
+										: null}
+								/>
+							</DetailMapPin>
+						{/if}
+
+						{#snippet footer()}
+							{#if adventure && (adventure.city || adventure.region || adventure.country)}
+								<!-- Where it is: each part links to its World Travel page -->
+								<div class="flex flex-wrap items-center gap-2">
+									{#if adventure.city}
+										{#if adventure.country}
+											<a href={regionHref(adventure)} class="btn btn-sm btn-soft btn-primary gap-2">
+												<CityVariant class="h-4 w-4" />
+												{adventure.city.name}
+											</a>
+										{:else}
+											<span class="badge badge-lg gap-2"
+												><CityVariant class="h-4 w-4" />{adventure.city.name}</span
+											>
+										{/if}
+									{/if}
+									{#if adventure.region && adventure.country}
+										<a href={regionHref(adventure)} class="btn btn-sm btn-soft btn-primary gap-2">
+											<MapOutline class="h-4 w-4" />
+											{adventure.region.name}
+										</a>
+									{/if}
+									{#if adventure.country}
+										<a
+											href={`/worldtravel/${adventure.country.country_code}`}
+											class="btn btn-sm btn-soft btn-primary gap-2"
+										>
+											<CountryFlag
+												src={adventure.country.flag_url}
+												code={adventure.country.country_code}
+												name={adventure.country.name}
+											/>
+											{adventure.country.name}
+										</a>
+									{/if}
 								</div>
 							{/if}
-							{#if adventure.tags && adventure.tags?.length > 0}
-								<div>
-									<div class="text-sm opacity-70 mb-1">{$t('adventures.tags')}</div>
-									<div class="flex flex-wrap gap-1">
-										{#each adventure.tags as activity}
-											<span class="badge badge-sm badge-outline">{activity}</span>
-										{/each}
-									</div>
-								</div>
-							{/if}
-							{#if adventure.link}
-								<div>
-									<div class="text-sm opacity-70 mb-1">{$t('adventures.link')}</div>
-									<a
-										href={adventure.link}
-										class="link link-primary text-sm break-all"
-										target="_blank"
-									>
-										{adventure.link.length > 30
-											? `${adventure.link.slice(0, 30)}...`
-											: adventure.link}
-									</a>
-								</div>
-							{/if}
-						</div>
-					</div>
-				</div>
 
-				<!-- Activity Summary -->
-				{#if getTotalActivities(adventure) > 0}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h3 class="card-title text-lg mb-4">🏃‍♂️ Activity Summary</h3>
-							<div class="space-y-2">
-								<div class="stat">
-									<div class="stat-title">Total Activities</div>
-									<div class="stat-value text-2xl">{getTotalActivities(adventure)}</div>
-								</div>
-								{#if getTotalDistance(adventure) > 0}
-									<div class="stat">
-										<div class="stat-title">Total Distance</div>
-										<div class="stat-value text-xl">
-											{getTotalDistance(adventure).toFixed(1)}
-											{#if measurementSystem === 'imperial'}mi
-											{:else}km{/if}
+							<div class="flex flex-wrap items-center justify-between gap-3">
+								{#if adventure && adventure.longitude && adventure.latitude}
+									<div class="flex items-center gap-1">
+										<span class="font-mono text-sm text-base-content/80">
+											{adventure.latitude}, {adventure.longitude}
+										</span>
+										<div class="tooltip" data-tip={$t('detail.copy_coordinates')}>
+											<button
+												class="btn btn-ghost btn-xs btn-square"
+												aria-label={$t('detail.copy_coordinates')}
+												onclick={copyAdventureCoordinates}
+											>
+												<ContentCopy class="h-4 w-4" />
+											</button>
+										</div>
+										<div class="tooltip" data-tip={$t('detail.copy_map_link')}>
+											<button
+												class="btn btn-ghost btn-xs btn-square"
+												aria-label={$t('detail.copy_map_link')}
+												onclick={copyAdventureGoogleMapsLink}
+											>
+												<LinkVariant class="h-4 w-4" />
+											</button>
 										</div>
 									</div>
-								{/if}
-								{#if getTotalElevationGain(adventure) > 0}
-									<div class="stat">
-										<div class="stat-title">Total Elevation</div>
-										<div class="stat-value text-xl">
-											{getTotalElevationGain(adventure).toFixed(0)}
-											{#if measurementSystem === 'imperial'}ft
-											{:else}m{/if}
-										</div>
-									</div>
+									<ExternalMapLinks
+										placeName={adventure.name}
+										latitude={adventure.latitude}
+										longitude={adventure.longitude}
+									/>
 								{/if}
 							</div>
-						</div>
-					</div>
+						{/snippet}
+					</DetailMapPanel>
 				{/if}
 
-				<!-- Attachments -->
-				{#if adventure.attachments && adventure.attachments.length > 0}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h3 class="card-title text-lg mb-4">
-								📎 {$t('adventures.attachments')}
-								<div class="tooltip" data-tip={$t('adventures.gpx_tip')}>
-									<LightbulbOn class="w-4 h-4 opacity-60" />
-								</div>
-							</h3>
+				{#if activeTab === 'media'}
+					{#if adventure.images.length > 0}
+						<DetailCard
+							title={$t('adventures.images')}
+							hint={$t('detail.photos_hint')}
+							icon={ImageMultiple}
+						>
+							{#snippet actions()}
+								<span class="badge badge-ghost">{adventure?.images.length}</span>
+							{/snippet}
+							<DetailPhotos
+								images={adventure.images}
+								name={adventure.name}
+								onOpen={openImageModal}
+								columns={4}
+							/>
+						</DetailCard>
+					{/if}
+					{#if adventure.attachments.length > 0}
+						<DetailCard
+							title={$t('adventures.attachments')}
+							hint={$t('adventures.gpx_tip')}
+							icon={Paperclip}
+						>
 							<div class="space-y-2">
 								{#each adventure.attachments as attachment}
 									<AttachmentCard {attachment} />
 								{/each}
 							</div>
-						</div>
-					</div>
+						</DetailCard>
+					{/if}
 				{/if}
+			</div>
 
-				<!-- Additional Images -->
-				{#if adventure.images}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
-							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-								{#each adventure.images as image, index}
-									<ImageFrame source={image.source} showSourceBadge className="relative group">
-										<div
-											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
-											style="background-image: url({image.image})"
-											onclick={() => openImageModal(index)}
-											onkeydown={(e) => e.key === 'Enter' && openImageModal(index)}
-											role="button"
-											tabindex="0"
-										></div>
-										{#snippet overlays()}
-											<div>
-												{#if image.is_primary}
-													<div class="absolute top-1 right-1">
-														<span class="badge badge-primary badge-xs"
-															>{$t('settings.primary')}</span
-														>
-													</div>
-												{/if}
-											</div>
-										{/snippet}
-									</ImageFrame>
-								{/each}
-							</div>
-						</div>
+			<!-- Sidebar -->
+			<div class="space-y-4 sm:space-y-6">
+				<DetailCard title={$t('adventures.basic_information')} icon={InformationOutline}>
+					<div class="space-y-4">
+						{#if adventure.user}
+							<DetailFact label={$t('detail.added_by')} icon={AccountOutline}>
+								<span class="flex items-center gap-2">
+									<!-- A fixed-size circle: UserAvatar fills its parent. -->
+									<span class="h-6 w-6 shrink-0 overflow-hidden rounded-full">
+										<UserAvatar
+											user={adventure.user}
+											alt={adventure.user.username}
+											className="h-full w-full rounded-full"
+											textClass="text-[10px]"
+										/>
+									</span>
+									{#if adventure.user.public_profile}
+										<a href={`/profile/${adventure.user.username}`} class="link link-hover">
+											{adventure.user.first_name || adventure.user.username}
+											{adventure.user.last_name || ''}
+										</a>
+									{:else}
+										{adventure.user.first_name || adventure.user.username}
+										{adventure.user.last_name || ''}
+									{/if}
+								</span>
+							</DetailFact>
+						{/if}
+						{#if adventure.collections && adventure.collections.length > 0}
+							<DetailFact label={$t('navbar.collections')} icon={Folder}>
+								{adventure.collections.length}
+							</DetailFact>
+						{/if}
+						{#if adventurePriceLabel}
+							<DetailFact label={$t('adventures.price')} icon={CashMultiple}>
+								<span class="font-semibold">{adventurePriceLabel}</span>
+							</DetailFact>
+						{/if}
+						{#if adventure.tags && adventure.tags.length > 0}
+							<DetailFact label={$t('adventures.tags')} icon={Tag}>
+								<span class="mt-1 flex flex-wrap gap-1">
+									{#each adventure.tags as tag}
+										<span class="badge badge-outline badge-sm">{tag}</span>
+									{/each}
+								</span>
+							</DetailFact>
+						{/if}
+						{#if adventure.link}
+							<DetailFact label={$t('adventures.link')} icon={LinkVariant}>
+								<a
+									href={adventure.link}
+									class="link link-primary break-all"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									{adventure.link.length > 40
+										? `${adventure.link.slice(0, 40)}...`
+										: adventure.link}
+								</a>
+							</DetailFact>
+						{/if}
 					</div>
+				</DetailCard>
+
+				{#if getTotalActivities(adventure) > 0}
+					<DetailCard title={$t('detail.activity_summary')} icon={Run}>
+						<div class="grid grid-cols-2 gap-3">
+							<DetailStat
+								label={$t('adventures.total_activities')}
+								value={getTotalActivities(adventure)}
+								icon={Run}
+							/>
+							{#if getTotalDistance(adventure) > 0}
+								<DetailStat
+									label={$t('adventures.total_distance')}
+									value={getTotalDistance(adventure).toFixed(1)}
+									unit={measurementUnits.distance}
+									icon={Speedometer}
+								/>
+							{/if}
+							{#if getTotalElevationGain(adventure) > 0}
+								<DetailStat
+									label={$t('detail.total_elevation')}
+									value={getTotalElevationGain(adventure).toFixed(0)}
+									unit={measurementUnits.elevation}
+									icon={TrendingUp}
+								/>
+							{/if}
+						</div>
+					</DetailCard>
 				{/if}
 			</div>
 		</div>

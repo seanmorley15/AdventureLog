@@ -128,6 +128,17 @@
 		(collection as any)[key] = exists
 			? items.map((entry: any) => (String(entry.id) === String(item.id) ? item : entry))
 			: [...items, item];
+		if (key === 'locations' && Array.isArray(item.visits)) {
+			// A visit deleted in the editor is cleared from its stop on the server; do the same here.
+			const visitIds = new Set(item.visits.map((visit: any) => String(visit.id)));
+			collection.itinerary = (collection.itinerary ?? []).map((placement) =>
+				String(placement.object_id) === String(item.id) &&
+				placement.logged_visit &&
+				!visitIds.has(String(placement.logged_visit))
+					? { ...placement, logged_visit: null }
+					: placement
+			);
+		}
 		collection = { ...collection }; // trigger reactivity so cost summary & UI refresh immediately
 	}
 

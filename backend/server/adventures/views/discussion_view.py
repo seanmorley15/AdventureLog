@@ -26,6 +26,7 @@ from adventures.utils.comments import (
     inbox_queryset,
     is_author,
     notify_mentions,
+    person_summary,
     resolve_mentions,
     serialize_comment,
     thread_payload,
@@ -202,6 +203,7 @@ class CollectionCommentViewSet(viewsets.ViewSet):
                 'thread': 'story' if comment.is_story else 'plan',
                 'day_index': comment.day.index if comment.day_id else None,
                 'author_name': comment.author_name,
+                'author': {'name': comment.author_name, **person_summary(comment.author_user, user)},
                 'excerpt': comment.body[:200],
                 'created_at': comment.created_at,
                 'mentions_me': any(u.pk == user.pk for u in comment.mentions.all()),
@@ -240,6 +242,7 @@ class CollectionActivityViewSet(viewsets.ViewSet):
                 'id': str(event.pk),
                 'verb': event.verb,
                 'actor_name': event.actor_name,
+                'actor': person_summary(event.actor_user, request.user),
                 'data': event.data,
                 'created_at': event.created_at,
             }

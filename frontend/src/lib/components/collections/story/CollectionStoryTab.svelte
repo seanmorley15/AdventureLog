@@ -41,7 +41,7 @@
 
 	// Reload whenever what readers would see changes.
 	let reloadKey = $derived(
-		`${collection.id}|${visibility}|${JSON.stringify(collection.story_groups ?? {})}|${collection.updated_at ?? ''}`
+		`${collection.id}|${visibility}|${collection.comment_access ?? 'off'}|${JSON.stringify(collection.story_groups ?? {})}|${collection.updated_at ?? ''}`
 	);
 
 	$effect(() => {
