@@ -193,9 +193,3 @@ These are great starting points for new contributors.
 Everyone participating in AdventureLog is expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Reports can be sent confidentially to `contact@adventurelog.app`.
-
----
-
-# Maintainer note: required status check
-
-To enforce the feature lane on merge, the GitHub ruleset (or branch protection) for **`development`** must require the status check named **`contribution-policy`**. Without that setting, a failing check is visible on the pull request but does not block merge. Maintainer and Dependabot pull requests remain exempt in the workflow.
