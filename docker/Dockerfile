@@ -62,6 +62,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=backend-builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=backend-builder /usr/local/bin /usr/local/bin
+# pip 26.2.1 (latest) vendors urllib3 2.7.0. The app uses urllib3 2.8.0, and the image never calls pip.
+RUN rm -rf \
+      /usr/local/lib/python3.13/site-packages/pip \
+      /usr/local/lib/python3.13/site-packages/pip-*.dist-info \
+      /usr/local/bin/pip \
+      /usr/local/bin/pip3 \
+      /usr/local/bin/pip3.13
 COPY backend/server /code/
 COPY docker/shared/entrypoint-common.sh /code/scripts/entrypoint-common.sh
 COPY backend/cron/adventurelog /etc/cron.d/adventurelog

@@ -6,6 +6,8 @@ allowBuilds:
   svelte-preprocess: true
 overrides:
   postcss: 8.5.18
+  # CVE-2026-92708 and the other 5.9.2 advisories. 5.9.4 includes the 5.9.3 fixes.
+  devalue@>=5.1.0 <5.9.4: 5.9.4
   svelte-i18n>esbuild: 0.25.12
   vite>esbuild: 0.25.12
   '@sveltejs/adapter-vercel@<6.3.2': '>=6.3.2'
