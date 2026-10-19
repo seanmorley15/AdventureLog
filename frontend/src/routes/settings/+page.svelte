@@ -3,7 +3,7 @@
 
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import { normalizeBasemapType } from '$lib';
+	import { sanitizeBasemapType } from '$lib';
 	import type {
 		EndurainIntegration,
 		ImmichIntegration,
@@ -103,7 +103,7 @@
 			if (nextUser) {
 				user = {
 					...nextUser,
-					map_style: normalizeBasemapType(nextUser.map_style)
+					map_style: sanitizeBasemapType(nextUser.map_style)
 				};
 				emails = nextEmails;
 			}

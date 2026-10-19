@@ -677,9 +677,40 @@ export function getIsDarkMode() {
 	return false;
 }
 
+const OPENFREEMAP_BRIGHT_STYLE = 'https://tiles.openfreemap.org/styles/bright';
+const OPENFREEMAP_DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark';
+const OPENFREEMAP_LIBERTY_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+// Vector Positron and Dark Matter. CARTO copies ?key= from the style URL onto the tile source.
+const CARTO_LIGHT_GL_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+const CARTO_DARK_GL_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
+const CARTO_RASTER_BASEMAPS = new Set([
+	'terrain-3d',
+	'carto-light',
+	'carto-dark',
+	'carto-positron',
+	'carto-positron-labels',
+	'carto-voyager'
+]);
+
+function cartoBasemapApiKey(): string {
+	return env.PUBLIC_CARTO_BASEMAP_API_KEY?.trim() ?? '';
+}
+
+function hasCartoBasemapApiKey(): boolean {
+	return cartoBasemapApiKey().length > 0;
+}
+
+function defaultBasemapStyle(): string {
+	if (hasCartoBasemapApiKey()) {
+		return cartoUrl(getIsDarkMode() ? CARTO_DARK_GL_STYLE : CARTO_LIGHT_GL_STYLE);
+	}
+	return getIsDarkMode() ? OPENFREEMAP_DARK_STYLE : OPENFREEMAP_BRIGHT_STYLE;
+}
+
 // Enhanced basemap functions with 3D terrain support
 export function getBasemapUrl(type = 'default'): any {
-	switch (type) {
+	switch (normalizeBasemapType(type)) {
 		// 3D Terrain Maps with elevation data
 		case 'terrain-3d':
 			return {
@@ -976,17 +1007,15 @@ export function getBasemapUrl(type = 'default'): any {
 			);
 
 		case 'openfreemap-liberty':
-			return 'https://tiles.openfreemap.org/styles/liberty';
+			return OPENFREEMAP_LIBERTY_STYLE;
 
 		default:
-			return getIsDarkMode()
-				? cartoUrl('https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json')
-				: cartoUrl('https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json');
+			return defaultBasemapStyle();
 	}
 }
 
 function cartoUrl(url: string): string {
-	const key = env.PUBLIC_CARTO_BASEMAP_API_KEY;
+	const key = cartoBasemapApiKey();
 	return key ? `${url}?key=${encodeURIComponent(key)}` : url;
 }
 
@@ -1042,8 +1071,15 @@ function getXYZStyle(tileUrl: string | string[], attribution: string, baseUrl?: 
 	};
 }
 
+export type BasemapOption = {
+	value: string;
+	label: string;
+	icon: string;
+	category: string;
+};
+
 // Enhanced basemap options array
-export const basemapOptions = [
+const allBasemapOptions: BasemapOption[] = [
 	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
 
 	// 3D Terrain Maps (New Category)
@@ -1098,14 +1134,27 @@ export const basemapOptions = [
 	{ value: 'osm-france', label: 'France Style', icon: '🇫🇷', category: 'Specialized' }
 ];
 
+export function getBasemapOptions(): BasemapOption[] {
+	if (hasCartoBasemapApiKey()) return allBasemapOptions;
+	return allBasemapOptions.filter((option) => !CARTO_RASTER_BASEMAPS.has(option.value));
+}
+
 export function getBasemapLabel(value: string) {
-	const option = basemapOptions.find((opt) => opt.value === value);
+	const resolved = normalizeBasemapType(value);
+	const option = allBasemapOptions.find((opt) => opt.value === resolved);
 	return option ? option.label : 'Default';
 }
 
-export function normalizeBasemapType(value?: string | null): string {
+/** Keep a stored style id when it is a known basemap, including CARTO styles with no key. */
+export function sanitizeBasemapType(value?: string | null): string {
 	if (!value) return 'default';
-	return basemapOptions.some((opt) => opt.value === value) ? value : 'default';
+	return allBasemapOptions.some((opt) => opt.value === value) ? value : 'default';
+}
+
+export function normalizeBasemapType(value?: string | null): string {
+	const sanitized = sanitizeBasemapType(value);
+	if (!hasCartoBasemapApiKey() && CARTO_RASTER_BASEMAPS.has(sanitized)) return 'default';
+	return sanitized;
 }
 
 export function getDistance(measurementSystem: 'metric' | 'imperial', meters: number): string {

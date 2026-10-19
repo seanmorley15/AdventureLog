@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { basemapOptions, getBasemapLabel } from '$lib';
+	import { getBasemapLabel, getBasemapOptions } from '$lib';
 	import { t } from 'svelte-i18n';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 	import MapIcon from '~icons/mdi/map';
@@ -19,6 +19,8 @@
 		'Clean',
 		'Specialized'
 	] as const;
+
+	const basemapOptions = getBasemapOptions();
 
 	const groupedOptions = basemapOptions.reduce<Record<string, typeof basemapOptions>>(
 		(acc, option) => {
@@ -88,7 +90,7 @@
 			</div>
 
 			<div class="max-h-64 overflow-y-auto overscroll-contain py-1">
-				{#each categoryOrder as category}
+				{#each categoryOrder as category (category)}
 					{#if groupedOptions[category]?.length}
 						<div class="px-2 pt-2 pb-0.5 first:pt-1">
 							<p
