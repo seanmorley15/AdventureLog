@@ -677,7 +677,12 @@ export function getIsDarkMode() {
 	return false;
 }
 
+const OPENFREEMAP_BRIGHT_STYLE = 'https://tiles.openfreemap.org/styles/bright';
+const OPENFREEMAP_DARK_STYLE = 'https://tiles.openfreemap.org/styles/dark';
 const OPENFREEMAP_LIBERTY_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+// Vector Positron and Dark Matter. CARTO copies ?key= from the style URL onto the tile source.
+const CARTO_LIGHT_GL_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+const CARTO_DARK_GL_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 const CARTO_RASTER_BASEMAPS = new Set([
 	'terrain-3d',
@@ -694,6 +699,13 @@ function cartoBasemapApiKey(): string {
 
 function hasCartoBasemapApiKey(): boolean {
 	return cartoBasemapApiKey().length > 0;
+}
+
+function defaultBasemapStyle(): string {
+	if (hasCartoBasemapApiKey()) {
+		return cartoUrl(getIsDarkMode() ? CARTO_DARK_GL_STYLE : CARTO_LIGHT_GL_STYLE);
+	}
+	return getIsDarkMode() ? OPENFREEMAP_DARK_STYLE : OPENFREEMAP_BRIGHT_STYLE;
 }
 
 // Enhanced basemap functions with 3D terrain support
@@ -998,7 +1010,7 @@ export function getBasemapUrl(type = 'default'): any {
 			return OPENFREEMAP_LIBERTY_STYLE;
 
 		default:
-			return OPENFREEMAP_LIBERTY_STYLE;
+			return defaultBasemapStyle();
 	}
 }
 
