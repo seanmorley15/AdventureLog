@@ -5,7 +5,6 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
-	import CollectionLink from '$lib/components/collections/CollectionLink.svelte';
 	import CollectionModal from '$lib/components/collections/CollectionModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Collection, CollectionInvite, SlimCollection } from '$lib/types';

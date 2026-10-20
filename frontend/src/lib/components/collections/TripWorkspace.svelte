@@ -12,6 +12,8 @@
 		user: any;
 		canModify?: boolean;
 		readMode?: boolean;
+		/** Folders show the catalog beside a clustered, auto-framed map. */
+		folder?: boolean;
 		onOpenLink?: (scope: LinkScope) => void;
 		children?: Snippet<[CatalogFilters]>;
 	}
@@ -21,6 +23,7 @@
 		user,
 		canModify = false,
 		readMode = false,
+		folder = false,
 		onOpenLink,
 		children
 	}: Props = $props();
@@ -63,7 +66,10 @@
 			onPinSelect={scrollToPin}
 			filters={children ? catalogFilters : undefined}
 			numberedPins={!children}
-			pinStyleToggle={Boolean(children)}
+			pinStyleToggle={Boolean(children) && !folder}
+			clusterEnabled={folder}
+			clusterOptions={{ radius: 300, maxZoom: 8, minPoints: 2 }}
+			autoFit={folder}
 		/>
 	</div>
 

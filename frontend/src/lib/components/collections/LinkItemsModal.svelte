@@ -33,6 +33,7 @@
 		id: string;
 		name: string;
 		detail: string | null;
+		icon?: string | null;
 	};
 
 	const FILTERS: { id: Filter; label: string }[] = [
@@ -48,6 +49,9 @@
 	let filter = $state<Filter>('all');
 	let pins = $state<Pin[]>([]);
 	let loading = $state(true);
+	let loadingMore = $state(false);
+	let total = $state(0);
+	let hasMore = $state(false);
 	let searching = $state(false);
 	let anchored = $state(false);
 	let busyId = $state<string | null>(null);
@@ -109,7 +113,8 @@
 				type: 'location',
 				id: pin.id,
 				name: pin.name,
-				detail: pin.category?.display_name ?? null
+				detail: pin.category?.display_name ?? null,
+				icon: pin.category?.icon ?? null
 			});
 		}
 		return list;
@@ -131,12 +136,30 @@
 
 	const visible = $derived([...otherRows, ...locationRows]);
 
-	async function loadPlaces(term = '') {
-		const params = new URLSearchParams({ collection: collection.id, limit: '24' });
+	const PAGE_SIZE = 30;
+
+	async function loadPlaces(term = '', offset = 0) {
+		const params = new URLSearchParams({
+			collection: collection.id,
+			limit: String(PAGE_SIZE),
+			offset: String(offset)
+		});
 		if (term) params.set('q', term);
 		const response = await fetch(`/api/locations/suggest/?${params}`);
-		if (!response.ok) return { results: [] as Pin[], anchored: false };
-		return (await response.json()) as { results: Pin[]; anchored: boolean };
+		if (!response.ok) return { results: [] as Pin[], anchored: false, total: 0, has_more: false };
+		return (await response.json()) as {
+			results: Pin[];
+			anchored: boolean;
+			total: number;
+			has_more: boolean;
+		};
+	}
+
+	function applyPage(data: Awaited<ReturnType<typeof loadPlaces>>, append = false) {
+		pins = append ? [...pins, ...(data.results ?? [])] : (data.results ?? []);
+		anchored = Boolean(data.anchored);
+		total = data.total ?? pins.length;
+		hasMore = Boolean(data.has_more);
 	}
 
 	function open(node: HTMLDialogElement) {
@@ -145,9 +168,7 @@
 		if (allowed.includes('location')) {
 			void loadPlaces()
 				.then((data) => {
-					if (cancelled) return;
-					pins = data.results ?? [];
-					anchored = Boolean(data.anchored);
+					if (!cancelled) applyPage(data);
 				})
 				.finally(() => {
 					if (!cancelled) loading = false;
@@ -165,23 +186,25 @@
 	function onQuery(value: string) {
 		query = value;
 		if (searchTimer) clearTimeout(searchTimer);
-		const term = value.trim();
-		if (term.length < 2) {
-			searching = false;
-			void loadPlaces().then((data) => {
-				pins = data.results ?? [];
-				anchored = Boolean(data.anchored);
-			});
-			return;
-		}
+		const term = value.trim().length < 2 ? '' : value.trim();
 		searching = true;
 		searchTimer = setTimeout(async () => {
 			const data = await loadPlaces(term);
-			if (query.trim() !== term) return;
-			pins = data.results ?? [];
-			anchored = Boolean(data.anchored);
+			if ((query.trim().length < 2 ? '' : query.trim()) !== term) return;
+			applyPage(data);
 			searching = false;
 		}, 250);
+	}
+
+	async function loadMore() {
+		if (loadingMore || !hasMore) return;
+		loadingMore = true;
+		try {
+			const term = query.trim().length < 2 ? '' : query.trim();
+			applyPage(await loadPlaces(term, pins.length), true);
+		} finally {
+			loadingMore = false;
+		}
 	}
 
 	async function add(row: Row) {
@@ -231,8 +254,10 @@
 			</div>
 		</div>
 
-		<div class="flex min-h-0 flex-1 flex-col gap-3 px-4 py-4 md:px-6">
-			<label class="input w-full">
+		<div
+			class="flex shrink-0 flex-col gap-3 border-b border-base-300 bg-base-200/40 px-4 py-3 md:px-6"
+		>
+			<label class="input input-md w-full bg-base-100">
 				<Magnify class="h-4 w-4 opacity-60" />
 				<input
 					type="search"
@@ -242,43 +267,61 @@
 				/>
 			</label>
 
-			{#if allowed.length > 1}
-				<div class="tabs tabs-box w-fit bg-base-200">
-					{#each FILTERS.filter((item) => item.id === 'all' || allowed.includes(item.id as PlanObjectType)) as item (item.id)}
-						<button
-							type="button"
-							class="tab tab-sm {filter === item.id ? 'tab-active' : ''}"
-							onclick={() => (filter = item.id)}
-						>
-							{$t(item.label)}
-						</button>
-					{/each}
-				</div>
-			{/if}
-
-			<div class="min-h-0 flex-1 space-y-2 overflow-y-auto">
-				{#if !loading && allowed.includes('location') && query.trim().length < 2}
-					<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50">
-						{anchored ? $t('itinerary.places_nearby') : $t('itinerary.search_for_a_place')}
-					</p>
-				{/if}
-				{#if loading || searching}
-					<div class="flex justify-center py-16">
-						<span class="loading loading-spinner loading-lg text-primary"></span>
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				{#if allowed.length > 1}
+					<div class="flex flex-wrap gap-1.5">
+						{#each FILTERS.filter((item) => item.id === 'all' || allowed.includes(item.id as PlanObjectType)) as item (item.id)}
+							<button
+								type="button"
+								class="btn btn-sm rounded-full {filter === item.id
+									? 'btn-primary'
+									: 'btn-ghost border-base-300'}"
+								onclick={() => (filter = item.id)}
+							>
+								{$t(item.label)}
+							</button>
+						{/each}
 					</div>
-				{:else if visible.length === 0}
-					<p class="py-16 text-center text-sm text-base-content/60">
-						{$t('itinerary.no_matching_items')}
-					</p>
 				{:else}
+					<span class="text-sm font-semibold">{$t('itinerary.your_places')}</span>
+				{/if}
+				{#if allowed.includes('location') && !loading}
+					<span class="text-xs text-base-content/60">
+						{$t('itinerary.showing_count', { values: { shown: pins.length, total } })}
+						· {anchored && needle.length < 2
+							? $t('itinerary.sorted_nearest')
+							: $t('itinerary.sorted_name')}
+					</span>
+				{/if}
+			</div>
+		</div>
+
+		<div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6">
+			{#if loading || searching}
+				<div class="flex justify-center py-16">
+					<span class="loading loading-spinner loading-lg text-primary"></span>
+				</div>
+			{:else if visible.length === 0}
+				<p class="py-16 text-center text-sm text-base-content/60">
+					{$t('itinerary.no_matching_items')}
+				</p>
+			{:else}
+				<div class="grid gap-2 md:grid-cols-2">
 					{#each visible as row (`${row.type}:${row.id}`)}
 						{@const key = `${row.type}:${row.id}`}
 						{@const where = placementLabel.get(row.id)}
+						{@const inCollection = row.type === 'location' && linkedIds.has(row.id)}
+						{@const done =
+							added.has(key) ||
+							(scope.kind === 'ideas' && plannedIds.has(row.id)) ||
+							(inCollection && scope.kind === 'collection')}
 						<div
-							class="flex items-center gap-3 rounded-xl border border-base-300 bg-base-100 px-3 py-2.5"
+							class="flex items-center gap-3 rounded-xl border border-base-300 bg-base-100 px-3 py-2.5 transition-colors {done
+								? 'opacity-70'
+								: 'hover:border-primary/40 hover:bg-base-200/40'}"
 						>
 							<div
-								class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
+								class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/10 text-lg text-primary"
 							>
 								{#if row.type === 'lodging'}
 									<Bed class="h-5 w-5" />
@@ -288,6 +331,8 @@
 									<NoteText class="h-5 w-5" />
 								{:else if row.type === 'checklist'}
 									<ListChecks class="h-5 w-5" />
+								{:else if row.icon}
+									<span aria-hidden="true">{row.icon}</span>
 								{:else}
 									<MapMarker class="h-5 w-5" />
 								{/if}
@@ -298,11 +343,6 @@
 									{#if row.detail}
 										<span class="truncate text-xs text-base-content/60">{row.detail}</span>
 									{/if}
-									{#if row.type === 'location' && linkedIds.has(row.id)}
-										<span class="badge badge-ghost badge-sm"
-											>{$t('itinerary.already_in_collection')}</span
-										>
-									{/if}
 									{#if where}
 										{#each where as label, index (index)}
 											<span class="badge badge-outline badge-sm">{label}</span>
@@ -310,12 +350,10 @@
 									{/if}
 								</div>
 							</div>
-							{#if scope.kind === 'ideas' && plannedIds.has(row.id)}
-								<span class="badge badge-ghost">{$t('itinerary.already_on_plan')}</span>
-							{:else if added.has(key)}
-								<span class="badge badge-success gap-1">
+							{#if done}
+								<span class="badge badge-success badge-soft gap-1 whitespace-nowrap">
 									<Check class="h-3.5 w-3.5" />
-									{$t('itinerary.added')}
+									{added.has(key) ? $t('itinerary.added') : $t('itinerary.already_in_collection')}
 								</span>
 							{:else}
 								<button
@@ -334,15 +372,23 @@
 							{/if}
 						</div>
 					{/each}
+				</div>
+				{#if hasMore && filter !== 'note' && filter !== 'checklist'}
+					<div class="flex justify-center pt-4">
+						<button type="button" class="btn btn-outline btn-sm" onclick={loadMore}>
+							{#if loadingMore}<span class="loading loading-spinner loading-xs"></span>{/if}
+							{$t('itinerary.load_more')}
+						</button>
+					</div>
 				{/if}
-			</div>
+			{/if}
 		</div>
 
 		<div
 			class="flex shrink-0 items-center justify-between border-t border-base-300 px-4 py-3 md:px-6"
 		>
 			<span class="text-sm text-base-content/60">
-				{visible.length}
+				{#if added.size}{$t('itinerary.added_n', { values: { n: added.size } })}{/if}
 			</span>
 			<button type="button" class="btn btn-primary" onclick={onClose}
 				>{$t('adventures.done')}</button

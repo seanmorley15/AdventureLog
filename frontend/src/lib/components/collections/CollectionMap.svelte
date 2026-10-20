@@ -11,7 +11,12 @@
 	import Clear from '~icons/mdi/close';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
+	import ImageMapPinPopup from '$lib/components/map/ImageMapPinPopup.svelte';
+	import {
+		collectCollectionImageGeoJson,
+		getImagePinNavigationUrl,
+		type ImagePinProperties
+	} from '$lib/map/imagePins';
 	import { t } from 'svelte-i18n';
 	import type { Collection, Location, User } from '$lib/types';
 	import { dayPinColor, dayStopPath, pinCoversDay, type PlanPin } from '$lib/collections/plan';
@@ -49,6 +54,8 @@
 		numberedPins?: boolean;
 		/** Show a map overlay to switch icon pins vs day numbers. */
 		pinStyleToggle?: boolean;
+		/** Fit the viewport to the visible pins on load and whenever the filters change. */
+		autoFit?: boolean;
 	}
 
 	let {
@@ -66,10 +73,12 @@
 		showRoutes = true,
 		filters = new CatalogFilters(),
 		numberedPins = true,
-		pinStyleToggle = false
+		pinStyleToggle = false,
+		autoFit = false
 	}: Props = $props();
 
 	let basemapType = $state('default');
+	let map: any = $state(undefined);
 
 	type MarkerType = 'location' | 'lodging' | 'transportation';
 	type VisitStatus = 'visited' | 'planned';
@@ -771,6 +780,43 @@
 			return displayPin(props) != null;
 		})
 	);
+	// Fit the viewport to whatever pins are visible, so a folder opens framed on its places.
+	let fitSignature = $derived(
+		filteredFeatures
+			.map((f) => f.geometry.coordinates.join(','))
+			.sort()
+			.join('|')
+	);
+	let hasFitted = false;
+	$effect(() => {
+		const signature = fitSignature;
+		const currentMap = map;
+		if (!autoFit || !currentMap || !signature) return;
+		untrack(() => {
+			const coords = filteredFeatures.map((f) => f.geometry.coordinates);
+			const lngs = coords.map((c) => c[0]);
+			const lats = coords.map((c) => c[1]);
+			const bounds: [[number, number], [number, number]] = [
+				[Math.min(...lngs), Math.min(...lats)],
+				[Math.max(...lngs), Math.max(...lats)]
+			];
+			const fit = () =>
+				currentMap.fitBounds(bounds, {
+					padding: 64,
+					maxZoom: 12,
+					duration: hasFitted ? 600 : 0
+				});
+			if (currentMap.loaded?.()) {
+				fit();
+				hasFitted = true;
+			} else {
+				currentMap.once('load', () => {
+					fit();
+					hasFitted = true;
+				});
+			}
+		});
+	});
 	// Auto-zoom when search results change
 	$effect(() => {
 		const query = searchQuery.trim();
@@ -778,14 +824,45 @@
 		if (!query || matches.length === 0) return;
 		untrack(() => zoomToFilteredFeatures());
 	});
+	let imagePinGeoJson = $derived(collectCollectionImageGeoJson(collection));
+	// With clustering on, photo pins join the same source so they group with places.
+	let clusteredImageFeatures = $derived(
+		clusterEnabled && showImagePins
+			? imagePinGeoJson.features.map((feature) => ({
+					...feature,
+					properties: {
+						...feature.properties,
+						id: `image:${feature.properties.imageId}`,
+						name: feature.properties.parentName,
+						type: 'image'
+					}
+				}))
+			: []
+	);
 	let markerGeoJson = $derived({
 		type: 'FeatureCollection',
-		features: filteredFeatures
-	} as MarkerFeatureCollection);
+		features: [...filteredFeatures, ...clusteredImageFeatures]
+	} as unknown as MarkerFeatureCollection);
+
+	function imagePinProps(props: Record<string, any>): ImagePinProperties {
+		return {
+			imageId: String(props.imageId),
+			imageUrl: String(props.imageUrl ?? ''),
+			source: props.source ?? 'upload',
+			isPrimary: Boolean(props.isPrimary),
+			parentType: String(props.parentType ?? 'location'),
+			parentId: String(props.parentId ?? ''),
+			parentName: String(props.parentName ?? '')
+		};
+	}
+
+	function openImagePin(props: ImagePinProperties) {
+		const href = getImagePinNavigationUrl(props);
+		if (href) goto(href);
+	}
 	// Stats
 	let visiblePinCount = $derived(filteredFeatures.length);
 	let totalPinCount = $derived(allFeatures.length);
-	let imagePinGeoJson = $derived(collectCollectionImageGeoJson(collection));
 	let imagePinCount = $derived(imagePinGeoJson.features.length);
 	let mapKey = $derived(
 		`${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${selectedDay ?? 'all'}-${showDayLinks}-${showNumberedPins}-${Array.from(
@@ -898,6 +975,7 @@
 	style={embedded ? undefined : 'min-height:600px; height:600px;'}
 >
 	<FullMap
+		bind:map
 		geoJson={markerGeoJson}
 		center={mapCenter}
 		zoom={mapZoom}
@@ -909,7 +987,37 @@
 		on:mapClick={handleMapClick}
 	>
 		{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
-			{#if markerProps && markerLngLat}
+			{#if markerProps && markerLngLat && markerProps.type === 'image'}
+				{@const imageProps = imagePinProps(markerProps)}
+				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
+					<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
+						<div
+							class="map-pin-hit grid h-8 w-8 cursor-pointer place-items-center rounded-full border-2 border-white bg-gradient-to-br from-rose-400 to-rose-600 text-sm shadow-lg transition-all duration-200 group-hover:scale-110"
+							class:scale-110={isActive}
+							role="button"
+							tabindex="0"
+							aria-label={imageProps.parentName || imageProps.imageId}
+							onmouseenter={() => setActive(true)}
+							onmouseleave={() => setActive(false)}
+							onfocus={() => setActive(true)}
+							onblur={() => setActive(false)}
+							onclick={(e) => {
+								e.stopPropagation();
+								openImagePin(imageProps);
+							}}
+							onkeydown={(e) => {
+								if (e.key !== 'Enter' && e.key !== ' ') return;
+								e.preventDefault();
+								e.stopPropagation();
+								openImagePin(imageProps);
+							}}
+						>
+							<span aria-hidden="true">📷</span>
+						</div>
+						<ImageMapPinPopup props={imageProps} visible={isActive} />
+					</div>
+				</Marker>
+			{:else if markerProps && markerLngLat}
 				{@const pin = showNumberedPins ? displayPin(markerProps) : null}
 				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
 					<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
@@ -1105,7 +1213,9 @@
 				</Marker>
 			{/if}
 
-			<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
+			{#if !clusterEnabled}
+				<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
+			{/if}
 		{/snippet}
 	</FullMap>
 

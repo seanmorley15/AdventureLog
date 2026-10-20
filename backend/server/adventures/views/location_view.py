@@ -14,7 +14,8 @@ from rest_framework.response import Response
 from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.utils.audience import can_edit
+from adventures.utils.audience import can_edit, member_collections_q, member_role, readable_collections_q
+from adventures.utils.location_collections import link_location, placements_for, unlink_location
 from adventures.utils.query_optimization import optimize_locations
 from adventures.serializers import (
     CalendarLocationSerializer,
@@ -188,16 +189,29 @@ class LocationViewSet(viewsets.ModelViewSet):
             for field in OWNER_ONLY_LOCATION_FIELDS:
                 serializer.validated_data.pop(field, None)
 
-        # Validate collection permissions if collections are being updated
+        removed_collections = []
         if 'collections' in serializer.validated_data:
-            self._validate_collection_update_permissions(
+            requested = list(serializer.validated_data['collections'])
+            # A PATCH only changes collections the requester can open; links to
+            # others stay, so a stale or partial list cannot drop them.
+            visible = Collection.objects.filter(
+                pk__in=instance.collections.values_list('pk', flat=True)
+            ).filter(readable_collections_q(request))
+            hidden = list(instance.collections.exclude(pk__in=visible.values_list('pk', flat=True)))
+            serializer.validated_data['collections'] = requested + [
+                c for c in hidden if c not in requested
+            ]
+            removed_collections = self._validate_collection_update_permissions(
                 instance, serializer.validated_data['collections']
             )
         else:
             # Remove collections from validated_data if not provided
             serializer.validated_data.pop('collections', None)
 
-        self.perform_update(serializer)
+        with transaction.atomic():
+            self.perform_update(serializer)
+            for collection in removed_collections:
+                unlink_location(instance, collection)
         return Response(serializer.data)
     
     def destroy(self, request, *args, **kwargs):
@@ -655,12 +669,14 @@ class LocationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='suggest')
-    def suggest(self, request):  # nearest places, or a name search
+    def suggest(self, request):  # the user's own places, searchable and paged
         """
-        A short list of the user's own places.
+        The user's own places, a page at a time.
 
-        With ``q``, search by name (at most 24). Without it, return the places
-        nearest the collection's geometric median. Nothing else is listed.
+        With ``q`` (two or more characters) search by name. Otherwise list every
+        place, nearest the collection's geometric median first when a
+        ``collection`` is given and has a center, A to Z when not. ``offset``
+        and ``limit`` (at most 50) page through the list.
         """
         if not request.user.is_authenticated:
             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -668,9 +684,11 @@ class LocationViewSet(viewsets.ModelViewSet):
         query = str(request.query_params.get('q') or '').strip()
         try:
             limit = int(request.query_params.get('limit') or 24)
+            offset = int(request.query_params.get('offset') or 0)
         except (TypeError, ValueError):
-            limit = 24
-        limit = min(max(limit, 1), 24)
+            limit, offset = 24, 0
+        limit = min(max(limit, 1), 50)
+        offset = max(offset, 0)
 
         from adventures.utils.geo import collection_center
 
@@ -691,11 +709,8 @@ class LocationViewSet(viewsets.ModelViewSet):
         locations = Location.objects.filter(user=request.user).select_related('category')
         if len(query) >= 2:
             locations = locations.filter(name__icontains=query)
-        elif center is None:
-            return Response({'results': [], 'anchored': False})
-        else:
-            locations = locations.filter(coordinates__isnull=False)
 
+        total = locations.count()
         if center is not None:
             locations = locations.annotate(distance=Distance('coordinates', center)).order_by(
                 F('distance').asc(nulls_last=True), 'name'
@@ -704,14 +719,91 @@ class LocationViewSet(viewsets.ModelViewSet):
             locations = locations.order_by('name')
 
         return Response({
-            'results': MapPinSerializer(locations[:limit], many=True).data,
+            'results': MapPinSerializer(locations[offset:offset + limit], many=True).data,
             'anchored': center is not None,
+            'total': total,
+            'has_more': offset + limit < total,
         })
+
+    # ==================== COLLECTION MEMBERSHIP ====================
+
+    def _location_owner_fits(self, location, collection):
+        """The place owner must own the collection or be a member of it."""
+        return (
+            collection.user_id == location.user_id
+            or collection.shared_with.filter(id=location.user_id).exists()
+        )
+
+    @action(detail=True, methods=['get'], url_path='collections')
+    def collection_memberships(self, request, pk=None):
+        """Collections this place is in, plus the ones the requester may add it to."""
+        location = self.get_object()
+        query = (request.query_params.get('q') or '').strip()
+
+        linked_ids = set(location.collections.values_list('pk', flat=True))
+        candidates = Collection.objects.filter(
+            Q(pk__in=linked_ids) & readable_collections_q(request)
+            | member_collections_q(request, editable=True)
+        ).distinct().select_related('user')
+        if query:
+            candidates = candidates.filter(name__icontains=query)
+
+        rows = []
+        for collection in candidates:
+            role = member_role(collection, request.user)
+            is_linked = collection.pk in linked_ids
+            editable = can_edit(request, collection)
+            rows.append({
+                'id': str(collection.pk),
+                'name': collection.name,
+                'start_date': collection.start_date,
+                'end_date': collection.end_date,
+                'is_shared': collection.user_id != request.user.id,
+                'owner_name': collection.user.username,
+                'role': role,
+                'is_linked': is_linked,
+                'can_link': editable and self._location_owner_fits(location, collection),
+                'can_unlink': editable or location.user_id == request.user.id,
+                'placements': placements_for(location, collection) if is_linked else [],
+            })
+        rows.sort(key=lambda r: (
+            not r['is_linked'], r['is_shared'], (r['name'] or '').lower()
+        ))
+        return Response(rows)
+
+    @action(detail=True, methods=['post', 'delete'], url_path=r'collections/(?P<collection_id>[^/.]+)')
+    def collection_membership(self, request, pk=None, collection_id=None):
+        """Link (POST) or unlink (DELETE) this place for one collection. Idempotent."""
+        location = self.get_object()
+        try:
+            collection = Collection.objects.get(pk=collection_id)
+        except (Collection.DoesNotExist, ValidationError, ValueError):
+            return Response({'error': 'Collection not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Hide collections the requester cannot open
+        if not Collection.objects.filter(pk=collection.pk).filter(readable_collections_q(request)).exists():
+            return Response({'error': 'Collection not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.method == 'POST':
+            if not can_edit(request, collection):
+                raise PermissionDenied("You don't have permission to add locations to this collection.")
+            if not self._location_owner_fits(location, collection):
+                return Response(
+                    {'error': 'The location owner must own or be a member of this collection.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            link_location(location, collection)
+            return Response({'linked': True})
+
+        if not (can_edit(request, collection) or location.user_id == request.user.id):
+            raise PermissionDenied("You don't have permission to remove this location from the collection.")
+        removed = unlink_location(location, collection)
+        return Response({'linked': False, 'removed_placements': removed})
 
     # ==================== HELPER METHODS ====================
 
     def _validate_collection_update_permissions(self, instance, new_collections):
-        """Validate collection permissions for updates, allowing collection owners to unlink locations."""
+        """Check collection permissions for an update. Returns the collections being removed."""
         current_collections = set(instance.collections.all())
         new_collections_set = set(new_collections)
         
@@ -740,27 +832,10 @@ class LocationViewSet(viewsets.ModelViewSet):
                 # Editors may unlink; viewers may not
                 if not can_edit(self.request, collection):
                     raise PermissionDenied(
-                        f"You don't have permission to remove this location from one of the collections it's linked to.'"
+                        "You don't have permission to remove this location from one of the collections it's linked to."
                     )
-            else:
-                # If the removal is permitted, also remove any itinerary items
-                # in this collection that reference this Location instance.
-                try:
-                    ct = ContentType.objects.get_for_model(instance.__class__)
-                    # Try deleting by native PK type first, then by string.
-                    qs = CollectionItineraryItem.objects.filter(
-                        collection=collection, content_type=ct, object_id=instance.pk
-                    )
-                    if qs.exists():
-                        qs.delete()
-                    else:
-                        CollectionItineraryItem.objects.filter(
-                            collection=collection, content_type=ct, object_id=str(instance.pk)
-                        ).delete()
-                except Exception:
-                    # Don't raise on cleanup failures; deletion of itinerary items
-                    # is best-effort and shouldn't block the update operation.
-                    pass
+
+        return list(collections_to_remove)
 
     def _validate_collection_permissions(self, collections):
         """Validate permissions for all collections (used in create)."""

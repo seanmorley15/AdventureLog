@@ -25,6 +25,7 @@
 	import { normalizeContentImage } from '$lib/images';
 	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
 	import TripWorkspace from '$lib/components/collections/TripWorkspace.svelte';
+	import LinkVariant from '~icons/mdi/link-variant';
 	import LinkItemsModal from '$lib/components/collections/LinkItemsModal.svelte';
 	import type { LinkScope } from '$lib/components/collections/LinkItemsModal.svelte';
 	import { placementType, showsDayPlanner, type PlanObjectType } from '$lib/collections/plan';
@@ -64,6 +65,7 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '$lib/toasts';
+	import { linkLocationToCollection } from '$lib/collection-membership';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
@@ -521,23 +523,12 @@
 		if (!collection) return false;
 		if ((collection.locations ?? []).some((item) => String(item.id) === String(locationId)))
 			return true;
-		const loaded = await fetch(`/api/locations/${locationId}/?include_collections=true`);
-		if (!loaded.ok) {
+		const loaded = await fetch(`/api/locations/${locationId}/`);
+		if (!loaded.ok || !(await linkLocationToCollection(locationId, collection.id))) {
 			addToast('error', $t('adventures.collection_link_location_error'));
 			return false;
 		}
 		const location = (await loaded.json()) as Location;
-		const response = await fetch(`/api/locations/${location.id}/`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				collections: [...(location.collections || []), collection.id]
-			})
-		});
-		if (!response.ok) {
-			addToast('error', $t('adventures.collection_link_location_error'));
-			return false;
-		}
 		collection.locations = [...(collection.locations ?? []), location];
 		collection = { ...collection };
 		return true;
@@ -680,7 +671,7 @@
 	// Define available views based on collection type
 	let dayPlanner = $derived(collection ? showsDayPlanner(collection) : false);
 	// Folders keep the catalog sidebar. Trip all-items uses the planner workspace chrome.
-	let catalogView = $derived(currentView === 'all' && !dayPlanner);
+	let catalogView = $derived(false);
 	// Plan, read, trip all-items, the map, calendar, and recommendations fill the space under the tab bar.
 	let lockedPane = $derived(
 		currentView === 'plan' ||
@@ -690,7 +681,7 @@
 			currentView === 'story' ||
 			currentView === 'discussion' ||
 			currentView === 'recommendations' ||
-			(currentView === 'all' && dayPlanner)
+			currentView === 'all'
 	);
 	let showComposer = $derived(
 		!!collection &&
@@ -1340,43 +1331,94 @@
 
 					<!-- All Items View -->
 					{#if currentView === 'all'}
-						{#if dayPlanner}
-							<div class="h-full min-h-0">
-								<TripWorkspace bind:collection user={data.user} canModify={canModifyCollection}>
-									{#snippet children(filters)}
-										<CollectionAllItems
-											bind:collection
-											user={data.user}
-											{isFolderView}
-											{filters}
-											showMapToggles
-											on:openEdit={handleOpenEdit}
-										/>
-									{/snippet}
-								</TripWorkspace>
-							</div>
-						{:else}
-							{#if isFolderView}
-								<div
-									class="h-[50vh] overflow-hidden rounded-2xl border border-base-300/70 shadow-sm"
-								>
-									<CollectionMap
-										bind:collection
-										user={data.user}
-										canModify={canModifyCollection}
-										embedded
-										showRoutes={false}
-										mapClass="h-full w-full"
-									/>
-								</div>
-							{/if}
-							<CollectionAllItems
+						<div class="h-full min-h-0">
+							<TripWorkspace
 								bind:collection
 								user={data.user}
-								{isFolderView}
-								on:openEdit={handleOpenEdit}
-							/>
-						{/if}
+								canModify={canModifyCollection}
+								folder={isFolderView}
+							>
+								{#snippet children(filters)}
+									{#if isFolderView && showComposer}
+										<div
+											class="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-base-300/70 bg-base-100 p-2.5 shadow-sm"
+										>
+											<span class="px-1.5 text-sm font-semibold text-base-content/70">
+												{$t('itinerary.add_to_folder')}
+											</span>
+											<button
+												type="button"
+												class="btn btn-primary btn-sm gap-1.5"
+												onclick={() => {
+													adventureToEdit = null;
+													isLocationModalOpen = true;
+												}}
+											>
+												<Plus class="h-4 w-4" />
+												{$t('itinerary.new_place')}
+											</button>
+											<button
+												type="button"
+												class="btn btn-primary btn-soft btn-sm gap-1.5"
+												onclick={() => (linkScope = { kind: 'collection' })}
+											>
+												<LinkVariant class="h-4 w-4" />
+												{$t('itinerary.add_existing')}
+											</button>
+											<button
+												type="button"
+												class="btn btn-ghost btn-sm border-base-300"
+												onclick={() => {
+													noteToEdit = null;
+													isNoteModalOpen = true;
+												}}
+											>
+												{$t('adventures.note')}
+											</button>
+											<button
+												type="button"
+												class="btn btn-ghost btn-sm border-base-300"
+												onclick={() => {
+													checklistToEdit = null;
+													isChecklistModalOpen = true;
+												}}
+											>
+												{$t('adventures.checklist')}
+											</button>
+										</div>
+									{/if}
+									{#if isFolderView && (collection?.locations?.length ?? 0) > 0}
+										{@const total = collection?.locations?.length ?? 0}
+										{@const visited =
+											collection?.locations?.filter((l) => l.is_visited).length ?? 0}
+										<div
+											class="mb-3 rounded-2xl border border-base-300/70 bg-base-100 px-4 py-3 shadow-sm"
+										>
+											<div class="mb-2 flex items-center justify-between text-sm">
+												<span class="flex items-center gap-2 font-semibold">
+													<CheckCircleOutline class="h-4 w-4 text-primary" />
+													{$t('worldtravel.progress')}
+												</span>
+												<span class="opacity-70">
+													{visited} / {total}
+													{$t('adventures.visited').toLowerCase()}
+												</span>
+											</div>
+											<progress class="progress progress-success w-full" value={visited} max={total}
+											></progress>
+										</div>
+									{/if}
+									<CollectionAllItems
+										bind:collection={collection!}
+										user={data.user}
+										{isFolderView}
+										{filters}
+										showMapToggles
+										on:openEdit={handleOpenEdit}
+									/>
+								{/snippet}
+							</TripWorkspace>
+						</div>
 					{/if}
 
 					<!-- Day plan and read, with the map -->
@@ -1630,7 +1672,7 @@
 {/if}
 
 <!-- Floating Action Button (FAB) - Only shown if user can modify collection -->
-{#if showComposer}
+{#if showComposer && !(isFolderView && currentView === 'all')}
 	<div class="fixed bottom-6 right-6 z-[999]">
 		<div class="dropdown dropdown-top dropdown-end">
 			<div

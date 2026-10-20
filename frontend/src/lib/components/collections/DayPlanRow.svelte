@@ -43,6 +43,7 @@
 		onToggleOptional?: (row: PlanRow) => void;
 		onAddAgain?: (row: PlanRow) => void;
 		onRemove?: (row: PlanRow) => void;
+		onRemoveFromCollection?: (row: PlanRow) => void;
 		onAddToPlan?: (row: PlanRow) => void;
 	}
 
@@ -61,6 +62,7 @@
 		onToggleOptional,
 		onAddAgain,
 		onRemove,
+		onRemoveFromCollection,
 		onAddToPlan
 	}: Props = $props();
 
@@ -365,6 +367,18 @@
 								{$t('itinerary.remove_from_plan')}
 							</button>
 						</li>
+						{#if row.type === 'location'}
+							<li>
+								<button
+									type="button"
+									role="menuitem"
+									class="text-error"
+									onclick={() => onRemoveFromCollection?.(row)}
+								>
+									{$t('adventures.remove_from_collection')}
+								</button>
+							</li>
+						{/if}
 					{/if}
 				</ul>
 			</div>

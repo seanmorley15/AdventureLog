@@ -20,6 +20,7 @@
 		Visit
 	} from '$lib/types';
 	import { addToast } from '$lib/toasts';
+	import { unlinkLocationFromCollection } from '$lib/collection-membership';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 	import { createEmptyLocation } from '$lib/location-draft';
@@ -51,7 +52,9 @@
 	import type { LinkScope } from './LinkItemsModal.svelte';
 	import LocationModal from '$lib/components/locations/LocationModal.svelte';
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
+	import TransportationModal, {
+		createEmptyTransportation
+	} from '$lib/components/transportation/TransportationModal.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import Plus from '~icons/mdi/plus';
@@ -585,6 +588,37 @@
 		if (res.ok) removeItem(row.id);
 	}
 
+	async function removeFromCollection(row: PlanRow) {
+		const placements = (collection.itinerary ?? []).filter(
+			(item) => String(item.object_id) === String(row.objectId)
+		).length;
+		if (
+			placements > 1 &&
+			!confirm(
+				$t('collection.unlink_plan_warning', {
+					values: { days: String(placements), name: collection.name }
+				})
+			)
+		) {
+			return;
+		}
+		const removed = await unlinkLocationFromCollection(row.objectId, collection.id);
+		if (removed === null) {
+			addToast('error', $t('adventures.collection_remove_location_error'));
+			return;
+		}
+		collection = {
+			...collection,
+			locations: (collection.locations ?? []).filter(
+				(item) => String(item.id) !== String(row.objectId)
+			),
+			itinerary: (collection.itinerary ?? []).filter(
+				(item) => String(item.object_id) !== String(row.objectId)
+			)
+		};
+		addToast('info', $t('adventures.collection_remove_location_success'));
+	}
+
 	let placementEdit = $state<{
 		mode: 'edit' | 'add';
 		row: PlanRow;
@@ -909,7 +943,7 @@
 	let checklistToEdit = $state<Checklist | null>(null);
 	let locationDraft = $state(createEmptyLocation());
 	let lodgingDraft = $state<Lodging | null>(null);
-	let transportationDraft = $state<Transportation | undefined>(undefined);
+	let transportationDraft = $state<Transportation>(createEmptyTransportation());
 	const placedFromModal = new Set<string>();
 
 	const createDate = $derived.by(() => {
@@ -927,7 +961,7 @@
 		checklistToEdit = null;
 		locationDraft = createEmptyLocation();
 		lodgingDraft = null;
-		transportationDraft = undefined;
+		transportationDraft = createEmptyTransportation();
 		openModal = type;
 	}
 
@@ -942,7 +976,7 @@
 			lodgingDraft = null;
 		} else if (row.type === 'transportation') {
 			transportationToEdit = row.object as Transportation;
-			transportationDraft = undefined;
+			transportationDraft = createEmptyTransportation();
 		} else if (row.type === 'note') {
 			noteToEdit = row.object as Note;
 		} else {
@@ -1150,6 +1184,7 @@
 		onToggleOptional={toggleOptional}
 		onAddAgain={(target) => (placementEdit = { mode: 'add', row: target, dayIndex: null })}
 		onRemove={removePlacement}
+		onRemoveFromCollection={removeFromCollection}
 		onAddToPlan={(target) => (placementEdit = { mode: 'add', row: target, dayIndex: null })}
 	/>
 {/snippet}

@@ -58,6 +58,7 @@
 	import DetailHeader from '$lib/components/detail/DetailHeader.svelte';
 	import DetailCard from '$lib/components/detail/DetailCard.svelte';
 	import DetailFact from '$lib/components/detail/DetailFact.svelte';
+	import LocationCollectionChips from '$lib/components/collections/LocationCollectionChips.svelte';
 	import DetailStat from '$lib/components/detail/DetailStat.svelte';
 	import DetailTabs, { type DetailTab } from '$lib/components/detail/DetailTabs.svelte';
 	import DetailPhotos from '$lib/components/detail/DetailPhotos.svelte';
@@ -933,9 +934,13 @@
 								</span>
 							</DetailFact>
 						{/if}
-						{#if adventure.collections && adventure.collections.length > 0}
+						{#if isOwner || (adventure.collections && adventure.collections.length > 0)}
 							<DetailFact label={$t('navbar.collections')} icon={Folder}>
-								{adventure.collections.length}
+								<LocationCollectionChips
+									locationId={adventure.id}
+									locationName={adventure.name}
+									canManage={isOwner}
+								/>
 							</DetailFact>
 						{/if}
 						{#if adventurePriceLabel}

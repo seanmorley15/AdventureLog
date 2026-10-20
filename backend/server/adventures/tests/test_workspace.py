@@ -122,7 +122,13 @@ class WorkspaceTests(APITestCase):
         self.assertEqual(found.status_code, 200)
         self.assertEqual([row['name'] for row in found.json()['results']], ['Pikes Peak'])
 
-        empty = self.client.get('/api/locations/suggest/')
-        self.assertEqual(empty.status_code, 200)
-        self.assertEqual(empty.json()['results'], [])
-        self.assertFalse(empty.json()['anchored'])
+        everything = self.client.get('/api/locations/suggest/')
+        self.assertEqual(everything.status_code, 200)
+        names = [row['name'] for row in everything.json()['results']]
+        self.assertEqual(names, sorted(names))
+        self.assertIn('Pikes Peak', names)
+        self.assertFalse(everything.json()['anchored'])
+
+        paged = self.client.get('/api/locations/suggest/', {'limit': 1, 'offset': 1})
+        self.assertEqual(len(paged.json()['results']), 1)
+        self.assertEqual(paged.json()['total'], len(names))

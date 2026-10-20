@@ -217,6 +217,7 @@
 								on:edit={(e) => handleItemEdit('locations', e.detail)}
 								on:editVisits={(e) => handleLocationEditVisits(e.detail)}
 								on:duplicate={(e) => handleLocationDuplicate(e.detail)}
+								on:unlink={(e) => handleItemDelete('locations', e.detail)}
 							/>
 						</div>
 					{/each}

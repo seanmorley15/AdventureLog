@@ -19,7 +19,8 @@
 	import Link from '~icons/mdi/link-variant';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
-	import CollectionLink from '../collections/CollectionLink.svelte';
+	import CollectionPicker from '../collections/CollectionPicker.svelte';
+	import { unlinkLocationFromCollection } from '$lib/collection-membership';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -147,62 +148,37 @@
 		}
 	}
 
-	async function linkCollection(event: CustomEvent<string>) {
-		let collectionId = event.detail;
-		// Create a copy to avoid modifying the original directly
-		const updatedCollections = adventure.collections ? [...adventure.collections] : [];
+	// Placements of this place on the open collection's plan, for the unlink warning.
+	let planPlacements = $derived(
+		collection
+			? (collection.itinerary ?? []).filter(
+					(item) => String(item.object_id) === String(adventure.id)
+				).length
+			: 0
+	);
 
-		// Add the new collection if not already present
-		if (!updatedCollections.some((c) => String(c) === String(collectionId))) {
-			updatedCollections.push(collectionId);
+	async function removeFromThisCollection() {
+		if (!collection?.id) return;
+		if (
+			planPlacements > 0 &&
+			!confirm(
+				$t('collection.unlink_plan_warning', {
+					values: { days: String(planPlacements), name: collection.name }
+				})
+			)
+		) {
+			return;
 		}
-
-		let res = await fetch(`/api/locations/${adventure.id}`, {
-			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ collections: updatedCollections })
-		});
-
-		if (res.ok) {
-			// Only update the adventure.collections after server confirms success
-			adventure.collections = updatedCollections;
-			addToast('info', `${$t('adventures.collection_link_location_success')}`);
-		} else {
-			addToast('error', `${$t('adventures.collection_link_location_error')}`);
-		}
-	}
-
-	async function removeFromCollection(event: CustomEvent<string>) {
-		let collectionId = event.detail;
-		if (!collectionId) {
+		const removed = await unlinkLocationFromCollection(adventure.id, collection.id);
+		if (removed === null) {
 			addToast('error', `${$t('adventures.collection_remove_location_error')}`);
 			return;
 		}
-
-		// Create a copy to avoid modifying the original directly
-		if (adventure.collections) {
-			const updatedCollections = adventure.collections.filter(
-				(c) => String(c) !== String(collectionId)
-			);
-
-			let res = await fetch(`/api/locations/${adventure.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ collections: updatedCollections })
-			});
-
-			if (res.ok) {
-				// Only update adventure.collections after server confirms success
-				adventure.collections = updatedCollections;
-				addToast('info', `${$t('adventures.collection_remove_location_success')}`);
-			} else {
-				addToast('error', `${$t('adventures.collection_remove_location_error')}`);
-			}
-		}
+		adventure.collections = (adventure.collections ?? []).filter(
+			(c) => String(c) !== String(collection.id)
+		);
+		addToast('info', `${$t('adventures.collection_remove_location_success')}`);
+		dispatch('unlink', adventure);
 	}
 
 	let isDuplicating = $state(false);
@@ -274,11 +250,14 @@
 </script>
 
 {#if isCollectionModalOpen}
-	<CollectionLink
-		on:link={(e) => linkCollection(e)}
-		on:unlink={(e) => removeFromCollection(e)}
-		on:close={() => (isCollectionModalOpen = false)}
-		linkedCollectionList={adventure.collections}
+	<CollectionPicker
+		locationId={adventure.id}
+		locationName={adventure.name}
+		onchange={(ids) => {
+			adventure.collections = ids;
+			if (collection?.id && !ids.includes(String(collection.id))) dispatch('unlink', adventure);
+		}}
+		onclose={() => (isCollectionModalOpen = false)}
 	/>
 {/if}
 
@@ -491,6 +470,22 @@
 										</button>
 									</li>
 								{/if}
+								{#if collection}
+									<li>
+										<button
+											onclick={() => {
+												isActionsMenuOpen = false;
+												removeFromThisCollection();
+											}}
+											class="flex items-center gap-2"
+										>
+											<LinkVariantRemove class="w-4 h-4" />
+											<span class="truncate">
+												{$t('collection.remove_from_named', { values: { name: collection.name } })}
+											</span>
+										</button>
+									</li>
+								{/if}
 								{#if user?.uuid == adventure.user?.uuid}
 									<li>
 										<button
@@ -502,19 +497,6 @@
 										>
 											<Plus class="w-4 h-4" />
 											{$t('collection.manage_collections')}
-										</button>
-									</li>
-								{:else if collection && user && collection.user == user.uuid}
-									<li>
-										<button
-											onclick={() => {
-												isActionsMenuOpen = false;
-												removeFromCollection(new CustomEvent('unlink', { detail: collection.id }));
-											}}
-											class="flex items-center gap-2"
-										>
-											<LinkVariantRemove class="w-4 h-4" />
-											{$t('adventures.remove_from_collection')}
 										</button>
 									</li>
 								{/if}

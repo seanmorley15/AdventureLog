@@ -768,6 +768,15 @@ class LocationSerializer(CoordinateSerializerMixin, CustomModelSerializer):
                             "Location cannot be added to collection unless the location owner has shared access to the collection."
                         )
         
+        # Links to collections the requester cannot open are kept by the view, not removed.
+        if collections_to_remove:
+            from adventures.utils.audience import readable_collections_q
+            openable = set(
+                Collection.objects.filter(pk__in=[c.pk for c in collections_to_remove])
+                .filter(readable_collections_q(self.context['request']))
+            )
+            collections_to_remove = collections_to_remove & openable
+
         # Validate collections being removed - allow if user owns the collection OR owns the location
         for collection in collections_to_remove:
             user_owns_collection = collection.user == user

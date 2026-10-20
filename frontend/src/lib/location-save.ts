@@ -57,8 +57,15 @@ export async function saveLocation({
 				: null
 	};
 
-	if (collectionId) {
+	const isUpdate = Boolean(locationToEdit?.id);
+
+	// Membership is set on create only. Editing a place never rewrites its collections,
+	// so a place shared across trips keeps every link.
+	if (collectionId && !isUpdate) {
 		payload.collections = [collectionId];
+	}
+	if (isUpdate) {
+		delete payload.collections;
 	}
 
 	if (location.price === null || location.price === undefined) {
@@ -68,11 +75,6 @@ export async function saveLocation({
 		const normalized = normalizeMoneyPayload(payload, 'price', 'price_currency', defaultCurrency);
 		payload.price = normalized.price;
 		payload.price_currency = normalized.price_currency;
-	}
-
-	const isUpdate = Boolean(locationToEdit?.id);
-	if (isUpdate && !collectionId) {
-		delete payload.collections;
 	}
 
 	const res = await fetch(isUpdate ? `/api/locations/${locationToEdit?.id}` : '/api/locations', {

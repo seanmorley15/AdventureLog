@@ -1,36 +1,7 @@
-<script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Collection, Location, Transportation, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
-	import { t } from 'svelte-i18n';
-	import Plane from '~icons/mdi/airplane';
-	import MediaStep from '../shared/MediaStep.svelte';
-	import TransportationDetails from './TransportationDetails.svelte';
+<script lang="ts" module>
+	import type { Transportation as TransportationType } from '$lib/types';
 
-	const dispatch = createEventDispatcher();
-
-	// Store the initial visit date internally so it persists even if parent clears it
-	let storedInitialVisitDate: string | null = $state(null);
-
-	let modal: HTMLDialogElement;
-
-	// Whether a save/create occurred during this modal session
-	let didSave = $state(false);
-
-	let steps = $state([
-		{
-			name: $t('adventures.details'),
-			selected: true,
-			requires_id: false
-		},
-		{
-			name: $t('settings.media'),
-			selected: false,
-			requires_id: true
-		}
-	]);
-
-	function createEmptyTransportation(): Transportation {
+	export function createEmptyTransportation(): TransportationType {
 		return {
 			id: '',
 			user: '',
@@ -63,6 +34,39 @@
 			attachments: []
 		};
 	}
+</script>
+
+<script lang="ts">
+	import { createEventDispatcher, onMount } from 'svelte';
+	import type { Collection, Location, Transportation, User } from '$lib/types';
+	import { addToast } from '$lib/toasts';
+	import { t } from 'svelte-i18n';
+	import Plane from '~icons/mdi/airplane';
+	import MediaStep from '../shared/MediaStep.svelte';
+	import TransportationDetails from './TransportationDetails.svelte';
+
+	const dispatch = createEventDispatcher();
+
+	// Store the initial visit date internally so it persists even if parent clears it
+	let storedInitialVisitDate: string | null = $state(null);
+
+	let modal: HTMLDialogElement;
+
+	// Whether a save/create occurred during this modal session
+	let didSave = $state(false);
+
+	let steps = $state([
+		{
+			name: $t('adventures.details'),
+			selected: true,
+			requires_id: false
+		},
+		{
+			name: $t('settings.media'),
+			selected: false,
+			requires_id: true
+		}
+	]);
 
 	interface Props {
 		user?: User | null;
