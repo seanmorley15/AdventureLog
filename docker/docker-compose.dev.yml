@@ -71,7 +71,7 @@ services:
       sh -c "memcached -u nobody -m 64 -p 11211 -d;
       until pg_isready -h db -p 5432 >/dev/null 2>&1; do sleep 1; done;
       python manage.py migrate --noinput;
-      python manage.py shell -c \"from worldtravel.models import Country; import sys; sys.exit(0 if Country.objects.exists() else 1)\" || python manage.py download-countries;
+      python manage.py shell -c \"from worldtravel.models import Country; import sys; sys.exit(0 if Country.objects.exists() else 1)\" || python manage.py download_countries;
       if [ -n \"$$DJANGO_SUPERUSER_USERNAME\" ] && [ -n \"$$DJANGO_SUPERUSER_PASSWORD\" ] && [ -n \"$$DJANGO_SUPERUSER_EMAIL\" ]; then
         python manage.py createsuperuser --noinput --username \"$$DJANGO_SUPERUSER_USERNAME\" --email \"$$DJANGO_SUPERUSER_EMAIL\" || true;
       fi;

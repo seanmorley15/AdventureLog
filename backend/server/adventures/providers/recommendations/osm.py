@@ -5,8 +5,8 @@ import time
 
 import requests
 
-from adventures.providers.base import ProviderResult
-from adventures.services.external_cache import cached_provider
+from core.results import ProviderResult
+from core.cache import cached_provider
 
 logger = logging.getLogger(__name__)
 

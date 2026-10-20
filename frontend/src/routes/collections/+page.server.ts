@@ -107,6 +107,9 @@ export const actions: Actions = {
 			// Create FormData for the API request
 			const apiFormData = new FormData();
 			apiFormData.append('file', file);
+			// 'link' reuses places the user already has; 'create' makes new copies.
+			const existingLocations = formData.get('existing_locations') === 'create' ? 'create' : 'link';
+			apiFormData.append('existing_locations', existingLocations);
 
 			let res = await fetch(`${serverEndpoint}/api/collections/import/`, {
 				method: 'POST',

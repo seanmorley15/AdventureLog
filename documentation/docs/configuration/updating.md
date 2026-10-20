@@ -57,7 +57,7 @@ Country and region reference data comes from [dr5hn/countries-states-cities-data
 
 ```bash
 docker exec -it <backend-container> bash
-python manage.py download-countries --force
+python manage.py download_countries --force
 ```
 
 Region data version is pinned per AdventureLog release in `settings.py` and is not auto-updated on every deploy.

@@ -1,8 +1,10 @@
+from datetime import datetime, time, timedelta, timezone as dt_timezone
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Avg, Max, Count
+from django.utils import timezone
 
-from adventures.models import Location, Collection, Activity
-from adventures.utils.get_is_visited import is_location_visited
+from adventures.models import Location, Collection, Activity, Visit
 from adventures.utils.sports_types import SPORT_CATEGORIES
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
 
@@ -13,14 +15,18 @@ class UserStatsService:
     """Build travel and activity statistics for a user profile."""
 
     def get_visited_locations_count(self, user):
-        visited_count = 0
-        user_locations = Location.objects.filter(user=user).prefetch_related('visits')
-
-        for location in user_locations:
-            if is_location_visited(location):
-                visited_count += 1
-
-        return visited_count
+        """
+        Places with a visit that has started, by the UTC date (the rule in
+        ``is_location_visited``), counted in the database.
+        """
+        tomorrow = timezone.now().date() + timedelta(days=1)
+        cutoff = datetime.combine(tomorrow, time.min, tzinfo=dt_timezone.utc)
+        return (
+            Visit.objects.filter(location__user=user, start_date__lt=cutoff)
+            .values('location_id')
+            .distinct()
+            .count()
+        )
 
     def _can_view_location(self, request_user, profile_user, location):
         if not location:
@@ -52,10 +58,12 @@ class UserStatsService:
     def get_activity_stats_by_category(self, user_activities, profile_user, request_user):
         category_stats = {}
 
+        present_sports = set(user_activities.order_by().values_list('sport_type', flat=True).distinct())
+
         for category, sports in SPORT_CATEGORIES.items():
             activities = user_activities.filter(sport_type__in=sports)
 
-            if activities.exists():
+            if present_sports.intersection(sports):
                 stats = activities.aggregate(
                     count=Count('id'),
                     total_distance=Sum('distance'),
@@ -69,21 +77,25 @@ class UserStatsService:
                     avg_speed=Avg('average_speed'),
                     max_speed=Max('max_speed'),
                     total_calories=Sum('calories'),
+                    max_calories=Max('calories'),
                 )
 
                 total_moving_seconds = 0
                 if stats['total_moving_time']:
                     total_moving_seconds = int(stats['total_moving_time'].total_seconds())
 
+                per_sport = {
+                    row['sport_type']: row
+                    for row in activities.order_by().values('sport_type').annotate(
+                        count=Count('id'),
+                        total_distance=Sum('distance'),
+                        total_elevation_gain=Sum('elevation_gain'),
+                    )
+                }
                 sport_breakdown = {}
                 for sport in sports:
-                    sport_activities = activities.filter(sport_type=sport)
-                    if sport_activities.exists():
-                        sport_stats = sport_activities.aggregate(
-                            count=Count('id'),
-                            total_distance=Sum('distance'),
-                            total_elevation_gain=Sum('elevation_gain'),
-                        )
+                    sport_stats = per_sport.get(sport)
+                    if sport_stats:
                         sport_breakdown[sport] = {
                             'count': sport_stats['count'],
                             'total_distance': round(sport_stats['total_distance'] or 0, 2),
@@ -141,7 +153,7 @@ class UserStatsService:
                             .order_by('-calories', '-start_date')
                             .first(),
                             'calories',
-                            activities.exclude(calories__isnull=True).aggregate(value=Max('calories'))['value'],
+                            stats['max_calories'],
                             profile_user,
                             request_user,
                         ),
@@ -151,7 +163,20 @@ class UserStatsService:
         return category_stats
 
     def get_overall_activity_stats(self, user_activities, profile_user, request_user):
-        if not user_activities.exists():
+        stats = user_activities.aggregate(
+            total_count=Count('id'),
+            total_distance=Sum('distance'),
+            total_moving_time=Sum('moving_time'),
+            total_elevation_gain=Sum('elevation_gain'),
+            total_elevation_loss=Sum('elevation_loss'),
+            total_calories=Sum('calories'),
+            max_distance=Max('distance'),
+            max_speed=Max('max_speed'),
+            max_elevation_gain=Max('elevation_gain'),
+            max_calories=Max('calories'),
+        )
+
+        if not stats['total_count']:
             return {
                 'total_count': 0,
                 'total_distance': 0,
@@ -166,15 +191,6 @@ class UserStatsService:
                     'max_calories': None,
                 },
             }
-
-        stats = user_activities.aggregate(
-            total_count=Count('id'),
-            total_distance=Sum('distance'),
-            total_moving_time=Sum('moving_time'),
-            total_elevation_gain=Sum('elevation_gain'),
-            total_elevation_loss=Sum('elevation_loss'),
-            total_calories=Sum('calories'),
-        )
 
         total_moving_seconds = 0
         if stats['total_moving_time']:
@@ -194,7 +210,7 @@ class UserStatsService:
                     .order_by('-distance', '-start_date')
                     .first(),
                     'distance',
-                    user_activities.exclude(distance__isnull=True).aggregate(value=Max('distance'))['value'],
+                    stats['max_distance'],
                     profile_user,
                     request_user,
                 ),
@@ -204,7 +220,7 @@ class UserStatsService:
                     .order_by('-max_speed', '-start_date')
                     .first(),
                     'max_speed',
-                    user_activities.exclude(max_speed__isnull=True).aggregate(value=Max('max_speed'))['value'],
+                    stats['max_speed'],
                     profile_user,
                     request_user,
                 ),
@@ -214,9 +230,7 @@ class UserStatsService:
                     .order_by('-elevation_gain', '-start_date')
                     .first(),
                     'elevation_gain',
-                    user_activities.exclude(elevation_gain__isnull=True).aggregate(value=Max('elevation_gain'))[
-                        'value'
-                    ],
+                    stats['max_elevation_gain'],
                     profile_user,
                     request_user,
                 ),
@@ -226,7 +240,7 @@ class UserStatsService:
                     .order_by('-calories', '-start_date')
                     .first(),
                     'calories',
-                    user_activities.exclude(calories__isnull=True).aggregate(value=Max('calories'))['value'],
+                    stats['max_calories'],
                     profile_user,
                     request_user,
                 ),

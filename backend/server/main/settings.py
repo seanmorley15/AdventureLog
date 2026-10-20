@@ -83,7 +83,6 @@ INSTALLED_APPS = (
     'cloud.apps.CloudConfig',
     'integrations',
     'django.contrib.gis',
-    # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
     'slippers',
     'django.contrib.humanize',
@@ -95,11 +94,11 @@ INSTALLED_APPS = (
 # ---------------------------------------------------------------------------
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'adventures.middleware.DisableCSRFForAPIKeyMiddleware',
+    'users.middleware.DisableCSRFForAPIKeyMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'adventures.middleware.OverrideHostMiddleware',
+    'core.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'users.middleware.EfficientSessionMiddleware',
@@ -343,7 +342,7 @@ INVITATIONS_ADAPTER = ACCOUNT_ADAPTER
 INVITATIONS_ACCEPT_INVITE_AFTER_SIGNUP = True
 INVITATIONS_EMAIL_SUBJECT_PREFIX = 'AdventureLog: '
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
-ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
+ACCOUNT_SIGNUP_FORM_CLASS = 'users.invitations.forms.CustomSignupForm'
 
 # Avoid a django_session write on every request. EfficientSessionMiddleware
 # extends expiry at most once per SESSION_TOUCH_INTERVAL_SECONDS instead.
@@ -358,7 +357,7 @@ USERSESSIONS_TRACK_ACTIVITY = False
 LOGIN_REDIRECT_URL = FRONTEND_URL  # Redirect to frontend after login
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
-INVITATIONS_INVITE_FORM = 'users.form_overrides.UseAdminInviteForm'
+INVITATIONS_INVITE_FORM = 'users.invitations.forms.UseAdminInviteForm'
 INVITATIONS_SIGNUP_REDIRECT_URL = f"{FRONTEND_URL}/signup"
 INVITATIONS_SIGNUP_REDIRECT = f"{FRONTEND_URL}/signup"
 INVITATIONS_CONFIRMATION_URL_NAME = 'accept-invite'

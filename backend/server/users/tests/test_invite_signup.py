@@ -2,7 +2,7 @@ from django.conf import settings
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
-from users.invitation_views import AcceptInviteView
+from users.invitations.views import AcceptInviteView
 from users.models import CustomUser
 
 

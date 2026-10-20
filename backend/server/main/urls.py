@@ -1,10 +1,9 @@
 from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
-from users.views import IsRegistrationDisabled, PasswordPolicyView, SignupLegalLinksView, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, UserMediaUsageView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView, DeleteAccountView
-from users.invitation_views import AcceptInviteView, InviteSignupStatusView
+from users.invitations.views import AcceptInviteView
 from cloud.views import CurrentUserView
-from .views import get_csrf_token, get_public_url, health_check, serve_protected_media, FrontendSignupRedirectView
+from .views import get_csrf_token, public_url_view, health_check, serve_protected_media, FrontendSignupRedirectView
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -22,34 +21,13 @@ urlpatterns = [
     # Serve protected media files
     re_path(r'^media/(?P<path>.*)$', serve_protected_media, name='serve-protected-media'),
 
-    path('auth/is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
-    path('auth/password-policy/', PasswordPolicyView.as_view(), name='password_policy'),
-    path('auth/signup-legal-links/', SignupLegalLinksView.as_view(), name='signup_legal_links'),
-    path('auth/invite-signup/<str:key>/', InviteSignupStatusView.as_view(), name='invite_signup_status'),
-    path('auth/users/', PublicUserListView.as_view(), name='public-user-list'),
-    path('auth/user/<str:username>/', PublicUserDetailView.as_view(), name='public-user-detail'),
-    path('auth/update-user/', UpdateUserMetadataView.as_view(), name='update-user-metadata'),
-
-    path('auth/user-metadata/', UserMetadataView.as_view(), name='user-metadata'),
-    path('auth/user-media-usage/', UserMediaUsageView.as_view(), name='user-media-usage'),
+    path('auth/', include('users.urls')),
+    # The signed-in user joined with their subscription: the app's "who am I" call.
     path('auth/current-user/', CurrentUserView.as_view(), name='current-user'),
-
-    path('auth/social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
-
-    path('auth/disable-password/', DisablePasswordAuthenticationView.as_view(), name='disable-password-authentication'),
-
-    path('auth/delete-account/', DeleteAccountView.as_view(), name='delete-account'),
-
-    # API key management
-    path('auth/api-keys/', APIKeyListCreateView.as_view(), name='api-key-list-create'),
-    path('auth/api-keys/<uuid:pk>/', APIKeyDetailView.as_view(), name='api-key-detail'),
-
-    # Mobile QR code for app login
-    path('auth/mobile-qr/', MobileQRCodeView.as_view(), name='mobile-qr-code'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
     path('health/', health_check, name='health_check'),
-    path('public-url/', get_public_url, name='get_public_url'),
+    path('public-url/', public_url_view, name='get_public_url'),
 
     path("invitations/accept-invite/<str:key>/", AcceptInviteView.as_view(), name="accept-invite"),
     path("invitations/", include('invitations.urls', namespace='invitations')),

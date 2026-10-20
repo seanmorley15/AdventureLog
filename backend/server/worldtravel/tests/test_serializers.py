@@ -1,7 +1,6 @@
-from django.contrib.gis.geos import Point
 from django.test import TestCase
 
-from adventures.utils.geo import make_point
+from core.geo import make_point
 from worldtravel.models import City, Country, Region
 from worldtravel.serializers import CitySerializer, CountrySerializer, RegionSerializer
 

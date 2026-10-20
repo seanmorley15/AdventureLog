@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.core.files.storage import default_storage
 from adventures.models import ContentImage, ContentAttachment
-from users.models import CustomUser
+from django.contrib.auth import get_user_model
 
 
 class Command(BaseCommand):
@@ -50,7 +50,7 @@ class Command(BaseCommand):
 				used_files.add(attachment.file.name)
 		
 		# Get user profile picture file paths
-		for user in CustomUser.objects.all():
+		for user in get_user_model().objects.all():
 			if user.profile_pic and user.profile_pic.name:
 				used_files.add(user.profile_pic.name)
 		

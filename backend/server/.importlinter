@@ -1,0 +1,32 @@
+[importlinter]
+root_packages =
+    core
+    worldtravel
+    adventures
+    users
+    integrations
+    billing
+    cloud
+    main
+
+[importlinter:contract:layers]
+name = Apps depend downward only
+type = layers
+layers =
+    main
+    cloud : billing
+    users | integrations
+    adventures
+    worldtravel
+    core
+ignore_imports =
+    # Tests and data migrations may reach across apps.
+    **.tests.** -> **
+    **.migrations.** -> **
+    # `adventures` reaches the integrations only through their facade.
+    adventures.management.commands.backfill_image_coordinates -> integrations.facade
+    adventures.serializers.activity -> integrations.facade
+    adventures.serializers.media -> integrations.facade
+    adventures.views.images -> integrations.facade
+    # A place embeds its owner's profile, built by the users app.
+    adventures.serializers.location -> users.serializers

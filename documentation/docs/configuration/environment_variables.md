@@ -61,7 +61,7 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `DJANGO_ADMIN_EMAIL` | Yes | First-boot superuser email. | `admin@example.com` |
 | `GUNICORN_WORKERS` | No | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers. | `2` |
 | `GUNICORN_THREADS` | No | Threads per Gunicorn worker. Each thread holds its own database connection. | `4` |
-| `SKIP_WORLD_DATA` | No | Set to `1` to skip the first-boot `download-countries` import (saves RAM; world travel data loads later). | unset |
+| `SKIP_WORLD_DATA` | No | Set to `1` to skip the first-boot `download_countries` import (saves RAM; world travel data loads later). | unset |
 
 ## Caching
 

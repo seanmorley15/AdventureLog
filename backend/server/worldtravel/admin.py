@@ -1,7 +1,7 @@
 from django.contrib import admin
 from allauth.account.decorators import secure_admin_login
 
-from main.admin_utils import (
+from core.admin import (
     AdventureLogGeoModelAdmin,
     CoordinatesDisplayMixin,
     UUID_READONLY,

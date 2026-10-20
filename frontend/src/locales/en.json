@@ -549,6 +549,8 @@
 		"import_success": "Import Success",
 		"import_failed": "Import Failed",
 		"import_from_file": "Import from file",
+		"import_link_existing": "Use places I already have",
+		"import_link_existing_help": "A place in the file that matches one in your account is added to the new collection instead of being copied. Turn this off to create a new copy of every place.",
 		"export_zip": "Export ZIP",
 		"export_pdf": "Download PDF",
 		"export_pdf_success": "Collection PDF downloaded",

@@ -3,5 +3,6 @@
 set -euo pipefail
 
 mkdir -p /etc/adventurelog /var/log/adventurelog /var/lock
-env > /etc/adventurelog/cron.env
-chmod 0644 /etc/adventurelog/cron.env
+# The snapshot holds secrets (SECRET_KEY, database password); only root, which runs cron, reads it.
+(umask 077 && env > /etc/adventurelog/cron.env)
+chmod 0600 /etc/adventurelog/cron.env

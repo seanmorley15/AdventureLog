@@ -16,8 +16,11 @@ from adventures.models import (
     Note,
     Transportation,
 )
-from users.models import CustomUser as User
+from django.contrib.auth import get_user_model
 from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
+
+
+User = get_user_model()
 
 
 ALL_SEARCH_TYPES = frozenset(
@@ -77,12 +80,12 @@ def _icontains_filter(term: str, field_names: tuple[str, ...]) -> Q:
     if not term:
         return filters
 
-    for field in field_names:
-        filters |= Q(**{f'{field}__icontains': term})
+    for field_name in field_names:
+        filters |= Q(**{f'{field_name}__icontains': term})
 
     for token in _tokenize(term):
-        for field in field_names:
-            filters |= Q(**{f'{field}__icontains': token})
+        for field_name in field_names:
+            filters |= Q(**{f'{field_name}__icontains': token})
 
     return filters
 

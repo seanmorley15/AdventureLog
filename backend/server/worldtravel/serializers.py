@@ -1,7 +1,8 @@
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from rest_framework import serializers
-from main.utils import CustomModelSerializer, build_media_url, memoized_count
-from adventures.utils.geo import point_to_lat_lon
+from core.serializers import CustomModelSerializer, memoized_count
+from core.public_url import build_media_url
+from core.geo import point_to_lat_lon
 
 
 class ReadOnlyLatLonMixin:

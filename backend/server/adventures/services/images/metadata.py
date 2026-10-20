@@ -10,12 +10,11 @@ from urllib.parse import urlparse
 import requests
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
-from django.core.files.base import ContentFile
 from PIL import Image as PILImage
 from PIL.ExifTags import GPSTAGS, IFD
 
 from adventures.models import ContentImage
-from adventures.utils.geo import make_point, point_to_lat_lon
+from core.geo import make_point
 
 logger = logging.getLogger(__name__)
 

@@ -151,6 +151,8 @@ AdventureLog currently includes:
 
 When contributing, please try to match the **style and patterns already used in the project**.
 
+For the backend, read [`backend/server/ARCHITECTURE.md`](backend/server/ARCHITECTURE.md) first: it explains where code belongs, which way dependencies point, and how to run the checks.
+
 ---
 
 # Documentation Changes

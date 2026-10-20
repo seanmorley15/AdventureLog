@@ -9,7 +9,7 @@ def convert_remaining_trips(apps, schema_editor):
     has day indexes is left as it is. Folders and trips without a positive
     date span are left unchanged.
     """
-    from adventures.utils.itinerary_days import convert_collection
+    from adventures.services.day_plan import convert_collection
 
     Collection = apps.get_model('adventures', 'Collection')
     for collection in Collection.objects.filter(type='trip').iterator():

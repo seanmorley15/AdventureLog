@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.urls import resolve, Resolver404
 from django.utils.translation import gettext_lazy as _
 
-from users.invitation_signup import invite_email_for_request, request_has_valid_invite
+from users.invitations.signup import invite_email_for_request, request_has_valid_invite
 
 HEADLESS_AUTH_PREFIXES = ('/auth/browser/', '/auth/app/')
 

@@ -6,8 +6,8 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFoun
 from django.views.generic import RedirectView
 from django.views.static import serve
 from django.core.files.storage import default_storage
-from adventures.utils.file_permissions import (
-    checkFilePermission,
+from adventures.access.file_permissions import (
+    check_file_permission,
     is_day_owned_media,
     is_public_media_path,
     is_protected_media_path,
@@ -18,7 +18,7 @@ def get_csrf_token(request):
     csrf_token = get_token(request)
     return JsonResponse({'csrfToken': csrf_token})
 
-def get_public_url(request):
+def public_url_view(request):
     return JsonResponse({
         'PUBLIC_URL': getenv('PUBLIC_URL'),
         'ALLOW_PUBLIC_COLLECTION_LINKS': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
@@ -93,8 +93,8 @@ def serve_protected_media(request, path):
     file_id = path_parts[1]
     authenticated = bool(user and getattr(user, 'is_authenticated', False))
 
-    # Owners and members, guest links (cookie), and story readers. See checkFilePermission.
-    if checkFilePermission(file_id, user if authenticated else None, media_type, request):
+    # Owners and members, guest links (cookie), and story readers. See check_file_permission.
+    if check_file_permission(file_id, user if authenticated else None, media_type, request):
         return _serve_media_file(request, normalized_path)
 
     if is_day_owned_media(file_id, media_type):

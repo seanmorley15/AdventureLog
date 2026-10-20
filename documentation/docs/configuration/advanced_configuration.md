@@ -37,7 +37,7 @@ Per-endpoint overrides (all optional):
 | Variable | Default | Description |
 | -------- | ------- | ----------- |
 | `GUNICORN_WORKERS` | `2` | Gunicorn worker count. Use `1` on small VPS instances; `(2 × CPU cores) + 1` on larger servers. |
-| `SKIP_WORLD_DATA` | unset | Set to `1` to skip the first-boot `download-countries` import. Saves RAM on low-memory hosts; world travel data can be imported later. |
+| `SKIP_WORLD_DATA` | unset | Set to `1` to skip the first-boot `download_countries` import. Saves RAM on low-memory hosts; world travel data can be imported later. |
 
 The installer offers `SKIP_WORLD_DATA=1` automatically when it detects limited RAM.
 

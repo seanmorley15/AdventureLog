@@ -8,7 +8,7 @@ handful. Keep this in sync with what the serializers read.
 """
 from django.db.models import Prefetch
 
-from adventures.models import ContentAttachment, ContentImage, Trail
+from adventures.models import Activity, ContentAttachment, ContentImage, Trail
 
 LOCATION_SELECT_RELATED = (
     'user',
@@ -24,7 +24,7 @@ def location_prefetches():
         Prefetch('images', queryset=ContentImage.objects.select_related('user')),
         Prefetch('attachments', queryset=ContentAttachment.objects.select_related('user')),
         Prefetch('trails', queryset=Trail.objects.select_related('user')),
-        'visits__activities',
+        Prefetch('visits__activities', queryset=Activity.objects.select_related('user')),
         'collections',
     ]
 

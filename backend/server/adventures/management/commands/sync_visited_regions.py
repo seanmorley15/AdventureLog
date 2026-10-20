@@ -13,11 +13,8 @@ Usage:
 
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
-from django.db import transaction
-from django.db.models import Prefetch, Q
 from adventures.models import Location
-from worldtravel.models import Region, City, VisitedRegion, VisitedCity
-from collections import defaultdict
+from worldtravel.services import mark_cities_visited, mark_regions_visited
 import logging
 
 logger = logging.getLogger(__name__)
@@ -194,66 +191,8 @@ class Command(BaseCommand):
 
     def _sync_visited_regions(self, user_id, region_ids, dry_run=False):
         """Sync visited regions for a user. Returns count of new regions created."""
-        # Get existing visited regions for this user in one query
-        existing_visited_regions = set(
-            VisitedRegion.objects.filter(
-                user_id=user_id,
-                region_id__in=region_ids
-            ).values_list('region_id', flat=True)
-        )
-        
-        # Determine which regions need to be created
-        regions_to_create = region_ids - existing_visited_regions
-        
-        if not regions_to_create:
-            return 0
-        
-        if dry_run:
-            return len(regions_to_create)
-        
-        # Bulk create new VisitedRegion entries
-        new_visited_regions = [
-            VisitedRegion(region_id=region_id, user_id=user_id)
-            for region_id in regions_to_create
-        ]
-        
-        with transaction.atomic():
-            VisitedRegion.objects.bulk_create(
-                new_visited_regions,
-                ignore_conflicts=True  # Handle race conditions gracefully
-            )
-        
-        return len(regions_to_create)
+        return len(mark_regions_visited(user_id, region_ids, dry_run=dry_run))
 
     def _sync_visited_cities(self, user_id, city_ids, dry_run=False):
         """Sync visited cities for a user. Returns count of new cities created."""
-        # Get existing visited cities for this user in one query
-        existing_visited_cities = set(
-            VisitedCity.objects.filter(
-                user_id=user_id,
-                city_id__in=city_ids
-            ).values_list('city_id', flat=True)
-        )
-        
-        # Determine which cities need to be created
-        cities_to_create = city_ids - existing_visited_cities
-        
-        if not cities_to_create:
-            return 0
-        
-        if dry_run:
-            return len(cities_to_create)
-        
-        # Bulk create new VisitedCity entries
-        new_visited_cities = [
-            VisitedCity(city_id=city_id, user_id=user_id)
-            for city_id in cities_to_create
-        ]
-        
-        with transaction.atomic():
-            VisitedCity.objects.bulk_create(
-                new_visited_cities,
-                ignore_conflicts=True  # Handle race conditions gracefully
-            )
-        
-        return len(cities_to_create)
+        return len(mark_cities_visited(user_id, city_ids, dry_run=dry_run))

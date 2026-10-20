@@ -1,8 +1,25 @@
+import logging
+
+from django.db import transaction
 from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 
-from adventures.models import Collection
+from adventures.models import (
+    Activity,
+    Checklist,
+    Collection,
+    CollectionItineraryItem,
+    ContentAttachment,
+    ContentImage,
+    Location,
+    Lodging,
+    Note,
+    Transportation,
+    Visit,
+)
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(m2m_changed, sender=Collection.shared_with.through)
@@ -28,46 +45,56 @@ def sync_collection_members(sender, instance, action, pk_set=None, **kwargs):
         CollectionMember.objects.filter(collection=instance).delete()
 
 
-@receiver(post_delete)
 def _remove_collection_itinerary_items_on_object_delete(sender, instance, **kwargs):
     """
-    When any model instance is deleted, remove any CollectionItineraryItem that
-    refers to it via the GenericForeignKey (matches by ContentType and object_id).
-
-    This ensures that if a referenced item (e.g. a `Location`, `Visit`, `Transportation`,
-    `Note`, etc.) is deleted, the itinerary entry that pointed to it is also removed.
+    When something an itinerary item can point at is deleted, remove the items that
+    refer to it through the GenericForeignKey (matched by ContentType and object_id).
     """
-    # Avoid acting when a CollectionItineraryItem itself is deleted
-    # to prevent needless extra queries.
-    if sender.__name__ == 'CollectionItineraryItem':
+    CollectionItineraryItem.objects.filter(
+        content_type=ContentType.objects.get_for_model(sender),
+        object_id=instance.pk,
+    ).delete()
+
+
+# The records CollectionItineraryItem.item can refer to (see CONTENT_MODELS in the itinerary view).
+for _model in (Location, Visit, Lodging, Transportation, Note, Checklist):
+    post_delete.connect(
+        _remove_collection_itinerary_items_on_object_delete,
+        sender=_model,
+        dispatch_uid=f'remove_itinerary_items_{_model.__name__}',
+    )
+
+
+def _delete_file_when_unreferenced(model, field_name, file):
+    """
+    Remove a stored file once no row of ``model`` uses it, after the delete commits.
+    Rows can share one file (a duplicated place), so the file stays while any remains.
+    """
+    if not file or not file.name:
         return
+    name, storage = file.name, file.storage
 
-    # Resolve the content type for the model that was deleted
-    try:
-        ct = ContentType.objects.get_for_model(sender)
-    except Exception:
-        return
-
-    # Import here to avoid circular import problems at module import time
-    from adventures.models import CollectionItineraryItem
-
-    # Try matching the primary key in its native form first, then as a string.
-    # CollectionItineraryItem.object_id is a UUIDField in the model, but some
-    # senders might have different PK representations; handle both safely.
-    pk = instance.pk
-    deleted = False
-    try:
-        qs = CollectionItineraryItem.objects.filter(content_type=ct, object_id=pk)
-        if qs.exists():
-            qs.delete()
-            deleted = True
-    except Exception:
-        pass
-
-    if not deleted:
+    def delete():
+        if model.objects.filter(**{field_name: name}).exists():
+            return
         try:
-            CollectionItineraryItem.objects.filter(content_type=ct, object_id=str(pk)).delete()
+            storage.delete(name)
         except Exception:
-            # If deletion fails for any reason, do nothing; we don't want to
-            # raise errors during another model's delete.
-            pass
+            logger.exception('Could not delete stored file %s', name)
+
+    transaction.on_commit(delete)
+
+
+@receiver(post_delete, sender=ContentImage)
+def _delete_image_file(sender, instance, **kwargs):
+    _delete_file_when_unreferenced(ContentImage, 'image', instance.image)
+
+
+@receiver(post_delete, sender=ContentAttachment)
+def _delete_attachment_file(sender, instance, **kwargs):
+    _delete_file_when_unreferenced(ContentAttachment, 'file', instance.file)
+
+
+@receiver(post_delete, sender=Activity)
+def _delete_activity_gpx_file(sender, instance, **kwargs):
+    _delete_file_when_unreferenced(Activity, 'gpx_file', instance.gpx_file)

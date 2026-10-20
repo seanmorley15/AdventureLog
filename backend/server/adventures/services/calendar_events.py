@@ -17,8 +17,9 @@ from adventures.models import (
     Transportation,
     Visit,
 )
-from adventures.utils.datetime_utils import is_midnight_utc
-from adventures.utils.itinerary_days import local_date, projected_date, span_bounds
+from core.dates import is_midnight_utc
+from core.parsing import parse_iso_date
+from adventures.services.day_plan import local_date, projected_date, span_bounds
 
 CALENDAR_EVENT_COLORS = {
     'visit': '#3b82f6',
@@ -40,15 +41,6 @@ TRANSPORT_ICONS = {
     'car': '🚗',
     'boat': '🚢',
 }
-
-
-def _parse_date_param(value: str | None) -> date | None:
-    if not value:
-        return None
-    try:
-        return date.fromisoformat(value[:10])
-    except ValueError:
-        return None
 
 
 def _parse_types_param(value: str | None) -> set[str]:
@@ -602,8 +594,8 @@ def get_calendar_events_for_user(
     end: str | None = None,
     types: str | None = None,
 ) -> list[dict]:
-    range_start = _parse_date_param(start)
-    range_end = _parse_date_param(end)
+    range_start = parse_iso_date(start)
+    range_end = parse_iso_date(end)
     selected_types = _parse_types_param(types)
 
     events: list[dict] = []

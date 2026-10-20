@@ -3,7 +3,7 @@ from typing import TypedDict
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
 
 logger = logging.getLogger(__name__)
 

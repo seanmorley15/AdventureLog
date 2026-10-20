@@ -1,11 +1,12 @@
 from datetime import date, timedelta
 
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Q
 
-from adventures.models import Collection, CollectionInvite, ContentImage, Location
+from adventures.models import Collection, CollectionInvite, Location
 from adventures.serializers import LocationSerializer, UltraSlimCollectionSerializer
 from adventures.services.calendar_events import get_calendar_events_for_user
 from adventures.services.user_stats import UserStatsService
+from adventures.utils.query_optimization import optimize_locations
 
 MAX_RECENT_LOCATIONS = 3
 MAX_UPCOMING_TRIPS = 3
@@ -17,14 +18,11 @@ def _collection_list_queryset(user):
         Collection.objects.filter(Q(user=user.id) & Q(is_archived=False))
         .distinct()
         .select_related('user', 'primary_image')
-        .prefetch_related(
-            Prefetch(
-                'locations__images',
-                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
-                to_attr='primary_images',
-            ),
-            'shared_with',
+        .annotate(
+            day_count_annotated=Count('itinerary_days', filter=Q(itinerary_days__index__isnull=False), distinct=True),
+            location_count_annotated=Count('locations', distinct=True),
         )
+        .prefetch_related('shared_with', 'members')
     )
 
 
@@ -44,14 +42,9 @@ def build_dashboard_data(user, request_user, *, events_days=30, request=None):
     today = date.today()
     end_date = today + timedelta(days=events_days)
 
-    recent_locations_qs = (
-        Location.objects.filter(user=user)
-        .filter(visits__start_date__lte=today)
-        .distinct()
-        .select_related('category', 'country', 'region', 'city', 'user')
-        .prefetch_related('visits', 'images', 'attachments', 'collections', 'trails')
-        .order_by('-updated_at')[:MAX_RECENT_LOCATIONS]
-    )
+    recent_locations_qs = optimize_locations(
+        Location.objects.filter(user=user).filter(visits__start_date__lte=today).distinct()
+    ).order_by('-updated_at')[:MAX_RECENT_LOCATIONS]
     recent_locations = LocationSerializer(
         recent_locations_qs,
         many=True,

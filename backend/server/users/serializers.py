@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 from adventures.models import Collection, CollectionInvite
-from main.utils import build_media_url
+from core.public_url import build_media_url
 from .models import CustomUser, APIKey
 
 User = get_user_model()
@@ -146,6 +145,20 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             representation.update(sharing_impact)
 
         return representation
+
+
+# Account details that belong to the signed-in user only. Anyone else's view of a person omits them.
+PRIVATE_USER_FIELDS = (
+    'has_password',
+    'disable_password',
+    'shared_collection_count',
+    'pending_collection_invite_count',
+)
+
+
+def without_private_fields(data):
+    """A copy of serialized user data without the fields only the user themselves should see."""
+    return {key: value for key, value in data.items() if key not in PRIVATE_USER_FIELDS}
 
 
 class APIKeySerializer(serializers.ModelSerializer):

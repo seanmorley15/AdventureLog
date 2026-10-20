@@ -41,7 +41,17 @@ jobs:
 
       - name: install python libraries
         working-directory: backend/server
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
+
+      - name: check for unused and undefined names
+        working-directory: backend/server
+        run: flake8 --config .flake8 .
+
+      - name: check app boundaries
+        working-directory: backend/server
+        env:
+          PYTHONPATH: "."
+        run: lint-imports
 
       - name: run tests
         working-directory: backend/server
@@ -59,4 +69,6 @@ jobs:
           DEBUG: "True"
           FRONTEND_URL: "http://localhost:5173"
           DJANGO_SETTINGS_MODULE: "main.test_settings"
-        run: python manage.py test --verbosity=1
+        run: |
+          python manage.py makemigrations --check --dry-run
+          python manage.py test --verbosity=1

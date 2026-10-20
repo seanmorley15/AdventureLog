@@ -84,7 +84,7 @@ def cached_gpx_geojson(gpx_file):
     if not name:
         return gpx_to_geojson(gpx_file)
 
-    from adventures.services.external_cache import build_cache_key
+    from core.cache import build_cache_key
     from django.core.cache import cache
 
     key = build_cache_key(GPX_GEOJSON_CACHE_PREFIX, name)
@@ -97,6 +97,40 @@ def cached_gpx_geojson(gpx_file):
 
     result = gpx_to_geojson(gpx_file)
     if result is not None and not (isinstance(result, dict) and result.get('error')):
+        try:
+            cache.set(key, result, GPX_GEOJSON_CACHE_TIMEOUT)
+        except Exception:
+            pass
+    return result
+
+
+GPX_DISTANCE_CACHE_PREFIX = 'gpx_distance_v1'
+
+
+def cached_gpx_distance_km(gpx_file, compute):
+    """
+    ``compute(gpx_file)`` (a distance in km, or None) cached by the stored file name.
+
+    Same reasoning as ``cached_gpx_geojson``: upload names are random, so a name never
+    points at different content. A failed parse (None) is not cached.
+    """
+    name = getattr(gpx_file, 'name', None)
+    if not name:
+        return compute(gpx_file)
+
+    from core.cache import build_cache_key
+    from django.core.cache import cache
+
+    key = build_cache_key(GPX_DISTANCE_CACHE_PREFIX, name)
+    try:
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+    except Exception:
+        pass
+
+    result = compute(gpx_file)
+    if result is not None:
         try:
             cache.set(key, result, GPX_GEOJSON_CACHE_TIMEOUT)
         except Exception:

@@ -1,25 +1,51 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from adventures.views import *
-from adventures.views.places_api_view import PlacesAPI
-from adventures.views.sunrise_sunset_view import SunriseSunsetAPI
+from adventures.views import (
+    ActivityViewSet,
+    AttachmentViewSet,
+    BackupViewSet,
+    CalendarViewSet,
+    CategoryViewSet,
+    ChecklistViewSet,
+    CollectionActivityViewSet,
+    CollectionCommentViewSet,
+    CollectionViewSet,
+    ContentImageViewSet,
+    DescriptionViewSet,
+    IcsCalendarGeneratorViewSet,
+    ItineraryDayViewSet,
+    ItineraryViewSet,
+    LocationViewSet,
+    LodgingViewSet,
+    NoteViewSet,
+    PlacesViewSet,
+    RecommendationsViewSet,
+    ReverseGeocodeViewSet,
+    SearchViewSet,
+    StatsViewSet,
+    SunriseSunsetViewSet,
+    TagViewSet,
+    TrailViewSet,
+    TransportationViewSet,
+    VisitViewSet,
+)
 
 router = DefaultRouter()
 router.register(r'locations', LocationViewSet, basename='locations')
 router.register(r'collections', CollectionViewSet, basename='collections')
 router.register(r'stats', StatsViewSet, basename='stats')
-router.register(r'generate', GenerateDescription, basename='generate')
-router.register(r'tags', ActivityTypesView, basename='tags')
+router.register(r'generate', DescriptionViewSet, basename='generate')
+router.register(r'tags', TagViewSet, basename='tags')
 router.register(r'transportations', TransportationViewSet, basename='transportations')
 router.register(r'notes', NoteViewSet, basename='notes')
 router.register(r'checklists', ChecklistViewSet, basename='checklists')
 router.register(r'images', ContentImageViewSet, basename='images')
 router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geocode')
-router.register(r'places', PlacesAPI, basename='places')
-router.register(r'sunrise-sunset', SunriseSunsetAPI, basename='sunrise-sunset')
+router.register(r'places', PlacesViewSet, basename='places')
+router.register(r'sunrise-sunset', SunriseSunsetViewSet, basename='sunrise-sunset')
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-calendar')
-router.register(r'search', GlobalSearchView, basename='search')
+router.register(r'search', SearchViewSet, basename='search')
 router.register(r'attachments', AttachmentViewSet, basename='attachments')
 router.register(r'lodging', LodgingViewSet, basename='lodging')
 router.register(r'recommendations', RecommendationsViewSet, basename='recommendations'),

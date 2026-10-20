@@ -3,14 +3,17 @@ from typing import Any, Dict, Optional
 
 from django.conf import settings
 
-from adventures.providers.geocoding.google import reverse_geocode as google_reverse
+from adventures.providers.geocoding.google import (
+    reverse_geocode as google_reverse,
+    search_nearby_place_names as google_nearby_place_names,
+)
 from adventures.providers.geocoding.osm import reverse_geocode as osm_reverse
-from adventures.utils.geocoding_utils import (
-    _extract_google_location_name,
-    _extract_osm_location_name,
-    _fetch_google_nearby_place_name,
-    _parse_google_address_components,
-    extractIsoCode,
+from adventures.services.geocoding.matching import extract_iso_code
+from adventures.services.geocoding.naming import (
+    extract_google_location_name,
+    extract_osm_location_name,
+    first_preferred_location_name,
+    parse_google_address_components,
 )
 
 
@@ -25,8 +28,9 @@ def _normalize_google_geocode_payload(payload: Dict[str, Any], lat: float, lon: 
     if not results:
         return {"error": "No location found for the given coordinates."}
 
-    nearby_place_name = _fetch_google_nearby_place_name(lat, lon, api_key)
-    location_name = _extract_google_location_name(results, nearby_place_name=nearby_place_name)
+    nearby = google_nearby_place_names(lat, lon, api_key)
+    nearby_place_name = first_preferred_location_name(nearby.data or [], allow_address_fallback=False)
+    location_name = extract_google_location_name(results, nearby_place_name=nearby_place_name)
 
     first_result = results[0]
     address_result = next(
@@ -37,7 +41,7 @@ def _normalize_google_geocode_payload(payload: Dict[str, Any], lat: float, lon: 
     return {
         "name": first_result.get("formatted_address"),
         "location_name": location_name,
-        "address": _parse_google_address_components(address_result.get("address_components", [])),
+        "address": parse_google_address_components(address_result.get("address_components", [])),
     }
 
 
@@ -72,7 +76,7 @@ def reverse_geocode(lat: float, lon: float, user) -> ReverseGeocodeResult:
             if normalized_google.get("error"):
                 google_result = normalized_google
             else:
-                google_result = extractIsoCode(user, normalized_google)
+                google_result = extract_iso_code(user, normalized_google)
                 if isinstance(google_result, dict) and "error" not in google_result:
                     google_result["provider_used"] = "google"
                     google_result["provider"] = "google"
@@ -85,8 +89,8 @@ def reverse_geocode(lat: float, lon: float, user) -> ReverseGeocodeResult:
     osm_result = None
     if not osm_payload.error:
         osm_data = osm_payload.data
-        osm_data["location_name"] = _extract_osm_location_name(osm_data)
-        osm_result = extractIsoCode(user, osm_data)
+        osm_data["location_name"] = extract_osm_location_name(osm_data)
+        osm_result = extract_iso_code(user, osm_data)
         if isinstance(osm_result, dict) and "error" not in osm_result:
             osm_result["provider_used"] = "osm"
             osm_result["provider"] = "osm"

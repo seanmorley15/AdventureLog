@@ -146,6 +146,7 @@
 	let importInputEl: HTMLInputElement | null = $state(null);
 	let importFormEl: HTMLFormElement | null = $state(null);
 	let isImporting: boolean = $state(false);
+	let linkExistingPlaces: boolean = $state(true);
 
 	function triggerImport() {
 		importInputEl?.click();
@@ -828,6 +829,17 @@
 						<Archive class="w-5 h-5" />
 						{$t('adventures.import_from_file')}
 					</button>
+					<label
+						class="flex items-start gap-3 px-1 cursor-pointer"
+						title={$t('adventures.import_link_existing_help')}
+					>
+						<input
+							type="checkbox"
+							class="checkbox checkbox-primary checkbox-sm mt-0.5"
+							bind:checked={linkExistingPlaces}
+						/>
+						<span class="text-sm">{$t('adventures.import_link_existing')}</span>
+					</label>
 					<form
 						bind:this={importFormEl}
 						method="POST"
@@ -848,6 +860,11 @@
 							};
 						}}
 					>
+						<input
+							type="hidden"
+							name="existing_locations"
+							value={linkExistingPlaces ? 'link' : 'create'}
+						/>
 						<input
 							bind:this={importInputEl}
 							type="file"

@@ -1,23 +1,57 @@
-from .tags_view import *
-from .location_image_view import *
-from .location_view import *
-from .category_view import *
-from .checklist_view import *
-from .collection_view import *
-from .generate_description_view import *
-from .ics_calendar_view import *
-from .note_view import *
-from .reverse_geocode_view import *
-from .stats_view import *
-from .transportation_view import *
-from .global_search_view import *
-from .attachment_view import *
-from .lodging_view import *
-from .recommendations_view import *
-from .import_export_view import *
-from .trail_view import *
-from .activity_view import *
-from .visit_view import *
-from .calendar_view import *
-from .itinerary_view import *
-from .discussion_view import *
+"""The adventures API views, one module per resource. Routes are registered in ``adventures.urls``."""
+
+from .activities import ActivityViewSet
+from .attachments import AttachmentViewSet
+from .backup import BackupViewSet
+from .calendar import CalendarViewSet
+from .categories import CategoryViewSet
+from .checklists import ChecklistViewSet
+from .descriptions import DescriptionViewSet
+from .discussion import CollectionCommentViewSet, CollectionActivityViewSet
+from .ics_calendar import IcsCalendarGeneratorViewSet
+from .images import ContentImageViewSet
+from .itineraries import ItineraryViewSet, ItineraryDayViewSet
+from .locations import LocationViewSet
+from .lodging import LodgingViewSet
+from .notes import NoteViewSet
+from .places import PlacesViewSet
+from .recommendations import RecommendationsViewSet
+from .reverse_geocode import ReverseGeocodeViewSet
+from .search import SearchViewSet
+from .stats import StatsViewSet
+from .sunrise_sunset import SunriseSunsetViewSet
+from .tags import TagViewSet
+from .trails import TrailViewSet
+from .transportation import TransportationViewSet
+from .visits import VisitViewSet
+from .collections import CollectionViewSet
+
+__all__ = [
+    'ActivityViewSet',
+    'AttachmentViewSet',
+    'BackupViewSet',
+    'CalendarViewSet',
+    'CategoryViewSet',
+    'ChecklistViewSet',
+    'CollectionActivityViewSet',
+    'CollectionCommentViewSet',
+    'CollectionViewSet',
+    'ContentImageViewSet',
+    'DescriptionViewSet',
+    'IcsCalendarGeneratorViewSet',
+    'ItineraryDayViewSet',
+    'ItineraryViewSet',
+    'LocationViewSet',
+    'LodgingViewSet',
+    'NoteViewSet',
+    'PlacesViewSet',
+    'RecommendationsViewSet',
+    'ReverseGeocodeViewSet',
+    'SearchViewSet',
+    'StatsViewSet',
+    'SunriseSunsetViewSet',
+    'TagViewSet',
+    'TrailViewSet',
+    'TransportationViewSet',
+    'VisitViewSet',
+]

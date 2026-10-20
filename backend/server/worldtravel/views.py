@@ -1,13 +1,12 @@
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from .models import Country, Region, VisitedRegion, City, VisitedCity
+from .services import mark_regions_visited
 from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, action
-from django.contrib.gis.geos import Point
-from adventures.models import Location
+from rest_framework.decorators import api_view, permission_classes
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -83,35 +82,6 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
             ),
         ).order_by('name')
 
-    @action(detail=False, methods=['get'])
-    def check_point_in_region(self, request):
-        lat = float(request.query_params.get('lat'))
-        lon = float(request.query_params.get('lon'))
-        point = Point(lon, lat, srid=4326)
-        region = Region.objects.filter(geometry__contains=point).first()
-        if region:
-            return Response({'in_region': True, 'region_name': region.name, 'region_id': region.id})
-        else:
-            return Response({'in_region': False})
-
-    @action(detail=False, methods=['post'])
-    def region_check_all_adventures(self, request):
-        adventures = Location.objects.filter(user=request.user.id, type='visited')
-        count = 0
-        for adventure in adventures:
-            if adventure.coordinates:
-                try:
-                    point = adventure.coordinates
-                    region = Region.objects.filter(geometry__contains=point).first()
-                    if region:
-                        if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
-                            VisitedRegion.objects.create(user=request.user, region=region)
-                            count += 1
-                except Exception as e:
-                    print(f"Error processing adventure {adventure.id}: {e}")
-                    continue
-        return Response({'regions_visited': count})
-
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.select_related('country').annotate(
         num_cities_annotated=Count('city', distinct=True)
@@ -165,8 +135,7 @@ class VisitedCityViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         # Ensure a VisitedRegion exists for the city
         region = serializer.validated_data['city'].region
-        if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
-            VisitedRegion.objects.create(user=request.user, region=region)
+        mark_regions_visited(request.user.id, [region.id])
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     

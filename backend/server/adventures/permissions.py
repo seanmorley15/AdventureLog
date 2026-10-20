@@ -1,6 +1,7 @@
 from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied
 
-from adventures.utils.audience import audience_for_request, can_edit, has_guest_token, is_member
+from adventures.access.audience import audience_for_request, can_edit, has_guest_token, is_member
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -169,3 +170,37 @@ class ContentImagePermission(IsOwnerOrSharedWithFullAccess):
         
         # Use the parent permission class to check access to the content object
         return super().has_object_permission(request, view, content_object)
+
+
+def ensure_can_change_collection(request, instance, validated_data):
+    """
+    Guard a change to a record's ``collection`` (lodging, transport, notes, checklists).
+
+    Only the owner of both the record and the collection involved may move a record
+    into another collection, and only the owner of the current collection may take it
+    out. A request that does not send ``collection`` leaves it alone, so collaborators
+    can still edit other fields. Call from ``perform_update`` so PUT and PATCH agree.
+    """
+    if 'collection' not in validated_data:
+        return
+
+    new_collection = validated_data['collection']
+    old_collection = instance.collection
+    if (new_collection.pk if new_collection else None) == (old_collection.pk if old_collection else None):
+        return
+
+    user = request.user
+    if new_collection is not None:
+        if new_collection.user_id != user.id or instance.user_id != user.id:
+            raise PermissionDenied("You do not have permission to use this collection.")
+    elif old_collection is not None and old_collection.user_id != user.id:
+        raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+
+
+def ensure_can_add_to_collections(request, collections, noun):
+    """Refuse unless the requester can edit every collection a new ``noun`` is being added to."""
+    for collection in collections:
+        if not can_edit(request, collection):
+            raise PermissionDenied(
+                f"You don't have permission to add {noun} to collection '{collection.name}'"
+            )

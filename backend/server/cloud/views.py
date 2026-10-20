@@ -7,7 +7,7 @@ from billing.serializers import SubscriptionSerializer
 from cloud.utils import get_or_create_subscription, has_access
 from users.serializers import CustomUserDetailsSerializer as PublicUserSerializer
 from adventures.models import CollectionInvite
-from adventures.utils.comments import unread_comment_count
+from adventures.services.discussion import unread_comment_count
 
 
 class CurrentUserView(APIView):

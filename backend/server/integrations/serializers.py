@@ -38,6 +38,8 @@ class ImmichIntegrationSerializer(serializers.ModelSerializer):
         model = ImmichIntegration
         fields = '__all__'
         read_only_fields = ['id', 'user']
+        # The key is accepted on create/update but never sent back to the client.
+        extra_kwargs = {'api_key': {'write_only': True}}
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

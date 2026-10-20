@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.gis.db import models as gis_models
-from adventures.utils.geo import first_usable_lat_lon, point_to_lat_lon
+from core.geo import first_usable_lat_lon, point_to_lat_lon
 
 
 User = get_user_model()
@@ -96,7 +96,7 @@ class VisitedRegion(models.Model):
         return f'{self.region.name} ({self.region.country.country_code}) visited by: {self.user.username}'
     
     def save(self, *args, **kwargs):
-        if VisitedRegion.objects.filter(user=self.user, region=self.region).exists():
+        if VisitedRegion.objects.filter(user=self.user, region=self.region).exclude(pk=self.pk).exists():
             raise ValidationError("Region already visited by user.")
         super().save(*args, **kwargs)
 
@@ -110,7 +110,7 @@ class VisitedCity(models.Model):
         return f'{self.city.name} ({self.city.region.name}) visited by: {self.user.username}'
     
     def save(self, *args, **kwargs):
-        if VisitedCity.objects.filter(user=self.user, city=self.city).exists():
+        if VisitedCity.objects.filter(user=self.user, city=self.city).exclude(pk=self.pk).exists():
             raise ValidationError("City already visited by user.")
         super().save(*args, **kwargs)
 

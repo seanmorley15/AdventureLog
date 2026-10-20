@@ -2,8 +2,8 @@ from typing import Dict, List
 
 import requests
 
-from adventures.providers.base import ProviderResult
-from adventures.services.external_cache import cached_provider, coordinate_key
+from core.results import ProviderResult
+from core.cache import cached_provider
 
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 

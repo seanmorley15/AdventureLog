@@ -2,9 +2,9 @@ from typing import Dict, List
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
 from django.conf import settings
-from adventures.services.external_cache import cached_provider, coordinate_key
+from core.cache import cached_provider, coordinate_key
 
 GOOGLE_CACHE_TIMEOUT = getattr(settings, 'GOOGLE_API_CACHE_TIMEOUT', 60 * 60 * 24)
 
