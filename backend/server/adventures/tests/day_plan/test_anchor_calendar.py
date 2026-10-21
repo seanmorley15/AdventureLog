@@ -12,7 +12,7 @@ from adventures.models import (
 from adventures.services.calendar_events import get_calendar_events_for_user
 from adventures.services.exports.pdf import build_collection_pdf
 from adventures.services.exports.pdf.data import group_itinerary_days
-from adventures.tests.day_plan.base import DayPlanTestBase, utc
+from adventures.tests.day_plan.base import DayPlanTestBase, item_url, plan_request, utc
 from adventures.services.day_plan import build_days, convert_collection, shift_datetime
 from users.models import CustomUser
 
@@ -24,16 +24,13 @@ class ShiftTests(DayPlanTestBase):
         convert_collection(self.trip)
 
     def place(self, obj, kind, day_index, **extra):
-        payload = {
-            'collection': str(self.trip.id), 'content_type': kind, 'object_id': str(obj.id),
-            'day_index': day_index, **extra,
-        }
-        response = self.client.post('/api/itineraries/', payload, format='json')
+        payload = {'content_type': kind, 'object_id': str(obj.id), 'day_index': day_index, **extra}
+        response = self.client.post(item_url(self.trip), payload, format='json')
         self.assertEqual(response.status_code, 201, response.content)
         return CollectionItineraryItem.objects.get(pk=response.json()['id'])
 
     def shift(self, **body):
-        return self.client.post('/api/itineraries/shift/', {'collection': str(self.trip.id), **body}, format='json')
+        return plan_request(self.client, self.trip, 'shift', body)
 
     def test_shift_by_three_days_keeps_indexes_order_and_clock_faces(self):
         museum = self.location('Museum', self.trip)
@@ -80,7 +77,7 @@ class ShiftTests(DayPlanTestBase):
         self.assertEqual(visit.start_date, utc(2026, 6, 2))
 
         # A later edit of the hotel's span does not restore the old dates.
-        self.client.patch(f'/api/itineraries/{stay.id}/', {'span_end_index': 4}, format='json')
+        self.client.patch(item_url(self.trip, stay.id), {'span_end_index': 4}, format='json')
         hotel.refresh_from_db()
         self.assertEqual(hotel.check_in, utc(2026, 6, 5, 15))
         self.assertEqual(hotel.check_out, utc(2026, 6, 8, 11))
@@ -128,7 +125,7 @@ class ShiftTests(DayPlanTestBase):
     def test_shift_needs_an_anchor_and_membership(self):
         loose = Collection.objects.create(user=self.user, name='Loose', type='trip')
         build_days(loose, 3)
-        refused = self.client.post('/api/itineraries/shift/', {'collection': str(loose.id), 'days': 2}, format='json')
+        refused = plan_request(self.client, loose, 'shift', {'days': 2})
         self.assertEqual(refused.status_code, 400)
         self.assertEqual(refused.json()['code'], 'no_anchor')
 
@@ -139,7 +136,8 @@ class ShiftTests(DayPlanTestBase):
 
         stranger = CustomUser.objects.create_user(username='stranger', email='s@example.com', password='pw12345678')
         self.client.force_authenticate(user=stranger)
-        self.assertEqual(self.shift(days=1).status_code, 403)
+        # Someone who cannot see the trip gets a 404, as if it did not exist.
+        self.assertEqual(self.shift(days=1).status_code, 404)
 
     def test_moving_the_anchor_in_the_duration_dialog_shifts_clocks(self):
         hotel = Lodging.objects.create(
@@ -147,11 +145,7 @@ class ShiftTests(DayPlanTestBase):
             check_in=utc(2026, 6, 2, 15), check_out=utc(2026, 6, 3, 11), timezone='UTC',
         )
         self.place(hotel, 'lodging', 2)
-        response = self.client.post(
-            '/api/itineraries/duration/',
-            {'collection': str(self.trip.id), 'day_count': 5, 'start_date': '2026-06-11'},
-            format='json',
-        )
+        response = plan_request(self.client, self.trip, 'duration', {'day_count': 5, 'start_date': '2026-06-11'})
         self.assertEqual(response.status_code, 200, response.content)
         hotel.refresh_from_db()
         self.assertEqual(hotel.check_in, utc(2026, 6, 12, 15))
@@ -172,8 +166,8 @@ class CalendarTests(DayPlanTestBase):
 
     def place(self, obj, kind, day_index, **extra):
         response = self.client.post(
-            '/api/itineraries/',
-            {'collection': str(self.trip.id), 'content_type': kind, 'object_id': str(obj.id), 'day_index': day_index, **extra},
+            item_url(self.trip.id),
+            {'content_type': kind, 'object_id': str(obj.id), 'day_index': day_index, **extra},
             format='json',
         )
         self.assertEqual(response.status_code, 201, response.content)
@@ -238,7 +232,7 @@ class CalendarTests(DayPlanTestBase):
         self.assertEqual(self.events(self.friend), [])
 
     def test_ics_is_private_and_omits_unanchored_trips(self):
-        response = self.client.get('/api/ics-calendar/generate/')
+        response = self.client.get('/api/calendar/ics/')
         self.assertEqual(response.status_code, 200)
         body = response.content.decode()
         self.assertIn('CLASS:PRIVATE', body)
@@ -248,7 +242,7 @@ class CalendarTests(DayPlanTestBase):
         self.trip.start_date = None
         self.trip.end_date = None
         self.trip.save()
-        body = self.client.get('/api/ics-calendar/generate/').content.decode()
+        body = self.client.get('/api/calendar/ics/').content.decode()
         self.assertNotIn('Museum', body)
 
 

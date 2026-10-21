@@ -1,8 +1,15 @@
 from django.db.models import Count, F, Q, Prefetch
 from django.db.models.functions import Lower
 from django.db import transaction
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    PolymorphicProxySerializer,
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import status
 import logging
@@ -14,7 +21,6 @@ from adventures.models import (
     Transportation,
     Note,
     Checklist,
-    ContentImage,
     CollectionItineraryItem,
     Lodging,
     CollectionItineraryDay,
@@ -31,8 +37,15 @@ from adventures.serializers import (
     CollectionItineraryItemSerializer,
     CollectionItineraryDaySerializer,
 )
+from adventures.serializers.collection_detail import (
+    CollectionDetailSerializer,
+    CollectionListQuerySerializer,
+    CollectionStorySerializer,
+)
 from django.contrib.auth import get_user_model
 from core import pagination
+from core.exceptions import APIError
+from core.serializers import validated
 from adventures.services import day_plan
 
 User = get_user_model()
@@ -44,29 +57,43 @@ from .exports import ExportActionsMixin
 from .sharing import SharingActionsMixin
 
 
+@extend_schema_view(
+    create=extend_schema(
+        description='Create a folder or a trip. A collection with dates, or `type: trip`, is a trip with a day '
+        'plan; send `day_count` (or `end_date`) to set its length.',
+    ),
+    update=extend_schema(
+        description='Owner only. Changing the dates of a dated trip removes placements outside the new range. '
+        'Changing `visibility` does not change the records inside.',
+    ),
+    partial_update=extend_schema(description='Owner only. Like PUT, for the fields you send.'),
+    destroy=extend_schema(description='Owner only. Deletes the collection; records in it that belong to you stay.'),
+)
 class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedResponseMixin, viewsets.ModelViewSet):
+    """
+    Collections group places, stays, journeys, notes and checklists. A **folder** is a plain group;
+    a **trip** has dates or a number of days and a day plan.
+
+    The owner can share a collection with other users as editors or viewers, hand out guest
+    links, and publish it as a story (`visibility`: `private`, `unlisted` or `public`).
+    """
+
+    openapi_tags = ['Collections']
+    queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
     permission_classes = [CollectionShared]
     pagination_class = pagination.StandardResultsSetPagination
 
     def get_serializer_class(self):
         """Return different serializers based on the action"""
-        if self.action in ['list', 'all', 'archived', 'shared']:
+        if self.action == 'list':
             return UltraSlimCollectionSerializer
         return CollectionSerializer
 
-    def apply_sorting(self, queryset):
-        order_by = self.request.query_params.get('order_by', 'name')
-        order_direction = self.request.query_params.get('order_direction', 'asc')
-
-        valid_order_by = ['name', 'updated_at', 'start_date']
-        if order_by not in valid_order_by:
-            order_by = 'updated_at'
-
-        if order_direction not in ['asc', 'desc']:
-            order_direction = 'asc'
-
-        descending = order_direction == 'desc'
+    @staticmethod
+    def apply_sorting(queryset, ordering):
+        descending = ordering.startswith('-')
+        order_by = ordering.lstrip('-')
         if order_by == 'name':
             # Case-insensitive, so "alpha" sorts with "Alpha".
             queryset = queryset.annotate(lower_name=Lower('name'))
@@ -79,11 +106,11 @@ class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedRespon
 
         return queryset.order_by(*ordering)
 
-    def apply_status_filter(self, queryset):
-        """Apply status filtering based on query parameter"""
+    @staticmethod
+    def apply_status_filter(queryset, status_filter):
+        """Filter by where today falls relative to the trip dates."""
         from datetime import date
-        status_filter = self.request.query_params.get('status', None)
-        
+
         if not status_filter:
             return queryset
         
@@ -109,48 +136,6 @@ class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedRespon
             location_count_annotated=Count('locations', distinct=True),
         ).prefetch_related('shared_with', 'members')
 
-    def apply_type_filter(self, queryset):
-        """Filter by collection type. type=folder replaces the old status=folder list filter."""
-        type_filter = self.request.query_params.get('type')
-        if type_filter in ('folder', 'trip'):
-            return queryset.filter(type=type_filter)
-        return queryset
-
-    def get_serializer_context(self):
-        """Override to add nested and exclusion contexts based on query parameters"""
-        context = super().get_serializer_context()
-        
-        # Handle nested parameter (only for full serializer actions)
-        if self.action not in ['list', 'all', 'archived', 'shared']:
-            is_nested = self.request.query_params.get('nested', 'false').lower() == 'true'
-            if is_nested:
-                context['nested'] = True
-            
-            # Handle individual exclusion parameters (if using granular approach)
-            exclude_params = [
-                'exclude_transportations',
-                'exclude_notes', 
-                'exclude_checklists',
-                'exclude_lodging'
-            ]
-            
-            for param in exclude_params:
-                if self.request.query_params.get(param, 'false').lower() == 'true':
-                    context[param] = True
-                    
-        return context
-
-    def get_optimized_queryset_for_listing(self):
-        """Get optimized queryset for list actions with prefetching"""
-        return self.get_base_queryset().select_related('user', 'primary_image').prefetch_related(
-            Prefetch(
-                'locations__images',
-                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
-                to_attr='primary_images'
-            ),
-            'shared_with'
-        )
-
     def get_base_queryset(self):
         """Base queryset logic extracted for reuse"""
         if self.action == 'destroy':
@@ -171,10 +156,10 @@ class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedRespon
                     | Q(shared_with=self.request.user)
                     | Q(invites__invited_user=self.request.user)
                 ).distinct()
-        elif self.action == 'export_collection':
+        elif self.action == 'archive':
             # An owner can always download their own collection, archived or not.
             queryset = Collection.objects.filter(user=self.request.user.id)
-        elif self.action in ('retrieve', 'export_pdf', 'share_image'):
+        elif self.action in ('retrieve', 'pdf', 'share_image'):
             # Members, guest links, and readers of a public or unlisted story.
             queryset = Collection.objects.filter(readable_collections_q(self.request)).distinct()
             if self.action == 'retrieve':
@@ -210,62 +195,53 @@ class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedRespon
         ]
 
     def get_queryset(self):
-        """Get queryset with optimizations for list actions"""
-        if self.action in ['list', 'all', 'archived', 'shared']:
-            return self.get_optimized_queryset_for_listing()
+        if getattr(self, 'swagger_fake_view', False):
+            return Collection.objects.none()
         return self.get_base_queryset()
 
+    @extend_schema(parameters=[CollectionListQuerySerializer], responses=UltraSlimCollectionSerializer(many=True))
     def list(self, request):
-        # make sure the user is authenticated
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
-        # List should only return collections owned by the requesting user (shared collections are available
-        # via the `shared` action).
-        queryset = Collection.objects.filter(
-            Q(user=request.user.id) & Q(is_archived=False)
-        ).distinct().select_related('user', 'primary_image')
-        
-        queryset = self._for_listing(queryset)
-        queryset = self.apply_type_filter(queryset)
-        queryset = self.apply_status_filter(queryset)
-        queryset = self.apply_sorting(queryset)
+        """
+        List collections
+
+        Your collections, or with `membership=shared` the ones shared with you, a page at a
+        time, as cards (no records inside).
+        """
+        params = validated(CollectionListQuerySerializer, request.query_params)
+        if params['membership'] == 'shared':
+            queryset = Collection.objects.filter(shared_with=request.user)
+            if params['archived'] is not None:
+                queryset = queryset.filter(is_archived=params['archived'])
+        else:
+            archived = params['archived'] if params['archived'] is not None else False
+            queryset = Collection.objects.filter(user=request.user, is_archived=archived)
+
+        queryset = self._for_listing(queryset.distinct())
+        if params.get('type'):
+            queryset = queryset.filter(type=params['type'])
+        queryset = self.apply_status_filter(queryset, params.get('status'))
+        queryset = self.apply_sorting(queryset, params['ordering'])
         return self.paginate_and_respond(queryset, request)
 
-    @action(detail=False, methods=['get'])
-    def all(self, request):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-       
-        queryset = Collection.objects.filter(
-            Q(user=request.user)
-        ).select_related('user', 'primary_image')
-        
-        queryset = self.apply_sorting(self._for_listing(queryset))
-        serializer = self.get_serializer(queryset, many=True)
-       
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def archived(self, request):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-       
-        queryset = Collection.objects.filter(
-            Q(user=request.user.id) & Q(is_archived=True)
-        ).select_related('user', 'primary_image')
-        
-        queryset = self.apply_sorting(self._for_listing(queryset))
-        serializer = self.get_serializer(queryset, many=True)
-       
-        return Response(serializer.data)
-
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('as', str, enum=['story'], description='`story`: preview what people with the public '
+                             'link see.'),
+            OpenApiParameter('s', str, description='The share secret, to read an unlisted collection.'),
+        ],
+        responses=PolymorphicProxySerializer(
+            component_name='CollectionRetrieve',
+            serializers=[CollectionDetailSerializer, CollectionStorySerializer],
+            resource_type_field_name=None,
+        ),
+    )
     def retrieve(self, request, pk=None):
         """
-        Retrieve a collection and include itinerary items and day metadata in the response.
+        Get a collection
 
-        A public reader gets the story payload only. A member can ask for the same
-        payload with ``?as=story`` to preview what people with the link see.
+        Members get the whole collection with its records and day plan. Anyone else who can
+        read it (a public or unlisted story, or a guest link with `X-Guest-Token`) gets the
+        story instead. Members can ask for the story with `as=story` to preview it.
         """
         collection = self.get_object()
         audience = audience_for_request(request, collection)
@@ -303,38 +279,23 @@ class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedRespon
             return Response(story)
         return Response(data)
 
-    @action(detail=False, methods=['get'])
-    def shared(self, request):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
-        queryset = Collection.objects.filter(
-            shared_with=request.user
-        ).select_related('user')
-        
-        queryset = self.apply_sorting(self._for_listing(queryset))
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
+    @extend_schema(request=None, responses={201: CollectionSerializer})
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
-        """Create a private copy of a collection (see ``duplicate_collection``). Only the owner can."""
+        """
+        Copy a collection
+
+        Owner only. Makes a private copy with everything in it and its day plan, without the
+        members or guest links.
+        """
         original = self.get_object()
-
         if original.user != request.user:
-            return Response(
-                {"error": "You do not have permission to duplicate this collection."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
+            raise PermissionDenied('Only the owner can copy this collection.')
         try:
             new_collection = duplicate_collection(original, request.user)
         except Exception:
             logger.exception("Failed to duplicate collection %s", pk)
-            return Response(
-                {"error": "An error occurred while duplicating the collection."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            raise APIError('The collection could not be copied.', code='server_error', status=500)
         return Response(self.get_serializer(new_collection).data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):

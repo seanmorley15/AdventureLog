@@ -29,7 +29,7 @@ class ImmichIntegrationApiTests(APITestCase):
         self.assertEqual(response.json()['server_url'], 'http://immich.example.com/api')
 
     @patch(
-        'integrations.views.immich.ImmichIntegrationViewSet._validate_immich_connection',
+        'integrations.views.immich.ImmichViewSet._validate_immich_connection',
         return_value=(True, 'http://immich.example.com/api', None),
     )
     def test_create_stores_key_but_does_not_echo_it(self, _validate):
@@ -45,14 +45,14 @@ class ImmichIntegrationApiTests(APITestCase):
         self.assertEqual(ImmichIntegration.objects.get(user=self.user).api_key, 'brand-new-key')
 
     @patch(
-        'integrations.views.immich.ImmichIntegrationViewSet._validate_immich_connection',
+        'integrations.views.immich.ImmichViewSet._validate_immich_connection',
         return_value=(True, 'http://immich.example.com/api', None),
     )
     def test_update_with_new_key_replaces_it_without_echoing(self, _validate):
         integration = self._create_integration()
 
-        response = self.client.put(
-            f'/api/integrations/immich/{integration.id}/',
+        response = self.client.patch(
+            '/api/integrations/immich/',
             {'server_url': 'http://immich.example.com/api', 'api_key': 'rotated-key'},
             format='json',
         )

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { Trail, WandererTrail } from '$lib/types';
@@ -97,7 +98,7 @@
 			});
 			if (!res.ok) {
 				const errorData = await res.json().catch(() => ({}));
-				throw new Error(errorData.message || errorData.error || 'Failed to create trail');
+				throw new Error(apiErrorMessage(errorData, 'Failed to create trail'));
 			}
 			const newTrail = (await res.json()) as Trail;
 			addToast('success', $t('adventures.trail_created_successfully'));

@@ -1,160 +1,91 @@
-"""The QR code that signs the mobile app in."""
+"""The API key the mobile app signs in with, delivered as a QR code."""
 
-from os import getenv
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from users.serializers import APIKeySerializer
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from django.conf import settings
-from users.models import APIKey
-import qrcode
-import io
 import base64
+import io
 import json
 from datetime import datetime
 
+import qrcode
+from django.conf import settings
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-class MobileQRCodeView(APIView):
+from core.exceptions import APIError
+from users.models import APIKey
+from users.serializers import APIKeySerializer, MobileKeySerializer
+
+MOBILE_KEY_PREFIX = 'Mobile App -'
+
+
+def _mobile_key(user):
+    return APIKey.objects.filter(user=user, name__startswith=MOBILE_KEY_PREFIX).first()
+
+
+def _qr_data_uri(payload):
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(json.dumps(payload))
+    qr.make(fit=True)
+    buffer = io.BytesIO()
+    qr.make_image(fill_color='black', back_color='white').save(buffer, format='PNG')
+    return f'data:image/png;base64,{base64.b64encode(buffer.getvalue()).decode()}'
+
+
+class MobileKeyView(APIView):
     """
-    POST /auth/mobile-qr/  → generate a QR code for mobile app login
-    GET  /auth/mobile-qr/  → get the current mobile API key if one exists
-    DELETE /auth/mobile-qr/ → delete the mobile API key if one exists
+    The mobile app's API key. It is an ordinary API key named ``Mobile App - <date>``, so it is
+    also listed (and can be revoked) with the other keys.
     """
 
-    permission_classes = [IsAuthenticated]
+    openapi_tags = ['Account']
 
-    @swagger_auto_schema(
-        responses={
-            200: openapi.Response(
-                "Mobile API key already exists",
-                openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        "id": openapi.Schema(type=openapi.TYPE_STRING, format="uuid"),
-                        "name": openapi.Schema(type=openapi.TYPE_STRING),
-                        "key_prefix": openapi.Schema(type=openapi.TYPE_STRING),
-                        "created_at": openapi.Schema(type=openapi.TYPE_STRING, format="date-time"),
-                    },
-                ),
-            ),
-            404: "No mobile API key found",
-        },
-        operation_description="Get the current mobile API key if one exists.",
-    )
+    @extend_schema(responses={200: APIKeySerializer, 404: OpenApiResponse(description='No mobile key exists.')})
     def get(self, request):
-        # Check if user already has a mobile app API key
-        mobile_key = APIKey.objects.filter(
-            user=request.user,
-            name__startswith="Mobile App -"
-        ).first()
+        """Get the mobile app key"""
+        key = _mobile_key(request.user)
+        if key is None:
+            raise APIError('No mobile API key exists.', code='not_found', status=status.HTTP_404_NOT_FOUND)
+        return Response(APIKeySerializer(key).data)
 
-        if mobile_key:
-            serializer = APIKeySerializer(mobile_key)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(
-            {"detail": "No mobile API key found."},
-            status=status.HTTP_404_NOT_FOUND
-        )
-
-    @swagger_auto_schema(
+    @extend_schema(
+        request=None,
         responses={
-            201: openapi.Response(
-                "QR code generated successfully",
-                openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        "id": openapi.Schema(type=openapi.TYPE_STRING, format="uuid"),
-                        "name": openapi.Schema(type=openapi.TYPE_STRING),
-                        "key_prefix": openapi.Schema(type=openapi.TYPE_STRING),
-                        "created_at": openapi.Schema(type=openapi.TYPE_STRING, format="date-time"),
-                        "key": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description="Full API key – shown once, never stored.",
-                        ),
-                        "qr_code": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description="Base64-encoded PNG QR code image",
-                        ),
-                    },
-                ),
-            ),
-            400: "Mobile API key already exists",
+            201: MobileKeySerializer,
+            409: OpenApiResponse(description='A mobile key already exists. Delete it first.'),
         },
-        operation_description="Generate a QR code for mobile app login. Creates an API key with name 'Mobile App - [date]'.",
     )
     def post(self, request):
-        # Check if user already has a mobile app API key
-        existing_key = APIKey.objects.filter(
-            user=request.user,
-            name__startswith="Mobile App -"
-        ).first()
+        """
+        Create the mobile app key
 
-        if existing_key:
-            return Response(
-                {"detail": "Mobile API key already exists. Please delete the existing one first."},
-                status=status.HTTP_400_BAD_REQUEST
+        Creates the key and a QR code for the AdventureLog app to scan. The QR code holds JSON:
+        `{"version": 1, "server_url", "api_key", "code_words"}`. Like any key, it is shown only
+        in this response.
+        """
+        if _mobile_key(request.user) is not None:
+            raise APIError(
+                'A mobile API key already exists. Delete it first.',
+                code='conflict',
+                status=status.HTTP_409_CONFLICT,
             )
-
-        # Generate a new API key with a name like "Mobile App - March 17, 2026"
-        name = f"Mobile App - {datetime.now().strftime('%B %d, %Y')}"
+        name = f"{MOBILE_KEY_PREFIX} {datetime.now().strftime('%B %d, %Y')}"
         api_key, raw_key = APIKey.generate(user=request.user, name=name)
+        data = APIKeySerializer(api_key).data
+        data['key'] = raw_key
+        data['qr_code'] = _qr_data_uri({
+            'version': 1,
+            'server_url': settings.PUBLIC_URL,
+            'api_key': raw_key,
+            'code_words': ['hike', 'explore'],
+        })
+        return Response(data, status=status.HTTP_201_CREATED)
 
-        # Create QR code data with proper structure for mobile app
-        qr_data = {
-            "version": 1,
-            "server_url": getattr(settings, 'PUBLIC_URL', getenv('PUBLIC_URL', 'http://localhost:8000')),
-            "api_key": raw_key,
-            "code_words": ["hike", "explore"]
-        }
-
-        # Generate QR code containing the JSON data
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(json.dumps(qr_data))
-        qr.make(fit=True)
-
-        # Create QR code image
-        img = qr.make_image(fill_color="black", back_color="white")
-
-        # Convert to base64
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-
-        # Return API key info and QR code
-        response_data = APIKeySerializer(api_key).data
-        response_data["key"] = raw_key
-        response_data["qr_code"] = f"data:image/png;base64,{img_str}"
-
-        return Response(response_data, status=status.HTTP_201_CREATED)
-
-    @swagger_auto_schema(
-        responses={
-            204: "Mobile API key deleted.",
-            404: "No mobile API key found.",
-        },
-        operation_description="Delete the mobile API key.",
-    )
+    @extend_schema(responses={204: OpenApiResponse(description='The mobile key was revoked.')})
     def delete(self, request):
-        # Find and delete the mobile app API key
-        mobile_key = APIKey.objects.filter(
-            user=request.user,
-            name__startswith="Mobile App -"
-        ).first()
-
-        if not mobile_key:
-            return Response(
-                {"detail": "No mobile API key found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        mobile_key.delete()
+        """Revoke the mobile app key"""
+        key = _mobile_key(request.user)
+        if key is None:
+            raise APIError('No mobile API key exists.', code='not_found', status=status.HTTP_404_NOT_FOUND)
+        key.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -5,7 +5,7 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from integrations.models import ImmichIntegration
-from integrations.views.immich import ImmichIntegrationView
+from integrations.views.immich import ImmichViewSet
 
 User = get_user_model()
 
@@ -19,8 +19,8 @@ class ImmichViewTests(TestCase):
             server_url='http://immich.example.com/api',
             api_key='test-api-key',
         )
-        self.view = ImmichIntegrationView.as_view({'get': 'search'})
-        self.album_view = ImmichIntegrationView.as_view({'get': 'album'})
+        self.view = ImmichViewSet.as_view({'get': 'search'})
+        self.album_view = ImmichViewSet.as_view({'get': 'album'})
 
     @patch('integrations.views.immich.immich_post')
     def test_search_by_date_uses_iso8601_datetime_range(self, mock_post):
@@ -69,7 +69,7 @@ class ImmichViewTests(TestCase):
         request = self.factory.get('/api/integrations/immich/albums/album-1/')
         force_authenticate(request, user=self.user)
 
-        response = self.album_view(request, albumid='album-1')
+        response = self.album_view(request, album_id='album-1')
 
         self.assertEqual(response.status_code, 200)
         mock_post.assert_called_once()
@@ -111,7 +111,7 @@ class ImmichViewTests(TestCase):
         request = self.factory.get('/api/integrations/immich/albums/album-1/')
         force_authenticate(request, user=self.user)
 
-        response = self.album_view(request, albumid='album-1')
+        response = self.album_view(request, album_id='album-1')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(mock_post.call_count, 2)
@@ -136,7 +136,7 @@ class ImmichViewTests(TestCase):
         force_authenticate(request, user=self.user)
 
         with patch('integrations.views.immich.immich_post') as mock_post:
-            response = self.album_view(request, albumid='album-1')
+            response = self.album_view(request, album_id='album-1')
 
         self.assertEqual(response.status_code, 200)
         mock_post.assert_not_called()
@@ -152,7 +152,7 @@ class ImmichTimeoutTests(TestCase):
         )
 
     def _call(self, action_name, url, **kwargs):
-        view = ImmichIntegrationView.as_view({'get': action_name})
+        view = ImmichViewSet.as_view({'get': action_name})
         request = self.factory.get(url)
         force_authenticate(request, user=self.user)
         return view(request, **kwargs)
@@ -174,7 +174,7 @@ class ImmichTimeoutTests(TestCase):
 
         mock_get.side_effect = requests.exceptions.ReadTimeout()
 
-        response = self._call('album', '/api/integrations/immich/albums/abc/', albumid='abc')
+        response = self._call('album', '/api/integrations/immich/albums/abc/', album_id='abc')
 
         self.assertEqual(response.status_code, 503)
         self.assertIsNotNone(mock_get.call_args.kwargs.get('timeout'))

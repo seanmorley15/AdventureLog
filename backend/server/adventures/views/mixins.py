@@ -1,12 +1,63 @@
 import uuid
 
 from django.db.models import Q
-from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import serializers
+from rest_framework.exceptions import NotAuthenticated, NotFound, PermissionDenied
 from rest_framework.response import Response
 
+from adventures.models import Collection
 from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_change_collection
-from adventures.access.audience import can_edit, member_collections_q
+from adventures.access.audience import audience_for_request, can_edit, member_collections_q
+from core.exceptions import APIError
+from core.serializers import validated
+
+
+class CollectionFilterSerializer(serializers.Serializer):
+    collection = serializers.UUIDField(
+        required=False, help_text='Only records in this collection (yours or one shared with you).'
+    )
+
+
+COLLECTION_ID_PARAMETER = OpenApiParameter(
+    'collection_id', OpenApiTypes.UUID, OpenApiParameter.PATH, description='The collection id.'
+)
+
+
+class CollectionScopedMixin:
+    """
+    For viewsets nested under ``/api/collections/{collection_id}/``.
+
+    ``get_collection()`` loads the collection named in the path once per request. An id that
+    is not a UUID or names no collection is a 404; who may read or change it is decided by
+    the viewset, with the ``adventures.access.audience`` helpers.
+    """
+
+    def get_collection(self):
+        if not hasattr(self, '_collection'):
+            try:
+                collection_id = uuid.UUID(str(self.kwargs.get('collection_id')))
+            except ValueError:
+                raise NotFound('Collection not found.')
+            collection = Collection.objects.select_related('user').filter(pk=collection_id).first()
+            if collection is None:
+                raise NotFound('Collection not found.')
+            self._collection = collection
+        return self._collection
+
+    def get_editable_collection(self):
+        """
+        The collection, when the requester is its owner, an editor, or holds an editor guest link.
+
+        Someone who cannot see the collection at all gets a 404; a viewer gets a 403.
+        """
+        collection = self.get_collection()
+        if not can_edit(self.request, collection):
+            if audience_for_request(self.request, collection) is None:
+                raise NotFound('Collection not found.')
+            raise PermissionDenied('You do not have permission to change this collection.')
+        return collection
 
 
 class CollectionOwnedViewSetMixin:
@@ -22,6 +73,8 @@ class CollectionOwnedViewSetMixin:
     model = None
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return self.model.objects.none()
         user = self.request.user
         # Owned rows and rows in collections the requester is a member of or holds a
         # guest link to. A row's own is_public opens it only when no collection owns it.
@@ -31,6 +84,25 @@ class CollectionOwnedViewSetMixin:
         if self.action == 'retrieve':
             scope |= Q(is_public=True, collection__isnull=True)
         return self.model.objects.filter(scope).distinct().order_by('-updated_at')
+
+    @extend_schema(parameters=[CollectionFilterSerializer])
+    def list(self, request, *args, **kwargs):
+        """
+        List your records of this kind, newest change first. With `collection`, list the ones
+        in that collection instead, including records other members added.
+        """
+        collection_id = validated(CollectionFilterSerializer, request.query_params).get('collection')
+        if collection_id:
+            queryset = self.get_queryset().filter(collection_id=collection_id)
+        elif request.user.is_authenticated:
+            queryset = self.model.objects.filter(user=request.user).order_by('-updated_at')
+        else:
+            raise NotAuthenticated()
+        return Response(self.get_serializer(self.optimize_list(queryset), many=True).data)
+
+    def optimize_list(self, queryset):
+        """Load what the list serializer reads. Override per resource."""
+        return queryset
 
     def perform_create(self, serializer):
         collection = serializer.validated_data.get('collection')
@@ -82,39 +154,25 @@ class ContentObjectMixin:
     validate_object_uuid = False
 
     def _get_and_validate_content_object(self, content_type_name, object_id):
-        """Return the content object, or an error Response if it is invalid or not accessible."""
+        """The record an upload is attached to. Raises a 400, 403 or 404 when it cannot be used."""
         models = self.content_object_models
 
         if content_type_name not in models:
-            return Response({
-                "error": f"Invalid content_type. Must be one of: {', '.join(models.keys())}"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            raise APIError(f"content_type must be one of: {', '.join(models.keys())}.", code='invalid')
 
         if self.validate_object_uuid:
-            # Reject "undefined" and empty ids from the client before they reach the database.
-            if not object_id or object_id == 'undefined':
-                return Response({
-                    "error": "object_id is required and must be a valid UUID"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
             try:
                 uuid.UUID(str(object_id))
             except (ValueError, AttributeError):
-                return Response({
-                    "error": f"Invalid object_id format: {object_id}"
-                }, status=status.HTTP_400_BAD_REQUEST)
+                raise APIError('object_id must be a UUID.', code='invalid')
 
         model = models[content_type_name]
         try:
             content_object = model.objects.get(id=object_id)
         except (ValueError, model.DoesNotExist):
-            return Response({
-                "error": f"{content_type_name} not found"
-            }, status=status.HTTP_404_NOT_FOUND)
+            raise NotFound(f'{content_type_name} not found.')
 
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, content_object):
-            return Response({
-                "error": "User does not have permission to access this content"
-            }, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied('You do not have permission to change this record.')
 
         return content_object

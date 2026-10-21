@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '$lib/api';
 import type { SearchEntityType, SearchResponse } from './types';
 
 export type SearchAppOptions = {
@@ -29,7 +30,7 @@ export async function searchApp(
 	const payload = await response.json();
 
 	if (!response.ok) {
-		throw new Error(payload?.error || 'Search failed');
+		throw new Error(apiErrorMessage(payload, 'Search failed'));
 	}
 
 	return payload as SearchResponse;

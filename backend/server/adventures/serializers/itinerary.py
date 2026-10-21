@@ -1,7 +1,9 @@
 """Itinerary days and the items placed on them."""
 
 from adventures.models import CollectionItineraryItem, CollectionItineraryDay, Lodging, Transportation
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from core.serializers import CustomModelSerializer
 from adventures.services import day_plan
 from .logistics import LodgingSerializer, TransportationSerializer
@@ -38,11 +40,30 @@ class CollectionItineraryDaySerializer(CustomModelSerializer):
         return super().update(instance, validated_data)
 
 
+@extend_schema_field(serializers.ChoiceField(choices=['location', 'lodging', 'transportation', 'note', 'checklist']))
+class ContentTypeNameField(serializers.RelatedField):
+    """A placed record's kind, by model name (``location``). Also accepts a ContentType id."""
+
+    def to_representation(self, value):
+        return value.model
+
+    def to_internal_value(self, data):
+        queryset = self.get_queryset()
+        if isinstance(data, int) or (isinstance(data, str) and data.isdigit()):
+            found = queryset.filter(pk=int(data)).first()
+        else:
+            found = queryset.filter(app_label='adventures', model=str(data)).first()
+        if found is None:
+            raise serializers.ValidationError('Unknown content type.')
+        return found
+
+
 class CollectionItineraryItemSerializer(CustomModelSerializer):
+    content_type = ContentTypeNameField(queryset=ContentType.objects.all())
     date = serializers.DateField(required=False, allow_null=True, default=None)
     item = serializers.SerializerMethodField()
-    start_datetime = serializers.ReadOnlyField()
-    end_datetime = serializers.ReadOnlyField()
+    start_datetime = serializers.SerializerMethodField()
+    end_datetime = serializers.SerializerMethodField()
     object_name = serializers.ReadOnlyField(source='content_type.model')
     is_global = serializers.BooleanField(required=False, default=False)
     day_index = serializers.SerializerMethodField()
@@ -97,6 +118,15 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
 
         return data
 
+    @extend_schema_field(serializers.CharField(allow_null=True, help_text="The placed record's start (date or date-time)."))
+    def get_start_datetime(self, obj):
+        return obj.start_datetime
+
+    @extend_schema_field(serializers.CharField(allow_null=True, help_text="The placed record's end (date or date-time)."))
+    def get_end_datetime(self, obj):
+        return obj.end_datetime
+
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_day_index(self, obj):
         return obj.day.index if obj.day_id else None
     
@@ -109,6 +139,7 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
         validated_data.pop('object_id', None)
         return super().update(instance, validated_data)
     
+    @extend_schema_field(serializers.JSONField(allow_null=True, help_text='`{id, type}` of the placed record.'))
     def get_item(self, obj):
         """Return id and type for the linked item"""
         if not obj.item:

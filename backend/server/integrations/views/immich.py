@@ -1,22 +1,28 @@
-import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status, viewsets
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
-from rest_framework import viewsets, status
-from integrations.serializers import ImmichIntegrationSerializer
+from integrations.serializers import ImmichAssetSerializer, ImmichIntegrationSerializer, ImmichSearchQuerySerializer
 from core.net import self_hosted_session
 from integrations.errors import IntegrationError
 from integrations.services import server_urls
 from integrations.models import ImmichIntegration
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 import requests
 from adventures.models import ContentImage
 from adventures.access.audience import has_guest_token
 from adventures.access.file_permissions import can_read_content_image
+from adventures.throttling import ImageProxyThrottle
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from core.exceptions import APIError
 from core.pagination import StandardResultsSetPagination
+from core.parsing import as_uuid
+from core.public_url import get_public_url
+from core.serializers import validated
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,362 +43,127 @@ def immich_post(url, **kwargs):
         return session.post(url, **kwargs)
 
 
-class ImmichIntegrationView(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
-    
-    def check_integration(self, request):
-        """
-        Checks if the user has an active Immich integration.
-        Returns:
-            - The integration object if it exists.
-            - A Response with an error message if the integration is missing.
-        """
-        if not request.user.is_authenticated:
-            return Response(
-                {
-                    'message': 'You need to be authenticated to use this feature.',
-                    'error': True,
-                    'code': 'immich.authentication_required'
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+def _server_down():
+    return APIError('The Immich server is down or unreachable.', code='immich.server_down', status=503)
 
-        user_integrations = ImmichIntegration.objects.filter(user=request.user)
-        if not user_integrations.exists():
-            return Response(
-                {
-                    'message': 'You need to have an active Immich integration to use this feature.',
-                    'error': True,
-                    'code': 'immich.integration_missing'
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
 
-        return user_integrations.first()
+def _no_items(code='immich.no_items_found'):
+    return APIError('No items found.', code=code, status=status.HTTP_404_NOT_FOUND)
 
-    def _immich_connection_error(self):
-        return Response(
-            {
-                'message': 'The Immich server is currently down or unreachable.',
-                'error': True,
-                'code': 'immich.server_down'
-            },
-            status=status.HTTP_503_SERVICE_UNAVAILABLE
-        )
 
-    def _immich_no_items_error(self, code='immich.no_items_found', message='No items found.'):
-        return Response(
-            {
-                'message': message,
-                'error': True,
-                'code': code
-            },
-            status=status.HTTP_404_NOT_FOUND
-        )
+_ASSET_PAGE = inline_serializer('PaginatedImmichAssetList', fields={
+    'count': serializers.IntegerField(),
+    'next': serializers.URLField(allow_null=True),
+    'previous': serializers.URLField(allow_null=True),
+    'results': ImmichAssetSerializer(many=True),
+})
 
-    def _build_date_range_arguments(self, date):
-        selected_date = datetime.strptime(date, '%Y-%m-%d')
-        next_day = selected_date + timedelta(days=1)
-        return {
-            'takenAfter': f'{selected_date.strftime("%Y-%m-%d")}T00:00:00.000Z',
-            'takenBefore': f'{next_day.strftime("%Y-%m-%d")}T00:00:00.000Z',
-        }
 
-    def _paginate_immich_assets(self, integration, request, items):
-        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-        public_url = public_url.replace("'", "")
-        for item in items:
-            item['image_url'] = f'{public_url}/api/integrations/immich/{integration.id}/get/{item["id"]}'
+def _paginated_assets():
+    return OpenApiResponse(_ASSET_PAGE, description='A page of assets (`?page=`, `?page_size=`).')
 
-        paginator = self.pagination_class()
-        result_page = paginator.paginate_queryset(items, request)
-        return paginator.get_paginated_response(result_page)
 
-    def _fetch_immich_search_assets(
-        self,
-        integration,
-        request,
-        arguments,
-        search_type='metadata',
-        not_found_code='immich.no_items_found',
-    ):
-        url = f'{integration.server_url}/search/{search_type}'
-        items = []
-        page = 1
+_NOT_CONNECTED = OpenApiResponse(description='You have not connected Immich (`immich.integration_missing`).')
+_DOWN = OpenApiResponse(description='Your Immich server is unreachable (`immich.server_down`).')
 
-        while True:
-            try:
-                immich_fetch = immich_post(
-                    url,
-                    headers={'x-api-key': integration.api_key},
-                    json={
-                        'size': IMMICH_SEARCH_SIZE,
-                        'page': page,
-                        'visibility': IMMICH_SEARCH_VISIBILITY,
-                        **arguments,
-                    },
-                    timeout=IMMICH_REQUEST_TIMEOUT,
-                )
-                res = immich_fetch.json()
-            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-                return self._immich_connection_error()
 
-            if not immich_fetch.ok:
-                logger.warning(
-                    'Immich search request failed: status=%s response=%s',
-                    immich_fetch.status_code,
-                    res,
-                )
-                return self._immich_no_items_error(code=not_found_code)
+class ImmichViewSet(viewsets.GenericViewSet):
+    """
+    Your connection to an Immich photo server, and browsing it.
 
-            assets = res.get('assets')
-            if not isinstance(assets, dict):
-                break
+    Routed as a singleton: there is one connection per user, at `/api/integrations/immich/`.
+    """
 
-            page_items = assets.get('items') or []
-            if page_items:
-                items.extend(page_items)
-
-            next_page = assets.get('nextPage')
-            if next_page:
-                try:
-                    page = int(next_page)
-                    continue
-                except (TypeError, ValueError):
-                    logger.warning(
-                        'Immich search returned invalid nextPage value: %s',
-                        next_page,
-                    )
-
-            if len(page_items) < IMMICH_SEARCH_SIZE:
-                break
-
-            page += 1
-
-        if items:
-            return self._paginate_immich_assets(integration, request, items)
-
-        return self._immich_no_items_error(code=not_found_code)
-
-    @action(detail=False, methods=['get'], url_path='search')
-    def search(self, request):
-        """
-        Handles the logic for searching Immich images.
-        """
-        # Check for integration before proceeding
-        integration = self.check_integration(request)
-        if isinstance(integration, Response):
-            return integration
-                
-        query = request.query_params.get('query', '')
-        date = request.query_params.get('date', '')
-
-        if not query and not date:
-            return Response(
-                {
-                    'message': 'Query or date is required.',
-                    'error': True,
-                    'code': 'immich.query_required'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-                
-        arguments = {}
-        if query:
-            arguments['query'] = query
-        if date:
-            try:
-                arguments.update(self._build_date_range_arguments(date))
-            except ValueError:
-                return Response(
-                    {
-                        'message': 'Invalid date format. Use YYYY-MM-DD.',
-                        'error': True,
-                        'code': 'immich.invalid_date_format'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-        return self._fetch_immich_search_assets(
-            integration,
-            request,
-            arguments,
-            search_type='smart' if query else 'metadata',
-        )
-        
-    @action(detail=False, methods=['get'])
-    def albums(self, request):
-        """
-        RESTful GET method for retrieving all Immich albums.
-        """
-        # Check for integration before proceeding
-        integration = self.check_integration(request)
-        if isinstance(integration, Response):
-            return integration
-
-        # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
-        try:
-            immich_fetch = immich_get(f'{integration.server_url}/albums', headers={
-                'x-api-key': integration.api_key
-            }, timeout=IMMICH_REQUEST_TIMEOUT)
-            res = immich_fetch.json()
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-            return Response(
-                {
-                    'message': 'The Immich server is currently down or unreachable.',
-                    'error': True,
-                    'code': 'immich.server_down'
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-        
-        return Response(
-            res,
-            status=status.HTTP_200_OK
-        )
-    
-    @action(detail=False, methods=['get'], url_path='albums/(?P<albumid>[^/.]+)')
-    def album(self, request, albumid=None):
-        """
-        RESTful GET method for retrieving a specific Immich album by ID.
-        """
-        # Check for integration before proceeding
-        integration = self.check_integration(request)
-        if isinstance(integration, Response):
-            return integration
-
-        if not albumid:
-            return Response(
-                {
-                    'message': 'Album ID is required.',
-                    'error': True,
-                    'code': 'immich.albumid_required'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
-        try:
-            immich_fetch = immich_get(f'{integration.server_url}/albums/{albumid}', headers={
-                'x-api-key': integration.api_key
-            }, timeout=IMMICH_REQUEST_TIMEOUT)
-            res = immich_fetch.json()
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-            return Response(
-                {
-                    'message': 'The Immich server is currently down or unreachable.',
-                    'error': True,
-                    'code': 'immich.server_down'
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-        
-        album_assets = res.get('assets')
-        if isinstance(album_assets, list) and album_assets:
-            return self._paginate_immich_assets(integration, request, album_assets)
-
-        return self._fetch_immich_search_assets(
-            integration,
-            request,
-            {'albumIds': [albumid]},
-            search_type='metadata',
-            not_found_code='immich.no_assets_found',
-        )
-
-    @action(
-    detail=False,
-    methods=['get'],
-    url_path='(?P<integration_id>[^/.]+)/get/(?P<imageid>[^/.]+)',
-    permission_classes=[]
-    )
-    def get_by_integration(self, request, integration_id=None, imageid=None):
-        """
-        GET an Immich image using the integration and asset ID.
-        Access levels (in order of priority):
-        1. Public locations: accessible by anyone
-        2. Private locations in public collections: accessible by anyone
-        3. Private locations in private collections shared with user: accessible by shared users, and the collection owner
-        4. Private locations: accessible only to the owner
-        5. No ContentImage: owner can still view via integration
-        """
-        if not imageid or not integration_id:
-            return Response({
-                'message': 'Image ID and Integration ID are required.',
-                'error': True,
-                'code': 'immich.missing_params'
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Lookup integration and user
-        integration = get_object_or_404(ImmichIntegration, id=integration_id)
-        owner_id = integration.user
-
-        # Every photo of this Immich asset that the integration's owner has added somewhere
-        image_entries = list(
-            ContentImage.objects
-            .filter(immich_id=imageid, user=owner_id)
-            .select_related('content_type')
-        )
-
-        user = request.user if request.user.is_authenticated else None
-        if user is None or user != owner_id:
-            # The same rule as the rest of the app serves files by: members and guest links of
-            # a collection, readers of its public story, and a place's own public flag.
-            if not any(can_read_content_image(entry, user, request) for entry in image_entries):
-                if image_entries:
-                    return Response({
-                        'message': 'This image is private and you are not authorized.',
-                        'error': True,
-                        'code': 'immich.permission_denied'
-                    }, status=status.HTTP_403_FORBIDDEN)
-                return Response({
-                    'message': 'Image is not linked to any location and you are not the owner.',
-                    'error': True,
-                    'code': 'immich.not_found'
-                }, status=status.HTTP_404_NOT_FOUND)
-
-        # Fetch from Immich
-        try:
-            immich_response = immich_get(
-                f'{integration.server_url}/assets/{imageid}/thumbnail?size=preview',
-                headers={'x-api-key': integration.api_key},
-                timeout=5
-            )
-            content_type = immich_response.headers.get('Content-Type', 'image/jpeg')
-            if not content_type.startswith('image/'):
-                return Response({
-                    'message': 'Invalid content type returned from Immich.',
-                    'error': True,
-                    'code': 'immich.invalid_content'
-                }, status=status.HTTP_502_BAD_GATEWAY)
-
-            response = HttpResponse(immich_response.content, content_type=content_type, status=200)
-            # A shared cache may keep it only when the request needed no sign-in or link to pass.
-            visibility = 'public' if user is None and not has_guest_token(request) else 'private'
-            response['Cache-Control'] = f'{visibility}, max-age=86400, stale-while-revalidate=3600'
-            return response
-
-        except requests.exceptions.ConnectionError:
-            return Response({
-                'message': 'The Immich server is unreachable.',
-                'error': True,
-                'code': 'immich.server_down'
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-
-        except requests.exceptions.Timeout:
-            return Response({
-                'message': 'The Immich server request timed out.',
-                'error': True,
-                'code': 'immich.timeout'
-            }, status=status.HTTP_504_GATEWAY_TIMEOUT)
-
-class ImmichIntegrationViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    openapi_tags = ['Integrations']
     serializer_class = ImmichIntegrationSerializer
     queryset = ImmichIntegration.objects.all()
+    pagination_class = StandardResultsSetPagination
+    # Actions that page their results set this (see core.openapi.AutoSchema._get_paginator).
+    paginate_action = False
 
-    def get_queryset(self):
-        return ImmichIntegration.objects.filter(user=self.request.user)
+    def get_integration(self):
+        integration = ImmichIntegration.objects.filter(user=self.request.user).first()
+        if integration is None:
+            raise APIError(
+                'Connect an Immich server first.', code='immich.integration_missing', status=status.HTTP_404_NOT_FOUND
+            )
+        return integration
+
+    # -- The connection ------------------------------------------------------------------
+
+    @extend_schema(responses={200: ImmichIntegrationSerializer, 404: _NOT_CONNECTED})
+    def retrieve(self, request):
+        """Get your Immich connection"""
+        return Response(self.get_serializer(self.get_integration()).data)
+
+    @extend_schema(
+        request=ImmichIntegrationSerializer,
+        responses={
+            201: ImmichIntegrationSerializer,
+            400: OpenApiResponse(description='The server could not be reached with these details '
+                                 '(`immich.connection_failed`, with `details`).'),
+            409: OpenApiResponse(description='Already connected (`immich.integration_exists`). Use PATCH.'),
+        },
+    )
+    def create(self, request):
+        """
+        Connect Immich
+
+        Checks the address and API key against the server before saving. The key is never
+        returned.
+        """
+        if ImmichIntegration.objects.filter(user=request.user).exists():
+            raise APIError(
+                'You already have an Immich connection. Change it instead.',
+                code='immich.integration_exists', status=status.HTTP_409_CONFLICT,
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        server_url = self._checked_server_url(
+            serializer.validated_data.get('server_url'), serializer.validated_data.get('api_key')
+        )
+        serializer.save(user=request.user, server_url=server_url)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(
+        request=ImmichIntegrationSerializer,
+        responses={200: ImmichIntegrationSerializer, 404: _NOT_CONNECTED,
+                   400: OpenApiResponse(description='`immich.connection_failed`.')},
+    )
+    def partial_update(self, request):
+        """
+        Change your Immich connection
+
+        Send what changes; the connection is checked again before saving.
+        """
+        integration = self.get_integration()
+        serializer = self.get_serializer(integration, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        server_url = self._checked_server_url(
+            serializer.validated_data.get('server_url', integration.server_url),
+            serializer.validated_data.get('api_key', integration.api_key),
+        )
+        serializer.save(server_url=server_url)
+        return Response(serializer.data)
+
+    @extend_schema(responses={204: OpenApiResponse(description='Disconnected.'), 404: _NOT_CONNECTED})
+    def destroy(self, request):
+        """
+        Disconnect Immich
+
+        Photos already copied into AdventureLog stay; linked ones stop loading.
+        """
+        self.get_integration().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def _checked_server_url(self, server_url, api_key):
+        is_valid, corrected_server_url, error_message = self._validate_immich_connection(server_url, api_key)
+        if not is_valid:
+            raise APIError(
+                f'Cannot connect to Immich server: {error_message}',
+                code='immich.connection_failed', details=error_message,
+            )
+        return corrected_server_url
 
     def _validate_immich_connection(self, server_url, api_key):
         """
@@ -465,137 +236,215 @@ class ImmichIntegrationViewSet(viewsets.ModelViewSet):
         # If we get here, none of the endpoints worked
         return False, original_server_url, "Immich server endpoint not found - check server URL"
 
-    def create(self, request):
-        """
-        RESTful POST method for creating a new Immich integration.
-        """
-        # Check if the user already has an integration
-        user_integrations = ImmichIntegration.objects.filter(user=request.user)
-        if user_integrations.exists():
-            return Response(
-                {
-                    'message': 'You already have an active Immich integration.',
-                    'error': True,
-                    'code': 'immich.integration_exists'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    # -- Browsing ------------------------------------------------------------------------
 
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            # Validate Immich server connection before saving
-            server_url = serializer.validated_data.get('server_url')
-            api_key = serializer.validated_data.get('api_key')
-            
-            is_valid, corrected_server_url, error_message = self._validate_immich_connection(server_url, api_key)
-            
-            if not is_valid:
-                return Response(
-                    {
-                        'message': f'Cannot connect to Immich server: {error_message}',
-                        'error': True,
-                        'code': 'immich.connection_failed',
-                        'details': error_message
+    def _build_date_range_arguments(self, selected_date):
+        next_day = selected_date + timedelta(days=1)
+        return {
+            'takenAfter': f'{selected_date.strftime("%Y-%m-%d")}T00:00:00.000Z',
+            'takenBefore': f'{next_day.strftime("%Y-%m-%d")}T00:00:00.000Z',
+        }
+
+    def _paginate_immich_assets(self, integration, request, items):
+        public_url = get_public_url()
+        for item in items:
+            item['image_url'] = f'{public_url}/api/integrations/immich/assets/{integration.id}/{item["id"]}/'
+
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(items, request)
+        return paginator.get_paginated_response(result_page)
+
+    def _fetch_immich_search_assets(
+        self,
+        integration,
+        request,
+        arguments,
+        search_type='metadata',
+        not_found_code='immich.no_items_found',
+    ):
+        url = f'{integration.server_url}/search/{search_type}'
+        items = []
+        page = 1
+
+        while True:
+            try:
+                immich_fetch = immich_post(
+                    url,
+                    headers={'x-api-key': integration.api_key},
+                    json={
+                        'size': IMMICH_SEARCH_SIZE,
+                        'page': page,
+                        'visibility': IMMICH_SEARCH_VISIBILITY,
+                        **arguments,
                     },
-                    status=status.HTTP_400_BAD_REQUEST
+                    timeout=IMMICH_REQUEST_TIMEOUT,
                 )
-            
-            # If validation passes, save the integration with the corrected URL
-            serializer.save(user=request.user, server_url=corrected_server_url)
-            return Response(
-                serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-        
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+                res = immich_fetch.json()
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+                raise _server_down()
 
-    def update(self, request, pk=None):
-        """
-        RESTful PUT method for updating an existing Immich integration.
-        """
-        integration = ImmichIntegration.objects.filter(user=request.user, id=pk).first()
-        if not integration:
-            return Response(
-                {
-                    'message': 'Integration not found.',
-                    'error': True,
-                    'code': 'immich.integration_not_found'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        serializer = self.serializer_class(integration, data=request.data, partial=True)
-        if serializer.is_valid():
-            # Validate Immich server connection before updating
-            server_url = serializer.validated_data.get('server_url', integration.server_url)
-            api_key = serializer.validated_data.get('api_key', integration.api_key)
-            
-            is_valid, corrected_server_url, error_message = self._validate_immich_connection(server_url, api_key)
-            
-            if not is_valid:
-                return Response(
-                    {
-                        'message': f'Cannot connect to Immich server: {error_message}',
-                        'error': True,
-                        'code': 'immich.connection_failed',
-                        'details': error_message
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
+            if not immich_fetch.ok:
+                logger.warning(
+                    'Immich search request failed: status=%s response=%s',
+                    immich_fetch.status_code,
+                    res,
                 )
-            
-            # If validation passes, save the integration with the corrected URL
-            serializer.save(server_url=corrected_server_url)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-        
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+                raise _no_items(not_found_code)
+
+            assets = res.get('assets')
+            if not isinstance(assets, dict):
+                break
+
+            page_items = assets.get('items') or []
+            if page_items:
+                items.extend(page_items)
+
+            next_page = assets.get('nextPage')
+            if next_page:
+                try:
+                    page = int(next_page)
+                    continue
+                except (TypeError, ValueError):
+                    logger.warning(
+                        'Immich search returned invalid nextPage value: %s',
+                        next_page,
+                    )
+
+            if len(page_items) < IMMICH_SEARCH_SIZE:
+                break
+
+            page += 1
+
+        if items:
+            return self._paginate_immich_assets(integration, request, items)
+
+        raise _no_items(not_found_code)
+
+    @extend_schema(
+        parameters=[ImmichSearchQuerySerializer],
+        responses={200: _paginated_assets(), 404: OpenApiResponse(description='Nothing found, or not connected.'),
+                   503: _DOWN},
+    )
+    @action(detail=False, methods=['get'], url_path='search', paginate_action=True)
+    def search(self, request):
+        """
+        Search your photos
+
+        Smart search by `query`, or the photos taken on a `date`.
+        """
+        integration = self.get_integration()
+        params = validated(ImmichSearchQuerySerializer, request.query_params)
+        arguments = {}
+        if params.get('query'):
+            arguments['query'] = params['query']
+        if params.get('date'):
+            arguments.update(self._build_date_range_arguments(params['date']))
+        return self._fetch_immich_search_assets(
+            integration, request, arguments, search_type='smart' if params.get('query') else 'metadata',
         )
 
-    def destroy(self, request, pk=None):
-        """
-        RESTful DELETE method for deleting an existing Immich integration.
-        """
-        integration = ImmichIntegration.objects.filter(user=request.user, id=pk).first()
-        if not integration:
-            return Response(
-                {
-                    'message': 'Integration not found.',
-                    'error': True,
-                    'code': 'immich.integration_not_found'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
-        integration.delete()
-        return Response(
-            {
-                'message': 'Integration deleted successfully.'
-            },
-            status=status.HTTP_200_OK
+    @extend_schema(
+        responses={200: OpenApiResponse({'type': 'array', 'items': {'type': 'object'}},
+                                        description="Immich's album objects, as Immich returns them."),
+                   404: _NOT_CONNECTED, 503: _DOWN},
+    )
+    @action(detail=False, methods=['get'], pagination_class=None)
+    def albums(self, request):
+        """List your albums"""
+        integration = self.get_integration()
+        try:
+            response = immich_get(f'{integration.server_url}/albums', headers={'x-api-key': integration.api_key},
+                                  timeout=IMMICH_REQUEST_TIMEOUT)
+            return Response(response.json())
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            raise _server_down()
+
+    @extend_schema(
+        parameters=[OpenApiParameter('album_id', str, OpenApiParameter.PATH, description='The Immich album id.')],
+        responses={200: _paginated_assets(), 404: OpenApiResponse(description='Empty album, or not connected.'),
+                   503: _DOWN},
+    )
+    @action(detail=False, methods=['get'], url_path=r'albums/(?P<album_id>[^/.]+)', paginate_action=True)
+    def album(self, request, album_id=None):
+        """List an album's photos"""
+        integration = self.get_integration()
+        try:
+            response = immich_get(f'{integration.server_url}/albums/{album_id}',
+                                  headers={'x-api-key': integration.api_key}, timeout=IMMICH_REQUEST_TIMEOUT)
+            res = response.json()
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            raise _server_down()
+
+        album_assets = res.get('assets') if isinstance(res, dict) else None
+        if isinstance(album_assets, list) and album_assets:
+            return self._paginate_immich_assets(integration, request, album_assets)
+        return self._fetch_immich_search_assets(
+            integration, request, {'albumIds': [album_id]}, search_type='metadata',
+            not_found_code='immich.no_assets_found',
         )
 
-    def list(self, request, *args, **kwargs):
-        # If the user has an integration, we only want to return that integration
-        user_integrations = ImmichIntegration.objects.filter(user=request.user)
-        if user_integrations.exists():
-            integration = user_integrations.first()
-            serializer = self.serializer_class(integration)
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('integration_id', OpenApiTypes.UUID, OpenApiParameter.PATH,
+                             description='The Immich connection the photo comes from.'),
+            OpenApiParameter('asset_id', str, OpenApiParameter.PATH, description='The Immich asset id.'),
+        ],
+        responses={
+            (200, 'image/*'): OpenApiResponse(response=bytes, description='A preview-sized image.'),
+            403: OpenApiResponse(description='The photo is on records you cannot see (`immich.permission_denied`).'),
+            404: OpenApiResponse(description='Unknown connection, or the photo is not on any record (`immich.not_found`).'),
+            502: OpenApiResponse(description='Immich did not return an image (`immich.invalid_content`).'),
+            503: _DOWN,
+            504: OpenApiResponse(description='Immich was too slow (`immich.timeout`).'),
+        },
+    )
+    @action(
+        detail=False, methods=['get'], url_path=r'assets/(?P<integration_id>[^/.]+)/(?P<asset_id>[^/.]+)',
+        permission_classes=[AllowAny], throttle_classes=[ImageProxyThrottle],
+    )
+    def asset(self, request, integration_id=None, asset_id=None):
+        """
+        Show an Immich photo
+
+        Serves a photo from the owner's Immich server. Anyone who can see a record the photo
+        is on can load it, also without signing in for public records; the owner can load
+        any photo from their server.
+        """
+        integration = ImmichIntegration.objects.filter(id=as_uuid(integration_id)).first() \
+            if as_uuid(integration_id) else None
+        if integration is None:
+            raise NotFound('Immich connection not found.')
+        owner = integration.user
+
+        # Every photo of this Immich asset that the integration's owner has added somewhere
+        image_entries = list(
+            ContentImage.objects.filter(immich_id=asset_id, user=owner).select_related('content_type')
+        )
+        user = request.user if request.user.is_authenticated else None
+        if user is None or user != owner:
+            # The same rule as the rest of the app serves files by: members and guest links of
+            # a collection, readers of its public story, and a place's own public flag.
+            if not any(can_read_content_image(entry, user, request) for entry in image_entries):
+                if image_entries:
+                    raise APIError('This photo is private.', code='immich.permission_denied', status=403)
+                raise APIError('This photo is not on any record you can see.', code='immich.not_found', status=404)
+
+        try:
+            immich_response = immich_get(
+                f'{integration.server_url}/assets/{asset_id}/thumbnail?size=preview',
+                headers={'x-api-key': integration.api_key},
+                timeout=5,
             )
-        else:
-            return Response(
-                {
-                    'message': 'No integration found.',
-                    'error': True,
-                    'code': 'immich.integration_not_found'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
+        except requests.exceptions.ConnectionError:
+            raise _server_down()
+        except requests.exceptions.Timeout:
+            raise APIError('The Immich server took too long.', code='immich.timeout', status=504)
+
+        content_type = immich_response.headers.get('Content-Type', 'image/jpeg')
+        if not content_type.startswith('image/'):
+            raise APIError('Immich did not return an image.', code='immich.invalid_content', status=502)
+        response = HttpResponse(immich_response.content, content_type=content_type, status=200)
+        # A shared cache may keep it only when the request needed no sign-in or link to pass.
+        visibility = 'public' if user is None and not has_guest_token(request) else 'private'
+        response['Cache-Control'] = f'{visibility}, max-age=86400, stale-while-revalidate=3600'
+        return response

@@ -35,7 +35,7 @@
 		error = null;
 
 		try {
-			const res = await fetch('/auth/mobile-qr/', {
+			const res = await fetch('/api/account/mobile-key/', {
 				method: 'GET',
 				credentials: 'include'
 			});
@@ -67,7 +67,7 @@
 		error = null;
 
 		try {
-			const res = await fetch('/auth/mobile-qr/', {
+			const res = await fetch('/api/account/mobile-key/', {
 				method: 'POST',
 				credentials: 'include'
 			});
@@ -110,7 +110,7 @@
 		error = null;
 
 		try {
-			const res = await fetch('/auth/mobile-qr/', {
+			const res = await fetch('/api/account/mobile-key/', {
 				method: 'DELETE',
 				credentials: 'include'
 			});
@@ -136,7 +136,7 @@
 		error = null;
 
 		try {
-			const res = await fetch('/auth/mobile-qr/', {
+			const res = await fetch('/api/account/mobile-key/', {
 				method: 'DELETE',
 				credentials: 'include'
 			});

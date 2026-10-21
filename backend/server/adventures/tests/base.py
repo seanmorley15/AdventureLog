@@ -45,7 +45,8 @@ class AudienceTestBase(APITestCase):
 
     def move_stop(self, day_index=2, **headers):
         return self.client.patch(
-            f'/api/itineraries/{self.stop.id}/', {'day_index': day_index}, format='json', **headers
+            f'/api/collections/{self.trip.id}/itinerary-items/{self.stop.id}/', {'day_index': day_index}, format='json',
+            **headers,
         )
 
     def publish(self, visibility='public', **groups):

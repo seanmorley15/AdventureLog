@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
@@ -169,13 +170,13 @@
 		}
 
 		try {
-			const response = await fetch(`/api/places/search/?query=${encodeURIComponent(query)}`);
+			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
 			if (!response.ok) {
 				return;
 			}
 
 			const rawResults = await response.json();
-			const mappedResults = Array.isArray(rawResults) ? rawResults.map(toPlaceResult) : [];
+			const mappedResults = (rawResults?.results ?? []).map(toPlaceResult);
 			const bestMatch = pickBestNearbyResult(mappedResults, lat, lng, query);
 			if (!bestMatch || !selectedLocation) {
 				return;
@@ -210,7 +211,7 @@
 		}
 
 		const response = await fetch(
-			`/api/places/place_details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name || '')}`
+			`/api/places/details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name || '')}`
 		);
 		if (!response.ok) {
 			throw new Error('Unable to fetch place details');
@@ -270,12 +271,10 @@
 
 		isSearching = true;
 		try {
-			const response = await fetch(
-				`/api/places/search/?query=${encodeURIComponent(query)}&include_meta=1`
-			);
+			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
 			const payload = await response.json();
-			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
-			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			const rawResults = payload?.results || [];
+			searchProvider = payload?.provider_used || null;
 			searchResults = Array.isArray(rawResults) ? rawResults.map(toPlaceResult) : [];
 		} catch (error) {
 			console.error('Search error:', error);
@@ -315,10 +314,10 @@
 		isReverseGeocoding = true;
 
 		try {
-			const response = await fetch(`/api/places/search/?query=${lat},${lng}&include_meta=1`);
+			const response = await fetch(`/api/places/search/?q=${lat},${lng}`);
 			const payload = await response.json();
-			const results = Array.isArray(payload) ? payload : payload?.results || [];
-			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			const results = payload?.results || [];
+			searchProvider = payload?.provider_used || null;
 
 			if (Array.isArray(results) && results.length > 0) {
 				selectedLocation = {
@@ -522,7 +521,7 @@
 				google_maps_url: prefill.google_maps_url,
 				types: prefill.types || [],
 				photos: prefill.photos || [],
-				collection_id: collectionId,
+				collection: collectionId,
 				itinerary_date: itineraryDate,
 				is_public: false
 			};
@@ -544,8 +543,8 @@
 			});
 
 			if (!res.ok) {
-				const errorData = await res.json().catch(() => ({}));
-				throw new Error(errorData?.error || errorData?.detail || `Failed to create ${itemLabel}`);
+				const errorData = await res.json().catch(() => null);
+				throw new Error(apiErrorMessage(errorData, `Failed to create ${itemLabel}`));
 			}
 
 			quickAddedLocation = await res.json();
@@ -596,7 +595,7 @@
 	let supportsCategory = $derived(mode === 'location');
 	let itemLabel = $derived(mode === 'lodging' ? 'lodging' : 'location');
 	let quickAddEndpoint = $derived(
-		mode === 'lodging' ? '/api/lodging/quick-add/' : '/api/locations/quick-add/'
+		mode === 'lodging' ? '/api/lodgings/quick-add/' : '/api/locations/quick-add/'
 	);
 	let formattedItineraryLabel = $derived(itineraryLabel || formatItineraryDate(itineraryDate));
 </script>

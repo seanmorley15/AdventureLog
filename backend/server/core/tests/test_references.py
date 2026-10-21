@@ -184,7 +184,10 @@ class ReferencesResolveTests(SimpleTestCase):
                             try:
                                 import_string(value)  # a class or function
                             except ImportError:
-                                importlib.import_module(value)  # a module, such as SESSION_ENGINE
+                                try:
+                                    importlib.import_module(value)  # a module, such as SESSION_ENGINE
+                                except ImportError:
+                                    pkgutil.resolve_name(value)  # a nested attribute, such as Model.Choices
                     except Exception as exc:  # noqa: BLE001
                         problems.append(f'settings.{key}: {value}: {exc}')
             elif isinstance(value, (list, tuple, set)):

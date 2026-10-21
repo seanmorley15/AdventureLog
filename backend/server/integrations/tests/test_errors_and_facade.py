@@ -19,12 +19,14 @@ class IntegrationErrorTests(SimpleTestCase):
     def test_optional_fields_default_to_none(self):
         error = IntegrationError('Nope')
 
-        self.assertEqual((str(error), error.user_message, error.status_code, error.code), ('Nope', 'Nope', None, None))
+        self.assertEqual((str(error), error.user_message, error.status_code), ('Nope', 'Nope', None))
+        # Every error carries a code and the status the API answers with.
+        self.assertEqual((error.code, error.status), ('integration_error', 400))
 
     def test_status_code_and_code_are_kept(self):
         error = IntegrationError('Gone', status_code=404, code='x.gone')
 
-        self.assertEqual((error.status_code, error.code), (404, 'x.gone'))
+        self.assertEqual((error.status_code, error.code, error.status), (404, 'x.gone', 404))
 
     def test_mfa_required_is_an_integration_error_carrying_the_username(self):
         error = MfaRequired('sam')

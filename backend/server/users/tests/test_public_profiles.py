@@ -20,7 +20,7 @@ class PublicProfileFieldTests(APITestCase):
     def test_detail_view_hides_account_fields_of_other_users(self):
         self.client.force_authenticate(user=self.viewer)
 
-        response = self.client.get(f'/auth/user/{self.person.username}/')
+        response = self.client.get(f'/api/users/{self.person.username}/')
 
         self.assertEqual(response.status_code, 200)
         user = response.json()['user']
@@ -29,7 +29,7 @@ class PublicProfileFieldTests(APITestCase):
             self.assertNotIn(field, user)
 
     def test_detail_view_works_for_anonymous_visitors_and_hides_account_fields(self):
-        response = self.client.get(f'/auth/user/{self.person.username}/')
+        response = self.client.get(f'/api/users/{self.person.username}/')
 
         self.assertEqual(response.status_code, 200)
         for field in PRIVATE_FIELDS:
@@ -38,7 +38,7 @@ class PublicProfileFieldTests(APITestCase):
     def test_list_view_hides_account_fields(self):
         self.client.force_authenticate(user=self.viewer)
 
-        response = self.client.get('/auth/users/')
+        response = self.client.get('/api/users/')
 
         self.assertEqual(response.status_code, 200)
         people = response.json()
@@ -49,8 +49,8 @@ class PublicProfileFieldTests(APITestCase):
     def test_own_metadata_still_includes_account_fields(self):
         self.client.force_authenticate(user=self.person)
 
-        response = self.client.get('/auth/user-metadata/')
+        response = self.client.get('/api/account/')
 
         self.assertEqual(response.status_code, 200)
         for field in PRIVATE_FIELDS:
-            self.assertIn(field, response.json())
+            self.assertIn(field, response.json()['user'])

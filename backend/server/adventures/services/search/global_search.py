@@ -18,6 +18,7 @@ from adventures.models import (
 )
 from django.contrib.auth import get_user_model
 from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
+from core.errors import ServiceError
 
 
 User = get_user_model()
@@ -60,10 +61,9 @@ TYPE_SORT_PRIORITY: dict[str, int] = {
 }
 
 
-class SearchValidationError(ValueError):
+class SearchValidationError(ServiceError, ValueError):
     def __init__(self, message: str):
-        super().__init__(message)
-        self.message = message
+        super().__init__(message, code='invalid')
 
 
 def _tokenize(term: str) -> list[str]:

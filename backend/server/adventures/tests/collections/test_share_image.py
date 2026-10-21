@@ -192,21 +192,21 @@ class ShareImageApiTests(TestCase):
 
     def test_anonymous_can_export_public_collection_pdf(self):
         self.client.logout()
-        url = f'/api/collections/{self.public_collection.id}/export-pdf/'
+        url = f'/api/collections/{self.public_collection.id}/pdf/'
         res = self.client.get(url)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res['Content-Type'], 'application/pdf')
         self.assertTrue(res.content.startswith(b'%PDF'))
 
     def test_owner_can_export_private_collection_pdf(self):
-        url = f'/api/collections/{self.private_collection.id}/export-pdf/'
+        url = f'/api/collections/{self.private_collection.id}/pdf/'
         res = self.client.get(url)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res['Content-Type'], 'application/pdf')
 
     def test_anonymous_cannot_export_private_collection_pdf(self):
         self.client.logout()
-        url = f'/api/collections/{self.private_collection.id}/export-pdf/'
+        url = f'/api/collections/{self.private_collection.id}/pdf/'
         res = self.client.get(url)
         self.assertIn(res.status_code, (403, 404))
 
@@ -214,7 +214,7 @@ class ShareImageApiTests(TestCase):
         self.private_collection.shared_with.add(self.other)
         self.client.logout()
         self.client.login(username='apiother', password='testpass123')
-        url = f'/api/collections/{self.private_collection.id}/export-pdf/'
+        url = f'/api/collections/{self.private_collection.id}/pdf/'
         res = self.client.get(url)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res['Content-Type'], 'application/pdf')

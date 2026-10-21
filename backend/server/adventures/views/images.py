@@ -1,5 +1,7 @@
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from adventures.throttling import ImageImportThrottle, ImageProxyThrottle
@@ -20,12 +22,20 @@ from adventures.models import (
     Trail,
 )
 from adventures.serializers import ContentImageSerializer, ImageMapPinSerializer
+from adventures.serializers.media import (
+    ImageFetchSerializer,
+    ImageImportFromUrlsSerializer,
+    ImageImportResultSerializer,
+    ImageUploadSerializer,
+)
 from integrations.facade import ImmichIntegration, immich_integration_for
 from adventures.views.mixins import ContentObjectMixin
 from adventures.permissions import ContentImagePermission
 import logging
 import requests
-from adventures.services.media_quota import enforce_media_storage_limit, get_uploaded_file_size
+from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
+from core.exceptions import APIError
+from core.serializers import validated
 
 from adventures.services.images.fetch import (
     download_remote_image,
@@ -39,7 +49,22 @@ from adventures.services.images.metadata import (
 
 logger = logging.getLogger(__name__)
 
+@extend_schema_view(
+    list=extend_schema(description='Every image you can see: on your records and on records in collections you belong to.'),
+    update=extend_schema(description='Change `is_primary` or the image file.'),
+    partial_update=extend_schema(description='Change `is_primary` or the image file.'),
+)
 class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
+    """
+    Images on locations, visits, lodging, transportation, notes, trip days, activities and trails.
+
+    An image belongs to the owner of the record it is on. Photos taken with a location in their
+    metadata get coordinates and appear on the map. Images can also point at an Immich photo.
+    """
+
+    openapi_tags = ['Media']
+    queryset = ContentImage.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     content_object_models = {
         'location': Location,
         'transportation': Transportation,
@@ -57,7 +82,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get all images the user has access to"""
-        if not self.request.user.is_authenticated:
+        if getattr(self, 'swagger_fake_view', False) or not self.request.user.is_authenticated:
             return ContentImage.objects.none()
         
         # Import here to avoid circular imports
@@ -161,21 +186,20 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
             )
         ).distinct()
 
-    @action(detail=True, methods=['post'])
-    def image_delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
-    
-    @action(detail=True, methods=['post'])
+    @extend_schema(request=None, responses=ContentImageSerializer)
+    @action(detail=True, methods=['post'], url_path='toggle-primary')
     def toggle_primary(self, request, *args, **kwargs):
+        """
+        Make an image the primary one
+
+        The primary image is the cover of its record. The record's other images stop being
+        primary. Answers 400 `already_primary` when it already is.
+        """
         instance = self.get_object()
-        
-        # Check if the image is already the primary image
+
         if instance.is_primary:
-            return Response(
-                {"error": "Image is already the primary image"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+            raise APIError('This image is already the primary image.', code='already_primary')
+
         # Set other images of the same content object to not primary
         ContentImage.objects.filter(
             content_type=instance.content_type,
@@ -186,11 +210,16 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         # Set the new image to primary
         instance.is_primary = True
         instance.save()
-        return Response({"success": "Image set as primary image"})
+        return Response(self.get_serializer(instance).data)
 
-    @action(detail=False, methods=['get'], url_path='map_pins')
+    @extend_schema(responses=ImageMapPinSerializer(many=True))
+    @action(detail=False, methods=['get'], url_path='map-pins')
     def map_pins(self, request):
-        """Return geotagged images accessible to the current user for map display."""
+        """
+        List geotagged images
+
+        Images you can see that have coordinates, for showing on a map.
+        """
         images = (
             self.get_queryset()
             .filter(coordinates__isnull=False)
@@ -208,71 +237,66 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
 
         return Response(pins)
 
-    @action(detail=False, methods=['post'],
-            permission_classes=[IsAuthenticated],
-            throttle_classes=[ImageProxyThrottle])
+    @extend_schema(
+        request=ImageFetchSerializer,
+        responses={
+            (200, 'image/*'): OpenApiResponse(response=bytes, description='The image, as the remote server sent it.'),
+            502: OpenApiResponse(description='The remote server failed (`upstream_error`).'),
+            504: OpenApiResponse(description='The remote server was too slow (`upstream_timeout`).'),
+        },
+    )
+    @action(
+        detail=False, methods=['post'], url_path='fetch-from-url',
+        permission_classes=[IsAuthenticated], throttle_classes=[ImageProxyThrottle],
+    )
     def fetch_from_url(self, request):
         """
-        Authenticated proxy endpoint to fetch images from external URLs.
-        Avoids CORS issues when the frontend downloads images from third-party
-        servers (e.g. wikimedia.org). Requires a logged-in user and is
-        rate-limited to 60 requests/minute.
-        """
-        image_url = request.data.get('url')
-        if not image_url:
-            return Response(
-                {"error": "URL is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        Fetch a remote image
 
+        Downloads an image from a public web address and returns its bytes, so the browser can
+        use pictures from servers that do not allow cross-site requests. Only public internet
+        addresses are fetched.
+        """
+        image_url = validated(ImageFetchSerializer, request.data)['url']
         try:
             image_data = download_remote_image(str(image_url).strip())
-            return HttpResponse(image_data['content'], content_type=image_data['content_type'], status=200)
-
         except ValueError:
-            return Response({"error": "Invalid image URL"}, status=status.HTTP_400_BAD_REQUEST)
-
+            raise APIError('That is not a usable image address.', code='invalid')
         except requests.exceptions.Timeout:
             logger.error("Timeout fetching image from URL %s", image_url)
-            return Response(
-                {"error": "Download timeout - image may be too large or server too slow"},
-                status=status.HTTP_504_GATEWAY_TIMEOUT
-            )
+            raise APIError('The image took too long to download.', code='upstream_timeout', status=504)
         except requests.exceptions.RequestException as e:
             logger.error("Failed to fetch image from URL %s: %s", image_url, str(e))
-            return Response(
-                {"error": "Failed to fetch image from the remote server"},
-                status=status.HTTP_502_BAD_GATEWAY
-            )
+            raise APIError('The image could not be downloaded.', code='upstream_error', status=502)
+        return HttpResponse(image_data['content'], content_type=image_data['content_type'], status=200)
 
+    @extend_schema(
+        request=ImageImportFromUrlsSerializer,
+        responses={
+            201: OpenApiResponse(ImageImportResultSerializer, description='Every image was imported.'),
+            200: OpenApiResponse(ImageImportResultSerializer, description='Some images were imported; see `results`.'),
+            400: OpenApiResponse(description='None could be imported (`import_failed`, with `results`), or invalid input.'),
+        },
+    )
     @action(
-        detail=False,
-        methods=['post'],
-        permission_classes=[IsAuthenticated],
-        throttle_classes=[ImageImportThrottle],
+        detail=False, methods=['post'], url_path='import-from-urls',
+        permission_classes=[IsAuthenticated], throttle_classes=[ImageImportThrottle],
     )
     def import_from_urls(self, request):
-        content_type_name = request.data.get('content_type')
-        object_id = request.data.get('object_id')
-        urls = request.data.get('urls')
+        """
+        Import images from web addresses
 
-        if not isinstance(urls, list) or not urls:
-            return Response({"error": "urls must be a non-empty array"}, status=status.HTTP_400_BAD_REQUEST)
-
-        urls = [str(url).strip() for url in urls if str(url).strip()]
-        if not urls:
-            return Response({"error": "No valid URLs provided"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if len(urls) > 10:
-            return Response({"error": "Maximum 10 URLs per request"}, status=status.HTTP_400_BAD_REQUEST)
-
-        content_object = self._get_and_validate_content_object(content_type_name, object_id)
-        if isinstance(content_object, Response):
-            return content_object
+        Downloads up to 10 images and attaches them to a record, for example pictures from
+        `GET /api/places/images/` or a place search. Each address gets its own entry in
+        `results`.
+        """
+        params = validated(ImageImportFromUrlsSerializer, request.data)
+        urls = [str(url).strip() for url in params['urls'] if str(url).strip()]
+        content_object = self._get_and_validate_content_object(params['content_type'], params['object_id'])
 
         owner = self._content_owner(content_object, request.user)
 
-        explicit_source = request.data.get('source')
+        explicit_source = params.get('source')
         import_summary = import_remote_images_for_object(
             content_object,
             urls,
@@ -285,13 +309,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         results = import_summary['results']
 
         if not created_images:
-            return Response(
-                {
-                    'error': 'No images could be imported',
-                    'results': results,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise APIError('None of the images could be imported.', code='import_failed', results=results)
 
         serialized = ContentImageSerializer(created_images, many=True, context={'request': request})
         response_status = (
@@ -310,21 +328,26 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
             status=response_status,
         )
 
+    @extend_schema(
+        request={'multipart/form-data': ImageUploadSerializer, 'application/json': ImageUploadSerializer},
+        responses={
+            201: ContentImageSerializer,
+            413: OpenApiResponse(description='The file would exceed the owner\'s media storage (`media_quota_exceeded`).'),
+            502: OpenApiResponse(description='The Immich photo could not be fetched (`immich_fetch_failed`).'),
+        },
+    )
     def create(self, request, *args, **kwargs):
-        # Get content type and object ID from request
-        content_type_name = request.data.get('content_type')
-        object_id = request.data.get('object_id')
-        
-        if not content_type_name or not object_id:
-            return Response({
-                "error": "content_type and object_id are required"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Get the content object and validate permissions
+        """
+        Add an image
+
+        Upload a file as `image` (multipart), or link a photo from your Immich server with
+        `immich_id`. The image belongs to the owner of the record it is added to.
+        """
+        params = validated(ImageUploadSerializer, request.data)
+        content_type_name = params['content_type']
+        object_id = params['object_id']
         content_object = self._get_and_validate_content_object(content_type_name, object_id)
-        if isinstance(content_object, Response):  # Error response
-            return content_object
-        
+
         content_type = ContentType.objects.get_for_model(content_object.__class__)
         
         # Handle Immich ID for shared users by downloading the image
@@ -362,10 +385,10 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         try:
             user_integration = ImmichIntegration.objects.get(user=request.user)
         except ImmichIntegration.DoesNotExist:
-            return Response({
-                "error": "No Immich integration found for your account. Please set up Immich integration first.",
-                "code": "immich_integration_not_found"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            raise APIError(
+                'No Immich integration found for your account. Please set up Immich integration first.',
+                code='immich_integration_not_found',
+            )
         
         # Download the image from the shared user's Immich server
         try:
@@ -379,10 +402,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
             # Create a temporary file with the downloaded content
             content_type_header = immich_response.headers.get('Content-Type', 'image/jpeg')
             if not content_type_header.startswith('image/'):
-                return Response({
-                    "error": "Invalid content type returned from Immich server.",
-                    "code": "invalid_content_type"
-                }, status=status.HTTP_400_BAD_REQUEST)
+                raise APIError('Immich did not return an image.', code='invalid_content_type', status=502)
             
             # Determine file extension from content type
             ext_map = {
@@ -398,18 +418,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
             image_file = ContentFile(immich_response.content, name=filename)
 
             owner = content_object.user if hasattr(content_object, 'user') else request.user
-            allowed, details = enforce_media_storage_limit(
-                owner,
-                get_uploaded_file_size(image_file),
-            )
-            if not allowed:
-                return Response(
-                    {
-                        "error": "Media storage limit exceeded",
-                        **details,
-                    },
-                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                )
+            ensure_media_storage_available(owner, get_uploaded_file_size(image_file))
 
             image = create_content_image(
                 user=owner,
@@ -423,15 +432,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
         except requests.exceptions.RequestException:
-            return Response({
-                "error": "Failed to fetch image from Immich server",
-                "code": "immich_fetch_failed"
-            }, status=status.HTTP_502_BAD_GATEWAY)
-        except Exception:
-            return Response({
-                "error": "Unexpected error processing Immich image",
-                "code": "immich_processing_error"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise APIError('The photo could not be fetched from Immich.', code='immich_fetch_failed', status=502)
     
     def _create_standard_image(self, request, content_object, content_type, object_id):
         """Handle standard image creation without deepcopy issues"""
@@ -440,7 +441,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         immich_id = request.data.get('immich_id')
 
         if not image_file and not immich_id:
-            return Response({"error": "No image uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+            raise APIError('Send an image file or an immich_id.', code='invalid')
 
         owner = self._content_owner(content_object, request.user)
         explicit_source = request.data.get('source')
@@ -450,18 +451,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         immich_integration = None
 
         if image_file:
-            allowed, details = enforce_media_storage_limit(
-                owner,
-                get_uploaded_file_size(image_file),
-            )
-            if not allowed:
-                return Response(
-                    {
-                        "error": "Media storage limit exceeded",
-                        **details,
-                    },
-                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                )
+            ensure_media_storage_available(owner, get_uploaded_file_size(image_file))
 
             file_bytes = image_file.read()
             image_file = ContentFile(file_bytes, name=image_file.name)

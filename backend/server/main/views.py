@@ -1,7 +1,10 @@
 from django.http import JsonResponse
-from django.middleware.csrf import get_token
-from os import getenv
 from django.conf import settings
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.views.generic import RedirectView
 from django.views.static import serve
@@ -14,17 +17,28 @@ from adventures.access.file_permissions import (
     normalize_media_request_path,
 )
 
-def get_csrf_token(request):
-    csrf_token = get_token(request)
-    return JsonResponse({'csrfToken': csrf_token})
+class ServerInfoView(APIView):
+    openapi_tags = ['Server']
+    permission_classes = [AllowAny]
 
-def public_url_view(request):
-    return JsonResponse({
-        'PUBLIC_URL': getenv('PUBLIC_URL'),
-        'ALLOW_PUBLIC_COLLECTION_LINKS': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
-    })
+    @extend_schema(
+        responses=inline_serializer('ServerInfo', fields={
+            'public_url': serializers.URLField(help_text='The address of this server, used in links and media URLs.'),
+            'allow_public_collection_links': serializers.BooleanField(
+                help_text='Whether collections may be made public or unlisted on this server.'
+            ),
+        })
+    )
+    def get(self, request):
+        """Get server information"""
+        return Response({
+            'public_url': settings.PUBLIC_URL,
+            'allow_public_collection_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+        })
+
 
 def health_check(request):
+    """For container health checks and monitors. Not part of the API."""
     from django.db import connection
     try:
         connection.ensure_connection()

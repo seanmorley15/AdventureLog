@@ -1,5 +1,14 @@
+"""
+Routes of the adventures app. Mounted at ``api/`` by ``main.api_urls``.
+
+Records that can stand alone are top-level. Records that exist only inside a collection are
+nested under ``collections/<collection_id>/``. See API.md for the conventions.
+"""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
+from core.routers import SingletonRouter
 from adventures.views import (
     ActivityViewSet,
     AttachmentViewSet,
@@ -9,57 +18,65 @@ from adventures.views import (
     ChecklistViewSet,
     CollectionActivityViewSet,
     CollectionCommentViewSet,
+    CollectionDayViewSet,
     CollectionViewSet,
+    CommentViewSet,
     ContentImageViewSet,
-    DescriptionViewSet,
-    IcsCalendarGeneratorViewSet,
-    ItineraryDayViewSet,
+    DashboardView,
+    ItineraryItemViewSet,
     ItineraryViewSet,
     LocationViewSet,
     LodgingViewSet,
     NoteViewSet,
     PlacesViewSet,
     RecommendationsViewSet,
-    ReverseGeocodeViewSet,
     SearchViewSet,
-    StatsViewSet,
-    SunriseSunsetViewSet,
     TagViewSet,
     TrailViewSet,
     TransportationViewSet,
+    VisitedRegionSyncView,
     VisitViewSet,
 )
 
+IN_COLLECTION = r'collections/(?P<collection_id>[^/.]+)'
+
 router = DefaultRouter()
+# Places and what happens at them
 router.register(r'locations', LocationViewSet, basename='locations')
-router.register(r'collections', CollectionViewSet, basename='collections')
-router.register(r'stats', StatsViewSet, basename='stats')
-router.register(r'generate', DescriptionViewSet, basename='generate')
+router.register(r'visits', VisitViewSet, basename='visits')
+router.register(r'activities', ActivityViewSet, basename='activities')
+router.register(r'trails', TrailViewSet, basename='trails')
+router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'tags', TagViewSet, basename='tags')
+# Collections and what lives only inside one
+router.register(r'collections', CollectionViewSet, basename='collections')
+router.register(rf'{IN_COLLECTION}/itinerary-items', ItineraryItemViewSet, basename='itinerary-items')
+router.register(rf'{IN_COLLECTION}/days', CollectionDayViewSet, basename='collection-days')
+router.register(rf'{IN_COLLECTION}/comments', CollectionCommentViewSet, basename='collection-comments')
+router.register(rf'{IN_COLLECTION}/activity', CollectionActivityViewSet, basename='collection-activity')
+router.register(r'comments', CommentViewSet, basename='comments')
+# Records that can be on their own or in a collection
+router.register(r'lodgings', LodgingViewSet, basename='lodgings')
 router.register(r'transportations', TransportationViewSet, basename='transportations')
 router.register(r'notes', NoteViewSet, basename='notes')
 router.register(r'checklists', ChecklistViewSet, basename='checklists')
+# Files on any record
 router.register(r'images', ContentImageViewSet, basename='images')
-router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geocode')
-router.register(r'places', PlacesViewSet, basename='places')
-router.register(r'sunrise-sunset', SunriseSunsetViewSet, basename='sunrise-sunset')
-router.register(r'categories', CategoryViewSet, basename='categories')
-router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-calendar')
-router.register(r'search', SearchViewSet, basename='search')
 router.register(r'attachments', AttachmentViewSet, basename='attachments')
-router.register(r'lodging', LodgingViewSet, basename='lodging')
-router.register(r'recommendations', RecommendationsViewSet, basename='recommendations'),
-router.register(r'backup', BackupViewSet, basename='backup')
-router.register(r'trails', TrailViewSet, basename='trails')
-router.register(r'activities', ActivityViewSet, basename='activities')
-router.register(r'visits', VisitViewSet, basename='visits')
+# Lookups and account-wide views
+router.register(r'places', PlacesViewSet, basename='places')
+router.register(r'recommendations', RecommendationsViewSet, basename='recommendations')
+router.register(r'search', SearchViewSet, basename='search')
 router.register(r'calendar', CalendarViewSet, basename='calendar')
-router.register(r'itineraries', ItineraryViewSet, basename='itineraries')
-router.register(r'itinerary-days', ItineraryDayViewSet, basename='itinerary-days')
-router.register(r'collection-comments', CollectionCommentViewSet, basename='collection-comments')
-router.register(r'collection-activity', CollectionActivityViewSet, basename='collection-activity')
+router.register(r'backup', BackupViewSet, basename='backup')
+
+plan_router = SingletonRouter()
+plan_router.register(rf'{IN_COLLECTION}/itinerary', ItineraryViewSet, basename='itinerary')
 
 urlpatterns = [
-    # Include the router under the 'api/' prefix
+    path('dashboard/', DashboardView.as_view(), name='dashboard'),
+    # Before the world travel routes, whose visited-regions/<region>/ would match it.
+    path('visited-regions/sync/', VisitedRegionSyncView.as_view(), name='visited-regions-sync'),
+    path('', include(plan_router.urls)),
     path('', include(router.urls)),
 ]

@@ -57,7 +57,7 @@ class GeoFieldMixinTests(APITestCase):
         response = self.client.post('/api/locations/', {'name': 'Reine', 'latitude': 67.9}, format='json')
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), [LAT_LON_MESSAGE])
+        self.assertEqual(response.json()['fields'], {'non_field_errors': [LAT_LON_MESSAGE]})
 
     def test_transport_endpoints_report_the_error_against_the_latitude_field(self):
         response = self.client.post(
@@ -66,7 +66,7 @@ class GeoFieldMixinTests(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'origin_latitude': LAT_LON_MESSAGE})
+        self.assertEqual(response.json()['fields'], {'origin_latitude': [LAT_LON_MESSAGE]})
 
         response = self.client.post(
             '/api/transportations/',
@@ -74,7 +74,7 @@ class GeoFieldMixinTests(APITestCase):
             format='json',
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'destination_latitude': LAT_LON_MESSAGE})
+        self.assertEqual(response.json()['fields'], {'destination_latitude': [LAT_LON_MESSAGE]})
 
     def test_transport_pairs_become_points(self):
         response = self.client.post(

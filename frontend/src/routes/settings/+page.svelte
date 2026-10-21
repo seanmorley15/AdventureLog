@@ -262,7 +262,7 @@
 	});
 
 	async function checkVisitedRegions() {
-		const res = await fetch('/api/reverse-geocode/mark_visited_region/', {
+		const res = await fetch('/api/visited-regions/sync/', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -278,7 +278,7 @@
 	}
 
 	async function removeEmail(email: { email: string; verified?: boolean; primary?: boolean }) {
-		const res = await fetch('/auth/browser/v1/account/email', {
+		const res = await fetch('/api/auth/browser/v1/account/email', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: email.email })
@@ -292,9 +292,9 @@
 	}
 
 	async function disablePassword() {
-		const method = user.disable_password ? 'POST' : 'DELETE';
-		const res = await fetch('/auth/disable-password/', {
-			method,
+		const action = user.disable_password ? 'disable' : 'enable';
+		const res = await fetch(`/api/account/password-login/${action}/`, {
+			method: 'POST',
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (res.ok) {
@@ -316,7 +316,7 @@
 	}
 
 	async function verifyEmail(email: { email: string; verified?: boolean; primary?: boolean }) {
-		const res = await fetch('/auth/browser/v1/account/email', {
+		const res = await fetch('/api/auth/browser/v1/account/email', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: email.email })
@@ -326,7 +326,7 @@
 	}
 
 	async function addEmail() {
-		const res = await fetch('/auth/browser/v1/account/email', {
+		const res = await fetch('/api/auth/browser/v1/account/email', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: new_email })
@@ -342,7 +342,7 @@
 	}
 
 	async function primaryEmail(email: { email: string; verified?: boolean; primary?: boolean }) {
-		const res = await fetch('/auth/browser/v1/account/email', {
+		const res = await fetch('/api/auth/browser/v1/account/email', {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: email.email, primary: true })
@@ -359,7 +359,7 @@
 		if (isDisablingMfa) return;
 		isDisablingMfa = true;
 		try {
-			const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
+			const res = await fetch('/api/auth/browser/v1/account/authenticators/totp', {
 				method: 'DELETE',
 				credentials: 'include'
 			});
@@ -428,7 +428,7 @@
 
 	async function createApiKey() {
 		if (!newApiKeyName.trim()) return;
-		const res = await fetch('/auth/api-keys/', {
+		const res = await fetch('/api/account/api-keys/', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ name: newApiKeyName.trim() })
@@ -465,7 +465,7 @@
 	}
 
 	async function deleteApiKey(id: string) {
-		const res = await fetch(`/auth/api-keys/${id}/`, { method: 'DELETE' });
+		const res = await fetch(`/api/account/api-keys/${id}/`, { method: 'DELETE' });
 		if (res.ok) {
 			apiKeys = apiKeys.filter((k) => k.id !== id);
 			addToast('success', $t('api_keys.key_revoked'));
@@ -478,7 +478,7 @@
 		if (!ids.length || isRevokingSession) return;
 		isRevokingSession = true;
 		try {
-			const res = await fetch('/auth/browser/v1/auth/sessions', {
+			const res = await fetch('/api/auth/browser/v1/auth/sessions', {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',

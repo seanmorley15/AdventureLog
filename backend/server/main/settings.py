@@ -73,7 +73,8 @@ INSTALLED_APPS = (
     'allauth.socialaccount.providers.openid_connect',
     'allauth.usersessions',
     'invitations',
-    'drf_yasg',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     'djmoney',
     'corsheaders',
     'adventures',
@@ -502,7 +503,10 @@ REST_FRAMEWORK = {
         'users.authentication.APIKeyAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    # Endpoints are closed unless a view opens them with an explicit permission class.
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'EXCEPTION_HANDLER': 'core.exceptions.api_exception_handler',
+    'DEFAULT_SCHEMA_CLASS': 'core.openapi.AutoSchema',
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
     ] if ENABLE_RATE_LIMITS else [],
@@ -511,6 +515,55 @@ REST_FRAMEWORK = {
         'endurain_auth': RATE_LIMIT_RATES['endurain_auth'],
     },
 }
+
+# ---------------------------------------------------------------------------
+# API documentation (drf-spectacular). See API.md.
+# ---------------------------------------------------------------------------
+from main import openapi as _openapi  # noqa: E402
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': _openapi.TITLE,
+    'DESCRIPTION': _openapi.DESCRIPTION,
+    'VERSION': _openapi.VERSION,
+    'TAGS': _openapi.TAGS,
+    'SCHEMA_PATH_PREFIX': r'/api/',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_PUBLIC': True,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    # Separate request and response components, so read-only and write-only fields are exact.
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'filter': True,
+        'displayOperationId': False,
+    },
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+        'core.openapi.merge_fragments',
+    ],
+    # Choice sets used by several fields get one shared name instead of a generated one.
+    'ENUM_NAME_OVERRIDES': {
+        'TimezoneEnum': 'core.timezones.TIMEZONES',
+        'LodgingTypeEnum': 'adventures.models.choices.LODGING_TYPES',
+        'CollectionRoleEnum': 'adventures.models.collection.CollectionMember.Role',
+        'CollectionVisibilityEnum': 'adventures.models.collection.Collection.Visibility',
+        'CollectionTypeEnum': 'adventures.models.collection.Collection.Type',
+        'TripStatusEnum': ['upcoming', 'in_progress', 'completed'],
+        'ImageSourceEnum': 'adventures.models.media.ContentImage.Source',
+        'ItineraryContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist'],
+        'PlaceableContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist', 'visit'],
+        'ImageContentTypeEnum': [
+            'location', 'transportation', 'note', 'lodging', 'visit', 'collectionitineraryday', 'activity', 'trail',
+        ],
+    },
+}
+
+# Hand-written OpenAPI paths for routes that are not DRF views (django-allauth headless).
+OPENAPI_FRAGMENTS = [str(BASE_DIR / 'openapi' / 'allauth.yaml')]
 
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (

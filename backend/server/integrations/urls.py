@@ -1,26 +1,17 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from integrations.views import (
-    EndurainIntegrationViewSet,
-    ImmichIntegrationView,
-    ImmichIntegrationViewSet,
-    IntegrationView,
-    StravaIntegrationView,
-    WandererIntegrationViewSet,
-)
+"""Integration routes. Mounted at ``api/integrations/``. Each integration is a per-user singleton."""
 
-router = DefaultRouter()
-# Two viewsets share the 'immich' prefix. ImmichIntegrationView holds the actions
-# (search, albums, the image proxy); ImmichIntegrationViewSet is the CRUD for the stored
-# integration, whose detail route would also match 'search' and 'albums' as a pk. The
-# actions must be registered first. test_urls.py pins this order.
-router.register(r'immich', ImmichIntegrationView, basename='immich')
-router.register(r'immich', ImmichIntegrationViewSet, basename='immich_viewset')
-router.register(r'', IntegrationView, basename='integrations')
-router.register(r'strava', StravaIntegrationView, basename='strava')
-router.register(r'wanderer', WandererIntegrationViewSet, basename='wanderer')
-router.register(r'endurain', EndurainIntegrationViewSet, basename='endurain')
+from django.urls import include, path
+
+from core.routers import SingletonRouter
+from integrations.views import EndurainViewSet, ImmichViewSet, IntegrationStatusView, StravaViewSet, WandererViewSet
+
+router = SingletonRouter()
+router.register(r'immich', ImmichViewSet, basename='immich')
+router.register(r'strava', StravaViewSet, basename='strava')
+router.register(r'wanderer', WandererViewSet, basename='wanderer')
+router.register(r'endurain', EndurainViewSet, basename='endurain')
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path('', IntegrationStatusView.as_view(), name='integrations'),
+    path('', include(router.urls)),
 ]

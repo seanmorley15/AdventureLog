@@ -1,5 +1,7 @@
-from datetime import datetime, timezone as dt_timezone
+from datetime import timezone as dt_timezone
 from django.db.models import Q
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -11,31 +13,23 @@ from adventures.models import CollectionActivity, CollectionGuestLink, Collectio
 from adventures.services.activity_log import record_activity
 from adventures.models import Collection, CollectionInvite
 from adventures.serializers import _build_profile_pic_url
-from adventures.serializers import CollectionInviteSerializer
+from adventures.serializers import CollectionInviteSerializer, UltraSlimCollectionSerializer
+from adventures.serializers.sharing import (
+    GuestLinkCreateSerializer,
+    InviteCreateSerializer,
+    MemberRoleSerializer,
+    ShareableUserSerializer,
+    ShareableUsersQuerySerializer,
+    SharingStateSerializer,
+)
+from core.exceptions import APIError
+from core.parsing import as_uuid
+from core.serializers import validated
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-
-
-def _parse_datetime(value):
-    if not value:
-        return None
-    if isinstance(value, datetime):
-        return value
-    text = str(value).strip()
-    if text.endswith('Z'):
-        text = text[:-1] + '+00:00'
-    try:
-        return datetime.fromisoformat(text)
-    except ValueError:
-        return None
-
-
-def _parse_role(value):
-    value = (value or CollectionMember.Role.EDITOR)
-    return value if value in CollectionMember.Role.values else None
 
 
 def _sharing_state(collection, request):
@@ -97,94 +91,100 @@ def _sharing_state(collection, request):
     }
 
 
+USER_PARAMETER = OpenApiParameter('user_uuid', OpenApiTypes.UUID, OpenApiParameter.PATH, description='The user\'s `uuid`.')
+LINK_PARAMETER = OpenApiParameter('link_id', OpenApiTypes.UUID, OpenApiParameter.PATH, description='The guest link id.')
+_DELETED = OpenApiResponse(description='Done. No body.')
+
+
 class SharingActionsMixin:
-    """Invites, members, guest links, and who a collection is shared with."""
+    """
+    Invites, members, guest links, and who a collection is shared with.
 
-    @action(detail=True, methods=['post'], url_path='share/(?P<uuid>[^/.]+)')
-    def share(self, request, pk=None, uuid=None):
-        collection = self.get_object()
-        if not uuid:
-            return Response({"error": "User UUID is required"}, status=400)
-        try:
-            user = User.objects.get(uuid=uuid, public_profile=True)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        
+    Everything that changes sharing is for the owner only. Others get a 404 for collections
+    they cannot see.
+    """
+
+    def _owned_collection(self, request, pk):
+        if not request.user.is_authenticated:
+            raise NotFound('Collection not found.')
+        collection = Collection.objects.filter(pk=pk, user=request.user.id).first()
+        if collection is None:
+            raise NotFound('Collection not found.')
+        return collection
+
+    def _sharing_response(self, collection, request, status_code=status.HTTP_200_OK):
+        return Response(_sharing_state(collection, request), status=status_code)
+
+    @extend_schema(tags=['Sharing'], responses=SharingStateSerializer)
+    @action(detail=True, methods=['get'], url_path='sharing')
+    def sharing(self, request, pk=None):
+        """
+        Get the sharing settings
+
+        Owner only. Members and their roles, invites waiting for an answer, guest links, and
+        the public story settings.
+        """
+        return self._sharing_response(self._owned_collection(request, pk), request)
+
+    # -- Invites -------------------------------------------------------------------------
+
+    @extend_schema(tags=['Sharing'], request=InviteCreateSerializer, responses={201: SharingStateSerializer})
+    @action(detail=True, methods=['post'], url_path='invites')
+    def create_invite(self, request, pk=None):
+        """
+        Invite someone
+
+        Owner only. Invites a user with a public profile as an `editor` or `viewer`. They join
+        when they accept. Returns the updated sharing settings.
+        """
+        collection = self._owned_collection(request, pk)
+        params = validated(InviteCreateSerializer, request.data)
+        user = User.objects.filter(uuid=params['user'], public_profile=True).first()
+        if user is None:
+            raise NotFound('User not found.')
         if user == request.user:
-            return Response({"error": "Cannot share with yourself"}, status=400)
-        
-        # Check if user is already shared with the collection
+            raise APIError('You cannot invite yourself.', code='invalid')
         if collection.shared_with.filter(id=user.id).exists():
-            return Response({"error": "Collection is already shared with this user"}, status=400)
-        
-        # Check if there's already a pending invite for this user
+            raise APIError('This person is already a member.', code='conflict', status=status.HTTP_409_CONFLICT)
         if CollectionInvite.objects.filter(collection=collection, invited_user=user).exists():
-            return Response({"error": "Invite already sent to this user"}, status=400)
-        
-        role = _parse_role(request.data.get('role'))
-        if role is None:
-            return Response({"error": "Role must be editor or viewer"}, status=400)
+            raise APIError('This person has already been invited.', code='conflict', status=status.HTTP_409_CONFLICT)
+        CollectionInvite.objects.create(collection=collection, invited_user=user, role=params['role'])
+        return self._sharing_response(collection, request, status.HTTP_201_CREATED)
 
-        # Create the invite instead of directly sharing
-        CollectionInvite.objects.create(
-            collection=collection,
-            invited_user=user,
-            role=role,
-        )
-        
-        return Response({"success": f"Invite sent to {user.username}"})
+    @extend_schema(tags=['Sharing'], parameters=[USER_PARAMETER], responses={204: _DELETED})
+    @action(detail=True, methods=['delete'], url_path=r'invites/(?P<user_uuid>[^/.]+)')
+    def revoke_invite(self, request, pk=None, user_uuid=None):
+        """Withdraw an invite"""
+        collection = self._owned_collection(request, pk)
+        invite = CollectionInvite.objects.filter(collection=collection, invited_user__uuid=as_uuid(user_uuid)).first()
+        if invite is None:
+            raise NotFound('No invite for this person.')
+        invite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['get'], url_path='invites')
-    def invites(self, request):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
-        invites = CollectionInvite.objects.filter(invited_user=request.user)
-        serializer = CollectionInviteSerializer(invites, many=True)
-        
-        return Response(serializer.data)
+    @extend_schema(tags=['Sharing'], responses=CollectionInviteSerializer(many=True))
+    @action(detail=False, methods=['get'], url_path='invitations', pagination_class=None)
+    def invitations(self, request):
+        """
+        List your invitations
 
-    @action(detail=True, methods=['post'], url_path='revoke-invite/(?P<uuid>[^/.]+)')
-    def revoke_invite(self, request, pk=None, uuid=None):
-        """Revoke a pending invite for a collection"""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
-        collection = self.get_object()
-        
-        if not uuid:
-            return Response({"error": "User UUID is required"}, status=400)
-        
-        try:
-            user = User.objects.get(uuid=uuid)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        
-        # Only collection owner can revoke invites
-        if collection.user != request.user:
-            return Response({"error": "Only collection owner can revoke invites"}, status=403)
-        
-        try:
-            invite = CollectionInvite.objects.get(collection=collection, invited_user=user)
-            invite.delete()
-            return Response({"success": f"Invite revoked for {user.username}"})
-        except CollectionInvite.DoesNotExist:
-            return Response({"error": "No pending invite found for this user"}, status=404)
+        Collections other people invited you to, waiting for you to accept or decline.
+        """
+        invites = CollectionInvite.objects.filter(invited_user=request.user).select_related('collection__user')
+        return Response(CollectionInviteSerializer(invites, many=True).data)
 
-    @action(detail=True, methods=['post'], url_path='accept-invite')
+    @extend_schema(tags=['Sharing'], request=None, responses=UltraSlimCollectionSerializer)
+    @action(detail=True, methods=['post'], url_path='invitation/accept')
     def accept_invite(self, request, pk=None):
-        """Accept a collection invite"""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
+        """
+        Accept an invitation
+
+        Joins the collection with the role you were invited with and returns it as a card.
+        """
         collection = self.get_object()
-        
-        try:
-            invite = CollectionInvite.objects.get(collection=collection, invited_user=request.user)
-        except CollectionInvite.DoesNotExist:
-            return Response({"error": "No pending invite found for this collection"}, status=404)
-        
-        # Add user to collection's shared_with with the invited role
+        invite = CollectionInvite.objects.filter(collection=collection, invited_user=request.user).first()
+        if invite is None:
+            raise NotFound('You have no invitation to this collection.')
         collection.shared_with.add(request.user)
         CollectionMember.objects.update_or_create(
             collection=collection, user=request.user, defaults={'role': invite.role}
@@ -193,46 +193,33 @@ class SharingActionsMixin:
             collection, request, CollectionActivity.Verb.MEMBER_ADDED,
             username=request.user.username, role=invite.role,
         )
-        
-        # Delete the invite
         invite.delete()
-        
-        return Response({"success": f"Successfully joined collection: {collection.name}"})
+        return Response(UltraSlimCollectionSerializer(collection, context={'request': request}).data)
 
-    @action(detail=True, methods=['post'], url_path='decline-invite')
+    @extend_schema(tags=['Sharing'], request=None, responses={204: _DELETED})
+    @action(detail=True, methods=['post'], url_path='invitation/decline')
     def decline_invite(self, request, pk=None):
-        """Decline a collection invite"""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
+        """Decline an invitation"""
         collection = self.get_object()
-        
-        try:
-            invite = CollectionInvite.objects.get(collection=collection, invited_user=request.user)
-            invite.delete()
-            return Response({"success": f"Declined invite for collection: {collection.name}"})
-        except CollectionInvite.DoesNotExist:
-            return Response({"error": "No pending invite found for this collection"}, status=404)
+        deleted, _ = CollectionInvite.objects.filter(collection=collection, invited_user=request.user).delete()
+        if not deleted:
+            raise NotFound('You have no invitation to this collection.')
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['get'], url_path='can-share')
-    def can_share(self, request, pk=None):
+    @extend_schema(
+        tags=['Sharing'], parameters=[ShareableUsersQuerySerializer], responses=ShareableUserSerializer(many=True)
+    )
+    @action(detail=True, methods=['get'], url_path='shareable-users', pagination_class=None)
+    def shareable_users(self, request, pk=None):
         """
-        People the owner can invite: public profiles that are not the owner, a
-        member, or already invited. Search with ``q`` (name or username, at
-        least 2 characters). At most ``limit`` rows (default 20, max 50), so
-        the Share sheet stays fast on servers with thousands of users.
+        Find people to invite
+
+        Users with a public profile who are not the owner, a member, or already invited.
+        Search with `q`; a `q` of one character returns nothing.
         """
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
         collection = self.get_object()
-
-        query = (request.query_params.get('q') or '').strip()
-        try:
-            limit = max(1, min(int(request.query_params.get('limit', 20)), 50))
-        except (TypeError, ValueError):
-            limit = 20
-
+        params = validated(ShareableUsersQuerySerializer, request.query_params)
+        query = params['q'].strip()
         candidates = (
             User.objects.filter(public_profile=True)
             .exclude(id=collection.user_id)
@@ -244,16 +231,10 @@ class SharingActionsMixin:
                 return Response([])
             terms = Q()
             for word in query.split()[:3]:
-                terms &= (
-                    Q(username__icontains=word)
-                    | Q(first_name__icontains=word)
-                    | Q(last_name__icontains=word)
-                )
+                terms &= Q(username__icontains=word) | Q(first_name__icontains=word) | Q(last_name__icontains=word)
             candidates = candidates.filter(terms)
 
-        users = candidates.order_by('username').only(
-            'uuid', 'username', 'first_name', 'last_name', 'profile_pic'
-        )[:limit]
+        users = candidates.order_by('username').only('uuid', 'username', 'first_name', 'last_name', 'profile_pic')
         return Response([
             {
                 'uuid': str(user.uuid),
@@ -263,128 +244,107 @@ class SharingActionsMixin:
                 'profile_pic': _build_profile_pic_url(user),
                 'status': 'available',
             }
-            for user in users
+            for user in users[:params['limit']]
         ])
 
-    @action(detail=True, methods=['post'], url_path='unshare/(?P<uuid>[^/.]+)')
-    def unshare(self, request, pk=None, uuid=None):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
-        collection = self.get_object()
-        
-        if not uuid:
-            return Response({"error": "User UUID is required"}, status=400)
-        
-        try:
-            user = User.objects.get(uuid=uuid)
-        except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=404)
-        
-        if user == request.user:
-            return Response({"error": "Cannot unshare with yourself"}, status=400)
-        
-        if not collection.shared_with.filter(id=user.id).exists():
-            return Response({"error": "Collection is not shared with this user"}, status=400)
-        
-        # Remove user from shared_with. Places created in the collection belong to its
-        # owner and stay. A place the member already owned stays theirs and stays linked.
-        collection.shared_with.remove(user)
-        collection.save()
-        record_activity(collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=user.username)
-        
-        return Response({"success": f"Unshared with {user.username}"})
+    # -- Members -------------------------------------------------------------------------
 
+    @extend_schema(
+        methods=['PATCH'], tags=['Sharing'], parameters=[USER_PARAMETER], request=MemberRoleSerializer,
+        responses=SharingStateSerializer, summary="Change a member's role",
+        description='Owner only. Also changes the role of an invite that has not been answered yet.',
+    )
+    @extend_schema(
+        methods=['DELETE'], tags=['Sharing'], parameters=[USER_PARAMETER], request=None, responses={204: _DELETED},
+        summary='Remove a member',
+        description='Owner only. Places they created in the collection belong to the owner and stay.',
+    )
+    @action(detail=True, methods=['patch', 'delete'], url_path=r'members/(?P<user_uuid>[^/.]+)')
+    def member(self, request, pk=None, user_uuid=None):
+        collection = self._owned_collection(request, pk)
+        user_uuid = as_uuid(user_uuid)
+        user = collection.shared_with.filter(uuid=user_uuid).first() if user_uuid else None
+
+        if request.method == 'DELETE':
+            if user is None:
+                raise NotFound('That person is not a member of this collection.')
+            collection.shared_with.remove(user)
+            collection.save()
+            record_activity(collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=user.username)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        role = validated(MemberRoleSerializer, request.data)['role']
+        if user is None:
+            invite = CollectionInvite.objects.filter(collection=collection, invited_user__uuid=user_uuid).first() \
+                if user_uuid else None
+            if invite is None:
+                raise NotFound('That person is not a member of this collection.')
+            invite.role = role
+            invite.save(update_fields=['role', 'updated_at'])
+        else:
+            CollectionMember.objects.update_or_create(collection=collection, user=user, defaults={'role': role})
+        return self._sharing_response(collection, request)
+
+    @extend_schema(tags=['Sharing'], request=None, responses={204: _DELETED})
     @action(detail=True, methods=['post'], url_path='leave')
     def leave(self, request, pk=None):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-        
+        """
+        Leave a collection
+
+        For members. Places you own that are in it stay yours and stay linked.
+        """
         collection = self.get_object()
-        
         if request.user == collection.user:
-            return Response({"error": "Owner cannot leave their own collection"}, status=400)
-        
+            raise APIError('The owner cannot leave their own collection.', code='invalid')
         if not collection.shared_with.filter(id=request.user.id).exists():
-            return Response({"error": "You are not a member of this collection"}, status=400)
-        
-        # Remove the user from shared_with. Their own places stay theirs and stay linked.
+            raise APIError('You are not a member of this collection.', code='invalid')
         collection.shared_with.remove(request.user)
         collection.save()
         record_activity(
             collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=request.user.username, left=True
         )
-        
-        return Response({"success": f"You have left the collection: {collection.name}"})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def _owned_collection(self, request, pk):
-        collection = Collection.objects.filter(pk=pk, user=request.user.id).first()
-        if collection is None:
-            raise NotFound('Collection not found.')
-        return collection
+    # -- Guest links ---------------------------------------------------------------------
 
-    @action(detail=True, methods=['get'], url_path='sharing')
-    def sharing(self, request, pk=None):
-        """Members with roles, pending invites, guest links, and story settings."""
-        if not request.user.is_authenticated:
-            raise NotFound('Collection not found.')
-        collection = self._owned_collection(request, pk)
-        return Response(_sharing_state(collection, request))
-
-    @action(detail=True, methods=['post'], url_path='members/(?P<uuid>[^/.]+)/role')
-    def member_role(self, request, pk=None, uuid=None):
-        if not request.user.is_authenticated:
-            raise NotFound('Collection not found.')
-        collection = self._owned_collection(request, pk)
-        role = _parse_role(request.data.get('role'))
-        if role is None:
-            return Response({"error": "Role must be editor or viewer"}, status=400)
-        user = collection.shared_with.filter(uuid=uuid).first()
-        if user is None:
-            invite = CollectionInvite.objects.filter(collection=collection, invited_user__uuid=uuid).first()
-            if invite is None:
-                return Response({"error": "That person is not a member of this collection"}, status=404)
-            invite.role = role
-            invite.save(update_fields=['role', 'updated_at'])
-        else:
-            CollectionMember.objects.update_or_create(collection=collection, user=user, defaults={'role': role})
-        return Response(_sharing_state(collection, request))
-
+    @extend_schema(tags=['Sharing'], request=GuestLinkCreateSerializer, responses={201: SharingStateSerializer})
     @action(detail=True, methods=['post'], url_path='guest-links')
     def create_guest_link(self, request, pk=None):
-        """Create a guest link with a role and an optional expiry. The owner can create several."""
-        if not request.user.is_authenticated:
-            raise NotFound('Collection not found.')
+        """
+        Create a guest link
+
+        Owner only. Anyone with the link can open the collection without an account, as an
+        `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
+        settings with the new link's `token`.
+        """
         collection = self._owned_collection(request, pk)
-        role = _parse_role(request.data.get('role') or CollectionMember.Role.VIEWER)
-        if role is None:
-            return Response({"error": "Role must be editor or viewer"}, status=400)
-        expires_at = None
-        if request.data.get('expires_at'):
-            expires_at = _parse_datetime(request.data.get('expires_at'))
-            if expires_at is None:
-                return Response({"error": "Use an ISO date and time for expires_at"}, status=400)
+        params = validated(GuestLinkCreateSerializer, request.data)
+        expires_at = params.get('expires_at')
+        if expires_at is not None:
             if timezone.is_naive(expires_at):
                 expires_at = timezone.make_aware(expires_at, dt_timezone.utc)
             if expires_at <= timezone.now():
-                return Response({"error": "The expiry must be in the future"}, status=400)
+                raise APIError('The expiry must be in the future.', code='invalid')
         CollectionGuestLink.objects.create(
-            collection=collection,
-            role=role,
-            label=(request.data.get('label') or '')[:100],
-            expires_at=expires_at,
+            collection=collection, role=params['role'], label=params['label'], expires_at=expires_at,
         )
-        return Response(_sharing_state(collection, request), status=status.HTTP_201_CREATED)
+        return self._sharing_response(collection, request, status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'], url_path='guest-links/(?P<link_id>[^/.]+)/revoke')
+    @extend_schema(tags=['Sharing'], parameters=[LINK_PARAMETER], responses={204: _DELETED})
+    @action(detail=True, methods=['delete'], url_path=r'guest-links/(?P<link_id>[^/.]+)')
     def revoke_guest_link(self, request, pk=None, link_id=None):
-        if not request.user.is_authenticated:
-            raise NotFound('Collection not found.')
+        """
+        Revoke a guest link
+
+        Owner only. The link stops working at once and stays listed as revoked.
+        """
         collection = self._owned_collection(request, pk)
-        link = CollectionGuestLink.objects.filter(collection=collection, pk=link_id).first()
+        link = CollectionGuestLink.objects.filter(collection=collection, pk=as_uuid(link_id)).first() \
+            if as_uuid(link_id) else None
         if link is None:
-            return Response({"error": "Guest link not found"}, status=404)
+            raise NotFound('Guest link not found.')
         if link.revoked_at is None:
             link.revoked_at = timezone.now()
             link.save(update_fields=['revoked_at'])
-        return Response(_sharing_state(collection, request))
+        return Response(status=status.HTTP_204_NO_CONTENT)
+

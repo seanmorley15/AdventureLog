@@ -195,7 +195,7 @@ class LocationDuplicateApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'error': 'name or coordinates are required'})
+        self.assertEqual(response.json()['fields'], {'non_field_errors': ['Send a name or coordinates.']})
 
     def test_check_duplicates_requires_authentication(self):
         self.client.force_authenticate(user=None)

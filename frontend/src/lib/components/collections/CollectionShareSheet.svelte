@@ -3,6 +3,7 @@
 </script>
 
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type {
@@ -130,15 +131,10 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: body === undefined ? undefined : JSON.stringify(body)
 			});
+			// 204 (removed, revoked) has no body: an empty object still means success.
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok) {
-				const message =
-					data?.error ||
-					data?.visibility?.[0] ||
-					data?.visibility ||
-					data?.comment_access?.[0] ||
-					$t('share.update_failed');
-				addToast('error', String(message));
+				addToast('error', apiErrorMessage(data, $t('share.update_failed')));
 				return null;
 			}
 			return data;
@@ -171,7 +167,7 @@
 		searchController = controller;
 		try {
 			const params = new URLSearchParams({ q: query, limit: String(SEARCH_LIMIT) });
-			const res = await fetch(`/api/collections/${collection.id}/can-share/?${params}`, {
+			const res = await fetch(`/api/collections/${collection.id}/shareable-users/?${params}`, {
 				signal: controller.signal
 			});
 			if (res.ok && searchController === controller) searchResults = await res.json();
@@ -211,21 +207,24 @@
 	async function invite(event: SubmitEvent) {
 		event.preventDefault();
 		if (!invitee) return;
-		const data = await request(`/api/collections/${collection.id}/share/${invitee.uuid}/`, 'POST', {
+		const data = await request(`/api/collections/${collection.id}/invites/`, 'POST', {
+			user: invitee.uuid,
 			role: inviteRole
 		});
 		if (data) {
 			addToast('success', $t('share.invite_sent'));
 			resetSearch();
-			await loadSharing();
+			sharing = data as CollectionSharing;
 		}
 	}
 
 	async function setRole(person: CollectionSharingPerson, role: 'editor' | 'viewer') {
 		const data = await request(
-			`/api/collections/${collection.id}/members/${person.uuid}/role/`,
-			'POST',
-			{ role }
+			`/api/collections/${collection.id}/members/${person.uuid}/`,
+			'PATCH',
+			{
+				role
+			}
 		);
 		if (data) {
 			sharing = data as CollectionSharing;
@@ -234,7 +233,10 @@
 	}
 
 	async function removeMember(person: CollectionSharingPerson) {
-		const data = await request(`/api/collections/${collection.id}/unshare/${person.uuid}/`, 'POST');
+		const data = await request(
+			`/api/collections/${collection.id}/members/${person.uuid}/`,
+			'DELETE'
+		);
 		if (data) {
 			addToast('success', `${$t('share.unshared')} ${displayName(person)}`);
 			await loadSharing();
@@ -244,8 +246,8 @@
 
 	async function revokeInvite(person: CollectionSharingPerson) {
 		const data = await request(
-			`/api/collections/${collection.id}/revoke-invite/${person.uuid}/`,
-			'POST'
+			`/api/collections/${collection.id}/invites/${person.uuid}/`,
+			'DELETE'
 		);
 		if (data) {
 			addToast('success', $t('share.invite_revoked'));
@@ -270,11 +272,8 @@
 	}
 
 	async function revokeGuestLink(id: string) {
-		const data = await request(
-			`/api/collections/${collection.id}/guest-links/${id}/revoke/`,
-			'POST'
-		);
-		if (data) sharing = data as CollectionSharing;
+		const data = await request(`/api/collections/${collection.id}/guest-links/${id}/`, 'DELETE');
+		if (data) await loadSharing();
 	}
 
 	function guestUrl(token: string) {

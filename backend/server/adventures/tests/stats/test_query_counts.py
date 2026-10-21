@@ -54,13 +54,14 @@ class ItineraryListQueryTests(QueryCountTestBase):
     def test_listing_items_does_not_query_once_per_item(self):
         trip = Collection.objects.create(user=self.user, name='Trip')
         self.add_items(trip, 3)
-        self.client.get('/api/itineraries/')
-        few, response = count_queries(lambda: self.client.get('/api/itineraries/'))
+        url = f'/api/collections/{trip.id}/itinerary-items/'
+        self.client.get(url)
+        few, response = count_queries(lambda: self.client.get(url))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 3)
 
         self.add_items(trip, 9)
-        many, response = count_queries(lambda: self.client.get('/api/itineraries/'))
+        many, response = count_queries(lambda: self.client.get(url))
         self.assertEqual(len(response.json()), 12)
 
         self.assertEqual(few, many)
@@ -78,7 +79,7 @@ class ItineraryListQueryTests(QueryCountTestBase):
         # A row left behind by older versions: delete the target without the signal's cleanup.
         Location.objects.filter(pk=place.pk)._raw_delete(Location.objects.db)
 
-        response = self.client.get('/api/itineraries/')
+        response = self.client.get(f'/api/collections/{trip.id}/itinerary-items/')
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual([row['id'] for row in response.json()], [str(item.id)])
@@ -102,13 +103,13 @@ class MapPinQueryTests(QueryCountTestBase):
                 )
 
         add_photos(2)
-        self.client.get('/api/images/map_pins/')  # warm Django's ContentType cache
-        few, response = count_queries(lambda: self.client.get('/api/images/map_pins/'))
+        self.client.get('/api/images/map-pins/')  # warm Django's ContentType cache
+        few, response = count_queries(lambda: self.client.get('/api/images/map-pins/'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 2)
 
         add_photos(8)
-        many, response = count_queries(lambda: self.client.get('/api/images/map_pins/'))
+        many, response = count_queries(lambda: self.client.get('/api/images/map-pins/'))
         self.assertEqual(len(response.json()), 10)
 
         self.assertEqual(few, many)
@@ -205,15 +206,15 @@ class DashboardQueryTests(QueryCountTestBase):
     def test_dashboard_query_count_does_not_grow_with_places_or_trips(self):
         self.add_recent_place(0)
         self.add_trip(0)
-        self.client.get('/api/stats/dashboard/')
-        few, response = count_queries(lambda: self.client.get('/api/stats/dashboard/'))
+        self.client.get('/api/dashboard/')
+        few, response = count_queries(lambda: self.client.get('/api/dashboard/'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()['recent_locations']), 1)
 
         for index in range(1, 3):
             self.add_recent_place(index)
             self.add_trip(index)
-        many, response = count_queries(lambda: self.client.get('/api/stats/dashboard/'))
+        many, response = count_queries(lambda: self.client.get('/api/dashboard/'))
         data = response.json()
         self.assertEqual(len(data['recent_locations']), 3)
         self.assertEqual(len(data['upcoming_trips']), 3)
@@ -280,9 +281,9 @@ class QueryCountTests(APITestCase):
         self.client.force_authenticate(user=None)
         self.assert_flat(f'/api/collections/{self.trip.id}/', 'story')
 
-    def test_location_list_all_and_pins_do_not_grow(self):
+    def test_location_list_and_pins_do_not_grow(self):
         self.assert_flat('/api/locations/', 'locations list')
-        self.assert_flat('/api/locations/all/', 'locations all', include_collections='true')
+        self.assert_flat('/api/locations/', 'locations in collections', in_collection='true')
         self.assert_flat('/api/locations/pins/', 'pins')
 
     def test_collection_lists_do_not_grow_with_collections(self):
@@ -328,6 +329,6 @@ class CurrentUserCountsTests(APITestCase):
 
         CollectionInvite.objects.create(collection=trip, invited_user=user)
         self.client.force_authenticate(user=user)
-        body = self.client.get('/auth/current-user/').json()
+        body = self.client.get('/api/account/').json()
         self.assertEqual(body['pending_invite_count'], 1)
         self.assertEqual(body['unread_comment_count'], 0)

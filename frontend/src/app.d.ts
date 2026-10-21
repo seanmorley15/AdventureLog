@@ -33,7 +33,7 @@ declare global {
 			} | null;
 			hasAccess: boolean;
 			cloudMode: boolean;
-			/** Navbar badges, read from /auth/current-user/ with the rest of the session. */
+			/** Navbar badges, read from /api/account/ with the rest of the session. */
 			pendingInviteCount?: number;
 			unreadCommentCount?: number;
 			locale: string;

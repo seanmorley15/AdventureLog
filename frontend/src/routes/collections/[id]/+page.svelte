@@ -272,7 +272,7 @@
 		try {
 			const secret = $page.url.searchParams.get('s');
 			const res = await fetch(
-				`/api/collections/${collection.id}/export-pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
+				`/api/collections/${collection.id}/pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
 			);
 			if (!res.ok) {
 				addToast('error', $t('adventures.export_pdf_failed'));
@@ -542,11 +542,10 @@
 	) {
 		if (!collection || !dayPlanner) return;
 		if (alreadyPlaced(type, objectId, dayIndex, isGlobal)) return;
-		const response = await fetch('/api/itineraries/', {
+		const response = await fetch(`/api/collections/${collection.id}/itinerary-items/`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				collection: collection.id,
 				content_type: type,
 				object_id: objectId,
 				day_index: isGlobal ? null : dayIndex,

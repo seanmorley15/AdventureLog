@@ -1,33 +1,35 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+
 from adventures.models import Category, Location
 from adventures.serializers import CategorySerializer
+from core.exceptions import APIError
 
+
+@extend_schema_view(
+    destroy=extend_schema(
+        description='Its locations move to the `general` category, which is created if needed. The `general` '
+        'category itself cannot be deleted (`400 protected_category`).'
+    ),
+)
 class CategoryViewSet(viewsets.ModelViewSet):
+    """Your location categories, each with a `name` (a slug), a `display_name` and an emoji `icon`."""
+
+    openapi_tags = ['Categories & tags']
+    openapi_resource_plural = 'categories'
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Category.objects.none()
         return Category.objects.filter(user=self.request.user)
 
-    def list(self, request, *args, **kwargs):
-        """
-        Retrieve a list of distinct categories for locations associated with the current user.
-        """
-        categories = self.get_queryset().distinct()
-        serializer = self.get_serializer(categories, many=True)
-        return Response(serializer.data)
-    
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.user != request.user:
-            return Response({"error": "User does not own this category"}, status
-            =400)
-        
         if instance.name == 'general':
-            return Response({"error": "Cannot delete the general category"}, status=400)
-        
+            raise APIError('The general category cannot be deleted.', code='protected_category')
+
         # set any locations with this category to a default category called general before deleting the category, if general does not exist create it for the user
         general_category = Category.objects.filter(user=request.user, name='general').first()
 

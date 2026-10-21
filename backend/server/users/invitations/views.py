@@ -7,11 +7,14 @@ from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from invitations.adapters import get_invitations_adapter
 from invitations.app_settings import app_settings
+from drf_spectacular.utils import extend_schema
 from invitations.views import AcceptInvite as BaseAcceptInvite
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from users.invitations.signup import inspect_invite_key, invitation_is_expired, stash_invite_email
+from users.serializers import InviteStatusSerializer
 
 # django-invitations keys are lowercase alphanumeric tokens.
 _INVITE_KEY_PATTERN = re.compile(r'[a-z0-9]+')
@@ -99,23 +102,29 @@ class AcceptInviteView(BaseAcceptInvite):
 
 
 class InviteSignupStatusView(APIView):
-    """Validate an invite key and stash the invited email in the Django session."""
-
+    openapi_tags = ['Authentication']
+    permission_classes = [AllowAny]
     throttle_classes = []
 
+    @extend_schema(responses=InviteStatusSerializer)
     def get(self, request, key):
+        """
+        Check an invitation
+
+        Whether an email invitation can be used to sign up, and the email it was sent to.
+        When it can, the email is remembered in the session so the sign-up that follows is
+        tied to the invitation. Unusable invites still answer 200 with `valid: false` and a
+        `message`.
+        """
         status = inspect_invite_key(key)
-        payload = {
+        if status.valid and status.email:
+            stash_invite_email(request, status.email)
+            request.session.modified = True
+        return Response({
             'valid': status.valid,
             'email': status.email,
             'expired': status.expired,
             'accepted': status.accepted,
             'registered': status.registered,
             'message': status.message,
-        }
-
-        if status.valid and status.email:
-            stash_invite_email(request, status.email)
-            request.session.modified = True
-
-        return Response(payload, status=200 if status.valid else 400)
+        })

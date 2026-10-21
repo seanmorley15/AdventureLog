@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import type { ContentImage, ImageSource } from '$lib/types';
 	import { normalizeContentImage } from '$lib/images';
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -182,7 +183,7 @@
 	async function fetchImageFromUrl(imageUrl: string): Promise<Blob | null> {
 		try {
 			// Use backend proxy to avoid CORS issues with external URLs (Wikipedia, etc.)
-			const res = await fetch('/api/images/fetch_from_url/', {
+			const res = await fetch('/api/images/fetch-from-url/', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -193,7 +194,7 @@
 				let errorMsg = 'Failed to fetch image';
 				try {
 					const errorData = await res.json();
-					errorMsg = errorData.error || errorMsg;
+					errorMsg = apiErrorMessage(errorData, errorMsg);
 				} catch {
 					// Response wasn't JSON (e.g. timeout), use default message
 				}
@@ -270,7 +271,7 @@
 
 		try {
 			const res = await fetch(
-				`/api/generate/img/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
+				`/api/places/images/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
 			);
 			const data = await res.json();
 
@@ -331,7 +332,7 @@
 
 	async function makePrimaryImage(imageId: string) {
 		try {
-			const res = await fetch(`/api/images/${imageId}/toggle_primary`, {
+			const res = await fetch(`/api/images/${imageId}/toggle-primary/`, {
 				method: 'POST'
 			});
 
@@ -353,8 +354,8 @@
 
 	async function removeImage(imageId: string) {
 		try {
-			const res = await fetch(`/api/images/${imageId}/image_delete`, {
-				method: 'POST'
+			const res = await fetch(`/api/images/${imageId}/`, {
+				method: 'DELETE'
 			});
 
 			if (res.status === 204) {
@@ -422,7 +423,7 @@
 		googlePhotoError = '';
 
 		try {
-			const res = await fetch('/api/images/import_from_urls/', {
+			const res = await fetch('/api/images/import-from-urls/', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

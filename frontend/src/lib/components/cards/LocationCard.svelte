@@ -137,9 +137,12 @@
 
 	async function removeFromItinerary() {
 		let itineraryItemId = itineraryItem?.id;
-		let res = await fetch(`/api/itineraries/${itineraryItemId}`, {
-			method: 'DELETE'
-		});
+		let res = await fetch(
+			`/api/collections/${itineraryItem?.collection}/itinerary-items/${itineraryItemId}/`,
+			{
+				method: 'DELETE'
+			}
+		);
 		if (res.ok) {
 			addToast('info', $t('itinerary.item_remove_success'));
 			dispatch('removeFromItinerary', itineraryItem);
@@ -187,7 +190,7 @@
 		if (isDuplicating) return;
 		isDuplicating = true;
 		try {
-			const duplicatePayload = collection?.id ? { collection_id: collection.id } : null;
+			const duplicatePayload = collection?.id ? { collection: collection.id } : null;
 			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },

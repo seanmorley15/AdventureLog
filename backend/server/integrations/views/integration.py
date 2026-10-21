@@ -1,41 +1,30 @@
-from rest_framework.response import Response
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
-from integrations.models import ImmichIntegration, StravaToken, WandererIntegration, EndurainIntegration
 from django.conf import settings
+from drf_spectacular.utils import extend_schema
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from integrations.models import EndurainIntegration, ImmichIntegration, StravaToken, WandererIntegration
+from integrations.serializers import IntegrationStatusSerializer
 
 
-class IntegrationView(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-    def list(self, request):
+class IntegrationStatusView(APIView):
+    openapi_tags = ['Integrations']
+
+    @extend_schema(responses=IntegrationStatusSerializer)
+    def get(self, request):
         """
-        RESTful GET method for listing all integrations.
-        """
-        immich_integrations = ImmichIntegration.objects.filter(user=request.user)
-        immich_integration = immich_integrations.first()
-        google_map_integration = settings.GOOGLE_MAPS_API_KEY != ''
-        strava_integration_global = settings.STRAVA_CLIENT_ID != '' and settings.STRAVA_CLIENT_SECRET != ''
-        strava_integration_user = StravaToken.objects.filter(user=request.user).exists()
-        wanderer_integration = WandererIntegration.objects.filter(user=request.user).exists()
-        endurain_integration = EndurainIntegration.objects.filter(user=request.user).exists()
+        Get your integrations
 
-        return Response(
-            {
-                'immich': {
-                    'exists': immich_integration is not None,
-                    'copy_locally': immich_integration.copy_locally if immich_integration else False,
-                },
-                'google_maps': google_map_integration,
-                'strava': {
-                    'global': strava_integration_global,
-                    'user': strava_integration_user
-                },
-                'wanderer': {
-                    'exists': wanderer_integration,
-                },
-                'endurain': {
-                    'exists': endurain_integration,
-                }
+        Which outside services you have connected, and which the server supports.
+        """
+        immich = ImmichIntegration.objects.filter(user=request.user).first()
+        return Response({
+            'immich': {'exists': immich is not None, 'copy_locally': immich.copy_locally if immich else False},
+            'google_maps': settings.GOOGLE_MAPS_API_KEY != '',
+            'strava': {
+                'global': settings.STRAVA_CLIENT_ID != '' and settings.STRAVA_CLIENT_SECRET != '',
+                'user': StravaToken.objects.filter(user=request.user).exists(),
             },
-            status=status.HTTP_200_OK
-        )
+            'wanderer': {'exists': WandererIntegration.objects.filter(user=request.user).exists()},
+            'endurain': {'exists': EndurainIntegration.objects.filter(user=request.user).exists()},
+        })

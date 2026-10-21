@@ -5,6 +5,7 @@ import { getRandomBackground, getRandomQuote } from '$lib';
 import {
 	csrfFail,
 	djangoBrowserFetch,
+	fetchAuthConfig,
 	fetchPasswordPolicy,
 	fetchSignupLegalLinks,
 	getServerEndpoint,
@@ -26,20 +27,17 @@ export const load: PageServerLoad = async (event) => {
 	const inviteKey = getInviteKeyFromUrl(event.url);
 	const inviteSignup = inviteKey ? await prepareInviteSignup(event, inviteKey) : null;
 
-	const [isDisabledFetch, passwordPolicy, signupLegalLinks] = await Promise.all([
-		event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`),
-		fetchPasswordPolicy(event.fetch, serverEndpoint),
-		fetchSignupLegalLinks(event.fetch, serverEndpoint)
-	]);
-	const isDisabledJson = await isDisabledFetch.json();
+	const authConfig = await fetchAuthConfig(event.fetch, serverEndpoint);
+	const passwordPolicy = authConfig.password_policy;
+	const signupLegalLinks = authConfig.legal_links;
 	const quote = getRandomQuote();
 	const background = getRandomBackground();
 	const inviteAllowsSignup = inviteSignup?.valid === true;
 
 	return {
 		props: {
-			is_disabled: inviteAllowsSignup ? false : isDisabledJson.is_disabled,
-			is_disabled_message: isDisabledJson.message,
+			is_disabled: inviteAllowsSignup ? false : !authConfig.registration.enabled,
+			is_disabled_message: authConfig.registration.message,
 			invite_key: inviteKey || null,
 			inviteSignup,
 			passwordPolicy,
@@ -102,7 +100,7 @@ export const actions: Actions = {
 			}
 		}
 
-		const signupFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/signup', {
+		const signupFetch = await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/signup', {
 			method: 'POST',
 			csrfToken,
 			headers: { 'Content-Type': 'application/json' },

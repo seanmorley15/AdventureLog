@@ -1,7 +1,7 @@
-from rest_framework.response import Response
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
 import requests
 import logging
 import time
@@ -12,6 +12,8 @@ from django.core import signing
 from django.shortcuts import redirect
 from django.conf import settings
 from integrations.models import StravaToken
+from core.exceptions import APIError
+from core.serializers import validated
 from core.timezones import TIMEZONES
 
 logger = logging.getLogger(__name__)
@@ -23,8 +25,30 @@ STRAVA_REQUEST_TIMEOUT = 15
 STRAVA_STATE_SALT = 'integrations.strava.oauth-state'
 STRAVA_STATE_MAX_AGE = 600
 
-class StravaIntegrationView(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+class StravaActivitiesQuerySerializer(serializers.Serializer):
+    start_date = serializers.CharField(required=False, help_text='ISO 8601 date or date-time; activities after it.')
+    end_date = serializers.CharField(required=False, help_text='ISO 8601 date or date-time; activities before it.')
+    page = serializers.IntegerField(default=1, min_value=1)
+    per_page = serializers.IntegerField(default=30, min_value=1, max_value=200)
+
+
+STRAVA_ACTIVITY = {
+    'type': 'object',
+    'description': 'An activity normalized from Strava: distances in meters, times in seconds, speeds in m/s, '
+    'plus `export_gpx`, `timezone` (IANA) and convenience units (`distance_km`, `average_speed_kmh`, ...).',
+}
+_NOT_CONNECTED = OpenApiResponse(description='You have not connected Strava (`strava.not_authorized`).')
+_UPSTREAM = OpenApiResponse(description='Strava failed (`strava.fetch_failed`, `strava.connection_failed`).')
+
+
+class StravaViewSet(viewsets.GenericViewSet):
+    """
+    Your connection to Strava, for importing activities. The server needs a Strava app
+    (`STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`). Routed as a singleton.
+    """
+
+    openapi_tags = ['Integrations']
+    queryset = StravaToken.objects.none()
 
     def extract_timezone_from_strava(self, strava_timezone):
         """
@@ -61,10 +85,16 @@ class StravaIntegrationView(viewsets.ViewSet):
         
         return None
 
+    @extend_schema(responses=inline_serializer('StravaAuthorize', fields={
+        'auth_url': serializers.URLField(help_text="Send the browser here to approve access on Strava's site."),
+    }))
     @action(detail=False, methods=['get'], url_path='authorize')
     def authorize(self, request):
         """
-        Redirects the user to Strava's OAuth authorization page.
+        Start connecting Strava
+
+        Returns the Strava page where you approve access. Strava then sends the browser to
+        `callback/`, which finishes the connection.
         """
         client_id = settings.STRAVA_CLIENT_ID
         redirect_uri = f"{settings.PUBLIC_URL}/api/integrations/strava/callback/"
@@ -84,22 +114,28 @@ class StravaIntegrationView(viewsets.ViewSet):
 
         return Response({'auth_url': auth_url}, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter('code', str, required=True, description='From Strava.'),
+            OpenApiParameter('state', str, required=True, description='From `authorize/`, passed back by Strava.'),
+        ],
+        responses={
+            302: OpenApiResponse(description='Connected; redirects to the settings page of the app.'),
+            400: OpenApiResponse(description='Missing code, or the approval expired or started elsewhere '
+                                 '(`strava.invalid_state`).'),
+            502: _UPSTREAM,
+        },
+    )
     @action(detail=False, methods=['get'], url_path='callback')
     def callback(self, request):
         """
-        Handles the OAuth callback from Strava and exchanges the code for an access token.
-        Saves or updates the StravaToken model instance for the authenticated user.
+        Finish connecting Strava
+
+        Strava sends the browser here after you approve access. Not called by API clients.
         """
         code = request.query_params.get('code')
         if not code:
-            return Response(
-                {
-                    'message': 'Missing authorization code from Strava.',
-                    'error': True,
-                    'code': 'strava.missing_code'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            raise APIError('Missing authorization code from Strava.', code='strava.missing_code', status=status.HTTP_400_BAD_REQUEST)
 
         try:
             state = signing.loads(
@@ -108,14 +144,7 @@ class StravaIntegrationView(viewsets.ViewSet):
         except signing.BadSignature:
             state = None
         if not state or state.get('user') != request.user.pk:
-            return Response(
-                {
-                    'message': 'The Strava authorization expired or did not start here. Try connecting again.',
-                    'error': True,
-                    'code': 'strava.invalid_state'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            raise APIError('The Strava authorization expired or did not start here. Try connecting again.', code='strava.invalid_state', status=status.HTTP_400_BAD_REQUEST)
 
         token_url = 'https://www.strava.com/oauth/token'
         payload = {
@@ -131,15 +160,7 @@ class StravaIntegrationView(viewsets.ViewSet):
 
             if response.status_code != 200:
                 logger.warning("Strava token exchange failed: %s", response_data)
-                return Response(
-                    {
-                        'message': 'Failed to exchange code for access token.',
-                        'error': True,
-                        'code': 'strava.exchange_failed',
-                        'details': response_data.get('message', 'Unknown error')
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                raise APIError('Failed to exchange code for access token.', code='strava.exchange_failed', status=status.HTTP_502_BAD_GATEWAY, details=response_data.get('message', 'Unknown error'))
 
             logger.info("Strava token exchange successful for user %s", request.user.username)
 
@@ -163,45 +184,22 @@ class StravaIntegrationView(viewsets.ViewSet):
 
         except requests.RequestException as e:
             logger.error("Error during Strava OAuth token exchange: %s", str(e))
-            return Response(
-                {
-                    'message': 'Failed to connect to Strava.',
-                    'error': True,
-                    'code': 'strava.connection_failed'
-                },
-                status=status.HTTP_502_BAD_GATEWAY
-            )
+            raise APIError('Failed to connect to Strava.', code='strava.connection_failed', status=status.HTTP_502_BAD_GATEWAY)
         
-    @action(detail=False, methods=['post'], url_path='disable')
-    def disable(self, request):
-        """
-        Disables the Strava integration for the authenticated user by deleting their StravaToken.
-        """
+    @extend_schema(responses={204: OpenApiResponse(description='Disconnected.'), 404: _NOT_CONNECTED})
+    def destroy(self, request):
+        """Disconnect Strava"""
         strava_token = StravaToken.objects.filter(user=request.user).first()
         if not strava_token:
-            return Response(
-                {
-                    'message': 'Strava integration is not enabled for this user.',
-                    'error': True,
-                    'code': 'strava.not_enabled'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
+            raise APIError('Strava integration is not enabled for this user.', code='strava.not_enabled', status=status.HTTP_404_NOT_FOUND)
 
         strava_token.delete()
-        return Response(
-            {'message': 'Strava integration disabled successfully.'},
-            status=status.HTTP_204_NO_CONTENT
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
         
     def refresh_strava_token_if_needed(self, user):
         strava_token = StravaToken.objects.filter(user=user).first()
         if not strava_token:
-            return None, Response({
-                'message': 'You need to authorize Strava first.',
-                'error': True,
-                'code': 'strava.not_authorized'
-            }, status=status.HTTP_403_FORBIDDEN)
+            raise APIError('You need to authorize Strava first.', code='strava.not_authorized', status=status.HTTP_404_NOT_FOUND)
 
         now = int(time.time())
         # If token expires in less than 5 minutes, refresh it
@@ -223,24 +221,15 @@ class StravaIntegrationView(viewsets.ViewSet):
                     strava_token.refresh_token = data['refresh_token']
                     strava_token.expires_at = data['expires_at']
                     strava_token.save()
-                    return strava_token, None
+                    return strava_token
                 else:
                     logger.error(f"Failed to refresh Strava token: {data}")
-                    return None, Response({
-                        'message': 'Failed to refresh Strava token.',
-                        'error': True,
-                        'code': 'strava.refresh_failed',
-                        'details': data.get('message', 'Unknown error')
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                    raise APIError('Failed to refresh Strava token.', code='strava.refresh_failed', status=status.HTTP_502_BAD_GATEWAY, details=data.get('message', 'Unknown error'))
             except requests.RequestException as e:
                 logger.error(f"Error refreshing Strava token: {str(e)}")
-                return None, Response({
-                    'message': 'Failed to connect to Strava for token refresh.',
-                    'error': True,
-                    'code': 'strava.connection_failed'
-                }, status=status.HTTP_502_BAD_GATEWAY)
+                raise APIError('Failed to connect to Strava for token refresh.', code='strava.connection_failed', status=status.HTTP_502_BAD_GATEWAY)
 
-        return strava_token, None
+        return strava_token
 
     def extract_essential_activity_info(self, activity):
         """
@@ -386,57 +375,53 @@ class StravaIntegrationView(viewsets.ViewSet):
         else:
             return f"{minutes}:{seconds:02d}"
 
+    @extend_schema(
+        parameters=[StravaActivitiesQuerySerializer],
+        responses={
+            200: inline_serializer('StravaActivityList', fields={
+                'activities': serializers.ListField(child=serializers.DictField()),
+                'count': serializers.IntegerField(help_text='Activities on this page.'),
+                'page': serializers.IntegerField(),
+                'per_page': serializers.IntegerField(),
+            }),
+            404: _NOT_CONNECTED,
+            502: _UPSTREAM,
+        },
+    )
     @action(detail=False, methods=['get'], url_path='activities')
     def activities(self, request):
-        strava_token, error_response = self.refresh_strava_token_if_needed(request.user)
-        if error_response:
-            return error_response
+        """
+        List your Strava activities
 
-        # Get date parameters from query string
-        start_date = request.query_params.get('start_date')
-        end_date = request.query_params.get('end_date')
-        per_page = request.query_params.get('per_page', 30)  # Default to 30 activities
-        page = request.query_params.get('page', 1)
-        
-        # Build query parameters for Strava API
-        params = {
-            'per_page': min(int(per_page), 200),  # Strava max is 200
-            'page': int(page)
-        }
+        Newest first, a page at a time, optionally between two dates. Strava's own paging:
+        there is no total count.
+        """
+        query = validated(StravaActivitiesQuerySerializer, request.query_params)
+        strava_token = self.refresh_strava_token_if_needed(request.user)
+        start_date, end_date = query.get('start_date'), query.get('end_date')
+        page, per_page = query['page'], query['per_page']
+        params = {'per_page': per_page, 'page': page}
         
         if start_date:
             try:
                 start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
                 params['after'] = int(start_dt.timestamp())
             except ValueError:
-                return Response({
-                    'message': 'Invalid start_date format. Use ISO format (e.g., 2024-01-01T00:00:00Z)',
-                    'error': True,
-                    'code': 'strava.invalid_start_date'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                raise APIError('Invalid start_date format. Use ISO format (e.g., 2024-01-01T00:00:00Z)', code='strava.invalid_start_date', status=status.HTTP_400_BAD_REQUEST)
         
         if end_date:
             try:
                 end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
                 params['before'] = int(end_dt.timestamp())
             except ValueError:
-                return Response({
-                    'message': 'Invalid end_date format. Use ISO format (e.g., 2024-12-31T23:59:59Z)',
-                    'error': True,
-                    'code': 'strava.invalid_end_date'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                raise APIError('Invalid end_date format. Use ISO format (e.g., 2024-12-31T23:59:59Z)', code='strava.invalid_end_date', status=status.HTTP_400_BAD_REQUEST)
 
         headers = {'Authorization': f'Bearer {strava_token.access_token}'}
         try:
             response = requests.get('https://www.strava.com/api/v3/athlete/activities', 
                                 headers=headers, params=params, timeout=STRAVA_REQUEST_TIMEOUT)
             if response.status_code != 200:
-                return Response({
-                    'message': 'Failed to fetch activities from Strava.',
-                    'error': True,
-                    'code': 'strava.fetch_failed',
-                    'details': response.json().get('message', 'Unknown error')
-                }, status=status.HTTP_400_BAD_REQUEST)
+                raise APIError('Failed to fetch activities from Strava.', code='strava.fetch_failed', status=status.HTTP_502_BAD_GATEWAY, details=response.json().get('message', 'Unknown error'))
 
             activities = response.json()
             essential_activities = [self.extract_essential_activity_info(act) for act in activities]
@@ -444,41 +429,29 @@ class StravaIntegrationView(viewsets.ViewSet):
             return Response({
                 'activities': essential_activities,
                 'count': len(essential_activities),
-                'page': int(page),
-                'per_page': int(per_page)
-            }, status=status.HTTP_200_OK)
+                'page': page,
+                'per_page': per_page,
+            })
 
         except requests.RequestException as e:
             logger.error(f"Error fetching Strava activities: {str(e)}")
-            return Response({
-                'message': 'Failed to connect to Strava.',
-                'error': True,
-                'code': 'strava.connection_failed'
-            }, status=status.HTTP_502_BAD_GATEWAY)
+            raise APIError('Failed to connect to Strava.', code='strava.connection_failed', status=status.HTTP_502_BAD_GATEWAY)
 
+    @extend_schema(
+        parameters=[OpenApiParameter('activity_id', str, OpenApiParameter.PATH, description='The Strava activity id.')],
+        responses={200: STRAVA_ACTIVITY, 404: _NOT_CONNECTED, 502: _UPSTREAM},
+    )
     @action(detail=False, methods=['get'], url_path='activities/(?P<activity_id>[^/.]+)')
     def activity(self, request, activity_id=None):
-        if not activity_id:
-            return Response({
-                'message': 'Activity ID is required.',
-                'error': True,
-                'code': 'strava.activity_id_required'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        """Get a Strava activity"""
 
-        strava_token, error_response = self.refresh_strava_token_if_needed(request.user)
-        if error_response:
-            return error_response
+        strava_token = self.refresh_strava_token_if_needed(request.user)
 
         headers = {'Authorization': f'Bearer {strava_token.access_token}'}
         try:
             response = requests.get(f'https://www.strava.com/api/v3/activities/{activity_id}', headers=headers, timeout=STRAVA_REQUEST_TIMEOUT)
             if response.status_code != 200:
-                return Response({
-                    'message': 'Failed to fetch activity from Strava.',
-                    'error': True,
-                    'code': 'strava.fetch_failed',
-                    'details': response.json().get('message', 'Unknown error')
-                }, status=status.HTTP_400_BAD_REQUEST)
+                raise APIError('Failed to fetch activity from Strava.', code='strava.fetch_failed', status=status.HTTP_502_BAD_GATEWAY, details=response.json().get('message', 'Unknown error'))
 
             activity = response.json()
             essential_activity = self.extract_essential_activity_info(activity)
@@ -486,8 +459,4 @@ class StravaIntegrationView(viewsets.ViewSet):
 
         except requests.RequestException as e:
             logger.error(f"Error fetching Strava activity: {str(e)}")
-            return Response({
-                'message': 'Failed to connect to Strava.',
-                'error': True,
-                'code': 'strava.connection_failed'
-            }, status=status.HTTP_502_BAD_GATEWAY)
+            raise APIError('Failed to connect to Strava.', code='strava.connection_failed', status=status.HTTP_502_BAD_GATEWAY)

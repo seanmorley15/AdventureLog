@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from users.invitations.signup import invite_email_for_request, request_has_valid_invite
 
-HEADLESS_AUTH_PREFIXES = ('/auth/browser/', '/auth/app/')
+HEADLESS_AUTH_PREFIXES = ('/api/auth/browser/', '/api/auth/app/')
 
 
 def _is_headless_auth_request(request) -> bool:

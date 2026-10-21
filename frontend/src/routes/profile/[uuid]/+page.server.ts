@@ -16,7 +16,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	// let sessionId = event.cookies.get('sessionid');
 	let stats = null;
 
-	let res = await event.fetch(`${endpoint}/api/stats/counts/${username}`, {
+	let res = await event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/stats/`, {
 		headers: {
 			'Content-Type': 'application/json',
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
@@ -28,7 +28,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 		stats = await res.json();
 	}
 
-	let userData = await event.fetch(`${endpoint}/auth/user/${username}/`, {
+	let userData = await event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/`, {
 		headers: {
 			'Content-Type': 'application/json',
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
@@ -42,7 +42,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 
 	return {
 		user: data.user,
-		adventures: data.adventures,
+		adventures: data.locations,
 		collections: data.collections,
 		stats: stats
 	};

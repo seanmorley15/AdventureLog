@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '$lib/api';
 import { DEFAULT_CURRENCY, normalizeMoneyPayload } from '$lib/money';
 import type { Location } from '$lib/types';
 
@@ -28,16 +29,8 @@ function sanitizeLink(value: unknown): string | null {
 	}
 }
 
-function parseApiError(errorData: any): string {
-	let errorMsg = errorData?.detail || errorData?.name?.[0] || '';
-	if (errorMsg) return String(errorMsg);
-
-	const fieldErrors = Object.entries(errorData || {})
-		.filter(([_, value]) => Array.isArray(value))
-		.map(([key, value]) => `${key}: ${(value as string[]).join(', ')}`)
-		.join('; ');
-
-	return fieldErrors || 'Failed to save location';
+function parseApiError(errorData: unknown): string {
+	return apiErrorMessage(errorData, 'Failed to save location');
 }
 
 export async function saveLocation({

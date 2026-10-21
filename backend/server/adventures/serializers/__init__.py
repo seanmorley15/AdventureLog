@@ -22,8 +22,6 @@ from .activity import (
 )
 from .location import (
     CategorySerializer,
-    CalendarVisitSerializer,
-    CalendarLocationSerializer,
     LocationListSerializer,
     LocationSerializer,
     MapPinSerializer,

@@ -235,7 +235,7 @@ export function getImagePinParentTypeKey(parentType: string): string {
 }
 
 export async function fetchImageMapPins(): Promise<ImageMapPin[]> {
-	const response = await fetch('/api/images/map_pins/', { credentials: 'same-origin' });
+	const response = await fetch('/api/images/map-pins/', { credentials: 'same-origin' });
 	if (!response.ok) {
 		throw new Error(`Failed to fetch image map pins (${response.status})`);
 	}

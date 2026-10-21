@@ -1,26 +1,69 @@
-from adventures.models import Location, Collection, CollectionItineraryItem, Transportation, Note, Lodging, Visit, Checklist, CollectionItineraryDay
-from django.utils.dateparse import parse_date, parse_datetime
+"""
+The day plan of a trip, under ``/api/collections/{collection_id}/``.
+
+- ``itinerary-items/``: placements of records on days, the trip-wide list, or Ideas.
+- ``days/``: the numbered days.
+- ``itinerary/``: the whole plan, and changes that touch all of it (reorder, length, shift).
+
+The rules live in ``adventures.services.day_plan``; these views only translate HTTP.
+"""
+
 from django.contrib.contenttypes.models import ContentType
-from django.db import IntegrityError, models
+from django.db import IntegrityError, models, transaction
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.response import Response
+
+from adventures.access.audience import is_member
+from adventures.models import (
+    Activity,
+    Checklist,
+    CollectionActivity,
+    CollectionItineraryDay,
+    CollectionItineraryItem,
+    Location,
+    Lodging,
+    Note,
+    Transportation,
+    Visit,
+)
+from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import (
-    CollectionItineraryItemSerializer,
     CollectionItineraryDaySerializer,
+    CollectionItineraryItemSerializer,
     VisitSerializer,
     plan_state,
     serialize_updated_object,
 )
-from adventures.services.day_plan.legacy import reorder_itinerary_items
-from adventures.services.day_plan.legacy import auto_generate_itinerary
+from adventures.serializers.day_plan import (
+    AutoGenerateResultSerializer,
+    DayDeleteQuerySerializer,
+    DayInsertSerializer,
+    DayMoveSerializer,
+    DurationSerializer,
+    ItemDeleteQuerySerializer,
+    ItineraryItemCreateSerializer,
+    ItineraryItemResultSerializer,
+    ItineraryItemUpdateSerializer,
+    LogDayResultSerializer,
+    LogItemResultSerializer,
+    LogVisitSerializer,
+    PlanByDaysSerializer,
+    PlanStateSerializer,
+    PlanStateWithDaySerializer,
+    ReorderResultSerializer,
+    ReorderSerializer,
+    ShiftSerializer,
+)
 from adventures.services import day_plan
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError, PermissionDenied
-from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.access.audience import can_edit, member_collections_q
 from adventures.services.activity_log import record_activity
-from adventures.models import CollectionActivity
-from django.db import transaction
+from adventures.services.day_plan.files import location_stops_on_day, serialize_day_files
+from adventures.services.day_plan.legacy import auto_generate_itinerary, reorder_itinerary_items
+from adventures.views.mixins import COLLECTION_ID_PARAMETER, CollectionScopedMixin
+from core.exceptions import APIError
+from core.serializers import validated
 
 CONTENT_MODELS = {
     'location': Location,
@@ -31,39 +74,8 @@ CONTENT_MODELS = {
     'checklist': Checklist,
 }
 
-_ERROR_STATUS = {
-    'not_found': status.HTTP_404_NOT_FOUND,
-    'conflict': status.HTTP_409_CONFLICT,
-}
-
-ORDER_CONFLICT = {
-    'error': 'The itinerary changed while you were editing. Refresh and try again.',
-    'code': 'order_conflict',
-}
-
-
-def _plan_error(exc: day_plan.DayPlanError):
-    body = {'error': exc.message, 'code': exc.code, **exc.extra}
-    return Response(body, status=_ERROR_STATUS.get(exc.code, status.HTTP_400_BAD_REQUEST))
-
-
-def _is_member(request, collection):
-    """Owner, editor, or guest editor. Viewers read the plan and change nothing."""
-    return can_edit(request, collection)
-
-
-def _member_collection(request, collection_id):
-    if not collection_id:
-        raise day_plan.DayPlanError('collection is required.')
-    try:
-        collection = Collection.objects.get(id=collection_id)
-    except (Collection.DoesNotExist, ValueError, TypeError):
-        raise day_plan.DayPlanError('Collection not found.', code='not_found')
-    except Exception:
-        raise day_plan.DayPlanError('Collection not found.', code='not_found')
-    if not _is_member(request, collection):
-        raise PermissionDenied('You do not have permission to modify this collection.')
-    return collection
+ORDER_CONFLICT_MESSAGE = 'The itinerary changed while you were editing. Refresh and try again.'
+DAY_PATH_PARAMETER = OpenApiParameter('id', str, OpenApiParameter.PATH, description='The day id (UUID).')
 
 
 def _record_item_move(request, item):
@@ -91,237 +103,218 @@ def _record_anchor_change(request, collection, before):
         )
 
 
-class ItineraryViewSet(viewsets.ModelViewSet):
-    serializer_class = CollectionItineraryItemSerializer
-    permission_classes = [IsOwnerOrSharedWithFullAccess]
+class _DayPlanViewMixin(CollectionScopedMixin):
+    """Shared by the three day plan viewsets."""
 
-    def get_queryset(self):
-        # Itinerary items from collections the requester is a member of or holds a guest link to
-        return CollectionItineraryItem.objects.filter(
-            member_collections_q(self.request, 'collection__')
-        ).distinct().select_related('collection', 'collection__user', 'day', 'content_type').prefetch_related('item').order_by('date', 'order')
+    openapi_tags = ['Day plan']
 
     def handle_exception(self, exc):
+        # Two edits that land on the same order slot hit the unique constraint.
         if isinstance(exc, IntegrityError):
-            return Response(ORDER_CONFLICT, status=status.HTTP_409_CONFLICT)
-        if isinstance(exc, day_plan.DayPlanError):
-            return _plan_error(exc)
+            exc = APIError(ORDER_CONFLICT_MESSAGE, code='order_conflict', status=status.HTTP_409_CONFLICT)
         return super().handle_exception(exc)
 
-    def _resolve_content(self, request, content_type_val, object_id):
-        if content_type_val not in CONTENT_MODELS:
-            raise ValidationError({'error': f"Invalid content_type. Must be one of: {', '.join(CONTENT_MODELS)}"})
-        model_class = CONTENT_MODELS[content_type_val]
-        try:
-            content_object = model_class.objects.get(id=object_id)
-        except (ValueError, model_class.DoesNotExist):
-            return None, None
-        except Exception:
-            return None, None
-        permission_checker = IsOwnerOrSharedWithFullAccess()
-        if not permission_checker.has_object_permission(request, self, content_object):
-            raise PermissionDenied('User does not have permission to access this content')
-        return content_object, ContentType.objects.get_for_model(model_class)
+    def get_readable_collection(self):
+        """The collection, for its members and guest-link holders. Anyone else gets a 404."""
+        collection = self.get_collection()
+        if not is_member(self.request, collection):
+            raise NotFound('Collection not found.')
+        return collection
 
+    def _state_response(self, collection, extra=None, status_code=status.HTTP_200_OK):
+        body = plan_state(collection, self.get_serializer_context())
+        if extra:
+            body.update(extra)
+        return Response(body, status=status_code)
+
+
+@extend_schema(parameters=[COLLECTION_ID_PARAMETER])
+@extend_schema_view(
+    list=extend_schema(summary="List a trip's itinerary items", description='Every placement in the plan.'),
+    retrieve=extend_schema(summary='Get an itinerary item'),
+    destroy=extend_schema(
+        summary='Remove an itinerary item',
+        description='Removes the placement, not the record. Visits it logged stay unless `confirm_delete_visits`.',
+        parameters=[ItemDeleteQuerySerializer],
+    ),
+)
+class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
+    """
+    Itinerary items place a location, lodging, transportation, note or checklist in a trip's
+    plan: on a day (`day_index`), across the trip (`is_global`), or in Ideas (neither).
+    Members read the plan; the owner and editors change it.
+    """
+
+    serializer_class = CollectionItineraryItemSerializer
+    permission_classes = [IsOwnerOrSharedWithFullAccess]
+    queryset = CollectionItineraryItem.objects.all()
+    pagination_class = None
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CollectionItineraryItem.objects.none()
+        collection = self.get_readable_collection()
+        return (
+            CollectionItineraryItem.objects.filter(collection=collection)
+            .select_related('collection', 'collection__user', 'day', 'content_type')
+            .prefetch_related('item')
+            .order_by('date', 'order')
+        )
+
+    def _resolve_content(self, request, content_type_name, object_id):
+        model_class = CONTENT_MODELS[content_type_name]
+        content_object = model_class.objects.filter(id=object_id).first()
+        if content_object is None:
+            raise NotFound(f'{content_type_name} not found.')
+        if not IsOwnerOrSharedWithFullAccess().has_object_permission(request, self, content_object):
+            raise PermissionDenied('You do not have permission to use this record.')
+        return content_object
+
+    @extend_schema(
+        request=ItineraryItemCreateSerializer,
+        responses={
+            201: ItineraryItemResultSerializer,
+            200: OpenApiResponse(ItineraryItemResultSerializer, description='The record was already placed there.'),
+        },
+    )
     def create(self, request, *args, **kwargs):
         """
-        Accept 'content_type' as either a ContentType PK or a model name string
-        (e.g. 'location', 'lodging', 'transportation', 'note', 'visit').
+        Place a record in the plan
 
-        Day-based trips place the object on ``day_index`` (or in Ideas when it is
-        omitted, or trip-wide with ``is_global``). Lodging and transport dates are
-        written with the placement. ``update_item_date`` is ignored: placing a
-        location never creates or rewrites a visit.
+        Day-based trips place it on `day_index` (or the day with `date`), across the trip with
+        `is_global`, or in Ideas. Placing a lodging or transportation sets its dates from the
+        day; placing a location never creates a visit.
         """
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        params = validated(ItineraryItemCreateSerializer, request.data)
+        collection = self.get_editable_collection()
+        content_type_name = params['content_type']
+        content_object = self._resolve_content(request, content_type_name, params['object_id'])
 
-        data = request.data.copy()
-        content_type_val = data.get('content_type')
-        object_id = data.get('object_id')
-        is_global = day_plan.parse_flag(data.get('is_global'), False)
-        data['is_global'] = is_global
-        if is_global and not data.get('date'):
-            data['date'] = None
-
-        # Support legacy field 'location' -> treat as content_type='location'
-        if not content_type_val and data.get('location'):
-            content_type_val = 'location'
-            object_id = object_id or data.get('location')
-            data['content_type'] = content_type_val
-            data['object_id'] = object_id
-
-        content_object = None
-        if content_type_val and isinstance(content_type_val, str) and not content_type_val.isdigit():
-            content_object, ct = self._resolve_content(request, content_type_val, object_id)
-            if content_object is None:
-                return Response({'error': f"{content_type_val} not found"}, status=status.HTTP_404_NOT_FOUND)
-            data['content_type'] = ct.pk
-
-        collection_id = data.get('collection')
-        collection = None
-        if collection_id:
-            try:
-                collection = Collection.objects.get(id=collection_id)
-            except (Collection.DoesNotExist, ValueError):
-                return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
-            except Exception:
-                return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        if collection is not None and not _is_member(request, collection):
-            raise PermissionDenied('You do not have permission to modify this collection.')
-
-        if collection is not None and day_plan.is_day_based(collection):
-            return self._create_day_placement(request, collection, data, content_object, content_type_val)
-
-        if content_object is None and content_type_val:
-            # A numeric ContentType pk skips the name lookup above; check the object anyway.
-            content_type = ContentType.objects.filter(pk=content_type_val).first()
-            if content_type is None:
-                return Response({'error': 'Invalid content_type'}, status=status.HTTP_400_BAD_REQUEST)
-            content_object, _ = self._resolve_content(request, content_type.model, object_id)
-            if content_object is None:
-                return Response({'error': f"{content_type.model} not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        return self._create_dated_row(request, data, collection, is_global)
+        if day_plan.is_day_based(collection):
+            return self._create_day_placement(collection, params, content_object, content_type_name)
+        return self._create_dated_row(collection, params, content_object)
 
     @transaction.atomic
-    def _create_day_placement(self, request, collection, data, content_object, content_type_val):
-        if not _is_member(request, collection):
-            raise PermissionDenied('You do not have permission to modify this collection.')
-        if content_object is None:
-            content_type = ContentType.objects.filter(pk=data.get('content_type')).first()
-            if content_type is None:
-                return Response({'error': 'content_type is required'}, status=status.HTTP_400_BAD_REQUEST)
-            content_type_val = content_type.model
-            content_object, _ = self._resolve_content(request, content_type_val, data.get('object_id'))
-            if content_object is None:
-                return Response({'error': f"{content_type_val} not found"}, status=status.HTTP_404_NOT_FOUND)
-        if content_type_val == 'visit':
+    def _create_day_placement(self, collection, params, content_object, content_type_name):
+        if content_type_name == 'visit':
             content_object = content_object.location
-            content_type_val = 'location'
         content_type = ContentType.objects.get_for_model(type(content_object))
 
         day = None
-        day_index = data.get('day_index')
-        if day_index in (None, '') and data.get('date') and not data.get('is_global'):
-            target = day_plan.parse_day_date(data.get('date'))
-            day = CollectionItineraryDay.objects.filter(collection=collection, index__isnull=False, date=target).first()
+        is_global = params.get('is_global', False)
+        if params.get('day_index') is None and params.get('date') and not is_global:
+            day = CollectionItineraryDay.objects.filter(
+                collection=collection, index__isnull=False, date=params['date']
+            ).first()
             if day is None:
-                return Response({'error': 'That date is not a day of this trip.'}, status=status.HTTP_400_BAD_REQUEST)
-        elif day_index not in (None, ''):
-            day = day_plan.get_day_by_index(collection, day_index)
+                raise APIError('That date is not a day of this trip.', code='invalid')
+        elif params.get('day_index') is not None:
+            day = day_plan.get_day_by_index(collection, params['day_index'])
 
-        order = data.get('order')
         item, created = day_plan.place_object(
             collection,
             content_type,
             content_object.id,
             day=day,
-            is_global=bool(data.get('is_global')),
-            order=int(order) if order not in (None, '') else None,
-            span_end_index=data.get('span_end_index') or None,
-            is_optional=day_plan.parse_flag(data.get('is_optional'), False),
-            start_time=day_plan.parse_clock(data.get('start_time')),
-            end_time=day_plan.parse_clock(data.get('end_time')),
-            timezone_name=data.get('timezone') or None,
+            is_global=is_global,
+            order=params.get('order'),
+            span_end_index=params.get('span_end_index') or None,
+            is_optional=params.get('is_optional', False),
+            start_time=params.get('start_time'),
+            end_time=params.get('end_time'),
+            timezone_name=params.get('timezone') or None,
         )
         item = CollectionItineraryItem.objects.select_related('day', 'content_type').get(pk=item.pk)
-        context = self.get_serializer_context()
         response_data = dict(self.get_serializer(item).data)
         content_object.refresh_from_db()
-        updated = serialize_updated_object(content_object, context)
+        updated = serialize_updated_object(content_object, self.get_serializer_context())
         if updated is not None:
             response_data['updated_object'] = updated
         return Response(response_data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
-    def _create_dated_row(self, request, data, collection, is_global):
-        item_date = data.get('date')
-        item_order = data.get('order', 0)
-
+    def _create_dated_row(self, collection, params, content_object):
+        """Trips keyed by date (not yet converted to a day plan) place items on a calendar date."""
+        is_global = params.get('is_global', False)
+        item_date = params.get('date')
         if is_global and item_date:
-            return Response({'error': 'Global itinerary items must not include a date.'}, status=status.HTTP_400_BAD_REQUEST)
-        if (not is_global) and not item_date:
-            return Response({'error': 'Dated itinerary items must include a date.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise APIError('A trip-wide item must not have a date.', code='invalid')
+        if not is_global and not item_date:
+            raise APIError('An item on a day needs a date.', code='invalid')
+        if item_date and not is_global:
+            if collection.start_date and item_date < collection.start_date:
+                raise APIError('That date is before the trip starts.', code='invalid')
+            if collection.end_date and item_date > collection.end_date:
+                raise APIError('That date is after the trip ends.', code='invalid')
 
-        # The itinerary date must fall inside the collection's date range.
-        if collection is not None and item_date and not is_global:
-            parsed_date = parse_date(str(item_date))
-            if parsed_date is None:
-                dt = parse_datetime(str(item_date))
-                parsed_date = dt.date() if dt else None
-            if parsed_date is not None:
-                if collection.start_date and parsed_date < collection.start_date:
-                    return Response({'error': 'Itinerary item date is before the collection start_date'}, status=status.HTTP_400_BAD_REQUEST)
-                if collection.end_date and parsed_date > collection.end_date:
-                    return Response({'error': 'Itinerary item date is after the collection end_date'}, status=status.HTTP_400_BAD_REQUEST)
+        order = params.get('order') or 0
+        bucket = (
+            CollectionItineraryItem.objects.filter(collection=collection, is_global=True)
+            if is_global else
+            CollectionItineraryItem.objects.filter(collection=collection, date=item_date, is_global=False, day__isnull=True)
+        )
+        existing_max = bucket.aggregate(max_order=models.Max('order'))['max_order']
+        if existing_max is not None and order <= existing_max:
+            order = existing_max + 1
 
-        if collection is not None:
-            if is_global:
-                existing_max = CollectionItineraryItem.objects.filter(
-                    collection=collection, is_global=True
-                ).aggregate(max_order=models.Max('order'))['max_order']
-                if existing_max is None:
-                    existing_max = -1
-                if item_order is None or int(item_order) <= existing_max:
-                    data['order'] = existing_max + 1
-            elif item_date:
-                existing_max = CollectionItineraryItem.objects.filter(
-                    collection=collection, date=item_date, is_global=False, day__isnull=True
-                ).aggregate(max_order=models.Max('order'))['max_order']
-                if existing_max is not None and int(item_order or 0) <= existing_max:
-                    data['order'] = existing_max + 1
-
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data={
+            'collection': str(collection.id),
+            'content_type': ContentType.objects.get_for_model(type(content_object)).pk,
+            'object_id': str(content_object.id),
+            'date': item_date,
+            'is_global': is_global,
+            'order': order,
+        })
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
-            self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     PLACEMENT_FIELDS = ('is_optional', 'start_time', 'end_time', 'timezone')
+    MOVE_FIELDS = ('day_index', 'is_global', 'order', 'span_end_index')
 
+    @extend_schema(request=ItineraryItemUpdateSerializer, responses=ItineraryItemResultSerializer)
     @transaction.atomic
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if not day_plan.is_day_based(instance.collection):
-            return super().update(request, *args, **kwargs)
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Move or change an itinerary item
 
-        data = request.data
-        moving = any(key in data for key in ('day_index', 'is_global', 'order', 'span_end_index'))
-        if moving:
-            is_global = day_plan.parse_flag(data.get('is_global'), instance.is_global if 'is_global' not in data else False)
-            if 'day_index' in data:
-                day = day_plan.get_day_by_index(instance.collection, data['day_index']) if data['day_index'] not in (None, '') else None
+        Sending `day_index`, `is_global`, `order` or `span_end_index` moves it (the other items
+        close up). `is_optional`, `start_time`, `end_time` and `timezone` change it in place;
+        times on a lodging or transportation also change its dates.
+        """
+        instance = self.get_object()
+        params = validated(ItineraryItemUpdateSerializer, request.data, partial=True)
+        if not day_plan.is_day_based(instance.collection):
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
+        if any(key in params for key in self.MOVE_FIELDS):
+            is_global = params.get('is_global', False) if 'is_global' in params else instance.is_global
+            if 'day_index' in params:
+                day = day_plan.get_day_by_index(instance.collection, params['day_index']) \
+                    if params['day_index'] is not None else None
             else:
                 day = instance.day if not is_global else None
             if is_global:
                 day = None
-            order = data.get('order')
             day_plan.move_placement(
                 instance.collection,
                 instance,
                 day=day,
                 is_global=is_global,
-                order=int(order) if order not in (None, '') else None,
-                span_end_index=data.get('span_end_index') if 'span_end_index' in data else None,
-                span_given='span_end_index' in data,
+                order=params.get('order'),
+                span_end_index=params.get('span_end_index'),
+                span_given='span_end_index' in params,
             )
             instance.refresh_from_db()
             _record_item_move(request, instance)
 
-        changes = {}
-        for key in self.PLACEMENT_FIELDS:
-            if key not in data:
-                continue
-            value = data.get(key)
-            if key == 'is_optional':
-                value = day_plan.parse_flag(value)
-            elif key in ('start_time', 'end_time'):
-                value = day_plan.parse_clock(value)
-            else:
-                value = value or None
-            changes[key] = value
+        changes = {key: params[key] for key in self.PLACEMENT_FIELDS if key in params}
+        if 'timezone' in changes:
+            changes['timezone'] = changes['timezone'] or None
         if changes:
             serializer = self.get_serializer(instance, data=changes, partial=True)
             serializer.is_valid(raise_exception=True)
@@ -333,22 +326,17 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         instance = CollectionItineraryItem.objects.select_related('day', 'content_type').get(pk=instance.pk)
         response_data = dict(self.get_serializer(instance).data)
         if instance.item is not None:
-            updated = serialize_updated_object(type(instance.item).objects.get(pk=instance.object_id), self.get_serializer_context())
+            updated = serialize_updated_object(
+                type(instance.item).objects.get(pk=instance.object_id), self.get_serializer_context()
+            )
             if updated is not None:
                 response_data['updated_object'] = updated
         return Response(response_data)
 
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
-        """
-        Remove a placement. Visits are kept: placing never created them, so
-        removing never deletes them. ``confirm_delete_visits=true`` deletes the
-        visit this placement logged. ``preserve_visits`` is accepted and keeps
-        visits, as it always did.
-        """
         instance = self.get_object()
-        confirm_delete = day_plan.parse_flag(request.query_params.get('confirm_delete_visits'), False)
-        if confirm_delete and instance.logged_visit_id:
+        if validated(ItemDeleteQuerySerializer, request.query_params)['confirm_delete_visits'] and instance.logged_visit_id:
             visit = instance.logged_visit
             if IsOwnerOrSharedWithFullAccess().has_object_permission(request, self, visit):
                 visit.delete()
@@ -358,141 +346,129 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         if day_plan.is_day_based(collection):
             day_plan.compact_bucket(collection, *bucket)
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-    @action(detail=False, methods=['post'], url_path='reorder')
-    @transaction.atomic
-    def reorder(self, request):
+
+    @extend_schema(
+        request=LogVisitSerializer,
+        responses={
+            201: OpenApiResponse(LogItemResultSerializer, description='A visit was created.'),
+            200: OpenApiResponse(LogItemResultSerializer, description='The stop had already logged its visit.'),
+            400: OpenApiResponse(description='`date_required` when the trip has no dates, or invalid input.'),
+        },
+    )
+    @action(detail=True, methods=['post'], url_path='log-visit')
+    def log_visit(self, request, *args, **kwargs):
         """
-        Reorder itinerary items in bulk.
+        Log a stop as visited
 
-        Date-keyed trips: ``{"items": [{"id", "date", "order", "is_global"}]}``.
-        Day-based trips: ``{"items": [{"id", "day_index", "order", "is_global", "span_end_index"?}]}``.
-        Lodging and transport dates move with their placement. A unique-order
-        conflict returns 409; refetch and retry.
+        Creates one visit to the location for this stop's day, or returns the one it already
+        logged.
         """
-        items_data = request.data.get('items', [])
-        if not items_data:
-            return Response([], status=status.HTTP_200_OK)
+        item = self.get_object()
+        self.get_editable_collection()
+        visit, created = day_plan.log_visited(item, validated(LogVisitSerializer, request.data).get('date'))
+        item.refresh_from_db()
+        return Response({
+            'item': self.get_serializer(item).data,
+            'visit': VisitSerializer(visit, context=self.get_serializer_context()).data,
+            'created': created,
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
-        first = CollectionItineraryItem.objects.filter(id=items_data[0].get('id')).select_related('collection').first()
-        if first is not None and day_plan.is_day_based(first.collection):
-            if not _is_member(request, first.collection):
-                raise PermissionDenied('You do not have permission to modify this collection.')
-            items, updated_objects = day_plan.reorder_day_plan(first.collection, items_data)
-            record_activity(
-                first.collection, request, CollectionActivity.Verb.ITEM_MOVED, count=len(items)
-            )
-            refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in items]).select_related('day', 'content_type').prefetch_related('item')
-            by_pk = {item.pk: item for item in refreshed}
-            context = self.get_serializer_context()
-            return Response({
-                'items': self.get_serializer([by_pk[i.pk] for i in items], many=True).data,
-                'updated_objects': [serialize_updated_object(obj, context) for obj in updated_objects],
-            }, status=status.HTTP_200_OK)
 
-        # Delegate to reusable helper which handles validation, permission checks
-        # and the two-phase update to avoid unique constraint races.
-        updated_items = reorder_itinerary_items(request, items_data)
+@extend_schema(parameters=[COLLECTION_ID_PARAMETER])
+class CollectionDayViewSet(_DayPlanViewMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+    """
+    The numbered days of a day-based trip. Changes that add, remove or reorder days answer
+    with the whole plan, so the planner can redraw without another request.
+    """
 
-        serializer = self.get_serializer(updated_items, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    @action(detail=False, methods=['post'], url_path='auto-generate')
-    @transaction.atomic
-    def auto_generate(self, request):
+    serializer_class = CollectionItineraryDaySerializer
+    queryset = CollectionItineraryDay.objects.all()
+    pagination_class = None
+
+    def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CollectionItineraryDay.objects.none()
+        return CollectionItineraryDay.objects.filter(collection=self.get_readable_collection()).order_by('index', 'date')
+
+    def list(self, request, *args, **kwargs):
+        """List a trip's days"""
+        return super().list(request, *args, **kwargs)
+
+    @extend_schema(request=DayInsertSerializer, responses={201: PlanStateWithDaySerializer})
+    def create(self, request, collection_id=None):
         """
-        Auto-generate itinerary items for a date-keyed collection from dated records.
+        Add a day
 
-        Day-based trips are built by the conversion and do not use this.
+        Inserts a day at `position` (later days move up by one), or at the end. Answers with
+        the plan and the new day's id.
         """
-        collection_id = request.data.get('collection_id')
-        
-        if not collection_id:
-            return Response(
-                {"error": "collection_id is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            collection = Collection.objects.get(id=collection_id)
-        except Collection.DoesNotExist:
-            return Response(
-                {"error": "Collection not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        if not _is_member(request, collection):
-            return Response(
-                {"error": "You do not have permission to modify this collection"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        if day_plan.is_day_based(collection):
-            return Response(
-                {"error": "This trip is planned by days. Place items on days instead."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        
-        try:
-            created_items = auto_generate_itinerary(collection)
-            serializer = self.get_serializer(created_items, many=True)
-            return Response({
-                "message": f"Successfully generated {len(created_items)} itinerary items",
-                "items": serializer.data
-            }, status=status.HTTP_201_CREATED)
-        except ValidationError as e:
-            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+        params = validated(DayInsertSerializer, request.data)
+        collection = self.get_editable_collection()
+        day = day_plan.insert_day(collection, params.get('position'), params.get('name'), params.get('description'))
+        return self._state_response(collection, {'day': str(day.pk)}, status.HTTP_201_CREATED)
 
-    # -- Day plan actions ---------------------------------------------------
+    @extend_schema(parameters=[DAY_PATH_PARAMETER], request=CollectionItineraryDaySerializer,
+                   responses=CollectionItineraryDaySerializer)
+    def partial_update(self, request, collection_id=None, pk=None):
+        """
+        Rename a day
 
-    def _state_response(self, collection, extra=None, status_code=status.HTTP_200_OK):
-        body = plan_state(collection, self.get_serializer_context())
-        if extra:
-            body.update(extra)
-        return Response(body, status=status_code)
+        Changes `name` and `description`. Use the other actions to move a day.
+        """
+        collection = self.get_editable_collection()
+        day = day_plan.get_day(collection, pk)
+        changes = {key: request.data[key] for key in ('name', 'description') if key in request.data}
+        serializer = self.get_serializer(day, data=changes, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-    @action(detail=False, methods=['post'], url_path='plan-by-days')
-    def plan_by_days(self, request):
-        """Build a day plan for a date-keyed trip. Omit ``day_count`` to use the date span."""
-        collection = _member_collection(request, request.data.get('collection'))
-        raw_count = request.data.get('day_count', None)
-        if raw_count in (None, ''):
-            count = None
-        else:
-            try:
-                count = int(raw_count)
-            except (TypeError, ValueError):
-                raise day_plan.DayPlanError('Day count must be a whole number.')
-        with transaction.atomic():
-            day_plan.plan_by_days(collection, count)
+    @extend_schema(
+        parameters=[DAY_PATH_PARAMETER, DayDeleteQuerySerializer],
+        responses={200: PlanStateSerializer, 400: OpenApiResponse(
+            description='`destination_required` (with `item_count`) when the day has stops and no `destination`.'
+        )},
+    )
+    def destroy(self, request, collection_id=None, pk=None):
+        """
+        Delete a day
+
+        Later days move down by one. The day's stops go to `destination`. Answers with the
+        plan (not 204), like the other day changes.
+        """
+        params = validated(DayDeleteQuerySerializer, request.query_params)
+        collection = self.get_editable_collection()
+        day_plan.delete_day(
+            collection, pk, destination=params.get('destination'),
+            target_day_id=str(params['target_day']) if params.get('target_day') else None,
+        )
         return self._state_response(collection)
 
-    @action(detail=False, methods=['post'], url_path='days/insert')
-    def insert_day(self, request):
-        collection = _member_collection(request, request.data.get('collection'))
-        position = request.data.get('position')
-        day = day_plan.insert_day(
-            collection,
-            int(position) if position not in (None, '') else None,
-            request.data.get('name'),
-            request.data.get('description'),
-        )
+    @extend_schema(parameters=[DAY_PATH_PARAMETER], request=None, responses={201: PlanStateWithDaySerializer})
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, collection_id=None, pk=None):
+        """
+        Duplicate a day
+
+        Adds a copy of the day and its stops right after it.
+        """
+        collection = self.get_editable_collection()
+        day = day_plan.duplicate_day(collection, pk)
         return self._state_response(collection, {'day': str(day.pk)}, status.HTTP_201_CREATED)
 
-    @action(detail=False, methods=['post'], url_path='days/duplicate')
-    def duplicate_day(self, request):
-        collection = _member_collection(request, request.data.get('collection'))
-        day = day_plan.duplicate_day(collection, request.data.get('day'))
-        return self._state_response(collection, {'day': str(day.pk)}, status.HTTP_201_CREATED)
+    @extend_schema(parameters=[DAY_PATH_PARAMETER], request=DayMoveSerializer, responses=PlanStateSerializer)
+    @action(detail=True, methods=['post'])
+    def move(self, request, collection_id=None, pk=None):
+        """
+        Move a day
 
-    @action(detail=False, methods=['post'], url_path='days/move')
-    def move_day(self, request):
-        collection = _member_collection(request, request.data.get('collection'))
-        position = request.data.get('position')
-        if position in (None, ''):
-            raise day_plan.DayPlanError('position is required.')
-        day = day_plan.get_day(collection, request.data.get('day'))
+        Makes the day number `position`; the days between shift by one.
+        """
+        position = validated(DayMoveSerializer, request.data)['position']
+        collection = self.get_editable_collection()
+        day = day_plan.get_day(collection, pk)
         from_index = day.index
-        day_plan.move_day(collection, day.pk, int(position))
+        day_plan.move_day(collection, day.pk, position)
         day.refresh_from_db()
         if day.index != from_index:
             record_activity(
@@ -501,149 +477,171 @@ class ItineraryViewSet(viewsets.ModelViewSet):
             )
         return self._state_response(collection)
 
-    @action(detail=False, methods=['post'], url_path='days/delete')
-    def delete_day(self, request):
-        collection = _member_collection(request, request.data.get('collection'))
-        day_plan.delete_day(
-            collection,
-            request.data.get('day'),
-            destination=request.data.get('destination'),
-            target_day_id=request.data.get('target_day'),
+    @extend_schema(parameters=[DAY_PATH_PARAMETER], request=LogVisitSerializer, responses=LogDayResultSerializer)
+    @action(detail=True, methods=['post'], url_path='log-visit')
+    def log_visit(self, request, collection_id=None, pk=None):
+        """
+        Log a day as visited
+
+        Logs every non-optional location stop on the day that has no visit yet.
+        """
+        collection = self.get_editable_collection()
+        day = day_plan.get_day(collection, pk)
+        logged = day_plan.log_day(collection, day, validated(LogVisitSerializer, request.data).get('date'))
+        refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in logged]) \
+            .select_related('day', 'content_type', 'logged_visit').prefetch_related('item')
+        needs_stop = []
+        if len(location_stops_on_day(day)) > 1:
+            needs_stop = [str(a.pk) for a in Activity.objects.filter(day=day, promoted_activity__isnull=True)]
+        context = self.get_serializer_context()
+        body = {
+            'items': CollectionItineraryItemSerializer(refreshed, many=True, context=context).data,
+            'visits': VisitSerializer([i.logged_visit for i in refreshed], many=True, context=context).data,
+            'activities_need_stop': needs_stop,
+        }
+        body.update(serialize_day_files(collection, context))
+        return Response(body)
+
+
+@extend_schema(parameters=[COLLECTION_ID_PARAMETER])
+class ItineraryViewSet(_DayPlanViewMixin, viewsets.GenericViewSet):
+    """The whole plan of a trip, and changes that touch all of it. Routed as a singleton."""
+
+    serializer_class = PlanStateSerializer
+
+    @extend_schema(responses=PlanStateSerializer)
+    def retrieve(self, request, collection_id=None):
+        """
+        Get the plan
+
+        Items, days, lodging, transportation, and the files on days, as the planner draws them.
+        """
+        return self._state_response(self.get_readable_collection())
+
+    @extend_schema(
+        request=ReorderSerializer,
+        responses={200: ReorderResultSerializer, 409: OpenApiResponse(
+            description='Someone else changed the plan at the same time (`order_conflict`). Reload and retry.'
+        )},
+    )
+    @action(detail=False, methods=['post'])
+    @transaction.atomic
+    def reorder(self, request, collection_id=None):
+        """
+        Reorder items
+
+        Moves many items at once, e.g. after a drag and drop. Lodging and transportation dates
+        move with their placements.
+        """
+        validated(ReorderSerializer, request.data)
+        collection = self.get_editable_collection()
+        items_data = request.data.get('items') or []
+        if not items_data:
+            return Response({'items': [], 'updated_objects': []})
+        ids = [entry.get('id') for entry in items_data]
+        if CollectionItineraryItem.objects.filter(id__in=ids).exclude(collection=collection).exists():
+            raise NotFound('One or more items are not in this collection.')
+
+        context = self.get_serializer_context()
+        if not day_plan.is_day_based(collection):
+            updated = reorder_itinerary_items(request, items_data)
+            return Response({
+                'items': CollectionItineraryItemSerializer(updated, many=True, context=context).data,
+                'updated_objects': [],
+            })
+
+        items, updated_objects = day_plan.reorder_day_plan(collection, items_data)
+        record_activity(collection, request, CollectionActivity.Verb.ITEM_MOVED, count=len(items))
+        refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in items]) \
+            .select_related('day', 'content_type').prefetch_related('item')
+        by_pk = {item.pk: item for item in refreshed}
+        return Response({
+            'items': CollectionItineraryItemSerializer([by_pk[i.pk] for i in items], many=True, context=context).data,
+            'updated_objects': [serialize_updated_object(obj, context) for obj in updated_objects],
+        })
+
+    @extend_schema(request=None, responses={201: AutoGenerateResultSerializer})
+    @action(detail=False, methods=['post'], url_path='auto-generate')
+    @transaction.atomic
+    def auto_generate(self, request, collection_id=None):
+        """
+        Fill the plan from dates
+
+        For trips still keyed by date: places every dated record of the collection on its
+        date. Day-based trips answer `400 day_based`.
+        """
+        collection = self.get_editable_collection()
+        if day_plan.is_day_based(collection):
+            raise APIError('This trip is planned by days. Place items on days instead.', code='day_based')
+        created = auto_generate_itinerary(collection)
+        return Response(
+            {'items': CollectionItineraryItemSerializer(created, many=True, context=self.get_serializer_context()).data},
+            status=status.HTTP_201_CREATED,
         )
+
+    @extend_schema(request=PlanByDaysSerializer, responses=PlanStateSerializer)
+    @action(detail=False, methods=['post'], url_path='plan-by-days')
+    def plan_by_days(self, request, collection_id=None):
+        """
+        Convert to a day plan
+
+        Turns a trip keyed by date into numbered days, keeping every placement.
+        """
+        params = validated(PlanByDaysSerializer, request.data)
+        collection = self.get_editable_collection()
+        with transaction.atomic():
+            day_plan.plan_by_days(collection, params.get('day_count'))
         return self._state_response(collection)
 
-    @action(detail=False, methods=['post'], url_path='duration')
-    def duration(self, request):
+    @extend_schema(
+        request=DurationSerializer,
+        responses={200: PlanStateSerializer, 400: OpenApiResponse(
+            description='`destination_required` (with `day_indexes`) when removed days have stops.'
+        )},
+    )
+    @action(detail=False, methods=['post'])
+    def duration(self, request, collection_id=None):
         """
-        Set the day count and, optionally, the anchor (``start_date``; null clears it).
-        ``end_date`` is derived; sending one that does not match returns 400.
+        Change the trip's length
+
+        Sets the number of days and, optionally, the start date (null makes the trip undated).
+        Stops on days that are removed go to `destination`. The end date follows.
         """
-        collection = _member_collection(request, request.data.get('collection'))
-        count = request.data.get('day_count')
-        if count in (None, ''):
-            raise day_plan.DayPlanError('day_count is required.')
-        anchor = ...
-        if 'start_date' in request.data:
-            anchor = day_plan.parse_day_date(request.data.get('start_date'))
-        if 'end_date' in request.data:
+        params = validated(DurationSerializer, request.data)
+        collection = self.get_editable_collection()
+        anchor = params['start_date'] if 'start_date' in params else ...
+        if 'end_date' in params:
             effective_anchor = anchor if anchor is not ... else collection.start_date
-            expected = day_plan.projected_date(effective_anchor, int(count)) if effective_anchor else None
-            if day_plan.parse_day_date(request.data.get('end_date')) != expected:
-                raise day_plan.DayPlanError(
-                    'end_date is derived from the start date and the day count. Send day_count instead.'
+            expected = day_plan.projected_date(effective_anchor, params['day_count']) if effective_anchor else None
+            if params['end_date'] != expected:
+                raise APIError(
+                    'end_date follows from the start date and the day count. Send day_count instead.', code='invalid'
                 )
         before = collection.start_date
         day_plan.set_duration(
             collection,
-            count,
+            params['day_count'],
             anchor=anchor,
-            destination=request.data.get('destination'),
-            target_day_id=request.data.get('target_day'),
-            timezone_name=request.data.get('timezone') or None,
+            destination=params.get('destination'),
+            target_day_id=str(params['target_day']) if params.get('target_day') else None,
+            timezone_name=params.get('timezone') or None,
         )
         _record_anchor_change(request, collection, before)
         return self._state_response(collection)
 
-    @action(detail=False, methods=['post'], url_path='shift')
-    def shift(self, request):
+    @extend_schema(request=ShiftSerializer, responses=PlanStateSerializer)
+    @action(detail=False, methods=['post'])
+    def shift(self, request, collection_id=None):
         """
-        Shift an anchored trip by ``days`` (civil days, may be negative) or to a new
-        ``start_date``. Indexes, order, and clock faces stay; visits do not move.
+        Move the trip's dates
+
+        Shifts a dated trip by `days`, or to a new `start_date`. Days, order and times stay;
+        visits already logged do not move.
         """
-        collection = _member_collection(request, request.data.get('collection'))
-        start_date = day_plan.parse_day_date(request.data.get('start_date'))
-        days = request.data.get('days')
-        if start_date is None and days in (None, ''):
-            raise day_plan.DayPlanError('Send days or start_date.')
+        params = validated(ShiftSerializer, request.data)
+        collection = self.get_editable_collection()
         before = collection.start_date
-        day_plan.shift_anchor(collection, days=days, start_date=start_date)
+        day_plan.shift_anchor(collection, days=params.get('days'), start_date=params.get('start_date'))
         _record_anchor_change(request, collection, before)
         return self._state_response(collection)
 
-    @action(detail=True, methods=['post'], url_path='log-visited')
-    def log_visited(self, request, pk=None):
-        """Create one visit for this stop, or return the visit it already logged."""
-        item = self.get_object()
-        if not _is_member(request, item.collection):
-            raise PermissionDenied('You do not have permission to modify this collection.')
-        visit_date = day_plan.parse_day_date(request.data.get('date'))
-        visit, created = day_plan.log_visited(item, visit_date)
-        item.refresh_from_db()
-        return Response({
-            'item': self.get_serializer(item).data,
-            'visit': VisitSerializer(visit, context=self.get_serializer_context()).data,
-            'created': created,
-        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-
-    @action(detail=False, methods=['post'], url_path='log-day')
-    def log_day(self, request):
-        """Log every non-optional location stop on a day that has no logged visit."""
-        collection = _member_collection(request, request.data.get('collection'))
-        day = day_plan.get_day(collection, request.data.get('day'))
-        visit_date = day_plan.parse_day_date(request.data.get('date'))
-        logged = day_plan.log_day(collection, day, visit_date)
-        refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in logged]).select_related('day', 'content_type', 'logged_visit').prefetch_related('item')
-        from adventures.models import Activity
-        from adventures.services.day_plan.files import location_stops_on_day, serialize_day_files
-
-        needs_stop = []
-        if len(location_stops_on_day(day)) > 1:
-            needs_stop = [
-                str(activity.pk)
-                for activity in Activity.objects.filter(day=day, promoted_activity__isnull=True)
-            ]
-        body = {
-            'items': self.get_serializer(refreshed, many=True).data,
-            'visits': VisitSerializer([i.logged_visit for i in refreshed], many=True, context=self.get_serializer_context()).data,
-            'activities_need_stop': needs_stop,
-        }
-        body.update(serialize_day_files(collection, self.get_serializer_context()))
-        return Response(body, status=status.HTTP_200_OK)
-
-
-class ItineraryDayViewSet(viewsets.ModelViewSet):
-    """Day names and descriptions. Day-based trips add and remove days with the itinerary actions."""
-    serializer_class = CollectionItineraryDaySerializer
-    permission_classes = [IsOwnerOrSharedWithFullAccess]
-
-    def get_queryset(self):
-        # Day metadata from collections the requester is a member of or holds a guest link to
-        return CollectionItineraryDay.objects.filter(
-            member_collections_q(self.request, 'collection__')
-        ).distinct().select_related('collection', 'collection__user').order_by('index', 'date')
-
-    def perform_create(self, serializer):
-        """Ensure the user has permission to modify the collection"""
-        collection = serializer.validated_data.get('collection')
-        
-        if not collection:
-            raise ValidationError("Collection is required")
-        
-        # Check if user has permission to modify this collection
-        if not can_edit(self.request, collection):
-            raise PermissionDenied("You do not have permission to modify this collection")
-        
-        serializer.save()
-
-    def perform_update(self, serializer):
-        """Ensure the user has permission to modify the collection"""
-        instance = self.get_object()
-        collection = instance.collection
-        
-        # Check if user has permission to modify this collection
-        if not can_edit(self.request, collection):
-            raise PermissionDenied("You do not have permission to modify this collection")
-        
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        """Ensure the user has permission to modify the collection"""
-        collection = instance.collection
-        
-        # Check if user has permission to modify this collection
-        if not can_edit(self.request, collection):
-            raise PermissionDenied("You do not have permission to modify this collection")
-        if instance.index is not None:
-            raise ValidationError("Delete a trip day with the itinerary day actions.")
-        
-        instance.delete()

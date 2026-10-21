@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '$lib/api';
 import type {
 	Location,
 	PlaceSearchResult,
@@ -42,19 +43,15 @@ export function toPlaceResult(result: Record<string, unknown>): PlaceSearchResul
 }
 
 export async function searchPlaces(query: string): Promise<PlacesSearchMeta> {
-	const response = await fetch(
-		`/api/places/search/?query=${encodeURIComponent(query)}&include_meta=1`
-	);
+	const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
 	const payload = await response.json();
 	if (!response.ok) {
-		throw new Error(payload?.error || 'Place search failed');
+		throw new Error(apiErrorMessage(payload, 'Place search failed'));
 	}
-	const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
-	const provider_used = Array.isArray(payload) ? undefined : payload?.provider_used;
 	return {
-		provider_used,
-		providers_attempted: payload?.providers_attempted,
-		results: Array.isArray(rawResults) ? rawResults.map((r) => toPlaceResult(r)) : []
+		provider_used: payload.provider_used ?? undefined,
+		providers_attempted: payload.providers_attempted,
+		results: (payload.results ?? []).map((r: Record<string, unknown>) => toPlaceResult(r))
 	};
 }
 
@@ -63,11 +60,11 @@ export async function fetchPlaceDetails(
 	name = ''
 ): Promise<Record<string, unknown>> {
 	const response = await fetch(
-		`/api/places/place_details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name)}`
+		`/api/places/details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name)}`
 	);
 	const details = await response.json();
 	if (!response.ok) {
-		throw new Error(details?.error || 'Unable to fetch place details');
+		throw new Error(apiErrorMessage(details, 'Unable to fetch place details'));
 	}
 	return details;
 }
@@ -113,7 +110,7 @@ export async function fetchFormattedLocation(
 	lng: number
 ): Promise<FormattedLocationData | null> {
 	try {
-		const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}&format=json`);
+		const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}`);
 		if (!response.ok) {
 			return null;
 		}
@@ -203,7 +200,7 @@ export async function quickAddLocation(
 		photos: payload.photos || [],
 		is_public: false
 	};
-	if (collectionId) body.collection_id = collectionId;
+	if (collectionId) body.collection = collectionId;
 	if (payload.type) body.type = payload.type;
 
 	const res = await fetch('/api/locations/quick-add/', {
@@ -212,12 +209,8 @@ export async function quickAddLocation(
 		body: JSON.stringify(body)
 	});
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => ({}));
-		throw new Error(
-			(errorData as { error?: string; detail?: string })?.error ||
-				(errorData as { detail?: string })?.detail ||
-				'Failed to create location'
-		);
+		const errorData = await res.json().catch(() => null);
+		throw new Error(apiErrorMessage(errorData, 'Failed to create location'));
 	}
 	return res.json();
 }
@@ -339,15 +332,12 @@ export async function fetchRecommendations(params: {
 		radius: params.radius.toString(),
 		category: params.category
 	});
-	const response = await fetch(`/api/recommendations/query/?${searchParams.toString()}`);
-	const data: RecommendationResponse = await response.json();
+	const response = await fetch(`/api/recommendations/?${searchParams.toString()}`);
+	const data = await response.json();
 	if (!response.ok) {
-		throw new Error(data.error || 'Failed to fetch recommendations');
+		throw new Error(apiErrorMessage(data, 'Failed to fetch recommendations'));
 	}
-	if (data.error) {
-		throw new Error(data.error);
-	}
-	return data;
+	return data as RecommendationResponse;
 }
 
 export async function refetchPins(): Promise<import('$lib/types').Pin[]> {

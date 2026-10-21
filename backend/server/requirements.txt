@@ -3,9 +3,9 @@ djangorestframework>=3.15.2,<3.16
 django-allauth==0.63.3
 django-money==3.5.4
 django-invitations==2.1.0
-drf-yasg==1.21.15
+drf-spectacular==0.30.0
+drf-spectacular-sidecar==2026.9.1  # Swagger UI and ReDoc served locally, not from a CDN
 django-cors-headers==4.4.0
-coreapi==2.3.3
 python-dotenv==1.1.0
 psycopg2-binary==2.9.10
 pillow==12.3.0

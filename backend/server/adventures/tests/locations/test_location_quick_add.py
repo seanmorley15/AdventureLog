@@ -1,5 +1,5 @@
 import uuid
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from rest_framework.test import APITestCase
 
@@ -109,6 +109,6 @@ class LocationQuickAddCategoryTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {'error': 'Category not found or inaccessible'},
+            {'detail': 'Category not found or inaccessible', 'code': ANY},
         )
         self.assertFalse(Location.objects.filter(user=self.user).exists())

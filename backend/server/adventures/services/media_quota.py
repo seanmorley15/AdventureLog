@@ -1,6 +1,14 @@
 from django.conf import settings
 from django.core.files.storage import default_storage
 from adventures.models import ContentAttachment, ContentImage
+from core.errors import ServiceError
+
+
+class MediaQuotaExceeded(ServiceError):
+    """An upload that would take the owner over their storage limit. ``extra`` has the numbers."""
+
+    status = 413
+    code = 'media_quota_exceeded'
 
 
 def get_media_storage_limit_bytes():
@@ -102,3 +110,11 @@ def user_content_media_names(user):
     images = ContentImage.objects.filter(user=user).exclude(image__isnull=True).exclude(image='')
     attachments = ContentAttachment.objects.filter(user=user).exclude(file__isnull=True).exclude(file='')
     return set(images.values_list('image', flat=True)) | set(attachments.values_list('file', flat=True))
+
+
+def ensure_media_storage_available(user, incoming_bytes, exclude_names=None):
+    """Raise ``MediaQuotaExceeded`` when ``incoming_bytes`` more would exceed the user's limit."""
+    allowed, details = enforce_media_storage_limit(user, incoming_bytes, exclude_names=exclude_names)
+    if not allowed:
+        raise MediaQuotaExceeded('Media storage limit exceeded.', extra=details)
+

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { run } from 'svelte/legacy';
 
 	import { enhance } from '$app/forms';
@@ -239,7 +240,7 @@
 	let collectionIdToLeave: string | null = $state(null);
 
 	async function leaveCollection() {
-		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave`, {
+		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave/`, {
 			method: 'POST'
 		});
 		if (res.ok) {
@@ -276,7 +277,7 @@
 	// Invite functions
 	async function acceptInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/accept-invite/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/accept/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -284,40 +285,14 @@
 			});
 
 			if (res.ok) {
-				// Try to parse returned collection data
-				let data: any = null;
-				try {
-					data = await res.json();
-				} catch (e) {
-					data = null;
-				}
-
-				// Remove invite from list
+				// The answer is the collection just joined, as a card.
+				const joined = (await res.json()) as SlimCollection;
 				invites = invites.filter((i) => i.id !== invite.id);
 				addToast('success', `${$t('invites.accepted')} "${invite.name}"`);
-
-				// If API returned the accepted collection, add it to sharedCollections immediately
-				if (data && (data.collection || data.result || data.id)) {
-					// Normalize expected shapes: {collection: {...}} or collection object directly
-					const newCollection = data.collection ? data.collection : data;
-					// Prepend so it's visible at top
-					sharedCollections = [newCollection as SlimCollection, ...sharedCollections];
-				} else {
-					// Fallback: refresh shared collections from API
-					try {
-						const sharedRes = await fetch(`/api/collections/shared/?nested=true`);
-						if (sharedRes.ok) {
-							const sharedData = await sharedRes.json();
-							// Prefer results if paginated
-							sharedCollections = sharedData.results ? sharedData.results : sharedData;
-						}
-					} catch (e) {
-						// ignore fallback errors; user already got success toast
-					}
-				}
+				sharedCollections = [joined, ...sharedCollections];
 			} else {
-				const error = await res.json();
-				addToast('error', error.error || $t('invites.accept_failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('invites.accept_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('invites.accept_failed'));
@@ -326,7 +301,7 @@
 
 	async function declineInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/decline-invite/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/decline/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -338,8 +313,8 @@
 				invites = invites.filter((i) => i.id !== invite.id);
 				addToast('success', `${$t('invites.declined')} "${invite.name}"`);
 			} else {
-				const error = await res.json();
-				addToast('error', error.error || $t('invites.decline_failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('invites.decline_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('invites.decline_failed'));

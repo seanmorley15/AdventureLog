@@ -146,20 +146,15 @@
 		});
 		if (term) params.set('q', term);
 		const response = await fetch(`/api/locations/suggest/?${params}`);
-		if (!response.ok) return { results: [] as Pin[], anchored: false, total: 0, has_more: false };
-		return (await response.json()) as {
-			results: Pin[];
-			anchored: boolean;
-			total: number;
-			has_more: boolean;
-		};
+		if (!response.ok) return { results: [] as Pin[], anchored: false, count: 0 };
+		return (await response.json()) as { results: Pin[]; anchored: boolean; count: number };
 	}
 
 	function applyPage(data: Awaited<ReturnType<typeof loadPlaces>>, append = false) {
 		pins = append ? [...pins, ...(data.results ?? [])] : (data.results ?? []);
 		anchored = Boolean(data.anchored);
-		total = data.total ?? pins.length;
-		hasMore = Boolean(data.has_more);
+		total = data.count ?? pins.length;
+		hasMore = pins.length < total;
 	}
 
 	function open(node: HTMLDialogElement) {

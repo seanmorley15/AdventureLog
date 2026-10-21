@@ -1,33 +1,37 @@
+"""The account as hosted (cloud) servers show it: with the subscription that gates access."""
+
 from django.conf import settings
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
+from rest_framework import serializers
 
 from billing.serializers import SubscriptionSerializer
 from cloud.utils import get_or_create_subscription, has_access
-from users.serializers import CustomUserDetailsSerializer as PublicUserSerializer
-from adventures.models import CollectionInvite
-from adventures.services.discussion import unread_comment_count
+from users.serializers import AccountSerializer
+from users.views import AccountViewSet as BaseAccountViewSet
 
 
-class CurrentUserView(APIView):
-    permission_classes = [IsAuthenticated]
-    throttle_classes = []
+class HostedAccountSerializer(AccountSerializer):
+    subscription = SubscriptionSerializer(
+        help_text='The billing state. Self-hosted servers always grant access, whatever it says.'
+    )
+    has_access = serializers.BooleanField(
+        help_text='False when a hosted server requires a subscription this account does not have. '
+        'Most endpoints then answer 402.'
+    )
+    cloud_mode = serializers.BooleanField(help_text='True on hosted servers with billing.')
 
-    def get(self, request):
-        user = request.user
+
+class AccountViewSet(BaseAccountViewSet):
+    def account_extras(self, user):
         subscription = get_or_create_subscription(user)
-        user_serializer = PublicUserSerializer(user)
-        subscription_serializer = SubscriptionSerializer(subscription)
+        return {
+            'subscription': SubscriptionSerializer(subscription).data,
+            'has_access': has_access(user, subscription),
+            'cloud_mode': settings.CLOUD_MODE,
+        }
 
-        return Response(
-            {
-                "user": user_serializer.data,
-                "subscription": subscription_serializer.data,
-                "has_access": has_access(user, subscription),
-                "cloud_mode": settings.CLOUD_MODE,
-                # Navbar badges. Returned here so each page load needs no extra requests.
-                "pending_invite_count": CollectionInvite.objects.filter(invited_user=user).count(),
-                "unread_comment_count": unread_comment_count(user),
-            }
-        )
+    @extend_schema(responses=HostedAccountSerializer)
+    def retrieve(self, request):
+        return super().retrieve(request)
+
+    retrieve.__doc__ = BaseAccountViewSet.retrieve.__doc__

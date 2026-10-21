@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -46,7 +47,7 @@ export const load = (async (event) => {
 			total: 0,
 			limit: 20,
 			offset: 0,
-			error: errorPayload.error || 'Failed to fetch search results'
+			error: apiErrorMessage(errorPayload, 'Failed to fetch search results')
 		};
 	}
 
@@ -56,7 +57,7 @@ export const load = (async (event) => {
 		query: data.query,
 		results: data.results,
 		facets: data.facets,
-		total: data.total,
+		total: data.count,
 		limit: data.limit,
 		offset: data.offset,
 		error: null

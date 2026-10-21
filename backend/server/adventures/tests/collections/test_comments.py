@@ -8,22 +8,26 @@ from django.test import override_settings
 
 from adventures.models import Activity, Collection, CollectionComment, CollectionGuestLink
 from adventures.tests.base import AudienceTestBase, make_user
+from adventures.tests.day_plan.base import plan_request
 from adventures.access.audience import resolve_audience
 
-COMMENTS = '/api/collection-comments/'
+COMMENTS = '/api/comments/'
 
 
 class CommentTestBase(AudienceTestBase):
+    def thread_url(self):
+        return f'/api/collections/{self.trip.id}/comments/'
+
     def post(self, thread='plan', body='Looks good', headers=None, **extra):
         return self.client.post(
-            COMMENTS,
-            {'collection': str(self.trip.id), 'thread': thread, 'body': body, **extra},
+            self.thread_url(),
+            {'thread': thread, 'body': body, **extra},
             format='json',
             **(headers or {}),
         )
 
     def thread(self, thread='plan', **headers):
-        return self.client.get(COMMENTS, {'collection': str(self.trip.id), 'thread': thread}, **headers)
+        return self.client.get(self.thread_url(), {'thread': thread}, **headers)
 
 
 class PlanCommentTests(CommentTestBase):
@@ -112,7 +116,7 @@ class PlanCommentTests(CommentTestBase):
         inbox = self.client.get(f'{COMMENTS}inbox/').json()
         self.assertEqual(inbox['unread_count'], 1)
         self.assertTrue(inbox['comments'][0]['mentions_me'])
-        self.client.post(f'{COMMENTS}inbox/seen/')
+        self.client.post(f'{COMMENTS}inbox/mark-seen/')
         self.assertEqual(self.client.get(f'{COMMENTS}inbox/').json()['unread_count'], 0)
         self.as_user(self.editor)
         self.assertEqual(self.client.get(f'{COMMENTS}inbox/').json()['comments'], [])
@@ -199,14 +203,14 @@ class StoryCommentTests(CommentTestBase):
 
 class ActivityTests(CommentTestBase):
     def feed(self):
-        return self.client.get('/api/collection-activity/', {'collection': str(self.trip.id)})
+        return self.client.get(f'/api/collections/{self.trip.id}/activity/')
 
     def test_editor_reads_the_feed_viewer_does_not(self):
         self.as_user(self.editor)
         day = self.trip.itinerary_days.get(index=1)
-        self.client.post('/api/itineraries/days/move/', {'collection': str(self.trip.id), 'day': str(day.id), 'position': 3}, format='json')
+        plan_request(self.client, self.trip, 'days/move', {'day': str(day.id), 'position': 3})
         self.move_stop(2)
-        self.client.post('/api/itineraries/shift/', {'collection': str(self.trip.id), 'days': 2}, format='json')
+        plan_request(self.client, self.trip, 'shift', {'days': 2})
         self.post(body='Moved things around')
         verbs = [event['verb'] for event in self.feed().json()]
         self.assertEqual(verbs, ['comment_added', 'anchor_changed', 'item_moved', 'day_moved'])
@@ -218,7 +222,7 @@ class ActivityTests(CommentTestBase):
 
     def test_membership_events_are_owner_only(self):
         self.as_user(self.owner)
-        self.client.post(f'/api/collections/{self.trip.id}/unshare/{self.viewer.uuid}/')
+        self.client.delete(f'/api/collections/{self.trip.id}/members/{self.viewer.uuid}/')
         self.assertIn('member_removed', [e['verb'] for e in self.feed().json()])
         self.as_user(self.editor)
         self.assertNotIn('member_removed', [e['verb'] for e in self.feed().json()])
@@ -370,7 +374,7 @@ class ProfileLinkTests(CommentTestBase):
         self.as_user(self.editor)
         self.post(body='hello @owner')
         self.as_user(self.owner)
-        feed = self.client.get('/api/collection-activity/', {'collection': str(self.trip.id)}).json()
+        feed = self.client.get(f'/api/collections/{self.trip.id}/activity/').json()
         self.assertEqual(feed[0]['actor']['username'], 'editor')
         self.assertTrue(feed[0]['actor']['can_view_profile'])
         inbox = self.client.get(f'{COMMENTS}inbox/').json()['comments'][0]

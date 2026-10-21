@@ -3,6 +3,7 @@
 import logging
 from adventures.models import Visit, Trail, Activity
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from core.serializers import CustomModelSerializer
 from core.public_url import build_media_url
 from adventures.utils.geojson import cached_gpx_geojson
@@ -41,6 +42,7 @@ class TrailSerializer(CustomModelSerializer):
 
     day_index = serializers.SerializerMethodField()
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_day_index(self, obj):
         return obj.day.index if obj.day_id else None
 
@@ -130,6 +132,7 @@ class TrailSerializer(CustomModelSerializer):
             )
             return None
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_provider(self, obj):
         if obj.wanderer_id:
             return 'Wanderer'
@@ -145,6 +148,7 @@ class TrailSerializer(CustomModelSerializer):
                 return 'Outdooractive'
         return 'External Link'
     
+    @extend_schema_field(serializers.JSONField(allow_null=True))
     def get_wanderer_data(self, obj):
         # The published story shows a trail's name and link, never Wanderer's own data.
         if not obj.wanderer_id or self.context.get('story'):
@@ -172,6 +176,7 @@ class TrailSerializer(CustomModelSerializer):
             logger.error("Error fetching Wanderer trail data for %s: %s", obj.wanderer_id, e)
             return None
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_wanderer_link(self, obj):
         if not obj.wanderer_id:
             return None
@@ -185,6 +190,7 @@ class TrailSerializer(CustomModelSerializer):
 
         return self._build_wanderer_link(obj, integration)
 
+    @extend_schema_field(serializers.JSONField(allow_null=True, help_text='The GPX track as GeoJSON.'))
     def get_geojson(self, obj):
         if not obj.wanderer_id or self.context.get('story'):
             return None
@@ -304,15 +310,18 @@ class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
             )
         return attrs
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_day_index(self, obj):
         return obj.day.index if obj.day_id else None
 
+    @extend_schema_field(serializers.UUIDField(allow_null=True))
     def get_promoted_visit(self, obj):
         copy = obj.promoted_activity if obj.promoted_activity_id else None
         if copy is None or not copy.visit_id:
             return None
         return str(copy.visit_id)
 
+    @extend_schema_field(serializers.UUIDField(allow_null=True))
     def get_promoted_location(self, obj):
         copy = obj.promoted_activity if obj.promoted_activity_id else None
         if copy is None or not copy.visit_id or not copy.visit.location_id:
@@ -325,6 +334,7 @@ class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
             representation['gpx_file'] = build_media_url(instance.gpx_file.name)
         return representation
     
+    @extend_schema_field(serializers.JSONField(allow_null=True, help_text='The GPX track as GeoJSON.'))
     def get_geojson(self, obj):
         # In the story, tracks are shown only when the owner turned the GPX group on.
         if self.context.get('story') and not self.context.get('story_gpx'):

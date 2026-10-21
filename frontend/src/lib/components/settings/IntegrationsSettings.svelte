@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
 	import type {
@@ -87,27 +88,22 @@
 	function handleImmichError(data: {
 		code?: string;
 		details?: string;
-		message?: string;
-		error?: string;
-		server_url?: string[];
-		api_key?: string[];
+		detail?: string;
+		fields?: { server_url?: string[]; api_key?: string[] };
 	}) {
 		if (data.code === 'immich.connection_failed') {
-			return `${$t('immich.connection_error')}: ${data.details || data.message}`;
+			return `${$t('immich.connection_error')}: ${data.details || data.detail}`;
 		}
 		if (data.code === 'immich.integration_exists') {
 			return $t('immich.integration_already_exists');
 		}
-		if (data.code === 'immich.integration_not_found') {
+		if (data.code === 'immich.integration_missing') {
 			return $t('immich.integration_not_found');
-		}
-		if (data.error && data.message) {
-			return data.message;
 		}
 
 		const errors: string[] = [];
-		if (data.server_url) errors.push(`Server URL: ${data.server_url.join(', ')}`);
-		if (data.api_key) errors.push(`API Key: ${data.api_key.join(', ')}`);
+		if (data.fields?.server_url) errors.push(`Server URL: ${data.fields.server_url.join(', ')}`);
+		if (data.fields?.api_key) errors.push(`API Key: ${data.fields.api_key.join(', ')}`);
 		return errors.length > 0
 			? `${$t('immich.validation_error')}: ${errors.join('; ')}`
 			: $t('immich.immich_error');
@@ -115,10 +111,9 @@
 
 	async function enableImmichIntegration() {
 		const isUpdate = !!immichIntegration?.id;
-		const url = isUpdate
-			? `/api/integrations/immich/${immichIntegration?.id ?? ''}/`
-			: '/api/integrations/immich/';
-		const method = isUpdate ? 'PUT' : 'POST';
+		// One connection per user, at one address: create it, or change it in place.
+		const url = '/api/integrations/immich/';
+		const method = isUpdate ? 'PATCH' : 'POST';
 
 		try {
 			const res = await fetch(url, {
@@ -143,7 +138,7 @@
 	async function disableImmichIntegration() {
 		if (!immichIntegration?.id) return;
 
-		const res = await fetch(`/api/integrations/immich/${immichIntegration.id}/`, {
+		const res = await fetch('/api/integrations/immich/', {
 			method: 'DELETE'
 		});
 		if (res.ok) {
@@ -168,8 +163,8 @@
 	}
 
 	async function stravaDisconnect() {
-		const res = await fetch('/api/integrations/strava/disable/', {
-			method: 'POST',
+		const res = await fetch('/api/integrations/strava/', {
+			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (res.ok) {
@@ -181,8 +176,8 @@
 	}
 
 	async function wandererDisconnect() {
-		const res = await fetch('/api/integrations/wanderer/disable/', {
-			method: 'POST',
+		const res = await fetch('/api/integrations/wanderer/', {
+			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (res.ok) {
@@ -261,7 +256,7 @@
 				resetEndurainForm();
 				endurainServerUrl = data.server_url || '';
 			} else {
-				addToast('error', data.message || data.detail || $t('endurain.connection_error'));
+				addToast('error', apiErrorMessage(data, $t('endurain.connection_error')));
 			}
 		} catch {
 			addToast('error', $t('endurain.connection_error'));
@@ -296,7 +291,7 @@
 				endurainEnabled = true;
 				resetEndurainForm();
 			} else {
-				addToast('error', data.message || data.detail || $t('endurain.connection_error'));
+				addToast('error', apiErrorMessage(data, $t('endurain.connection_error')));
 			}
 		} catch {
 			addToast('error', $t('endurain.connection_error'));
@@ -306,8 +301,8 @@
 	}
 
 	async function endurainDisconnect() {
-		const res = await fetch('/api/integrations/endurain/disable/', {
-			method: 'POST',
+		const res = await fetch('/api/integrations/endurain/', {
+			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' }
 		});
 		if (res.ok) {
@@ -323,10 +318,8 @@
 	async function enableWandererIntegration() {
 		const integrationId = newWandererIntegration.id || wandererIntegration?.id;
 		const isUpdate = !!integrationId;
-		const url = isUpdate
-			? `/api/integrations/wanderer/${integrationId}/`
-			: '/api/integrations/wanderer/';
-		const method = isUpdate ? 'PUT' : 'POST';
+		const url = '/api/integrations/wanderer/';
+		const method = isUpdate ? 'PATCH' : 'POST';
 
 		try {
 			const res = await fetch(url, {
@@ -342,12 +335,7 @@
 				wandererEnabled = true;
 				newWandererIntegration = { server_url: '', api_key: '', id: '' };
 			} else {
-				const message =
-					responseData.error ||
-					responseData.detail ||
-					(Array.isArray(responseData) ? responseData.join(', ') : null) ||
-					$t('wanderer.connection_error');
-				addToast('error', message);
+				addToast('error', apiErrorMessage(responseData, $t('wanderer.connection_error')));
 			}
 		} catch {
 			addToast('error', $t('wanderer.connection_error'));

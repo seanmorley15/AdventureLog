@@ -95,14 +95,14 @@ class CopyLocationTests(APITestCase):
     def test_naming_a_collection_links_the_copy_to_only_that_collection(self):
         target = self.objects['folder']
 
-        new = Location.objects.get(id=self.copy(collection_id=str(target.id)).json()['id'])
+        new = Location.objects.get(id=self.copy(collection=str(target.id)).json()['id'])
 
         self.assertEqual(list(new.collections.all()), [target])
 
     def test_an_unknown_collection_is_a_404_and_nothing_is_created(self):
         before = Location.objects.count()
 
-        response = self.copy(collection_id='11111111-1111-1111-1111-111111111111')
+        response = self.copy(collection='11111111-1111-1111-1111-111111111111')
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(Location.objects.count(), before)
@@ -111,7 +111,7 @@ class CopyLocationTests(APITestCase):
         theirs = Collection.objects.create(user=self.stranger, name='Not yours')
         before = Location.objects.count()
 
-        response = self.copy(collection_id=str(theirs.id))
+        response = self.copy(collection=str(theirs.id))
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(Location.objects.count(), before)

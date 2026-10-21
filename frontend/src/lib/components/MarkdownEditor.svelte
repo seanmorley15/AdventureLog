@@ -64,7 +64,7 @@
 				lang: fetchLang || 'en',
 				source
 			});
-			const response = await fetch(`/api/generate/desc/?${params.toString()}`);
+			const response = await fetch(`/api/places/description/?${params.toString()}`);
 			const data = await response.json().catch(() => ({}));
 			if (response.ok && data.extract) {
 				text = data.extract;

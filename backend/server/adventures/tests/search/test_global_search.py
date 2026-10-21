@@ -68,13 +68,13 @@ class GlobalSearchAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.owner)
         response = self.client.get('/api/search/')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['error'], 'Search query is required')
+        self.assertEqual(set(response.json()['fields']), {'q'})
 
     def test_short_query_returns_400(self):
         self.client.force_authenticate(user=self.owner)
         response = self.client.get('/api/search/?q=a')
         self.assertEqual(response.status_code, 400)
-        self.assertIn('at least 2 characters', response.json()['error'])
+        self.assertIn('at least 2 characters', response.json()['detail'])
 
     def test_location_hit_returns_lightweight_shape(self):
         self.client.force_authenticate(user=self.owner)
@@ -156,11 +156,11 @@ class GlobalSearchAPITestCase(APITestCase):
         self.assertTrue(location_hits)
         self.assertEqual(location_hits[0]['title'], 'Eiffel Tower Visit')
 
-    def test_query_alias_still_works(self):
+    def test_the_old_query_parameter_is_not_accepted(self):
         self.client.force_authenticate(user=self.owner)
         response = self.client.get('/api/search/?query=eiffel')
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(any(hit['type'] == 'location' for hit in response.json()['results']))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(set(response.json()['fields']), {'q'})
 
     def test_locations_rank_before_other_entity_types(self):
         self.client.force_authenticate(user=self.owner)

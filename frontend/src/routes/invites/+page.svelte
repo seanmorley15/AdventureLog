@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { addToast } from '$lib/toasts';
+	import { apiErrorMessage } from '$lib/api';
 	import { t } from 'svelte-i18n';
 	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
@@ -19,7 +20,7 @@
 
 	async function fetchInvites() {
 		try {
-			const res = await fetch('/api/collections/invites/', {
+			const res = await fetch('/api/collections/invitations/', {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json'
@@ -40,7 +41,7 @@
 
 	async function acceptInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/accept-invite/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/accept/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -52,8 +53,8 @@
 				invites = invites.filter((i) => i.id !== invite.id);
 				addToast('success', `${$t('invites.accepted')} "${invite.name}"`);
 			} else {
-				const error = await res.json();
-				addToast('error', error.error || $t('invites.accept_failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('invites.accept_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('invites.accept_failed'));
@@ -62,7 +63,7 @@
 
 	async function declineInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/decline-invite/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/decline/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -74,8 +75,8 @@
 				invites = invites.filter((i) => i.id !== invite.id);
 				addToast('success', `${$t('invites.declined')} "${invite.name}"`);
 			} else {
-				const error = await res.json();
-				addToast('error', error.error || $t('invites.decline_failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('invites.decline_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('invites.decline_failed'));

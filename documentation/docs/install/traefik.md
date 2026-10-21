@@ -39,7 +39,7 @@ Traefik routes traffic to two containers on a single domain:
 
 | Path prefix | Service |
 | ----------- | ------- |
-| `/`, `/api`, `/auth`, app pages | Frontend (SvelteKit) |
+| `/`, `/api`, app pages | Frontend (SvelteKit) |
 | `/media`, `/admin`, `/accounts`, `/static` | Backend (Django/Gunicorn) |
 
 This matches the internal routing model used by [Standard Deployment](standard.md), but with separate frontend and backend services.

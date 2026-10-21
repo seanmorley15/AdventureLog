@@ -1,4 +1,4 @@
-"""How the locations list orders places. The page relies on 'asc' for updated_at meaning newest first."""
+"""How the locations list orders places with ``?ordering=``."""
 
 from datetime import timedelta
 
@@ -21,21 +21,31 @@ class LocationSortingTests(APITestCase):
             Location.objects.filter(pk=place.pk).update(updated_at=now - timedelta(days=days_ago))
 
     def names(self, **params):
-        response = self.client.get('/api/locations/filtered/', {'types': 'all', **params})
+        response = self.client.get('/api/locations/', params)
         self.assertEqual(response.status_code, 200, response.content)
         return [place['name'] for place in response.json()['results']]
 
     def test_name_is_plain_ascending_and_descending_ignoring_case(self):
-        self.assertEqual(self.names(order_by='name', order_direction='asc'), ['Alpha', 'beta', 'gamma'])
-        self.assertEqual(self.names(order_by='name', order_direction='desc'), ['gamma', 'beta', 'Alpha'])
+        self.assertEqual(self.names(ordering='name'), ['Alpha', 'beta', 'gamma'])
+        self.assertEqual(self.names(ordering='-name'), ['gamma', 'beta', 'Alpha'])
 
     def test_rating_is_plain_ascending_and_descending(self):
-        self.assertEqual(self.names(order_by='rating', order_direction='asc'), ['beta', 'gamma', 'Alpha'])
-        self.assertEqual(self.names(order_by='rating', order_direction='desc'), ['Alpha', 'gamma', 'beta'])
+        self.assertEqual(self.names(ordering='rating'), ['beta', 'gamma', 'Alpha'])
+        self.assertEqual(self.names(ordering='-rating'), ['Alpha', 'gamma', 'beta'])
 
-    def test_updated_at_ascending_is_newest_first_which_is_the_pages_default_view(self):
-        self.assertEqual(self.names(order_by='updated_at', order_direction='asc'), ['Alpha', 'gamma', 'beta'])
-        self.assertEqual(self.names(order_by='updated_at', order_direction='desc'), ['beta', 'gamma', 'Alpha'])
+    def test_updated_at_is_plain_ascending_and_descending(self):
+        self.assertEqual(self.names(ordering='-updated_at'), ['Alpha', 'gamma', 'beta'])
+        self.assertEqual(self.names(ordering='updated_at'), ['beta', 'gamma', 'Alpha'])
 
     def test_with_no_parameters_the_newest_places_come_first(self):
         self.assertEqual(self.names(), ['Alpha', 'gamma', 'beta'])
+
+    def test_places_without_a_rating_come_last_instead_of_disappearing(self):
+        Location.objects.create(user=self.user, name='unrated')
+        self.assertEqual(self.names(ordering='-rating')[-1], 'unrated')
+        self.assertEqual(self.names(ordering='rating')[-1], 'unrated')
+
+    def test_an_unknown_ordering_is_a_validation_error(self):
+        response = self.client.get('/api/locations/', {'ordering': 'secret_field'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('ordering', response.json()['fields'])

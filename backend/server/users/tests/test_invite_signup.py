@@ -40,7 +40,7 @@ class InviteSignupTestCase(APITestCase):
         invitation.sent = invitation.created
         invitation.save()
 
-        response = self.client.get(f'/auth/invite-signup/{invitation.key}/')
+        response = self.client.get(f'/api/auth/invitations/{invitation.key}/')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data['valid'])
@@ -55,7 +55,7 @@ class InviteSignupTestCase(APITestCase):
         invitation = Invitation.create('unsent@example.com')
         self.assertIsNone(invitation.sent)
 
-        response = self.client.get(f'/auth/invite-signup/{invitation.key}/')
+        response = self.client.get(f'/api/auth/invitations/{invitation.key}/')
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertTrue(data['valid'])
@@ -77,7 +77,7 @@ class InviteSignupTestCase(APITestCase):
         session['account_verified_email'] = invitation.email
         session.save()
 
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'inviteduser',
             'email': invitation.email,
             'password': 'testpassword12',
@@ -103,7 +103,7 @@ class InviteSignupTestCase(APITestCase):
         invitation.sent = invitation.created
         invitation.save()
 
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'keyonlyuser',
             'email': invitation.email,
             'password': 'testpassword12',
@@ -127,7 +127,7 @@ class InviteSignupTestCase(APITestCase):
         session['account_verified_email'] = invitation.email
         session.save()
 
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'wrongemailuser',
             'email': 'someoneelse@example.com',
             'password': 'testpassword12',

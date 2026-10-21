@@ -1,170 +1,165 @@
 """The signed-in user's own account: details, media use, password sign-in, and deletion."""
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from users.serializers import DeleteAccountSerializer
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from users.serializers import CustomUserDetailsSerializer as PublicUserSerializer
-from allauth.socialaccount.models import SocialAccount
-from adventures.services.media_quota import enforce_media_storage_limit, get_media_storage_limit_bytes, get_uploaded_file_size, get_user_media_usage
 from django.contrib.auth import logout
+from allauth.socialaccount.models import SocialAccount
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.response import Response
+
+from adventures.models import CollectionInvite
+from adventures.services.discussion import unread_comment_count
+from adventures.services.media_quota import (
+    ensure_media_storage_available,
+    get_media_storage_limit_bytes,
+    get_uploaded_file_size,
+    get_user_media_usage,
+)
+from core.exceptions import APIError
+from users.serializers import (
+    AccountSerializer,
+    CustomUserDetailsSerializer,
+    DeleteAccountSerializer,
+    MediaUsageSerializer,
+    PasswordLoginSerializer,
+)
 from users.services.account_deletion import AccountDeletionError, delete_user_account
 
 
-class UserMetadataView(APIView):
-    permission_classes = [IsAuthenticated]
-    # This endpoint is used by the frontend auth hook to hydrate user state.
-    # Global throttling can cause an auth loop and forced logout behavior.
+@extend_schema_view(
+    partial_update=extend_schema(
+        summary='Update your profile',
+        description=(
+            'Change your profile and preferences. Send JSON, or `multipart/form-data` to upload a new '
+            '`profile_pic`.\n\n'
+            'Turning `public_profile` off also removes you from collections other people shared with you '
+            'and cancels invites you have not answered. The response then includes '
+            '`left_shared_collections` and `revoked_collection_invites` with how many were affected.'
+        ),
+        request=CustomUserDetailsSerializer,
+        responses={
+            200: CustomUserDetailsSerializer,
+            413: OpenApiResponse(description='The new profile picture would exceed your media storage.'),
+        },
+    ),
+)
+class AccountViewSet(viewsets.GenericViewSet):
+    """
+    The signed-in user's account.
+
+    Routed with ``core.routers.SingletonRouter``: there is one account per user at
+    ``/api/account/``, so no id appears in the path.
+    """
+
+    openapi_tags = ['Account']
+    serializer_class = CustomUserDetailsSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    # The app loads the account on every page; a global rate limit would sign people out.
     throttle_classes = []
 
-    @swagger_auto_schema(
-        responses={
-            200: openapi.Response('User metadata'),
-            400: 'Bad Request'
-        },
-        operation_description="Get user metadata."
-    )
-    def get(self, request):
+    def account_extras(self, user):
+        """Fields added to ``GET /api/account/`` by deployments that know more (hosted billing)."""
+        return {}
+
+    @extend_schema(responses=AccountSerializer)
+    def retrieve(self, request):
+        """
+        Get your account
+
+        Your profile plus what the app's header shows: how many collection invites are waiting
+        and how many comments you have not read. On hosted servers the subscription is included.
+        """
         user = request.user
-        serializer = PublicUserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({
+            'user': CustomUserDetailsSerializer(user, context={'request': request}).data,
+            'pending_invite_count': CollectionInvite.objects.filter(invited_user=user).count(),
+            'unread_comment_count': unread_comment_count(user),
+            **self.account_extras(user),
+        })
 
-
-class UserMediaUsageView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        responses={
-            200: openapi.Response('User media usage')
-        },
-        operation_description="Get media storage usage for the authenticated user."
-    )
-    def get(self, request):
-        usage = get_user_media_usage(request.user)
-        usage["limit_bytes"] = get_media_storage_limit_bytes()
-        return Response(usage, status=status.HTTP_200_OK)
-
-
-class UpdateUserMetadataView(APIView):
-    """
-    Update user metadata using fields from the PublicUserSerializer.
-    Using patch opposed to put allows for partial updates, covers the case where it checks the username and says it's already taken. Duplicate uesrname values should not be included in the request to avoid this.
-    """
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        request_body=PublicUserSerializer,
-        responses={
-            200: openapi.Response('User metadata updated'),
-            400: 'Bad Request'
-        },
-        operation_description="Update user metadata."
-    )
-    def patch(self, request):
+    def partial_update(self, request):
         user = request.user
         profile_pic = request.FILES.get('profile_pic')
         if profile_pic:
-            exclude_names = []
-            if user.profile_pic and user.profile_pic.name:
-                exclude_names.append(user.profile_pic.name)
-            allowed, details = enforce_media_storage_limit(
-                user,
-                get_uploaded_file_size(profile_pic),
-                exclude_names=exclude_names,
-            )
-            if not allowed:
-                return Response(
-                    {
-                        "error": "Media storage limit exceeded",
-                        **details,
-                    },
-                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                )
-        serializer = PublicUserSerializer(user, data=request.data, partial=True, context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            exclude_names = [user.profile_pic.name] if user.profile_pic and user.profile_pic.name else []
+            ensure_media_storage_available(user, get_uploaded_file_size(profile_pic), exclude_names=exclude_names)
+        serializer = CustomUserDetailsSerializer(user, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-
-class DisablePasswordAuthenticationView(APIView):
-    """
-    Disable password authentication for a user. This is used when a user signs up with a social provider.
-    """
-
-# Allows the user to set the disable_password field to True if they have a social account linked
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
+    @extend_schema(
+        request=DeleteAccountSerializer,
         responses={
-            200: openapi.Response('Password authentication disabled'),
-            400: 'Bad Request'
+            204: OpenApiResponse(description='The account and everything it owns were deleted.'),
+            403: OpenApiResponse(description='Staff accounts cannot delete themselves here.'),
+            502: OpenApiResponse(description='The hosted billing provider could not be cleaned up; nothing was deleted.'),
         },
-        operation_description="Disable password authentication."
     )
-    def post(self, request):
+    def destroy(self, request):
+        """
+        Delete your account
+
+        Permanently deletes the account and everything it owns. Send your username as
+        `confirmation`, and your `password` unless the account signs in only through a social
+        provider. On hosted servers the subscription is cancelled first. Ends the session.
+        """
         user = request.user
-        if SocialAccount.objects.filter(user=user).exists():
-            user.disable_password = True
-            user.save()
-            return Response({"detail": "Password authentication disabled."}, status=status.HTTP_200_OK)
-        return Response({"detail": "No social account linked."}, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request):
-        user = request.user
-        user.disable_password = False
-        user.save()
-        return Response({"detail": "Password authentication enabled."}, status=status.HTTP_200_OK)
-
-
-class DeleteAccountView(APIView):
-    """
-    POST /auth/delete-account/
-
-    Permanently delete the authenticated user's account and all associated data.
-    Cancels any active Stripe subscription in cloud mode before removing the user.
-    """
-
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        request_body=DeleteAccountSerializer,
-        responses={
-            204: "Account deleted.",
-            400: "Invalid confirmation or password.",
-            403: "Staff accounts cannot be self-deleted.",
-            502: "Stripe billing cleanup failed.",
-        },
-        operation_description="Permanently delete the authenticated user's account.",
-    )
-    def post(self, request):
-        user = request.user
-
         if user.is_staff or user.is_superuser:
-            return Response(
-                {"detail": "Staff accounts cannot be deleted via self-service."},
+            raise APIError(
+                'Staff accounts cannot be deleted here. Use the admin site.',
+                code='permission_denied',
                 status=status.HTTP_403_FORBIDDEN,
             )
-
-        serializer = DeleteAccountSerializer(data=request.data, context={"request": request})
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        serializer = DeleteAccountSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
         try:
             delete_user_account(user)
-        except AccountDeletionError:
-            return Response(
-                {
-                    "detail": (
-                        "Unable to delete your account because billing cleanup failed. "
-                        "Please try again or contact support."
-                    )
-                },
+        except AccountDeletionError as exc:
+            raise APIError(
+                'Unable to delete your account because billing cleanup failed. '
+                'Please try again or contact support.',
+                code='billing_cleanup_failed',
                 status=status.HTTP_502_BAD_GATEWAY,
-            )
-
+            ) from exc
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(responses=MediaUsageSerializer)
+    @action(detail=False, methods=['get'], url_path='media-usage')
+    def media_usage(self, request):
+        """
+        Get your media storage use
+
+        Bytes and file counts for images, attachments and profile pictures, and the storage
+        limit (`null` when the server sets none).
+        """
+        usage = get_user_media_usage(request.user)
+        usage['limit_bytes'] = get_media_storage_limit_bytes()
+        return Response(usage)
+
+    @extend_schema(request=None, responses=PasswordLoginSerializer)
+    @action(detail=False, methods=['post'], url_path='password-login/disable')
+    def disable_password_login(self, request):
+        """
+        Turn off password sign-in
+
+        Only for accounts with a linked social provider, which then becomes the only way to sign
+        in. Answers `400 no_social_account` otherwise.
+        """
+        user = request.user
+        if not SocialAccount.objects.filter(user=user).exists():
+            raise APIError('Link a social account before turning off password sign-in.', code='no_social_account')
+        user.disable_password = True
+        user.save(update_fields=['disable_password'])
+        return Response({'disable_password': True})
+
+    @extend_schema(request=None, responses=PasswordLoginSerializer)
+    @action(detail=False, methods=['post'], url_path='password-login/enable')
+    def enable_password_login(self, request):
+        """Turn password sign-in back on"""
+        user = request.user
+        user.disable_password = False
+        user.save(update_fields=['disable_password'])
+        return Response({'disable_password': False})

@@ -1,88 +1,51 @@
 """Creating, listing and revoking API keys."""
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from users.serializers import APIKeySerializer, APIKeyCreateSerializer
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from users.models import APIKey
+from users.serializers import APIKeyCreateSerializer, APIKeyCreatedSerializer, APIKeySerializer
 
 
 class APIKeyListCreateView(APIView):
-    """
-    List the current user's API keys or create a new one.
+    openapi_tags = ['Account']
 
-    GET  /auth/api-keys/   → list of keys (name, prefix, created_at, last_used_at)
-    POST /auth/api-keys/   → create a new key; returns the raw token **once**
-    """
-
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        responses={200: APIKeySerializer(many=True)},
-        operation_description="List all API keys for the authenticated user.",
-    )
+    @extend_schema(responses=APIKeySerializer(many=True))
     def get(self, request):
+        """
+        List your API keys
+
+        Each key shows its name and the first characters (`key_prefix`) so you can tell them
+        apart. The key itself is never shown again after it is created. The mobile app's key is
+        listed too.
+        """
         keys = APIKey.objects.filter(user=request.user)
-        serializer = APIKeySerializer(keys, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(APIKeySerializer(keys, many=True).data)
 
-    @swagger_auto_schema(
-        request_body=APIKeyCreateSerializer,
-        responses={
-            201: openapi.Response(
-                "API key created.  The ``key`` field is returned only once.",
-                openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        "id": openapi.Schema(type=openapi.TYPE_STRING, format="uuid"),
-                        "name": openapi.Schema(type=openapi.TYPE_STRING),
-                        "key_prefix": openapi.Schema(type=openapi.TYPE_STRING),
-                        "created_at": openapi.Schema(type=openapi.TYPE_STRING, format="date-time"),
-                        "last_used_at": openapi.Schema(type=openapi.TYPE_STRING, format="date-time", x_nullable=True),
-                        "key": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description="Full API key – shown once, never stored.",
-                        ),
-                    },
-                ),
-            ),
-            400: "Bad request – name is required.",
-        },
-        operation_description="Create a new API key.  Copy the returned ``key`` immediately; it will not be shown again.",
-    )
+    @extend_schema(request=APIKeyCreateSerializer, responses={201: APIKeyCreatedSerializer})
     def post(self, request):
-        serializer = APIKeyCreateSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        """
+        Create an API key
 
-        api_key, raw_key = APIKey.generate(
-            user=request.user,
-            name=serializer.validated_data["name"],
-        )
-        response_data = APIKeySerializer(api_key).data
-        response_data["key"] = raw_key
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        The response carries the full `key` **once**. Store it now: only a hash is kept on the
+        server. Send it as `X-API-Key: <key>` or `Authorization: Api-Key <key>`.
+        """
+        serializer = APIKeyCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        api_key, raw_key = APIKey.generate(user=request.user, name=serializer.validated_data['name'])
+        data = APIKeySerializer(api_key).data
+        data['key'] = raw_key
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 class APIKeyDetailView(APIView):
-    """
-    DELETE /auth/api-keys/<id>/  → revoke (delete) an API key
-    """
+    openapi_tags = ['Account']
 
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        responses={
-            204: "API key deleted.",
-            404: "Not found.",
-        },
-        operation_description="Revoke an API key by its ID.",
-    )
+    @extend_schema(responses={204: OpenApiResponse(description='The key was revoked and stops working at once.')})
     def delete(self, request, pk):
-        api_key = get_object_or_404(APIKey, pk=pk, user=request.user)
-        api_key.delete()
+        """Revoke an API key"""
+        get_object_or_404(APIKey, pk=pk, user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

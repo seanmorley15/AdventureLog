@@ -19,24 +19,24 @@ class LodgingPermissionTests(APITestCase):
         self.collection = Collection.objects.create(user=self.owner, name='Owner Trip')
 
     def test_anonymous_list_is_forbidden(self):
-        response = self.client.get('/api/lodging/')
-        self.assertEqual(response.status_code, 403)
+        response = self.client.get('/api/lodgings/')
+        self.assertEqual(response.status_code, 401)
 
     def test_owner_can_create_and_other_user_cannot_list_it(self):
         self.client.force_authenticate(user=self.owner)
-        created = self.client.post('/api/lodging/', {'name': 'Left Bank Hotel'}, format='json')
+        created = self.client.post('/api/lodgings/', {'name': 'Left Bank Hotel'}, format='json')
         self.assertEqual(created.status_code, 201)
         self.assertEqual(Lodging.objects.get().user, self.owner)
 
         self.client.force_authenticate(user=self.other)
-        listed = self.client.get('/api/lodging/')
+        listed = self.client.get('/api/lodgings/')
         self.assertEqual(listed.status_code, 200)
         self.assertEqual(listed.json(), [])
 
     def test_other_user_cannot_create_in_owner_collection(self):
         self.client.force_authenticate(user=self.other)
         response = self.client.post(
-            '/api/lodging/',
+            '/api/lodgings/',
             {'name': 'Sneaky Stay', 'collection': str(self.collection.id)},
             format='json',
         )
@@ -60,7 +60,7 @@ class TransportationPermissionTests(APITestCase):
 
     def test_anonymous_list_is_forbidden(self):
         response = self.client.get('/api/transportations/')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 401)
 
     def test_owner_can_create_and_other_user_cannot_list_it(self):
         self.client.force_authenticate(user=self.owner)
@@ -172,7 +172,7 @@ class CollectionReassignmentMixin:
 
 
 class LodgingCollectionReassignmentTests(CollectionReassignmentMixin, APITestCase):
-    url = 'lodging'
+    url = 'lodgings'
     model = Lodging
 
 

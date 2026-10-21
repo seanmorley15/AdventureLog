@@ -1,6 +1,7 @@
 """Shared setup for the day-plan tests."""
 
 from datetime import date, datetime, timezone
+from urllib.parse import urlencode
 
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.test import APITestCase
@@ -15,6 +16,36 @@ def utc(year, month, day, hour=0, minute=0):
 
 def ct(model):
     return ContentType.objects.get_for_model(model)
+
+
+def item_url(collection, item_id=None, action=None):
+    """``/api/collections/<id>/itinerary-items/[<item>/[<action>/]]``."""
+    url = f'/api/collections/{getattr(collection, "id", collection)}/itinerary-items/'
+    if item_id is not None:
+        url += f'{item_id}/'
+    if action:
+        url += f'{action}/'
+    return url
+
+
+def plan_request(client, collection, action, payload=None):
+    """
+    Send a day plan change. ``action`` names it (``days/insert``, ``days/delete``, ``duration``,
+    ``log-day``...); ``payload`` may carry the ``day`` it is about.
+    """
+    payload = dict(payload or {})
+    base = f'/api/collections/{getattr(collection, "id", collection)}'
+    day = payload.pop('day', None)
+    if action == 'days/insert':
+        return client.post(f'{base}/days/', payload, format='json')
+    if action == 'days/delete':
+        query = f'?{urlencode(payload)}' if payload else ''
+        return client.delete(f'{base}/days/{day}/{query}')
+    if action in ('days/move', 'days/duplicate'):
+        return client.post(f'{base}/days/{day}/{action.split("/")[1]}/', payload, format='json')
+    if action == 'log-day':
+        return client.post(f'{base}/days/{day}/log-visit/', payload, format='json')
+    return client.post(f'{base}/itinerary/{action}/', payload, format='json')
 
 
 class DayPlanTestBase(APITestCase):

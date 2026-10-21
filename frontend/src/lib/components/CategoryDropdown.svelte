@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { Category } from '$lib/types';
@@ -144,10 +145,7 @@
 			}
 
 			const errorData = await res.json().catch(() => ({}));
-			createError =
-				(errorData as { error?: string; detail?: string })?.error ||
-				(errorData as { detail?: string })?.detail ||
-				$t('adventures.error_occurred');
+			createError = apiErrorMessage(errorData, $t('adventures.error_occurred'));
 		} catch (error) {
 			console.error('Unable to create category', error);
 			createError = $t('adventures.error_occurred');

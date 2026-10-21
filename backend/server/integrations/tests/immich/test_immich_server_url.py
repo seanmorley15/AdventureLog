@@ -8,7 +8,7 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from integrations.models import ImmichIntegration
-from integrations.views.immich import ImmichIntegrationView, ImmichIntegrationViewSet
+from integrations.views.immich import ImmichViewSet
 
 User = get_user_model()
 LAN = [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('192.168.1.50', 0))]
@@ -17,7 +17,7 @@ METADATA = [(socket.AF_INET, socket.SOCK_STREAM, 6, '', ('169.254.169.254', 0))]
 
 class ValidateImmichConnectionTests(TestCase):
     def validate(self, url):
-        return ImmichIntegrationViewSet()._validate_immich_connection(url, 'key')
+        return ImmichViewSet()._validate_immich_connection(url, 'key')
 
     def test_credentials_are_refused_without_calling_the_server(self):
         with patch('integrations.views.immich.immich_get') as get:
@@ -63,7 +63,7 @@ class ImmichRequestGuardTests(TestCase):
     def albums(self):
         request = self.factory.get('/api/integrations/immich/albums/')
         force_authenticate(request, user=self.user)
-        return ImmichIntegrationView.as_view({'get': 'albums'})(request)
+        return ImmichViewSet.as_view({'get': 'albums'})(request)
 
     def test_a_stored_server_that_now_resolves_to_a_metadata_address_is_reported_unreachable(self):
         with patch('socket.getaddrinfo', return_value=METADATA), patch('core.net.create_connection') as connect:

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import type { Attachment, ContentImage, Trail, WandererTrail } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
@@ -122,7 +123,7 @@
 				resetTrailForm();
 			} else {
 				const errorData = await res.json();
-				throw new Error(errorData.message || 'Failed to create trail');
+				throw new Error(apiErrorMessage(errorData, 'Failed to create trail'));
 			}
 		} catch (error) {
 			console.error('Trail creation error:', error);
@@ -211,7 +212,7 @@
 				wandererFetchedTrails = itemsResponse.items || [];
 			} else {
 				const errorData = await res.json();
-				addToast('error', errorData.message || $t('adventures.trail_fetch_failed'));
+				addToast('error', apiErrorMessage(errorData, $t('adventures.trail_fetch_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('adventures.trail_fetch_failed'));

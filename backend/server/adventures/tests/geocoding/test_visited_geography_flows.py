@@ -38,7 +38,7 @@ class VisitedGeographyFlowTests(APITestCase):
         self.planned = Location.objects.create(user=self.user, name='Brest', region=other_region)
 
     def test_mark_visited_region_endpoint_marks_only_visited_locations(self):
-        response = self.client.post('/api/reverse-geocode/mark_visited_region/')
+        response = self.client.post('/api/visited-regions/sync/')
 
         self.assertEqual(response.status_code, 200, response.content)
         body = response.json()
@@ -49,9 +49,9 @@ class VisitedGeographyFlowTests(APITestCase):
         self.assertEqual(list(VisitedRegion.objects.values_list('region_id', flat=True)), ['FR-IDF'])
 
     def test_mark_visited_region_endpoint_is_idempotent(self):
-        self.client.post('/api/reverse-geocode/mark_visited_region/')
+        self.client.post('/api/visited-regions/sync/')
 
-        response = self.client.post('/api/reverse-geocode/mark_visited_region/')
+        response = self.client.post('/api/visited-regions/sync/')
 
         self.assertEqual(response.json()['new_regions'], 0)
         self.assertEqual(response.json()['new_cities'], 0)
@@ -97,7 +97,7 @@ class VisitedGeographyFlowTests(APITestCase):
         self.assertEqual(VisitedCity.objects.filter(user=self.user).count(), 1)
 
     def test_visiting_a_city_through_the_api_also_marks_its_region(self):
-        response = self.client.post('/api/visitedcity/', {'city': 'FR-IDF-1'}, format='json')
+        response = self.client.post('/api/visited-cities/', {'city': 'FR-IDF-1'}, format='json')
 
         self.assertEqual(response.status_code, 201, response.content)
         self.assertTrue(VisitedRegion.objects.filter(user=self.user, region=self.region).exists())

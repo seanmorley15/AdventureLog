@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '$lib/api';
 import type {
 	Checklist,
 	Collection,
@@ -327,16 +328,8 @@ export async function planRequest<T = any>(
 	return { ok: res.ok, status: res.status, data };
 }
 
-export function errorMessage(data: any, fallback: string): string {
-	if (!data) return fallback;
-	if (typeof data.error === 'string') return data.error;
-	if (typeof data.detail === 'string') return data.detail;
-	for (const value of Object.values(data)) {
-		if (Array.isArray(value) && typeof value[0] === 'string') return value[0];
-		if (typeof value === 'string') return value;
-	}
-	return fallback;
-}
+/** The message to show for a failed plan request. */
+export const errorMessage = apiErrorMessage;
 
 /** A fingerprint of the stored plan, used to notice changes made by someone else. */
 export function planFingerprint(collection: Collection): string {

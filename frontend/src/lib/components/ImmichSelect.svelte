@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { run } from 'svelte/legacy';
 
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -75,7 +76,7 @@
 
 			if (!res.ok) {
 				const data = await res.json();
-				console.error('Error in fetchAssets:', data.message);
+				console.error('Error in fetchAssets:', data.detail);
 				immichError = $t(data.code || 'immich.fetch_error');
 				return;
 			}
@@ -148,7 +149,7 @@
 			} else {
 				const errorData = await res.json();
 				console.error('Error saving image URL:', errorData);
-				immichError = $t(errorData.message || 'immich.error_saving_image');
+				immichError = apiErrorMessage(errorData, $t('immich.error_saving_image'));
 			}
 		} catch (error) {
 			console.error('Error in saveImmichRemoteUrl:', error);

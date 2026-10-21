@@ -1,46 +1,58 @@
 import logging
-from django.utils import timezone
-from django.db import transaction
-from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Q, Max, Prefetch, Exists, OuterRef, F
+
 from django.contrib.gis.db.models.functions import Distance
+from django.db import transaction
+from django.db.models import Exists, F, Max, OuterRef, Prefetch, Q
 from django.db.models.functions import Lower
 from django.http import HttpResponse
-from rest_framework import viewsets, status
+from django.utils import timezone
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from adventures.models import Location, Category, Collection, ContentImage, Visit
-from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_add_to_collections
+
 from adventures.access.audience import can_edit, is_member, member_collections_q, member_role, readable_collections_q
 from adventures.access.location import can_read_location
-from adventures.services.location_collections import link_location, placements_for, unlink_location
-from adventures.utils.query_optimization import optimize_locations
-from adventures.serializers import (
-    add_quick_add_extras,
-    CalendarLocationSerializer,
-    LocationListSerializer,
-    LocationSerializer,
-    MapPinSerializer,
+from adventures.models import Collection, ContentImage, Location, Visit
+from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_add_to_collections
+from adventures.serializers import LocationListSerializer, LocationSerializer, MapPinSerializer, add_quick_add_extras
+from adventures.serializers.location import (
+    CollectionLinkResultSerializer,
+    CollectionMembershipQuerySerializer,
+    CollectionMembershipSerializer,
+    DuplicateCheckResultSerializer,
+    DuplicateCheckSerializer,
+    LocationDuplicateRequestSerializer,
+    LocationListQuerySerializer,
+    LocationSuggestQuerySerializer,
+    LocationSuggestResponseSerializer,
+    ShareImageQuerySerializer,
+    SunTimesQuerySerializer,
+    SunTimesSerializer,
 )
-from core import pagination
-from adventures.throttling import ExternalGeocodeThrottle
+from adventures.serializers.quick_add import LocationQuickAddResultSerializer, QuickAddSerializer
 from adventures.services.exports.share_image import (
     build_share_image,
     get_location_for_share,
     resolve_share_page_url,
     share_image_filename,
-    valid_aspect,
 )
+from adventures.services.geocoding.assignment import apply_reverse_geocode_result
+from adventures.services.location_collections import link_location, placements_for, unlink_location
 from adventures.services.locations.center import collection_center
 from adventures.services.locations.copy import copy_location
 from adventures.services.locations.matching import find_duplicate_locations
+from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
+from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
+from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
 from adventures.views.mixins import PaginatedResponseMixin
-from adventures.services.geocoding.assignment import apply_reverse_geocode_result
-from adventures.services.quick_add import (
-    QuickAddError,
-    finish_quick_add,
-    prepare_location_quick_add,
-)
+from core import pagination
+from core.exceptions import APIError
+from core.geo import point_to_lat_lon
+from core.parsing import as_uuid
+from core.serializers import validated
 
 logger = logging.getLogger(__name__)
 
@@ -52,120 +64,122 @@ OWNER_ONLY_LOCATION_FIELDS = (
     'latitude', 'longitude', 'coordinates',
 )
 
+ASPECT_PARAMETER = OpenApiParameter(
+    'aspect', str, OpenApiParameter.PATH, enum=['square', 'story', 'landscape'],
+    description='`square` (1080×1080), `story` (1080×1920) or `landscape` (1200×630).',
+)
+PNG_RESPONSE = {(200, 'image/png'): OpenApiResponse(response=bytes, description='A PNG image.')}
+
+
+@extend_schema_view(
+    retrieve=extend_schema(
+        description='Anyone can read a public location. Otherwise you need to own it or be a member of a '
+        'collection it is in.',
+    ),
+    create=extend_schema(
+        description='Send `collections` (ids) to add it to collections you can edit. A place created in a '
+        "collection belongs to the collection's owner.",
+    ),
+    update=extend_schema(
+        description='Collaborators change visits, photos and collection links; `name`, `description`, '
+        '`category`, `is_public`, `location` and the coordinates are kept as the owner set them.',
+    ),
+    partial_update=extend_schema(
+        description='Like PUT, for the fields you send. Sending `collections` changes only links to '
+        'collections you can open; links to others stay.',
+    ),
+    destroy=extend_schema(description='Only the owner can delete a location.'),
+)
 class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
     """
-    ViewSet for managing Adventure objects with support for filtering, sorting,
-    and sharing functionality.
+    Locations: places you have been or want to go, with visits, photos, files, trails and activities.
+
+    A location belongs to one user. It can be in any number of collections; members of those
+    collections can see it and editors can change some of it.
     """
+
+    openapi_tags = ['Locations']
+    queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
     pagination_class = pagination.StandardResultsSetPagination
 
-    # ==================== QUERYSET & PERMISSIONS ====================
+    # Actions a signed-out visitor may use on a public location.
+    PUBLIC_ACTIONS = {'retrieve', 'share_image', 'sun_times'}
+    # Actions about the requester's own places, which need an account.
+    OWN_PLACES_ACTIONS = {'list', 'pins', 'suggest', 'check_duplicates'}
+
+    def get_permissions(self):
+        if self.action in self.OWN_PLACES_ACTIONS:
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
     def get_queryset(self):
-        """
-        Returns queryset based on user authentication and action type.
-        Public actions allow unauthenticated access to public locations.
-        """
-        user = self.request.user
-        public_allowed_actions = {'retrieve', 'additional_info', 'share_image'}
-
-        if not user.is_authenticated:
-            if self.action in public_allowed_actions:
-                return Location.objects.retrieve_locations(
-                    user, include_public=True
-                ).order_by('-updated_at')
+        if getattr(self, 'swagger_fake_view', False):
             return Location.objects.none()
-
-        include_public = self.action in public_allowed_actions
-        queryset = Location.objects.retrieve_locations(
-            user,
-            include_public=include_public,
-            include_owned=True,
-            include_shared=True
+        user = self.request.user
+        include_public = self.action in self.PUBLIC_ACTIONS
+        if not user.is_authenticated:
+            if include_public:
+                return Location.objects.retrieve_locations(user, include_public=True).order_by('-updated_at')
+            return Location.objects.none()
+        return Location.objects.retrieve_locations(
+            user, include_public=include_public, include_owned=True, include_shared=True
         ).order_by('-updated_at')
-        # Lists serialize many places; load what they read in a fixed number of queries.
-        if self.action == 'list':
-            queryset = optimize_locations(queryset)
-        return queryset
 
-    # ==================== SORTING & FILTERING ====================
+    # ==================== LIST ====================
 
-    def apply_sorting(self, queryset):
-        """Apply sorting and collection filtering to queryset."""
-        order_by = self.request.query_params.get('order_by', 'updated_at')
-        order_direction = self.request.query_params.get('order_direction', 'asc')
-        include_collections = self.request.query_params.get('include_collections', 'true')
+    @extend_schema(parameters=[LocationListQuerySerializer], responses=LocationListSerializer(many=True))
+    def list(self, request, *args, **kwargs):
+        """
+        List your locations
 
-        # Validate parameters
-        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
-        if order_by not in valid_order_by:
-            order_by = 'name'
+        The places you own, a page at a time, in a light form (no trails, files or GPS
+        tracks). Filter by category, visited status and whether they are in a collection.
+        Places in collections shared with you are listed with the collection.
+        """
+        params = validated(LocationListQuerySerializer, request.query_params)
+        now = timezone.now()
+        queryset = (
+            Location.objects.filter(user=request.user)
+            .annotate(annotated_is_visited=Exists(Visit.objects.filter(location_id=OuterRef('pk'), start_date__lte=now)))
+            .select_related('category', 'user')
+            .prefetch_related(Prefetch('images', queryset=ContentImage.objects.select_related('user')), 'collections')
+        )
+        if params.get('category'):
+            names = [name.strip() for name in params['category'].split(',') if name.strip()]
+            queryset = queryset.filter(category__name__in=names, category__user=request.user)
+        if params['is_visited'] is not None:
+            queryset = queryset.filter(annotated_is_visited=params['is_visited'])
+        if params['in_collection'] is not None:
+            queryset = queryset.filter(collections__isnull=not params['in_collection'])
+        queryset = self._order(queryset.distinct(), params['ordering'])
+        return self.paginate_and_respond(queryset, request, serializer_class=LocationListSerializer)
 
-        if order_direction not in ['asc', 'desc']:
-            order_direction = 'asc'
-
-        # Apply sorting logic
-        queryset = self._apply_ordering(queryset, order_by, order_direction)
-
-        # Filter locations without collections if requested
-        if include_collections == 'false':
-            queryset = queryset.filter(collections__isnull=True)
-
-        return queryset
-
-    def _apply_ordering(self, queryset, order_by, order_direction):
-        """Apply ordering to queryset based on field type."""
-        if order_by == 'date':
-            queryset = queryset.annotate(
-                latest_visit=Max('visits__start_date')
-            ).filter(latest_visit__isnull=False)
-            ordering = 'latest_visit'
-        elif order_by == 'name':
-            queryset = queryset.annotate(lower_name=Lower('name'))
-            ordering = 'lower_name'
-        elif order_by == 'rating':
-            queryset = queryset.filter(rating__isnull=False)
-            ordering = 'rating'
-        elif order_by == 'updated_at':
-            # The locations page sends one direction for every field and defaults it to 'asc', so
-            # 'asc' on updated_at must mean newest first for its default view to show recent places.
-            # (Collections use plain ascending and descending.) Change this together with the page.
-            ordering = '-updated_at' if order_direction == 'asc' else 'updated_at'
-            return queryset.order_by(ordering)
+    @staticmethod
+    def _order(queryset, ordering):
+        descending = ordering.startswith('-')
+        field = ordering.lstrip('-')
+        if field == 'name':
+            queryset, expression = queryset.annotate(lower_name=Lower('name')), F('lower_name')
+        elif field == 'date':
+            queryset, expression = queryset.annotate(latest_visit=Max('visits__start_date')), F('latest_visit')
         else:
-            ordering = order_by
+            expression = F(field)
+        ordered = expression.desc(nulls_last=True) if descending else expression.asc(nulls_last=True)
+        return queryset.order_by(ordered, 'id')
 
-        # Apply direction
-        if order_direction == 'desc':
-            ordering = f'-{ordering}'
-
-        return queryset.order_by(ordering)
-
-    # ==================== CRUD OPERATIONS ====================
+    # ==================== CRUD ====================
 
     @transaction.atomic
     def perform_create(self, serializer):
-        """Create adventure with collection validation and ownership logic."""
         collections = serializer.validated_data.get('collections', [])
-
-        # Validate permissions for all collections
-        self._validate_collection_permissions(collections)
-
+        ensure_can_add_to_collections(self.request, collections, 'location')
         # A place created inside a collection belongs to the collection owner,
         # including when a collaborator creates it. Their own map does not gain the pin.
-        user_to_assign = collections[0].user if collections else self.request.user
-
-        serializer.save(user=user_to_assign)
-
-    def perform_update(self, serializer):
-        """Update adventure."""
-        # Just save the adventure - the signal will handle publicity updates
-        serializer.save()
+        serializer.save(user=collections[0].user if collections else self.request.user)
 
     def update(self, request, *args, **kwargs):
-        """Handle adventure updates with collection permission validation."""
         instance = self.get_object()
         partial = kwargs.pop('partial', False)
 
@@ -187,331 +201,186 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
                 pk__in=instance.collections.values_list('pk', flat=True)
             ).filter(readable_collections_q(request))
             hidden = list(instance.collections.exclude(pk__in=visible.values_list('pk', flat=True)))
-            serializer.validated_data['collections'] = requested + [
-                c for c in hidden if c not in requested
-            ]
+            serializer.validated_data['collections'] = requested + [c for c in hidden if c not in requested]
             removed_collections = self._validate_collection_update_permissions(
                 instance, serializer.validated_data['collections']
             )
-        else:
-            # Remove collections from validated_data if not provided
-            serializer.validated_data.pop('collections', None)
 
         with transaction.atomic():
-            self.perform_update(serializer)
+            serializer.save()
             for collection in removed_collections:
                 unlink_location(instance, collection)
         return Response(serializer.data)
-    
+
     def destroy(self, request, *args, **kwargs):
-        """Only allow the owner to delete a location."""
         instance = self.get_object()
-        
-        # Check if the user is the owner
         if instance.user != request.user:
-            raise PermissionDenied("Only the owner can delete this location.")
-        
+            raise PermissionDenied('Only the owner can delete this location.')
         return super().destroy(request, *args, **kwargs)
 
-    # ==================== CUSTOM ACTIONS ====================
+    # ==================== CREATING AND COPYING ====================
 
-    @action(
-        detail=False,
-        methods=['post'],
-        url_path='quick-add',
-        throttle_classes=[ExternalGeocodeThrottle],
-    )
+    @extend_schema(request=QuickAddSerializer, responses={201: LocationQuickAddResultSerializer})
+    @action(detail=False, methods=['post'], url_path='quick-add', throttle_classes=[ExternalGeocodeThrottle])
     def quick_add(self, request):
-        """Create a location from lightweight map/place input in one server-side call."""
+        """
+        Add a location from a map pin
+
+        Creates a location from a place picked on the map or from search, in one call: finds
+        the country, region and city, picks or creates the category, optionally adds it to a
+        collection and a trip day, and imports a few photos. Everything is undone if any
+        step fails.
+        """
         payload = request.data if isinstance(request.data, dict) else {}
+        # Anything that fails inside rolls the whole thing back, so a refusal leaves no half-made place.
+        with transaction.atomic():
+            prepared = prepare_location_quick_add(
+                request.user, payload, can_add_to_collection=lambda collection: can_edit(request, collection)
+            )
+            serializer = self.get_serializer(data=prepared.serializer_payload)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
 
-        try:
-            # Anything that fails inside rolls the whole thing back, so a refusal leaves no half-made place.
-            with transaction.atomic():
-                prepared = prepare_location_quick_add(
-                    request.user, payload, can_add_to_collection=lambda collection: can_edit(request, collection)
-                )
-                serializer = self.get_serializer(data=prepared.serializer_payload)
-                serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer)
+            location = serializer.instance
+            apply_reverse_geocode_result(location, prepared.reverse_data, prepared.location_label)
+            itinerary_item, image_import_summary = finish_quick_add(location, prepared, payload)
 
-                location = serializer.instance
-                apply_reverse_geocode_result(location, prepared.reverse_data, prepared.location_label)
-                itinerary_item, image_import_summary = finish_quick_add(location, prepared, payload)
-        except QuickAddError as error:
-            return Response({"error": error.message}, status=error.status_code)
-
-        response_data = add_quick_add_extras(
-            self.get_serializer(location).data, itinerary_item, image_import_summary
-        )
+        response_data = add_quick_add_extras(self.get_serializer(location).data, itinerary_item, image_import_summary)
         return Response(response_data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(request=DuplicateCheckSerializer, responses=DuplicateCheckResultSerializer)
     @action(detail=False, methods=['post'], url_path='check-duplicates')
     def check_duplicates(self, request):
-        """Return likely existing locations that match a place being added."""
-        if not request.user or not request.user.is_authenticated:
-            return Response(
-                {"error": "Authentication required"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+        """
+        Find likely duplicates
 
-        payload = request.data if isinstance(request.data, dict) else {}
-        name = str(payload.get('name') or '').strip()
-        if not name and payload.get('latitude') in (None, '') and payload.get('longitude') in (None, ''):
-            return Response(
-                {"error": "name or coordinates are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        Your existing locations that are probably the same place as one being added, by name
+        and distance, best match first.
+        """
+        params = validated(DuplicateCheckSerializer, request.data)
         matches = find_duplicate_locations(
             request.user,
-            name=name,
-            latitude=payload.get('latitude'),
-            longitude=payload.get('longitude'),
-            location=payload.get('location'),
-            exclude_id=payload.get('exclude_id') or None,
+            name=params['name'].strip(),
+            latitude=params.get('latitude'),
+            longitude=params.get('longitude'),
+            location=params.get('location'),
+            exclude_id=params.get('exclude_id'),
         )
-        return Response({"matches": [match.to_dict() for match in matches]})
+        return Response({'matches': [match.to_dict() for match in matches]})
 
-    @action(detail=False, methods=['get'])
-    def filtered(self, request):
-        """Filter locations by category types and visit status."""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-
-        types = [t for t in request.query_params.get('types', '').split(',') if t]
-        
-        # Handle 'all' types
-        if 'all' in types:
-            types = list(
-                Category.objects.filter(user=request.user).values_list('name', flat=True)
-            )
-        else:
-            # Validate provided types in a single query
-            if not types:
-                return Response(
-                    {"error": "Invalid category or no types provided"},
-                    status=400
-                )
-            found = set(
-                Category.objects.filter(
-                    user=request.user, name__in=types
-                ).values_list('name', flat=True)
-            )
-            if found != set(types):
-                return Response(
-                    {"error": "Invalid category or no types provided"},
-                    status=400
-                )
-
-        now = timezone.now()
-
-        # Build base queryset optimized for list cards (no GPX/trails/geo payloads)
-        queryset = (
-            Location.objects.filter(
-                category__name__in=types,
-                category__user=request.user,
-                user=request.user.id,
-            )
-            .annotate(
-                annotated_is_visited=Exists(
-                    Visit.objects.filter(
-                        location_id=OuterRef('pk'),
-                        start_date__lte=now,
-                    )
-                )
-            )
-            .select_related('category', 'user')
-            .prefetch_related(
-                Prefetch(
-                    'images',
-                    queryset=ContentImage.objects.select_related('user'),
-                ),
-                'collections',
-            )
-        )
-
-        # Apply visit status filtering
-        queryset = self._apply_visit_filtering(queryset, request)
-        queryset = self.apply_sorting(queryset)
-
-        return self.paginate_and_respond(
-            queryset, request, serializer_class=LocationListSerializer
-        )
-
-    @action(detail=False, methods=['get'])
-    def all(self, request):
-        """Get all locations (public and owned) with optional collection filtering."""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-
-        include_collections = request.query_params.get('include_collections', 'false') == 'true'
-        nested = request.query_params.get('nested', 'false') == 'true'
-        allowedNestedFields = request.query_params.get('allowed_nested_fields', '').split(',')
-        
-        # Build queryset with collection filtering
-        base_filter = Q(user=request.user.id)
-        
-        if include_collections:
-            queryset = Location.objects.filter(base_filter)
-        else:
-            queryset = Location.objects.filter(base_filter, collections__isnull=True)
-
-        queryset = optimize_locations(self.apply_sorting(queryset))
-        serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields})
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def calendar(self, request):
-        """Return a lightweight payload for calendar rendering."""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-
-        queryset = (
-            self.get_queryset()
-            .filter(visits__isnull=False)
-            .select_related('category')
-            .prefetch_related(
-                Prefetch(
-                    'visits',
-                    queryset=Visit.objects.only('id', 'start_date', 'end_date', 'timezone')
-                )
-            )
-            .only('id', 'name', 'location', 'category__name', 'category__icon')
-            .distinct()
-        )
-
-        serializer = CalendarLocationSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'], url_path='additional-info')
-    def additional_info(self, request, pk=None):
-        """Get adventure with extended details (kept for backwards compatibility)."""
-        adventure = self.get_object()
-        if not can_read_location(request, adventure):
-            return Response(
-                {"error": "User does not have permission to access this adventure"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        serializer = self.get_serializer(adventure)
-        return Response(serializer.data)
-    
+    @extend_schema(request=LocationDuplicateRequestSerializer, responses={201: LocationSerializer})
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
-        """Copy a place the user can read into their own account (see ``copy_location``)."""
-        original = self.get_object()
+        """
+        Copy a location
 
+        Copies a place you can see into your own account, with its photos, files and trails
+        but not its visits. Optionally puts the copy in a collection.
+        """
+        original = self.get_object()
         if not can_read_location(request, original):
-            return Response(
-                {"error": "You do not have permission to duplicate this location."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise PermissionDenied('You do not have permission to copy this location.')
 
         collection = None
-        collection_id = request.data.get('collection_id')
+        collection_id = validated(LocationDuplicateRequestSerializer, request.data).get('collection')
         if collection_id:
-            try:
-                collection = Collection.objects.get(id=collection_id)
-            except Collection.DoesNotExist:
-                return Response({"error": "Collection not found."}, status=status.HTTP_404_NOT_FOUND)
+            collection = Collection.objects.filter(id=collection_id).first()
+            if collection is None:
+                raise NotFound('Collection not found.')
             if not can_edit(request, collection):
-                return Response(
-                    {"error": "You do not have permission to add locations to this collection."},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
+                raise PermissionDenied('You do not have permission to add locations to this collection.')
 
         try:
             new_location = copy_location(original, request.user, collection)
         except Exception:
-            logger.exception("Failed to duplicate location %s", pk)
-            return Response(
-                {"error": "An error occurred while duplicating the location."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            logger.exception('Failed to duplicate location %s', pk)
+            raise APIError('The location could not be copied.', code='server_error', status=500)
         return Response(self.get_serializer(new_location).data, status=status.HTTP_201_CREATED)
 
-    @action(
-        detail=True,
-        methods=['get'],
-        url_path=r'share-image/(?P<aspect>square|story|landscape)',
-    )
-    def share_image(self, request, pk=None, aspect=None):
-        """Generate a branded PNG share card for social media."""
-        if not valid_aspect(aspect):
-            return Response({'error': 'Invalid aspect ratio.'}, status=status.HTTP_400_BAD_REQUEST)
+    # ==================== OTHER VIEWS OF A LOCATION ====================
 
+    @extend_schema(parameters=[ASPECT_PARAMETER, ShareImageQuerySerializer], responses=PNG_RESPONSE)
+    @action(detail=True, methods=['get'], url_path=r'share-image/(?P<aspect>square|story|landscape)')
+    def share_image(self, request, pk=None, aspect=None):
+        """
+        Get a share card
+
+        A branded PNG for social media with the place's photo, name and a link. Public places
+        can be fetched without signing in.
+        """
+        params = validated(ShareImageQuerySerializer, request.query_params)
         location = self.get_object()
         try:
             location = get_location_for_share(location.id)
-            page_url = resolve_share_page_url(request, f'/locations/{location.id}')
-            png_bytes = build_share_image(location, aspect, page_url)
+            png_bytes = build_share_image(location, aspect, resolve_share_page_url(request, f'/locations/{location.id}'))
         except Exception:
             logger.exception('Failed to generate share image for location %s', location.id)
-            return Response(
-                {'error': 'Failed to generate share image. Please try again later.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            raise APIError('The share image could not be made. Please try again later.', code='server_error', status=500)
 
-        filename = share_image_filename(location, aspect)
-        disposition = 'attachment' if request.query_params.get('download') else 'inline'
         response = HttpResponse(png_bytes, content_type='image/png')
-        response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+        disposition = 'attachment' if params['download'] else 'inline'
+        response['Content-Disposition'] = f'{disposition}; filename="{share_image_filename(location, aspect)}"'
         return response
 
-    # view to return location name and lat/lon for all locations a user owns for the golobal map
-    @action(detail=False, methods=['get'], url_path='pins')
-    def map_locations(self, request):
-        """Get all locations with name and lat/lon for map display."""
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
-
-        locations = (
-            Location.objects.filter(user=request.user)
-            .select_related('category__user')
-            .prefetch_related('visits')
-        )
-        serializer = MapPinSerializer(locations, many=True, context={'request': request})
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'], url_path='suggest')
-    def suggest(self, request):  # the user's own places, searchable and paged
+    @extend_schema(
+        parameters=[SunTimesQuerySerializer],
+        responses={200: SunTimesSerializer, 404: OpenApiResponse(description='No times for this place or date.')},
+    )
+    @action(detail=True, methods=['get'], url_path='sun-times', throttle_classes=[ExternalSunriseSunsetThrottle])
+    def sun_times(self, request, pk=None):
         """
-        The user's own places, a page at a time.
+        Get sunrise and sunset
 
-        With ``q`` (two or more characters) search by name. Otherwise list every
-        place, nearest the collection's geometric median first when a
-        ``collection`` is given and has a center, A to Z when not. ``offset``
-        and ``limit`` (at most 50) page through the list.
+        Sunrise and sunset at the place on a date, in its local time. Needs coordinates.
         """
-        if not request.user.is_authenticated:
-            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        params = validated(SunTimesQuerySerializer, request.query_params)
+        # Guest links can read places in their collection, which the detail queryset leaves out.
+        location = Location.objects.filter(pk=as_uuid(pk)).first() if as_uuid(pk) else None
+        if location is None or not can_read_location(request, location):
+            raise NotFound('Location not found.')
+        if not location.coordinates:
+            raise APIError('This location has no coordinates.', code='no_coordinates')
+        latitude, longitude = point_to_lat_lon(location.coordinates)
+        times = get_sunrise_sunset_for_date(latitude, longitude, params['date'].isoformat())
+        if not times:
+            raise NotFound('Sunrise and sunset are not available for this date.')
+        return Response(times)
 
-        query = str(request.query_params.get('q') or '').strip()
-        try:
-            limit = int(request.query_params.get('limit') or 24)
-            offset = int(request.query_params.get('offset') or 0)
-        except (TypeError, ValueError):
-            limit, offset = 24, 0
-        limit = min(max(limit, 1), 50)
-        offset = max(offset, 0)
+    @extend_schema(responses=MapPinSerializer(many=True))
+    @action(detail=False, methods=['get'], url_path='pins', pagination_class=None)
+    def pins(self, request):
+        """
+        List map pins
 
+        Every location you own with just what a map needs: name, coordinates, category and
+        whether you have visited it.
+        """
+        locations = Location.objects.filter(user=request.user).select_related('category__user').prefetch_related('visits')
+        return Response(MapPinSerializer(locations, many=True, context={'request': request}).data)
 
+    @extend_schema(parameters=[LocationSuggestQuerySerializer], responses=LocationSuggestResponseSerializer)
+    @action(detail=False, methods=['get'], url_path='suggest', pagination_class=None)
+    def suggest(self, request):
+        """
+        Suggest your locations
+
+        Your own places for adding to a collection, a page at a time. With `q`, search by name.
+        With `collection`, places closest to the middle of that collection come first;
+        otherwise A to Z.
+        """
+        params = validated(LocationSuggestQuerySerializer, request.query_params)
         center = None
-        collection_id = request.query_params.get('collection')
-        if collection_id:
-            collection = Collection.objects.filter(id=collection_id).first()
-            if collection is None:
-                return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
-            if not is_member(request, collection):
-                return Response({'error': 'You do not have access to this collection.'}, status=status.HTTP_403_FORBIDDEN)
+        if params.get('collection'):
+            collection = Collection.objects.filter(id=params['collection']).first()
+            if collection is None or not is_member(request, collection):
+                raise NotFound('Collection not found.')
             center = collection_center(collection)
 
         locations = Location.objects.filter(user=request.user).select_related('category')
+        query = params['q'].strip()
         if len(query) >= 2:
             locations = locations.filter(name__icontains=query)
-
-        total = locations.count()
+        count = locations.count()
         if center is not None:
             locations = locations.annotate(distance=Distance('coordinates', center)).order_by(
                 F('distance').asc(nulls_last=True), 'name'
@@ -519,11 +388,11 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
         else:
             locations = locations.order_by('name')
 
+        offset, limit = params['offset'], params['limit']
         return Response({
+            'count': count,
             'results': MapPinSerializer(locations[offset:offset + limit], many=True).data,
             'anchored': center is not None,
-            'total': total,
-            'has_more': offset + limit < total,
         })
 
     # ==================== COLLECTION MEMBERSHIP ====================
@@ -535,11 +404,19 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
             or collection.shared_with.filter(id=location.user_id).exists()
         )
 
-    @action(detail=True, methods=['get'], url_path='collections')
+    @extend_schema(
+        parameters=[CollectionMembershipQuerySerializer], responses=CollectionMembershipSerializer(many=True)
+    )
+    @action(detail=True, methods=['get'], url_path='collections', pagination_class=None)
     def collection_memberships(self, request, pk=None):
-        """Collections this place is in, plus the ones the requester may add it to."""
+        """
+        List the location's collections
+
+        The collections the place is in, then the ones you could add it to, with what you are
+        allowed to do in each.
+        """
         location = self.get_object()
-        query = (request.query_params.get('q') or '').strip()
+        query = validated(CollectionMembershipQuerySerializer, request.query_params)['q'].strip()
 
         linked_ids = set(location.collections.values_list('pk', flat=True))
         candidates = Collection.objects.filter(
@@ -551,7 +428,6 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
 
         rows = []
         for collection in candidates:
-            role = member_role(collection, request.user)
             is_linked = collection.pk in linked_ids
             editable = can_edit(request, collection)
             rows.append({
@@ -561,38 +437,40 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
                 'end_date': collection.end_date,
                 'is_shared': collection.user_id != request.user.id,
                 'owner_name': collection.user.username,
-                'role': role,
+                'role': member_role(collection, request.user),
                 'is_linked': is_linked,
                 'can_link': editable and self._location_owner_fits(location, collection),
                 'can_unlink': editable or location.user_id == request.user.id,
                 'placements': placements_for(location, collection) if is_linked else [],
             })
-        rows.sort(key=lambda r: (
-            not r['is_linked'], r['is_shared'], (r['name'] or '').lower()
-        ))
+        rows.sort(key=lambda r: (not r['is_linked'], r['is_shared'], (r['name'] or '').lower()))
         return Response(rows)
 
+    @extend_schema(
+        methods=['POST'], request=None, responses=CollectionLinkResultSerializer,
+        summary='Add the location to a collection',
+        description='Idempotent. The place owner must own the collection or be a member of it.',
+        parameters=[OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.')],
+    )
+    @extend_schema(
+        methods=['DELETE'], request=None, responses={200: CollectionLinkResultSerializer},
+        summary='Remove the location from a collection',
+        description='Idempotent. Also removes its placements from the day plan, and says how many.',
+        parameters=[OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.')],
+    )
     @action(detail=True, methods=['post', 'delete'], url_path=r'collections/(?P<collection_id>[^/.]+)')
     def collection_membership(self, request, pk=None, collection_id=None):
-        """Link (POST) or unlink (DELETE) this place for one collection. Idempotent."""
         location = self.get_object()
-        try:
-            collection = Collection.objects.get(pk=collection_id)
-        except (Collection.DoesNotExist, ValidationError, ValueError):
-            return Response({'error': 'Collection not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Hide collections the requester cannot open
-        if not Collection.objects.filter(pk=collection.pk).filter(readable_collections_q(request)).exists():
-            return Response({'error': 'Collection not found.'}, status=status.HTTP_404_NOT_FOUND)
+        collection = Collection.objects.filter(pk=collection_id).filter(readable_collections_q(request)).first() \
+            if as_uuid(collection_id) else None
+        if collection is None:
+            raise NotFound('Collection not found.')
 
         if request.method == 'POST':
             if not can_edit(request, collection):
                 raise PermissionDenied("You don't have permission to add locations to this collection.")
             if not self._location_owner_fits(location, collection):
-                return Response(
-                    {'error': 'The location owner must own or be a member of this collection.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                raise APIError('The location owner must own or be a member of this collection.', code='invalid')
             link_location(location, collection)
             return Response({'linked': True})
 
@@ -601,66 +479,24 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
         removed = unlink_location(location, collection)
         return Response({'linked': False, 'removed_placements': removed})
 
-    # ==================== HELPER METHODS ====================
+    # ==================== HELPERS ====================
 
     def _validate_collection_update_permissions(self, instance, new_collections):
         """Check collection permissions for an update. Returns the collections being removed."""
         current_collections = set(instance.collections.all())
         new_collections_set = set(new_collections)
-        
-        # Collections being added
-        collections_to_add = new_collections_set - current_collections
-        
-        # Collections being removed
-        collections_to_remove = current_collections - new_collections_set
-        
-        # Validate permissions for collections being added
-        for collection in collections_to_add:
-            # Standard validation for adding collections
-            if not can_edit(self.request, collection):
-                raise PermissionDenied(
-                    f"You don't have permission to add location to collection '{collection.name}'"
-                )
-        
-        # For collections being removed, allow if:
-        # 1. User owns the location, OR
-        # 2. User owns the collection (even if they don't own the location)
-        for collection in collections_to_remove:
-            user_owns_location = instance.user == self.request.user
-            user_owns_collection = collection.user == self.request.user
-            
-            if not (user_owns_location or user_owns_collection):
-                # Editors may unlink; viewers may not
-                if not can_edit(self.request, collection):
-                    raise PermissionDenied(
-                        "You don't have permission to remove this location from one of the collections it's linked to."
-                    )
 
+        for collection in new_collections_set - current_collections:
+            if not can_edit(self.request, collection):
+                raise PermissionDenied(f"You don't have permission to add location to collection '{collection.name}'")
+
+        # A collection can be removed by the place owner, the collection owner, or an editor.
+        collections_to_remove = current_collections - new_collections_set
+        for collection in collections_to_remove:
+            owns = instance.user == self.request.user or collection.user == self.request.user
+            if not owns and not can_edit(self.request, collection):
+                raise PermissionDenied(
+                    "You don't have permission to remove this location from one of the collections it's linked to."
+                )
         return list(collections_to_remove)
 
-    def _validate_collection_permissions(self, collections):
-        """Validate permissions for all collections (used in create)."""
-        ensure_can_add_to_collections(self.request, collections, 'location')
-
-    def _apply_visit_filtering(self, queryset, request):
-        """Apply visit status filtering to queryset."""
-        is_visited_param = request.query_params.get('is_visited')
-        if is_visited_param is None:
-            return queryset
-
-        # Convert parameter to boolean
-        if is_visited_param.lower() == 'true':
-            is_visited_bool = True
-        elif is_visited_param.lower() == 'false':
-            is_visited_bool = False
-        else:
-            return queryset
-
-        # Apply visit filtering
-        now = timezone.now().date()
-        if is_visited_bool:
-            queryset = queryset.filter(visits__start_date__lte=now).distinct()
-        else:
-            queryset = queryset.exclude(visits__start_date__lte=now).distinct()
-
-        return queryset

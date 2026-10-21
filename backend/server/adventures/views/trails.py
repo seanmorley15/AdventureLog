@@ -1,14 +1,30 @@
-from rest_framework import viewsets
 from django.db.models import Q
-from adventures.models import Trail
-from adventures.serializers import TrailSerializer
-from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.access.audience import can_edit, has_guest_token, member_collections_q
-from adventures.services.day_plan.files import trail_collection
-from adventures.services import day_plan
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework import viewsets
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied, ValidationError
 
+from adventures.access.audience import can_edit, has_guest_token, member_collections_q
+from adventures.models import Trail
+from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from adventures.serializers import TrailSerializer
+from adventures.services import day_plan
+from adventures.services.day_plan.files import trail_collection
+from core.exceptions import APIError
+
+
+@extend_schema_view(
+    create=extend_schema(
+        description='Attach it to a `location`, a trip `day` (optionally spanning to `span_end_index`), or a '
+        '`collection` (its Ideas). Give a `link`, or a `wanderer_id` to show a trail from your Wanderer server; only '
+        "the record's owner can attach a Wanderer trail."
+    ),
+    partial_update=extend_schema(description='The location, day or collection cannot be changed.'),
+)
 class TrailViewSet(viewsets.ModelViewSet):
+    """Trails: a link to a route, or a trail from a Wanderer server, on a location, a trip day or Ideas."""
+
+    openapi_tags = ['Trails']
+    queryset = Trail.objects.all()
     serializer_class = TrailSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
 
@@ -21,6 +37,8 @@ class TrailViewSet(viewsets.ModelViewSet):
         - The location is in a collection that is shared with the user
         - The location is in a collection that the user owns
         """
+        if getattr(self, 'swagger_fake_view', False):
+            return Trail.objects.none()
         user = self.request.user
         authenticated = bool(user and user.is_authenticated)
 
@@ -28,7 +46,7 @@ class TrailViewSet(viewsets.ModelViewSet):
         day_filter |= member_collections_q(self.request, 'collection__')
         if not authenticated:
             if not has_guest_token(self.request):
-                raise PermissionDenied("You must be authenticated to view trails.")
+                raise NotAuthenticated()
             return Trail.objects.filter(day_filter).distinct()
 
         location_filter = Q(location__user=user)
@@ -76,11 +94,11 @@ class TrailViewSet(viewsets.ModelViewSet):
         new_collection = serializer.validated_data.get('collection')
 
         if new_location and new_location != instance.location:
-            raise PermissionDenied("Cannot change trail location after creation. Create a new trail instead.")
+            raise APIError('A trail cannot move to another location. Create a new trail instead.', code='invalid')
         if new_day and new_day != instance.day:
-            raise PermissionDenied("Cannot change trail day after creation. Create a new trail instead.")
+            raise APIError('A trail cannot move to another day. Create a new trail instead.', code='invalid')
         if new_collection and new_collection != instance.collection:
-            raise PermissionDenied("Cannot change trail collection after creation. Create a new trail instead.")
+            raise APIError('A trail cannot move to another collection. Create a new trail instead.', code='invalid')
 
         parent = trail_collection(instance)
         if parent is not None:

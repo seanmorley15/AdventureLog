@@ -1,5 +1,6 @@
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from core.serializers import CustomModelSerializer, memoized_count
 from core.public_url import build_media_url
 from core.geo import point_to_lat_lon
@@ -21,16 +22,19 @@ class CountrySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     num_regions = serializers.SerializerMethodField()
     num_visits = serializers.SerializerMethodField()
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_flag_url(self, obj):
         flag_path = f"flags/{obj.country_code.lower()}.png"
         return build_media_url(flag_path)
     
+    @extend_schema_field(serializers.IntegerField())
     def get_num_regions(self, obj):
         # Annotated by the viewsets that list countries; per-row count otherwise.
         if hasattr(obj, 'num_regions_annotated'):
             return obj.num_regions_annotated
         return memoized_count(self, 'country_regions', obj.pk, lambda: Region.objects.filter(country=obj).count())
     
+    @extend_schema_field(serializers.IntegerField())
     def get_num_visits(self, obj):
         request = self.context.get('request')
         user = getattr(request, 'user', None)
@@ -62,6 +66,7 @@ class RegionSerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
         exclude = ['coordinates']
         read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name']
 
+    @extend_schema_field(serializers.IntegerField())
     def get_num_cities(self, obj):
         if hasattr(obj, 'num_cities_annotated'):
             return obj.num_cities_annotated

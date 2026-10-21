@@ -243,12 +243,10 @@
 		isSearching = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(
-				`/api/places/search/?query=${encodeURIComponent(searchTerm)}&include_meta=1`
-			);
+			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(searchTerm)}`);
 			const payload = await response.json();
-			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
-			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			const rawResults = payload?.results || [];
+			searchProvider = payload?.provider_used || null;
 
 			searchResults = rawResults.map((result: any) => ({
 				id: result.name + result.lat + result.lon,
@@ -281,12 +279,10 @@
 		isSearchingStart = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(
-				`/api/places/search/?query=${encodeURIComponent(searchTerm)}&include_meta=1`
-			);
+			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(searchTerm)}`);
 			const payload = await response.json();
-			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
-			startSearchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			const rawResults = payload?.results || [];
+			startSearchProvider = payload?.provider_used || null;
 
 			startSearchResults = rawResults.map((result: any) => ({
 				id: result.name + result.lat + result.lon,
@@ -318,12 +314,10 @@
 		isSearchingEnd = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(
-				`/api/places/search/?query=${encodeURIComponent(searchTerm)}&include_meta=1`
-			);
+			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(searchTerm)}`);
 			const payload = await response.json();
-			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
-			endSearchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			const rawResults = payload?.results || [];
+			endSearchProvider = payload?.provider_used || null;
 
 			endSearchResults = rawResults.map((result: any) => ({
 				id: result.name + result.lat + result.lon,
@@ -537,10 +531,10 @@
 		isReverseGeocoding = true;
 
 		try {
-			const response = await fetch(`/api/places/search/?query=${lat},${lng}&include_meta=1`);
+			const response = await fetch(`/api/places/search/?q=${lat},${lng}`);
 			const payload = await response.json();
-			const results = Array.isArray(payload) ? payload : payload?.results || [];
-			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			const results = payload?.results || [];
+			searchProvider = payload?.provider_used || null;
 
 			if (results && results.length > 0) {
 				const result = results[0];
@@ -595,7 +589,7 @@
 		target: 'single' | 'start' | 'end' = 'single'
 	) {
 		try {
-			const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}&format=json`);
+			const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}`);
 
 			if (response.ok) {
 				const data = await response.json();

@@ -1,5 +1,7 @@
 from rest_framework.test import APITestCase
 
+from adventures.tests.day_plan.base import item_url
+
 from adventures.models import Collection, CollectionItineraryItem, Location
 from users.models import CustomUser
 
@@ -17,9 +19,8 @@ class ItineraryAPITestCase(APITestCase):
 
     def test_create_global_itinerary_item_without_date(self):
         response = self.client.post(
-            '/api/itineraries/',
+            item_url(self.collection),
             {
-                'collection': str(self.collection.id),
                 'content_type': 'location',
                 'object_id': str(self.location.id),
                 'is_global': True,
@@ -46,9 +47,8 @@ class ItineraryAPITestCase(APITestCase):
     def test_collection_retrieve_serializes_itinerary_content_type_as_model_name(self):
         self.collection.locations.add(self.location)
         create_response = self.client.post(
-            '/api/itineraries/',
+            item_url(self.collection),
             {
-                'collection': str(self.collection.id),
                 'content_type': 'location',
                 'object_id': str(self.location.id),
                 'is_global': True,
@@ -81,7 +81,6 @@ class ItineraryCreatePermissionTestCase(APITestCase):
 
     def _payload(self, location, **extra):
         return {
-            'collection': str(self.collection.id),
             'content_type': 'location',
             'object_id': str(location.id),
             'is_global': True,
@@ -91,37 +90,33 @@ class ItineraryCreatePermissionTestCase(APITestCase):
 
     def test_non_member_cannot_create_item_in_date_keyed_collection(self):
         self.client.force_authenticate(user=self.outsider)
-        response = self.client.post('/api/itineraries/', self._payload(self.outsider_location), format='json')
+        response = self.client.post(item_url(self.collection), self._payload(self.outsider_location), format='json')
 
-        self.assertEqual(response.status_code, 403)
+        # The outsider cannot see the collection, so it does not exist for them.
+        self.assertEqual(response.status_code, 404)
         self.assertEqual(CollectionItineraryItem.objects.count(), 0)
 
-    def test_non_member_cannot_use_numeric_content_type_to_skip_object_check(self):
-        from django.contrib.contenttypes.models import ContentType
-
-        self.client.force_authenticate(user=self.outsider)
-        payload = self._payload(self.outsider_location, content_type=ContentType.objects.get_for_model(Location).pk)
-        response = self.client.post('/api/itineraries/', payload, format='json')
-
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(CollectionItineraryItem.objects.count(), 0)
-
-    def test_owner_cannot_place_object_they_cannot_access_via_numeric_content_type(self):
-        from django.contrib.contenttypes.models import ContentType
-
+    def test_owner_cannot_place_a_record_they_cannot_access(self):
         self.client.force_authenticate(user=self.owner)
-        payload = self._payload(self.outsider_location, content_type=ContentType.objects.get_for_model(Location).pk)
-        response = self.client.post('/api/itineraries/', payload, format='json')
+        response = self.client.post(item_url(self.collection), self._payload(self.outsider_location), format='json')
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(CollectionItineraryItem.objects.count(), 0)
 
-    def test_owner_can_create_item_with_numeric_content_type(self):
+    def test_a_numeric_content_type_is_refused(self):
         from django.contrib.contenttypes.models import ContentType
 
         self.client.force_authenticate(user=self.owner)
         payload = self._payload(self.location, content_type=ContentType.objects.get_for_model(Location).pk)
-        response = self.client.post('/api/itineraries/', payload, format='json')
+        response = self.client.post(item_url(self.collection), payload, format='json')
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('content_type', response.json()['fields'])
+        self.assertEqual(CollectionItineraryItem.objects.count(), 0)
+
+    def test_owner_can_create_an_item(self):
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.post(item_url(self.collection), self._payload(self.location), format='json')
+
+        self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(CollectionItineraryItem.objects.count(), 1)

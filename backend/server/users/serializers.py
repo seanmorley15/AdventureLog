@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from adventures.models import Collection, CollectionInvite
@@ -96,7 +97,8 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + [
+        # `pk` and `email` are never sent (see to_representation); emails are managed through allauth.
+        fields = [f for f in UserDetailsSerializer.Meta.fields if f not in ('pk', 'email')] + [
             'has_password',
             'disable_password',
             'shared_collection_count',
@@ -111,14 +113,17 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         )
 
     @staticmethod
+    @extend_schema_field(serializers.IntegerField())
     def get_shared_collection_count(instance):
         return Collection.objects.filter(shared_with=instance).count()
 
     @staticmethod
+    @extend_schema_field(serializers.IntegerField())
     def get_pending_collection_invite_count(instance):
         return CollectionInvite.objects.filter(invited_user=instance).count()
 
     @staticmethod
+    @extend_schema_field(serializers.BooleanField())
     def get_has_password(instance):
         """
         Computes whether the user has a usable password set.
@@ -205,3 +210,122 @@ class DeleteAccountSerializer(serializers.Serializer):
                 raise serializers.ValidationError({"password": "Incorrect password."})
 
         return attrs
+
+
+class PublicProfileSerializer(CustomUserDetailsSerializer):
+    """A user as anyone else sees them: the account-only fields are left out."""
+
+    class Meta(CustomUserDetailsSerializer.Meta):
+        fields = [f for f in CustomUserDetailsSerializer.Meta.fields if f not in PRIVATE_USER_FIELDS]
+
+
+class APIKeyCreatedSerializer(APIKeySerializer):
+    key = serializers.CharField(
+        read_only=True,
+        help_text='The full key. It is returned only in this response and cannot be shown again.',
+    )
+
+    class Meta(APIKeySerializer.Meta):
+        fields = APIKeySerializer.Meta.fields + ['key']
+
+
+class MobileKeySerializer(APIKeyCreatedSerializer):
+    qr_code = serializers.CharField(
+        read_only=True,
+        help_text='A PNG data URI of a QR code holding the server URL and the key, for the mobile app to scan.',
+    )
+
+    class Meta(APIKeyCreatedSerializer.Meta):
+        fields = APIKeyCreatedSerializer.Meta.fields + ['qr_code']
+
+
+class MediaUsageSerializer(serializers.Serializer):
+    total_bytes = serializers.IntegerField()
+    images_bytes = serializers.IntegerField()
+    attachments_bytes = serializers.IntegerField()
+    profile_pics_bytes = serializers.IntegerField()
+    images_files = serializers.IntegerField()
+    attachments_files = serializers.IntegerField()
+    profile_pics_files = serializers.IntegerField()
+    limit_bytes = serializers.IntegerField(
+        allow_null=True, help_text='The storage limit for the account, or null when there is none.'
+    )
+
+
+class PasswordLoginSerializer(serializers.Serializer):
+    disable_password = serializers.BooleanField(
+        help_text='True when signing in with a password is turned off for this account.'
+    )
+
+
+class _RegistrationSerializer(serializers.Serializer):
+    enabled = serializers.BooleanField()
+    message = serializers.CharField(allow_blank=True, allow_null=True, help_text='Shown when sign-up is closed.')
+
+
+class _PasswordPolicySerializer(serializers.Serializer):
+    min_length = serializers.IntegerField()
+    validators_enabled = serializers.BooleanField(
+        help_text="True when Django's password strength checks (common, numeric, similar) are on."
+    )
+
+
+class _LegalLinksSerializer(serializers.Serializer):
+    terms_of_service_url = serializers.URLField(allow_null=True)
+    privacy_policy_url = serializers.URLField(allow_null=True)
+
+
+class _SocialProviderSerializer(serializers.Serializer):
+    provider = serializers.CharField(help_text='e.g. `github`, `openid_connect`.')
+    name = serializers.CharField()
+    url = serializers.URLField(help_text='Open this in the browser to sign in with the provider.')
+    usage_required = serializers.BooleanField(help_text='True when password sign-in is disabled on this server.')
+
+
+class AuthConfigSerializer(serializers.Serializer):
+    registration = _RegistrationSerializer()
+    password_policy = _PasswordPolicySerializer()
+    legal_links = _LegalLinksSerializer()
+    social_providers = _SocialProviderSerializer(many=True)
+
+
+class CsrfTokenSerializer(serializers.Serializer):
+    csrf_token = serializers.CharField(help_text='Send as `X-CSRFToken` on requests that change data.')
+
+
+class InviteStatusSerializer(serializers.Serializer):
+    valid = serializers.BooleanField()
+    email = serializers.EmailField(allow_null=True)
+    expired = serializers.BooleanField()
+    accepted = serializers.BooleanField()
+    registered = serializers.BooleanField(help_text='True when an account with this email already exists.')
+    message = serializers.CharField(
+        allow_null=True, help_text='Why the invite cannot be used: `invalid`, `expired`, `already_accepted` or `already_registered`.'
+    )
+
+
+class AccountSerializer(serializers.Serializer):
+    user = CustomUserDetailsSerializer()
+    pending_invite_count = serializers.IntegerField(help_text='Collection invites waiting for an answer.')
+    unread_comment_count = serializers.IntegerField(help_text='Comments in your inbox you have not seen.')
+
+
+class UserStatsSerializer(serializers.Serializer):
+    location_count = serializers.IntegerField()
+    visited_location_count = serializers.IntegerField()
+    trips_count = serializers.IntegerField(help_text='Collections the user owns.')
+    visited_city_count = serializers.IntegerField()
+    total_cities = serializers.IntegerField()
+    visited_region_count = serializers.IntegerField()
+    total_regions = serializers.IntegerField()
+    visited_country_count = serializers.IntegerField()
+    total_countries = serializers.IntegerField()
+    activities_overall = serializers.DictField(
+        help_text='Totals over all activities: `total_count`, `total_distance` (m), '
+        '`total_moving_time` (s), `total_elevation_gain` (m) and more.'
+    )
+    activity_distance = serializers.FloatField(help_text='Total distance in meters.')
+    activity_moving_time = serializers.FloatField(help_text='Total moving time in seconds.')
+    activity_elevation = serializers.FloatField(help_text='Total elevation gain in meters.')
+    activity_count = serializers.IntegerField()
+    activities_by_category = serializers.JSONField(help_text='The same totals per sport category.')

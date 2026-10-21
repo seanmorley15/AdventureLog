@@ -1,16 +1,38 @@
-from rest_framework import viewsets, status
-from django.db.models import Q
-from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
-from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentAttachment
-from adventures.serializers import AttachmentSerializer
-from adventures.views.mixins import ContentObjectMixin
+from django.db.models import Q
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import viewsets
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+
+from adventures.models import ContentAttachment, Location, Lodging, Note, Transportation, Visit
 from adventures.permissions import ContentImagePermission
-from rest_framework.exceptions import ValidationError
-from adventures.services.media_quota import enforce_media_storage_limit, get_uploaded_file_size
+from adventures.serializers import AttachmentSerializer
+from adventures.serializers.media import AttachmentTargetSerializer, AttachmentUploadSerializer
+from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
+from adventures.views.mixins import ContentObjectMixin
+from core.serializers import validated
+
+_QUOTA = OpenApiResponse(description="The file would exceed the owner's media storage (`media_quota_exceeded`).")
 
 
+@extend_schema_view(
+    create=extend_schema(
+        summary='Add an attachment',
+        description='Upload a file (multipart) to a location, visit, lodging, transportation or note. The file '
+        'belongs to the owner of the record. GPX files get a `geojson` track for maps.',
+        request={'multipart/form-data': AttachmentUploadSerializer},
+        responses={201: AttachmentSerializer, 413: _QUOTA},
+    ),
+    update=extend_schema(responses={200: AttachmentSerializer, 413: _QUOTA}),
+    partial_update=extend_schema(description='Rename it with `name`, or replace the `file`.',
+                                 responses={200: AttachmentSerializer, 413: _QUOTA}),
+)
 class AttachmentViewSet(ContentObjectMixin, viewsets.ModelViewSet):
+    """Files (PDFs, tickets, GPX tracks…) on locations, visits, lodging, transportation and notes."""
+
+    openapi_tags = ['Media']
+    queryset = ContentAttachment.objects.all()
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     serializer_class = AttachmentSerializer
     content_object_models = {
         'location': Location,
@@ -23,11 +45,9 @@ class AttachmentViewSet(ContentObjectMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get all images the user has access to"""
-        if not self.request.user.is_authenticated:
+        if getattr(self, 'swagger_fake_view', False) or not self.request.user.is_authenticated:
             return ContentAttachment.objects.none()
-        
-        # Import here to avoid circular imports
-        from adventures.models import Location, Transportation, Note, Lodging, Visit
+
         
         # Build a single query with all conditions
         return ContentAttachment.objects.filter(
@@ -98,64 +118,19 @@ class AttachmentViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         ).distinct()
 
     def create(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        # Get content type and object ID from request
-        content_type_name = request.data.get('content_type')
-        object_id = request.data.get('object_id')
-        
-        # For backward compatibility, also check for 'location' parameter
-        location_id = request.data.get('location')
-        
-        if location_id and not (content_type_name and object_id):
-            # Handle legacy location-specific requests
-            content_type_name = 'location'
-            object_id = location_id
-        
-        if not content_type_name or not object_id:
-            return Response({"error": "content_type and object_id are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Get and validate the content object
-        content_object = self._get_and_validate_content_object(content_type_name, object_id)
-        if isinstance(content_object, Response):  # Error response
-            return content_object
-
+        # The record first: a missing or forbidden record is a 404 or 403 whatever the file.
+        params = validated(AttachmentTargetSerializer, request.data)
+        self._content_object = self._get_and_validate_content_object(params['content_type'], params['object_id'])
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        content_type_name = self.request.data.get('content_type')
-        object_id = self.request.data.get('object_id')
-        
-        # Handle legacy location parameter
-        location_id = self.request.data.get('location')
-        if location_id and not (content_type_name and object_id):
-            content_type_name = 'location'
-            object_id = location_id
-
-        # Get the content object (we know it exists from create validation)
-        model_class = self.content_object_models[content_type_name]
-        content_object = model_class.objects.get(id=object_id)
-        content_type = ContentType.objects.get_for_model(model_class)
-
-        # Determine the appropriate user to assign
+        content_object = self._content_object
         attachment_user = self._get_attachment_user(content_object)
-
-        upload_file = serializer.validated_data.get('file')
-        allowed, details = enforce_media_storage_limit(
-            attachment_user,
-            get_uploaded_file_size(upload_file),
-        )
-        if not allowed:
-            raise ValidationError({
-                "error": "Media storage limit exceeded",
-                **details,
-            })
-        
+        ensure_media_storage_available(attachment_user, get_uploaded_file_size(serializer.validated_data.get('file')))
         serializer.save(
             user=attachment_user,
-            content_type=content_type,
-            object_id=object_id
+            content_type=ContentType.objects.get_for_model(type(content_object)),
+            object_id=content_object.id,
         )
 
     def perform_update(self, serializer):
@@ -163,16 +138,9 @@ class AttachmentViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         if upload_file:
             # The new file replaces the old one, so the old one stops counting.
             old_name = serializer.instance.file.name if serializer.instance.file else None
-            allowed, details = enforce_media_storage_limit(
-                serializer.instance.user,
-                get_uploaded_file_size(upload_file),
-                exclude_names=[old_name],
+            ensure_media_storage_available(
+                serializer.instance.user, get_uploaded_file_size(upload_file), exclude_names=[old_name]
             )
-            if not allowed:
-                raise ValidationError({
-                    "error": "Media storage limit exceeded",
-                    **details,
-                })
         serializer.save()
 
     def _get_attachment_user(self, content_object):

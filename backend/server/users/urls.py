@@ -1,4 +1,4 @@
-"""Account and sign-in routes. Mounted at ``auth/`` by the project URLs."""
+"""Sign-in configuration, the signed-in account, and public profiles. Mounted at ``api/``."""
 
 from django.urls import path
 
@@ -6,43 +6,29 @@ from .invitations.views import InviteSignupStatusView
 from .views import (
     APIKeyDetailView,
     APIKeyListCreateView,
-    DeleteAccountView,
-    DisablePasswordAuthenticationView,
-    EnabledSocialProvidersView,
-    IsRegistrationDisabled,
-    MobileQRCodeView,
-    PasswordPolicyView,
+    AuthConfigView,
+    CsrfTokenView,
+    MobileKeyView,
     PublicUserDetailView,
     PublicUserListView,
-    SignupLegalLinksView,
-    UpdateUserMetadataView,
-    UserMediaUsageView,
-    UserMetadataView,
+    PublicUserStatsView,
 )
 
+# The account itself (``/api/account/`` and its actions) is routed by main.api_urls, because the
+# hosted (cloud) app extends it with subscription details.
 urlpatterns = [
     # What the sign-in and sign-up screens need before anyone is signed in
-    path('is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
-    path('password-policy/', PasswordPolicyView.as_view(), name='password_policy'),
-    path('signup-legal-links/', SignupLegalLinksView.as_view(), name='signup_legal_links'),
-    path('invite-signup/<str:key>/', InviteSignupStatusView.as_view(), name='invite_signup_status'),
-    path('social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
+    path('auth/config/', AuthConfigView.as_view(), name='auth-config'),
+    path('auth/csrf/', CsrfTokenView.as_view(), name='auth-csrf'),
+    path('auth/invitations/<str:key>/', InviteSignupStatusView.as_view(), name='auth-invitation'),
+
+    # The signed-in user's keys
+    path('account/api-keys/', APIKeyListCreateView.as_view(), name='api-key-list'),
+    path('account/api-keys/<uuid:pk>/', APIKeyDetailView.as_view(), name='api-key-detail'),
+    path('account/mobile-key/', MobileKeyView.as_view(), name='mobile-key'),
 
     # Public profiles
     path('users/', PublicUserListView.as_view(), name='public-user-list'),
-    path('user/<str:username>/', PublicUserDetailView.as_view(), name='public-user-detail'),
-
-    # The signed-in user's account
-    path('update-user/', UpdateUserMetadataView.as_view(), name='update-user-metadata'),
-    path('user-metadata/', UserMetadataView.as_view(), name='user-metadata'),
-    path('user-media-usage/', UserMediaUsageView.as_view(), name='user-media-usage'),
-    path('disable-password/', DisablePasswordAuthenticationView.as_view(), name='disable-password-authentication'),
-    path('delete-account/', DeleteAccountView.as_view(), name='delete-account'),
-
-    # API key management
-    path('api-keys/', APIKeyListCreateView.as_view(), name='api-key-list-create'),
-    path('api-keys/<uuid:pk>/', APIKeyDetailView.as_view(), name='api-key-detail'),
-
-    # Mobile QR code for app login
-    path('mobile-qr/', MobileQRCodeView.as_view(), name='mobile-qr-code'),
+    path('users/<str:username>/', PublicUserDetailView.as_view(), name='public-user-detail'),
+    path('users/<str:username>/stats/', PublicUserStatsView.as_view(), name='public-user-stats'),
 ]

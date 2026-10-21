@@ -108,7 +108,7 @@
 				offset: nextOffset
 			});
 			results = [...results, ...response.results];
-			total = response.total;
+			total = response.count;
 			offset = response.offset;
 		} catch (err) {
 			loadMoreError = (err as Error).message || 'Failed to load more results';

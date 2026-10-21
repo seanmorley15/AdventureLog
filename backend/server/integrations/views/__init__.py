@@ -1,16 +1,9 @@
 """Views for the external-service integrations."""
 
-from .endurain import EndurainIntegrationViewSet
-from .immich import ImmichIntegrationView, ImmichIntegrationViewSet
-from .integration import IntegrationView
-from .strava import StravaIntegrationView
-from .wanderer import WandererIntegrationViewSet
+from .endurain import EndurainViewSet
+from .immich import ImmichViewSet
+from .integration import IntegrationStatusView
+from .strava import StravaViewSet
+from .wanderer import WandererViewSet
 
-__all__ = [
-    'EndurainIntegrationViewSet',
-    'ImmichIntegrationView',
-    'ImmichIntegrationViewSet',
-    'IntegrationView',
-    'StravaIntegrationView',
-    'WandererIntegrationViewSet',
-]
+__all__ = ['EndurainViewSet', 'ImmichViewSet', 'IntegrationStatusView', 'StravaViewSet', 'WandererViewSet']

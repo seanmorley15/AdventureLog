@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { t } from 'svelte-i18n';
@@ -82,10 +83,10 @@
 
 	async function load() {
 		failed = false;
-		const params = new URLSearchParams({ collection: collectionId, thread });
+		const params = new URLSearchParams({ thread });
 		if (storySecret) params.set('s', storySecret);
 		try {
-			const res = await fetch(`/api/collection-comments/?${params}`);
+			const res = await fetch(`/api/collections/${collectionId}/comments/?${params}`);
 			if (!res.ok) throw new Error(String(res.status));
 			data = await res.json();
 		} catch {
@@ -102,8 +103,8 @@
 				body: payload === undefined ? undefined : JSON.stringify(payload)
 			});
 			if (!res.ok) {
-				const error = await res.json().catch(() => ({}));
-				addToast('error', error?.body?.[0] ?? error?.detail ?? $t('comments.failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('comments.failed')));
 				return false;
 			}
 			await load();
@@ -117,8 +118,7 @@
 	async function post(event?: Event) {
 		event?.preventDefault();
 		if (!body.trim()) return;
-		const ok = await send('POST', '/api/collection-comments/', {
-			collection: collectionId,
+		const ok = await send('POST', `/api/collections/${collectionId}/comments/`, {
 			thread,
 			body,
 			...(thread === 'plan' && dayFilter ? { day: dayFilter } : {})
@@ -129,8 +129,7 @@
 	async function postReply(event: Event) {
 		event.preventDefault();
 		if (!replyTo || !replyBody.trim()) return;
-		const ok = await send('POST', '/api/collection-comments/', {
-			collection: collectionId,
+		const ok = await send('POST', `/api/collections/${collectionId}/comments/`, {
 			thread,
 			body: replyBody,
 			parent: replyTo.id
@@ -144,7 +143,7 @@
 	async function saveEdit(event: Event) {
 		event.preventDefault();
 		if (!editingId || !editBody.trim()) return;
-		const ok = await send('PATCH', `/api/collection-comments/${editingId}/`, { body: editBody });
+		const ok = await send('PATCH', `/api/comments/${editingId}/`, { body: editBody });
 		if (ok) editingId = null;
 	}
 
@@ -154,7 +153,7 @@
 			return;
 		}
 		confirmDelete = null;
-		await send('DELETE', `/api/collection-comments/${comment.id}/`);
+		await send('DELETE', `/api/comments/${comment.id}/`);
 	}
 
 	function submitOnShortcut(event: KeyboardEvent, submit: (event: Event) => void) {

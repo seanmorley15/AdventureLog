@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
@@ -281,11 +282,7 @@
 					dispatch('save', toSlimCollection(collection));
 				} else {
 					console.error(data);
-					const fieldErrors = Object.entries(data)
-						.filter(([_, v]) => Array.isArray(v))
-						.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-						.join('; ');
-					addToast('error', fieldErrors || $t('collection.error_creating_collection'));
+					addToast('error', apiErrorMessage(data, $t('collection.error_creating_collection')));
 				}
 			} else {
 				let res = await fetch(`/api/collections/${collection.id}`, {

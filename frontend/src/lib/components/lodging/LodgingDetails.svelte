@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '$lib/api';
 	import { run } from 'svelte/legacy';
 
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -348,7 +349,7 @@
 					delete payload.collection;
 				}
 
-				let res = await fetch(`/api/lodging/${persistedId}`, {
+				let res = await fetch(`/api/lodgings/${persistedId}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json'
@@ -358,9 +359,7 @@
 
 				if (!res.ok) {
 					const errorData = await res.json().catch(() => null);
-					const errorMsg = errorData
-						? Object.values(errorData).flat().join(', ')
-						: `Server error (${res.status})`;
+					const errorMsg = apiErrorMessage(errorData, `Server error (${res.status})`);
 					addToast('error', errorMsg);
 					return;
 				}
@@ -368,7 +367,7 @@
 				let updatedLocation = await res.json();
 				lodging = updatedLocation;
 			} else {
-				let res = await fetch(`/api/lodging`, {
+				let res = await fetch(`/api/lodgings/`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -378,9 +377,7 @@
 
 				if (!res.ok) {
 					const errorData = await res.json().catch(() => null);
-					const errorMsg = errorData
-						? Object.values(errorData).flat().join(', ')
-						: `Server error (${res.status})`;
+					const errorMsg = apiErrorMessage(errorData, `Server error (${res.status})`);
 					addToast('error', errorMsg);
 					return;
 				}

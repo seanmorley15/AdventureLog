@@ -4,13 +4,13 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load: PageServerLoad = async (event) => {
-	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
+	let publicUrlFetch = await fetch(`${endpoint}/api/server-info/`);
 	let publicUrl = '';
 	if (!publicUrlFetch.ok) {
 		return redirect(302, '/');
 	} else {
 		let publicUrlJson = await publicUrlFetch.json();
-		publicUrl = publicUrlJson.PUBLIC_URL;
+		publicUrl = publicUrlJson.public_url;
 	}
 
 	return redirect(302, publicUrl + '/admin/');

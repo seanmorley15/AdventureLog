@@ -1,4 +1,5 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
+import type { ServerInfo } from '$lib/api';
 import type { PageServerLoad } from '../$types';
 import type {
 	APIKey,
@@ -14,6 +15,7 @@ import {
 	djangoBrowserFetch,
 	djangoSessionFetch,
 	djangoSessionJson,
+	fetchAuthConfig,
 	fetchCSRFToken,
 	fetchPasswordPolicy,
 	getServerEndpoint,
@@ -53,13 +55,6 @@ type IntegrationsSummary = {
 	endurain?: { exists: boolean };
 };
 
-type SocialProvider = {
-	provider: string;
-	url: string;
-	name: string;
-	usage_required: boolean;
-};
-
 export const load: PageServerLoad = async (event) => {
 	requireUser(event);
 
@@ -70,6 +65,7 @@ export const load: PageServerLoad = async (event) => {
 
 	// User profile is already hydrated in event.locals.user via the auth hook.
 	// Fetch everything else in parallel instead of serial round-trips.
+	const authConfig = fetchAuthConfig(event.fetch, endpoint);
 	const [
 		emailResponse,
 		mfaAuthenticatorResponse,
@@ -84,22 +80,23 @@ export const load: PageServerLoad = async (event) => {
 		endurainIntegration,
 		sessionsResponse
 	] = await Promise.all([
-		djangoSessionJson<EmailListResponse>(event, '/auth/browser/v1/account/email'),
-		djangoSessionJson<MFAAuthenticatorResponse>(event, '/auth/browser/v1/account/authenticators'),
+		djangoSessionJson<EmailListResponse>(event, '/api/auth/browser/v1/account/email'),
+		djangoSessionJson<MFAAuthenticatorResponse>(
+			event,
+			'/api/auth/browser/v1/account/authenticators'
+		),
 		djangoSessionJson<IntegrationsSummary>(event, '/api/integrations/'),
 		event
-			.fetch(`${endpoint}/public-url/`)
-			.then(async (res) => (res.ok ? ((await res.json()) as { PUBLIC_URL: string }) : null)),
-		djangoSessionJson<SocialProvider[]>(event, '/auth/social-providers/').then(
-			(data) => data ?? []
-		),
+			.fetch(`${endpoint}/api/server-info/`)
+			.then(async (res) => (res.ok ? ((await res.json()) as ServerInfo) : null)),
+		authConfig.then((config) => config.social_providers),
 		djangoSessionJson<ImmichIntegration>(event, '/api/integrations/immich/'),
-		djangoSessionJson<APIKey[]>(event, '/auth/api-keys/').then((data) => data ?? []),
-		djangoSessionJson<MediaUsage>(event, '/auth/user-media-usage/'),
-		fetchPasswordPolicy(event.fetch, endpoint),
+		djangoSessionJson<APIKey[]>(event, '/api/account/api-keys/').then((data) => data ?? []),
+		djangoSessionJson<MediaUsage>(event, '/api/account/media-usage/'),
+		authConfig.then((config) => config.password_policy),
 		djangoSessionJson<WandererIntegration>(event, '/api/integrations/wanderer/'),
 		djangoSessionJson<EndurainIntegration>(event, '/api/integrations/endurain/'),
-		djangoSessionJson<SessionsListResponse>(event, '/auth/browser/v1/auth/sessions')
+		djangoSessionJson<SessionsListResponse>(event, '/api/auth/browser/v1/auth/sessions')
 	]);
 
 	if (!emailResponse || !integrations || !publicUrlJson) {
@@ -113,7 +110,7 @@ export const load: PageServerLoad = async (event) => {
 			emails: emailResponse.data,
 			authenticators,
 			immichIntegration,
-			publicUrl: publicUrlJson.PUBLIC_URL,
+			publicUrl: publicUrlJson.public_url,
 			socialProviders,
 			googleMapsEnabled: integrations.google_maps,
 			stravaGlobalEnabled: integrations.strava.global,
@@ -153,7 +150,7 @@ export const actions: Actions = {
 			let date_format = formData.get('date_format') as string | null | undefined;
 			let map_style = formData.get('map_style') as string | null | undefined;
 
-			const resCurrent = await djangoSessionFetch(event, '/auth/user-metadata/');
+			const resCurrent = await djangoSessionFetch(event, '/api/account/');
 
 			if (!resCurrent.ok) {
 				return fail(resCurrent.status, await resCurrent.json());
@@ -181,7 +178,7 @@ export const actions: Actions = {
 				map_style = map_style.trim();
 			}
 
-			let currentUser = (await resCurrent.json()) as User;
+			let currentUser = ((await resCurrent.json()) as { user: User }).user;
 
 			if (username === currentUser.username || !username) {
 				username = undefined;
@@ -233,7 +230,7 @@ export const actions: Actions = {
 
 			let csrfToken = await fetchCSRFToken();
 
-			let res = await fetch(`${endpoint}/auth/update-user/`, {
+			let res = await fetch(`${endpoint}/api/account/`, {
 				method: 'PATCH',
 				headers: {
 					Referer: event.url.origin,
@@ -246,7 +243,7 @@ export const actions: Actions = {
 			let response = await res.json();
 
 			if (!res.ok) {
-				return fail(res.status, response);
+				return fail(res.status, { error: response.detail ?? 'settings.update_error' });
 			}
 
 			return {
@@ -299,7 +296,7 @@ export const actions: Actions = {
 			? { current_password, new_password: password1 }
 			: { new_password: password1 };
 
-		const res = await djangoBrowserFetch(event, '/auth/browser/v1/account/password/change', {
+		const res = await djangoBrowserFetch(event, '/api/auth/browser/v1/account/password/change', {
 			method: 'POST',
 			csrfToken,
 			sessionId,
@@ -319,7 +316,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await djangoBrowserFetch(event, '/auth/browser/v1/auth/session', {
+			await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/session', {
 				method: 'DELETE',
 				csrfToken,
 				sessionId,
@@ -373,9 +370,8 @@ export const actions: Actions = {
 			if (!res.ok) {
 				const errorData = await res.json();
 				return fail(res.status, {
-					message: errorData.code
-						? `settings.restore_error_${errorData.code}`
-						: 'settings.generic_error',
+					message: 'settings.restore_error',
+					values: { detail: errorData.detail ?? '' },
 					details: errorData
 				});
 			}
@@ -405,8 +401,8 @@ export const actions: Actions = {
 			body.password = password;
 		}
 
-		const res = await fetch(`${endpoint}/auth/delete-account/`, {
-			method: 'POST',
+		const res = await fetch(`${endpoint}/api/account/`, {
+			method: 'DELETE',
 			headers: {
 				Referer: event.url.origin,
 				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
@@ -422,8 +418,9 @@ export const actions: Actions = {
 		}
 
 		const error = await res.json().catch(() => ({}));
-		if (error.confirmation || error.password) {
-			const messages = [error.confirmation, error.password].filter(Boolean).flat();
+		const fields = error.fields ?? {};
+		if (fields.confirmation || fields.password) {
+			const messages = [fields.confirmation, fields.password].filter(Boolean).flat();
 			return fail(res.status, {
 				deleteAccountError: messages[0] || 'settings.delete_account_error'
 			});

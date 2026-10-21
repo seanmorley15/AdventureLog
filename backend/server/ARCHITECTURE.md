@@ -7,7 +7,7 @@ dependencies point, and how to find your way from a URL to the code and its test
 
 | App | What it owns |
 |---|---|
-| `core` | Helpers with no knowledge of any app: geo and date maths, parsing, caching, pagination, the outbound HTTP rules (`net.py`), base serializers, shared test helpers (`testing.py`). |
+| `core` | Helpers with no knowledge of any app: geo and date maths, parsing, caching, pagination, the outbound HTTP rules (`net.py`), base serializers, the API's error handling (`errors.py`, `exceptions.py`), its schema generation (`openapi.py`) and routers (`routers.py`), shared test helpers (`testing.py`). |
 | `worldtravel` | Countries, regions, cities and which of them a user has visited. |
 | `adventures` | The product: places, collections, trips and their day plan, transport, lodging, notes, media, comments, sharing, backups. |
 | `users` | Accounts, sign-in and API keys, public profiles, invitations. |
@@ -39,8 +39,9 @@ management/        management commands (snake_case names)
 **Where does new code go?**
 
 - A *view* should only translate between HTTP and a function call. If it has a loop over records, it belongs in a service.
-- A *service* raises a domain error (`DayPlanError`, `QuickAddError`, `BackupError`, `IntegrationError`); the view
-  turns it into a status code. Services do not import DRF.
+- A *service* raises a domain error (`DayPlanError`, `QuickAddError`, `BackupError`, `IntegrationError`, all
+  `core.errors.ServiceError`). `core.exceptions.api_exception_handler` turns it into the API's error body and
+  status. Services do not import DRF.
 - A *provider* only talks to one outside service and returns data (`core.results.ProviderResult`). No database.
 - A *util* has no side effects.
 
@@ -56,12 +57,18 @@ The larger features are packages:
 
 ## Tracing an endpoint
 
+The API's conventions, its documentation, and how to add an endpoint are in [API.md](API.md).
+
 Take `POST /api/collections/<id>/duplicate/`:
 
-1. `adventures/urls.py` registers `collections` -> `CollectionViewSet`.
+1. `main/api_urls.py` mounts `adventures.urls`, which registers `collections` -> `CollectionViewSet`.
 2. `adventures/views/collections/viewset.py` -> `duplicate`. Sharing actions live in `sharing.py`, downloads in `exports.py`.
 3. `adventures/services/collections/duplicate.py` -> `duplicate_collection`.
 4. Tests: `adventures/tests/collections/test_collection_duplicate.py`.
+
+Routes that live inside one collection are nested viewsets: `POST /api/collections/<id>/days/` is
+`CollectionDayViewSet.create` in `adventures/views/itineraries.py`, registered with the prefix
+`collections/(?P<collection_id>...)/days`.
 
 Views are named after their resource (`views/trails.py` -> `TrailViewSet`), and tests mirror the area of the code
 they cover.
@@ -117,3 +124,5 @@ Add `--parallel 4` to go faster; install `tblib` too, or a failure inside a work
 - `lint-imports` - the dependency rules above.
 - `flake8` (config in `.flake8`) - unused and undefined names.
 - `python manage.py makemigrations --check` - a refactor must not change the schema.
+- `python manage.py spectacular --file openapi/schema.yaml --validate --fail-on-warn`, then `git diff --exit-code` -
+  the API documents every endpoint and the committed schema is current (see [API.md](API.md)).

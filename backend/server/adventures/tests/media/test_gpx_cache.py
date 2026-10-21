@@ -1,5 +1,6 @@
 """GPX files are parsed once and the result is cached."""
 
+
 from unittest import mock
 from django.core.cache import cache
 from django.core.files.base import ContentFile

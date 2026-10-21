@@ -36,52 +36,27 @@ class CollectionSortingTests(APITestCase):
         return [c['name'] for c in body.get('results', body)]
 
     def test_name_ascending_is_a_to_z_ignoring_case(self):
-        self.assertEqual(
-            self.names(order_by='name', order_direction='asc'),
-            ['Alpha', 'beta', 'Delta (undated)', 'gamma'],
-        )
+        self.assertEqual(self.names(ordering='name'), ['Alpha', 'beta', 'Delta (undated)', 'gamma'])
 
     def test_name_descending_is_z_to_a(self):
-        self.assertEqual(
-            self.names(order_by='name', order_direction='desc'),
-            ['gamma', 'Delta (undated)', 'beta', 'Alpha'],
-        )
+        self.assertEqual(self.names(ordering='-name'), ['gamma', 'Delta (undated)', 'beta', 'Alpha'])
 
     def test_with_no_parameters_the_list_is_a_to_z(self):
         self.assertEqual(self.names(), ['Alpha', 'beta', 'Delta (undated)', 'gamma'])
 
     def test_start_date_ascending_is_earliest_first_with_undated_last(self):
-        self.assertEqual(
-            self.names(order_by='start_date', order_direction='asc'),
-            ['Alpha', 'gamma', 'beta', 'Delta (undated)'],
-        )
+        self.assertEqual(self.names(ordering='start_date'), ['Alpha', 'gamma', 'beta', 'Delta (undated)'])
 
     def test_start_date_descending_is_latest_first_with_undated_last(self):
-        self.assertEqual(
-            self.names(order_by='start_date', order_direction='desc'),
-            ['beta', 'gamma', 'Alpha', 'Delta (undated)'],
-        )
+        self.assertEqual(self.names(ordering='-start_date'), ['beta', 'gamma', 'Alpha', 'Delta (undated)'])
 
     def test_updated_at_descending_is_most_recent_first(self):
-        self.assertEqual(
-            self.names(order_by='updated_at', order_direction='desc'),
-            ['Alpha', 'gamma', 'beta', 'Delta (undated)'],
-        )
+        self.assertEqual(self.names(ordering='-updated_at'), ['Alpha', 'gamma', 'beta', 'Delta (undated)'])
 
     def test_updated_at_ascending_is_oldest_first(self):
-        self.assertEqual(
-            self.names(order_by='updated_at', order_direction='asc'),
-            ['Delta (undated)', 'beta', 'gamma', 'Alpha'],
-        )
+        self.assertEqual(self.names(ordering='updated_at'), ['Delta (undated)', 'beta', 'gamma', 'Alpha'])
 
-    def test_an_unknown_field_falls_back_to_most_recently_updated(self):
-        self.assertEqual(
-            self.names(order_by='bogus', order_direction='desc'),
-            ['Alpha', 'gamma', 'beta', 'Delta (undated)'],
-        )
-
-    def test_an_unknown_direction_falls_back_to_ascending(self):
-        self.assertEqual(
-            self.names(order_by='name', order_direction='sideways'),
-            ['Alpha', 'beta', 'Delta (undated)', 'gamma'],
-        )
+    def test_an_unknown_ordering_is_a_validation_error(self):
+        response = self.client.get('/api/collections/', {'ordering': 'bogus'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('ordering', response.json()['fields'])

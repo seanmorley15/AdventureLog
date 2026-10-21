@@ -23,26 +23,34 @@ class CloudAccessMiddlewareTests(APITestCase):
 
     def test_canceled_subscription_blocks_api(self):
         self._set_status(Subscription.STATUS_CANCELED)
-        response = self.client.get('/api/lodging/')
+        response = self.client.get('/api/lodgings/')
         self.assertEqual(response.status_code, 402)
         self.assertEqual(response.json()['code'], 'subscription_required')
 
-    def test_billing_endpoint_stays_available_without_access(self):
+    def test_the_account_stays_available_without_access(self):
         self._set_status(Subscription.STATUS_CANCELED)
-        response = self.client.get('/api/billing/subscription/')
+        response = self.client.get('/api/account/')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['status'], Subscription.STATUS_CANCELED)
+        self.assertEqual(response.json()['subscription']['status'], Subscription.STATUS_CANCELED)
+        self.assertFalse(response.json()['has_access'])
+
+    def test_sign_in_and_docs_stay_available_without_access(self):
+        self._set_status(Subscription.STATUS_CANCELED)
+        for path in ('/api/auth/config/', '/api/auth/csrf/', '/api/server-info/', '/api/schema/'):
+            with self.subTest(path=path):
+                self.assertNotEqual(self.client.get(path).status_code, 402)
+        self.assertEqual(self.client.get('/api/lodgings/').status_code, 402)
 
     def test_active_subscription_allows_api(self):
         self._set_status(Subscription.STATUS_ACTIVE)
-        response = self.client.get('/api/lodging/')
+        response = self.client.get('/api/lodgings/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), [])
 
     def test_anonymous_api_request_is_not_blocked_by_billing(self):
         self.client.logout()
-        response = self.client.get('/api/lodging/')
-        self.assertEqual(response.status_code, 403)
+        response = self.client.get('/api/lodgings/')
+        self.assertEqual(response.status_code, 401)
 
     def test_non_api_path_ignores_subscription(self):
         self._set_status(Subscription.STATUS_CANCELED)

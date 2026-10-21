@@ -463,8 +463,7 @@
 		objectId: string,
 		payload: Partial<PlacementPayload> = {}
 	): Promise<boolean> {
-		const res = await send('/api/itineraries/', 'POST', {
-			collection: collection.id,
+		const res = await send(`/api/collections/${collection.id}/itinerary-items/`, 'POST', {
 			content_type: type,
 			object_id: objectId,
 			day_index: payload.day_index ?? null,
@@ -534,7 +533,7 @@
 		const res = await send<{
 			items: CollectionItineraryItem[];
 			updated_objects: (Lodging | Transportation | null)[];
-		}>('/api/itineraries/reorder/', 'POST', { items: entries });
+		}>(`/api/collections/${collection.id}/itinerary/reorder/`, 'POST', { items: entries });
 		if (res.ok) {
 			upsertItems(res.data.items);
 			mergeUpdatedObjects(res.data.updated_objects ?? []);
@@ -559,7 +558,7 @@
 
 	async function logVisit(row: PlanRow, date?: string): Promise<LogVisitResult> {
 		const res = await send<{ item: CollectionItineraryItem; visit: Visit }>(
-			`/api/itineraries/${row.id}/log-visited/`,
+			`/api/collections/${collection.id}/itinerary-items/${row.id}/log-visit/`,
 			'POST',
 			date ? { date } : {},
 			true
@@ -577,14 +576,21 @@
 
 	async function toggleOptional(row: PlanRow) {
 		if (!row.item) return;
-		const res = await send(`/api/itineraries/${row.id}/`, 'PATCH', {
-			is_optional: !row.item.is_optional
-		});
+		const res = await send(
+			`/api/collections/${collection.id}/itinerary-items/${row.id}/`,
+			'PATCH',
+			{
+				is_optional: !row.item.is_optional
+			}
+		);
 		if (res.ok) applyItemResponse(res.data);
 	}
 
 	async function removePlacement(row: PlanRow) {
-		const res = await send(`/api/itineraries/${row.id}/`, 'DELETE');
+		const res = await send(
+			`/api/collections/${collection.id}/itinerary-items/${row.id}/`,
+			'DELETE'
+		);
 		if (res.ok) removeItem(row.id);
 	}
 
@@ -650,7 +656,11 @@
 		if ((payload.end_time ?? '') !== (item.end_time ?? '').slice(0, 5))
 			body.end_time = payload.end_time;
 		if (!Object.keys(body).length) return true;
-		const res = await send(`/api/itineraries/${item.id}/`, 'PATCH', body);
+		const res = await send(
+			`/api/collections/${collection.id}/itinerary-items/${item.id}/`,
+			'PATCH',
+			body
+		);
 		if (res.ok) applyItemResponse(res.data);
 		return res.ok;
 	}
@@ -664,13 +674,32 @@
 	let destinationPrompt = $state<DestinationPrompt | null>(null);
 	let destinationChoice = $state('ideas');
 
-	async function dayAction(path: string, body: Record<string, unknown>, quiet = false) {
-		const res = await send<DayPlanState>(
-			`/api/itineraries/${path}/`,
-			'POST',
-			{ collection: collection.id, ...body },
-			quiet
-		);
+	/** Where each day-plan change goes: `days/...` act on one day, the rest on the whole plan. */
+	function dayActionRequest(
+		action: string,
+		body: Record<string, unknown>
+	): [string, 'POST' | 'DELETE', Record<string, unknown> | undefined] {
+		const base = `/api/collections/${collection.id}`;
+		const { day, ...rest } = body;
+		switch (action) {
+			case 'days/insert':
+				return [`${base}/days/`, 'POST', rest];
+			case 'days/duplicate':
+				return [`${base}/days/${day}/duplicate/`, 'POST', rest];
+			case 'days/move':
+				return [`${base}/days/${day}/move/`, 'POST', rest];
+			case 'days/delete': {
+				const query = new URLSearchParams(rest as Record<string, string>).toString();
+				return [`${base}/days/${day}/${query ? `?${query}` : ''}`, 'DELETE', undefined];
+			}
+			default:
+				return [`${base}/itinerary/${action}/`, 'POST', rest];
+		}
+	}
+
+	async function dayAction(action: string, body: Record<string, unknown>, quiet = false) {
+		const [url, method, payload] = dayActionRequest(action, body);
+		const res = await send<DayPlanState>(url, method, payload, quiet);
 		if (res.ok) applyState(res.data);
 		return res;
 	}
@@ -805,9 +834,13 @@
 	) {
 		const next = value.trim() || null;
 		if (next === (day[field] ?? null)) return;
-		const res = await send<CollectionItineraryDay>(`/api/itinerary-days/${day.id}/`, 'PATCH', {
-			[field]: next
-		});
+		const res = await send<CollectionItineraryDay>(
+			`/api/collections/${collection.id}/days/${day.id}/`,
+			'PATCH',
+			{
+				[field]: next
+			}
+		);
 		if (res.ok) {
 			collection.itinerary_days = (collection.itinerary_days ?? []).map((existing) =>
 				existing.id === day.id ? res.data : existing
@@ -892,9 +925,9 @@
 				day_activities?: Collection['day_activities'];
 				activities_need_stop?: string[];
 			}>(
-				'/api/itineraries/log-day/',
+				`/api/collections/${collection.id}/days/${day.id}/log-visit/`,
 				'POST',
-				{ collection: collection.id, day: day.id, ...(date ? { date } : {}) },
+				date ? { date } : {},
 				true
 			);
 			if (res.ok) {

@@ -3,7 +3,8 @@
 from adventures.models import ContentImage, Collection, CollectionInvite
 from django.db import transaction
 from rest_framework import serializers
-from core.serializers import CustomModelSerializer
+from drf_spectacular.utils import extend_schema_field
+from core.serializers import CustomModelSerializer, UserUUIDField
 from adventures.utils.collection_type import assign_collection_type_from_dates, collection_lifecycle_status
 from adventures.services import day_plan
 from .common import _member_roles, _serialize_collaborator
@@ -14,6 +15,7 @@ from .media import ContentImageSerializer
 class CollectionSummaryMixin:
     """Who is on a collection and where it stands in time, shared by the full and slim serializers."""
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_collaborators(self, obj):
         request = self.context.get('request')
         request_user = getattr(request, 'user', None) if request else None
@@ -41,10 +43,12 @@ class CollectionSummaryMixin:
 
         return collaborators
 
+    @extend_schema_field(serializers.ChoiceField(choices=['upcoming', 'in_progress', 'completed'], allow_null=True))
     def get_status(self, obj):
         """Lifecycle from dates. Type is a separate field and is never returned here."""
         return collection_lifecycle_status(obj)
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_days_until_start(self, obj):
         """Days until a collection starts, or None once it has begun or has no start date."""
         from datetime import date
@@ -69,7 +73,7 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
     lodging = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     days_until_start = serializers.SerializerMethodField()
-    primary_image = ContentImageSerializer(read_only=True)
+    primary_image = ContentImageSerializer(read_only=True, allow_null=True)
     primary_image_id = serializers.PrimaryKeyRelatedField(
         queryset=ContentImage.objects.all(),
         source='primary_image',
@@ -81,6 +85,7 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
     # values before validate_link() can clean them up.
     link = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     day_count = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    shared_with = UserUUIDField(many=True, help_text='Members, by uuid.')
 
     class Meta:
         model = Collection
@@ -180,6 +185,7 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
             return None
         return value
 
+    @extend_schema_field(LocationSerializer(many=True))
     def get_locations(self, obj):
         if self.context.get('nested', False):
             allowed_nested_fields = set(self.context.get('allowed_nested_fields', []))
@@ -191,24 +197,28 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
         
         return LocationSerializer(obj.locations.all(), many=True, context=self.context).data
 
+    @extend_schema_field(TransportationSerializer(many=True))
     def get_transportations(self, obj):
         # Only include transportations if not in nested context
         if self.context.get('nested', False):
             return []
         return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
 
+    @extend_schema_field(NoteSerializer(many=True))
     def get_notes(self, obj):
         # Only include notes if not in nested context
         if self.context.get('nested', False):
             return []
         return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
 
+    @extend_schema_field(ChecklistSerializer(many=True))
     def get_checklists(self, obj):
         # Only include checklists if not in nested context
         if self.context.get('nested', False):
             return []
         return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
 
+    @extend_schema_field(LodgingSerializer(many=True))
     def get_lodging(self, obj):
         # Only include lodging if not in nested context
         if self.context.get('nested', False):
@@ -426,10 +436,13 @@ class UltraSlimCollectionSerializer(CollectionSummaryMixin, serializers.ModelSer
     location_count = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     days_until_start = serializers.SerializerMethodField()
-    primary_image = ContentImageSerializer(read_only=True)
+    primary_image = ContentImageSerializer(read_only=True, allow_null=True)
     collaborators = serializers.SerializerMethodField()
     day_count = serializers.SerializerMethodField()
+    user = UserUUIDField(help_text='The owner.')
+    shared_with = UserUUIDField(many=True, help_text='Members, by uuid.')
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_day_count(self, obj):
         return day_plan.day_count(obj) or None
     
@@ -465,6 +478,7 @@ class UltraSlimCollectionSerializer(CollectionSummaryMixin, serializers.ModelSer
             memo[key] = _load_collection_images(ids)
         return memo[key].get(obj.pk, [])
 
+    @extend_schema_field(ContentImageSerializer(many=True))
     def get_location_images(self, obj):
         """Get primary images from locations in this collection, optimized with select_related"""
         images = list(self._images_for(obj))
@@ -486,6 +500,7 @@ class UltraSlimCollectionSerializer(CollectionSummaryMixin, serializers.ModelSer
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 
+    @extend_schema_field(serializers.IntegerField())
     def get_location_count(self, obj):
         """Get count of locations in this collection"""
         if hasattr(obj, 'location_count_annotated'):

@@ -20,7 +20,7 @@ from adventures.models import (
 )
 from adventures.utils.collection_type import BACKUP_SCHEMA
 from adventures.services.day_plan import convert_collection
-from adventures.tests.day_plan.base import DayPlanTestBase, ct, utc
+from adventures.tests.day_plan.base import DayPlanTestBase, ct, utc, item_url, plan_request
 from users.models import CustomUser
 
 
@@ -244,10 +244,10 @@ class PlacementTests(DayPlanTestBase):
         convert_collection(self.trip)
 
     def place(self, obj, kind, day_index=None, **extra):
-        payload = {'collection': str(self.trip.id), 'content_type': kind, 'object_id': str(obj.id), **extra}
+        payload = {'content_type': kind, 'object_id': str(obj.id), **extra}
         if day_index is not None:
             payload['day_index'] = day_index
-        return self.client.post('/api/itineraries/', payload, format='json')
+        return self.client.post(item_url(self.trip), payload, format='json')
 
     def test_dropping_a_hotel_on_day_2_writes_check_in_and_next_morning(self):
         hotel = Lodging.objects.create(user=self.user, name='Hotel', collection=self.trip)
@@ -271,7 +271,7 @@ class PlacementTests(DayPlanTestBase):
 
         item = CollectionItineraryItem.objects.get(object_id=hotel.id)
         response = self.client.post(
-            '/api/itineraries/reorder/',
+            f'/api/collections/{self.trip.id}/itinerary/reorder/',
             {'items': [{'id': str(item.id), 'day_index': None, 'is_global': False, 'order': 0}]},
             format='json',
         )
@@ -319,26 +319,26 @@ class PlacementTests(DayPlanTestBase):
         museum = self.location('Museum', self.trip)
         item_id = self.place(museum, 'location', 2).json()['id']
 
-        first = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+        first = self.client.post(item_url(self.trip, item_id, 'log-visit'), {}, format='json')
         self.assertEqual(first.status_code, 201, first.content)
         visit = Visit.objects.get()
         self.assertEqual(visit.start_date, utc(2026, 6, 2))
         self.assertEqual(visit.end_date, utc(2026, 6, 2))
         self.assertEqual(first.json()['item']['logged_visit'], str(visit.id))
 
-        second = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+        second = self.client.post(item_url(self.trip, item_id, 'log-visit'), {}, format='json')
         self.assertEqual(second.status_code, 200)
         self.assertEqual(Visit.objects.count(), 1)
 
-        removed = self.client.delete(f'/api/itineraries/{item_id}/')
+        removed = self.client.delete(item_url(self.trip, item_id))
         self.assertEqual(removed.status_code, 204)
         self.assertTrue(Visit.objects.filter(id=visit.id).exists())
 
     def test_confirm_delete_visits_removes_the_logged_visit(self):
         museum = self.location('Museum', self.trip)
         item_id = self.place(museum, 'location', 2).json()['id']
-        self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
-        self.client.delete(f'/api/itineraries/{item_id}/?confirm_delete_visits=true')
+        self.client.post(item_url(self.trip, item_id, 'log-visit'), {}, format='json')
+        self.client.delete(item_url(self.trip, item_id) + '?confirm_delete_visits=true')
         self.assertEqual(Visit.objects.count(), 0)
 
     def test_log_visit_links_a_visit_already_on_those_dates(self):
@@ -346,7 +346,7 @@ class PlacementTests(DayPlanTestBase):
         existing = Visit.objects.create(location=museum, start_date=utc(2026, 6, 2), end_date=utc(2026, 6, 2))
         item_id = self.place(museum, 'location', 2).json()['id']
 
-        response = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+        response = self.client.post(item_url(self.trip, item_id, 'log-visit'), {}, format='json')
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(Visit.objects.count(), 1)
@@ -358,7 +358,7 @@ class PlacementTests(DayPlanTestBase):
         Visit.objects.create(location=museum, start_date=utc(2026, 6, 1), end_date=utc(2026, 6, 1))
         item_id = self.place(museum, 'location', 2).json()['id']
 
-        response = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+        response = self.client.post(item_url(self.trip, item_id, 'log-visit'), {}, format='json')
 
         self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(Visit.objects.count(), 2)
@@ -370,15 +370,15 @@ class PlacementTests(DayPlanTestBase):
         build_days(trip, 3)
         museum = self.location('Museum', trip)
         response = self.client.post(
-            '/api/itineraries/',
-            {'collection': str(trip.id), 'content_type': 'location', 'object_id': str(museum.id), 'day_index': 2},
+            item_url(trip.id),
+            {'content_type': 'location', 'object_id': str(museum.id), 'day_index': 2},
             format='json',
         )
         item_id = response.json()['id']
-        missing = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {}, format='json')
+        missing = self.client.post(item_url(trip, item_id, 'log-visit'), {}, format='json')
         self.assertEqual(missing.status_code, 400)
         self.assertEqual(missing.json()['code'], 'date_required')
-        logged = self.client.post(f'/api/itineraries/{item_id}/log-visited/', {'date': '2026-03-03'}, format='json')
+        logged = self.client.post(item_url(trip, item_id, 'log-visit'), {'date': '2026-03-03'}, format='json')
         self.assertEqual(logged.status_code, 201, logged.content)
         visit = Visit.objects.get()
         self.assertEqual((visit.start_date, visit.end_date), (utc(2026, 3, 3), utc(2026, 3, 3)))
@@ -392,13 +392,9 @@ class PlacementTests(DayPlanTestBase):
         self.place(b, 'location', 2)
         self.place(c, 'location', 2, is_optional=True)
         self.place(hotel, 'lodging', 2)
-        self.client.post(f'/api/itineraries/{a_id}/log-visited/', {}, format='json')
+        self.client.post(item_url(self.trip, a_id, 'log-visit'), {}, format='json')
 
-        response = self.client.post(
-            '/api/itineraries/log-day/',
-            {'collection': str(self.trip.id), 'day': str(self.day(self.trip, 2).id)},
-            format='json',
-        )
+        response = plan_request(self.client, self.trip, 'log-day', {'day': str(self.day(self.trip, 2).id)})
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(len(response.json()['items']), 1)
         self.assertEqual(Visit.objects.filter(location=a).count(), 1)
@@ -427,7 +423,7 @@ class PlacementTests(DayPlanTestBase):
         a_id = self.place(a, 'location', 1).json()['id']
         b_id = self.place(b, 'location', 1).json()['id']
         response = self.client.post(
-            '/api/itineraries/reorder/',
+            f'/api/collections/{self.trip.id}/itinerary/reorder/',
             {'items': [
                 {'id': a_id, 'day_index': 1, 'order': 0},
                 {'id': b_id, 'day_index': 1, 'order': 0},
@@ -440,7 +436,7 @@ class PlacementTests(DayPlanTestBase):
         museum = self.location('Museum', self.trip)
         item_id = self.place(museum, 'location', 1).json()['id']
         response = self.client.patch(
-            f'/api/itineraries/{item_id}/',
+            item_url(self.trip, item_id),
             {'is_optional': True, 'start_time': '09:30', 'end_time': '11:00', 'timezone': 'Europe/Paris'},
             format='json',
         )
@@ -458,14 +454,14 @@ class DayActionTests(DayPlanTestBase):
         convert_collection(self.trip)
         self.hotel = Lodging.objects.create(user=self.user, name='Hotel', collection=self.trip)
         self.client.post(
-            '/api/itineraries/',
-            {'collection': str(self.trip.id), 'content_type': 'lodging', 'object_id': str(self.hotel.id),
+            item_url(self.trip.id),
+            {'content_type': 'lodging', 'object_id': str(self.hotel.id),
              'day_index': 2, 'span_end_index': 4},
             format='json',
         )
 
     def post(self, path, payload):
-        return self.client.post(f'/api/itineraries/{path}/', {'collection': str(self.trip.id), **payload}, format='json')
+        return plan_request(self.client, self.trip, path, payload)
 
     def hotel_span(self):
         row = CollectionItineraryItem.objects.select_related('day').get(object_id=self.hotel.id)
@@ -498,8 +494,8 @@ class DayActionTests(DayPlanTestBase):
     def test_deleting_a_day_with_stops_needs_a_destination(self):
         museum = self.location('Museum', self.trip)
         self.client.post(
-            '/api/itineraries/',
-            {'collection': str(self.trip.id), 'content_type': 'location', 'object_id': str(museum.id), 'day_index': 5},
+            item_url(self.trip.id),
+            {'content_type': 'location', 'object_id': str(museum.id), 'day_index': 5},
             format='json',
         )
         day5 = self.day(self.trip, 5)
@@ -514,8 +510,8 @@ class DayActionTests(DayPlanTestBase):
     def test_delete_to_ideas_clears_lodging_dates(self):
         flight = Transportation.objects.create(user=self.user, name='Flight', type='plane', collection=self.trip)
         self.client.post(
-            '/api/itineraries/',
-            {'collection': str(self.trip.id), 'content_type': 'transportation', 'object_id': str(flight.id), 'day_index': 1},
+            item_url(self.trip.id),
+            {'content_type': 'transportation', 'object_id': str(flight.id), 'day_index': 1},
             format='json',
         )
         flight.refresh_from_db()
@@ -529,8 +525,8 @@ class DayActionTests(DayPlanTestBase):
     def test_move_and_duplicate_day(self):
         museum = self.location('Museum', self.trip)
         self.client.post(
-            '/api/itineraries/',
-            {'collection': str(self.trip.id), 'content_type': 'location', 'object_id': str(museum.id), 'day_index': 5},
+            item_url(self.trip.id),
+            {'content_type': 'location', 'object_id': str(museum.id), 'day_index': 5},
             format='json',
         )
         day5 = self.day(self.trip, 5)
@@ -546,8 +542,8 @@ class DayActionTests(DayPlanTestBase):
     def test_duration_shortening_into_a_stop_uses_the_delete_prompt(self):
         museum = self.location('Museum', self.trip)
         self.client.post(
-            '/api/itineraries/',
-            {'collection': str(self.trip.id), 'content_type': 'location', 'object_id': str(museum.id), 'day_index': 5},
+            item_url(self.trip.id),
+            {'content_type': 'location', 'object_id': str(museum.id), 'day_index': 5},
             format='json',
         )
         refused = self.post('duration', {'day_count': 3})
@@ -578,17 +574,15 @@ class DayActionTests(DayPlanTestBase):
         build_days(trip, 4)
         hotel = Lodging.objects.create(user=self.user, name='Inn', collection=trip)
         self.client.post(
-            '/api/itineraries/',
-            {'collection': str(trip.id), 'content_type': 'lodging', 'object_id': str(hotel.id), 'day_index': 2},
+            item_url(trip.id),
+            {'content_type': 'lodging', 'object_id': str(hotel.id), 'day_index': 2},
             format='json',
         )
         hotel.refresh_from_db()
         self.assertIsNone(hotel.check_in)
 
-        response = self.client.post(
-            '/api/itineraries/duration/',
-            {'collection': str(trip.id), 'day_count': 4, 'start_date': '2026-10-10', 'timezone': 'Europe/Paris'},
-            format='json',
+        response = plan_request(
+            self.client, trip, 'duration', {'day_count': 4, 'start_date': '2026-10-10', 'timezone': 'Europe/Paris'}
         )
         self.assertEqual(response.status_code, 200, response.content)
         hotel.refresh_from_db()
@@ -605,7 +599,7 @@ class DayActionTests(DayPlanTestBase):
         far = self.location('Far', year)
         self.row(year, far, on=date(2026, 6, 1))
 
-        response = self.client.post('/api/itineraries/plan-by-days/', {'collection': str(year.id)}, format='json')
+        response = plan_request(self.client, year, 'plan-by-days')
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(len(self.days(year)), 365)
         self.assertEqual(self.placements(year, museum)[0].day.index, 3)
@@ -614,9 +608,7 @@ class DayActionTests(DayPlanTestBase):
         self.assertEqual(year.end_date, date(2026, 12, 31))
 
         longer = self.make_trip(start=date(2026, 1, 1), end=date(2026, 3, 1))
-        counted = self.client.post(
-            '/api/itineraries/plan-by-days/', {'collection': str(longer.id), 'day_count': 400}, format='json'
-        )
+        counted = plan_request(self.client, longer, 'plan-by-days', {'day_count': 400})
         self.assertEqual(counted.status_code, 200, counted.content)
         self.assertEqual(len(self.days(longer)), 400)
 
@@ -630,7 +622,7 @@ class DayActionTests(DayPlanTestBase):
         stranger = CustomUser.objects.create_user(username='stranger', email='s@example.com', password='pw12345678')
         self.client.force_authenticate(user=stranger)
         refused = self.post('days/insert', {})
-        self.assertEqual(refused.status_code, 403)
+        self.assertEqual(refused.status_code, 404)
 
 
 class DayPlanBackupTests(DayPlanTestBase):

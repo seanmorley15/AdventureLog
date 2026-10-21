@@ -31,16 +31,16 @@ class CollectionSharingPrivateProfileTestCase(APITestCase):
 
     def test_user_metadata_includes_sharing_counts(self):
         self.client.force_authenticate(user=self.collaborator)
-        response = self.client.get('/auth/user-metadata/')
+        response = self.client.get('/api/account/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['shared_collection_count'], 1)
-        self.assertEqual(response.json()['pending_collection_invite_count'], 0)
+        self.assertEqual(response.json()['user']['shared_collection_count'], 1)
+        self.assertEqual(response.json()['user']['pending_collection_invite_count'], 0)
 
     def test_making_profile_private_removes_existing_shares(self):
         self.client.force_authenticate(user=self.collaborator)
         response = self.client.patch(
-            '/auth/update-user/',
+            '/api/account/',
             {'public_profile': False},
             format='json',
         )
@@ -62,7 +62,7 @@ class CollectionSharingPrivateProfileTestCase(APITestCase):
 
         self.client.force_authenticate(user=self.collaborator)
         response = self.client.patch(
-            '/auth/update-user/',
+            '/api/account/',
             {'public_profile': False},
             format='json',
         )
@@ -78,10 +78,10 @@ class CollectionSharingPrivateProfileTestCase(APITestCase):
 
     def test_unshare_works_before_collaborator_goes_private(self):
         self.client.force_authenticate(user=self.owner)
-        response = self.client.post(
-            f'/api/collections/{self.collection.id}/unshare/{self.collaborator.uuid}/'
+        response = self.client.delete(
+            f'/api/collections/{self.collection.id}/members/{self.collaborator.uuid}/'
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 204)
         self.collection.refresh_from_db()
         self.assertFalse(self.collection.shared_with.filter(id=self.collaborator.id).exists())

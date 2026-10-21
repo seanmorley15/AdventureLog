@@ -24,7 +24,7 @@ class UserSessionsTestCase(TestCase):
     def test_login_creates_user_session_and_middleware_tracks_once(self):
         self.assertTrue(self.client.login(username='sessionuser', password='testpassword123'))
         # Force a request so EfficientSessionMiddleware runs.
-        response = self.client.get('/auth/current-user/')
+        response = self.client.get('/api/account/')
         self.assertEqual(response.status_code, 200)
 
         sessions = UserSession.objects.filter(user=self.user)
@@ -34,15 +34,15 @@ class UserSessionsTestCase(TestCase):
 
     def test_headless_sessions_list_and_revoke_other(self):
         self.assertTrue(self.client.login(username='sessionuser', password='testpassword123'))
-        self.client.get('/auth/current-user/')
+        self.client.get('/api/account/')
 
         # Simulate a second device session for the same user.
         other = Client()
         self.assertTrue(other.login(username='sessionuser', password='testpassword123'))
-        other.get('/auth/current-user/')
+        other.get('/api/account/')
         self.assertEqual(UserSession.objects.filter(user=self.user).count(), 2)
 
-        list_resp = self.client.get('/auth/browser/v1/auth/sessions')
+        list_resp = self.client.get('/api/auth/browser/v1/auth/sessions')
         self.assertEqual(list_resp.status_code, 200)
         payload = list_resp.json()
         self.assertEqual(len(payload['data']), 2)
@@ -51,7 +51,7 @@ class UserSessionsTestCase(TestCase):
         self.assertEqual(len(other_ids), 1)
 
         delete_resp = self.client.delete(
-            '/auth/browser/v1/auth/sessions',
+            '/api/auth/browser/v1/auth/sessions',
             data={'sessions': other_ids},
             content_type='application/json',
         )
@@ -62,5 +62,5 @@ class UserSessionsTestCase(TestCase):
         self.assertEqual(UserSession.objects.filter(user=self.user).count(), 1)
 
         # Other client session should no longer authenticate.
-        other_resp = other.get('/auth/current-user/')
+        other_resp = other.get('/api/account/')
         self.assertIn(other_resp.status_code, (401, 403))

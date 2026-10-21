@@ -961,6 +961,7 @@
 		"backup_your_data_desc": "Download a complete backup of your account data including locations, \t\t\t\t\t\t\t\t\t\tcollections, media, and visits.",
 		"restore_data": "Restore Data",
 		"restore_data_desc": "Upload a backup file to restore your data.",
+		"restore_error": "Restore failed: {detail}",
 		"download_backup": "Download Backup",
 		"data_override_warning": "Data Override Warning",
 		"data_override_warning_desc": "Restoring data will completely replace all existing data (that is included \t\t\t\t\t\t\t\t\t\t\t\tin the backup) in your account. This action cannot be undone.",

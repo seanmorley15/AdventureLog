@@ -9,7 +9,6 @@ from core.testing import make_user
 class SunriseSunsetLocationAccessTests(APITestCase):
     """The public sunrise endpoint reveals where a place is, so it follows who may read the place."""
 
-    URL = '/api/sunrise-sunset/lookup/'
 
     def setUp(self):
         from core.geo import make_point
@@ -29,7 +28,7 @@ class SunriseSunsetLocationAccessTests(APITestCase):
         )
         self.loose_place = Location.objects.create(user=self.owner, name='Home', coordinates=make_point(10.7, 59.9))
         patcher = patch(
-            'adventures.views.sunrise_sunset.get_sunrise_sunset_for_date',
+            'adventures.views.locations.get_sunrise_sunset_for_date',
             return_value={'sunrise': '03:00', 'sunset': '23:00'},
         )
         patcher.start()
@@ -37,7 +36,7 @@ class SunriseSunsetLocationAccessTests(APITestCase):
 
     def lookup(self, location, user=None, **extra):
         self.client.force_authenticate(user=user)
-        return self.client.get(self.URL, {'location_id': str(location.id), 'date': '2026-06-21'}, **extra)
+        return self.client.get(f'/api/locations/{location.id}/sun-times/', {'date': '2026-06-21'}, **extra)
 
     def test_public_place_is_open_to_anyone(self):
         self.assertEqual(self.lookup(self.public_place).status_code, 200)
@@ -50,12 +49,12 @@ class SunriseSunsetLocationAccessTests(APITestCase):
         header = {'HTTP_X_GUEST_TOKEN': self.guest_link.token}
 
         self.assertEqual(self.lookup(self.place, **header).status_code, 200)
-        self.assertEqual(self.lookup(self.loose_place, **header).status_code, 403)
+        self.assertEqual(self.lookup(self.loose_place, **header).status_code, 404)
 
     def test_strangers_and_anonymous_visitors_are_refused(self):
         for user in (self.stranger, None):
-            self.assertEqual(self.lookup(self.place, user).status_code, 403, user)
-            self.assertEqual(self.lookup(self.loose_place, user).status_code, 403, user)
+            self.assertIn(self.lookup(self.place, user).status_code, (401, 404), user)
+            self.assertIn(self.lookup(self.loose_place, user).status_code, (401, 404), user)
 
 
 class LocationAdditionalInfoAccessTests(APITestCase):
@@ -69,8 +68,8 @@ class LocationAdditionalInfoAccessTests(APITestCase):
         self.place = Location.objects.create(user=self.owner, name='Hut')
         self.place.collections.add(self.trip)
 
-    def test_members_read_additional_info_and_strangers_cannot(self):
-        url = f'/api/locations/{self.place.id}/additional-info/'
+    def test_members_read_the_place_and_strangers_cannot(self):
+        url = f'/api/locations/{self.place.id}/'
         for user, expected in ((self.owner, 200), (self.viewer, 200), (self.stranger, 404)):
             self.client.force_authenticate(user=user)
             self.assertEqual(self.client.get(url).status_code, expected, user)

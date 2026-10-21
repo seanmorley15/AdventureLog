@@ -45,7 +45,7 @@ class QuickAddExtrasTests(APITestCase):
         response = self.client.post(
             '/api/locations/quick-add/',
             self.payload(
-                collection_id=str(self.trip.id), itinerary_date='2026-06-02',
+                collection=str(self.trip.id), itinerary_date='2026-06-02',
                 photos=['http://example.com/a.jpg', 'http://example.com/b.jpg'],
             ),
             format='json',
@@ -61,9 +61,9 @@ class QuickAddExtrasTests(APITestCase):
 
     def test_lodging_reports_failed_photos_and_its_placement(self, import_photos):
         response = self.client.post(
-            '/api/lodging/quick-add/',
+            '/api/lodgings/quick-add/',
             self.payload(
-                collection_id=str(self.trip.id), itinerary_date='2026-06-02',
+                collection=str(self.trip.id), itinerary_date='2026-06-02',
                 photos=['http://example.com/a.jpg', 'http://example.com/b.jpg'],
             ),
             format='json',
@@ -76,7 +76,7 @@ class QuickAddExtrasTests(APITestCase):
         self.assertEqual(import_photos.call_args.args[0], Lodging.objects.get(id=body['id']))
 
     def test_no_photos_and_no_date_adds_no_extras(self, import_photos):
-        for url in ('/api/locations/quick-add/', '/api/lodging/quick-add/'):
+        for url in ('/api/locations/quick-add/', '/api/lodgings/quick-add/'):
             response = self.client.post(url, self.payload(), format='json')
 
             self.assertEqual(response.status_code, 201, response.content)
@@ -95,9 +95,9 @@ class QuickAddExtrasTests(APITestCase):
         self.assertNotIn('quick_add_image_import', response.json())
 
     def test_a_date_outside_the_trip_is_refused_for_both(self, import_photos):
-        for url in ('/api/locations/quick-add/', '/api/lodging/quick-add/'):
+        for url in ('/api/locations/quick-add/', '/api/lodgings/quick-add/'):
             response = self.client.post(
-                url, self.payload(collection_id=str(self.trip.id), itinerary_date='2027-01-01'), format='json'
+                url, self.payload(collection=str(self.trip.id), itinerary_date='2027-01-01'), format='json'
             )
 
             self.assertEqual(response.status_code, 400, (url, response.content))

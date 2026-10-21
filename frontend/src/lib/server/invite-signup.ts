@@ -27,7 +27,7 @@ export async function prepareInviteSignup(
 
 	const inviteRes = await djangoSessionFetch(
 		event,
-		`/auth/invite-signup/${encodeURIComponent(inviteKey)}/`
+		`/api/auth/invitations/${encodeURIComponent(inviteKey)}/`
 	);
 
 	try {

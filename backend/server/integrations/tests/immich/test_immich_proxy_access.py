@@ -61,7 +61,7 @@ class ImmichProxyAccessTests(APITestCase):
         self.fetch.return_value = image
 
     def get(self, key, **extra):
-        return self.client.get(f'/api/integrations/immich/{self.integration.id}/get/{self.assets[key]}/', **extra)
+        return self.client.get(f'/api/integrations/immich/assets/{self.integration.id}/{self.assets[key]}/', **extra)
 
     def assertAllowed(self, key, user=None, **extra):
         self.client.force_authenticate(user=user)

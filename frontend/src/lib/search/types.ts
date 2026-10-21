@@ -23,7 +23,7 @@ export type SearchHit = {
 
 export type SearchResponse = {
 	query: string;
-	total: number;
+	count: number;
 	limit: number;
 	offset: number;
 	results: SearchHit[];

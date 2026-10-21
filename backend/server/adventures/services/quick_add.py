@@ -20,6 +20,7 @@ from adventures.services.geocoding.reverse import reverse_geocode as reverse_geo
 from adventures.services.images.fetch import import_remote_images_for_object
 from adventures.services.places.details import get_place_details
 from core.dates import aware_utc_from_date
+from core.errors import ServiceError
 from core.parsing import (
     clean_url,
     coerce_bool,
@@ -30,12 +31,13 @@ from core.parsing import (
 )
 
 
-class QuickAddError(Exception):
+class QuickAddError(ServiceError):
     """A quick add that cannot proceed, with the HTTP status the caller should answer with."""
 
+    _CODES = {403: 'permission_denied', 404: 'not_found'}
+
     def __init__(self, message, status_code=400):
-        super().__init__(message)
-        self.message = message
+        super().__init__(message, code=self._CODES.get(status_code, 'invalid'), status=status_code)
         self.status_code = status_code
 
 
@@ -333,7 +335,7 @@ def prepare_location_quick_add(user, payload, can_add_to_collection):
     """Work out the place to create from a quick-add payload. Creates nothing."""
     name, latitude, longitude = read_quick_add_basics(payload)
     collection = resolve_quick_add_collection(
-        payload.get('collection_id'),
+        payload.get('collection'),
         can_add_to_collection,
         'You do not have permission to add this location to the selected collection.',
     )
@@ -382,7 +384,7 @@ def prepare_lodging_quick_add(user, payload, can_add_to_collection):
     """Work out the lodging to create from a quick-add payload. Creates nothing."""
     name, latitude, longitude = read_quick_add_basics(payload)
     collection = resolve_quick_add_collection(
-        payload.get('collection_id'),
+        payload.get('collection'),
         can_add_to_collection,
         'You do not have permission to add this lodging to the selected collection.',
     )

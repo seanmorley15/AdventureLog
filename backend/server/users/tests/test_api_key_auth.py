@@ -8,7 +8,7 @@ from users.models import APIKey, CustomUser
 
 
 class APIKeyAuthenticationTests(APITestCase):
-    URL = '/auth/user-metadata/'
+    URL = '/api/account/'
 
     def setUp(self):
         self.user = CustomUser.objects.create_user(
@@ -22,7 +22,7 @@ class APIKeyAuthenticationTests(APITestCase):
 
         self.assertEqual(by_header.status_code, 200)
         self.assertEqual(by_authorization.status_code, 200)
-        self.assertEqual(by_header.json()['username'], 'key-user')
+        self.assertEqual(by_header.json()['user']['username'], 'key-user')
 
     def test_unknown_key_is_rejected(self):
         response = self.client.get(self.URL, HTTP_X_API_KEY='al_not-a-real-key')
@@ -55,7 +55,7 @@ class APIKeyAuthenticationTests(APITestCase):
 
 
 class APIKeyHashingTests(APITestCase):
-    URL = '/auth/user-metadata/'
+    URL = '/api/account/'
 
     def setUp(self):
         self.user = CustomUser.objects.create_user(

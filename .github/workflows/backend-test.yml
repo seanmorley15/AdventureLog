@@ -72,3 +72,20 @@ jobs:
         run: |
           python manage.py makemigrations --check --dry-run
           python manage.py test --verbosity=1
+
+      # The API documents itself: the schema must be valid OpenAPI, generate without warnings,
+      # and match the committed openapi/schema.yaml (see API.md).
+      - name: check the OpenAPI schema
+        working-directory: backend/server
+        env:
+          PGHOST: "127.0.0.1"
+          PGDATABASE: "database"
+          PGUSER: "adventure"
+          PGPASSWORD: "changeme123"
+          SECRET_KEY: "changeme123"
+          PUBLIC_URL: "http://localhost:8000"
+          FRONTEND_URL: "http://localhost:5173"
+          DJANGO_SETTINGS_MODULE: "main.test_settings"
+        run: |
+          python manage.py spectacular --file openapi/schema.yaml --validate --fail-on-warn
+          git diff --exit-code openapi/schema.yaml

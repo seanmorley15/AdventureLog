@@ -1,25 +1,12 @@
 """The users app's API views, grouped by what they are for."""
 
-from .account import (
-    DeleteAccountView,
-    DisablePasswordAuthenticationView,
-    UpdateUserMetadataView,
-    UserMediaUsageView,
-    UserMetadataView,
-)
+from .account import AccountViewSet
 from .api_keys import APIKeyDetailView, APIKeyListCreateView
-from .auth_config import (
-    EnabledSocialProvidersView,
-    IsRegistrationDisabled,
-    PasswordPolicyView,
-    SignupLegalLinksView,
-)
-from .mobile import MobileQRCodeView
-from .public import PublicUserDetailView, PublicUserListView
+from .auth_config import AuthConfigView, CsrfTokenView
+from .mobile import MobileKeyView
+from .public import PublicUserDetailView, PublicUserListView, PublicUserStatsView
 
 __all__ = [
-    'APIKeyDetailView', 'APIKeyListCreateView', 'DeleteAccountView', 'DisablePasswordAuthenticationView',
-    'EnabledSocialProvidersView', 'IsRegistrationDisabled', 'MobileQRCodeView', 'PasswordPolicyView',
-    'PublicUserDetailView', 'PublicUserListView', 'SignupLegalLinksView', 'UpdateUserMetadataView',
-    'UserMediaUsageView', 'UserMetadataView',
+    'APIKeyDetailView', 'APIKeyListCreateView', 'AccountViewSet', 'AuthConfigView', 'CsrfTokenView',
+    'MobileKeyView', 'PublicUserDetailView', 'PublicUserListView', 'PublicUserStatsView',
 ]

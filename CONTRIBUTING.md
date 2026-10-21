@@ -151,7 +151,7 @@ AdventureLog currently includes:
 
 When contributing, please try to match the **style and patterns already used in the project**.
 
-For the backend, read [`backend/server/ARCHITECTURE.md`](backend/server/ARCHITECTURE.md) first: it explains where code belongs, which way dependencies point, and how to run the checks.
+For the backend, read [`backend/server/ARCHITECTURE.md`](backend/server/ARCHITECTURE.md) first: it explains where code belongs, which way dependencies point, and how to run the checks. If you add or change an API endpoint, follow [`backend/server/API.md`](backend/server/API.md): it describes the API's conventions and how to document an endpoint and regenerate the OpenAPI schema.
 
 ---
 

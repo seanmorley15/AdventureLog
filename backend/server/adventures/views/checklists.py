@@ -1,26 +1,28 @@
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from django.db.models import Q
-from adventures.models import Checklist, CollectionItineraryItem
-from adventures.serializers import ChecklistSerializer
-from adventures.permissions import ensure_can_change_collection
-from adventures.views.mixins import CollectionOwnedViewSetMixin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from rest_framework import viewsets
+
+from adventures.models import Checklist, CollectionItineraryItem
+from adventures.permissions import ensure_can_change_collection
+from adventures.serializers import ChecklistSerializer
+from adventures.views.mixins import CollectionOwnedViewSetMixin
+
 
 class ChecklistViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
-    model = Checklist
-    serializer_class = ChecklistSerializer
-    filterset_fields = ['is_public', 'collection']
+    """
+    Checklists with items to tick off, on their own or in a collection.
 
-    def list(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."}, status=status.HTTP_403_FORBIDDEN)
-        queryset = Checklist.objects.filter(
-            Q(user=request.user)
-        )
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+    Send the full `items` list when creating or updating; items not in it are removed.
+    Changing a checklist's date removes it from the itinerary day it was placed on.
+    """
+
+    openapi_tags = ['Trip items']
+    model = Checklist
+    queryset = Checklist.objects.all()
+    serializer_class = ChecklistSerializer
+
+    def optimize_list(self, queryset):
+        return queryset.prefetch_related('checklistitem_set')
 
     def perform_update(self, serializer):
         instance = serializer.instance
@@ -39,4 +41,3 @@ class ChecklistViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
                     day__isnull=True,
                 ).delete()
             serializer.save()
-

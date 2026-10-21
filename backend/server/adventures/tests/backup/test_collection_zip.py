@@ -94,7 +94,7 @@ class CollectionZipExportImportTests(APITestCase):
 
     def _export_zip(self, collection_id=None):
         collection_id = collection_id or self.collection.id
-        response = self.client.get(f'/api/collections/{collection_id}/export/')
+        response = self.client.get(f'/api/collections/{collection_id}/archive/')
         self.assertEqual(response.status_code, 200)
         return response.content
 

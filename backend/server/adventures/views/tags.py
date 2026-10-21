@@ -1,32 +1,23 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
 from adventures.models import Location
 
+
 class TagViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+    openapi_tags = ['Categories & tags']
 
-    @action(detail=False, methods=['get'])
-    def types(self, request):
+    @extend_schema(responses={200: {'type': 'array', 'items': {'type': 'string'}}})
+    def list(self, request):
         """
-        Retrieve a list of distinct activity types for locations associated with the current user.
+        List your tags
 
-        Args:
-            request (HttpRequest): The HTTP request object.
-
-        Returns:
-            Response: A response containing a list of distinct activity types.
+        Every distinct tag used on your locations, for suggestions while editing.
         """
-        types = Location.objects.filter(user=request.user).values_list('tags', flat=True).distinct()
-
-        allTypes = []
-
-        for i in types:
-            if not i:
-                continue
-            for x in i:
-                if x and x not in allTypes:
-                    allTypes.append(x)
-
-        return Response(allTypes)
+        tags = []
+        for location_tags in Location.objects.filter(user=request.user).values_list('tags', flat=True).distinct():
+            for tag in location_tags or []:
+                if tag and tag not in tags:
+                    tags.append(tag)
+        return Response(tags)

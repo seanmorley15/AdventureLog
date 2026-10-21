@@ -10,7 +10,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"api:types": "openapi-typescript ../backend/server/openapi/schema.yaml -o src/lib/api/schema.d.ts"
 	},
 	"devDependencies": {
 		"@event-calendar/core": "^3.12.0",
@@ -28,6 +29,7 @@
 		"@types/qrcode": "^1.5.5",
 		"baseline-browser-mapping": "^2.9.9",
 		"daisyui": "^5.7.16",
+		"openapi-typescript": "7.13.0",
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.0.0",

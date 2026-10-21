@@ -25,7 +25,7 @@
 	async function load() {
 		lastLoad = Date.now();
 		try {
-			const res = await fetch('/api/collection-comments/inbox/?limit=20');
+			const res = await fetch('/api/comments/inbox/?limit=20');
 			if (!res.ok) return;
 			const data = await res.json();
 			unread = data.unread_count ?? 0;
@@ -36,7 +36,7 @@
 	}
 
 	async function markRead() {
-		const res = await fetch('/api/collection-comments/inbox/seen/', { method: 'POST' });
+		const res = await fetch('/api/comments/inbox/mark-seen/', { method: 'POST' });
 		if (res.ok) {
 			unread = 0;
 			items = (items ?? []).map((item) => ({ ...item, unread: false }));

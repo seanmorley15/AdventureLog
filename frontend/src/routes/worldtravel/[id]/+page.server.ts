@@ -18,7 +18,7 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	}
 
-	let res = await fetch(`${endpoint}/api/${id}/regions/`, {
+	let res = await fetch(`${endpoint}/api/countries/${id}/regions/`, {
 		method: 'GET',
 		headers: {
 			Cookie: `sessionid=${sessionId}`
@@ -31,7 +31,7 @@ export const load = (async (event) => {
 		regions = (await res.json()) as Region[];
 	}
 
-	res = await fetch(`${endpoint}/api/${id}/visits/`, {
+	res = await fetch(`${endpoint}/api/visited-regions/?country=${id}`, {
 		method: 'GET',
 		headers: {
 			Cookie: `sessionid=${sessionId}`
@@ -44,7 +44,7 @@ export const load = (async (event) => {
 		visitedRegions = (await res.json()) as VisitedRegion[];
 	}
 
-	res = await fetch(`${endpoint}/api/countries/${regions[0].country}/`, {
+	res = await fetch(`${endpoint}/api/countries/${id}/`, {
 		method: 'GET',
 		headers: {
 			Cookie: `sessionid=${sessionId}`
@@ -61,7 +61,7 @@ export const load = (async (event) => {
 	let description: string | null = null;
 	try {
 		const descRes = await fetch(
-			`${endpoint}/api/generate/desc/?name=${encodeURIComponent(country.name)}`,
+			`${endpoint}/api/places/description/?name=${encodeURIComponent(country.name)}`,
 			{
 				method: 'GET',
 				headers: {

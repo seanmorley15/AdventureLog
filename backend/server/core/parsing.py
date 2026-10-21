@@ -1,5 +1,6 @@
 """Forgiving coercion and cleaning for untrusted request values."""
 
+import uuid
 from datetime import date, datetime
 from urllib.parse import urlparse
 
@@ -106,3 +107,12 @@ def parse_iso_date(value):
         return date.fromisoformat(str(value)[:10])
     except ValueError:
         return None
+
+
+def as_uuid(value):
+    """``value`` as a ``uuid.UUID``, or ``None`` when it is not one (an id from a URL, say)."""
+    try:
+        return uuid.UUID(str(value))
+    except (TypeError, ValueError, AttributeError):
+        return None
+

@@ -114,7 +114,7 @@
 	async function logActivity(activity: Activity, placement?: string, date?: string) {
 		logging = activity.id;
 		try {
-			const res = await fetch(`/api/activities/${activity.id}/log-visited/`, {
+			const res = await fetch(`/api/activities/${activity.id}/log-visit/`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

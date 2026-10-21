@@ -33,8 +33,7 @@
 	$effect(() => {
 		void refreshKey;
 		const controller = new AbortController();
-		const params = new URLSearchParams({ collection: collectionId, limit: '100' });
-		fetch(`/api/collection-activity/?${params}`, { signal: controller.signal })
+		fetch(`/api/collections/${collectionId}/activity/?limit=100`, { signal: controller.signal })
 			.then(async (res) => {
 				if (!res.ok) throw new Error(String(res.status));
 				events = await res.json();

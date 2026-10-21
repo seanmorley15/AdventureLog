@@ -7,12 +7,16 @@ from django.db import transaction
 
 from adventures.models import Collection, CollectionInvite
 from adventures.services.account_data import clear_user_adventure_data
+from core.errors import ServiceError
 
 logger = logging.getLogger(__name__)
 
 
-class AccountDeletionError(Exception):
+class AccountDeletionError(ServiceError):
     """Raised when account deletion cannot be completed."""
+
+    status = 502
+    code = 'billing_cleanup_failed'
 
 
 def cancel_stripe_billing(user) -> None:

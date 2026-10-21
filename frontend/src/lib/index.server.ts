@@ -23,6 +23,12 @@ export {
 	type PasswordPolicy
 } from '$lib/server/password-policy';
 export {
+	fetchAuthConfig,
+	DEFAULT_AUTH_CONFIG,
+	type AuthConfig,
+	type SocialProvider
+} from '$lib/server/auth-config';
+export {
 	fetchSignupLegalLinks,
 	signupLegalRequired,
 	type SignupLegalLinks

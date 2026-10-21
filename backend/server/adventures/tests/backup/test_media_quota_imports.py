@@ -43,7 +43,7 @@ class MediaQuotaTests(APITestCase):
         response = self.client.post('/api/backup/import/', {'file': upload, 'confirm': 'yes'}, format='multipart')
 
         self.assertEqual(response.status_code, 413, response.content)
-        self.assertEqual(response.json()['error'], 'Media storage limit exceeded')
+        self.assertEqual(response.json()['detail'], 'Media storage limit exceeded')
         self.assertTrue(Collection.objects.filter(user=self.user, name='Keep me').exists())
 
     def test_backup_import_within_the_limit_still_works(self):
@@ -78,7 +78,8 @@ class MediaQuotaTests(APITestCase):
             format='multipart',
         )
 
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.status_code, 413, response.content)
+        self.assertEqual(response.json()['code'], 'media_quota_exceeded')
         attachment.refresh_from_db()
         self.assertTrue(attachment.file.name.endswith('.txt'))
         self.assertEqual(attachment.file.size, 5)

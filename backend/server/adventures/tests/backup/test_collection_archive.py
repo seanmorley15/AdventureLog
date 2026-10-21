@@ -46,7 +46,7 @@ class CollectionArchiveTests(APITestCase):
 
     def export_bytes(self):
         self.as_user(self.owner)
-        response = self.client.get(f'/api/collections/{self.trip.id}/export/')
+        response = self.client.get(f'/api/collections/{self.trip.id}/archive/')
         self.assertEqual(response.status_code, 200)
         return response.content
 
@@ -81,7 +81,7 @@ class CollectionArchiveTests(APITestCase):
 
     def test_only_the_owner_can_download_it(self):
         self.as_user(self.friend)
-        response = self.client.get(f'/api/collections/{self.trip.id}/export/')
+        response = self.client.get(f'/api/collections/{self.trip.id}/archive/')
         self.assertEqual(response.status_code, 404)
 
     def test_an_archived_collection_can_still_be_downloaded_by_its_owner(self):
@@ -263,7 +263,7 @@ class CollectionArchiveTests(APITestCase):
         response = self.upload(backup, user=self.owner)
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('full backup', response.json()['error'])
+        self.assertIn('full backup', response.json()['detail'])
 
     def test_a_collection_file_is_refused_by_full_restore_and_nothing_is_erased(self):
         self.as_user(self.owner)
@@ -272,7 +272,7 @@ class CollectionArchiveTests(APITestCase):
         response = self.client.post('/api/backup/import/', {'file': file, 'confirm': 'yes'}, format='multipart')
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('single collection', response.json()['error'])
+        self.assertIn('single collection', response.json()['detail'])
         self.assertTrue(Location.objects.filter(pk=self.objects['hut'].pk).exists())
         self.assertEqual(Collection.objects.filter(user=self.owner).count(), 2)
 
@@ -286,7 +286,7 @@ class CollectionArchiveTests(APITestCase):
         response = self.upload(buffer.getvalue())
 
         self.assertEqual(response.status_code, 400)
-        self.assertIn('newer schema', response.json()['error'])
+        self.assertIn('newer schema', response.json()['detail'])
 
     def test_a_zip_with_no_collection_data_is_refused(self):
         buffer = io.BytesIO()
@@ -308,7 +308,7 @@ class CollectionArchiveTests(APITestCase):
         response = self.upload(buffer.getvalue())
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['error'], 'An internal error occurred during import')
+        self.assertEqual(response.json()['code'], 'invalid_backup')
         self.assertEqual(before, (Collection.objects.count(), Location.objects.count()))
 
 

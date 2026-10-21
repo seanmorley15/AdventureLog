@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import date
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from rest_framework.test import APITestCase
 
@@ -12,7 +12,7 @@ from core.results import ProviderResult
 from core.testing import make_user
 
 LOCATION = '/api/locations/quick-add/'
-LODGING = '/api/lodging/quick-add/'
+LODGING = '/api/lodgings/quick-add/'
 
 
 @patch('adventures.services.geocoding.reverse.osm_reverse', return_value=ProviderResult(error='offline'))
@@ -36,7 +36,7 @@ class QuickAddErrorTests(APITestCase):
         for url in (LOCATION, LODGING):
             with self.subTest(url=url):
                 response = self.client.post(url, {'latitude': 1, 'longitude': 2}, format='json')
-                self.assertEqual((response.status_code, response.json()), (400, {'error': 'name is required'}))
+                self.assertEqual((response.status_code, response.json()), (400, {'detail': 'name is required', 'code': ANY}))
 
     def test_missing_or_impossible_coordinates_are_refused(self, _osm):
         bad = ({'latitude': None}, {'longitude': 'x'}, {'latitude': 91}, {'longitude': -181})
@@ -45,19 +45,19 @@ class QuickAddErrorTests(APITestCase):
                 with self.subTest(url=url, extra=extra):
                     response = self.post(url, **extra)
                     self.assertEqual(response.status_code, 400)
-                    self.assertEqual(response.json(), {'error': 'Valid latitude and longitude are required'})
+                    self.assertEqual(response.json(), {'detail': 'Valid latitude and longitude are required', 'code': ANY})
 
     def test_an_unknown_collection_is_a_404(self, _osm):
         for url in (LOCATION, LODGING):
             with self.subTest(url=url):
-                response = self.post(url, collection_id=str(uuid.uuid4()))
-                self.assertEqual((response.status_code, response.json()), (404, {'error': 'Collection not found.'}))
+                response = self.post(url, collection=str(uuid.uuid4()))
+                self.assertEqual((response.status_code, response.json()), (404, {'detail': 'Collection not found.', 'code': ANY}))
 
     def test_a_collection_id_that_is_not_an_id_is_a_404_not_a_server_error(self, _osm):
         for url in (LOCATION, LODGING):
             with self.subTest(url=url):
-                response = self.post(url, collection_id='not-a-uuid')
-                self.assertEqual((response.status_code, response.json()), (404, {'error': 'Collection not found.'}))
+                response = self.post(url, collection='not-a-uuid')
+                self.assertEqual((response.status_code, response.json()), (404, {'detail': 'Collection not found.', 'code': ANY}))
 
     def test_a_collection_the_user_cannot_edit_is_a_403_naming_what_was_being_added(self, _osm):
         theirs = Collection.objects.create(user=self.other, name='Theirs')
@@ -67,38 +67,38 @@ class QuickAddErrorTests(APITestCase):
         }
         for url, message in expected.items():
             with self.subTest(url=url):
-                response = self.post(url, collection_id=str(theirs.id))
-                self.assertEqual((response.status_code, response.json()), (403, {'error': message}))
+                response = self.post(url, collection=str(theirs.id))
+                self.assertEqual((response.status_code, response.json()), (403, {'detail': message, 'code': ANY}))
         self.assertFalse(Location.objects.filter(collections=theirs).exists())
 
     def test_a_category_must_be_an_object_or_a_string(self, _osm):
         response = self.post(LOCATION, category=123)
-        self.assertEqual((response.status_code, response.json()), (400, {'error': 'category must be an object or string'}))
+        self.assertEqual((response.status_code, response.json()), (400, {'detail': 'category must be an object or string', 'code': ANY}))
 
     def test_an_id_for_a_category_that_is_not_the_users_is_refused(self, _osm):
         response = self.post(LOCATION, category=str(uuid.uuid4()))
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), {'error': 'Category not found or inaccessible'})
+        self.assertEqual(response.json(), {'detail': 'Category not found or inaccessible', 'code': ANY})
 
     def test_a_date_before_or_after_the_trip_is_refused_with_its_own_message(self, _osm):
         cases = (('2026-05-31', 'before the collection start_date'), ('2026-06-06', 'after the collection end_date'))
         for url in (LOCATION, LODGING):
             for day, wording in cases:
                 with self.subTest(url=url, day=day):
-                    response = self.post(url, collection_id=str(self.trip.id), itinerary_date=day)
+                    response = self.post(url, collection=str(self.trip.id), itinerary_date=day)
                     self.assertEqual(response.status_code, 400)
-                    self.assertIn(wording, response.json()['error'])
+                    self.assertIn(wording, response.json()['detail'])
 
     def test_a_refused_date_leaves_nothing_behind(self, _osm):
-        self.post(LOCATION, name='Ghost place', collection_id=str(self.trip.id), itinerary_date='2027-01-01')
-        self.post(LODGING, name='Ghost lodge', collection_id=str(self.trip.id), itinerary_date='2027-01-01')
+        self.post(LOCATION, name='Ghost place', collection=str(self.trip.id), itinerary_date='2027-01-01')
+        self.post(LODGING, name='Ghost lodge', collection=str(self.trip.id), itinerary_date='2027-01-01')
 
         self.assertFalse(Location.objects.filter(name='Ghost place').exists())
         self.assertFalse(Lodging.objects.filter(name='Ghost lodge').exists())
         self.assertFalse(self.trip.itinerary_items.exists())
 
     def test_a_date_inside_the_trip_places_the_new_record_on_that_day(self, _osm):
-        response = self.post(LOCATION, collection_id=str(self.trip.id), itinerary_date='2026-06-03')
+        response = self.post(LOCATION, collection=str(self.trip.id), itinerary_date='2026-06-03')
 
         self.assertEqual(response.status_code, 201, response.content)
         placement = self.trip.itinerary_items.get()

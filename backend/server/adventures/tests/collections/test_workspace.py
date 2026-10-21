@@ -131,4 +131,4 @@ class WorkspaceTests(APITestCase):
 
         paged = self.client.get('/api/locations/suggest/', {'limit': 1, 'offset': 1})
         self.assertEqual(len(paged.json()['results']), 1)
-        self.assertEqual(paged.json()['total'], len(names))
+        self.assertEqual(paged.json()['count'], len(names))

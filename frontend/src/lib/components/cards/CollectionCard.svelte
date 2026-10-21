@@ -107,7 +107,7 @@
 
 	async function exportCollectionZip() {
 		await downloadCollectionBlob(
-			`/api/collections/${collection.id}/export`,
+			`/api/collections/${collection.id}/archive/`,
 			`collection-${String(collection.name).replace(/\s+/g, '_')}.zip`,
 			'adventures.export_success',
 			'adventures.export_failed'
@@ -120,7 +120,7 @@
 				.replace(/[^\w\s-]/g, '')
 				.replace(/\s+/g, '_') || 'collection';
 		await downloadCollectionBlob(
-			`/api/collections/${collection.id}/export-pdf/`,
+			`/api/collections/${collection.id}/pdf/`,
 			`${safeName}_itinerary.pdf`,
 			'adventures.export_pdf_success',
 			'adventures.export_pdf_failed'

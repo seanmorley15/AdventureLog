@@ -24,6 +24,7 @@ from adventures.models import (
 from adventures.services.calendar_events import get_calendar_events_for_user
 from adventures.services.exports.pdf import build_collection_pdf, get_collection_for_pdf
 from adventures.access.audience import resolve_audience
+from adventures.tests.day_plan.base import plan_request
 from adventures.tests.base import AudienceTestBase, make_user
 from users.models import CustomUser
 
@@ -72,9 +73,7 @@ class RoleTests(AudienceTestBase):
             '/api/notes/', {'name': 'Pack', 'collection': str(self.trip.id)}, format='json'
         )
         self.assertEqual(refused.status_code, 403)
-        refused_day = self.client.post(
-            '/api/itineraries/days/insert/', {'collection': str(self.trip.id)}, format='json'
-        )
+        refused_day = plan_request(self.client, self.trip, 'days/insert')
         self.assertEqual(refused_day.status_code, 403)
 
     def test_guest_link_reads_the_plan_until_revoked_or_expired(self):
@@ -99,7 +98,7 @@ class RoleTests(AudienceTestBase):
         self.assertIn(self.client.patch(url, {'visibility': 'public'}, format='json', **headers).status_code, (401, 403, 404))
         self.assertIn(self.client.delete(url, **headers).status_code, (401, 403, 404))
         self.assertIn(
-            self.client.post(f'/api/collections/{self.trip.id}/unshare/{self.editor.uuid}/', **headers).status_code,
+            self.client.delete(f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/', **headers).status_code,
             (401, 403, 404),
         )
         self.trip.refresh_from_db()
@@ -121,22 +120,22 @@ class RoleTests(AudienceTestBase):
     def test_invite_role_and_owner_role_change(self):
         guest = make_user('guest')
         self.as_user(self.owner)
-        self.client.post(f'/api/collections/{self.trip.id}/share/{guest.uuid}/', {'role': 'viewer'}, format='json')
+        self.client.post(f'/api/collections/{self.trip.id}/invites/', {'user': str(guest.uuid), 'role': 'viewer'}, format='json')
         self.assertEqual(CollectionInvite.objects.get(invited_user=guest).role, 'viewer')
         self.as_user(guest)
-        self.client.post(f'/api/collections/{self.trip.id}/accept-invite/')
+        self.client.post(f'/api/collections/{self.trip.id}/invitation/accept/')
         self.assertEqual(resolve_audience(self.trip, guest).role, 'viewer')
 
         self.as_user(self.owner)
-        response = self.client.post(
-            f'/api/collections/{self.trip.id}/members/{guest.uuid}/role/', {'role': 'editor'}, format='json'
+        response = self.client.patch(
+            f'/api/collections/{self.trip.id}/members/{guest.uuid}/', {'role': 'editor'}, format='json'
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(resolve_audience(self.trip, guest).role, 'editor')
 
         self.as_user(self.editor)
-        refused = self.client.post(
-            f'/api/collections/{self.trip.id}/members/{guest.uuid}/role/', {'role': 'viewer'}, format='json'
+        refused = self.client.patch(
+            f'/api/collections/{self.trip.id}/members/{guest.uuid}/', {'role': 'viewer'}, format='json'
         )
         self.assertEqual(refused.status_code, 404)
 
@@ -151,17 +150,19 @@ class RoleTests(AudienceTestBase):
         )
         links = second.json()['guest_links']
         self.assertEqual(len(links), 2)
-        revoked = self.client.post(f'/api/collections/{self.trip.id}/guest-links/{links[0]["id"]}/revoke/')
-        self.assertFalse(revoked.json()['guest_links'][0]['is_active'])
-        self.assertTrue(revoked.json()['guest_links'][1]['is_active'])
+        revoked = self.client.delete(f'/api/collections/{self.trip.id}/guest-links/{links[0]["id"]}/')
+        self.assertEqual(revoked.status_code, 204)
+        sharing = self.client.get(f'/api/collections/{self.trip.id}/sharing/').json()
+        self.assertFalse(sharing['guest_links'][0]['is_active'])
+        self.assertTrue(sharing['guest_links'][1]['is_active'])
 
     def test_removing_a_member_drops_the_trip_and_keeps_places(self):
         own = Location.objects.create(user=self.editor, name='Editor cafe')
         own.collections.add(self.trip)
         self.assertTrue(get_calendar_events_for_user(self.editor))
         self.as_user(self.owner)
-        response = self.client.post(f'/api/collections/{self.trip.id}/unshare/{self.editor.uuid}/')
-        self.assertEqual(response.status_code, 200)
+        response = self.client.delete(f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/')
+        self.assertEqual(response.status_code, 204)
         self.assertEqual(get_calendar_events_for_user(self.editor), [])
         self.assertFalse(CollectionMember.objects.filter(collection=self.trip, user=self.editor).exists())
         self.hut.refresh_from_db()
@@ -338,9 +339,9 @@ class StoryTests(AudienceTestBase):
         self.hotel.is_public = True
         self.hotel.save()
         self.as_anonymous()
-        self.assertEqual(self.client.get(f'/api/lodging/{self.hotel.id}/').status_code, 404)
+        self.assertEqual(self.client.get(f'/api/lodgings/{self.hotel.id}/').status_code, 404)
         self.as_user(self.viewer)
-        self.assertEqual(self.client.get(f'/api/lodging/{self.hotel.id}/').status_code, 200)
+        self.assertEqual(self.client.get(f'/api/lodgings/{self.hotel.id}/').status_code, 200)
 
     @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
     def test_day_gpx_needs_the_gpx_group(self):
@@ -364,19 +365,19 @@ class StoryTests(AudienceTestBase):
         self.assertTrue(story_pdf.startswith(b'%PDF'))
         self.assertGreater(len(member_pdf), 0)
         self.as_anonymous()
-        self.assertEqual(self.client.get(f'/api/collections/{self.trip.id}/export-pdf/').status_code, 200)
+        self.assertEqual(self.client.get(f'/api/collections/{self.trip.id}/pdf/').status_code, 200)
 
     @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
     def test_profile_lists_public_collections_only(self):
         self.publish('unlisted')
         self.as_anonymous()
-        body = self.client.get(f'/auth/user/{self.owner.username}/').json()
+        body = self.client.get(f'/api/users/{self.owner.username}/').json()
         self.assertEqual(body['collections'], [])
         self.publish('public')
-        body = self.client.get(f'/auth/user/{self.owner.username}/').json()
+        body = self.client.get(f'/api/users/{self.owner.username}/').json()
         self.assertEqual([c['name'] for c in body['collections']], ['Lofoten'])
         self.assertNotIn('lodging', body['collections'][0])
-        self.assertEqual(body['adventures'], [])
+        self.assertEqual(body['locations'], [])
 
 
 class BackupTests(AudienceTestBase):
@@ -501,7 +502,7 @@ class MigrationTests(APITestCase):
 class InviteSearchTests(AudienceTestBase):
     def search(self, **params):
         self.as_user(self.owner)
-        return self.client.get(f'/api/collections/{self.trip.id}/can-share/', params)
+        return self.client.get(f'/api/collections/{self.trip.id}/shareable-users/', params)
 
     def test_search_skips_owner_members_invited_and_private_profiles(self):
         make_user('editor-two', first_name='Ed')
@@ -527,12 +528,13 @@ class InviteSearchTests(AudienceTestBase):
         for i in range(30, 90):
             make_user(f'traveler{i:02d}')
         with CaptureQueriesContext(connection) as large:
-            body = self.search(q='traveler', limit=500).json()
+            body = self.search(q='traveler', limit=50).json()
         self.assertEqual(len(body), 50)
+        self.assertEqual(self.search(q='traveler', limit=500).status_code, 400)
         self.assertEqual(len(self.search(q='traveler').json()), 20)
         self.assertEqual(len(large.captured_queries), len(small.captured_queries))
 
     def test_only_the_owner_can_search(self):
         self.as_user(self.editor)
-        response = self.client.get(f'/api/collections/{self.trip.id}/can-share/', {'q': 'view'})
+        response = self.client.get(f'/api/collections/{self.trip.id}/shareable-users/', {'q': 'view'})
         self.assertEqual(response.status_code, 404)

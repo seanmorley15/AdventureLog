@@ -23,6 +23,7 @@ from adventures.models import (
     Trail,
     Visit,
 )
+from adventures.tests.day_plan.base import item_url, plan_request
 from adventures.utils.collection_type import BACKUP_SCHEMA
 from users.models import CustomUser
 
@@ -174,7 +175,7 @@ class DayFileTests(APITestCase):
         activity = Activity.objects.create(
             user=self.owner, day=self.day3, name='Day 3 hike', sport_type='Hike', gpx_file='activities/copy-me.gpx'
         )
-        response = self.client.post(f'/api/activities/{activity.id}/log-visited/', {}, format='json')
+        response = self.client.post(f'/api/activities/{activity.id}/log-visit/', {}, format='json')
         self.assertEqual(response.status_code, 201, response.content)
         activity.refresh_from_db()
         self.assertIsNone(activity.visit_id)
@@ -188,7 +189,7 @@ class DayFileTests(APITestCase):
         self.shelter_row.refresh_from_db()
         self.assertEqual(self.shelter_row.logged_visit_id, copy.visit_id)
 
-        again = self.client.post(f'/api/activities/{activity.id}/log-visited/', {}, format='json')
+        again = self.client.post(f'/api/activities/{activity.id}/log-visit/', {}, format='json')
         self.assertEqual(again.status_code, 200, again.content)
         self.assertEqual(Activity.objects.filter(visit__location=self.shelter).count(), 2)
 
@@ -204,13 +205,13 @@ class DayFileTests(APITestCase):
             order=1,
         )
         activity = Activity.objects.create(user=self.owner, day=self.day3, name='Linkup')
-        asked = self.client.post(f'/api/activities/{activity.id}/log-visited/', {}, format='json')
+        asked = self.client.post(f'/api/activities/{activity.id}/log-visit/', {}, format='json')
         self.assertEqual(asked.status_code, 400)
         self.assertEqual(asked.json()['code'], 'stop_required')
         self.assertEqual(len(asked.json()['stops']), 2)
 
         chosen = self.client.post(
-            f'/api/activities/{activity.id}/log-visited/',
+            f'/api/activities/{activity.id}/log-visit/',
             {'placement': str(town_row.id)},
             format='json',
         )
@@ -219,7 +220,7 @@ class DayFileTests(APITestCase):
         self.assertEqual(activity.promoted_activity.visit.location_id, town.id)
         self.assertIsNone(activity.visit_id)
 
-        logged = self.client.post(f'/api/itineraries/{self.shelter_row.id}/log-visited/', {}, format='json')
+        logged = self.client.post(item_url(self.trip, self.shelter_row.id, 'log-visit'), {}, format='json')
         self.assertEqual(logged.status_code, 201, logged.content)
         activity.refresh_from_db()
         self.assertEqual(activity.day_id, self.day3.id)
@@ -227,11 +228,7 @@ class DayFileTests(APITestCase):
 
     def test_log_day_includes_the_day_activity(self):
         Activity.objects.create(user=self.owner, day=self.day3, name='Included')
-        response = self.client.post(
-            '/api/itineraries/log-day/',
-            {'collection': str(self.trip.id), 'day': str(self.day3.id)},
-            format='json',
-        )
+        response = plan_request(self.client, self.trip, 'log-day', {'day': str(self.day3.id)})
         self.assertEqual(response.status_code, 200, response.content)
         activity = Activity.objects.get(day=self.day3)
         self.assertIsNotNone(activity.promoted_activity_id)
@@ -241,13 +238,13 @@ class DayFileTests(APITestCase):
         activity = Activity.objects.create(user=self.owner, day=self.day3, name='Dated')
 
         bad = self.client.post(
-            f'/api/activities/{activity.id}/log-visited/', {'date': 'not-a-date'}, format='json'
+            f'/api/activities/{activity.id}/log-visit/', {'date': 'not-a-date'}, format='json'
         )
         self.assertEqual(bad.status_code, 400)
-        self.assertEqual(bad.json()['error'], 'Use a YYYY-MM-DD date.')
+        self.assertEqual(bad.json()['fields'], {'date': ['Use a YYYY-MM-DD date.']})
 
         good = self.client.post(
-            f'/api/activities/{activity.id}/log-visited/', {'date': '2026-06-03T09:30:00'}, format='json'
+            f'/api/activities/{activity.id}/log-visit/', {'date': '2026-06-03T09:30:00'}, format='json'
         )
         self.assertEqual(good.status_code, 201, good.content)
         activity.refresh_from_db()
@@ -256,19 +253,11 @@ class DayFileTests(APITestCase):
     def test_delete_day_moves_files_to_ideas_or_another_day(self):
         activity = Activity.objects.create(user=self.owner, day=self.day3, name='Move me')
         Trail.objects.create(user=self.owner, day=self.day3, name='AT', link='https://example.com/at')
-        refused = self.client.post(
-            '/api/itineraries/days/delete/',
-            {'collection': str(self.trip.id), 'day': str(self.day3.id)},
-            format='json',
-        )
+        refused = plan_request(self.client, self.trip, 'days/delete', {'day': str(self.day3.id)})
         self.assertEqual(refused.status_code, 400)
         self.assertEqual(refused.json()['code'], 'destination_required')
 
-        moved = self.client.post(
-            '/api/itineraries/days/delete/',
-            {'collection': str(self.trip.id), 'day': str(self.day3.id), 'destination': 'ideas'},
-            format='json',
-        )
+        moved = plan_request(self.client, self.trip, 'days/delete', {'day': str(self.day3.id), 'destination': 'ideas'})
         self.assertEqual(moved.status_code, 200, moved.content)
         activity.refresh_from_db()
         self.assertIsNone(activity.day_id)
@@ -283,7 +272,7 @@ class DayFileTests(APITestCase):
         activity = Activity.objects.create(
             user=self.owner, day=self.day3, name='Day 3 hike', gpx_file='activities/copy-me.gpx'
         )
-        self.client.post(f'/api/activities/{activity.id}/log-visited/', {}, format='json')
+        self.client.post(f'/api/activities/{activity.id}/log-visit/', {}, format='json')
         copy_id = Activity.objects.get(pk=activity.id).promoted_activity_id
         self.trip.delete()
         self.assertTrue(Location.objects.filter(pk=self.shelter.id).exists())

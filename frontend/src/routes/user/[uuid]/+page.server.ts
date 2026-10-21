@@ -12,7 +12,7 @@ export const load = (async (event) => {
 	if (!uuid) {
 		return redirect(302, '/users');
 	}
-	let res = await fetch(`${serverEndpoint}/auth/user/${uuid}/`, {
+	let res = await fetch(`${serverEndpoint}/api/users/${uuid}/`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
 		}

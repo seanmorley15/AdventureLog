@@ -20,12 +20,12 @@ class DashboardAPITestCase(APITestCase):
         self.city = City.objects.create(id='FR-75-paris', name='Paris City', region=self.region)
 
     def test_dashboard_requires_authentication(self):
-        response = self.client.get('/api/stats/dashboard/')
+        response = self.client.get('/api/dashboard/')
         self.assertIn(response.status_code, [401, 403])
 
     def test_dashboard_returns_expected_shape_for_empty_user(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/api/stats/dashboard/')
+        response = self.client.get('/api/dashboard/')
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -58,7 +58,7 @@ class DashboardAPITestCase(APITestCase):
         )
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/api/stats/dashboard/')
+        response = self.client.get('/api/dashboard/')
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -75,7 +75,7 @@ class DashboardAPITestCase(APITestCase):
         )
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/api/stats/dashboard/')
+        response = self.client.get('/api/dashboard/')
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -85,14 +85,14 @@ class DashboardAPITestCase(APITestCase):
 
     def test_dashboard_omits_activities_by_category(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/api/stats/dashboard/')
+        response = self.client.get('/api/dashboard/')
 
         self.assertEqual(response.status_code, 200)
         self.assertNotIn('activities_by_category', response.json()['stats'])
 
     def test_counts_endpoint_still_includes_activities_by_category(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(f'/api/stats/counts/{self.user.username}/')
+        response = self.client.get(f'/api/users/{self.user.username}/stats/')
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('activities_by_category', response.json())

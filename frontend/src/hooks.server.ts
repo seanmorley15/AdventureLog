@@ -5,9 +5,9 @@ import { clearSessionCookie, getServerEndpoint, setSessionFromResponse } from '$
 
 const ALLOWED_THEME_NAMES = new Set(themes.map((theme) => theme.name));
 
-/** Routes handled by the Django proxy (`routes/api/[...path]`, `routes/auth/[...path]`). */
+/** Routes handled by the Django proxy (`routes/api/[...path]`). */
 export function isBackendProxyPath(pathname: string): boolean {
-	return pathname.startsWith('/api/') || pathname.startsWith('/auth/');
+	return pathname.startsWith('/api/');
 }
 
 export const authHook: Handle = async ({ event, resolve }) => {
@@ -23,7 +23,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 			return await resolve(event);
 		}
 
-		// The /api and /auth routes only proxy to Django, which authenticates the session
+		// The /api routes only proxy to Django, which authenticates the session
 		// itself. Looking the user up here would add a backend round-trip to every call.
 		if (isBackendProxyPath(event.url.pathname)) {
 			event.locals.user = null;
@@ -40,7 +40,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		const serverEndpoint = getServerEndpoint();
 		const cookie = event.request.headers.get('cookie') || '';
 
-		const userFetch = await event.fetch(`${serverEndpoint}/auth/current-user/`, {
+		const userFetch = await event.fetch(`${serverEndpoint}/api/account/`, {
 			headers: { cookie }
 		});
 

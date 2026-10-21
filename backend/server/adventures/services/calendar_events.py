@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta, timezone as dt_timezone
 from typing import Iterable
 
 from django.db.models import Prefetch, Q, prefetch_related_objects
+from icalendar import Calendar, Event, vCalAddress, vText
 from django.utils import timezone
 
 from adventures.models import (
@@ -613,3 +614,63 @@ def get_calendar_events_for_user(
 
 def iter_calendar_events_for_ics(user) -> Iterable[dict]:
     return get_calendar_events_for_user(user)
+
+
+def _parse_event_datetime(value: str | None):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+
+
+def build_ics_calendar(user) -> bytes:
+    """Every calendar event of the user as an iCalendar (RFC 5545) file."""
+    name = f'{user.first_name} {user.last_name}'.strip() or user.username
+    cal = Calendar()
+    cal.add('prodid', '-//AdventureLog Calendar//adventurelog.app//')
+    cal.add('version', '2.0')
+    cal.add('calscale', 'GREGORIAN')
+    cal.add('method', 'PUBLISH')
+    cal.add('x-wr-calname', 'AdventureLog')
+
+    for item in iter_calendar_events_for_ics(user):
+        start_dt = _parse_event_datetime(item.get('start'))
+        if not start_dt:
+            continue
+        end_dt = _parse_event_datetime(item.get('end')) or start_dt
+
+        event = Event()
+        event.add('uid', f"{item['id']}@adventurelog")
+        event.add('summary', f"{item.get('icon', '')} {item.get('title', 'Event')}".strip())
+        event.add('dtstamp', datetime.now())
+        event.add('transp', 'TRANSPARENT')
+        event.add('class', 'PRIVATE')
+        event.add('created', datetime.now())
+        event.add('last-modified', datetime.now())
+        if item.get('description'):
+            event.add('description', item['description'])
+        if item.get('location_label'):
+            event.add('location', item['location_label'])
+        if item.get('url'):
+            event.add('url', item['url'])
+        categories = [item.get('category', 'Adventure')]
+        if item.get('collection_name'):
+            categories.append(item['collection_name'])
+        event.add('categories', categories)
+
+        if item.get('all_day'):
+            event.add('dtstart', start_dt.date())
+            event.add('dtend', end_dt.date() + timedelta(days=1))
+        else:
+            event.add('dtstart', start_dt)
+            event.add('dtend', end_dt if end_dt >= start_dt else start_dt)
+
+        organizer = vCalAddress(f'MAILTO:{user.email}')
+        organizer.params['cn'] = vText(name)
+        event.add('organizer', organizer)
+        cal.add_component(event)
+
+    return cal.to_ical()
+

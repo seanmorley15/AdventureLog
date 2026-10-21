@@ -5,6 +5,7 @@ import {
 	csrfFail,
 	djangoBrowserFetch,
 	extractSessionIdFromResponse,
+	fetchAuthConfig,
 	requireCsrf,
 	setSessionFromResponse
 } from '$lib/index.server';
@@ -24,10 +25,7 @@ export const load: PageServerLoad = async (event) => {
 		[];
 
 	try {
-		const socialProviderFetch = await event.fetch(`${serverEndpoint}/auth/social-providers/`);
-		if (socialProviderFetch.ok) {
-			socialProviders = await socialProviderFetch.json();
-		}
+		socialProviders = (await fetchAuthConfig(event.fetch, serverEndpoint)).social_providers;
 	} catch {
 		// Degrade gracefully — login still works without social providers.
 	}
@@ -74,7 +72,7 @@ export const actions: Actions = {
 			return csrfFail();
 		}
 
-		const loginFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/login', {
+		const loginFetch = await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/login', {
 			method: 'POST',
 			csrfToken,
 			headers: { 'Content-Type': 'application/json' },
@@ -114,7 +112,7 @@ export const actions: Actions = {
 
 				const mfaLoginFetch = await djangoBrowserFetch(
 					event,
-					'/auth/browser/v1/auth/2fa/authenticate',
+					'/api/auth/browser/v1/auth/2fa/authenticate',
 					{
 						method: 'POST',
 						csrfToken,

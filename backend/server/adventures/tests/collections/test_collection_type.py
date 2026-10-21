@@ -224,11 +224,10 @@ class CollectionTypeApiTests(APITestCase):
         self.assertTrue(all(item['type'] == 'folder' for item in folders.json()['results']))
         self.assertTrue(all(item['status'] != 'folder' for item in folders.json()['results']))
 
+        # `folder` is a type, not a status: the list says so instead of ignoring it.
         by_old_status = self.client.get('/api/collections/?status=folder')
-        self.assertEqual(by_old_status.status_code, 200)
-        old_names = {item['name'] for item in by_old_status.json()['results']}
-        self.assertIn('Folder A', old_names)
-        self.assertIn('Trip A', old_names)
+        self.assertEqual(by_old_status.status_code, 400)
+        self.assertIn('status', by_old_status.json()['fields'])
 
     def test_folder_can_keep_one_date(self):
         response = self.client.post(

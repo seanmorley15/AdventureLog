@@ -4,6 +4,7 @@ import logging
 import gpxpy
 from adventures.models import ChecklistItem, Note, Transportation, Checklist, Lodging
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from core.serializers import CustomModelSerializer
 from geopy.distance import geodesic
 from adventures.utils.geojson import cached_gpx_distance_km
@@ -32,6 +33,7 @@ class TransportationSerializer(MediaFieldsMixin, TransportationCoordinateMixin, 
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance', 'travel_duration_minutes']
 
+    @extend_schema_field(serializers.FloatField(allow_null=True, help_text='Kilometers between the two ends.'))
     def get_distance(self, obj):
         gpx_distance = self._get_gpx_distance_km(obj)
         if gpx_distance is not None:
@@ -86,6 +88,7 @@ class TransportationSerializer(MediaFieldsMixin, TransportationCoordinateMixin, 
             )
         return None
 
+    @extend_schema_field(serializers.IntegerField(allow_null=True))
     def get_travel_duration_minutes(self, obj):
         if not obj.date or not obj.end_date:
             return None

@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
@@ -25,23 +26,29 @@ export const load = (async (event) => {
 		}
 
 		const include_collections = event.url.searchParams.get('include_collections') || 'true';
-		const order_by = event.url.searchParams.get('order_by') || 'updated_at';
+		const requestedOrder = event.url.searchParams.get('order_by') || 'updated_at';
+		const order_by = ['updated_at', 'name', 'date', 'rating'].includes(requestedOrder)
+			? requestedOrder
+			: 'updated_at';
 		const order_direction = event.url.searchParams.get('order_direction') || 'asc';
 		const page = event.url.searchParams.get('page') || '1';
 		const is_visited = event.url.searchParams.get('is_visited') || 'all';
 
-		let initialFetch = await event.fetch(
-			backendApiUrl(
-				'/api/locations/filtered',
-				`types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`
-			),
-			{
-				headers: {
-					Cookie: `sessionid=${event.cookies.get('sessionid')}`
-				},
-				credentials: 'include'
-			}
-		);
+		// The page keeps its own URL parameters; the API takes `ordering` and plain filters.
+		// On this page `asc` for updated_at has always meant newest first.
+		const descending =
+			order_by === 'updated_at' ? order_direction !== 'desc' : order_direction === 'desc';
+		const params = new URLSearchParams({ ordering: `${descending ? '-' : ''}${order_by}`, page });
+		if (typeString !== 'all') params.set('category', typeString);
+		if (is_visited === 'true' || is_visited === 'false') params.set('is_visited', is_visited);
+		if (include_collections === 'false') params.set('in_collection', 'false');
+
+		let initialFetch = await event.fetch(backendApiUrl('/api/locations/', params.toString()), {
+			headers: {
+				Cookie: `sessionid=${event.cookies.get('sessionid')}`
+			},
+			credentials: 'include'
+		});
 
 		if (!initialFetch.ok) {
 			let error_message = await initialFetch.json();
@@ -93,7 +100,10 @@ export const actions: Actions = {
 		}
 
 		let data = await res.json();
-		return data;
+		// Callers read `error`; the API's message is `detail`.
+		return res.ok
+			? data
+			: { error: apiErrorMessage(data, `Image upload failed (status ${res.status})`) };
 	},
 	activity: async (event) => {
 		let formData = await event.request.formData();
@@ -109,7 +119,7 @@ export const actions: Actions = {
 			body: formData
 		});
 		let data = await res.json();
-		return data;
+		return res.ok ? data : { error: apiErrorMessage(data, 'Activity upload failed') };
 	},
 	attachment: async (event) => {
 		let formData = await event.request.formData();
@@ -125,9 +135,6 @@ export const actions: Actions = {
 			body: formData
 		});
 		let data = await res.json();
-
-		console.log(res);
-		console.log(data);
-		return data;
+		return res.ok ? data : { error: apiErrorMessage(data, 'Attachment upload failed') };
 	}
 };
