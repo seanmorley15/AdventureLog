@@ -1,0 +1,68 @@
+# Development environment for AdventureLog.
+#
+# `dev` is the workspace container VS Code attaches to; Django and the SvelteKit
+# dev server both run inside it so debugpy / the Node debugger can attach directly.
+# `db` is PostGIS. Environment defaults below mean no .env file is required.
+name: adventurelog-devcontainer
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sleep infinity
+    working_dir: /workspaces/adventurelog
+    volumes:
+      - ..:/workspaces/adventurelog:cached
+      # Keep node_modules and the pnpm store off the bind mount: faster installs and no
+      # host/container platform mismatch (Windows/WSL, macOS).
+      - frontend_node_modules:/workspaces/adventurelog/frontend/node_modules
+      - pnpm_store:/home/vscode/.pnpm-store
+    environment:
+      # Flush Python output immediately so `docker compose exec -T` tasks see server logs
+      PYTHONUNBUFFERED: "1"
+      # Database
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: database
+      PGUSER: adventure
+      PGPASSWORD: adventure
+      # Django
+      SECRET_KEY: dev-only-secret-key-do-not-use-in-production
+      DEBUG: "True"
+      PUBLIC_URL: http://127.0.0.1:8000
+      FRONTEND_URL: http://localhost:3000
+      CSRF_TRUSTED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      ENABLE_RATE_LIMITS: "False"
+      EMAIL_BACKEND: console
+      # First-boot admin user (created by .devcontainer/bootstrap.sh)
+      DJANGO_ADMIN_USERNAME: admin
+      DJANGO_ADMIN_PASSWORD: admin
+      DJANGO_ADMIN_EMAIL: admin@example.com
+      # SvelteKit (read from process.env, so it must be a real environment variable)
+      PUBLIC_SERVER_URL: http://127.0.0.1:8000
+      BODY_SIZE_LIMIT: Infinity
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgis/postgis:16-3.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: adventure
+      POSTGRES_PASSWORD: adventure
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adventure -d database"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  frontend_node_modules:
+  pnpm_store:

@@ -1,6 +1,17 @@
 {
     "recommendations": [
         "lokalise.i18n-ally",
-        "svelte.svelte-vscode"
+        "svelte.svelte-vscode",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "batisteo.vscode-django",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "antfu.iconify",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "mikestead.dotenv",
+        "ms-vscode-remote.remote-containers"
     ]
 }

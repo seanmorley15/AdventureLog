@@ -1,27 +1,71 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+// AdventureLog development container (Docker Compose based).
+// Works with Docker Desktop + WSL 2 on Windows and with Docker Engine on Linux.
+// Clone the repo inside the WSL/Linux filesystem (not /mnt/c) for good file-watching performance.
 {
-	"name": "Ubuntu",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:jammy",
+	"name": "AdventureLog",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "dev",
+	"runServices": ["dev", "db"],
+	"workspaceFolder": "/workspaces/adventurelog",
+	"remoteUser": "vscode",
+	"shutdownAction": "stopCompose",
+
 	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
-		"ghcr.io/devcontainers/features/node:1": {},
-		"ghcr.io/devcontainers/features/python:1": {}
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+
+	"forwardPorts": [3000, 8000, "db:5432"],
+	"portsAttributes": {
+		"3000": { "label": "Frontend (SvelteKit)", "onAutoForward": "notify" },
+		"8000": { "label": "Backend (Django)", "onAutoForward": "silent" },
+		"db:5432": { "label": "PostGIS", "onAutoForward": "silent" }
+	},
+
+	"postCreateCommand": "bash .devcontainer/post-create.sh",
+	"postStartCommand": "bash .devcontainer/bootstrap.sh",
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				// Python / Django
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy",
+				"batisteo.vscode-django",
+				// Frontend
+				"svelte.svelte-vscode",
+				"esbenp.prettier-vscode",
+				"bradlc.vscode-tailwindcss",
+				"antfu.iconify",
+				// Translations (frontend/src/locales)
+				"lokalise.i18n-ally",
+				// Config / infra
+				"ms-azuretools.vscode-docker",
+				"redhat.vscode-yaml",
+				"mikestead.dotenv",
+				// Database browser for the PostGIS container
+				"cweijan.vscode-database-client2",
+				// Quality of life
+				"eamodio.gitlens",
+				"usernamehw.errorlens"
+			],
+			"settings": {
+				"files.eol": "\n",
+				"python.defaultInterpreterPath": "/usr/local/bin/python",
+				"python.analysis.extraPaths": ["backend/server"],
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"[svelte]": { "editor.defaultFormatter": "svelte.svelte-vscode" },
+				"[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+				"[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+				"[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+				"prettier.configPath": "frontend/.prettierrc",
+				"tailwindCSS.rootFontSize": 16,
+				"files.watcherExclude": {
+					"**/node_modules/**": true,
+					"**/.svelte-kit/**": true,
+					"**/media/**": true
+				}
+			}
+		}
 	}
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "uname -a",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
 }

@@ -1,0 +1,39 @@
+{
+	// Works both on the host (env from backend/server/.env and frontend/.env) and inside the
+	// dev container (env from .devcontainer/docker-compose.yml). Use the compound
+	// "AdventureLog: Full Stack" to debug Django and SvelteKit together.
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Django: runserver",
+			"type": "debugpy",
+			"request": "launch",
+			"python": "${command:python.interpreterPath}",
+			"program": "${workspaceFolder}/backend/server/manage.py",
+			"args": ["runserver", "0.0.0.0:8000"],
+			"django": true,
+			"justMyCode": true,
+			"cwd": "${workspaceFolder}/backend/server",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "SvelteKit: vite dev",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/frontend/node_modules/vite/bin/vite.js",
+			"args": ["dev", "--host", "0.0.0.0", "--port", "3000", "--strictPort"],
+			"cwd": "${workspaceFolder}/frontend",
+			"envFile": "${workspaceFolder}/frontend/.env",
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		}
+	],
+	"compounds": [
+		{
+			"name": "AdventureLog: Full Stack",
+			"configurations": ["Django: runserver", "SvelteKit: vite dev"],
+			"preLaunchTask": "Dev: prepare",
+			"stopAll": true
+		}
+	]
+}
