@@ -14,22 +14,27 @@
 
 	import MobileQR from '$lib/components/MobileQR.svelte';
 	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
 
-	export let user: any;
-	export let cloudMode = false;
+	interface Props {
+		user: any;
+		cloudMode?: boolean;
+	}
 
-	let showMobileQR = false;
-	let showDevMobileLogin = false;
+	let { user, cloudMode = false }: Props = $props();
+
+	let showMobileQR = $state(false);
+	let showDevMobileLogin = $state(false);
 	let typedBuffer = '';
 	const DEV_UNLOCK_KEYWORD = 'dev';
 
 	// Get display name
-	$: displayName = user.first_name
-		? `${user.first_name} ${user.last_name || ''}`.trim()
-		: user.username || 'User';
+	let displayName = $derived(
+		user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user.username || 'User'
+	);
 
 	// Menu items for better organization
-	const menuItems = [
+	let menuItems = $derived([
 		{
 			path: `/profile/${user.username}`,
 			icon: Account,
@@ -48,17 +53,19 @@
 			label: 'navbar.settings',
 			section: 'secondary'
 		}
-	];
+	]);
 
 	// Add admin item if user is staff
-	$: adminMenuItem = user.is_staff
-		? {
-				path: '/admin',
-				icon: Shield,
-				label: 'navbar.admin_panel',
-				section: 'secondary'
-			}
-		: null;
+	let adminMenuItem = $derived(
+		user.is_staff
+			? {
+					path: '/admin',
+					icon: Shield,
+					label: 'navbar.admin_panel',
+					section: 'secondary'
+				}
+			: null
+	);
 
 	function openMobileQR() {
 		showMobileQR = true;
@@ -87,7 +94,11 @@
 	});
 </script>
 
-<div class="dropdown dropdown-bottom dropdown-end z-[999]">
+<div
+	class="dropdown dropdown-bottom dropdown-end z-[999]"
+	role="group"
+	onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
+>
 	<div
 		tabindex="0"
 		role="button"
@@ -105,7 +116,6 @@
 		</div>
 	</div>
 
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<ul
 		tabindex="-1"
 		class="dropdown-content z-[999] menu p-4 shadow-2xl bg-base-100 border border-base-300 rounded-2xl w-72 mt-2"
@@ -113,7 +123,7 @@
 		<!-- User Info Header -->
 		<div class="px-2 py-3 mb-3 border-b border-base-300">
 			<div class="flex items-center gap-3">
-				<div class="avatar placeholder">
+				<div class="avatar avatar-placeholder">
 					<div class="w-12 rounded-full ring-2 ring-primary/20 overflow-hidden">
 						<UserAvatar
 							{user}
@@ -136,13 +146,13 @@
 
 		<!-- Main Menu Items -->
 		<div class="space-y-1 mb-3">
-			{#each menuItems.filter((item) => item.section === 'main') as item}
+			{#each menuItems.filter((item) => item.section === 'main') as item (item.path)}
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						on:click={() => goto(item.path)}
+						onclick={() => goto(item.path)}
 					>
-						<svelte:component this={item.icon} class="w-5 h-5 text-base-content/70" />
+						<item.icon class="w-5 h-5 text-base-content/70" />
 						<span>{$t(item.label)}</span>
 					</button>
 				</li>
@@ -157,9 +167,9 @@
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						on:click={() => goto(adminMenuItem.path)}
+						onclick={() => goto(adminMenuItem.path)}
 					>
-						<svelte:component this={adminMenuItem.icon} class="w-5 h-5 text-warning" />
+						<adminMenuItem.icon class="w-5 h-5 text-warning" />
 						<span class="text-warning font-medium">{$t(adminMenuItem.label)}</span>
 					</button>
 				</li>
@@ -170,7 +180,7 @@
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						on:click={openMobileQR}
+						onclick={openMobileQR}
 					>
 						<Phone class="w-5 h-5 text-base-content/70" />
 						<span>{$t('navbar.mobile_login', { default: 'Mobile Login' })}</span>
@@ -178,13 +188,13 @@
 				</li>
 			{/if}
 
-			{#each menuItems.filter((item) => item.section === 'secondary') as item}
+			{#each menuItems.filter((item) => item.section === 'secondary') as item (item.path)}
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						on:click={() => goto(item.path)}
+						onclick={() => goto(item.path)}
 					>
-						<svelte:component this={item.icon} class="w-5 h-5 text-base-content/70" />
+						<item.icon class="w-5 h-5 text-base-content/70" />
 						<span>{$t(item.label)}</span>
 					</button>
 				</li>
@@ -194,10 +204,10 @@
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						on:click={() => goto('/subscribe')}
+						onclick={() => goto('/subscribe')}
 					>
 						<CreditCard class="w-5 h-5 text-base-content/70" />
-						<span>{$t('Billing')}</span>
+						<span>{$t('navbar.billing')}</span>
 					</button>
 				</li>
 			{/if}

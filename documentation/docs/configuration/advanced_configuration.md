@@ -6,7 +6,7 @@ Optional environment variables for security hardening, performance tuning, and a
 
 | Variable | Default | Description |
 | -------- | ------- | ----------- |
-| `ACCOUNT_EMAIL_VERIFICATION` | `none` | `none`, `optional`, or `mandatory` email verification for new accounts |
+| `ACCOUNT_EMAIL_VERIFICATION` | `none` | `none` (no verification), `optional` (send link, allow login), or `mandatory` (block login until verified) |
 | `FORCE_SOCIALACCOUNT_LOGIN` | `False` | When `True`, disables password login — social/OIDC providers only |
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | `False` | Allow new accounts via social providers even when `DISABLE_REGISTRATION=True` |
 

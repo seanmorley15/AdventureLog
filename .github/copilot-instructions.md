@@ -24,7 +24,7 @@ Run these commands in order:
 
 **Backend (Django with Python):**
 - Backend development requires Docker - local Python pip install fails due to network timeouts
-- `docker compose exec server python3 manage.py test` - **7 seconds** - Run tests (2/3 tests fail, this is expected)
+- `cd backend/server && python manage.py test` - Run the Django test suite (`main.test_settings` is selected automatically)
 - `docker compose exec server python3 manage.py help` - View Django commands
 - `docker compose exec server python3 manage.py migrate` - Run database migrations
 
@@ -64,7 +64,7 @@ Run these commands in order:
 
 ### Expected Test Failures
 - Frontend check: 3 errors and 19 warnings expected (accessibility and TypeScript issues)
-- Backend tests: 2 out of 3 Django tests fail (API endpoint issues) - **DO NOT fix unrelated test failures**
+- Backend tests should pass. Do not treat failures as expected.
 
 ### Build Timing (NEVER CANCEL)
 - **Docker first startup**: 25+ minutes (image downloads)

@@ -6,9 +6,13 @@
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import { defaultImageSource } from '$lib/images';
 
-	export let source: ImageSource | null | undefined = 'upload';
+	interface Props {
+		source?: ImageSource | null | undefined;
+	}
 
-	$: resolvedSource = defaultImageSource(source);
+	let { source = 'upload' }: Props = $props();
+
+	let resolvedSource = $derived(defaultImageSource(source));
 
 	const tooltipKeys: Record<Exclude<ImageSource, 'upload'>, string> = {
 		google: 'images.source.google',
@@ -20,7 +24,7 @@
 
 {#if resolvedSource !== 'upload'}
 	<div
-		class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded bg-black/55 p-0.5 shadow-sm pointer-events-none"
+		class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-sm bg-black/55 p-0.5 shadow-xs pointer-events-none"
 		title={$t(tooltipKeys[resolvedSource])}
 		aria-label={$t(tooltipKeys[resolvedSource])}
 	>

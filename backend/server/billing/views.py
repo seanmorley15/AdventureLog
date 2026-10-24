@@ -3,6 +3,7 @@ import logging
 
 import stripe
 from django.conf import settings
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -12,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cloud.utils import get_or_create_subscription
-from .models import Subscription
+from .models import StripeWebhookEvent, Subscription
 from .serializers import SubscriptionSerializer
 
 logger = logging.getLogger(__name__)
@@ -94,6 +95,61 @@ def _apply_stripe_subscription(subscription: Subscription, stripe_subscription: 
         subscription.trial_ends_at = datetime.fromtimestamp(trial_end, tz=dt_timezone.utc)
 
     subscription.save()
+
+
+def _handle_stripe_webhook_event(event_type: str, data: dict) -> None:
+    if event_type == "checkout.session.completed":
+        user_id = data.get("client_reference_id")
+        customer_id = data.get("customer")
+        subscription_id = data.get("subscription")
+
+        subscription = None
+        if user_id:
+            subscription = Subscription.objects.filter(user_id=user_id).first()
+        if subscription is None and customer_id:
+            subscription = Subscription.objects.filter(stripe_customer_id=customer_id).first()
+
+        if subscription:
+            if customer_id:
+                subscription.stripe_customer_id = customer_id
+            if subscription_id:
+                subscription.stripe_subscription_id = subscription_id
+
+            if subscription_id:
+                try:
+                    stripe_subscription = stripe.Subscription.retrieve(subscription_id)
+                except stripe.error.StripeError:
+                    stripe_subscription = None
+
+                if stripe_subscription:
+                    _apply_stripe_subscription(subscription, stripe_subscription)
+                else:
+                    subscription.save()
+            else:
+                subscription.save()
+
+    elif event_type in (
+        "customer.subscription.created",
+        "customer.subscription.updated",
+        "customer.subscription.deleted",
+    ):
+        stripe_subscription = data
+        subscription_id = stripe_subscription.get("id")
+        customer_id = stripe_subscription.get("customer")
+        user_id = stripe_subscription.get("metadata", {}).get("user_id")
+
+        subscription = None
+        if subscription_id:
+            subscription = Subscription.objects.filter(
+                stripe_subscription_id=subscription_id
+            ).first()
+        if subscription is None and customer_id:
+            subscription = Subscription.objects.filter(stripe_customer_id=customer_id).first()
+        if subscription is None and user_id:
+            subscription = Subscription.objects.filter(user_id=user_id).first()
+
+        if subscription:
+            _apply_stripe_subscription(subscription, stripe_subscription)
 
 
 class SubscriptionStatusView(APIView):
@@ -249,60 +305,21 @@ class StripeWebhookView(APIView):
         except stripe.error.SignatureVerificationError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        event_type = event.get("type")
+        event_id = event.get("id")
+        event_type = event.get("type", "")
         data = event.get("data", {}).get("object", {})
 
-        if event_type == "checkout.session.completed":
-            user_id = data.get("client_reference_id")
-            customer_id = data.get("customer")
-            subscription_id = data.get("subscription")
+        if not event_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            subscription = None
-            if user_id:
-                subscription = Subscription.objects.filter(user_id=user_id).first()
-            if subscription is None and customer_id:
-                subscription = Subscription.objects.filter(stripe_customer_id=customer_id).first()
+        if StripeWebhookEvent.objects.filter(event_id=event_id).exists():
+            return Response(status=status.HTTP_200_OK)
 
-            if subscription:
-                if customer_id:
-                    subscription.stripe_customer_id = customer_id
-                if subscription_id:
-                    subscription.stripe_subscription_id = subscription_id
-
-                if subscription_id:
-                    try:
-                        stripe_subscription = stripe.Subscription.retrieve(subscription_id)
-                    except stripe.error.StripeError:
-                        stripe_subscription = None
-
-                    if stripe_subscription:
-                        _apply_stripe_subscription(subscription, stripe_subscription)
-                    else:
-                        subscription.save()
-                else:
-                    subscription.save()
-
-        if event_type in (
-            "customer.subscription.created",
-            "customer.subscription.updated",
-            "customer.subscription.deleted",
-        ):
-            stripe_subscription = data
-            subscription_id = stripe_subscription.get("id")
-            customer_id = stripe_subscription.get("customer")
-            user_id = stripe_subscription.get("metadata", {}).get("user_id")
-
-            subscription = None
-            if subscription_id:
-                subscription = Subscription.objects.filter(
-                    stripe_subscription_id=subscription_id
-                ).first()
-            if subscription is None and customer_id:
-                subscription = Subscription.objects.filter(stripe_customer_id=customer_id).first()
-            if subscription is None and user_id:
-                subscription = Subscription.objects.filter(user_id=user_id).first()
-
-            if subscription:
-                _apply_stripe_subscription(subscription, stripe_subscription)
+        try:
+            with transaction.atomic():
+                StripeWebhookEvent.objects.create(event_id=event_id, event_type=event_type)
+                _handle_stripe_webhook_event(event_type, data)
+        except IntegrityError:
+            return Response(status=status.HTTP_200_OK)
 
         return Response(status=status.HTTP_200_OK)

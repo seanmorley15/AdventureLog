@@ -1,5 +1,5 @@
 name: Bug report
-description: Found something not working as expected? File a detailed bug report so we can fix it quickly.
+description: Something is not working as expected. File a detailed report so we can fix it.
 labels:
   - bug
   - backlog
@@ -7,12 +7,31 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please search existing issues before filing a new one. This helps avoid duplicates and ensures we can address your concern efficiently.
+        Search existing issues before filing a new one.
+
+        A fix pull request can be opened immediately and linked with `Closes #N`. Bug fix PRs do not need the issue labeled `Ready`.
+
+        For setup help or “how do I run this?”, use [Discord](https://discord.gg/wRbQ9Egr8C) instead.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of AdventureLog is affected?
+      options:
+        - Frontend
+        - Backend
+        - Auth
+        - Docker / Install
+        - Docs
+        - Security
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: bug-description
     attributes:
       label: Bug Description
-      description: A clear and concise description of the issue. What went wrong?
+      description: A clear and concise description of what went wrong.
       placeholder: Describe what happened.
     validations:
       required: true
@@ -20,7 +39,7 @@ body:
     id: steps-to-reproduce
     attributes:
       label: Steps to Reproduce
-      description: Provide exact steps so we can reliably reproduce the issue.
+      description: Exact steps so we can reliably reproduce the issue.
       placeholder: |
         1. Go to ...
         2. Click on ...
@@ -75,7 +94,7 @@ body:
     id: version
     attributes:
       label: AdventureLog Version
-      description: "To find the version, open the web app, click the 3-dot menu in the navbar, and select 'About'."
+      description: "Open the web app, click the 3-dot menu in the navbar, and select About."
       placeholder: v0.0.0
     validations:
       required: true
@@ -104,6 +123,13 @@ body:
       placeholder: Network setup, custom configuration, database details, etc.
     validations:
       required: false
+  - type: checkboxes
+    id: can-pr
+    attributes:
+      label: Pull request
+      options:
+        - label: I can open a pull request for this fix.
+          required: false
   - type: checkboxes
     id: terms
     attributes:

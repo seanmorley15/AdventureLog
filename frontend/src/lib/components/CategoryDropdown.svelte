@@ -2,9 +2,19 @@
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { Category } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-	export let selected_category: Category | null = null;
-	export let searchTerm = '';
+	interface Props {
+		selected_category?: Category | null;
+		searchTerm?: string;
+		id?: string;
+	}
+
+	let {
+		selected_category = $bindable(null),
+		searchTerm = $bindable(''),
+		id = undefined
+	}: Props = $props();
 
 	const emptyCategory: Category = {
 		name: '',
@@ -15,24 +25,31 @@
 		num_locations: 0
 	};
 
-	let newCategory: Category = { ...emptyCategory };
-	let categories: Category[] = [];
-	let isOpen = false;
-	let isEmojiPickerVisible = false;
-	let dropdownRef: HTMLDivElement;
-	let mobileSearchInputRef: HTMLInputElement;
-	let desktopSearchInputRef: HTMLInputElement;
+	let newCategory: Category = $state({ ...emptyCategory });
+	let categories: Category[] = $state([]);
+	let isOpen = $state(false);
+	let openUpward = $state(false);
+	let isEmojiPickerVisible = $state(false);
+	let isCreatingCategory = $state(false);
+	let createError: string | null = $state(null);
+	let dropdownRef: HTMLDivElement | undefined = $state();
+	let mobileSearchInputRef: HTMLInputElement | undefined = $state();
+	let desktopSearchInputRef: HTMLInputElement | undefined = $state();
 
-	$: sortedCategories = [...categories].sort((a, b) => {
-		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
-		if (usageDiff !== 0) return usageDiff;
-		return a.display_name.localeCompare(b.display_name);
-	});
+	let sortedCategories = $derived(
+		[...categories].sort((a, b) => {
+			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+			if (usageDiff !== 0) return usageDiff;
+			return a.display_name.localeCompare(b.display_name);
+		})
+	);
 
-	$: filteredCategories = sortedCategories.filter((category) => {
-		if (!searchTerm) return true;
-		return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
-	});
+	let filteredCategories = $derived(
+		sortedCategories.filter((category) => {
+			if (!searchTerm) return true;
+			return category.display_name.toLowerCase().includes(searchTerm.toLowerCase());
+		})
+	);
 
 	function closeDropdown() {
 		isOpen = false;
@@ -40,6 +57,7 @@
 	}
 
 	async function openDropdown() {
+		openUpward = shouldFlipDropdownUp(dropdownRef);
 		isOpen = true;
 		await tick();
 		(mobileSearchInputRef ?? desktopSearchInputRef)?.focus();
@@ -58,26 +76,91 @@
 		closeDropdown();
 	}
 
-	function createCustomCategory() {
+	function categorySlug(displayName: string) {
+		return displayName
+			.toLowerCase()
+			.replace(/\s+/g, '_')
+			.replace(/[^a-z0-9_]/g, '');
+	}
+
+	function findExistingCategory(name: string, displayName: string) {
+		return categories.find(
+			(category) =>
+				category.name === name || category.display_name.toLowerCase() === displayName.toLowerCase()
+		);
+	}
+
+	async function createCustomCategory() {
 		const displayName = newCategory.display_name.trim();
-		if (!displayName) return;
+		if (!displayName || isCreatingCategory) return;
 
-		const generatedId =
-			newCategory.id ||
-			(typeof crypto !== 'undefined' && 'randomUUID' in crypto
-				? crypto.randomUUID()
-				: `custom-${Date.now()}`);
+		const name = categorySlug(displayName) || displayName.toLowerCase();
+		const icon = newCategory.icon.trim() || '🌍';
+		createError = null;
 
-		const category: Category = {
-			...newCategory,
-			id: generatedId,
-			name: displayName.toLowerCase().replace(/\s+/g, '_'),
-			icon: newCategory.icon || '🌎'
-		};
+		const existing = findExistingCategory(name, displayName);
+		if (existing) {
+			selectCategory(existing);
+			newCategory = { ...emptyCategory };
+			return;
+		}
 
-		categories = [category, ...categories];
-		selectCategory(category);
-		newCategory = { ...emptyCategory };
+		isCreatingCategory = true;
+		try {
+			const res = await fetch('/api/categories', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					display_name: displayName,
+					name,
+					icon
+				})
+			});
+
+			if (res.ok) {
+				const created: Category = await res.json();
+				categories = [created, ...categories];
+				selectCategory(created);
+				newCategory = { ...emptyCategory };
+				return;
+			}
+
+			try {
+				const listRes = await fetch('/api/categories');
+				if (listRes.ok) {
+					const data = await listRes.json();
+					if (Array.isArray(data)) {
+						categories = data;
+						const match = findExistingCategory(name, displayName);
+						if (match) {
+							selectCategory(match);
+							newCategory = { ...emptyCategory };
+							return;
+						}
+					}
+				}
+			} catch {
+				// Fall through to the create error below.
+			}
+
+			const errorData = await res.json().catch(() => ({}));
+			createError =
+				(errorData as { error?: string; detail?: string })?.error ||
+				(errorData as { detail?: string })?.detail ||
+				$t('adventures.error_occurred');
+		} catch (error) {
+			console.error('Unable to create category', error);
+			createError = $t('adventures.error_occurred');
+		} finally {
+			isCreatingCategory = false;
+		}
+	}
+
+	function handleCategoryNameKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			createCustomCategory();
+		}
 	}
 
 	function handleEmojiSelect(event: CustomEvent) {
@@ -128,13 +211,19 @@
 	});
 </script>
 
-<div class="dropdown w-full" class:dropdown-open={isOpen} bind:this={dropdownRef}>
+<div
+	class="dropdown w-full"
+	class:dropdown-open={isOpen}
+	class:dropdown-top={openUpward}
+	bind:this={dropdownRef}
+>
 	<button
 		type="button"
-		class="btn btn-outline w-full justify-between sm:h-auto h-12"
+		{id}
+		class="input w-full h-12 min-h-12 flex justify-between items-center gap-2 cursor-pointer font-normal text-left"
 		aria-haspopup="listbox"
 		aria-expanded={isOpen}
-		on:click={toggleDropdown}
+		onclick={toggleDropdown}
 	>
 		<span class="flex items-center gap-2">
 			{#if selected_category && selected_category.name}
@@ -145,7 +234,10 @@
 			{/if}
 		</span>
 		<svg
-			class={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+			class={[
+				'w-4 h-4 shrink-0 text-base-content/50 transition-transform duration-200',
+				isOpen && 'rotate-180'
+			]}
 			fill="none"
 			stroke="currentColor"
 			viewBox="0 0 24 24"
@@ -158,16 +250,16 @@
 	{#if isOpen}
 		<button
 			type="button"
-			class="fixed inset-0 bg-black/50 z-40 sm:hidden focus:outline-none"
+			class="fixed inset-0 bg-black/50 z-40 sm:hidden focus:outline-hidden"
 			aria-label={$t('adventures.back')}
-			on:click={closeDropdown}
-			on:keydown={(event) => event.key === 'Enter' && closeDropdown()}
+			onclick={closeDropdown}
+			onkeydown={(event) => event.key === 'Enter' && closeDropdown()}
 		></button>
 
 		<div
 			class="fixed bottom-0 left-0 right-0 z-50 bg-base-100 rounded-t-2xl shadow-2xl border-t border-base-300 max-h-[90vh] flex flex-col sm:hidden"
 		>
-			<div class="flex-shrink-0 bg-base-100 border-b border-base-300 p-4">
+			<div class="shrink-0 bg-base-100 border-b border-base-300 p-4">
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold">{$t('categories.select_category')}</h2>
 					<button
@@ -175,7 +267,7 @@
 						class="btn btn-ghost btn-sm btn-circle"
 						aria-label={$t('about.close')}
 						title={$t('about.close')}
-						on:click={closeDropdown}
+						onclick={closeDropdown}
 					>
 						<svg
 							class="w-5 h-5"
@@ -219,20 +311,21 @@
 						<input
 							type="text"
 							placeholder={$t('categories.category_name')}
-							class="input input-bordered w-full h-12 text-base"
+							class="input w-full h-12 text-base"
 							bind:value={newCategory.display_name}
+							onkeydown={handleCategoryNameKeydown}
 						/>
 						<div class="join w-full">
 							<input
 								type="text"
 								placeholder={$t('categories.icon')}
-								class="input input-bordered join-item flex-1 h-12 text-base"
+								class="input join-item flex-1 h-12 text-base"
 								bind:value={newCategory.icon}
 							/>
 							<button
 								type="button"
 								class="btn join-item h-12 w-12 text-lg"
-								on:click={toggleEmojiPicker}
+								onclick={toggleEmojiPicker}
 								class:btn-active={isEmojiPickerVisible}
 							>
 								😊
@@ -242,29 +335,36 @@
 						<button
 							type="button"
 							class="btn btn-primary h-12 w-full"
-							on:click={createCustomCategory}
-							disabled={!newCategory.display_name.trim()}
+							onclick={createCustomCategory}
+							disabled={!newCategory.display_name.trim() || isCreatingCategory}
 						>
-							<svg
-								class="w-4 h-4 mr-1"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-								/>
-							</svg>
+							{#if isCreatingCategory}
+								<span class="loading loading-spinner loading-xs"></span>
+							{:else}
+								<svg
+									class="w-4 h-4 mr-1"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+									/>
+								</svg>
+							{/if}
 							{$t('adventures.add')}
 						</button>
+						{#if createError}
+							<p class="text-sm text-error">{createError}</p>
+						{/if}
 
 						{#if isEmojiPickerVisible}
 							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
-								<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+								<emoji-picker onemoji-click={handleEmojiSelect}></emoji-picker>
 							</div>
 						{/if}
 					</div>
@@ -290,11 +390,11 @@
 					</div>
 
 					{#if categories.length > 0}
-						<div class="form-control">
+						<div class="flex flex-col">
 							<input
 								type="text"
 								placeholder={$t('navbar.search')}
-								class="input input-bordered w-full h-12 text-base"
+								class="input w-full h-12 text-base"
 								bind:value={searchTerm}
 								bind:this={mobileSearchInputRef}
 							/>
@@ -309,10 +409,10 @@
 									class:text-primary-content={selected_category &&
 										selected_category.id === category.id}
 									class:border-primary={selected_category && selected_category.id === category.id}
-									on:click={() => selectCategory(category)}
+									onclick={() => selectCategory(category)}
 								>
 									<div class="flex items-center gap-3 w-full">
-										<span class="text-2xl flex-shrink-0">{category.icon}</span>
+										<span class="text-2xl shrink-0">{category.icon}</span>
 										<div class="flex-1 min-w-0">
 											<div class="font-medium text-base truncate">{category.display_name}</div>
 											<div class="text-sm opacity-70 mt-1">
@@ -345,13 +445,15 @@
 					{/if}
 				</div>
 
-				<div class="flex-shrink-0 h-4"></div>
+				<div class="shrink-0 h-4"></div>
 			</div>
 		</div>
 
 		<div
 			tabindex="-1"
-			class="dropdown-content z-[1] w-full mt-1 bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[28rem] overflow-y-auto hidden sm:block"
+			class="dropdown-content z-[1] w-full bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[28rem] overflow-y-auto hidden sm:block {openUpward
+				? 'mb-1'
+				: 'mt-1'}"
 		>
 			<div class="p-4 border-b border-base-300 space-y-3">
 				<div class="flex items-center gap-2 text-sm font-semibold text-base-content/80">
@@ -376,20 +478,21 @@
 					<input
 						type="text"
 						placeholder={$t('categories.category_name')}
-						class="input input-bordered input-sm w-full"
+						class="input input-sm w-full"
 						bind:value={newCategory.display_name}
+						onkeydown={handleCategoryNameKeydown}
 					/>
-					<div class="input-group">
+					<div class="join w-full">
 						<input
 							type="text"
 							placeholder={$t('categories.icon')}
-							class="input input-bordered input-sm flex-1"
+							class="input input-sm join-item flex-1"
 							bind:value={newCategory.icon}
 						/>
 						<button
 							type="button"
-							class="btn btn-square btn-sm btn-secondary"
-							on:click={toggleEmojiPicker}
+							class="btn btn-square btn-sm btn-secondary join-item"
+							onclick={toggleEmojiPicker}
 							class:btn-active={isEmojiPickerVisible}
 						>
 							😊
@@ -401,30 +504,37 @@
 					<button
 						type="button"
 						class="btn btn-primary btn-sm"
-						on:click={createCustomCategory}
-						disabled={!newCategory.display_name.trim()}
+						onclick={createCustomCategory}
+						disabled={!newCategory.display_name.trim() || isCreatingCategory}
 					>
-						<svg
-							class="w-4 h-4 mr-1"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-							aria-hidden="true"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-							/>
-						</svg>
+						{#if isCreatingCategory}
+							<span class="loading loading-spinner loading-xs"></span>
+						{:else}
+							<svg
+								class="w-4 h-4 mr-1"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+								/>
+							</svg>
+						{/if}
 						{$t('adventures.add')}
 					</button>
 				</div>
+				{#if createError}
+					<p class="text-sm text-error">{createError}</p>
+				{/if}
 
 				{#if isEmojiPickerVisible}
 					<div class="p-3 rounded-lg border border-base-300">
-						<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+						<emoji-picker onemoji-click={handleEmojiSelect}></emoji-picker>
 					</div>
 				{/if}
 			</div>
@@ -452,7 +562,7 @@
 					<input
 						type="text"
 						placeholder={$t('navbar.search')}
-						class="input input-bordered input-sm w-full"
+						class="input input-sm w-full"
 						bind:value={searchTerm}
 						bind:this={desktopSearchInputRef}
 					/>
@@ -466,7 +576,7 @@
 								type="button"
 								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
 								class:btn-active={selected_category && selected_category.id === category.id}
-								on:click={() => selectCategory(category)}
+								onclick={() => selectCategory(category)}
 								role="option"
 								aria-selected={selected_category && selected_category.id === category.id}
 							>

@@ -22,6 +22,7 @@ AdventureLog runs on Docker in most setups. Pick the guide that matches your env
 | Unraid | [Unraid](unraid.md) |
 | Umbrel | [Umbrel](https://apps.umbrel.com/app/adventurelog) — community app |
 | TrueNAS SCALE | [TrueNAS](https://apps.truenas.com/catalog/adventurelog/) — community app |
+| Easypanel | [Easypanel](easypanel.md) — official one-click template |
 
 These guides use the same AdventureLog Docker images, adapted for each platform.
 

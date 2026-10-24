@@ -11,12 +11,23 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { CalendarDisplayEvent } from '$lib/calendar/types';
 
-	export let events: CalendarDisplayEvent[] = [];
-	export let height: string = 'auto';
-	export let view: string = 'dayGridMonth';
-	export let dayMaxEvents: number = 4;
-	export let initialDate: string | Date | null = null;
-	export let bare = false;
+	interface Props {
+		events?: CalendarDisplayEvent[];
+		height?: string;
+		view?: string;
+		dayMaxEvents?: number;
+		initialDate?: string | Date | null;
+		bare?: boolean;
+	}
+
+	let {
+		events = [],
+		height = 'auto',
+		view = 'dayGridMonth',
+		dayMaxEvents = 4,
+		initialDate = null,
+		bare = false
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		eventClick: CalendarDisplayEvent;
@@ -26,7 +37,7 @@
 	let plugins = [TimeGrid, DayGrid, Interaction];
 	let styleInjected = false;
 
-	$: options = {
+	let options = $derived({
 		view,
 		events,
 		date: initialDate || undefined,
@@ -59,7 +70,7 @@
 			info.el.style.cursor = 'pointer';
 		},
 		themeSystem: 'standard'
-	};
+	});
 
 	onMount(() => {
 		if (styleInjected || document.getElementById('adventurelog-calendar-styles')) return;
@@ -67,33 +78,33 @@
 		style.id = 'adventurelog-calendar-styles';
 		style.textContent = `
 			.ec-toolbar {
-				background: hsl(var(--b2)) !important;
+				background: var(--color-base-200) !important;
 				border-radius: 0.75rem !important;
 				padding: 1rem !important;
 				margin-bottom: 1rem !important;
-				border: 1px solid hsl(var(--b3)) !important;
+				border: 1px solid var(--color-base-300) !important;
 			}
 			.ec-button {
-				background: hsl(var(--b3)) !important;
-				border: 1px solid hsl(var(--b3)) !important;
-				color: hsl(var(--bc)) !important;
+				background: var(--color-base-300) !important;
+				border: 1px solid var(--color-base-300) !important;
+				color: var(--color-base-content) !important;
 				border-radius: 0.5rem !important;
 				padding: 0.45rem 0.85rem !important;
 				font-weight: 500 !important;
 			}
 			.ec-button:hover {
-				background: hsl(var(--b1)) !important;
+				background: var(--color-base-100) !important;
 			}
 			.ec-button.ec-button-active {
-				background: hsl(var(--p)) !important;
-				color: hsl(var(--pc)) !important;
+				background: var(--color-primary) !important;
+				color: var(--color-primary-content) !important;
 			}
 			.ec-day {
-				background: hsl(var(--b1)) !important;
-				border: 1px solid hsl(var(--b3)) !important;
+				background: var(--color-base-100) !important;
+				border: 1px solid var(--color-base-300) !important;
 			}
 			.ec-day-today {
-				background: hsl(var(--b2)) !important;
+				background: var(--color-base-200) !important;
 			}
 			.ec-event {
 				border-radius: 0.375rem !important;
@@ -103,7 +114,7 @@
 				border-width: 0 !important;
 			}
 			.ec-view {
-				background: hsl(var(--b1)) !important;
+				background: var(--color-base-100) !important;
 				border-radius: 0.75rem !important;
 				overflow: hidden !important;
 			}

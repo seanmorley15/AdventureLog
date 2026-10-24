@@ -1,19 +1,27 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Category } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
-	let types_arr: string[] = [];
-	export let types: string;
-	let adventure_types: Category[] = [];
+	let types_arr: string[] = $state([]);
+	interface Props {
+		types: string;
+	}
+
+	let { types = $bindable() }: Props = $props();
+	let adventure_types: Category[] = $state([]);
 	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
-	$: sortedAdventureTypes = [...adventure_types].sort((a, b) => {
-		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
-		if (usageDiff !== 0) return usageDiff;
-		return (a.display_name || '').localeCompare(b.display_name || '');
-	});
+	let sortedAdventureTypes = $derived(
+		[...adventure_types].sort((a, b) => {
+			const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+			if (usageDiff !== 0) return usageDiff;
+			return (a.display_name || '').localeCompare(b.display_name || '');
+		})
+	);
 
 	onMount(async () => {
 		try {
@@ -26,9 +34,9 @@
 		}
 	});
 
-	$: {
+	run(() => {
 		types_arr = types ? types.split(',').filter((item) => item !== '') : [];
-	}
+	});
 
 	function clearTypes() {
 		types_arr = [];
@@ -50,7 +58,7 @@
 <div>
 	{#if types_arr.length > 0}
 		<div class="flex justify-end mb-2">
-			<button type="button" class="btn btn-ghost btn-xs h-auto min-h-0 px-2" on:click={clearTypes}>
+			<button type="button" class="btn btn-ghost btn-xs h-auto min-h-0 px-2" onclick={clearTypes}>
 				{$t('adventures.clear')}
 			</button>
 		</div>
@@ -61,17 +69,17 @@
 			{$t('categories.no_categories_found')}
 		</p>
 	{:else}
-		<div class="max-h-40 overflow-y-auto space-y-1 -mx-1 px-1">
+		<div class="max-h-40 overflow-y-auto flex flex-col -mx-1 px-1">
 			{#each sortedAdventureTypes as type (type.id)}
-				<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+				<label class="filter-option">
 					<input
 						type="checkbox"
-						class="checkbox checkbox-primary checkbox-sm"
+						class="checkbox checkbox-primary"
 						value={type.name}
-						on:change={() => toggleSelect(type.name)}
+						onchange={() => toggleSelect(type.name)}
 						checked={types_arr.includes(type.name)}
 					/>
-					<span class="label-text leading-tight">
+					<span class="text-sm leading-snug min-w-0">
 						{type.icon}
 						{type.display_name}
 						<span class="text-base-content/50">({type.num_locations})</span>

@@ -3,6 +3,7 @@ from django.middleware.csrf import get_token
 from os import getenv
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.views.generic import RedirectView
 from django.views.static import serve
 from django.core.files.storage import default_storage
 from adventures.utils.file_permissions import (
@@ -26,6 +27,16 @@ def health_check(request):
         return JsonResponse({'ok': True, 'db': 'connected'})
     except Exception:
         return JsonResponse({'ok': False, 'db': 'disconnected'}, status=503)
+
+
+class FrontendSignupRedirectView(RedirectView):
+    """Send server-rendered signup to the frontend, reading FRONTEND_URL per request."""
+
+    query_string = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        self.url = f'{settings.FRONTEND_URL.rstrip("/")}/signup'
+        return super().get_redirect_url(*args, **kwargs)
 
 def _redirect_storage(path):
     storage_url = default_storage.url(path)

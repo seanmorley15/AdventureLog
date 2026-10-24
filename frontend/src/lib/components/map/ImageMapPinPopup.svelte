@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: migrating this component would require adding a `$props` rune but there's already a variable named props.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import CameraIcon from '~icons/mdi/camera';
@@ -18,7 +20,7 @@
 	aria-label={title}
 >
 	<div
-		class="card card-compact overflow-hidden border border-base-300 bg-base-100 shadow-xl ring-1 ring-base-content/5"
+		class="card card-sm overflow-hidden border border-base-300 bg-base-100 shadow-xl ring-1 ring-base-content/5"
 	>
 		<figure class="relative aspect-[4/3] bg-base-200">
 			<img src={props.imageUrl} alt="" class="h-full w-full object-cover" loading="lazy" />

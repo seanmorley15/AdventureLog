@@ -7,7 +7,26 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please search existing issues before creating a new request. This helps avoid duplicates and keeps discussions focused.
+        Search existing issues before creating a new request.
+
+        You can open a pull request early, including as a draft. Feature PRs merge only after this issue is labeled `ready` (not `approved` — that means later, not open for contributors yet).
+
+        For questions or brainstorming, [Discord](https://discord.gg/wRbQ9Egr8C) is a good place to start.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of AdventureLog would this change?
+      options:
+        - Frontend
+        - Backend
+        - Auth
+        - Docker / Install
+        - Docs
+        - Security
+        - Other
+    validations:
+      required: true
   - type: textarea
     id: feature-summary
     attributes:
@@ -56,6 +75,13 @@ body:
       placeholder: Extra context.
     validations:
       required: false
+  - type: checkboxes
+    id: can-pr
+    attributes:
+      label: Pull request
+      options:
+        - label: I can open a pull request for this feature.
+          required: false
   - type: checkboxes
     id: terms
     attributes:

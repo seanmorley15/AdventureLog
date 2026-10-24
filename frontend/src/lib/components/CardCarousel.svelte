@@ -1,31 +1,39 @@
 <script lang="ts">
+	import { run, stopPropagation } from 'svelte/legacy';
+
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 	import { t } from 'svelte-i18n';
 	import type { ContentImage } from '$lib/types';
-	export let images: ContentImage[] = [];
-	export let name: string = '';
-	export let icon: string = '';
+	interface Props {
+		images?: ContentImage[];
+		name?: string;
+		icon?: string;
+	}
 
-	let currentSlide = 0;
-	let showImageModal = false;
-	let modalInitialIndex = 0;
+	let { images = [], name = '', icon = '' }: Props = $props();
 
-	$: sortedImages = [...images].sort((a, b) => {
-		if (a.is_primary && !b.is_primary) {
-			return -1;
-		} else if (!a.is_primary && b.is_primary) {
-			return 1;
-		} else {
-			return 0;
-		}
-	});
+	let currentSlide = $state(0);
+	let showImageModal = $state(false);
+	let modalInitialIndex = $state(0);
 
-	$: {
+	let sortedImages = $derived(
+		[...images].sort((a, b) => {
+			if (a.is_primary && !b.is_primary) {
+				return -1;
+			} else if (!a.is_primary && b.is_primary) {
+				return 1;
+			} else {
+				return 0;
+			}
+		})
+	);
+
+	run(() => {
 		if (sortedImages.length > 0) {
 			currentSlide = 0;
 		}
-	}
+	});
 
 	function changeSlide(direction: string) {
 		if (direction === 'next' && currentSlide < sortedImages.length - 1) {
@@ -57,13 +65,13 @@
 <figure>
 	{#if sortedImages && sortedImages.length > 0}
 		<div class="carousel w-full relative">
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div class="carousel-item w-full block">
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				<!-- svelte-ignore a11y-missing-attribute -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<!-- svelte-ignore a11y_missing_attribute -->
 				<a
-					on:click|stopPropagation={() => openImageModal(currentSlide)}
+					onclick={stopPropagation(() => openImageModal(currentSlide))}
 					class="cursor-pointer relative group block w-full h-full"
 				>
 					<ImageFrame source={sortedImages[currentSlide].source} className="w-full h-full">
@@ -111,7 +119,7 @@
 					<div class="absolute inset-0 flex items-center justify-between pointer-events-none">
 						{#if currentSlide > 0}
 							<button
-								on:click|stopPropagation={() => changeSlide('prev')}
+								onclick={stopPropagation(() => changeSlide('prev'))}
 								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-neutral border-none text-neutral-content shadow-lg"
 								aria-label="Previous image"
 							>
@@ -130,7 +138,7 @@
 
 						{#if currentSlide < sortedImages.length - 1}
 							<button
-								on:click|stopPropagation={() => changeSlide('next')}
+								onclick={stopPropagation(() => changeSlide('next'))}
 								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-neutral border-none text-neutral-content shadow-lg"
 								aria-label="Next image"
 							>
@@ -155,9 +163,9 @@
 								<button
 									on:click|stopPropagation={() => (currentSlide = index)}
 									class="w-2 h-2 rounded-full transition-all pointer-events-auto {index ===
-									currentSlide
-										? 'bg-white shadow-lg'
-										: 'bg-white/50 hover:bg-white/80'}"
+ currentSlide
+ ? 'bg-white shadow-lg'
+ : 'bg-white/50 hover:bg-white/80'}"
 									aria-label="Go to image {index + 1}"
 								/>
 							{/each}

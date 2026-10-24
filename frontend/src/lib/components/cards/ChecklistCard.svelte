@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { stopPropagation } from 'svelte/legacy';
+
 	import { addToast } from '$lib/toasts';
 	import type { Checklist, Collection, User } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -17,9 +19,12 @@
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 
-	let isActionsMenuOpen = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
+	let isActionsMenuOpen = $state(false);
+	let openUpward = $state(false);
+	let actionsMenuRef: HTMLDivElement | null = $state(null);
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
 
@@ -44,20 +49,33 @@
 		};
 	});
 
-	export let checklist: Checklist;
-	export let user: User | null = null;
-	export let collection: Collection;
-	export let readOnly: boolean = false;
-	export let itineraryItem: CollectionItineraryItem | null = null;
+	interface Props {
+		checklist: Checklist;
+		user?: User | null;
+		collection: Collection;
+		readOnly?: boolean;
+		itineraryItem?: CollectionItineraryItem | null;
+	}
 
-	let isWarningModalOpen: boolean = false;
-	let isDetailsOpen: boolean = false;
-	let updatingItemId: string | null = null;
+	let {
+		checklist = $bindable(),
+		user = null,
+		collection,
+		readOnly = false,
+		itineraryItem = null
+	}: Props = $props();
 
-	$: canEdit =
+	let isWarningModalOpen: boolean = $state(false);
+	let isDetailsOpen: boolean = $state(false);
+	let updatingItemId: string | null = $state(null);
+
+	let canEdit = $derived(
 		!readOnly &&
-		(checklist.user == user?.uuid ||
-			(collection && user && collection.shared_with?.includes(user.uuid)));
+			(checklist.user == user?.uuid ||
+				(collection && user && collection.shared_with?.includes(user.uuid)))
+	);
+
+	const dateFormat = $derived(dateFormatFromUser(user));
 
 	const normalizeDateForApi = (date: string | Date | null | undefined): string | null => {
 		if (!date) return null;
@@ -178,7 +196,7 @@
 							<div class="flex items-center gap-2">
 								<Calendar class="w-4 h-4 text-primary" />
 								<span>
-									{new Date(checklist.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+									{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}
 								</span>
 							</div>
 						{/if}
@@ -194,7 +212,7 @@
 				<button
 					type="button"
 					class="btn btn-circle btn-ghost btn-sm"
-					on:click={() => (isDetailsOpen = false)}
+					onclick={() => (isDetailsOpen = false)}
 					aria-label={$t('about.close')}
 				>
 					<Close class="w-4 h-4" />
@@ -207,17 +225,16 @@
 						{#if canEdit}
 							<button
 								type="button"
-								on:click={() => toggleItemStatus(item.id)}
+								onclick={() => toggleItemStatus(item.id)}
 								disabled={updatingItemId === item.id}
 								class="flex w-full items-center gap-3 rounded-lg bg-base-200/60 p-2 text-left transition-colors hover:bg-base-200 disabled:opacity-70"
 							>
 								{#if updatingItemId === item.id}
-									<span class="loading loading-spinner loading-xs text-primary flex-shrink-0"
-									></span>
+									<span class="loading loading-spinner loading-xs text-primary shrink-0"></span>
 								{:else if item.is_checked}
-									<CheckCircle class="w-5 h-5 text-success flex-shrink-0" />
+									<CheckCircle class="w-5 h-5 text-success shrink-0" />
 								{:else}
-									<CheckboxBlankCircleOutline class="w-5 h-5 flex-shrink-0" />
+									<CheckboxBlankCircleOutline class="w-5 h-5 shrink-0" />
 								{/if}
 								<span
 									class="flex-1 text-sm"
@@ -230,9 +247,9 @@
 						{:else}
 							<div class="flex items-center gap-3 rounded-lg bg-base-200/60 p-2">
 								{#if item.is_checked}
-									<CheckCircle class="w-5 h-5 text-success flex-shrink-0" />
+									<CheckCircle class="w-5 h-5 text-success shrink-0" />
 								{:else}
-									<CheckboxBlankCircleOutline class="w-5 h-5 flex-shrink-0" />
+									<CheckboxBlankCircleOutline class="w-5 h-5 shrink-0" />
 								{/if}
 								<span
 									class="flex-1 text-sm"
@@ -250,16 +267,16 @@
 			{/if}
 
 			<div class="modal-action">
-				<button class="btn" on:click={() => (isDetailsOpen = false)}>Close</button>
+				<button class="btn" onclick={() => (isDetailsOpen = false)}>Close</button>
 			</div>
 		</div>
 		<form method="dialog" class="modal-backdrop">
-			<button aria-label="close" on:click={() => (isDetailsOpen = false)}>Close</button>
+			<button aria-label="close" onclick={() => (isDetailsOpen = false)}>Close</button>
 		</form>
 	</dialog>
 {/if}
 <div
-	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="checklist-card"
 >
 	<div class="card-body p-4 space-y-3">
@@ -275,7 +292,7 @@
 			<div class="flex items-center gap-2">
 				<button
 					class="btn btn-square btn-sm p-1 text-base-content"
-					on:click={() => (isDetailsOpen = true)}
+					onclick={() => (isDetailsOpen = true)}
 					aria-label={$t('adventures.view')}
 					type="button"
 				>
@@ -286,30 +303,32 @@
 					<div
 						class="dropdown dropdown-end relative z-50"
 						class:dropdown-open={isActionsMenuOpen}
+						class:dropdown-top={openUpward}
 						bind:this={actionsMenuRef}
 					>
 						<button
 							type="button"
 							class="btn btn-square btn-sm p-1 text-base-content"
 							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
+							onclick={stopPropagation(() => {
 								if (isActionsMenuOpen) {
 									isActionsMenuOpen = false;
 									return;
 								}
 								closeAllChecklistMenus();
+								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
-							}}
+							})}
 						>
 							<DotsHorizontal class="w-5 h-5" />
 						</button>
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 						>
 							<li>
 								<button
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										editChecklist();
 									}}
@@ -324,7 +343,7 @@
 								{#if !itineraryItem.is_global}
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												dispatch('moveToGlobal', { type: 'checklist', id: checklist.id });
 											}}
@@ -336,11 +355,11 @@
 									</li>
 									<li>
 										<button
-											on:click={() => {
+											onclick={() => {
 												isActionsMenuOpen = false;
 												changeDay();
 											}}
-											class=" flex items-center gap-2"
+											class="flex items-center gap-2"
 										>
 											<Calendar class="w-4 h-4 text" />
 											{$t('itinerary.change_day')}
@@ -349,7 +368,7 @@
 								{/if}
 								<li>
 									<button
-										on:click={() => {
+										onclick={() => {
 											isActionsMenuOpen = false;
 											removeFromItinerary();
 										}}
@@ -368,7 +387,7 @@
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
-									on:click={() => {
+									onclick={() => {
 										isActionsMenuOpen = false;
 										isWarningModalOpen = true;
 									}}
@@ -390,16 +409,16 @@
 					{#if canEdit}
 						<button
 							type="button"
-							on:click={() => toggleItemStatus(item.id)}
+							onclick={() => toggleItemStatus(item.id)}
 							disabled={updatingItemId === item.id}
 							class="flex w-full items-center gap-1.5 rounded-lg px-2 py-0.5 text-left text-sm text-base-content/80 transition-colors hover:bg-base-200/80 disabled:opacity-60"
 						>
 							{#if updatingItemId === item.id}
 								<span class="loading loading-spinner loading-xs text-primary"></span>
 							{:else if item.is_checked}
-								<CheckCircle class="w-4 h-4 text-success flex-shrink-0" />
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
 							{:else}
-								<CheckboxBlankCircleOutline class="w-4 h-4 flex-shrink-0" />
+								<CheckboxBlankCircleOutline class="w-4 h-4 shrink-0" />
 							{/if}
 							<span
 								class="truncate"
@@ -412,9 +431,9 @@
 					{:else}
 						<div class="flex items-center gap-1.5 text-sm text-base-content/70">
 							{#if item.is_checked}
-								<CheckCircle class="w-4 h-4 text-success flex-shrink-0" />
+								<CheckCircle class="w-4 h-4 text-success shrink-0" />
 							{:else}
-								<CheckboxBlankCircleOutline class="w-4 h-4 flex-shrink-0" />
+								<CheckboxBlankCircleOutline class="w-4 h-4 shrink-0" />
 							{/if}
 							<span
 								class="truncate"
@@ -440,7 +459,7 @@
 			{#if checklist.date && checklist.date !== ''}
 				<div class="flex items-center gap-1">
 					<Calendar class="w-4 h-4 text-primary" />
-					<span>{new Date(checklist.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</span>
+					<span>{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}</span>
 				</div>
 			{/if}
 

@@ -7,6 +7,7 @@
 	import type { ActivityRecord, SlimCollection, UserStats } from '$lib/types';
 	import type { CalendarApiEvent } from '$lib/calendar/types';
 	import { apiEventsToDisplayEvents } from '$lib/calendar/events';
+	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
 	import { getDistance, getElevation } from '$lib/index';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -33,18 +34,23 @@
 	import ChevronRight from '~icons/mdi/chevron-right';
 	import CompassRose from '~icons/mdi/compass-rose';
 
-	export let data: PageData;
+	interface Props {
+		data: PageData;
+	}
 
-	const user = data.user;
-	let stats: UserStats | null = data.props.stats;
-	let recentLocations = data.props.recentLocations;
-	let upcomingTrips: SlimCollection[] = data.props.upcomingTrips;
-	let activeTrip: SlimCollection | null = data.props.activeTrip;
-	let upcomingEvents: CalendarApiEvent[] = data.props.upcomingEvents;
-	let inviteCount = data.props.inviteCount;
-	let loadError = data.props.loadError;
+	let { data }: Props = $props();
 
-	let heroVisible = false;
+	const user = $derived(data.user);
+	const dateFormat = $derived(dateFormatFromUser(user));
+	let stats: UserStats | null = $derived(data.props.stats);
+	let recentLocations = $derived(data.props.recentLocations);
+	let upcomingTrips: SlimCollection[] = $derived(data.props.upcomingTrips);
+	let activeTrip: SlimCollection | null = $derived(data.props.activeTrip);
+	let upcomingEvents: CalendarApiEvent[] = $derived(data.props.upcomingEvents);
+	let inviteCount = $derived(data.props.inviteCount);
+	let loadError = $derived(data.props.loadError);
+
+	let heroVisible = $state(false);
 
 	onMount(() => {
 		requestAnimationFrame(() => {
@@ -52,33 +58,24 @@
 		});
 	});
 
-	$: stats = data.props.stats;
-	$: recentLocations = data.props.recentLocations;
-	$: upcomingTrips = data.props.upcomingTrips;
-	$: activeTrip = data.props.activeTrip;
-	$: upcomingEvents = data.props.upcomingEvents;
-	$: inviteCount = data.props.inviteCount;
-	$: loadError = data.props.loadError;
-
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	$: measurementSystem = user?.measurement_system || 'metric';
-	$: greetingName = user?.first_name || user?.username || '';
+	let measurementSystem = $derived(user?.measurement_system || 'metric');
+	let greetingName = $derived(user?.first_name || user?.username || '');
 
-	$: timezoneLabels = {
+	let timezoneLabels = $derived({
 		eventTimezone: $t('calendar.event timezone'),
 		localTimezone: $t('calendar.your timezone')
-	};
+	});
 
-	$: displayEvents = apiEventsToDisplayEvents(
-		upcomingEvents,
-		'event',
-		userTimezone,
-		timezoneLabels
+	let displayEvents = $derived(
+		apiEventsToDisplayEvents(upcomingEvents, 'event', userTimezone, timezoneLabels, dateFormat)
 	);
 
-	$: agendaEvents = displayEvents
-		.filter((event) => event.start.split('T')[0] >= new Date().toISOString().split('T')[0])
-		.slice(0, 5);
+	let agendaEvents = $derived(
+		displayEvents
+			.filter((event) => event.start.split('T')[0] >= new Date().toISOString().split('T')[0])
+			.slice(0, 5)
+	);
 
 	function getPercentage(value: number, total: number): number {
 		if (!total || total <= 0) return 0;
@@ -97,59 +94,59 @@
 		return record.activity_name || record.sport_type || 'Activity';
 	}
 
-	$: worldExplorationPercentage = stats
-		? getPercentage(stats.visited_country_count, stats.total_countries)
-		: 0;
-	$: regionExplorationPercentage = stats
-		? getPercentage(stats.visited_region_count, stats.total_regions)
-		: 0;
-	$: cityExplorationPercentage = stats
-		? getPercentage(stats.visited_city_count, stats.total_cities)
-		: 0;
-	$: locationVisitedPercentage = stats
-		? getPercentage(stats.visited_location_count, stats.location_count)
-		: 0;
+	let worldExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_country_count, stats.total_countries) : 0
+	);
+	let regionExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_region_count, stats.total_regions) : 0
+	);
+	let cityExplorationPercentage = $derived(
+		stats ? getPercentage(stats.visited_city_count, stats.total_cities) : 0
+	);
+	let locationVisitedPercentage = $derived(
+		stats ? getPercentage(stats.visited_location_count, stats.location_count) : 0
+	);
 
-	$: isNewUser =
+	let isNewUser = $derived(
 		stats &&
-		stats.location_count === 0 &&
-		stats.trips_count === 0 &&
-		upcomingTrips.length === 0 &&
-		!activeTrip;
+			stats.location_count === 0 &&
+			stats.trips_count === 0 &&
+			upcomingTrips.length === 0 &&
+			!activeTrip
+	);
 
-	$: profileHref = user ? `/profile/${user.username}` : '/settings';
+	let profileHref = $derived(user ? `/profile/${user.username}` : '/settings');
 
-	$: heroTrip = activeTrip ?? upcomingTrips[0] ?? null;
-	$: heroTripIsActive = Boolean(activeTrip);
+	let heroTrip = $derived(activeTrip ?? upcomingTrips[0] ?? null);
+	let heroTripIsActive = $derived(Boolean(activeTrip));
 
-	$: timeGreetingKey = (() => {
-		const hour = new Date().getHours();
-		if (hour < 12) return 'dashboard.greeting_morning';
-		if (hour < 17) return 'dashboard.greeting_afternoon';
-		if (hour < 22) return 'dashboard.greeting_evening';
-		return 'dashboard.greeting_night';
-	})();
+	let timeGreetingKey = $derived(
+		(() => {
+			const hour = new Date().getHours();
+			if (hour < 12) return 'dashboard.greeting_morning';
+			if (hour < 17) return 'dashboard.greeting_afternoon';
+			if (hour < 22) return 'dashboard.greeting_evening';
+			return 'dashboard.greeting_night';
+		})()
+	);
 
-	$: welcomeSubtitle = loadError
-		? $t('dashboard.stats_error')
-		: stats && stats.visited_country_count > 0
-			? $t('dashboard.hero_countries', { values: { count: stats.visited_country_count } })
-			: stats && stats.location_count > 0
-				? stats.location_count === 1
-					? $t('dashboard.hero_location_logged')
-					: $t('dashboard.hero_locations_logged', {
-							values: { count: stats.location_count }
-						})
-				: $t('dashboard.hero_start_journey');
+	let welcomeSubtitle = $derived(
+		loadError
+			? $t('dashboard.stats_error')
+			: stats && stats.visited_country_count > 0
+				? $t('dashboard.hero_countries', { values: { count: stats.visited_country_count } })
+				: stats && stats.location_count > 0
+					? stats.location_count === 1
+						? $t('dashboard.hero_location_logged')
+						: $t('dashboard.hero_locations_logged', {
+								values: { count: stats.location_count }
+							})
+					: $t('dashboard.hero_start_journey')
+	);
 
 	function formatTripDate(date: string | null): string {
 		if (!date) return '';
-		return new Date(date).toLocaleDateString(undefined, {
-			timeZone: 'UTC',
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
+		return formatDisplayDate(date, dateFormat, { timeZone: 'UTC' });
 	}
 
 	function getTripBannerImage(trip: SlimCollection): string | null {
@@ -158,9 +155,9 @@
 		return locationImage?.image ?? null;
 	}
 
-	$: heroTripBannerImage = heroTrip ? getTripBannerImage(heroTrip) : null;
+	let heroTripBannerImage = $derived(heroTrip ? getTripBannerImage(heroTrip) : null);
 
-	$: quickLinks = [
+	let quickLinks = $derived([
 		{ href: '/map', labelKey: 'navbar.map', icon: Map },
 		{
 			href: '/worldtravel',
@@ -175,7 +172,7 @@
 		},
 		{ href: '/search', labelKey: 'navbar.search', icon: Magnify },
 		{ href: profileHref, labelKey: 'navbar.profile', icon: Account }
-	];
+	]);
 </script>
 
 <svelte:head>
@@ -279,7 +276,7 @@
 					<!-- Trip card -->
 					<div class="relative w-full lg:justify-self-end">
 						<div
-							class="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/10 blur-sm"
+							class="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/10 blur-xs"
 							aria-hidden="true"
 						></div>
 
@@ -404,7 +401,7 @@
 
 		{#if isNewUser}
 			<div
-				class="mb-10 overflow-hidden rounded-2xl border border-base-300/50 bg-base-100/80 shadow-sm"
+				class="mb-10 overflow-hidden rounded-2xl border border-base-300/50 bg-base-100/80 shadow-xs"
 			>
 				<div class="card-body items-center p-8 text-center sm:p-12">
 					<div class="mb-5 rounded-2xl bg-primary/10 p-6">
@@ -443,7 +440,7 @@
 				<div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
 					<a
 						href="/worldtravel"
-						class="dashboard-stat-card group relative col-span-1 overflow-hidden rounded-2xl border border-success/20 bg-base-100/80 p-5 shadow-sm md:col-span-2 xl:row-span-2"
+						class="dashboard-stat-card group relative col-span-1 overflow-hidden rounded-2xl border border-success/20 bg-base-100/80 p-5 shadow-xs md:col-span-2 xl:row-span-2"
 					>
 						<div class="relative flex h-full flex-col justify-between gap-6">
 							<div class="flex items-start justify-between gap-4">
@@ -479,7 +476,7 @@
 
 					<a
 						href="/locations"
-						class="dashboard-stat-card group rounded-2xl border border-primary/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-primary/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div class="min-w-0">
@@ -508,7 +505,7 @@
 
 					<a
 						href="/collections"
-						class="dashboard-stat-card group rounded-2xl border border-secondary/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-secondary/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div>
@@ -526,7 +523,7 @@
 
 					<a
 						href="/worldtravel"
-						class="dashboard-stat-card group rounded-2xl border border-info/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-info/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div class="min-w-0 flex-1">
@@ -549,7 +546,7 @@
 
 					<a
 						href="/worldtravel"
-						class="dashboard-stat-card group rounded-2xl border border-warning/15 bg-base-100/80 p-4 shadow-sm"
+						class="dashboard-stat-card group rounded-2xl border border-warning/15 bg-base-100/80 p-4 shadow-xs"
 					>
 						<div class="flex items-center justify-between gap-3">
 							<div class="min-w-0 flex-1">
@@ -572,7 +569,7 @@
 
 					{#if stats.activities_overall.total_count > 0}
 						<div
-							class="dashboard-stat-card rounded-2xl border border-accent/15 bg-base-100/80 p-4 shadow-sm md:col-span-2"
+							class="dashboard-stat-card rounded-2xl border border-accent/15 bg-base-100/80 p-4 shadow-xs md:col-span-2"
 						>
 							<div class="flex items-center justify-between gap-3">
 								<div>
@@ -599,7 +596,7 @@
 			</section>
 
 			<div class="mb-10 grid grid-cols-1 gap-5 xl:grid-cols-2">
-				<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6">
+				<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6">
 					<div class="mb-5">
 						<h2 class="text-lg font-bold text-base-content">{$t('dashboard.whats_next')}</h2>
 						<p class="text-sm text-base-content/55">{$t('dashboard.upcoming_trips')}</p>
@@ -674,7 +671,7 @@
 
 				<section class="flex flex-col gap-5">
 					{#if stats.activities_overall.total_count > 0}
-						<div class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6">
+						<div class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6">
 							<h2 class="mb-4 text-lg font-bold">{$t('dashboard.activity_highlights')}</h2>
 
 							<div class="grid grid-cols-2 gap-3">
@@ -761,18 +758,18 @@
 					{/if}
 
 					<div
-						class="flex-1 rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6"
+						class="flex-1 rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6"
 					>
 						<h2 class="mb-4 text-lg font-bold">{$t('dashboard.quick_links')}</h2>
 
-						<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-							{#each quickLinks as link}
+						<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+							{#each quickLinks as link (link.href)}
 								<a
 									href={link.href}
-									class="btn btn-ghost h-auto min-h-0 flex-col gap-1.5 py-3 px-2 normal-case font-normal border border-base-300/40 bg-base-200/30"
+									class="btn btn-ghost h-auto min-h-24 flex-col gap-2.5 py-5 px-3 normal-case font-medium border border-base-300/40 bg-base-200/30"
 								>
-									<svelte:component this={link.icon} class="h-5 w-5 text-primary" />
-									<span class="text-xs leading-tight text-center">{$t(link.labelKey)}</span>
+									<link.icon class="h-7 w-7 text-primary" />
+									<span class="text-sm leading-tight text-center">{$t(link.labelKey)}</span>
 								</a>
 							{/each}
 						</div>
@@ -781,7 +778,7 @@
 			</div>
 		{/if}
 
-		<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-sm sm:p-6">
+		<section class="rounded-2xl border border-base-300/50 bg-base-100/70 p-5 shadow-xs sm:p-6">
 			<div class="mb-5 flex flex-wrap items-center justify-between gap-4">
 				<div>
 					<h2 class="text-lg font-bold text-primary sm:text-xl">
@@ -857,7 +854,11 @@
 	}
 
 	.dashboard-trip-card {
-		background: linear-gradient(135deg, hsl(var(--b1) / 0.95) 0%, hsl(var(--b2) / 0.85) 100%);
+		background: linear-gradient(
+			135deg,
+			color-mix(in oklab, var(--color-base-100) 95%, transparent) 0%,
+			color-mix(in oklab, var(--color-base-200) 85%, transparent) 100%
+		);
 	}
 
 	.line-clamp-2 {

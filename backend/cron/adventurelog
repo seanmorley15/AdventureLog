@@ -14,3 +14,6 @@ CRON_TZ=UTC
 
 # Sync visited regions and cities from user locations (nightly midnight UTC)
 0 0 * * * root /code/scripts/run-cron-job.sh sync_visited_regions sync_visited_regions
+
+# Purge expired Django sessions (weekly Sunday 03:15 UTC)
+15 3 * * 0 root /code/scripts/run-cron-job.sh clearsessions clearsessions

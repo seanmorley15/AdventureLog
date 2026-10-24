@@ -9,22 +9,34 @@
 	import DOMPurify from 'dompurify';
 	import type { CalendarDisplayEvent } from '$lib/calendar/types';
 
-	export let show = false;
-	export let event: CalendarDisplayEvent | null = null;
-	export let onClose: () => void;
-	export let timezoneMode: 'event' | 'local' = 'event';
-	export let userTimezone = '';
+	interface Props {
+		show?: boolean;
+		event?: CalendarDisplayEvent | null;
+		onClose: () => void;
+		timezoneMode?: 'event' | 'local';
+		userTimezone?: string;
+	}
+
+	let {
+		show = false,
+		event = null,
+		onClose,
+		timezoneMode = 'event',
+		userTimezone = ''
+	}: Props = $props();
 
 	const renderMarkdown = (markdown: string) => DOMPurify.sanitize(marked(markdown) as string);
 
-	$: detailUrl = event?.extendedProps?.url || '';
-	$: typeLabel = event?.extendedProps?.type
-		? $t(`calendar.type_${event.extendedProps.type}`)
-		: $t('calendar.event');
+	let detailUrl = $derived(event?.extendedProps?.url || '');
+	let typeLabel = $derived(
+		event?.extendedProps?.type
+			? $t(`calendar.type_${event.extendedProps.type}`)
+			: $t('calendar.event')
+	);
 </script>
 
 {#if show && event}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div class="modal modal-open">
 		<div
 			class="modal-box max-w-3xl p-0 bg-base-100 border border-base-300 shadow-2xl max-h-[90vh] flex flex-col"
@@ -35,7 +47,7 @@
 				<div class="relative flex items-start justify-between gap-4">
 					<div class="flex items-start gap-4 min-w-0">
 						<div
-							class="h-14 w-14 rounded-2xl bg-base-100/20 backdrop-blur flex items-center justify-center text-3xl shadow-inner shrink-0"
+							class="h-14 w-14 rounded-2xl bg-base-100/20 backdrop-blur-sm flex items-center justify-center text-3xl shadow-inner shrink-0"
 						>
 							{event.extendedProps?.icon || '📅'}
 						</div>
@@ -61,7 +73,7 @@
 							</div>
 						</div>
 					</div>
-					<button class="btn btn-ghost btn-sm btn-circle shrink-0" on:click={onClose}>
+					<button class="btn btn-ghost btn-sm btn-circle shrink-0" onclick={onClose}>
 						<CloseIcon class="w-5 h-5" />
 					</button>
 				</div>
@@ -141,12 +153,12 @@
 							</a>
 						{/if}
 					</div>
-					<button class="btn btn-ghost btn-sm" on:click={onClose}>{$t('about.close')}</button>
+					<button class="btn btn-ghost btn-sm" onclick={onClose}>{$t('about.close')}</button>
 				</div>
 			</div>
 		</div>
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div class="modal-backdrop" on:click={onClose}></div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div class="modal-backdrop" onclick={onClose}></div>
 	</div>
 {/if}

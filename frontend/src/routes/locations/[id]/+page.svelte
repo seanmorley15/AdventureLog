@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
+	import { createEmptyLocation } from '$lib/location-draft';
 	import type { Location } from '$lib/types';
 	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '$lib/sunriseSunset';
 	import type { PageData } from './$types';
@@ -11,6 +14,8 @@
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
+	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
+	import { dateFormatFromUser } from '$lib/dateFormat';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
@@ -35,43 +40,56 @@
 	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 	import ImageOutline from '~icons/mdi/image-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
 	};
 
-	export let data: PageData;
-	let measurementSystem = data.user?.measurement_system || 'metric';
+	interface Props {
+		data: PageData;
+	}
 
-	let adventure: Location | undefined;
-	let visitSunriseSunset: Record<string, SunriseSunset> = {};
-	let sunriseSunsetLoading: Record<string, boolean> = {};
-	let currentSlide = 0;
+	let { data }: Props = $props();
 
-	$: adventurePriceLabel = adventure
-		? formatMoney(
-				toMoneyValue(
-					adventure.price,
-					adventure.price_currency,
-					data.user?.default_currency || DEFAULT_CURRENCY
+	const dateFormat = $derived(dateFormatFromUser(data.user));
+	let measurementSystem = $derived(data.user?.measurement_system || 'metric');
+
+	let adventure: Location | undefined = $state();
+	let visitSunriseSunset: Record<string, SunriseSunset> = $state({});
+	let sunriseSunsetLoading: Record<string, boolean> = $state({});
+	let currentSlide = $state(0);
+
+	let adventurePriceLabel = $derived(
+		adventure
+			? formatMoney(
+					toMoneyValue(
+						adventure.price,
+						adventure.price_currency,
+						data.user?.default_currency || DEFAULT_CURRENCY
+					)
 				)
-			)
-		: null;
+			: null
+	);
 
 	function goToSlide(index: number) {
 		currentSlide = index;
 	}
 
-	let notFound: boolean = false;
-	let isEditModalOpen: boolean = false;
-	let isSocialShareModalOpen: boolean = false;
+	let notFound: boolean = $state(false);
+	let isEditModalOpen: boolean = $state(false);
+	let locationDraft = $state(createEmptyLocation());
+	let isSocialShareModalOpen: boolean = $state(false);
 	let adventure_images: { image: string; adventure: Location | null }[] = [];
-	let modalInitialIndex: number = 0;
-	let isImageModalOpen: boolean = false;
-	let mapBasemapType = normalizeBasemapType(data.user?.map_style);
-	let showActivityTracks = true;
-	let showTrailTracks = true;
-	let showImagePins = true;
+	let modalInitialIndex: number = $state(0);
+	let isImageModalOpen: boolean = $state(false);
+	let mapBasemapType = $state(normalizeBasemapType(undefined));
+	$effect.pre(() => {
+		mapBasemapType = normalizeBasemapType(data.user?.map_style);
+	});
+	let showActivityTracks = $state(true);
+	let showTrailTracks = $state(true);
+	let showImagePins = $state(true);
 
 	async function loadSunriseSunsetForDate(date: string) {
 		if (!adventure?.id || sunriseSunsetLoading[date] || visitSunriseSunset[date]) {
@@ -94,12 +112,19 @@
 	}
 
 	function applyLocationPageData(adventureData: Location | null | undefined) {
+		const previousId = adventure?.id ?? null;
+		const nextId = adventureData?.id ?? null;
+		const locationChanged = previousId !== nextId;
+
 		if (!adventureData) {
 			notFound = true;
 			adventure = undefined;
 			visitSunriseSunset = {};
 			sunriseSunsetLoading = {};
 			currentSlide = 0;
+			isImageModalOpen = false;
+			isEditModalOpen = false;
+			isSocialShareModalOpen = false;
 			return;
 		}
 
@@ -123,6 +148,10 @@
 			});
 		}
 
+		if (!locationChanged) {
+			return;
+		}
+
 		visitSunriseSunset = {};
 		sunriseSunsetLoading = {};
 		currentSlide = 0;
@@ -131,16 +160,23 @@
 		isSocialShareModalOpen = false;
 	}
 
-	$: applyLocationPageData(data.props.adventure);
+	$effect.pre(() => {
+		const adventureData = data.props.adventure;
+		untrack(() => {
+			applyLocationPageData(adventureData);
+		});
+	});
 
-	$: imagePinGeoJson = adventure
-		? contentImagesToGeoJson(adventure.images, {
-				parentType: 'location',
-				parentId: adventure.id,
-				parentName: adventure.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON;
-	$: hasImagePins = imagePinGeoJson.features.length > 0;
+	let imagePinGeoJson = $derived(
+		adventure
+			? contentImagesToGeoJson(adventure.images, {
+					parentType: 'location',
+					parentId: adventure.id,
+					parentName: adventure.name
+				})
+			: EMPTY_IMAGE_PIN_GEOJSON
+	);
+	let hasImagePins = $derived(imagePinGeoJson.features.length > 0);
 
 	function hasActivityGeojson(adventure: Location) {
 		return adventure.visits.some((visit) => visit.activities.some((activity) => activity.geojson));
@@ -190,8 +226,8 @@
 		return measurementSystem === 'imperial' ? totalMeters * 3.28084 : totalMeters;
 	}
 
-	let isDuplicating = false;
-	let isFabMenuOpen = false;
+	let isDuplicating = $state(false);
+	let isFabMenuOpen = $state(false);
 
 	async function duplicateAdventure() {
 		if (isDuplicating || !adventure) return;
@@ -214,6 +250,31 @@
 		} finally {
 			isDuplicating = false;
 		}
+	}
+
+	function closeEditModal() {
+		if (adventure && locationDraft?.id === adventure.id) {
+			adventure = {
+				...adventure,
+				...locationDraft,
+				city: adventure.city,
+				region: adventure.region,
+				country: adventure.country,
+				created_at: adventure.created_at,
+				updated_at: adventure.updated_at,
+				rating:
+					typeof locationDraft.rating === 'number' && Number.isFinite(locationDraft.rating)
+						? locationDraft.rating
+						: adventure.rating,
+				latitude: Number.isFinite(locationDraft.latitude)
+					? locationDraft.latitude
+					: adventure.latitude,
+				longitude: Number.isFinite(locationDraft.longitude)
+					? locationDraft.longitude
+					: adventure.longitude
+			};
+		}
+		isEditModalOpen = false;
 	}
 
 	function closeImageModal() {
@@ -283,7 +344,7 @@
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
 				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.location_not_found')}</h1>
 				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
-				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
+				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>
 			</div>
@@ -293,10 +354,10 @@
 
 {#if isEditModalOpen}
 	<NewLocationModal
-		on:close={() => (isEditModalOpen = false)}
+		on:close={closeEditModal}
 		user={data.user}
 		locationToEdit={adventure}
-		bind:location={adventure}
+		bind:location={locationDraft}
 	/>
 {/if}
 
@@ -332,7 +393,7 @@
 			<div class="dropdown dropdown-top dropdown-end" class:dropdown-open={isFabMenuOpen}>
 				<button
 					class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-					on:click={() => (isFabMenuOpen = !isFabMenuOpen)}
+					onclick={() => (isFabMenuOpen = !isFabMenuOpen)}
 				>
 					<DotsVertical class="w-8 h-8" />
 				</button>
@@ -342,7 +403,7 @@
 				>
 					<li>
 						<button
-							on:click={() => {
+							onclick={() => {
 								isFabMenuOpen = false;
 								isEditModalOpen = true;
 							}}
@@ -354,7 +415,7 @@
 					</li>
 					<li>
 						<button
-							on:click={() => {
+							onclick={() => {
 								isFabMenuOpen = false;
 								isSocialShareModalOpen = true;
 							}}
@@ -366,7 +427,7 @@
 					</li>
 					<li>
 						<button
-							on:click={duplicateAdventure}
+							onclick={duplicateAdventure}
 							class="flex items-center gap-2"
 							disabled={isDuplicating}
 						>
@@ -396,7 +457,7 @@
 					>
 						<button
 							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => openImageModal(i)}
+							onclick={() => openImageModal(i)}
 							aria-label={`View full image of ${adventure.name}`}
 						>
 							<ImageFrame source={image.source} showSourceBadge className="w-full h-full">
@@ -476,7 +537,7 @@
 							<!-- Navigation arrows and current position -->
 							<div class="flex items-center justify-center gap-4 mb-3">
 								<button
-									on:click={goToPreviousImage}
+									onclick={goToPreviousImage}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.previous_image')}
 								>
@@ -488,7 +549,7 @@
 								</div>
 
 								<button
-									on:click={goToNextImage}
+									onclick={goToNextImage}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.next_image')}
 								>
@@ -501,7 +562,7 @@
 								<div class="flex justify-center gap-2 flex-wrap">
 									{#each adventure.images as _, i}
 										<button
-											on:click={() => goToSlide(i)}
+											onclick={() => goToSlide(i)}
 											class="btn btn-circle btn-xs transition-all duration-200"
 											class:btn-primary={i === currentSlide}
 											class:btn-outline={i !== currentSlide}
@@ -538,29 +599,20 @@
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<div class="flex items-center gap-4">
-								{#if adventure.user.profile_pic}
-									<div class="avatar">
-										<div
-											class="w-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
-										>
-											<img src={adventure.user.profile_pic} alt={adventure.user.username} />
-										</div>
+								<div class="avatar shrink-0">
+									<div
+										class="w-16 overflow-hidden rounded-full ring-3 ring-neutral ring-offset-base-100 ring-offset-2"
+									>
+										<UserAvatar
+											user={adventure.user}
+											alt={adventure.user.first_name && adventure.user.last_name
+												? `${adventure.user.first_name} ${adventure.user.last_name}`
+												: adventure.user.username}
+											className="w-16 h-16 rounded-full"
+											textClass="text-xl"
+										/>
 									</div>
-								{:else}
-									<div class="avatar placeholder">
-										<div
-											class="bg-primary text-primary-content w-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
-										>
-											<span class="text-xl font-bold">
-												{adventure.user.first_name
-													? adventure.user.first_name.charAt(0)
-													: adventure.user.username.charAt(0)}{adventure.user.last_name
-													? adventure.user.last_name.charAt(0)
-													: ''}
-											</span>
-										</div>
-									</div>
-								{/if}
+								</div>
 								<div class="flex-1">
 									<div class="text-lg font-bold">
 										{#if adventure.user.public_profile}
@@ -637,7 +689,7 @@
 											{/if}
 										</div>
 										<div class="flex-1 pb-4">
-											<div class="card bg-base-100 shadow">
+											<div class="card bg-base-100 shadow-sm">
 												<div class="card-body p-4">
 													<div class="flex gap-2">
 														<div class="flex-1 min-w-0">
@@ -645,9 +697,10 @@
 																<div class="flex items-center gap-2 mb-2">
 																	<span class="badge badge-primary">All Day</span>
 																	<span class="font-semibold">
-																		{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
-																			? visit.end_date.split('T')[0]
-																			: ''}
+																		{formatAllDayDate(visit.start_date, dateFormat)} – {formatAllDayDate(
+																			visit.end_date,
+																			dateFormat
+																		)}
 																	</span>
 																</div>
 															{:else}
@@ -661,25 +714,18 @@
 																		{/if}
 																	</div>
 																	<div class="text-sm">
-																		{#if visit.timezone}
-																			<strong>{$t('adventures.start')}:</strong>
-																			{DateTime.fromISO(visit.start_date, { zone: 'utc' })
-																				.setZone(visit.timezone)
-																				.toLocaleString(DateTime.DATETIME_MED)}<br />
-																			<strong>{$t('adventures.end')}:</strong>
-																			{DateTime.fromISO(visit.end_date, { zone: 'utc' })
-																				.setZone(visit.timezone)
-																				.toLocaleString(DateTime.DATETIME_MED)}
-																		{:else}
-																			<strong>Start:</strong>
-																			{DateTime.fromISO(visit.start_date).toLocaleString(
-																				DateTime.DATETIME_MED
-																			)}<br />
-																			<strong>End:</strong>
-																			{DateTime.fromISO(visit.end_date).toLocaleString(
-																				DateTime.DATETIME_MED
-																			)}
-																		{/if}
+																		<strong>{$t('adventures.start')}:</strong>
+																		{formatDateInTimezone(
+																			visit.start_date,
+																			visit.timezone,
+																			dateFormat
+																		)}<br />
+																		<strong>{$t('adventures.end')}:</strong>
+																		{formatDateInTimezone(
+																			visit.end_date,
+																			visit.timezone,
+																			dateFormat
+																		)}
 																	</div>
 																</div>
 															{/if}
@@ -753,7 +799,7 @@
 																			class="btn btn-circle btn-ghost btn-sm opacity-60 hover:opacity-100"
 																			type="button"
 																			aria-label={$t('adventures.show_sunrise_sunset')}
-																			on:click={() => loadSunriseSunsetForDate(visitDate)}
+																			onclick={() => loadSunriseSunsetForDate(visitDate)}
 																		>
 																			<WeatherSunset class="w-5 h-5" />
 																		</button>
@@ -791,14 +837,16 @@
 										</div>
 
 										<div class="grid grid-cols-2 gap-3 mb-4">
-											<div class="text-center p-2 bg-base-200/70 rounded border border-primary/10">
+											<div
+												class="text-center p-2 bg-base-200/70 rounded-sm border border-primary/10"
+											>
 												<div class="text-xs text-primary/70 uppercase tracking-wide">
 													{$t('adventures.latitude')}
 												</div>
 												<div class="text-lg font-bold text-primary">{adventure.latitude}°</div>
 											</div>
 											<div
-												class="text-center p-2 bg-base-200/70 rounded border border-secondary/10"
+												class="text-center p-2 bg-base-200/70 rounded-sm border border-secondary/10"
 											>
 												<div class="text-xs text-secondary/70 uppercase tracking-wide">
 													{$t('adventures.longitude')}
@@ -813,7 +861,7 @@
 												{#if adventure.city}
 													<button
 														class="btn btn-xs btn-outline hover:btn-info"
-														on:click={navigateToWorldTravelRegion}
+														onclick={navigateToWorldTravelRegion}
 													>
 														🏙️ {adventure.city.name}
 													</button>
@@ -821,7 +869,7 @@
 												{#if adventure.region}
 													<button
 														class="btn btn-xs btn-outline hover:btn-warning"
-														on:click={navigateToWorldTravelRegion}
+														onclick={navigateToWorldTravelRegion}
 													>
 														🗺️ {adventure.region.name}
 													</button>
@@ -829,13 +877,13 @@
 												{#if adventure.country}
 													<button
 														class="btn btn-xs btn-outline hover:btn-success"
-														on:click={navigateToWorldTravelCountry}
+														onclick={navigateToWorldTravelCountry}
 													>
 														{#if adventure.country.flag_url}
 															<img
 																src={adventure.country.flag_url}
 																alt={adventure.country.name}
-																class="w-4 h-3 rounded"
+																class="w-4 h-3 rounded-sm"
 															/>
 														{:else}
 															🌎
@@ -858,13 +906,13 @@
 										<div class="flex gap-2">
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={copyAdventureCoordinates}
+												onclick={copyAdventureCoordinates}
 											>
 												📋 {$t('adventures.copy_coordinates')}
 											</button>
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={copyAdventureGoogleMapsLink}
+												onclick={copyAdventureGoogleMapsLink}
 											>
 												🔗 {$t('adventures.copy_link')}
 											</button>
@@ -880,26 +928,23 @@
 									center={[adventure.longitude || 0, adventure.latitude || 0]}
 									zoom={adventure.longitude ? 12 : 1}
 								>
-									<div
-										slot="overlayControls"
-										let:map
-										let:fullscreenTarget
-										class="pointer-events-none absolute inset-0 z-20"
-									>
-										<MapTrackLayerControls
-											bind:showActivities={showActivityTracks}
-											bind:showTrails={showTrailTracks}
-											bind:showImagePins
-											hasActivities={hasActivityGeojson(adventure)}
-											hasTrails={hasTrailGeojson(adventure)}
-											{hasImagePins}
-										/>
-										<MapFloatingControls
-											{map}
-											{fullscreenTarget}
-											bind:basemapType={mapBasemapType}
-										/>
-									</div>
+									{#snippet overlayControls({ map, fullscreenTarget })}
+										<div class="pointer-events-none absolute inset-0 z-20">
+											<MapTrackLayerControls
+												bind:showActivities={showActivityTracks}
+												bind:showTrails={showTrailTracks}
+												bind:showImagePins
+												hasActivities={adventure ? hasActivityGeojson(adventure) : false}
+												hasTrails={adventure ? hasTrailGeojson(adventure) : false}
+												{hasImagePins}
+											/>
+											<MapFloatingControls
+												{map}
+												{fullscreenTarget}
+												bind:basemapType={mapBasemapType}
+											/>
+										</div>
+									{/snippet}
 
 									<!-- Activity GPS tracks -->
 									{#if showActivityTracks}
@@ -986,7 +1031,7 @@
 						<div class="space-y-3">
 							{#if adventurePriceLabel}
 								<div class="flex items-start gap-3">
-									<CashMultiple class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+									<CashMultiple class="w-5 h-5 text-primary mt-1 shrink-0" />
 									<div>
 										<div class="text-sm opacity-70 mb-0.5">{$t('adventures.price')}</div>
 										<div class="text-base font-semibold">{adventurePriceLabel}</div>
@@ -1086,18 +1131,22 @@
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
-											on:click={() => openImageModal(index)}
-											on:keydown={(e) => e.key === 'Enter' && openImageModal(index)}
+											onclick={() => openImageModal(index)}
+											onkeydown={(e) => e.key === 'Enter' && openImageModal(index)}
 											role="button"
 											tabindex="0"
 										></div>
-										<div slot="overlays">
-											{#if image.is_primary}
-												<div class="absolute top-1 right-1">
-													<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
-												</div>
-											{/if}
-										</div>
+										{#snippet overlays()}
+											<div>
+												{#if image.is_primary}
+													<div class="absolute top-1 right-1">
+														<span class="badge badge-primary badge-xs"
+															>{$t('settings.primary')}</span
+														>
+													</div>
+												{/if}
+											</div>
+										{/snippet}
 									</ImageFrame>
 								{/each}
 							</div>

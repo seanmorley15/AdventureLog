@@ -133,7 +133,6 @@ def _visit_events(
         Location.objects.filter(
             Q(user=user.id)
             | Q(collections__shared_with=user.id)
-            | Q(is_public=True)
         )
         .filter(visits__isnull=False)
         .select_related('category')

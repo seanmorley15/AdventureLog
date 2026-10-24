@@ -1,12 +1,15 @@
 <script lang="ts">
-	import { basemapOptions, getBasemapLabel } from '$lib';
+	import { getBasemapLabel, getBasemapOptions } from '$lib';
 	import { t } from 'svelte-i18n';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 	import MapIcon from '~icons/mdi/map';
 	import CheckIcon from '~icons/mdi/check';
 
-	export let basemapType: string = 'default';
-	/** DaisyUI dropdown placement classes */
-	export let dropdownClass = 'dropdown dropdown-left';
+	interface Props {
+		basemapType?: string;
+	}
+
+	let { basemapType = $bindable('default') }: Props = $props();
 
 	const categoryOrder = [
 		'Standard',
@@ -16,6 +19,8 @@
 		'Clean',
 		'Specialized'
 	] as const;
+
+	const basemapOptions = getBasemapOptions();
 
 	const groupedOptions = basemapOptions.reduce<Record<string, typeof basemapOptions>>(
 		(acc, option) => {
@@ -28,8 +33,9 @@
 		{}
 	);
 
-	let dropdownOpen = false;
-	let dropdownEl: HTMLDivElement;
+	let dropdownOpen = $state(false);
+	let openUpward = $state(false);
+	let dropdownEl: HTMLDivElement | undefined = $state();
 
 	function selectBasemap(value: string) {
 		basemapType = value;
@@ -37,6 +43,9 @@
 	}
 
 	function toggleDropdown() {
+		if (!dropdownOpen) {
+			openUpward = shouldFlipDropdownUp(dropdownEl);
+		}
 		dropdownOpen = !dropdownOpen;
 	}
 
@@ -47,15 +56,15 @@
 	}
 </script>
 
-<svelte:window on:click={closeDropdown} />
+<svelte:window onclick={closeDropdown} />
 
-<div bind:this={dropdownEl} class="{dropdownClass} {dropdownOpen ? 'dropdown-open' : ''}">
+<div bind:this={dropdownEl} class="relative">
 	<button
 		type="button"
 		class="btn btn-sm btn-ghost gap-1.5 min-h-0 h-8 px-2 sm:px-3"
 		aria-haspopup="menu"
 		aria-expanded={dropdownOpen}
-		on:click={toggleDropdown}
+		onclick={toggleDropdown}
 	>
 		<MapIcon class="w-4 h-4 shrink-0" />
 		<span class="text-xs font-medium hidden sm:inline truncate max-w-[5.5rem] md:max-w-none">
@@ -66,9 +75,11 @@
 		</svg>
 	</button>
 
-	{#if basemapOptions?.length}
+	{#if dropdownOpen && basemapOptions?.length}
 		<div
-			class="dropdown-content z-[100] shadow-xl bg-base-100 rounded-xl border border-base-300 w-56 sm:w-60 p-0"
+			class="absolute {openUpward
+				? 'bottom-full mb-1'
+				: 'top-full mt-1'} right-0 z-[100] shadow-xl bg-base-100 rounded-xl border border-base-300 w-56 sm:w-60 p-0"
 			role="menu"
 			tabindex="-1"
 		>
@@ -79,11 +90,11 @@
 			</div>
 
 			<div class="max-h-64 overflow-y-auto overscroll-contain py-1">
-				{#each categoryOrder as category}
+				{#each categoryOrder as category (category)}
 					{#if groupedOptions[category]?.length}
 						<div class="px-2 pt-2 pb-0.5 first:pt-1">
 							<p
-								class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-base-content/45 sticky top-0 bg-base-100/95 backdrop-blur-sm z-[1]"
+								class="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-base-content/45 sticky top-0 bg-base-100/95 backdrop-blur-xs z-[1]"
 							>
 								{category}
 							</p>
@@ -96,7 +107,7 @@
 											option.value
 												? 'bg-primary/15 text-primary font-medium'
 												: 'hover:bg-base-200/80'}"
-											on:click={() => selectBasemap(option.value)}
+											onclick={() => selectBasemap(option.value)}
 											role="menuitemradio"
 											aria-checked={basemapType === option.value}
 										>

@@ -19,6 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
+from users.services.account_deletion import clear_user_adventure_data
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
     ContentImage, ContentAttachment, Category, Lodging, Visit, Trail, Activity,
@@ -932,31 +933,7 @@ class BackupViewSet(viewsets.ViewSet):
     
     def _clear_user_data(self, user):
         """Clear all existing user data before import"""
-        # Delete itinerary items first (they reference collections and content)
-        CollectionItineraryItem.objects.filter(collection__user=user).delete()
-        
-        # Delete in reverse order of dependencies
-        user.activity_set.all().delete()  # Delete activities first
-        user.trail_set.all().delete()     # Delete trails
-        user.checklistitem_set.all().delete()
-        user.checklist_set.all().delete()
-        user.note_set.all().delete()
-        user.transportation_set.all().delete()
-        user.lodging_set.all().delete()
-        
-        # Delete location-related data
-        user.contentimage_set.all().delete()
-        user.contentattachment_set.all().delete()
-        # Visits are deleted via cascade when locations are deleted
-        user.location_set.all().delete()
-        
-        # Delete collections and categories last
-        user.collection_set.all().delete()
-        user.category_set.all().delete()
-
-        # Clear visited cities and regions
-        user.visitedcity_set.all().delete()
-        user.visitedregion_set.all().delete()
+        clear_user_adventure_data(user)
     
     def _import_data(self, backup_data, zip_file, user):
         """Import backup data and return summary"""

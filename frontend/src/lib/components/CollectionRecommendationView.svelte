@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import type { Collection, User, ContentImage } from '$lib/types';
 	import { googleContentImage } from '$lib/images';
 	import { onMount } from 'svelte';
@@ -26,8 +28,12 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Location, Lodging } from '$lib/types';
 
-	export let collection: Collection;
-	export let user: User | null;
+	interface Props {
+		collection: Collection;
+		user: User | null;
+	}
+
+	let { collection = $bindable(), user }: Props = $props();
 	// Whether the current user can modify this collection (owner or shared user)
 
 	type RecommendationResult = {
@@ -53,36 +59,36 @@
 		quality_score?: number;
 	};
 
-	let searchQuery = '';
-	let selectedCategory: 'tourism' | 'lodging' | 'food' = 'tourism';
-	let radiusValue = 5000; // Default 5km
-	let loading = false;
-	let results: RecommendationResult[] = [];
-	let error: string | null = null;
-	let selectedLocationId: string | null = null;
-	let showFilters = false;
-	let mapCenter: { lng: number; lat: number } = { lng: 0, lat: 0 };
+	let searchQuery = $state('');
+	let selectedCategory: 'tourism' | 'lodging' | 'food' = $state('tourism');
+	let radiusValue = $state(5000); // Default 5km
+	let loading = $state(false);
+	let results: RecommendationResult[] = $state([]);
+	let error: string | null = $state(null);
+	let selectedLocationId: string | null = $state(null);
+	let showFilters = $state(false);
+	let mapCenter: { lng: number; lat: number } = $state({ lng: 0, lat: 0 });
 	let mapZoom = 12;
 
 	// Filters
-	let minRating = 0;
-	let minReviews = 0;
-	let showOpenOnly = false;
+	let minRating = $state(0);
+	let minReviews = $state(0);
+	let showOpenOnly = $state(false);
 
 	// Photo modal
-	let photoModalOpen = false;
-	let selectedPhotos: ContentImage[] = [];
-	let selectedPhotoIndex = 0;
-	let selectedPlaceName = '';
-	let selectedPlaceAddress = '';
+	let photoModalOpen = $state(false);
+	let selectedPhotos: ContentImage[] = $state([]);
+	let selectedPhotoIndex = $state(0);
+	let selectedPlaceName = $state('');
+	let selectedPlaceAddress = $state('');
 
 	const dispatch = createEventDispatcher();
 
 	// Modals for creating autofilled items
-	let showLocationModal = false;
-	let showLodgingModal = false;
-	let modalLocationToEdit: Location | null = null;
-	let modalLodgingToEdit: Lodging | null = null;
+	let showLocationModal = $state(false);
+	let showLodgingModal = $state(false);
+	let modalLocationToEdit: Location | null = $state(null);
+	let modalLodgingToEdit: Lodging | null = $state(null);
 
 	function mapPhotosToContentImages(photos: string[]): ContentImage[] {
 		return photos.map((url, i) => googleContentImage(`rec-${i}-${Date.now()}`, url, i === 0));
@@ -167,31 +173,33 @@
 		modalLodgingToEdit = null;
 	}
 
-	$: isMetric = user?.measurement_system === 'metric';
-	$: radiusDisplay = isMetric
-		? `${(radiusValue / 1000).toFixed(1)} km`
-		: `${(radiusValue / 1609.34).toFixed(1)} mi`;
+	let isMetric = $derived(user?.measurement_system === 'metric');
+	let radiusDisplay = $derived(
+		isMetric ? `${(radiusValue / 1000).toFixed(1)} km` : `${(radiusValue / 1609.34).toFixed(1)} mi`
+	);
 
-	$: radiusOptions = isMetric
-		? [
-				{ value: 1000, label: '1 km' },
-				{ value: 2000, label: '2 km' },
-				{ value: 5000, label: '5 km' },
-				{ value: 10000, label: '10 km' },
-				{ value: 20000, label: '20 km' },
-				{ value: 50000, label: '50 km' }
-			]
-		: [
-				{ value: 1609, label: '1 mi' },
-				{ value: 3219, label: '2 mi' },
-				{ value: 8047, label: '5 mi' },
-				{ value: 16093, label: '10 mi' },
-				{ value: 32187, label: '20 mi' },
-				{ value: 80467, label: '50 mi' }
-			];
+	let radiusOptions = $derived(
+		isMetric
+			? [
+					{ value: 1000, label: '1 km' },
+					{ value: 2000, label: '2 km' },
+					{ value: 5000, label: '5 km' },
+					{ value: 10000, label: '10 km' },
+					{ value: 20000, label: '20 km' },
+					{ value: 50000, label: '50 km' }
+				]
+			: [
+					{ value: 1609, label: '1 mi' },
+					{ value: 3219, label: '2 mi' },
+					{ value: 8047, label: '5 mi' },
+					{ value: 16093, label: '10 mi' },
+					{ value: 32187, label: '20 mi' },
+					{ value: 80467, label: '50 mi' }
+				]
+	);
 
 	// Get locations with coordinates for dropdown
-	$: locationsWithCoords = collection.locations.filter((l) => l.latitude && l.longitude);
+	let locationsWithCoords = $derived(collection.locations.filter((l) => l.latitude && l.longitude));
 
 	// Set default selected location and map center
 	onMount(() => {
@@ -205,21 +213,25 @@
 	});
 
 	// Update map center when selected location changes
-	$: if (selectedLocationId) {
-		const location = locationsWithCoords.find((l) => l.id === selectedLocationId);
-		if (location && location.latitude && location.longitude) {
-			mapCenter = { lng: location.longitude, lat: location.latitude };
+	run(() => {
+		if (selectedLocationId) {
+			const location = locationsWithCoords.find((l) => l.id === selectedLocationId);
+			if (location && location.latitude && location.longitude) {
+				mapCenter = { lng: location.longitude, lat: location.latitude };
+			}
 		}
-	}
+	});
 
 	// Filter results
-	$: filteredResults = results.filter((r) => {
-		if (minRating > 0 && (r.rating === undefined || r.rating < minRating)) return false;
-		if (minReviews > 0 && (r.review_count === undefined || r.review_count < minReviews))
-			return false;
-		if (showOpenOnly && !r.is_open_now) return false;
-		return true;
-	});
+	let filteredResults = $derived(
+		results.filter((r) => {
+			if (minRating > 0 && (r.rating === undefined || r.rating < minRating)) return false;
+			if (minReviews > 0 && (r.review_count === undefined || r.review_count < minReviews))
+				return false;
+			if (showOpenOnly && !r.is_open_now) return false;
+			return true;
+		})
+	);
 
 	async function searchRecommendations() {
 		if (!searchQuery.trim() && !selectedLocationId) {
@@ -398,15 +410,13 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 				<!-- Location Selector -->
 				{#if locationsWithCoords.length > 0}
-					<div class="form-control">
-						<label class="label" for="search-around-location">
-							<span class="label-text font-semibold"
-								>{$t('recomendations.search_around_location')}</span
-							>
+					<div class="flex flex-col">
+						<label class="field-label" for="search-around-location">
+							{$t('recomendations.search_around_location')}
 						</label>
 						<select
 							id="search-around-location"
-							class="select select-bordered w-full"
+							class="select w-full"
 							bind:value={selectedLocationId}
 						>
 							<option value={null}>{$t('recomendations.use_search_instead')}...</option>
@@ -418,31 +428,25 @@
 				{/if}
 
 				<!-- Search Input -->
-				<div class="form-control">
-					<label class="label" for="search-by-address">
-						<span class="label-text font-semibold">{$t('recomendations.search_by_address')}</span>
-					</label>
+				<div class="flex flex-col">
+					<label class="field-label" for="search-by-address"
+						>{$t('recomendations.search_by_address')}</label
+					>
 					<input
 						id="search-by-address"
 						type="text"
 						placeholder={$t('adventures.search_placeholder')}
-						class="input input-bordered w-full"
+						class="input w-full"
 						bind:value={searchQuery}
 						disabled={selectedLocationId !== null}
-						on:keydown={(e) => e.key === 'Enter' && searchRecommendations()}
+						onkeydown={(e) => e.key === 'Enter' && searchRecommendations()}
 					/>
 				</div>
 
 				<!-- Category Selector -->
-				<div class="form-control">
-					<label class="label" for="search-category">
-						<span class="label-text font-semibold">{$t('adventures.category')}</span>
-					</label>
-					<select
-						id="search-category"
-						class="select select-bordered w-full"
-						bind:value={selectedCategory}
-					>
+				<div class="flex flex-col">
+					<label class="field-label" for="search-category">{$t('adventures.category')}</label>
+					<select id="search-category" class="select w-full" bind:value={selectedCategory}>
 						<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
 						<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
 						<option value="food">🍴 {$t('recomendations.food')}</option>
@@ -450,13 +454,12 @@
 				</div>
 
 				<!-- Radius Selector -->
-				<div class="form-control">
-					<label class="label" for="search-radius">
-						<span class="label-text font-semibold"
-							>{$t('recomendations.search_radius_label')} {radiusDisplay}</span
-						>
+				<div class="flex flex-col">
+					<label class="field-label" for="search-radius">
+						{$t('recomendations.search_radius_label')}
+						{radiusDisplay}
 					</label>
-					<select id="search-radius" class="select select-bordered w-full" bind:value={radiusValue}>
+					<select id="search-radius" class="select w-full" bind:value={radiusValue}>
 						{#each radiusOptions as option}
 							<option value={option.value}>{option.label}</option>
 						{/each}
@@ -466,7 +469,7 @@
 
 			<!-- Filters Toggle -->
 			<div class="flex gap-2 mt-4">
-				<button class="btn btn-primary flex-1" on:click={searchRecommendations} disabled={loading}>
+				<button class="btn btn-primary flex-1" onclick={searchRecommendations} disabled={loading}>
 					{#if loading}
 						<span class="loading loading-spinner loading-sm"></span>
 						{$t('recomendations.searching')}
@@ -475,7 +478,7 @@
 						{$t('navbar.search')}
 					{/if}
 				</button>
-				<button class="btn btn-ghost" on:click={() => (showFilters = !showFilters)}>
+				<button class="btn btn-ghost" onclick={() => (showFilters = !showFilters)}>
 					<TuneVariant class="w-5 h-5" />
 					{$t('adventures.filter')}
 				</button>
@@ -485,15 +488,11 @@
 			{#if showFilters}
 				<div class="divider">{$t('adventures.filter')}</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="form-control">
-						<label class="label" for="minimum-rating">
-							<span class="label-text">{$t('recomendations.minimum_rating')}</span>
-						</label>
-						<select
-							id="minimum-rating"
-							class="select select-bordered select-sm"
-							bind:value={minRating}
+					<div class="flex flex-col">
+						<label class="field-label" for="minimum-rating"
+							>{$t('recomendations.minimum_rating')}</label
 						>
+						<select id="minimum-rating" class="select select-sm" bind:value={minRating}>
 							<option value={0}>{$t('recomendations.any')}</option>
 							<option value={3}>3+ ⭐</option>
 							<option value={3.5}>3.5+ ⭐</option>
@@ -502,15 +501,11 @@
 						</select>
 					</div>
 
-					<div class="form-control">
-						<label class="label" for="minimum-reviews">
-							<span class="label-text">{$t('recomendations.minimum_reviews')}</span>
-						</label>
-						<select
-							id="minimum-reviews"
-							class="select select-bordered select-sm"
-							bind:value={minReviews}
+					<div class="flex flex-col">
+						<label class="field-label" for="minimum-reviews"
+							>{$t('recomendations.minimum_reviews')}</label
 						>
+						<select id="minimum-reviews" class="select select-sm" bind:value={minReviews}>
 							<option value={0}>{$t('recomendations.any')}</option>
 							<option value={10}>10+</option>
 							<option value={50}>50+</option>
@@ -519,9 +514,11 @@
 						</select>
 					</div>
 
-					<div class="form-control">
-						<label class="label cursor-pointer">
-							<span class="label-text">{$t('recomendations.open_now_only')}</span>
+					<div class="flex flex-col">
+						<label class="field-toggle">
+							<span class="font-semibold text-sm text-base-content"
+								>{$t('recomendations.open_now_only')}</span
+							>
 							<input type="checkbox" class="toggle toggle-primary" bind:checked={showOpenOnly} />
 						</label>
 					</div>
@@ -545,7 +542,7 @@
 		</div>
 	{:else if filteredResults.length > 0}
 		<!-- Results Stats -->
-		<div class="stats shadow w-full">
+		<div class="stats bg-base-100 shadow-sm w-full">
 			<div class="stat">
 				<div class="stat-title">{$t('recomendations.total_results')}</div>
 				<div class="stat-value text-primary">{filteredResults.length}</div>
@@ -650,7 +647,7 @@
 						<figure class="relative h-48 cursor-pointer">
 							<button
 								class="w-full h-full"
-								on:click={() =>
+								onclick={() =>
 									openPhotoModal(result.photos || [], result.name, result.address || '')}
 							>
 								<img src={result.photos[0]} alt={result.name} class="w-full h-full object-cover" />
@@ -788,13 +785,13 @@
 							<!-- Create from recommendation -->
 							<button
 								class="btn btn-sm btn-outline"
-								on:click={() => openCreateLocationFromResult(result)}
+								onclick={() => openCreateLocationFromResult(result)}
 							>
 								{$t('recomendations.add_location')}
 							</button>
 							<button
 								class="btn btn-sm btn-ghost"
-								on:click={() => openCreateLodgingFromResult(result)}
+								onclick={() => openCreateLodgingFromResult(result)}
 							>
 								{$t('recomendations.add_lodging')}
 							</button>

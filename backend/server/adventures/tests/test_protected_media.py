@@ -43,6 +43,11 @@ class ProtectedMediaTestCase(TestCase):
         absolute_path.parent.mkdir(parents=True, exist_ok=True)
         absolute_path.write_bytes(content)
 
+    def _response_body(self, response):
+        if getattr(response, 'streaming', False):
+            return b''.join(response.streaming_content)
+        return response.content
+
     def test_anonymous_user_cannot_download_private_gpx(self):
         response = self.client.get(f'/media/{self.gpx_path}')
         self.assertEqual(response.status_code, 403)
@@ -56,7 +61,7 @@ class ProtectedMediaTestCase(TestCase):
         self.client.force_login(self.owner)
         response = self.client.get(f'/media/{self.gpx_path}')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'SECRET_GPX_TRACK_DATA')
+        self.assertEqual(self._response_body(response), b'SECRET_GPX_TRACK_DATA')
 
     def test_unknown_media_subtree_is_denied(self):
         self._write_media_file('secret-stash/leak.txt', b'leaked')
@@ -67,7 +72,7 @@ class ProtectedMediaTestCase(TestCase):
         self._write_media_file('flags/us.png', b'flag-bytes')
         response = self.client.get('/media/flags/us.png')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'flag-bytes')
+        self.assertEqual(self._response_body(response), b'flag-bytes')
 
     def test_path_traversal_cannot_bypass_gpx_protection(self):
         response = self.client.get(f'/media/profile-pics/../{self.gpx_path}')
@@ -91,4 +96,4 @@ class ProtectedMediaTestCase(TestCase):
 
         response = self.client.get(f'/media/{public_gpx_path}')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'PUBLIC_GPX_DATA')
+        self.assertEqual(self._response_body(response), b'PUBLIC_GPX_DATA')

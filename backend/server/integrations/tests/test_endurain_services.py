@@ -141,6 +141,7 @@ class EndurainServicesTest(TestCase):
     @patch('integrations.endurain_services.requests.post')
     def test_login_with_password_mfa_required(self, mock_post):
         mock_response = MagicMock()
+        mock_response.is_redirect = False
         mock_response.status_code = 202
         mock_response.json.return_value = {
             'mfa_required': True,
@@ -163,6 +164,7 @@ class EndurainServicesTest(TestCase):
         payload = base64.urlsafe_b64encode(json.dumps({'sub': 99}).encode()).decode().rstrip('=')
         access = f'h.{payload}.s'
         mock_response = MagicMock()
+        mock_response.is_redirect = False
         mock_response.status_code = 200
         mock_response.json.return_value = {
             'access_token': access,
@@ -186,6 +188,7 @@ class EndurainServicesTest(TestCase):
         payload = base64.urlsafe_b64encode(json.dumps({'sub': 99}).encode()).decode().rstrip('=')
         access = f'h.{payload}.s'
         mock_response = MagicMock()
+        mock_response.is_redirect = False
         mock_response.status_code = 200
         mock_response.json.return_value = {
             'access_token': access,

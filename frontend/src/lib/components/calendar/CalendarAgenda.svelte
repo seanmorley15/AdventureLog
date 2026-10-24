@@ -5,12 +5,16 @@
 	import { groupEventsByDay } from '$lib/calendar/events';
 	import CalendarBlank from '~icons/mdi/calendar-blank';
 
-	export let events: CalendarDisplayEvent[] = [];
-	export let emptyMessage = '';
+	interface Props {
+		events?: CalendarDisplayEvent[];
+		emptyMessage?: string;
+	}
+
+	let { events = [], emptyMessage = '' }: Props = $props();
 
 	const dispatch = createEventDispatcher<{ select: CalendarDisplayEvent }>();
 
-	$: grouped = groupEventsByDay(events);
+	let grouped = $derived(groupEventsByDay(events));
 </script>
 
 {#if grouped.length === 0}
@@ -23,7 +27,7 @@
 		{#each grouped as group (group.date)}
 			<section>
 				<h3
-					class="sticky top-0 z-10 bg-base-100/95 backdrop-blur py-2 text-sm font-semibold text-primary border-b border-base-300"
+					class="sticky top-0 z-10 bg-base-100/95 backdrop-blur-sm py-2 text-sm font-semibold text-primary border-b border-base-300"
 				>
 					{group.label}
 				</h3>
@@ -32,7 +36,7 @@
 						<button
 							type="button"
 							class="w-full text-left py-3 px-1 hover:bg-base-200/60 rounded-lg transition-colors"
-							on:click={() => dispatch('select', event)}
+							onclick={() => dispatch('select', event)}
 						>
 							<div class="flex items-start gap-3">
 								<div

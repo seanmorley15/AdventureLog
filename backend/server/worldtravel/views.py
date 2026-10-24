@@ -12,7 +12,7 @@ from adventures.models import Location
 @permission_classes([IsAuthenticated])
 def regions_by_country(request, country_code):
     country = get_object_or_404(Country, country_code=country_code)
-    regions = Region.objects.filter(country=country).order_by('name')
+    regions = Region.objects.filter(country=country).select_related('country').order_by('name')
     serializer = RegionSerializer(regions, many=True)
     return Response(serializer.data)
 
@@ -20,7 +20,7 @@ def regions_by_country(request, country_code):
 @permission_classes([IsAuthenticated])
 def visits_by_country(request, country_code):
     country = get_object_or_404(Country, country_code=country_code)
-    visits = VisitedRegion.objects.filter(region__country=country, user=request.user.id)
+    visits = VisitedRegion.objects.filter(region__country=country, user=request.user.id).select_related('region__country')
     serializer = VisitedRegionSerializer(visits, many=True)
     return Response(serializer.data)
 
@@ -49,7 +49,7 @@ def globespin(request):
         "country": CountrySerializer(country).data,
     }
     
-    regions = Region.objects.filter(country=country)
+    regions = Region.objects.filter(country=country).select_related('country')
     if regions.exists():
         region = regions.order_by('?').first()
         data["region"] = RegionSerializer(region).data
@@ -96,7 +96,7 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
         return Response({'regions_visited': count})
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Region.objects.all()
+    queryset = Region.objects.select_related('country').all()
     serializer_class = RegionSerializer
     permission_classes = [IsAuthenticated]
 
@@ -105,7 +105,7 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return VisitedRegion.objects.filter(user=self.request.user.id)
+        return VisitedRegion.objects.filter(user=self.request.user.id).select_related('region__country')
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

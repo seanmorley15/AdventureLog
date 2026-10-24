@@ -1,45 +1,50 @@
 <script lang="ts">
+	import { run } from 'svelte/legacy';
+
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
 	import type { ImmichAlbum } from '$lib/types';
 	import { debounce } from '$lib';
+	import DateInput from './shared/DateInput.svelte';
 
-	// Props
-	export let copyImmichLocally: boolean = false;
-	export let objectId: string = '';
-	export let contentType: string = 'location';
-	export let defaultDate: string = '';
+	interface Props {
+		// Props
+		copyImmichLocally?: boolean;
+		objectId?: string;
+		contentType?: string;
+		defaultDate?: string;
+	}
+
+	let {
+		copyImmichLocally = false,
+		objectId = '',
+		contentType = 'location',
+		defaultDate = ''
+	}: Props = $props();
 
 	// Component state
-	let immichImages: any[] = [];
-	let immichSearchValue: string = '';
-	let searchCategory: 'search' | 'date' | 'album' = 'date';
-	let immichError: string = '';
-	let immichNextURL: string = '';
-	let loading = false;
-	let albums: ImmichAlbum[] = [];
-	let currentAlbum: string = '';
-	let selectedDate: string = defaultDate || new Date().toISOString().split('T')[0];
+	let immichImages: any[] = $state([]);
+	let immichSearchValue: string = $state('');
+	let searchCategory: 'search' | 'date' | 'album' = $state('date');
+	let immichError: string = $state('');
+	let immichNextURL: string = $state('');
+	let loading = $state(false);
+	let albums: ImmichAlbum[] = $state([]);
+	let currentAlbum: string = $state('');
+	let selectedDate: string = $state(new Date().toISOString().split('T')[0]);
+
+	$effect.pre(() => {
+		if (defaultDate) {
+			selectedDate = defaultDate;
+		}
+	});
 
 	const dispatch = createEventDispatcher<{
 		localImage: { file: File; immichId: string };
 		remoteImmichSaved: Record<string, unknown>;
 	}>();
-
-	// Reactive statements
-	$: {
-		if (searchCategory === 'album' && currentAlbum) {
-			immichImages = [];
-			fetchAlbumAssets(currentAlbum);
-		} else if (searchCategory === 'date' && selectedDate) {
-			clearAlbumSelection();
-			searchImmich();
-		} else if (searchCategory === 'search') {
-			clearAlbumSelection();
-		}
-	}
 
 	// Helper functions
 	function clearAlbumSelection() {
@@ -226,6 +231,18 @@
 			console.error('Error fetching albums:', error);
 		}
 	});
+	// Reactive statements
+	run(() => {
+		if (searchCategory === 'album' && currentAlbum) {
+			immichImages = [];
+			fetchAlbumAssets(currentAlbum);
+		} else if (searchCategory === 'date' && selectedDate) {
+			clearAlbumSelection();
+			searchImmich();
+		} else if (searchCategory === 'search') {
+			clearAlbumSelection();
+		}
+	});
 </script>
 
 <!-- Search Category Tabs -->
@@ -234,7 +251,7 @@
 		class="btn btn-sm"
 		class:btn-primary={searchCategory === 'search'}
 		class:btn-ghost={searchCategory !== 'search'}
-		on:click={() => handleSearchCategoryChange('search')}
+		onclick={() => handleSearchCategoryChange('search')}
 	>
 		{$t('navbar.search')}
 	</button>
@@ -242,7 +259,7 @@
 		class="btn btn-sm"
 		class:btn-primary={searchCategory === 'date'}
 		class:btn-ghost={searchCategory !== 'date'}
-		on:click={() => handleSearchCategoryChange('date')}
+		onclick={() => handleSearchCategoryChange('date')}
 	>
 		{$t('immich.by_date')}
 	</button>
@@ -250,7 +267,7 @@
 		class="btn btn-sm"
 		class:btn-primary={searchCategory === 'album'}
 		class:btn-ghost={searchCategory !== 'album'}
-		on:click={() => handleSearchCategoryChange('album')}
+		onclick={() => handleSearchCategoryChange('album')}
 	>
 		{$t('immich.by_album')}
 	</button>
@@ -263,7 +280,7 @@
 			type="text"
 			placeholder={$t('immich.image_search_placeholder') + '...'}
 			bind:value={immichSearchValue}
-			class="input input-bordered flex-1"
+			class="input flex-1"
 			disabled={loading}
 		/>
 		<button
@@ -271,28 +288,17 @@
 			class="btn btn-primary btn-sm"
 			class:loading
 			disabled={loading || !immichSearchValue.trim()}
-			on:click={searchImmich}
+			onclick={searchImmich}
 		>
 			{$t('navbar.search')}
 		</button>
 	</div>
 {:else if searchCategory === 'date'}
 	<div class="flex gap-2 items-center">
-		<input
-			id="date-picker"
-			type="date"
-			bind:value={selectedDate}
-			class="input input-bordered flex-1"
-			disabled={loading}
-		/>
+		<DateInput id="date-picker" bind:value={selectedDate} disabled={loading} clearable={false} />
 	</div>
 {:else if searchCategory === 'album'}
-	<select
-		id="album-select"
-		class="select select-bordered w-full"
-		bind:value={currentAlbum}
-		disabled={loading}
-	>
+	<select id="album-select" class="select w-full" bind:value={currentAlbum} disabled={loading}>
 		<option value="" disabled>
 			{albums.length > 0 ? $t('immich.select_album') : $t('immich.loading_albums')}
 		</option>
@@ -319,7 +325,7 @@
 			</span>
 			<button
 				class="btn btn-ghost btn-xs"
-				on:click={() => {
+				onclick={() => {
 					immichImages = [];
 					immichSearchValue = '';
 					immichNextURL = '';
@@ -333,7 +339,7 @@
 				<button
 					type="button"
 					class="card bg-base-100 border border-base-300 hover:border-primary hover:shadow-lg transition-all duration-200 cursor-pointer group relative"
-					on:click={() => handleImageSelect(image)}
+					onclick={() => handleImageSelect(image)}
 					disabled={loading}
 				>
 					<figure class="aspect-square bg-base-200 overflow-hidden">
@@ -359,11 +365,7 @@
 		<!-- Load More Button -->
 		{#if immichNextURL}
 			<div class="flex justify-center mt-3">
-				<button
-					class="btn btn-outline btn-sm btn-wide"
-					on:click={loadMoreImmich}
-					disabled={loading}
-				>
+				<button class="btn btn-outline btn-sm btn-wide" onclick={loadMoreImmich} disabled={loading}>
 					{loading ? $t('immich.loading') : $t('immich.load_more')}
 				</button>
 			</div>

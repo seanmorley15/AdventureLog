@@ -18,8 +18,16 @@ User = get_user_model()
 
 class ShareImageServiceTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='shareuser', password='testpass123')
-        self.other = User.objects.create_user(username='otheruser', password='testpass123')
+        self.user = User.objects.create_user(
+            username='shareuser',
+            email='shareuser@example.com',
+            password='testpass123',
+        )
+        self.other = User.objects.create_user(
+            username='otheruser',
+            email='otheruser@example.com',
+            password='testpass123',
+        )
 
     def _png_size(self, png_bytes: bytes) -> tuple[int, int]:
         img = PILImage.open(io.BytesIO(png_bytes))
@@ -88,8 +96,16 @@ class ShareImageServiceTests(TestCase):
 
 class ShareImageApiTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='apiuser', password='testpass123')
-        self.other = User.objects.create_user(username='apiother', password='testpass123')
+        self.user = User.objects.create_user(
+            username='apiuser',
+            email='apiuser@example.com',
+            password='testpass123',
+        )
+        self.other = User.objects.create_user(
+            username='apiother',
+            email='apiother@example.com',
+            password='testpass123',
+        )
         self.client.login(username='apiuser', password='testpass123')
 
         self.public_collection = Collection.objects.create(
