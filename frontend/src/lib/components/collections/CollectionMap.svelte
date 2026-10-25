@@ -324,6 +324,8 @@
 			return null;
 		}
 		if (originLat === destLat && originLon === destLon) return null;
+		// A GPX track attachment already shows the actual route
+		if (t?.attachments?.some((a: any) => a?.geojson)) return null;
 
 		return {
 			type: 'Feature',
