@@ -13,10 +13,7 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
-		"@event-calendar/core": "^3.12.0",
-		"@event-calendar/day-grid": "^3.12.0",
-		"@event-calendar/interaction": "^3.12.0",
-		"@event-calendar/time-grid": "^3.12.0",
+		"@event-calendar/core": "^5.18.1",
 		"@iconify-json/mdi": "^1.2.3",
 		"@sveltejs/adapter-node": "^6.0.0",
 		"@sveltejs/adapter-vercel": "^7.0.1",
@@ -47,13 +44,13 @@
 		"cally": "^0.9.2",
 		"dompurify": "^3.4.17",
 		"emoji-picker-element": "^1.26.3",
-		"gsap": "^3.12.7",
+		"gsap": "^3.15.0",
 		"luxon": "^3.6.1",
 		"maplibre-gl": "^6.16.0",
 		"marked": "^15.0.11",
 		"psl": "^1.15.0",
 		"qrcode": "^1.5.4",
-		"svelte-dnd-action": "^0.9.68",
+		"svelte-dnd-action": "^0.9.80",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^2.0.1"
 	},

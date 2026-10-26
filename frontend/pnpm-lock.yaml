@@ -34,8 +34,8 @@ importers:
         specifier: ^1.26.3
         version: 1.29.1
       gsap:
-        specifier: ^3.12.7
-        version: 3.14.2
+        specifier: ^3.15.0
+        version: 3.15.0
       luxon:
         specifier: ^3.6.1
         version: 3.7.2
@@ -52,8 +52,8 @@ importers:
         specifier: ^1.5.4
         version: 1.5.4
       svelte-dnd-action:
-        specifier: ^0.9.68
-        version: 0.9.69(svelte@5.57.2)
+        specifier: ^0.9.80
+        version: 0.9.80(svelte@5.57.2)
       svelte-i18n:
         specifier: ^4.0.1
         version: 4.0.1(svelte@5.57.2)
@@ -62,17 +62,8 @@ importers:
         version: 2.0.1(svelte@5.57.2)
     devDependencies:
       '@event-calendar/core':
-        specifier: ^3.12.0
-        version: 3.12.0
-      '@event-calendar/day-grid':
-        specifier: ^3.12.0
-        version: 3.12.0
-      '@event-calendar/interaction':
-        specifier: ^3.12.0
-        version: 3.12.0
-      '@event-calendar/time-grid':
-        specifier: ^3.12.0
-        version: 3.12.0
+        specifier: ^5.18.1
+        version: 5.18.1
       '@iconify-json/mdi':
         specifier: ^1.2.3
         version: 1.2.3
@@ -135,10 +126,6 @@ importers:
         version: 8.3.5(@types/node@22.19.15)(jiti@2.7.0)
 
 packages:
-
-  '@ampproject/remapping@2.3.0':
-    resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
-    engines: {node: '>=6.0.0'}
 
   '@antfu/install-pkg@1.1.0':
     resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
@@ -302,17 +289,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@event-calendar/core@3.12.0':
-    resolution: {integrity: sha512-aKtDwEKzWHOV2PLVdhR/f843ecW3C0w5G5VhGl1f0GBEgT8dZvoYreQ7QKTBWh7B7YEtEn2P0Dn36zFYj5XEXQ==}
-
-  '@event-calendar/day-grid@3.12.0':
-    resolution: {integrity: sha512-gY6XvEIlwWI9uKWsXukyanDmrEWv1UDHdhikhchpe6iZP25p3+760qXIU2kdu91tXjb+hVbpFcn7sdNPPE4u7Q==}
-
-  '@event-calendar/interaction@3.12.0':
-    resolution: {integrity: sha512-+d3KqxNdcY/RfJrdai37XCoTx7KKpzqJIo/WAjH1p8ZiypsfrHgpWWuTtF76u3hpn/1qqWUM3VFJSTKbjJkWTg==}
-
-  '@event-calendar/time-grid@3.12.0':
-    resolution: {integrity: sha512-n/IoFSq/ym6ad2k+H9RL2A8GpfOJy1zpKKLb1Edp/QEusexpPg8LNdSbxhmKGz6ip5ud0Bi/xgUa8xUqut8ooQ==}
+  '@event-calendar/core@5.18.1':
+    resolution: {integrity: sha512-xYtqnd/PWnHwtztf1DQm2qgno2RjEP2MWWyF/sNaemDqeR8IWtXovsSOS8dtHTxEKHUc/WBwOcZN3E5SxoFHug==}
 
   '@formatjs/ecma402-abstract@2.3.6':
     resolution: {integrity: sha512-HJnTFeRM2kVFVr5gr5kH1XP6K0JcJtE7Lzvtr3FS/so5f1kpsqqqxy5JF+FRaO6H2qmcMfAUIox7AJteieRtVw==}
@@ -831,11 +809,6 @@ packages:
     peerDependencies:
       acorn: ^8
 
-  acorn@8.16.0:
-    resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-
   acorn@8.19.0:
     resolution: {integrity: sha512-oJlA3XiRm7Cyk6qFD2Jn8ak9B7jSy0qy00ADO3+8dpT0LSjFihQYv4C02LFCSYJV3Q37xYwwRy5m+IpIiUzqWw==}
     engines: {node: '>=0.4.0'}
@@ -912,9 +885,6 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  code-red@1.0.4:
-    resolution: {integrity: sha512-7qJWqItLA8/VPVlKJlFXU+NBlo/qyfs39aJcuMT/2ere32ZqvF5OSxgdM5xOfJJ7O429gg2HM47y8v9P+9wrNw==}
-
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
     engines: {node: '>=7.0.0'}
@@ -935,10 +905,6 @@ packages:
   cookie@2.0.1:
     resolution: {integrity: sha512-yuToqVvRrj6pfDXREyQAAv8SkAEk/8GS3jQRTiUMm66TVtBYmqQeoEjL2Lmq8Rpo6271vH76InTChTitEAm65w==}
     engines: {node: '>=22'}
-
-  css-tree@2.3.1:
-    resolution: {integrity: sha512-6Fv1DV/TYw//QF5IzQdqsNDjx/wc8TrMBZsqjL9eW01tWb7R7k/mq+/VXfJCl7SoD5emsJop9cOByJZfs8hYIw==}
-    engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
 
   cssesc@3.0.0:
     resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
@@ -1047,9 +1013,6 @@ packages:
   estree-walker@2.0.2:
     resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
-  estree-walker@3.0.3:
-    resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
-
   event-emitter@0.3.5:
     resolution: {integrity: sha512-D9rRn9y7kLPnJ+hMq7S/nhvoKwwvVJahBi2BPmx3bvbsEdK3W9ii8cBSGjP+72/LnM4n6fo3+dkCX5FeTQruXA==}
 
@@ -1103,8 +1066,8 @@ packages:
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
-  gsap@3.14.2:
-    resolution: {integrity: sha512-P8/mMxVLU7o4+55+1TCnQrPmgjPKnwkzkXOK1asnR9Jg2lna4tEY5qBJjMmAaOBDDZWtlRjBXjLa0w53G/uBLA==}
+  gsap@3.15.0:
+    resolution: {integrity: sha512-dMW4CWBTUK1AEEDeZc1g4xpPGIrSf9fJF960qbTZmN/QwZIWY5wgliS6JWl9/25fpTGJrMRtSjGtOmPnfjZB+A==}
 
   https-proxy-agent@7.0.6:
     resolution: {integrity: sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==}
@@ -1328,9 +1291,6 @@ packages:
     engines: {node: '>= 18'}
     hasBin: true
 
-  mdn-data@2.0.30:
-    resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
-
   memoizee@0.4.17:
     resolution: {integrity: sha512-DGqD7Hjpi/1or4F/aYAspXKNm5Yili0QDAFAY4QYvpqpgiY6+1jOfqpmByzjxbWd/T9mChbCArXAbDAsTm5oXA==}
     engines: {node: '>=0.12'}
@@ -1429,9 +1389,6 @@ packages:
   pbf@5.1.2:
     resolution: {integrity: sha512-mnvGdvOrIvJOBGUEdGkrVXjN8E/VkIJCkf2eS1DH2yv82ORUlLttmDt0rWY38yYZmVwciZwBUvHM20qxBZf40w==}
     hasBin: true
-
-  periscopic@3.1.0:
-    resolution: {integrity: sha512-vKiQ8RRtkl9P+r/+oefh25C3fhybptkHKCZSPlcXiJux2tJF55GnEj3BVn4A5gKfq9NWWXXrxkHBwVPUfH0opw==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -1568,8 +1525,8 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       typescript: ^5.0.0 || ^6.0.0
 
-  svelte-dnd-action@0.9.69:
-    resolution: {integrity: sha512-NAmSOH7htJoYraTQvr+q5whlIuVoq88vEuHr4NcFgscDRUxfWPPxgie2OoxepBCQCikrXZV4pqV86aun60wVyw==}
+  svelte-dnd-action@0.9.80:
+    resolution: {integrity: sha512-GweBRVBMp0F3T/e3O8EZoukRbbi+NhYlOghn5cE69CFmkDH1AuY0P/FklTlQxAfWw+SUkSm+iZyvYaRljgKUOA==}
     peerDependencies:
       svelte: '>=3.23.0 || ^5.0.0-next.0'
 
@@ -1597,10 +1554,6 @@ packages:
         optional: true
       topojson-client:
         optional: true
-
-  svelte@4.2.19:
-    resolution: {integrity: sha512-IY1rnGr6izd10B0A8LqsBfmlT5OILVuZ7XsI0vdGPEvuonFV7NYEUK4dAkm9Zg2q0Um92kYjTpS1CAP3Nh/KWw==}
-    engines: {node: '>=16'}
 
   svelte@5.57.2:
     resolution: {integrity: sha512-1YiPCAXT0Ct6g1vOMmSLa0Nsc3QRMvtDF32ihgglGVrugIuIK38RyDiFNXVDhtQ81TJjSO57NdMw6DyYLqSGDQ==}
@@ -1809,11 +1762,6 @@ packages:
 
 snapshots:
 
-  '@ampproject/remapping@2.3.0':
-    dependencies:
-      '@jridgewell/gen-mapping': 0.3.13
-      '@jridgewell/trace-mapping': 0.3.31
-
   '@antfu/install-pkg@1.1.0':
     dependencies:
       package-manager-detector: 1.6.0
@@ -1902,24 +1850,11 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@event-calendar/core@3.12.0':
+  '@event-calendar/core@5.18.1':
     dependencies:
-      svelte: 4.2.19
-
-  '@event-calendar/day-grid@3.12.0':
-    dependencies:
-      '@event-calendar/core': 3.12.0
-      svelte: 4.2.19
-
-  '@event-calendar/interaction@3.12.0':
-    dependencies:
-      '@event-calendar/core': 3.12.0
-      svelte: 4.2.19
-
-  '@event-calendar/time-grid@3.12.0':
-    dependencies:
-      '@event-calendar/core': 3.12.0
-      svelte: 4.2.19
+      svelte: 5.57.2
+    transitivePeerDependencies:
+      - '@typescript-eslint/types'
 
   '@formatjs/ecma402-abstract@2.3.6':
     dependencies:
@@ -2338,8 +2273,6 @@ snapshots:
     dependencies:
       acorn: 8.19.0
 
-  acorn@8.16.0: {}
-
   acorn@8.19.0: {}
 
   agent-base@7.1.4: {}
@@ -2402,14 +2335,6 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  code-red@1.0.4:
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
-      '@types/estree': 1.0.8
-      acorn: 8.16.0
-      estree-walker: 3.0.3
-      periscopic: 3.1.0
-
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
@@ -2423,11 +2348,6 @@ snapshots:
   consola@3.4.2: {}
 
   cookie@2.0.1: {}
-
-  css-tree@2.3.1:
-    dependencies:
-      mdn-data: 2.0.30
-      source-map-js: 1.2.2
 
   cssesc@3.0.0: {}
 
@@ -2548,10 +2468,6 @@ snapshots:
 
   estree-walker@2.0.2: {}
 
-  estree-walker@3.0.3:
-    dependencies:
-      '@types/estree': 1.0.8
-
   event-emitter@0.3.5:
     dependencies:
       d: 1.0.2
@@ -2595,7 +2511,7 @@ snapshots:
 
   graceful-fs@4.2.11: {}
 
-  gsap@3.14.2: {}
+  gsap@3.15.0: {}
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -2780,8 +2696,6 @@ snapshots:
 
   marked@15.0.12: {}
 
-  mdn-data@2.0.30: {}
-
   memoizee@0.4.17:
     dependencies:
       d: 1.0.2
@@ -2862,12 +2776,6 @@ snapshots:
   pbf@5.1.2:
     dependencies:
       resolve-protobuf-schema: 2.1.0
-
-  periscopic@3.1.0:
-    dependencies:
-      '@types/estree': 1.0.8
-      estree-walker: 3.0.3
-      is-reference: 3.0.3
 
   picocolors@1.1.1: {}
 
@@ -3038,7 +2946,7 @@ snapshots:
     transitivePeerDependencies:
       - picomatch
 
-  svelte-dnd-action@0.9.69(svelte@5.57.2):
+  svelte-dnd-action@0.9.80(svelte@5.57.2):
     dependencies:
       svelte: 5.57.2
 
@@ -3061,23 +2969,6 @@ snapshots:
       maplibre-gl: 6.16.0
       pmtiles: 3.2.1
       svelte: 5.57.2
-
-  svelte@4.2.19:
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@jridgewell/sourcemap-codec': 1.5.5
-      '@jridgewell/trace-mapping': 0.3.31
-      '@types/estree': 1.0.8
-      acorn: 8.16.0
-      aria-query: 5.3.1
-      axobject-query: 4.1.0
-      code-red: 1.0.4
-      css-tree: 2.3.1
-      estree-walker: 3.0.3
-      is-reference: 3.0.3
-      locate-character: 3.0.0
-      magic-string: 0.30.21
-      periscopic: 3.1.0
 
   svelte@5.57.2:
     dependencies:

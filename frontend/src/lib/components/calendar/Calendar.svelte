@@ -1,12 +1,6 @@
 <script lang="ts">
-	// @ts-ignore
-	import Calendar from '@event-calendar/core';
-	// @ts-ignore
-	import TimeGrid from '@event-calendar/time-grid';
-	// @ts-ignore
-	import DayGrid from '@event-calendar/day-grid';
-	// @ts-ignore
-	import Interaction from '@event-calendar/interaction';
+	import { Calendar, DayGrid, Interaction, TimeGrid } from '@event-calendar/core';
+	import '@event-calendar/core/index.css';
 	import { t } from 'svelte-i18n';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { CalendarDisplayEvent } from '#lib/calendar/types.js';
@@ -54,22 +48,21 @@
 		},
 		height,
 		eventDisplay: 'block',
-		dayMaxEvents,
+		dayMaxEvents: Boolean(dayMaxEvents),
 		moreLinkText: (num: number) => $t('calendar.more_events', { values: { count: num } }),
-		eventClick: (info: { event: CalendarDisplayEvent }) => {
-			dispatch('eventClick', info.event);
+		eventClick: (info: Calendar.EventClickInfo) => {
+			dispatch('eventClick', info.event as unknown as CalendarDisplayEvent);
 		},
-		datesSet: (info: { start: Date; end: Date; view: { type: string } }) => {
+		datesSet: (info: Calendar.DatesSetInfo) => {
 			dispatch('datesSet', {
 				start: info.start,
 				end: info.end,
 				view: info.view.type
 			});
 		},
-		eventMouseEnter: (info: { el: HTMLElement }) => {
+		eventMouseEnter: (info: Calendar.MouseEnterInfo) => {
 			info.el.style.cursor = 'pointer';
-		},
-		themeSystem: 'standard'
+		}
 	});
 
 	onMount(() => {
