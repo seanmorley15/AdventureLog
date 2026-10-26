@@ -1,4 +1,20 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
+import type { ClusterOptions } from 'svelte-maplibre';
+
+/**
+ * MapLibre 4 scaled a cluster radius to tile units (x16) when a source was created, but stored a radius
+ * changed through `setClusterOptions()` as-is. svelte-maplibre 0.9 always calls that on mount, so a
+ * configured `radius: 300` actually clustered within 300 / 16 ~= 19px. MapLibre 6 interprets the radius
+ * as real pixels, which made clusters swallow far more pins. Convert so the established density is kept.
+ */
+const LEGACY_RADIUS_DIVISOR = 16;
+
+export function toMapLibreClusterOptions(
+	options: ClusterOptions | undefined
+): ClusterOptions | undefined {
+	if (!options || options.radius === undefined) return options;
+	return { ...options, radius: options.radius / LEGACY_RADIUS_DIVISOR };
+}
 
 type ClusterSource = {
 	getClusterExpansionZoom: (clusterId: number) => Promise<number>;
