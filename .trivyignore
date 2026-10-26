@@ -37,7 +37,7 @@ CVE-2026-24049
 # pip vendored msgpack (pip/_vendor/msgpack); not importable at runtime.
 GHSA-6v7p-g79w-8964
 
-# pip bundled SBOM lists setuptools 70.3.0; runtime setuptools is 79.0.1+.
+# pip bundled SBOM lists setuptools 70.3.0; runtime setuptools is 84.2.1+.
 CVE-2025-47273
 
 # Wolfi npm/node-gyp in Chainguard base; unused at SSR runtime (only `node start.js`).
