@@ -93,6 +93,10 @@
 			.ec-month-view .ec-grid {
 				--ec-row-height: minmax(9rem, 1fr) !important;
 			}
+			/* The month grid is clipped by default; with taller rows it has to scroll instead. */
+			.ec-month-view .ec-main.ec-uniform {
+				overflow-y: auto !important;
+			}
 			.ec-toolbar {
 				background: var(--color-base-200) !important;
 				border-radius: 0.75rem !important;
