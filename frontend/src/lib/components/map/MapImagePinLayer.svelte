@@ -9,6 +9,7 @@
 	import ImageMapPinPopup from './ImageMapPinPopup.svelte';
 	import type { ImagePinFeatureCollection, ImagePinProperties } from '#lib/map/imagePins.js';
 	import { getImagePinNavigationUrl } from '#lib/map/imagePins.js';
+	import { expandCluster } from '#lib/map/clusters.js';
 
 	interface Props {
 		geoJson?: ImagePinFeatureCollection;
@@ -145,30 +146,16 @@
 		return 44;
 	}
 
-	type ClusterSource = {
-		getClusterExpansionZoom: (
-			clusterId: number,
-			callback: (error: unknown, zoom: number) => void
-		) => void;
-	};
-
-	function handleClusterClick(event: CustomEvent<LayerClickInfo>) {
-		const { clusterId, features, map, source } = event.detail ?? ({} as LayerClickInfo);
+	function handleClusterClick(info: LayerClickInfo) {
+		const { clusterId, features, map, source } = info ?? ({} as LayerClickInfo);
 		if (!clusterId || !features?.length || !map || !source) return;
 
 		const center = getPointCoordinates(features[0]);
 		if (!center) return;
 
-		const geoJsonSource = map.getSource(source) as ClusterSource | undefined;
-		if (!geoJsonSource?.getClusterExpansionZoom) return;
-
-		geoJsonSource.getClusterExpansionZoom(Number(clusterId), (error, zoomLevel) => {
-			if (error) {
-				console.error('Failed to expand image pin cluster', error);
-				return;
-			}
-			map.easeTo({ center, zoom: zoomLevel });
-		});
+		expandCluster(map, source, clusterId, center).catch((error: unknown) =>
+			console.error('Failed to expand image pin cluster', error)
+		);
 	}
 </script>
 
@@ -180,7 +167,7 @@
 				applyToClusters
 				hoverCursor="pointer"
 				paint={clusterCirclePaint}
-				on:click={handleClusterClick}
+				onclick={handleClusterClick}
 			/>
 			<MarkerLayer applyToClusters>
 				{#snippet children({ feature: clusterFeature }: { feature: unknown })}
