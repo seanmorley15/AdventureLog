@@ -70,6 +70,29 @@
 		const style = document.createElement('style');
 		style.id = 'adventurelog-calendar-styles';
 		style.textContent = `
+			/* Map the calendar's theme variables onto the app (daisyUI) theme so every part of it,
+			   including the weekday header, time sidebars and the "+N more" popup, follows light/dark. */
+			.ec.ec {
+				color-scheme: inherit;
+				--ec-bg-color: var(--color-base-100);
+				--ec-text-color: var(--color-base-content);
+				--ec-border-color: var(--color-base-300);
+				--ec-color-400: color-mix(in oklab, var(--color-base-content) 40%, var(--color-base-100));
+				--ec-color-300: var(--color-base-300);
+				--ec-color-200: var(--color-base-200);
+				--ec-color-100: var(--color-base-100);
+				--ec-color-50: var(--color-base-100);
+				--ec-today-bg-color: var(--color-base-200);
+				--ec-highlight-color: color-mix(in oklab, var(--color-primary) 15%, var(--color-base-100));
+				--ec-popup-bg-color: var(--color-base-100);
+			}
+			/* Leave room for a few events plus the "+N more" link instead of hiding them all. */
+			.ec-month-view,
+			.ec-month-view .ec-main,
+			.ec-month-view .ec-body,
+			.ec-month-view .ec-grid {
+				--ec-row-height: minmax(9rem, 1fr) !important;
+			}
 			.ec-toolbar {
 				background: var(--color-base-200) !important;
 				border-radius: 0.75rem !important;
