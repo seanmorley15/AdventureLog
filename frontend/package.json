@@ -37,7 +37,7 @@
 	},
 	"type": "module",
 	"engines": {
-		"node": ">=22.17 <26"
+		"node": ">=22.17 <27"
 	},
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.4",
