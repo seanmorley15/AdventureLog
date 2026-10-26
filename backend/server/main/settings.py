@@ -454,6 +454,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    # DRF 3.18 reports many=True validation errors as a dict keyed by index; keep the list format.
+    'LIST_SERIALIZER_ERRORS_AS_DICT': False,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
     ] if ENABLE_RATE_LIMITS else [],
