@@ -9,7 +9,7 @@
 	import ImageMapPinPopup from './ImageMapPinPopup.svelte';
 	import type { ImagePinFeatureCollection, ImagePinProperties } from '#lib/map/imagePins.js';
 	import { getImagePinNavigationUrl } from '#lib/map/imagePins.js';
-	import { expandCluster } from '#lib/map/clusters.js';
+	import { expandCluster, toMapLibreClusterOptions } from '#lib/map/clusters.js';
 
 	interface Props {
 		geoJson?: ImagePinFeatureCollection;
@@ -161,7 +161,12 @@
 
 {#if visible && geoJson.features.length > 0}
 	{#if clusterEnabled}
-		<GeoJSON id={sourceId} data={geoJson} cluster={clusterOptions} generateId>
+		<GeoJSON
+			id={sourceId}
+			data={geoJson}
+			cluster={toMapLibreClusterOptions(clusterOptions)}
+			generateId
+		>
 			<CircleLayer
 				id={`${sourceId}-clusters`}
 				applyToClusters

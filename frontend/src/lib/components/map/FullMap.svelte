@@ -25,7 +25,7 @@
 	import { getMapViewportCenter } from '#lib/map/viewportCenter.js';
 	import { guardMapRenderQueue } from '#lib/map/renderGuard.js';
 	import { configureMapLibreWorker } from '#lib/map/maplibreWorker.js';
-	import { expandCluster } from '#lib/map/clusters.js';
+	import { expandCluster, toMapLibreClusterOptions } from '#lib/map/clusters.js';
 	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
 	import { resolveThemeColor, withAlpha } from '#lib/utils/resolveThemeColor.js';
 
@@ -358,7 +358,12 @@
 		{#key styleNonce}
 			{#if effectiveGeoJson && Array.isArray(effectiveGeoJson.features) && effectiveGeoJson.features.length > 0}
 				{#if clusterEnabled}
-					<GeoJSON id={sourceId} data={effectiveGeoJson} cluster={clusterOptions} generateId>
+					<GeoJSON
+						id={sourceId}
+						data={effectiveGeoJson}
+						cluster={toMapLibreClusterOptions(clusterOptions)}
+						generateId
+					>
 						<CircleLayer
 							id={`${sourceId}-clusters`}
 							applyToClusters
