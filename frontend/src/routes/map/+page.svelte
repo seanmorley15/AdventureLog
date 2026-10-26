@@ -2,6 +2,7 @@
 	import { run } from 'svelte/legacy';
 
 	import { DefaultMarker, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import type { Map as MapLibreMap } from 'maplibre-gl';
 	import MapNearbyRadiusLayer from '#lib/components/map/MapNearbyRadiusLayer.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/env';
@@ -142,7 +143,7 @@
 	let mapCenter: [number, number] = $state(initialView?.center ?? [0, 0]);
 	/** When true, center/zoom props drive FullMap. Disabled after load so pan/zoom is not fought by easeTo. */
 	let syncViewportFromProps = $state(true);
-	let mapInstance: maplibregl.Map | undefined = $state(undefined);
+	let mapInstance: MapLibreMap | undefined = $state(undefined);
 	let mapViewportEl: HTMLElement | null = $state(null);
 	let mapPageEl: HTMLElement | null = $state(null);
 	let updateUrlTimeout: NodeJS.Timeout | null = null;
