@@ -46,7 +46,8 @@
 		},
 		height,
 		eventDisplay: 'block',
-		dayMaxEvents: Boolean(dayMaxEvents),
+		// Rows grow to fit their events; empty weeks stay short.
+		dayMaxEvents: false,
 		moreLinkText: (num: number) => $t('calendar.more_events', { values: { count: num } }),
 		eventClick: (info: Calendar.EventClickInfo) => {
 			dispatch('eventClick', info.event as unknown as CalendarDisplayEvent);
