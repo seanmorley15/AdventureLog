@@ -1,12 +1,69 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for more information:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-# https://containers.dev/guide/dependabot
+# Dependabot version updates for every ecosystem the repo ships.
+# Security alerts are raised separately by GitHub regardless of this file.
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 
 version: 2
 updates:
- - package-ecosystem: "devcontainers"
-   directory: "/"
-   schedule:
-     interval: weekly
+  # Frontend (SvelteKit)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: weekly
+    groups:
+      frontend-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Kit 3 requires TypeScript 6; wait for Kit to support 7 before moving.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Keep types aligned with the Node 22 LTS runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  # Documentation site (VitePress)
+  - package-ecosystem: "npm"
+    directory: "/documentation"
+    schedule:
+      interval: weekly
+    groups:
+      docs-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # Backend (Django)
+  - package-ecosystem: "pip"
+    directory: "/backend/server"
+    schedule:
+      interval: weekly
+    groups:
+      backend-minor-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Stay on the Django 5.2 LTS line; move to the next LTS deliberately.
+      - dependency-name: "django"
+        update-types: ["version-update:semver-major"]
+
+  # Container base images
+  - package-ecosystem: "docker"
+    directory: "/docker"
+    schedule:
+      interval: weekly
+
+  # Compose files
+  - package-ecosystem: "docker-compose"
+    directories: ["/", "/docker"]
+    schedule:
+      interval: weekly
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: weekly
