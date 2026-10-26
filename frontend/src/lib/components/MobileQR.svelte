@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 
 	// Icons
 	import Close from '~icons/mdi/close';

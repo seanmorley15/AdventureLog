@@ -1,6 +1,6 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import { djangoSessionFetch } from '$lib/index.server';
-import { setSessionFromResponse } from '$lib/server/session-cookies';
+import { djangoSessionFetch } from '#lib/index.server.js';
+import { setSessionFromResponse } from '#lib/server/session-cookies.js';
 
 export type InviteSignupState = {
 	valid: boolean;

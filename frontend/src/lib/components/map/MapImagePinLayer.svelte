@@ -5,10 +5,10 @@
 	import { goto } from '$app/navigation';
 	import { CircleLayer, GeoJSON, Marker, MarkerLayer } from 'svelte-maplibre';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
-	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
+	import { resolveThemeColor, withAlpha } from '#lib/utils/resolveThemeColor.js';
 	import ImageMapPinPopup from './ImageMapPinPopup.svelte';
-	import type { ImagePinFeatureCollection, ImagePinProperties } from '$lib/map/imagePins';
-	import { getImagePinNavigationUrl } from '$lib/map/imagePins';
+	import type { ImagePinFeatureCollection, ImagePinProperties } from '#lib/map/imagePins.js';
+	import { getImagePinNavigationUrl } from '#lib/map/imagePins.js';
 
 	interface Props {
 		geoJson?: ImagePinFeatureCollection;

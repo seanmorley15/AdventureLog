@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { Collection, SlimCollection, User } from '$lib/types';
+	import type { Collection, SlimCollection, User } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	import UserCard from './cards/UserCard.svelte';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
 

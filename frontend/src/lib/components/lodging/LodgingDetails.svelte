@@ -9,8 +9,8 @@
 		validateDateRange,
 		toDateOnlyLocal,
 		toTimedLocalDefault
-	} from '$lib/dateUtils';
-	import type { Collection, Lodging, MoneyValue } from '$lib/types';
+	} from '#lib/dateUtils.js';
+	import type { Collection, Lodging, MoneyValue } from '#lib/types.js';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
 
 	// Icons
@@ -19,17 +19,17 @@
 	import InfoIcon from '~icons/mdi/information';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import SaveIcon from '~icons/mdi/content-save';
-	import type { Category, User } from '$lib/types';
+	import type { Category, User } from '#lib/types.js';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import MoneyInput from '../shared/MoneyInput.svelte';
 	import DateInput from '../shared/DateInput.svelte';
-	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '$lib/money';
-	import { normalizeBasemapType } from '$lib';
+	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '#lib/money.js';
+	import { normalizeBasemapType } from '#lib';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { isAllDay } from '$lib';
-	import { addToast } from '$lib/toasts';
+	import { isAllDay } from '#lib';
+	import { addToast } from '#lib/toasts.js';
 
 	const dispatch = createEventDispatcher();
 

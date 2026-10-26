@@ -1,5 +1,5 @@
-import type { ContentImage, Collection, ImageSource, MapImagePinSelection } from '$lib/types';
-import type { FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
+import type { ContentImage, Collection, ImageSource, MapImagePinSelection } from '#lib/types.js';
+import type { FullMapFeatureCollection } from '#lib/components/map/FullMap.svelte';
 
 export type ImageMapPin = {
 	id: string;

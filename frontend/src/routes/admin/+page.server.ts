@@ -13,5 +13,5 @@ export const load: PageServerLoad = async (event) => {
 		publicUrl = publicUrlJson.PUBLIC_URL;
 	}
 
-	return redirect(302, publicUrl + '/admin/');
+	return redirect(302, publicUrl + '/admin/', { external: true });
 };

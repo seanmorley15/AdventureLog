@@ -7,7 +7,7 @@
 	import FolderIcon from '~icons/mdi/folder';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import type { CalendarDisplayEvent } from '$lib/calendar/types';
+	import type { CalendarDisplayEvent } from '#lib/calendar/types.js';
 
 	interface Props {
 		show?: boolean;

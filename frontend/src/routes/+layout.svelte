@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { untrack } from 'svelte';
 	import { register, init, locale, waitLocale } from 'svelte-i18n';
 	import { UmamiAnalyticsEnv } from '@lukulent/svelte-umami';
@@ -85,9 +85,9 @@
 		}
 	}
 
-	import Navbar from '$lib/components/Navbar.svelte';
-	import Toast from '$lib/components/Toast.svelte';
-	import CommandPalette from '$lib/components/search/CommandPalette.svelte';
+	import Navbar from '#lib/components/Navbar.svelte';
+	import Toast from '#lib/components/Toast.svelte';
+	import CommandPalette from '#lib/components/search/CommandPalette.svelte';
 	import '../app.css';
 
 	// Create a promise that resolves when the locale is ready

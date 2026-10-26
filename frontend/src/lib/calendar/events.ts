@@ -6,12 +6,12 @@ import type {
 	CalendarStats,
 	CalendarTimezoneMode
 } from './types';
-import { formatAllDayDate } from '$lib/dateUtils';
-import { isAllDay, isVisitAllDay } from '$lib';
-import type { DateFormatPreference } from '$lib/dateFormat';
+import { formatAllDayDate } from '#lib/dateUtils.js';
+import { isAllDay, isVisitAllDay } from '#lib';
+import type { DateFormatPreference } from '#lib/dateFormat.js';
 // @ts-ignore luxon types are not bundled in this project
 import { DateTime } from 'luxon';
-import type { Collection, Lodging, Transportation } from '$lib/types';
+import type { Collection, Lodging, Transportation } from '#lib/types.js';
 
 export const CALENDAR_EVENT_COLORS: Record<CalendarEventType, string> = {
 	visit: '#3b82f6',

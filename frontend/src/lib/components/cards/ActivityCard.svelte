@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Activity, Trail, TransportationVisit, Visit } from '$lib/types';
+	import type { Activity, Trail, TransportationVisit, Visit } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -11,9 +11,9 @@
 	import ClockIcon from '~icons/mdi/clock';
 	import CaloriesIcon from '~icons/mdi/fire';
 	import LocationIcon from '~icons/mdi/map-marker';
-	import { formatDateInTimezone } from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
-	import { getDistance, getElevation } from '$lib';
+	import { formatDateInTimezone } from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import { getDistance, getElevation } from '#lib';
 	import { page } from '$app/state';
 
 	interface Props {

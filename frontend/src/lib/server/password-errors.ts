@@ -1,4 +1,4 @@
-import type { PasswordPolicy } from '$lib/password-policy';
+import type { PasswordPolicy } from '#lib/password-policy.js';
 
 type AllauthError = {
 	param?: string;

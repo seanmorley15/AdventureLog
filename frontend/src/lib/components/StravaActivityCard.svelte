@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { formatDateInTimezone } from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
-	import type { StravaActivity } from '$lib/types';
+	import { formatDateInTimezone } from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import type { StravaActivity } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 	import { page } from '$app/state';
 
 	const dispatch = createEventDispatcher();

@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import type {
 		EndurainIntegration,
 		ImmichIntegration,
 		User,
 		WandererIntegration
-	} from '$lib/types';
-	import ImmichLogo from '$lib/assets/immich.svg';
-	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
-	import StravaLogo from '$lib/assets/strava.svg';
-	import WandererLogoSrc from '$lib/assets/wanderer.svg';
-	import EndurainLogo from '$lib/assets/endurain.png';
+	} from '#lib/types.js';
+	import ImmichLogo from '#lib/assets/immich.svg';
+	import GoogleMapsLogo from '#lib/assets/google_maps.svg';
+	import StravaLogo from '#lib/assets/strava.svg';
+	import WandererLogoSrc from '#lib/assets/wanderer.svg';
+	import EndurainLogo from '#lib/assets/endurain.png';
 	import { BUILTIN_INTEGRATIONS } from './integrationCatalog';
 	import MapIcon from '~icons/mdi/map';
 	import BookOpenPageVariant from '~icons/mdi/book-open-page-variant';

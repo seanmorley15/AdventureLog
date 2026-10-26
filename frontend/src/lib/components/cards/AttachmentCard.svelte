@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { Attachment } from '$lib/types';
+	import type { Attachment } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 
 	import { createEventDispatcher } from 'svelte';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	interface Props {
 		attachment: Attachment;
 		allowEdit?: boolean;

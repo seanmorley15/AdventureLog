@@ -8,10 +8,10 @@ import MapMarker from '~icons/mdi/map-marker';
 import MapMarkerRadius from '~icons/mdi/map-marker-radius';
 import NoteText from '~icons/mdi/note-text-outline';
 import Run from '~icons/mdi/run';
-import type { ComponentType } from 'svelte';
+import type { Component } from 'svelte';
 import type { SearchEntityType } from './types';
 
-const searchTypeIcons: Record<SearchEntityType, ComponentType> = {
+const searchTypeIcons: Record<SearchEntityType, Component<any>> = {
 	location: MapMarker,
 	collection: FormatListBulletedSquare,
 	lodging: Bed,
@@ -25,6 +25,6 @@ const searchTypeIcons: Record<SearchEntityType, ComponentType> = {
 	user: AccountMultiple
 };
 
-export function getSearchTypeIcon(type: SearchEntityType): ComponentType {
+export function getSearchTypeIcon(type: SearchEntityType): Component<any> {
 	return searchTypeIcons[type] || MapMarker;
 }

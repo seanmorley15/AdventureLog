@@ -2,7 +2,7 @@
 	import { t } from 'svelte-i18n';
 	import type { Attachment } from 'svelte/attachments';
 	import EarthIcon from '~icons/mdi/earth';
-	import { attachPopoverFlip } from '$lib/utils/flipDropdown';
+	import { attachPopoverFlip } from '#lib/utils/flipDropdown.js';
 
 	const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 

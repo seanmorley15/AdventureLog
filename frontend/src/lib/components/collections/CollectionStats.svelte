@@ -8,13 +8,13 @@
 		Visit,
 		Activity,
 		User
-	} from '$lib/types';
+	} from '#lib/types.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { t } from 'svelte-i18n';
 	// lodging icons and helpers
-	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '#lib';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface Props {
 		collection: Collection;

@@ -1,5 +1,10 @@
 <script lang="ts">
-	import { getAvatarGradient, getAvatarSeed, getUserInitials, type AvatarUser } from '$lib/avatar';
+	import {
+		getAvatarGradient,
+		getAvatarSeed,
+		getUserInitials,
+		type AvatarUser
+	} from '#lib/avatar.js';
 
 	interface Props {
 		user?: AvatarUser & { profile_pic?: string | null };

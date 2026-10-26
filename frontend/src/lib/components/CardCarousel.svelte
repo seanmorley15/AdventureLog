@@ -4,7 +4,7 @@
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 	import { t } from 'svelte-i18n';
-	import type { ContentImage } from '$lib/types';
+	import type { ContentImage } from '#lib/types.js';
 	interface Props {
 		images?: ContentImage[];
 		name?: string;

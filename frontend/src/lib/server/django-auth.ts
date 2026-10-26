@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
-import { fetchCSRFToken, getServerEndpoint } from '$lib/server/django-proxy';
-import { buildAuthCookieHeader } from '$lib/server/session-cookies';
+import { fetchCSRFToken, getServerEndpoint } from '#lib/server/django-proxy.js';
+import { buildAuthCookieHeader } from '#lib/server/session-cookies.js';
 
 export class CsrfError extends Error {
 	constructor(message = 'CSRF token is missing or invalid') {

@@ -1,8 +1,8 @@
-import { getServerEndpoint } from '$lib/server/django-proxy';
-import type { SignupLegalLinks } from '$lib/signup-legal';
+import { getServerEndpoint } from '#lib/server/django-proxy.js';
+import type { SignupLegalLinks } from '#lib/signup-legal.js';
 
 export type { SignupLegalLinks };
-export { signupLegalRequired } from '$lib/signup-legal';
+export { signupLegalRequired } from '#lib/signup-legal.js';
 
 const DEFAULT_SIGNUP_LEGAL_LINKS: SignupLegalLinks = {
 	terms_of_service_url: null,

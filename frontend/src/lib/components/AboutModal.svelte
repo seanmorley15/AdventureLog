@@ -2,10 +2,10 @@
 	import { createEventDispatcher } from 'svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { copyrightYear, versionChangelog, appVersion } from '$lib/config';
-	import { copyToClipboard } from '$lib/index';
-	import { addToast } from '$lib/toasts';
-	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
+	import { copyrightYear, versionChangelog, appVersion } from '#lib/config.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import { addToast } from '#lib/toasts.js';
+	import AppVersionDisplay from '#lib/components/shared/AppVersionDisplay.svelte';
 
 	import CloseIcon from '~icons/mdi/close';
 	import AccountIcon from '~icons/mdi/account-circle';

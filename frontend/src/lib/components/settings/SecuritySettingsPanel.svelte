@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import type { APIKey, AuthUserSession, User } from '$lib/types.js';
-	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
+	import type { APIKey, AuthUserSession, User } from '#lib/types.js';
+	import PasswordRequirements from '#lib/components/auth/PasswordRequirements.svelte';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	type Provider = { name: string; usage_required: boolean };
 	type PasswordPolicy = { min_length: number; validators_enabled: boolean };
@@ -84,18 +84,19 @@
 		if (!ua) return '';
 
 		let browser = '';
+
 		if (/Edg\//.test(ua)) browser = 'Edge';
 		else if (/Chrome\//.test(ua) && !/Chromium\//.test(ua)) browser = 'Chrome';
 		else if (/Firefox\//.test(ua)) browser = 'Firefox';
 		else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = 'Safari';
 
 		let os = '';
+
 		if (/Windows/.test(ua)) os = 'Windows';
 		else if (/Android/.test(ua)) os = 'Android';
 		else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
 		else if (/Mac OS X/.test(ua)) os = 'macOS';
 		else if (/Linux/.test(ua)) os = 'Linux';
-
 		if (browser && os) return `${browser} on ${os}`;
 		if (browser || os) return browser || os;
 		return ua.length > 80 ? `${ua.slice(0, 80)}…` : ua;
@@ -156,11 +157,12 @@
 				</div>
 			</div>
 			<PasswordRequirements policy={passwordPolicy} password={newPassword} />
-			{#if $page.form?.changePasswordError}
+
+			{#if page.form?.changePasswordError}
 				<div class="alert alert-warning max-w-2xl">
 					<span
-						>{$t($page.form.changePasswordError, {
-							values: $page.form.changePasswordValues ?? {}
+						>{$t(page.form.changePasswordError, {
+							values: page.form.changePasswordValues ?? {}
 						})}</span
 					>
 				</div>

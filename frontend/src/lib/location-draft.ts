@@ -1,4 +1,4 @@
-import type { Location } from '$lib/types';
+import type { Location } from '#lib/types.js';
 
 /** Blank location used as a bindable draft. Must not be `undefined` — Svelte throws `props_invalid_value` when `bind:` passes `undefined` into a prop that has a fallback. */
 export function createEmptyLocation(): Location {

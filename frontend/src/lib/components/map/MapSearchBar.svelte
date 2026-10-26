@@ -3,8 +3,8 @@
 
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { MapSearchMode, Pin, PlaceSearchResult } from '$lib/types';
-	import { searchPlaces } from '$lib/map/places';
+	import type { MapSearchMode, Pin, PlaceSearchResult } from '#lib/types.js';
+	import { searchPlaces } from '#lib/map/places.js';
 	import SearchIcon from '~icons/mdi/magnify';
 	import ClearIcon from '~icons/mdi/close';
 	import MapMarkerIcon from '~icons/mdi/map-marker';

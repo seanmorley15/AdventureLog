@@ -2,9 +2,9 @@
 	import { run } from 'svelte/legacy';
 
 	import { goto } from '$app/navigation';
-	import CountryCard from '$lib/components/cards/CountryCard.svelte';
-	import ClusterMap from '$lib/components/ClusterMap.svelte';
-	import type { Country } from '$lib/types';
+	import CountryCard from '#lib/components/cards/CountryCard.svelte';
+	import ClusterMap from '#lib/components/ClusterMap.svelte';
+	import type { Country } from '#lib/types.js';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 	import type { ClusterOptions } from 'svelte-maplibre';
@@ -19,7 +19,7 @@
 	import Check from '~icons/mdi/check-circle';
 	import Progress from '~icons/mdi/progress-check';
 	import Cancel from '~icons/mdi/cancel';
-	import { normalizeBasemapType } from '$lib';
+	import { normalizeBasemapType } from '#lib';
 
 	interface Props {
 		data: PageData;

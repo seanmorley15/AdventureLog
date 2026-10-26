@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Collection, Location, Transportation, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
+	import type { Collection, Location, Transportation, User } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import { t } from 'svelte-i18n';
 	import Plane from '~icons/mdi/airplane';
 	import MediaStep from '../shared/MediaStep.svelte';

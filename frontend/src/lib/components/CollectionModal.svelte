@@ -3,9 +3,9 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from './MarkdownEditor.svelte';
-	import { addToast } from '$lib/toasts';
-	import { copyToClipboard } from '$lib/index';
-	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
+	import { addToast } from '#lib/toasts.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import type { Collection, ContentImage, SlimCollection } from '#lib/types.js';
 	import DateInput from './shared/DateInput.svelte';
 
 	// Icons

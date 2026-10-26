@@ -2,22 +2,22 @@
 	import { untrack } from 'svelte';
 	import { stopPropagation } from 'svelte/legacy';
 
-	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
+	import FullMap, { type FullMapFeatureCollection } from '#lib/components/map/FullMap.svelte';
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { LODGING_TYPES_ICONS, getActivityColor, normalizeBasemapType } from '$lib';
+	import { LODGING_TYPES_ICONS, getActivityColor, normalizeBasemapType } from '#lib';
 	import SearchIcon from '~icons/mdi/magnify';
 	import FilterIcon from '~icons/mdi/filter-variant';
 	import ChevronDown from '~icons/mdi/chevron-down';
 	import Plus from '~icons/mdi/plus';
 	import PinIcon from '~icons/mdi/map-marker';
 	import Clear from '~icons/mdi/close';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
+	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
+	import { collectCollectionImageGeoJson } from '#lib/map/imagePins.js';
 	import { t } from 'svelte-i18n';
-	import type { Collection, Location, User } from '$lib/types';
-	import DateInput from '$lib/components/shared/DateInput.svelte';
+	import type { Collection, Location, User } from '#lib/types.js';
+	import DateInput from '#lib/components/shared/DateInput.svelte';
 
 	interface Props {
 		collection: Collection;

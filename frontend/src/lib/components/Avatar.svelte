@@ -12,9 +12,9 @@
 	import Phone from '~icons/mdi/cellphone';
 	import CreditCard from '~icons/mdi/credit-card';
 
-	import MobileQR from '$lib/components/MobileQR.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import MobileQR from '#lib/components/MobileQR.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 
 	interface Props {
 		user: any;

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Lost from '$lib/assets/undraw_lost.svg';
-	import ServerError from '$lib/assets/undraw_server_error.svg';
+	import Lost from '#lib/assets/undraw_lost.svg';
+	import ServerError from '#lib/assets/undraw_server_error.svg';
 </script>
 
 {#if page.status === 404}

@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { t } from 'svelte-i18n';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
+	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '#lib/money.js';
 	import {
 		DATE_FORMAT_OPTIONS,
 		DEFAULT_DATE_FORMAT,
 		formatDateFormatPreview,
 		normalizeDateFormat,
 		type DateFormatPreference
-	} from '$lib/dateFormat';
-	import { getBasemapOptions } from '$lib';
-	import type { User } from '$lib/types.js';
+	} from '#lib/dateFormat.js';
+	import { getBasemapOptions } from '#lib';
+	import type { User } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';

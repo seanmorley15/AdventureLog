@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type { Transportation } from '$lib/types';
+	import type { Transportation } from '#lib/types.js';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import Lost from '$lib/assets/undraw_lost.svg';
-	import FullMap from '$lib/components/map/FullMap.svelte';
+	import Lost from '#lib/assets/undraw_lost.svg';
+	import FullMap from '#lib/components/map/FullMap.svelte';
 	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
@@ -15,10 +15,10 @@
 	import { DateTime } from 'luxon';
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
-	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '$lib';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
+	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
+	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '#lib';
 	import Star from '~icons/mdi/star';
 	import StarOutline from '~icons/mdi/star-outline';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -26,16 +26,16 @@
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
-	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
-	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
+	import { formatDateInTimezone, formatAllDayDate } from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import TransportationModal from '#lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
-	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
+	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
+	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
+	import MapTrackLayerControls from '#lib/components/map/MapTrackLayerControls.svelte';
+	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;

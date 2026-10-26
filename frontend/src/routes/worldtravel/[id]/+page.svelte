@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import RegionCard from '$lib/components/cards/RegionCard.svelte';
-	import type { Region, VisitedRegion } from '$lib/types';
-	import ClusterMap from '$lib/components/ClusterMap.svelte';
+	import RegionCard from '#lib/components/cards/RegionCard.svelte';
+	import type { Region, VisitedRegion } from '#lib/types.js';
+	import ClusterMap from '#lib/components/ClusterMap.svelte';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import type { PageData } from './$types';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import { t } from 'svelte-i18n';
 
 	// Icons
@@ -20,7 +20,7 @@
 	import Cancel from '~icons/mdi/cancel';
 	import Trophy from '~icons/mdi/trophy';
 	import Flag from '~icons/mdi/flag';
-	import { normalizeBasemapType } from '$lib';
+	import { normalizeBasemapType } from '#lib';
 
 	interface Props {
 		data: PageData;

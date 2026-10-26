@@ -4,7 +4,7 @@
 	import { t } from 'svelte-i18n';
 	import DOMPurify from 'dompurify';
 	import FetchIcon from '~icons/mdi/download';
-	import type { IntegrationsResponse } from '$lib/integrations';
+	import type { IntegrationsResponse } from '#lib/integrations.js';
 
 	interface Props {
 		text?: string | null | undefined;
