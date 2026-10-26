@@ -9,7 +9,6 @@
 		events?: CalendarDisplayEvent[];
 		height?: string;
 		view?: string;
-		dayMaxEvents?: number;
 		initialDate?: string | Date | null;
 		bare?: boolean;
 	}
@@ -18,7 +17,6 @@
 		events = [],
 		height = 'auto',
 		view = 'dayGridMonth',
-		dayMaxEvents = 4,
 		initialDate = null,
 		bare = false
 	}: Props = $props();
@@ -85,17 +83,6 @@
 				--ec-today-bg-color: var(--color-base-200);
 				--ec-highlight-color: color-mix(in oklab, var(--color-primary) 15%, var(--color-base-100));
 				--ec-popup-bg-color: var(--color-base-100);
-			}
-			/* Leave room for a few events plus the "+N more" link instead of hiding them all. */
-			.ec-month-view,
-			.ec-month-view .ec-main,
-			.ec-month-view .ec-body,
-			.ec-month-view .ec-grid {
-				--ec-row-height: minmax(9rem, 1fr) !important;
-			}
-			/* The month grid is clipped by default; with taller rows it has to scroll instead. */
-			.ec-month-view .ec-main.ec-uniform {
-				overflow-y: auto !important;
 			}
 			.ec-toolbar {
 				background: var(--color-base-200) !important;
