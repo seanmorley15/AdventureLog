@@ -1,46 +1,46 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 
-	import { createEmptyLocation } from '$lib/location-draft';
-	import type { Location } from '$lib/types';
-	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '$lib/sunriseSunset';
+	import { createEmptyLocation } from '#lib/location-draft.js';
+	import type { Location } from '#lib/types.js';
+	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '#lib/sunriseSunset.js';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import Lost from '$lib/assets/undraw_lost.svg';
-	import FullMap from '$lib/components/map/FullMap.svelte';
+	import Lost from '#lib/assets/undraw_lost.svg';
+	import FullMap from '#lib/components/map/FullMap.svelte';
 	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
+	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ContentCopy from '~icons/mdi/content-copy';
 	import DotsVertical from '~icons/mdi/dots-vertical';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
-	import { googleContentImage } from '$lib/images';
-	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { addToast } from '$lib/toasts';
-	import { getActivityColor, normalizeBasemapType, isVisitAllDay, copyToClipboard } from '$lib';
-	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
-	import TrailCard from '$lib/components/cards/TrailCard.svelte';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
+	import { googleContentImage } from '#lib/images.js';
+	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import { getActivityColor, normalizeBasemapType, isVisitAllDay, copyToClipboard } from '#lib';
+	import ActivityCard from '#lib/components/cards/ActivityCard.svelte';
+	import TrailCard from '#lib/components/cards/TrailCard.svelte';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
-	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
+	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
+	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
+	import MapTrackLayerControls from '#lib/components/map/MapTrackLayerControls.svelte';
+	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 	import ImageOutline from '~icons/mdi/image-outline';
-	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import SocialShareModal from '#lib/components/SocialShareModal.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { ImageSource } from '$lib/types';
+	import type { ImageSource } from '#lib/types.js';
 	import ImageSourceBadge from './ImageSourceBadge.svelte';
-	import { defaultImageSource } from '$lib/images';
+	import { defaultImageSource } from '#lib/images.js';
 
 	interface Props {
 		source?: ImageSource | null | undefined;

@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/public';
+import { PUBLIC_CARTO_BASEMAP_API_KEY } from '$app/env/public';
 import inspirationalQuotes from './json/quotes.json';
 import randomBackgrounds from './json/backgrounds.json';
 
@@ -633,8 +633,9 @@ export function osmTagToEmoji(tag: string) {
 		case 'ice_cream':
 			return '🍦';
 		default:
-			return '📍'; // Default placeholder emoji for unknown tags
+			return '📍';
 	}
+	// Default placeholder emoji for unknown tags
 }
 
 export function debounce(func: Function, timeout: number) {
@@ -694,7 +695,7 @@ const CARTO_RASTER_BASEMAPS = new Set([
 ]);
 
 function cartoBasemapApiKey(): string {
-	return env.PUBLIC_CARTO_BASEMAP_API_KEY?.trim() ?? '';
+	return PUBLIC_CARTO_BASEMAP_API_KEY?.trim() ?? '';
 }
 
 function hasCartoBasemapApiKey(): boolean {
@@ -711,8 +712,8 @@ function defaultBasemapStyle(): string {
 // Enhanced basemap functions with 3D terrain support
 export function getBasemapUrl(type = 'default'): any {
 	switch (normalizeBasemapType(type)) {
-		// 3D Terrain Maps with elevation data
-		case 'terrain-3d':
+		case // 3D Terrain Maps with elevation data
+		'terrain-3d':
 			return {
 				version: 8,
 				name: '3D Terrain',
@@ -835,8 +836,8 @@ export function getBasemapUrl(type = 'default'): any {
 				}
 			};
 
-		// Alternative free terrain source using MapTiler (no key required for basic use)
-		case 'maptiler-terrain-3d':
+		case // Alternative free terrain source using MapTiler (no key required for basic use)
+		'maptiler-terrain-3d':
 			return {
 				version: 8,
 				name: 'MapTiler 3D Terrain',
@@ -879,8 +880,8 @@ export function getBasemapUrl(type = 'default'): any {
 				}
 			};
 
-		// Existing non-3D maps...
-		case 'satellite':
+		case // Existing non-3D maps...
+		'satellite':
 			return getXYZStyle(
 				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
 				'© Esri, Maxar, Earthstar Geographics, USGS'
@@ -1038,18 +1039,9 @@ function getXYZStyle(tileUrl: string | string[], attribution: string, baseUrl?: 
 	return {
 		version: 8,
 		sources: {
-			'raster-tiles': {
-				type: 'raster',
-				tiles: tiles,
-				tileSize: 256,
-				attribution: attribution
-			},
+			'raster-tiles': { type: 'raster', tiles, tileSize: 256, attribution },
 			...(baseUrl && {
-				'base-tiles': {
-					type: 'raster',
-					tiles: [baseUrl],
-					tileSize: 256
-				}
+				'base-tiles': { type: 'raster', tiles: [baseUrl], tileSize: 256 }
 			})
 		},
 		layers: [
@@ -1083,7 +1075,13 @@ const allBasemapOptions: BasemapOption[] = [
 	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
 
 	// 3D Terrain Maps (New Category)
-	{ value: 'terrain-3d', label: '3D Terrain', icon: '🏔️', category: '3D Terrain' },
+	{
+		value: 'terrain-3d',
+		label: '3D Terrain',
+		icon: '🏔️',
+		category: '3D Terrain'
+	},
+
 	{
 		value: 'satellite-terrain-3d',
 		label: '3D Satellite Terrain',
@@ -1096,34 +1094,128 @@ const allBasemapOptions: BasemapOption[] = [
 	{ value: 'osm-standard', label: 'OpenStreetMap', icon: '🌍', category: 'Standard' },
 
 	// Satellite & Imagery
-	{ value: 'satellite', label: 'Satellite', icon: '🛰️', category: 'Satellite' },
-	{ value: 'satellite-labels', label: 'Satellite + Labels', icon: '🏷️', category: 'Satellite' },
-	{ value: 'usgs-imagery', label: 'USGS Imagery', icon: '📸', category: 'Satellite' },
-	{ value: 'usgs-imagery-topo', label: 'USGS Imagery + Topo', icon: '🗻', category: 'Satellite' },
+	{
+		value: 'satellite',
+		label: 'Satellite',
+		icon: '🛰️',
+		category: 'Satellite'
+	},
+
+	{
+		value: 'satellite-labels',
+		label: 'Satellite + Labels',
+		icon: '🏷️',
+		category: 'Satellite'
+	},
+
+	{
+		value: 'usgs-imagery',
+		label: 'USGS Imagery',
+		icon: '📸',
+		category: 'Satellite'
+	},
+
+	{
+		value: 'usgs-imagery-topo',
+		label: 'USGS Imagery + Topo',
+		icon: '🗻',
+		category: 'Satellite'
+	},
 
 	// Topographic & Terrain
-	{ value: 'elevation', label: 'Elevation', icon: '🏔️', category: 'Topographic' },
-	{ value: 'usgs-topo', label: 'USGS Topo', icon: '📊', category: 'Topographic' },
-	{ value: 'esri-topo', label: 'Esri Topo', icon: '🗾', category: 'Topographic' },
-	{ value: 'opentopomap', label: 'OpenTopoMap', icon: '🧭', category: 'Topographic' },
+	{
+		value: 'elevation',
+		label: 'Elevation',
+		icon: '🏔️',
+		category: 'Topographic'
+	},
+
+	{
+		value: 'usgs-topo',
+		label: 'USGS Topo',
+		icon: '📊',
+		category: 'Topographic'
+	},
+
+	{
+		value: 'esri-topo',
+		label: 'Esri Topo',
+		icon: '🗾',
+		category: 'Topographic'
+	},
+
+	{
+		value: 'opentopomap',
+		label: 'OpenTopoMap',
+		icon: '🧭',
+		category: 'Topographic'
+	},
 
 	// Clean & Minimal
-	{ value: 'carto-light', label: 'Light', icon: '☀️', category: 'Clean' },
-	{ value: 'carto-dark', label: 'Dark', icon: '🌙', category: 'Clean' },
-	{ value: 'carto-positron', label: 'Positron', icon: '⚡', category: 'Clean' },
-	{ value: 'carto-positron-labels', label: 'Positron + Labels', icon: '🏷️', category: 'Clean' },
-	{ value: 'esri-gray', label: 'Gray Canvas', icon: '⬜', category: 'Clean' },
+	{
+		value: 'carto-light',
+		label: 'Light',
+		icon: '☀️',
+		category: 'Clean'
+	},
+
+	{
+		value: 'carto-dark',
+		label: 'Dark',
+		icon: '🌙',
+		category: 'Clean'
+	},
+
+	{
+		value: 'carto-positron',
+		label: 'Positron',
+		icon: '⚡',
+		category: 'Clean'
+	},
+
+	{
+		value: 'carto-positron-labels',
+		label: 'Positron + Labels',
+		icon: '🏷️',
+		category: 'Clean'
+	},
+
+	{
+		value: 'esri-gray',
+		label: 'Gray Canvas',
+		icon: '⬜',
+		category: 'Clean'
+	},
 
 	// Specialized
-	{ value: 'carto-voyager', label: 'Voyager', icon: '🚢', category: 'Specialized' },
-	{ value: 'osm-humanitarian', label: 'Humanitarian', icon: '🏥', category: 'Specialized' },
+	{
+		value: 'carto-voyager',
+		label: 'Voyager',
+		icon: '🚢',
+		category: 'Specialized'
+	},
+
+	{
+		value: 'osm-humanitarian',
+		label: 'Humanitarian',
+		icon: '🏥',
+		category: 'Specialized'
+	},
+
 	{
 		value: 'openfreemap-liberty',
 		label: 'OpenFreeMap Liberty',
 		icon: '🗽',
 		category: 'Specialized'
 	},
-	{ value: 'esri-streets', label: 'Streets', icon: '🛣️', category: 'Specialized' },
+
+	{
+		value: 'esri-streets',
+		label: 'Streets',
+		icon: '🛣️',
+		category: 'Specialized'
+	},
+
 	{
 		value: 'esri-national-geographic',
 		label: 'National Geographic',
@@ -1208,12 +1300,47 @@ export let SPORT_TYPE_CHOICES = [
 	{ key: 'Sailing', label: 'Sail', icon: '⛵', color: '#06B6D4' },
 
 	// Winter Sports
-	{ key: 'IceSkate', label: 'Ice Skate', icon: '⛸️', color: '#0EA5E9' },
-	{ key: 'AlpineSki', label: 'Alpine Ski', icon: '⛷️', color: '#0EA5E9' },
-	{ key: 'BackcountrySki', label: 'Backcountry Ski', icon: '🎿', color: '#0EA5E9' },
-	{ key: 'NordicSki', label: 'Nordic Ski', icon: '🎿', color: '#0EA5E9' },
-	{ key: 'Snowboard', label: 'Snowboard', icon: '🏂', color: '#0EA5E9' },
-	{ key: 'Snowshoe', label: 'Snowshoe', icon: '🥾', color: '#0EA5E9' },
+	{
+		key: 'IceSkate',
+		label: 'Ice Skate',
+		icon: '⛸️',
+		color: '#0EA5E9'
+	},
+
+	{
+		key: 'AlpineSki',
+		label: 'Alpine Ski',
+		icon: '⛷️',
+		color: '#0EA5E9'
+	},
+
+	{
+		key: 'BackcountrySki',
+		label: 'Backcountry Ski',
+		icon: '🎿',
+		color: '#0EA5E9'
+	},
+
+	{
+		key: 'NordicSki',
+		label: 'Nordic Ski',
+		icon: '🎿',
+		color: '#0EA5E9'
+	},
+
+	{
+		key: 'Snowboard',
+		label: 'Snowboard',
+		icon: '🏂',
+		color: '#0EA5E9'
+	},
+
+	{
+		key: 'Snowshoe',
+		label: 'Snowshoe',
+		icon: '🥾',
+		color: '#0EA5E9'
+	},
 
 	// Other Sports
 	{ key: 'Handcycle', label: 'Handcycle', icon: '🚴‍♂️', color: '#EF4444' },

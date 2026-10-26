@@ -1,6 +1,5 @@
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
-import { fetchCSRFToken } from '$lib/index.server';
+import { fetchCSRFToken } from '#lib/index.server.js';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -19,5 +18,5 @@ export const POST: RequestHandler = async (event) => {
 	if (data) {
 		allActivities = data;
 	}
-	return json({ activities: allActivities });
+	return Response.json({ activities: allActivities });
 };

@@ -11,7 +11,7 @@
 		Note,
 		Checklist,
 		Visit
-	} from '$lib/types';
+	} from '#lib/types.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { dndzone, TRIGGERS, SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action';
@@ -20,27 +20,27 @@
 	import Bed from '~icons/mdi/bed';
 	import Info from '~icons/mdi/information';
 	import Plus from '~icons/mdi/plus';
-	import LocationCard from '$lib/components/cards/LocationCard.svelte';
-	import TransportationCard from '$lib/components/cards/TransportationCard.svelte';
-	import LodgingCard from '$lib/components/cards/LodgingCard.svelte';
-	import NoteCard from '$lib/components/cards/NoteCard.svelte';
-	import ChecklistCard from '$lib/components/cards/ChecklistCard.svelte';
-	import { createEmptyLocation } from '$lib/location-draft';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
+	import LocationCard from '#lib/components/cards/LocationCard.svelte';
+	import TransportationCard from '#lib/components/cards/TransportationCard.svelte';
+	import LodgingCard from '#lib/components/cards/LodgingCard.svelte';
+	import NoteCard from '#lib/components/cards/NoteCard.svelte';
+	import ChecklistCard from '#lib/components/cards/ChecklistCard.svelte';
+	import { createEmptyLocation } from '#lib/location-draft.js';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
 	import LodgingModal from '../lodging/LodgingModal.svelte';
 	import TransportationModal from '../transportation/TransportationModal.svelte';
-	import NoteModal from '$lib/components/NoteModal.svelte';
-	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import ItineraryLinkModal from '$lib/components/collections/ItineraryLinkModal.svelte';
-	import ItineraryDayPickModal from '$lib/components/collections/ItineraryDayPickModal.svelte';
+	import NoteModal from '#lib/components/NoteModal.svelte';
+	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
+	import ItineraryLinkModal from '#lib/components/collections/ItineraryLinkModal.svelte';
+	import ItineraryDayPickModal from '#lib/components/collections/ItineraryDayPickModal.svelte';
 	import Car from '~icons/mdi/car';
 	import LocationMarker from '~icons/mdi/map-marker';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
-	import { isVisitAllDay } from '$lib';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { addToast } from '#lib/toasts.js';
+	import { isVisitAllDay } from '#lib';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 	import Globe from '~icons/mdi/globe';
-	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 
 	interface Props {
 		collection: Collection;

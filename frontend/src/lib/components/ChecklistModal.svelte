@@ -2,7 +2,7 @@
 	import { createBubbler, preventDefault } from 'svelte/legacy';
 
 	const bubble = createBubbler();
-	import type { Collection, Checklist, User, ChecklistItem } from '$lib/types';
+	import type { Collection, Checklist, User, ChecklistItem } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';

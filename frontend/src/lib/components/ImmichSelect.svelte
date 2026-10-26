@@ -5,8 +5,8 @@
 	import { t } from 'svelte-i18n';
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
-	import type { ImmichAlbum } from '$lib/types';
-	import { debounce } from '$lib';
+	import type { ImmichAlbum } from '#lib/types.js';
+	import { debounce } from '#lib';
 	import DateInput from './shared/DateInput.svelte';
 
 	interface Props {

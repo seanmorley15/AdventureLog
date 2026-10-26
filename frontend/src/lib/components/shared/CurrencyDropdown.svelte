@@ -2,9 +2,9 @@
 	import { run } from 'svelte/legacy';
 
 	import { createEventDispatcher } from 'svelte';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
+	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '#lib/money.js';
 	import { t } from 'svelte-i18n';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	type CurrencyOption = { code: string; label?: string };
 

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type { Collection, User, ContentImage } from '$lib/types';
-	import { googleContentImage } from '$lib/images';
+	import type { Collection, User, ContentImage } from '#lib/types.js';
+	import { googleContentImage } from '#lib/images.js';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import FullMap from '$lib/components/map/FullMap.svelte';
+	import FullMap from '#lib/components/map/FullMap.svelte';
 	import { DefaultMarker, Popup } from 'svelte-maplibre';
-	import { normalizeBasemapType } from '$lib';
+	import { normalizeBasemapType } from '#lib';
 	import MagnifyIcon from '~icons/mdi/magnify';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Star from '~icons/mdi/star';
@@ -22,11 +22,11 @@
 	import TuneVariant from '~icons/mdi/tune-variant';
 	import CloseCircle from '~icons/mdi/close-circle';
 	import Compass from '~icons/mdi/compass';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import LocationModal from '$lib/components/locations/LocationModal.svelte';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import LocationModal from '#lib/components/locations/LocationModal.svelte';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
 	import { createEventDispatcher } from 'svelte';
-	import type { Location, Lodging } from '$lib/types';
+	import type { Location, Lodging } from '#lib/types.js';
 
 	interface Props {
 		collection: Collection;

@@ -20,11 +20,11 @@
 	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import { CircleLayer, GeoJSON, MapEvents, MapLibre, MarkerLayer } from 'svelte-maplibre';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
-	import { getBasemapUrl, getIsDarkMode } from '$lib';
-	import { getMapViewportCenter } from '$lib/map/viewportCenter';
-	import { guardMapRenderQueue } from '$lib/map/renderGuard';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
+	import { getBasemapUrl, getIsDarkMode } from '#lib';
+	import { getMapViewportCenter } from '#lib/map/viewportCenter.js';
+	import { guardMapRenderQueue } from '#lib/map/renderGuard.js';
+	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
+	import { resolveThemeColor, withAlpha } from '#lib/utils/resolveThemeColor.js';
 
 	type Feature = FullMapFeature;
 	type FeatureCollection = FullMapFeatureCollection;

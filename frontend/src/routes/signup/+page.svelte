@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
 	import FileImageBox from '~icons/mdi/file-image-box';
-	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
-	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
-	import type { Background } from '$lib/types.js';
-	import { signupLegalRequired, type SignupLegalLinks } from '$lib/signup-legal';
-	import type { PasswordPolicy } from '$lib/password-policy';
+	import ImageInfoModal from '#lib/components/ImageInfoModal.svelte';
+	import PasswordRequirements from '#lib/components/auth/PasswordRequirements.svelte';
+	import type { Background } from '#lib/types.js';
+	import { signupLegalRequired, type SignupLegalLinks } from '#lib/signup-legal.js';
+	import type { PasswordPolicy } from '#lib/password-policy.js';
 
 	let { data } = $props();
 
@@ -218,17 +218,13 @@
 											</button>
 										</div>
 
-										{#if $page.form?.email_verification_required}
+										{#if page.form?.email_verification_required}
 											<div class="alert alert-warning mt-4">
 												<span>{$t('auth.user_email_verification_required')}</span>
 											</div>
-										{:else if $page.form?.message}
+										{:else if page.form?.message}
 											<div class="alert alert-error mt-4">
-												<span
-													>{$t($page.form.message, {
-														values: $page.form.values ?? {}
-													})}</span
-												>
+												<span>{$t(page.form.message, { values: page.form.values ?? {} })}</span>
 											</div>
 										{/if}
 
@@ -259,7 +255,7 @@
 													stroke-linejoin="round"
 													stroke-width="2"
 													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-												/>
+												></path>
 											</svg>
 										</div>
 										<h1 class="text-4xl font-bold text-base-content mb-4">
@@ -299,7 +295,7 @@
 													stroke-linejoin="round"
 													stroke-width="2"
 													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-												/>
+												></path>
 											</svg>
 										</div>
 										<h1 class="text-4xl font-bold text-base-content mb-4">
@@ -310,9 +306,7 @@
 										</p>
 									</div>
 
-									<div class="mt-8">
-										<a href="/login" class="btn btn-primary"> Go to Login </a>
-									</div>
+									<div class="mt-8"><a href="/login" class="btn btn-primary">Go to Login</a></div>
 								</div>
 							{/if}
 						</div>
@@ -343,10 +337,8 @@
 	{#if background.url}
 		<button
 			class="btn btn-circle btn-sm fixed bottom-4 right-4 bg-base-100/80 border-base-300 z-20"
-			onclick={() => (isImageInfoModalOpen = true)}
+			onclick={() => (isImageInfoModalOpen = true)}><FileImageBox class="w-4 h-4" /></button
 		>
-			<FileImageBox class="w-4 h-4" />
-		</button>
 	{/if}
 </div>
 

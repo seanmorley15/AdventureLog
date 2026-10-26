@@ -1,4 +1,4 @@
-import { proxyToDjango } from '$lib/server/django-proxy';
+import { proxyToDjango } from '#lib/server/django-proxy.js';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = (event) => proxyToDjango(event, 'api');

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { Category } from '$lib/types';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import type { Category } from '#lib/types.js';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	interface Props {
 		selected_category?: Category | null;

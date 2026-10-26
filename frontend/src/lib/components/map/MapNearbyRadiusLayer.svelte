@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { GeoJSON, FillLayer, LineLayer } from 'svelte-maplibre';
-	import { circleFeatureCollection } from '$lib/map/circleGeoJson';
+	import { circleFeatureCollection } from '#lib/map/circleGeoJson.js';
 
 	interface Props {
 		visible?: boolean;

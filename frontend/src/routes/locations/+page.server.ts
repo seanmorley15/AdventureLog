@@ -1,10 +1,10 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location } from '$lib/types';
+import type { Location } from '#lib/types.js';
 
 import type { Actions } from '@sveltejs/kit';
-import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
+import { backendApiUrl, fetchCSRFToken } from '#lib/index.server.js';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 

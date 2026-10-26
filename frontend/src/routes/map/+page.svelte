@@ -2,11 +2,11 @@
 	import { run } from 'svelte/legacy';
 
 	import { DefaultMarker, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
-	import MapNearbyRadiusLayer from '$lib/components/map/MapNearbyRadiusLayer.svelte';
+	import MapNearbyRadiusLayer from '#lib/components/map/MapNearbyRadiusLayer.svelte';
 	import { onDestroy, onMount } from 'svelte';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { t } from 'svelte-i18n';
-	import { googleContentImage } from '$lib/images';
+	import { googleContentImage } from '#lib/images.js';
 	import type {
 		Activity,
 		Location,
@@ -18,16 +18,16 @@
 		PlaceSearchResult,
 		Recommendation,
 		Lodging
-	} from '$lib/types.js';
-	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
-	import { createEmptyLocation } from '$lib/location-draft';
+	} from '#lib/types.js';
+	import { LocationDuplicateChecker } from '#lib/location-duplicate-checker.svelte.js';
+	import { createEmptyLocation } from '#lib/location-draft.js';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { getActivityColor, normalizeBasemapType } from '$lib';
-	import { page } from '$app/stores';
-	import { addToast } from '$lib/toasts';
-	import { bindMapViewportCenterSync, getMapViewportCenter } from '$lib/map/viewportCenter';
-	import { safeMapResize } from '$lib/map/renderGuard';
+	import { getActivityColor, normalizeBasemapType } from '#lib';
+	import { page } from '$app/state';
+	import { addToast } from '#lib/toasts.js';
+	import { bindMapViewportCenterSync, getMapViewportCenter } from '#lib/map/viewportCenter.js';
+	import { safeMapResize } from '#lib/map/renderGuard.js';
 	import {
 		enrichPlace,
 		fetchRecommendations,
@@ -37,7 +37,7 @@
 		recommendationToLocationPrefill,
 		recommendationToQuickAddPayload,
 		resolveQuickAddPayload
-	} from '$lib/map/places';
+	} from '#lib/map/places.js';
 
 	import MapIcon from '~icons/mdi/map';
 	import Filter from '~icons/mdi/filter-variant';
@@ -48,22 +48,22 @@
 	import FlagIcon from '~icons/mdi/flag';
 	import CityIcon from '~icons/mdi/city';
 	import CameraIcon from '~icons/mdi/camera';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import FullMap from '$lib/components/map/FullMap.svelte';
-	import MapSearchBar from '$lib/components/map/MapSearchBar.svelte';
-	import MapDetailPanel from '$lib/components/map/MapDetailPanel.svelte';
-	import MapRecommendationsLayer from '$lib/components/map/MapRecommendationsLayer.svelte';
-	import ImageMapPinPopup from '$lib/components/map/ImageMapPinPopup.svelte';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
+	import FullMap from '#lib/components/map/FullMap.svelte';
+	import MapSearchBar from '#lib/components/map/MapSearchBar.svelte';
+	import MapDetailPanel from '#lib/components/map/MapDetailPanel.svelte';
+	import MapRecommendationsLayer from '#lib/components/map/MapRecommendationsLayer.svelte';
+	import ImageMapPinPopup from '#lib/components/map/ImageMapPinPopup.svelte';
 	import {
 		fetchImageMapPins,
 		imagePinPropsToSelection,
 		mapImagePinSelectionToProps,
 		type ImageMapPin,
 		type ImagePinProperties
-	} from '$lib/map/imagePins';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
+	} from '#lib/map/imagePins.js';
+	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
+	import CategoryFilterDropdown from '#lib/components/CategoryFilterDropdown.svelte';
 	import Compass from '~icons/mdi/compass';
 	import Tag from '~icons/mdi/tag';
 	import ChevronLeft from '~icons/mdi/chevron-left';
@@ -94,7 +94,7 @@
 	const MAP_VIEW_STORAGE_KEY = 'adventurelog.map.view';
 
 	function viewFromSearchParams(
-		params: URLSearchParams
+		params: Pick<URLSearchParams, 'get'>
 	): { center: [number, number]; zoom: number } | null {
 		const lat = params.get('lat');
 		const lng = params.get('lng');
@@ -134,7 +134,7 @@
 
 	function getInitialMapView(): { center: [number, number]; zoom: number } | null {
 		if (!browser) return null;
-		return viewFromSearchParams($page.url.searchParams) ?? readStoredMapView();
+		return viewFromSearchParams(page.url.searchParams) ?? readStoredMapView();
 	}
 
 	const initialView = getInitialMapView();
@@ -1032,12 +1032,14 @@
 		filteredPins = pins.filter((pin) => {
 			const statusMatch =
 				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
+
 			if (!statusMatch) return false;
 			if (categoryFilterNames.length > 0) {
 				const categoryName = pin.category?.name;
 				if (!categoryName || !categoryFilterNames.includes(categoryName)) return false;
 			}
 			if (!query) return true;
+
 			return (
 				pin.name?.toLowerCase().includes(query) ||
 				pin.category?.display_name?.toLowerCase().includes(query)
@@ -1130,6 +1132,7 @@
 							{@const isSelected =
 								(pinKind === 'location' && selectedPinId === markerProps.id) ||
 								(pinKind === 'image' && selectedImagePinId === imagePinProps?.imageId)}
+
 							<Marker
 								lngLat={markerLngLat}
 								class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
+	import PasswordRequirements from '#lib/components/auth/PasswordRequirements.svelte';
 
 	let { data } = $props();
 
@@ -46,16 +46,14 @@
 			</div>
 
 			<PasswordRequirements policy={data.passwordPolicy} {password} />
-
 			<div class="flex flex-col mt-2">
-				<button type="submit" class="btn btn-primary w-full">
-					{$t('settings.reset_password')}
-				</button>
+				<button type="submit" class="btn btn-primary w-full">{$t('settings.reset_password')}</button
+				>
 			</div>
 
-			{#if $page.form?.message}
+			{#if page.form?.message}
 				<div class="mt-2 text-center text-error">
-					{$t($page.form?.message, { values: $page.form?.values ?? {} })}
+					{$t(page.form?.message, { values: page.form?.values ?? {} })}
 				</div>
 			{/if}
 		</form>

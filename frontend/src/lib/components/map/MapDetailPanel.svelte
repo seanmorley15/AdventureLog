@@ -11,16 +11,16 @@
 		Recommendation,
 		ContentImage,
 		DuplicateLocationMatch
-	} from '$lib/types';
-	import DuplicateLocationPrompt from '$lib/components/locations/DuplicateLocationPrompt.svelte';
-	import type { ImagePinProperties } from '$lib/map/imagePins';
-	import { getImagePinNavigationUrl, getImagePinParentTypeKey } from '$lib/map/imagePins';
-	import { formatProviderLabel } from '$lib/map/places';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
-	import { googleContentImage } from '$lib/images';
+	} from '#lib/types.js';
+	import DuplicateLocationPrompt from '#lib/components/locations/DuplicateLocationPrompt.svelte';
+	import type { ImagePinProperties } from '#lib/map/imagePins.js';
+	import { getImagePinNavigationUrl, getImagePinParentTypeKey } from '#lib/map/imagePins.js';
+	import { formatProviderLabel } from '#lib/map/places.js';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
+	import { googleContentImage } from '#lib/images.js';
 	import { page } from '$app/state';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	import ArrowLeft from '~icons/mdi/arrow-left';
 	import OpenInNew from '~icons/mdi/open-in-new';

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { addToast } from '$lib/toasts';
-	import { copyToClipboard as clipboardCopy } from '$lib/index';
-	import { isReauthRequired, reauthenticateWithPassword } from '$lib/reauthenticate';
+	import { addToast } from '#lib/toasts.js';
+	import { copyToClipboard as clipboardCopy } from '#lib/index.js';
+	import { isReauthRequired, reauthenticateWithPassword } from '#lib/reauthenticate.js';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -9,7 +9,7 @@
 	// @ts-ignore
 	import QRCode from 'qrcode';
 	import { t } from 'svelte-i18n';
-	import type { User } from '$lib/types';
+	import type { User } from '#lib/types.js';
 	let secret: string | null = $state(null);
 	let qrCodeDataUrl: string | null = $state(null);
 	let totpUrl: string | null = null;

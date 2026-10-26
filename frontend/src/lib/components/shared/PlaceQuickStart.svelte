@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-	import FullMap from '$lib/components/map/FullMap.svelte';
+	import FullMap from '#lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
-	import type { Category } from '$lib/types';
-	import { fetchFormattedLocation } from '$lib/map/places';
-	import { LocationDuplicateChecker } from '$lib/location-duplicate-checker.svelte';
-	import DuplicateLocationPrompt from '$lib/components/locations/DuplicateLocationPrompt.svelte';
+	import type { Category } from '#lib/types.js';
+	import { fetchFormattedLocation } from '#lib/map/places.js';
+	import { LocationDuplicateChecker } from '#lib/location-duplicate-checker.svelte.js';
+	import DuplicateLocationPrompt from '#lib/components/locations/DuplicateLocationPrompt.svelte';
 	import { page } from '$app/state';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	import SearchIcon from '~icons/mdi/magnify';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';

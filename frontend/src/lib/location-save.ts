@@ -1,5 +1,5 @@
-import { DEFAULT_CURRENCY, normalizeMoneyPayload } from '$lib/money';
-import type { Location } from '$lib/types';
+import { DEFAULT_CURRENCY, normalizeMoneyPayload } from '#lib/money.js';
+import type { Location } from '#lib/types.js';
 
 type SaveLocationInput = {
 	location: Partial<Location>;

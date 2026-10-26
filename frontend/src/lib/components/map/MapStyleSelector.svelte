@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { getBasemapLabel, getBasemapOptions } from '$lib';
+	import { getBasemapLabel, getBasemapOptions } from '#lib';
 	import { t } from 'svelte-i18n';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 	import MapIcon from '~icons/mdi/map';
 	import CheckIcon from '~icons/mdi/check';
 

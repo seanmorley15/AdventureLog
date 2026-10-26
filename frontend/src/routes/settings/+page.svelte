@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { page } from '$app/stores';
-	import { addToast } from '$lib/toasts';
-	import { sanitizeBasemapType } from '$lib';
+	import { page } from '$app/state';
+	import { addToast } from '#lib/toasts.js';
+	import { sanitizeBasemapType } from '#lib';
 	import type {
 		EndurainIntegration,
 		ImmichIntegration,
@@ -12,22 +12,22 @@
 		APIKey,
 		MediaUsage,
 		AuthUserSession
-	} from '$lib/types.js';
+	} from '#lib/types.js';
 	import { onMount, untrack } from 'svelte';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import TotpModal from '$lib/components/TOTPModal.svelte';
-	import IntegrationsSettings from '$lib/components/settings/IntegrationsSettings.svelte';
-	import SettingsNav from '$lib/components/settings/SettingsNav.svelte';
-	import ProfileSettingsPanel from '$lib/components/settings/ProfileSettingsPanel.svelte';
-	import EmailsSettingsPanel from '$lib/components/settings/EmailsSettingsPanel.svelte';
-	import SecuritySettingsPanel from '$lib/components/settings/SecuritySettingsPanel.svelte';
-	import DataSettingsPanel from '$lib/components/settings/DataSettingsPanel.svelte';
-	import DangerZoneSettingsPanel from '$lib/components/settings/DangerZoneSettingsPanel.svelte';
-	import AboutSettingsPanel from '$lib/components/settings/AboutSettingsPanel.svelte';
-	import AdminSettingsPanel from '$lib/components/settings/AdminSettingsPanel.svelte';
-	import { isReauthRequired, reauthenticateWithPassword } from '$lib/reauthenticate';
+	import TotpModal from '#lib/components/TOTPModal.svelte';
+	import IntegrationsSettings from '#lib/components/settings/IntegrationsSettings.svelte';
+	import SettingsNav from '#lib/components/settings/SettingsNav.svelte';
+	import ProfileSettingsPanel from '#lib/components/settings/ProfileSettingsPanel.svelte';
+	import EmailsSettingsPanel from '#lib/components/settings/EmailsSettingsPanel.svelte';
+	import SecuritySettingsPanel from '#lib/components/settings/SecuritySettingsPanel.svelte';
+	import DataSettingsPanel from '#lib/components/settings/DataSettingsPanel.svelte';
+	import DangerZoneSettingsPanel from '#lib/components/settings/DangerZoneSettingsPanel.svelte';
+	import AboutSettingsPanel from '#lib/components/settings/AboutSettingsPanel.svelte';
+	import AdminSettingsPanel from '#lib/components/settings/AdminSettingsPanel.svelte';
+	import { isReauthRequired, reauthenticateWithPassword } from '#lib/reauthenticate.js';
 
 	let { data = $bindable() } = $props();
 
@@ -71,6 +71,7 @@
 
 	let apiKeys: APIKey[] = $state<APIKey[]>([]);
 	let sessions: AuthUserSession[] = $state<AuthUserSession[]>([]);
+
 	let mediaUsage: MediaUsage = $derived(
 		data.props.mediaUsage ??
 			({
@@ -140,33 +141,37 @@
 			(mediaUsage?.attachments_files ?? 0) +
 			(mediaUsage?.profile_pics_files ?? 0)
 	);
+
 	let overallUsagePercent = $derived(
 		mediaLimitBytes ? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100)) : 0
 	);
+
 	let imagesPercent = $derived(
 		mediaLimitBytes
 			? Math.min(100, Math.round((mediaUsage.images_bytes / mediaLimitBytes) * 100))
 			: 0
 	);
+
 	let attachmentsPercent = $derived(
 		mediaLimitBytes
 			? Math.min(100, Math.round((mediaUsage.attachments_bytes / mediaLimitBytes) * 100))
 			: 0
 	);
+
 	let profilePicsPercent = $derived(
 		mediaLimitBytes
 			? Math.min(100, Math.round((mediaUsage.profile_pics_bytes / mediaLimitBytes) * 100))
 			: 0
 	);
-	let mediaLimitLabel = $derived(mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited');
 
+	let mediaLimitLabel = $derived(mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited');
 	let profileSharingImpact = $derived(
 		(user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0)
 	);
 
 	run(() => {
-		if (browser && $page.form?.deleteAccountError) {
-			addToast('error', $t($page.form.deleteAccountError));
+		if (browser && page.form?.deleteAccountError) {
+			addToast('error', $t(page.form.deleteAccountError));
 		}
 	});
 
@@ -185,7 +190,7 @@
 	function setActiveSection(sectionId: string) {
 		activeSection = sectionId;
 		if (browser) {
-			const url = new URL($page.url);
+			const url = new URL(page.url.href);
 			url.searchParams.set('tab', sectionId);
 			url.searchParams.delete('focus');
 			history.replaceState({}, '', url);
@@ -235,18 +240,18 @@
 
 	onMount(() => {
 		if (!browser) return;
-		activeSection = normalizeSection($page.url.searchParams.get('tab'));
-		if ($page.url.searchParams.get('page') === 'success') {
+		activeSection = normalizeSection(page.url.searchParams.get('tab'));
+		if (page.url.searchParams.get('page') === 'success') {
 			addToast('success', $t('settings.update_success'));
 		}
 	});
 
 	run(() => {
-		if (browser && $page.form?.success) {
-			const leftShared = $page.form.left_shared_collections ?? 0;
-			const revokedInvites = $page.form.revoked_collection_invites ?? 0;
+		if (browser && page.form?.success) {
+			const leftShared = page.form.left_shared_collections ?? 0;
+			const revokedInvites = page.form.revoked_collection_invites ?? 0;
 			if (leftShared > 0 || revokedInvites > 0) {
-				addToast('success', profileUpdateToastMessage($page.form));
+				addToast('success', profileUpdateToastMessage(page.form));
 				user.shared_collection_count = 0;
 				user.pending_collection_invite_count = Math.max(
 					0,
@@ -257,8 +262,8 @@
 				window.location.href = '/settings?page=success';
 			}
 		}
-		if (browser && $page.form?.error) addToast('error', $t('settings.update_error'));
-		if (browser && $page.form) isRestoring = false;
+		if (browser && page.form?.error) addToast('error', $t('settings.update_error'));
+		if (browser && page.form) isRestoring = false;
 	});
 
 	async function checkVisitedRegions() {

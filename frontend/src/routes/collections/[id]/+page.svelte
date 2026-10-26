@@ -1,33 +1,33 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '$lib/types';
+	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '#lib/types.js';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import Lost from '$lib/assets/undraw_lost.svg';
+	import { page } from '$app/state';
+	import Lost from '#lib/assets/undraw_lost.svg';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import Calendar from '~icons/mdi/calendar';
-	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
-	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
-	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
-	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
-	import { normalizeContentImage } from '$lib/images';
-	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
-	import CollectionItineraryPlanner from '$lib/components/collections/CollectionItineraryPlanner.svelte';
-	import CollectionRecommendationView from '$lib/components/CollectionRecommendationView.svelte';
-	import CollectionMap from '$lib/components/collections/CollectionMap.svelte';
-	import CollectionStats from '$lib/components/collections/CollectionStats.svelte';
-	import LocationLink from '$lib/components/LocationLink.svelte';
-	import { getBasemapUrl } from '$lib';
-	import { formatMoney, toMoneyValue, DEFAULT_CURRENCY } from '$lib/money';
+	import CalendarComponent from '#lib/components/calendar/Calendar.svelte';
+	import EventDetailsModal from '#lib/components/calendar/EventDetailsModal.svelte';
+	import { buildCollectionCalendarEvents } from '#lib/calendar/events.js';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
+	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '#lib/calendar/types.js';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
+	import { normalizeContentImage } from '#lib/images.js';
+	import CollectionAllItems from '#lib/components/collections/CollectionAllItems.svelte';
+	import CollectionItineraryPlanner from '#lib/components/collections/CollectionItineraryPlanner.svelte';
+	import CollectionRecommendationView from '#lib/components/CollectionRecommendationView.svelte';
+	import CollectionMap from '#lib/components/collections/CollectionMap.svelte';
+	import CollectionStats from '#lib/components/collections/CollectionStats.svelte';
+	import LocationLink from '#lib/components/LocationLink.svelte';
+	import { getBasemapUrl } from '#lib';
+	import { formatMoney, toMoneyValue, DEFAULT_CURRENCY } from '#lib/money.js';
 	import FolderMultiple from '~icons/mdi/folder-multiple';
 	import FormatListBulleted from '~icons/mdi/format-list-bulleted';
 	import Timeline from '~icons/mdi/timeline';
@@ -37,14 +37,14 @@
 	import Plus from '~icons/mdi/plus';
 	import FilePdfBox from '~icons/mdi/file-pdf-box';
 	import ImageOutline from '~icons/mdi/image-outline';
-	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
-	import { addToast } from '$lib/toasts';
-	import NoteModal from '$lib/components/NoteModal.svelte';
-	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
-	import LocationModal from '$lib/components/locations/LocationModal.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import SocialShareModal from '#lib/components/SocialShareModal.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import NoteModal from '#lib/components/NoteModal.svelte';
+	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
+	import TransportationModal from '#lib/components/transportation/TransportationModal.svelte';
+	import LocationModal from '#lib/components/locations/LocationModal.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -419,9 +419,9 @@
 	}
 
 	function switchView(view: ViewType) {
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('view', view);
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(url.toString(), { replace: true, reset: false });
 	}
 
 	function closeLocationLinkModal() {
@@ -478,12 +478,8 @@
 		try {
 			const response = await fetch(`/api/locations/${location.id}/`, {
 				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					collections: [...(location.collections || []), collection.id]
-				})
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ collections: [...(location.collections || []), collection.id] })
 			});
 
 			if (response.ok) {
@@ -588,7 +584,8 @@
 	});
 	// Read view from URL params and validate it's available
 	run(() => {
-		const view = $page.url.searchParams.get('view') as ViewType;
+		const view = page.url.searchParams.get('view') as ViewType;
+
 		if (
 			view &&
 			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
@@ -1144,16 +1141,15 @@
 												class="btn btn-xs sm:btn-sm join-item"
 												class:btn-active={timezoneMode === 'event'}
 												onclick={() => (timezoneMode = 'event')}
+												>{$t('collections.event_timezone')}</button
 											>
-												{$t('collections.event_timezone')}
-											</button>
+
 											<button
 												class="btn btn-xs sm:btn-sm join-item"
 												class:btn-active={timezoneMode === 'local'}
 												onclick={() => (timezoneMode = 'local')}
+												>{$t('collections.local_timezone')}</button
 											>
-												{$t('collections.local_timezone')}
-											</button>
 										</div>
 									</div>
 								</div>

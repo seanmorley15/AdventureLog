@@ -9,7 +9,7 @@
 	import Interaction from '@event-calendar/interaction';
 	import { t } from 'svelte-i18n';
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { CalendarDisplayEvent } from '$lib/calendar/types';
+	import type { CalendarDisplayEvent } from '#lib/calendar/types.js';
 
 	interface Props {
 		events?: CalendarDisplayEvent[];

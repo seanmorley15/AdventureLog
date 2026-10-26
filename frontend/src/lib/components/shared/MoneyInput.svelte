@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { MoneyValue } from '$lib/types';
-	import { CURRENCY_OPTIONS, DEFAULT_CURRENCY } from '$lib/money';
+	import type { MoneyValue } from '#lib/types.js';
+	import { CURRENCY_OPTIONS, DEFAULT_CURRENCY } from '#lib/money.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import CurrencyDropdown from './CurrencyDropdown.svelte';

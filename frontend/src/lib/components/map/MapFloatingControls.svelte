@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
-	import { safeMapResize } from '$lib/map/renderGuard';
-	import MapStyleSelector from '$lib/components/map/MapStyleSelector.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import { safeMapResize } from '#lib/map/renderGuard.js';
+	import MapStyleSelector from '#lib/components/map/MapStyleSelector.svelte';
 	import PlusIcon from '~icons/mdi/plus';
 	import MinusIcon from '~icons/mdi/minus';
 	import CrosshairsGpsIcon from '~icons/mdi/crosshairs-gps';

@@ -1,5 +1,5 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { City, Region, VisitedCity } from '$lib/types';
+import type { City, Region, VisitedCity } from '#lib/types.js';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

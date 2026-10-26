@@ -1,7 +1,10 @@
-import type { Handle } from '@sveltejs/kit';
-import { sequence } from '@sveltejs/kit/hooks';
-import { themes } from '$lib';
-import { clearSessionCookie, getServerEndpoint, setSessionFromResponse } from '$lib/index.server';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
+import { themes } from '#lib';
+import {
+	clearSessionCookie,
+	getServerEndpoint,
+	setSessionFromResponse
+} from '#lib/index.server.js';
 
 const ALLOWED_THEME_NAMES = new Set(themes.map((theme) => theme.name));
 

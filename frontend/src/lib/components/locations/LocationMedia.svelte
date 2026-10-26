@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Attachment, ContentImage, Trail, WandererTrail } from '$lib/types';
+	import type { Attachment, ContentImage, Trail, WandererTrail } from '#lib/types.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
@@ -21,13 +21,13 @@
 	import Users from '~icons/mdi/account-supervisor';
 	import Camera from '~icons/mdi/camera';
 
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import ImageManagement from '../ImageManagement.svelte';
-	import { parseImmichIntegration } from '$lib/integrations';
+	import { parseImmichIntegration } from '#lib/integrations.js';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 	import WandererCard from '../cards/WandererCard.svelte';
 	import { page } from '$app/state';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface Props {
 		// Props

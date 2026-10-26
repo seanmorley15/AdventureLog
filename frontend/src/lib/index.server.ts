@@ -1,4 +1,4 @@
-export { backendApiUrl, fetchCSRFToken, getServerEndpoint } from '$lib/server/django-proxy';
+export { backendApiUrl, fetchCSRFToken, getServerEndpoint } from '#lib/server/django-proxy.js';
 export {
 	buildAuthCookieHeader,
 	clearSessionCookie,
@@ -6,7 +6,7 @@ export {
 	getSessionCookieOptions,
 	resolveSessionCookieDomain,
 	setSessionFromResponse
-} from '$lib/server/session-cookies';
+} from '#lib/server/session-cookies.js';
 export {
 	csrfFail,
 	djangoBrowserFetch,
@@ -14,21 +14,21 @@ export {
 	djangoSessionJson,
 	requireCsrf,
 	CsrfError
-} from '$lib/server/django-auth';
-export { requireUser } from '$lib/server/require-user';
-export { isPasswordResetSuccess } from '$lib/server/allauth-password-reset';
+} from '#lib/server/django-auth.js';
+export { requireUser } from '#lib/server/require-user.js';
+export { isPasswordResetSuccess } from '#lib/server/allauth-password-reset.js';
 export {
 	fetchPasswordPolicy,
 	isPasswordLongEnough,
 	type PasswordPolicy
-} from '$lib/server/password-policy';
+} from '#lib/server/password-policy.js';
 export {
 	fetchSignupLegalLinks,
 	signupLegalRequired,
 	type SignupLegalLinks
-} from '$lib/server/signup-legal';
+} from '#lib/server/signup-legal.js';
 export {
 	mapAllauthPasswordError,
 	mapSignupError,
 	type PasswordFormError
-} from '$lib/server/password-errors';
+} from '#lib/server/password-errors.js';

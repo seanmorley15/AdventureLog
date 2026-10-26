@@ -1,4 +1,4 @@
-import { json, type RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
 
 export function getServerEndpoint(): string {
 	return process.env['PUBLIC_SERVER_URL'] || 'http://localhost:8000';
@@ -116,7 +116,7 @@ export async function proxyToDjango(
 
 	const csrfToken = await fetchCSRFToken();
 	if (!csrfToken) {
-		return json({ error: 'CSRF token is missing or invalid' }, { status: 400 });
+		return Response.json({ error: 'CSRF token is missing or invalid' }, { status: 400 });
 	}
 
 	const sessionId = cookies.get('sessionid');
@@ -162,7 +162,7 @@ export async function proxyToDjango(
 			return new Response(null, { status: 499 });
 		}
 		console.error('Error forwarding request:', error);
-		return json({ error: 'Internal Server Error' }, { status: 500 });
+		return Response.json({ error: 'Internal Server Error' }, { status: 500 });
 	}
 }
 

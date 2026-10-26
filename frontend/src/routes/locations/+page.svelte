@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { goto, invalidate } from '$app/navigation';
-	import { page } from '$app/stores';
-	import LocationCard from '$lib/components/cards/LocationCard.svelte';
-	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
-	import CategoryModal from '$lib/components/CategoryModal.svelte';
-	import { createEmptyLocation } from '$lib/location-draft';
-	import type { Location } from '$lib/types';
+	import { page } from '$app/state';
+	import LocationCard from '#lib/components/cards/LocationCard.svelte';
+	import CategoryFilterDropdown from '#lib/components/CategoryFilterDropdown.svelte';
+	import CategoryModal from '#lib/components/CategoryModal.svelte';
+	import { createEmptyLocation } from '#lib/location-draft.js';
+	import type { Location } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -16,7 +16,7 @@
 	import Calendar from '~icons/mdi/calendar';
 	import Tag from '~icons/mdi/tag';
 	import Compass from '~icons/mdi/compass';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
 
 	interface Props {
 		data: any;
@@ -33,12 +33,12 @@
 	$effect.pre(() => {
 		adventures = [...(data?.props?.adventures ?? [])];
 	});
-	let categoryTypes = $derived($page.url.searchParams.get('types') ?? '');
-	let orderBy = $derived($page.url.searchParams.get('order_by') || 'updated_at');
-	let orderDirection = $derived($page.url.searchParams.get('order_direction') || 'asc');
-	let isVisitedFilter = $derived($page.url.searchParams.get('is_visited') || 'all');
-	let includeCollections = $derived($page.url.searchParams.get('include_collections') !== 'false');
-	let currentPage = $derived(parseInt($page.url.searchParams.get('page') || '1', 10));
+	let categoryTypes = $derived(page.url.searchParams.get('types') ?? '');
+	let orderBy = $derived(page.url.searchParams.get('order_by') || 'updated_at');
+	let orderDirection = $derived(page.url.searchParams.get('order_direction') || 'asc');
+	let isVisitedFilter = $derived(page.url.searchParams.get('is_visited') || 'all');
+	let includeCollections = $derived(page.url.searchParams.get('include_collections') !== 'false');
+	let currentPage = $derived(parseInt(page.url.searchParams.get('page') || '1', 10));
 
 	let locationBeingUpdated = $state(createEmptyLocation());
 
@@ -83,8 +83,7 @@
 	};
 
 	function buildFilterUrl(overrides: LocationFilterOverrides = {}) {
-		const url = new URL($page.url);
-
+		const url = new URL(page.url.href);
 		const types =
 			overrides.types !== undefined ? overrides.types : (url.searchParams.get('types') ?? '');
 		const nextIsVisited = overrides.is_visited ?? url.searchParams.get('is_visited') ?? 'all';
@@ -113,7 +112,7 @@
 
 	async function applyLocationFilters(overrides: LocationFilterOverrides = {}) {
 		const target = buildFilterUrl(overrides);
-		await goto(target, { keepFocus: true, noScroll: true });
+		await goto(target, { reset: false });
 		await invalidate('locations:list');
 	}
 
@@ -134,10 +133,10 @@
 	}
 
 	async function handleChangePage(pageNumber: number) {
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', pageNumber.toString());
 		const target = `${url.pathname}${url.search}`;
-		await goto(target, { keepFocus: true, noScroll: true });
+		await goto(target, { reset: false });
 		await invalidate('locations:list');
 	}
 
@@ -303,7 +302,7 @@
 								isEditLoading={editingLocationId === adventure.id}
 								on:delete={deleteAdventure}
 								on:edit={editAdventure}
-								on:editVisits={editVisits}
+								on:editVisits
 								on:duplicate={(e) => {
 									// Add the new location to the beginning of the list
 									adventures = [e.detail, ...adventures];

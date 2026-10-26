@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { StravaActivity, User } from '$lib/types';
-	import StravaActivityCard from '$lib/components/StravaActivityCard.svelte';
+	import type { StravaActivity, User } from '#lib/types.js';
+	import StravaActivityCard from '#lib/components/StravaActivityCard.svelte';
 	import LoadingIcon from '~icons/mdi/loading';
 	import RunIcon from '~icons/mdi/run';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { ContentImage, ImageSource } from '$lib/types';
-	import { normalizeContentImage } from '$lib/images';
+	import type { ContentImage, ImageSource } from '#lib/types.js';
+	import { normalizeContentImage } from '#lib/images.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -14,7 +14,7 @@
 	import ImageIcon from '~icons/mdi/image';
 	import GoogleIcon from '~icons/mdi/google';
 
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import ImmichSelect from './ImmichSelect.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 

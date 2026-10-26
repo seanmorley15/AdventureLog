@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { searchApp } from '$lib/search/api';
-	import SearchResultRow from '$lib/search/SearchResultRow.svelte';
-	import { openCommandPalette } from '$lib/search/palette';
-	import type { SearchEntityType, SearchHit } from '$lib/search/types';
+	import { page } from '$app/state';
+	import { searchApp } from '#lib/search/api.js';
+	import SearchResultRow from '#lib/search/SearchResultRow.svelte';
+	import { openCommandPalette } from '#lib/search/palette.js';
+	import type { SearchEntityType, SearchHit } from '#lib/search/types.js';
 	import type { PageData } from './$types';
 	import Magnify from '~icons/mdi/magnify';
 	import { t } from 'svelte-i18n';
@@ -57,11 +57,8 @@
 	let limit = $state(0);
 	let loadingMore = $state(false);
 	let loadMoreError = $state('');
-
-	let query = $derived(
-		$page.url.searchParams.get('q') || $page.url.searchParams.get('query') || ''
-	);
-	let activeFilter = $derived($page.url.searchParams.get('filter') || 'all');
+	let query = $derived(page.url.searchParams.get('q') || page.url.searchParams.get('query') || '');
+	let activeFilter = $derived(page.url.searchParams.get('filter') || 'all');
 	let hasQuery = $derived(query.trim().length > 0);
 	let hasResults = $derived(results.length > 0);
 	let canLoadMore = $derived(hasQuery && results.length < total);
@@ -89,7 +86,7 @@
 				url.searchParams.set('types', types.join(','));
 			}
 		}
-		goto(url.toString(), { invalidateAll: true });
+		goto(url.toString(), { refreshAll: true });
 	}
 
 	async function loadMore() {
@@ -185,10 +182,8 @@
 				<button
 					type="button"
 					class="btn btn-sm"
-					onclick={() => goto($page.url.pathname + $page.url.search)}
+					onclick={() => goto(page.url.pathname + page.url.search)}>{$t('search.retry')}</button
 				>
-					{$t('search.retry')}
-				</button>
 			</div>
 		{:else if !hasQuery}
 			<div class="flex flex-col items-center justify-center py-16 text-center">

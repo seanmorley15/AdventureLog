@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount, untrack } from 'svelte';
-	import type { Collection, Location, User } from '$lib/types';
+	import type { Collection, Location, User } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
-	import { normalizeBasemapType } from '$lib';
-	import { createEmptyLocation } from '$lib/location-draft';
-	import { extractGooglePhotoUrls } from '$lib/map/places';
+	import { normalizeBasemapType } from '#lib';
+	import { createEmptyLocation } from '#lib/location-draft.js';
+	import { extractGooglePhotoUrls } from '#lib/map/places.js';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
