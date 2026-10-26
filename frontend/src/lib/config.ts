@@ -1,4 +1,4 @@
-export let appVersion = 'v0.13.1-main-102326';
+export let appVersion = 'v0.13.1-main-102626';
 export let appCodename = 'Cadillac';
 export let versionChangelog = 'https://github.com/seanmorley15/AdventureLog/releases/tag/v0.13.1';
 export let appTitle = 'AdventureLog';
