@@ -114,38 +114,38 @@ Built for travelers who want to track, plan, and remember their travel experienc
 
 ## Features
 
-| | Feature | What you get |
-| --- | --- | --- |
-| 📍 | **Locations & visits** | Pin places on the map with dates, notes, photos, categories, tags, and multi-visit history |
-| 🗺️ | **Interactive map** | Filter by visited / planned, add locations by click, 2D & 3D views |
-| ✈️ | **Trip itineraries** | Multi-day collections with flights, lodging, checklists, links & calendar views |
-| 🤝 | **Collaboration** | Share locations and itineraries via public links or invite other users to edit together |
-| 🌍 | **World travel book** | Track countries, regions, and cities — with stats and progress milestones |
-| 🥾 | **Trails & activities** | Attach hiking routes, GPX tracks, distance, elevation & outdoor activity logs |
-| 🔍 | **Search & organize** | Full-text search, custom categories, public/private visibility |
-| 🔐 | **Security** | MFA, API keys, social auth (Google, GitHub, Authelia & more) |
+|     | Feature                 | What you get                                                                               |
+| --- | ----------------------- | ------------------------------------------------------------------------------------------ |
+| 📍  | **Locations & visits**  | Pin places on the map with dates, notes, photos, categories, tags, and multi-visit history |
+| 🗺️  | **Interactive map**     | Filter by visited / planned, add locations by click, 2D & 3D views                         |
+| ✈️  | **Trip itineraries**    | Multi-day collections with flights, lodging, checklists, links & calendar views            |
+| 🤝  | **Collaboration**       | Share locations and itineraries via public links or invite other users to edit together    |
+| 🌍  | **World travel book**   | Track countries, regions, and cities — with stats and progress milestones                  |
+| 🥾  | **Trails & activities** | Attach hiking routes, GPX tracks, distance, elevation & outdoor activity logs              |
+| 🔍  | **Search & organize**   | Full-text search, custom categories, public/private visibility                             |
+| 🔐  | **Security**            | MFA, API keys, social auth (Google, GitHub, Authelia & more)                               |
 
 ### Integrations
 
 Connect the tools you already use:
 
-| Integration | Purpose |
-| ----------- | ------- |
-| [**Immich**](https://adventurelog.app/docs/configuration/immich_integration.html) | Link photos from your self-hosted media library |
-| [**Strava**](https://adventurelog.app/docs/configuration/strava_integration.html) | Import activities with GPX tracks & stats |
-| [**Endurain**](https://adventurelog.app/docs/configuration/endurain_integration.html) | Import activities with GPX tracks & stats |
-| [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration.html) | Attach trails with distance & elevation data |
-| [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration.html) | Geocoding & location search |
+| Integration                                                                                 | Purpose                                         |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| [**Immich**](https://adventurelog.app/docs/configuration/immich_integration.html)           | Link photos from your self-hosted media library |
+| [**Strava**](https://adventurelog.app/docs/configuration/strava_integration.html)           | Import activities with GPX tracks & stats       |
+| [**Endurain**](https://adventurelog.app/docs/configuration/endurain_integration.html)       | Import activities with GPX tracks & stats       |
+| [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration.html)       | Attach trails with distance & elevation data    |
+| [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration.html) | Geocoding & location search                     |
 
 ## Why AdventureLog?
 
-| | **AdventureLog** | Typical closed travel apps |
-| --- | --- | --- |
-| **Ownership** | Your data on your server | Locked in a vendor cloud |
-| **Cost** | Free to self-host (GPL-3.0) | Subscriptions & upsells |
-| **Privacy** | You control access & sharing | Opaque data policies |
-| **Customization** | Open source — extend & integrate | Fixed feature set |
-| **Scope** | Locations, itineraries & world travel in one app | Split across multiple tools |
+|                   | **AdventureLog**                                 | Typical closed travel apps  |
+| ----------------- | ------------------------------------------------ | --------------------------- |
+| **Ownership**     | Your data on your server                         | Locked in a vendor cloud    |
+| **Cost**          | Free to self-host (GPL-3.0)                      | Subscriptions & upsells     |
+| **Privacy**       | You control access & sharing                     | Opaque data policies        |
+| **Customization** | Open source — extend & integrate                 | Fixed feature set           |
+| **Scope**         | Locations, itineraries & world travel in one app | Split across multiple tools |
 
 ## Quick start
 
@@ -161,14 +161,14 @@ Or follow the [Standard Deployment guide](https://adventurelog.app/docs/install/
 
 **Requirements:** Docker Engine + Compose v2 · 2 GB RAM on first boot · Linux, VPS, homelab, or macOS
 
-| I want to… | Guide |
-| ---------- | ----- |
-| See all install options | [**Getting Started**](https://adventurelog.app/docs/install/getting_started.html) |
-| Try before installing | [Live demo](https://demo.adventurelog.app) |
-| One-command install | [Quick Start Installer](https://adventurelog.app/docs/install/quick_start.html) |
-| Deploy on Proxmox / Synology / Unraid | [Platform guides](https://adventurelog.app/docs/install/getting_started.html) |
-| Run on Kubernetes | [Kustomize guide](https://adventurelog.app/docs/install/kustomize.html) |
-| Learn the app | [Usage guide](https://adventurelog.app/docs/usage/usage.html) |
+| I want to…                            | Guide                                                                             |
+| ------------------------------------- | --------------------------------------------------------------------------------- |
+| See all install options               | [**Getting Started**](https://adventurelog.app/docs/install/getting_started.html) |
+| Try before installing                 | [Live demo](https://demo.adventurelog.app)                                        |
+| One-command install                   | [Quick Start Installer](https://adventurelog.app/docs/install/quick_start.html)   |
+| Deploy on Proxmox / Synology / Unraid | [Platform guides](https://adventurelog.app/docs/install/getting_started.html)     |
+| Run on Kubernetes                     | [Kustomize guide](https://adventurelog.app/docs/install/kustomize.html)           |
+| Learn the app                         | [Usage guide](https://adventurelog.app/docs/usage/usage.html)                     |
 
 > Default login is `admin` / `admin` — it's recommended to change it immediately after first sign-in.
 
@@ -233,7 +233,7 @@ Want the full origin story? Read the [Development Timeline](https://adventurelog
 
 ## Acknowledgements
 
-- Logo design by [nordtektiger](https://github.com/nordtektiger)
+- Logo design by [jacobaulin](https://github.com/jacobaulin)
 - World geography data from [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
 
 ## Supporters

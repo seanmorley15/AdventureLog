@@ -1007,6 +1007,12 @@ export function getBasemapUrl(type = 'default'): any {
 				'© OpenTopoMap (CC-BY-SA), © OpenStreetMap contributors'
 			);
 
+		case 'openfreemap-bright':
+			return OPENFREEMAP_BRIGHT_STYLE;
+
+		case 'openfreemap-dark':
+			return OPENFREEMAP_DARK_STYLE;
+
 		case 'openfreemap-liberty':
 			return OPENFREEMAP_LIBERTY_STYLE;
 
@@ -1199,6 +1205,20 @@ const allBasemapOptions: BasemapOption[] = [
 		value: 'osm-humanitarian',
 		label: 'Humanitarian',
 		icon: '🏥',
+		category: 'Specialized'
+	},
+
+	{
+		value: 'openfreemap-bright',
+		label: 'OpenFreeMap Bright',
+		icon: '☀️',
+		category: 'Specialized'
+	},
+
+	{
+		value: 'openfreemap-dark',
+		label: 'OpenFreeMap Dark',
+		icon: '🌙',
 		category: 'Specialized'
 	},
 
