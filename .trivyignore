@@ -34,8 +34,10 @@ GHSA-58pv-8j8x-9vj2
 CVE-2026-23949
 CVE-2026-24049
 
-# pip vendored msgpack (pip/_vendor/msgpack); not importable at runtime.
+# pip vendored msgpack 1.1.2 (pip/_vendor/msgpack); not importable at runtime. pip 26.2.2 is the
+# latest release; remove once pip vendors msgpack >= 1.2.3.
 GHSA-6v7p-g79w-8964
+CVE-2026-114613
 
 # pip bundled SBOM lists setuptools 70.3.0; runtime setuptools is 84.2.1+.
 CVE-2025-47273
