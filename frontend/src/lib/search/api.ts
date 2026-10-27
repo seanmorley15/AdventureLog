@@ -1,4 +1,4 @@
-import { apiErrorMessage } from '$lib/api';
+import { apiErrorMessage } from '#lib/api/index.js';
 import type { SearchEntityType, SearchResponse } from './types';
 
 export type SearchAppOptions = {

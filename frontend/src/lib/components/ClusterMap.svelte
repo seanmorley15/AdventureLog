@@ -2,9 +2,9 @@
 	import { run } from 'svelte/legacy';
 
 	import { createEventDispatcher, onMount } from 'svelte';
-	import FullMap from '$lib/components/map/FullMap.svelte';
+	import FullMap from '#lib/components/map/FullMap.svelte';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
-	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
+	import { resolveThemeColor, withAlpha } from '#lib/utils/resolveThemeColor.js';
 
 	type PointGeometry = {
 		type: 'Point';

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { t } from 'svelte-i18n';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import FileImageBox from '~icons/mdi/file-image-box';
 	import GitHub from '~icons/mdi/github';
 	import OpenIdConnect from '~icons/mdi/openid';
-	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
-	import type { Background } from '$lib/types.js';
+	import ImageInfoModal from '#lib/components/ImageInfoModal.svelte';
+	import type { Background } from '#lib/types.js';
 
 	let isSubmitting = $state(false);
 
@@ -129,7 +129,7 @@
 										</div>
 
 										<!-- TOTP / recovery code -->
-										{#if $page.form?.mfa_required}
+										{#if page.form?.mfa_required}
 											<div class="flex flex-col">
 												<label class="field-label" for="totp">{$t('auth.totp')}</label>
 												<input
@@ -157,13 +157,14 @@
 										</div>
 
 										<!-- Status / Error Message -->
-										{#if $page.form?.email_verification_required}
+
+										{#if page.form?.email_verification_required}
 											<div class="alert alert-warning mt-4">
 												<span>{$t('auth.user_email_verification_required')}</span>
 											</div>
-										{:else if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
+										{:else if (page.form?.message && page.form?.message.length > 1) || page.form?.type === 'error'}
 											<div class="alert alert-error mt-4">
-												<span>{$t($page.form.message) || $t('auth.login_error')}</span>
+												<span>{$t(page.form.message) || $t('auth.login_error')}</span>
 											</div>
 										{/if}
 
@@ -228,10 +229,8 @@
 	{#if background.url}
 		<button
 			class="btn btn-circle btn-sm fixed bottom-4 right-4 bg-base-100/80 border-base-300 z-20"
-			onclick={() => (isImageInfoModalOpen = true)}
+			onclick={() => (isImageInfoModalOpen = true)}><FileImageBox class="w-4 h-4" /></button
 		>
-			<FileImageBox class="w-4 h-4" />
-		</button>
 	{/if}
 </div>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { ContentImage } from '$lib/types';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
+	import type { ContentImage } from '#lib/types.js';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
 
 	interface Props {
 		images: ContentImage[];

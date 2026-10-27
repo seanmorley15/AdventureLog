@@ -7,9 +7,9 @@ import {
 	isPasswordResetSuccess,
 	mapAllauthPasswordError,
 	requireCsrf
-} from '$lib/index.server';
+} from '#lib/index.server.js';
 import type { PageServerLoad, Actions } from './$types';
-import { getServerEndpoint } from '$lib/server/django-proxy';
+import { getServerEndpoint } from '#lib/server/django-proxy.js';
 
 export const load = (async ({ params, fetch }) => {
 	const key = params.key;

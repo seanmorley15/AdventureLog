@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Attachment, ContentImage, User } from '$lib/types';
+	import type { Attachment, ContentImage, User } from '#lib/types.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
@@ -7,9 +7,9 @@
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import CheckIcon from '~icons/mdi/check';
 
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import ImageManagement from '../ImageManagement.svelte';
-	import { parseImmichIntegration } from '$lib/integrations';
+	import { parseImmichIntegration } from '#lib/integrations.js';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 
 	interface Props {

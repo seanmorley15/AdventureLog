@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import Lost from '$lib/assets/undraw_lost.svg';
+	import Lost from '#lib/assets/undraw_lost.svg';
 
 	interface Props {
 		title: string;

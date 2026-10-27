@@ -1,5 +1,5 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
-import type { ServerInfo } from '$lib/api';
+import type { ServerInfo } from '#lib/api/index.js';
 import type { PageServerLoad } from '../$types';
 import type {
 	APIKey,
@@ -9,7 +9,7 @@ import type {
 	User,
 	WandererIntegration,
 	AuthUserSession
-} from '$lib/types';
+} from '#lib/types.js';
 import {
 	clearSessionCookie,
 	djangoBrowserFetch,
@@ -23,7 +23,7 @@ import {
 	mapAllauthPasswordError,
 	requireCsrf,
 	requireUser
-} from '$lib/index.server';
+} from '#lib/index.server.js';
 
 const endpoint = getServerEndpoint();
 

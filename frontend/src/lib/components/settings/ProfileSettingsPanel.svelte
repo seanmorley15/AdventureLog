@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { t } from 'svelte-i18n';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
+	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '#lib/money.js';
 	import {
 		DATE_FORMAT_OPTIONS,
 		DEFAULT_DATE_FORMAT,
 		formatDateFormatPreview,
 		normalizeDateFormat,
 		type DateFormatPreference
-	} from '$lib/dateFormat';
-	import { basemapOptions } from '$lib';
-	import type { User } from '$lib/types.js';
+	} from '#lib/dateFormat.js';
+	import { getBasemapOptions } from '#lib';
+	import type { User } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
@@ -40,9 +40,15 @@
 		'Specialized'
 	] as const;
 
+	const availableBasemapOptions = getBasemapOptions();
+	const defaultBasemapOption = availableBasemapOptions.find((option) => option.value === 'default');
+	const showsStoredFallback = $derived(
+		!availableBasemapOptions.some((option) => option.value === user.map_style)
+	);
+
 	const groupedBasemapOptions = BASEMAP_CATEGORY_ORDER.map((category) => ({
 		category,
-		options: basemapOptions.filter((option) => option.category === category)
+		options: availableBasemapOptions.filter((option) => option.category === category)
 	})).filter((group) => group.options.length > 0);
 </script>
 
@@ -187,6 +193,12 @@
 					class="select select-primary w-full"
 					bind:value={user.map_style}
 				>
+					{#if showsStoredFallback}
+						<option value={user.map_style} hidden>
+							{defaultBasemapOption?.icon}
+							{defaultBasemapOption?.label}
+						</option>
+					{/if}
 					{#each groupedBasemapOptions as group (group.category)}
 						<optgroup label={group.category}>
 							{#each group.options as option (option.value)}

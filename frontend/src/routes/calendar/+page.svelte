@@ -4,7 +4,7 @@
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import CalendarIcon from '~icons/mdi/calendar';
 	import FilterIcon from '~icons/mdi/filter-variant';
 	import SearchIcon from '~icons/mdi/magnify';
@@ -14,24 +14,24 @@
 	import ViewWeek from '~icons/mdi/view-week';
 	import ClockOutline from '~icons/mdi/clock-outline';
 	import CalendarClock from '~icons/mdi/calendar-clock';
-	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
-	import CalendarAgenda from '$lib/components/calendar/CalendarAgenda.svelte';
-	import CalendarSidebar from '$lib/components/calendar/CalendarSidebar.svelte';
-	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
+	import CalendarComponent from '#lib/components/calendar/Calendar.svelte';
+	import CalendarAgenda from '#lib/components/calendar/CalendarAgenda.svelte';
+	import CalendarSidebar from '#lib/components/calendar/CalendarSidebar.svelte';
+	import EventDetailsModal from '#lib/components/calendar/EventDetailsModal.svelte';
 	import type {
 		CalendarApiEvent,
 		CalendarDisplayEvent,
 		CalendarEventType,
 		CalendarViewMode
-	} from '$lib/calendar/types';
+	} from '#lib/calendar/types.js';
 	import {
 		apiEventsToDisplayEvents,
 		CALENDAR_EVENT_TYPES,
 		computeCalendarStats,
 		filterCalendarEvents,
 		formatCalendarRange
-	} from '$lib/calendar/events';
-	import { dateFormatFromUser } from '$lib/dateFormat';
+	} from '#lib/calendar/events.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
 
 	interface Props {
 		data: PageData;

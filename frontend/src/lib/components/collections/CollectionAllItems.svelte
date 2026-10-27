@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { Collection } from '$lib/types';
+	import type { Collection } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
-	import LocationCard from '$lib/components/cards/LocationCard.svelte';
-	import TransportationCard from '$lib/components/cards/TransportationCard.svelte';
-	import LodgingCard from '$lib/components/cards/LodgingCard.svelte';
-	import NoteCard from '$lib/components/cards/NoteCard.svelte';
-	import ChecklistCard from '$lib/components/cards/ChecklistCard.svelte';
+	import LocationCard from '#lib/components/cards/LocationCard.svelte';
+	import TransportationCard from '#lib/components/cards/TransportationCard.svelte';
+	import LodgingCard from '#lib/components/cards/LodgingCard.svelte';
+	import NoteCard from '#lib/components/cards/NoteCard.svelte';
+	import ChecklistCard from '#lib/components/cards/ChecklistCard.svelte';
 	import CollectionCatalogFilters from './CollectionCatalogFilters.svelte';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -24,7 +24,7 @@
 		sortLocations,
 		transportationDateOf,
 		transportationMatches
-	} from '$lib/collections/catalog.svelte';
+	} from '#lib/collections/catalog.svelte.js';
 
 	const dispatch = createEventDispatcher();
 

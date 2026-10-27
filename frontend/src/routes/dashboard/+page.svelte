@@ -1,14 +1,14 @@
 <script lang="ts">
-	import LocationCard from '$lib/components/cards/LocationCard.svelte';
-	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import CalendarAgenda from '$lib/components/calendar/CalendarAgenda.svelte';
+	import LocationCard from '#lib/components/cards/LocationCard.svelte';
+	import CollectionCard from '#lib/components/cards/CollectionCard.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import CalendarAgenda from '#lib/components/calendar/CalendarAgenda.svelte';
 	import type { PageData } from './$types';
-	import type { ActivityRecord, SlimCollection, UserStats } from '$lib/types';
-	import type { CalendarApiEvent } from '$lib/calendar/types';
-	import { apiEventsToDisplayEvents } from '$lib/calendar/events';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
-	import { getDistance, getElevation } from '$lib/index';
+	import type { ActivityRecord, SlimCollection, UserStats } from '#lib/types.js';
+	import type { CalendarApiEvent } from '#lib/calendar/types.js';
+	import { apiEventsToDisplayEvents } from '#lib/calendar/events.js';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
+	import { getDistance, getElevation } from '#lib/index.js';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 

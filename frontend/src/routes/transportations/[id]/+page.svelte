@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Transportation } from '$lib/types';
+	import type { Transportation } from '#lib/types.js';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { GeoJSON, LineLayer } from 'svelte-maplibre';
@@ -16,31 +16,31 @@
 	import ClockOutline from '~icons/mdi/clock-outline';
 	import RouteIcon from '~icons/mdi/routes';
 	import TicketConfirmation from '~icons/mdi/ticket-confirmation-outline';
-	import DetailHeader from '$lib/components/detail/DetailHeader.svelte';
-	import DetailCard from '$lib/components/detail/DetailCard.svelte';
-	import DetailFact from '$lib/components/detail/DetailFact.svelte';
-	import DetailDateTime from '$lib/components/detail/DetailDateTime.svelte';
-	import DetailPhotos from '$lib/components/detail/DetailPhotos.svelte';
-	import DetailMapPanel from '$lib/components/detail/DetailMapPanel.svelte';
-	import DetailMapPin from '$lib/components/detail/DetailMapPin.svelte';
-	import DetailMapPopup from '$lib/components/detail/DetailMapPopup.svelte';
-	import DetailVisibilityBadge from '$lib/components/detail/DetailVisibilityBadge.svelte';
-	import DetailNotFound from '$lib/components/detail/DetailNotFound.svelte';
-	import DetailLoading from '$lib/components/detail/DetailLoading.svelte';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '$lib';
+	import DetailHeader from '#lib/components/detail/DetailHeader.svelte';
+	import DetailCard from '#lib/components/detail/DetailCard.svelte';
+	import DetailFact from '#lib/components/detail/DetailFact.svelte';
+	import DetailDateTime from '#lib/components/detail/DetailDateTime.svelte';
+	import DetailPhotos from '#lib/components/detail/DetailPhotos.svelte';
+	import DetailMapPanel from '#lib/components/detail/DetailMapPanel.svelte';
+	import DetailMapPin from '#lib/components/detail/DetailMapPin.svelte';
+	import DetailMapPopup from '#lib/components/detail/DetailMapPopup.svelte';
+	import DetailVisibilityBadge from '#lib/components/detail/DetailVisibilityBadge.svelte';
+	import DetailNotFound from '#lib/components/detail/DetailNotFound.svelte';
+	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
+	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '#lib';
 	import MapMarker from '~icons/mdi/map-marker';
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
-	import { dateFormatFromUser } from '$lib/dateFormat';
-	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import TransportationModal from '#lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
-	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import { routeLine, type LngLat } from '$lib/map/routeArc';
-	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
+	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
+	import { routeLine, type LngLat } from '#lib/map/routeArc.js';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;

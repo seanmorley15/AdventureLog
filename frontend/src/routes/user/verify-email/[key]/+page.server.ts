@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { djangoBrowserFetch, requireCsrf, setSessionFromResponse } from '$lib/index.server';
+import { djangoBrowserFetch, requireCsrf, setSessionFromResponse } from '#lib/index.server.js';
 import type { PageServerLoad } from './$types';
 
 export const load = (async (event) => {

@@ -12,8 +12,8 @@
 		getFirstDayOfWeek,
 		prefersHour12,
 		resolveDateFormatLocale
-	} from '$lib/dateFormat';
-	import { attachPopoverFlip } from '$lib/utils/flipDropdown';
+	} from '#lib/dateFormat.js';
+	import { attachPopoverFlip } from '#lib/utils/flipDropdown.js';
 
 	interface Props {
 		value?: string | null;

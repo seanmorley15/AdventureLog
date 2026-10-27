@@ -1,4 +1,4 @@
-import type { DuplicateLocationMatch } from '$lib/types';
+import type { DuplicateLocationMatch } from '#lib/types.js';
 
 export type DuplicateCheckInput = {
 	name?: string | null;

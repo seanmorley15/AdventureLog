@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { isAllDay } from '$lib';
-	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
-	import type { DateFormatPreference } from '$lib/dateFormat';
+	import { isAllDay } from '#lib';
+	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
+	import type { DateFormatPreference } from '#lib/dateFormat.js';
 	import DetailFact from './DetailFact.svelte';
 	import CalendarRange from '~icons/mdi/calendar-range';
 	import type InformationOutline from '~icons/mdi/information-outline';

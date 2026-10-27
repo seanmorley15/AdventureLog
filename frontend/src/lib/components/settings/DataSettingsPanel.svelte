@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import type { MediaUsage } from '$lib/types.js';
+	import type { MediaUsage } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
@@ -153,9 +153,10 @@
 					/>
 					<span class="text-sm text-warning">{$t('settings.data_override_acknowledge')}</span>
 				</label>
-				{#if $page.form?.message && $page.form?.message.includes('restore')}
+
+				{#if page.form?.message && page.form?.message.includes('restore')}
 					<div class="alert alert-error py-2 text-sm">
-						<span>{$t($page.form?.message, { values: $page.form?.values ?? {} })}</span>
+						<span>{$t(page.form?.message, { values: page.form?.values ?? {} })}</span>
 					</div>
 				{/if}
 				<button

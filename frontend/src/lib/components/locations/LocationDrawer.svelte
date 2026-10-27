@@ -6,7 +6,7 @@
 		closeLocationDrawer,
 		locationDrawer,
 		openLocationHref
-	} from '$lib/location-drawer.svelte';
+	} from '#lib/location-drawer.svelte.js';
 	import Close from '~icons/mdi/close';
 	import OpenInNew from '~icons/mdi/open-in-new';
 

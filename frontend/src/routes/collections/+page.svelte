@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { apiErrorMessage } from '$lib/api';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { run } from 'svelte/legacy';
 
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
-	import CollectionModal from '$lib/components/collections/CollectionModal.svelte';
-	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Collection, CollectionInvite, SlimCollection } from '$lib/types';
+	import { page } from '$app/state';
+	import CollectionCard from '#lib/components/cards/CollectionCard.svelte';
+	import CollectionModal from '#lib/components/collections/CollectionModal.svelte';
+	import NotFound from '#lib/components/NotFound.svelte';
+	import type { Collection, CollectionInvite, SlimCollection } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -20,9 +20,9 @@
 	import MailIcon from '~icons/mdi/email';
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
-	import { addToast } from '$lib/toasts';
-	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { addToast } from '#lib/toasts.js';
+	import DeleteWarning from '#lib/components/DeleteWarning.svelte';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface Props {
 		data: any;
@@ -97,9 +97,9 @@
 	});
 
 	async function goToPage(pageNum: number) {
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('page', pageNum.toString());
-		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		await goto(url.toString(), { refreshAll: true, replace: true });
 		if (data.props.adventures) {
 			collections = data.props.adventures;
 		}
@@ -110,14 +110,14 @@
 	}
 
 	async function updateSort(by: string, direction: string) {
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('order_by', by);
 		url.searchParams.set('order_direction', direction);
 		url.searchParams.set('page', '1'); // Reset to first page when sorting changes
 		currentPage = 1;
 		orderBy = by;
 		orderDirection = direction;
-		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		await goto(url.toString(), { refreshAll: true, replace: true });
 		if (data.props.adventures) {
 			collections = data.props.adventures;
 		}
@@ -127,7 +127,7 @@
 	}
 
 	async function updateStatusFilter(status: string) {
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.delete('status');
 		url.searchParams.delete('type');
 		if (status === 'folder') {
@@ -138,7 +138,7 @@
 		url.searchParams.set('page', '1'); // Reset to first page when filter changes
 		currentPage = 1;
 		statusFilter = status;
-		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		await goto(url.toString(), { refreshAll: true, replace: true });
 		if (data.props.adventures) {
 			collections = data.props.adventures;
 		}
@@ -346,7 +346,7 @@
 	<CollectionModal
 		{collectionToEdit}
 		on:close={() => (isShowingCollectionModal = false)}
-		on:saveEdit={saveEdit}
+		on:saveEdit
 		on:save={saveOrCreate}
 	/>
 {/if}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type { Category } from '$lib/types';
+	import type { Category } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';

@@ -3,8 +3,8 @@
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 
-	import MapWithPins from '$lib/assets/MapWithPins.webp';
-	import type { Background } from '$lib/types.js';
+	import MapWithPins from '#lib/assets/MapWithPins.webp';
+	import type { Background } from '#lib/types.js';
 
 	// Icons
 	import MapIcon from '~icons/mdi/map-outline';

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import FullMap from '$lib/components/map/FullMap.svelte';
+	import FullMap from '#lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 

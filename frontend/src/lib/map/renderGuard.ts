@@ -22,8 +22,8 @@ type GuardedMap = {
 	_sourcesDirty?: boolean;
 	_renderTaskQueue?: MapLibreTaskQueue;
 	__adventurelogRenderGuard?: boolean;
-	resize?: (...args: unknown[]) => unknown;
-	redraw?: (...args: unknown[]) => unknown;
+	resize?: (...args: any[]) => unknown;
+	redraw?: (...args: any[]) => unknown;
 	triggerRepaint?: () => void;
 	on?: (type: string, listener: (...args: unknown[]) => void) => void;
 };

@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { basemapOptions, getBasemapLabel } from '$lib';
+	import { getBasemapLabel, getBasemapOptions, normalizeBasemapType } from '#lib';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 	import MapIcon from '~icons/mdi/map';
 	import CheckIcon from '~icons/mdi/check';
 
@@ -20,6 +21,8 @@
 		'Specialized'
 	] as const;
 
+	const basemapOptions = getBasemapOptions();
+
 	const groupedOptions = basemapOptions.reduce<Record<string, typeof basemapOptions>>(
 		(acc, option) => {
 			if (!acc[option.category]) {
@@ -35,8 +38,11 @@
 	let openUpward = $state(false);
 	let dropdownEl: HTMLDivElement | undefined = $state();
 
+	// "Default" means the user's saved map style, falling back to the app default.
+	let userDefaultBasemap = $derived(normalizeBasemapType(page.data.user?.map_style));
+
 	function selectBasemap(value: string) {
-		basemapType = value;
+		basemapType = value === 'default' ? userDefaultBasemap : value;
 		dropdownOpen = false;
 	}
 
@@ -88,7 +94,7 @@
 			</div>
 
 			<div class="max-h-64 overflow-y-auto overscroll-contain py-1">
-				{#each categoryOrder as category}
+				{#each categoryOrder as category (category)}
 					{#if groupedOptions[category]?.length}
 						<div class="px-2 pt-2 pb-0.5 first:pt-1">
 							<p

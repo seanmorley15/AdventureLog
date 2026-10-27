@@ -1,5 +1,5 @@
-import { getServerEndpoint } from '$lib/server/django-proxy';
-import type { Schemas } from '$lib/api';
+import { getServerEndpoint } from '#lib/server/django-proxy.js';
+import type { Schemas } from '#lib/api/index.js';
 
 /** `GET /api/auth/config/`: what the sign-in and sign-up screens need before anyone signs in. */
 export type AuthConfig = Schemas['AuthConfig'];

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import {
 		fetchMembership,
 		unlinkLocationFromCollection,
 		type CollectionMembership
-	} from '$lib/collection-membership';
+	} from '#lib/collection-membership.js';
 	import CollectionPicker from './CollectionPicker.svelte';
 	import Folder from '~icons/mdi/folder-outline';
 	import Close from '~icons/mdi/close';

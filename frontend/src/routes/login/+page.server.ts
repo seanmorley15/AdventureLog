@@ -1,6 +1,6 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RouteParams } from './$types';
-import { getRandomBackground, getRandomQuote } from '$lib';
+import { getRandomBackground, getRandomQuote } from '#lib';
 import {
 	csrfFail,
 	djangoBrowserFetch,
@@ -8,9 +8,9 @@ import {
 	fetchAuthConfig,
 	requireCsrf,
 	setSessionFromResponse
-} from '$lib/index.server';
-import { hasPendingAllauthFlow } from '$lib/server/allauth-flows';
-import { getServerEndpoint } from '$lib/server/django-proxy';
+} from '#lib/index.server.js';
+import { hasPendingAllauthFlow } from '#lib/server/allauth-flows.js';
+import { getServerEndpoint } from '#lib/server/django-proxy.js';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
@@ -34,7 +34,7 @@ export const load: PageServerLoad = async (event) => {
 
 	if (usageRequired) {
 		if (socialProviders.length === 1) {
-			return redirect(302, socialProviders[0].url);
+			return redirect(302, socialProviders[0].url, { external: true });
 		}
 		if (socialProviders.length > 1) {
 			return {

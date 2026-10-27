@@ -507,6 +507,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
     'EXCEPTION_HANDLER': 'core.exceptions.api_exception_handler',
     'DEFAULT_SCHEMA_CLASS': 'core.openapi.AutoSchema',
+    # DRF 3.18 reports many=True validation errors as a dict keyed by index; keep the list format.
+    'LIST_SERIALIZER_ERRORS_AS_DICT': False,
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
     ] if ENABLE_RATE_LIMITS else [],
@@ -626,7 +628,7 @@ LOGGING = {
 PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhost:8000')
 
 # Major release version of AdventureLog, not including the patch version date.
-ADVENTURELOG_RELEASE_VERSION = 'v0.13.0'
+ADVENTURELOG_RELEASE_VERSION = 'v0.13.1'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v3.2'

@@ -1,8 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location, Collection } from '$lib/types';
-import { buildCollectionShareMeta } from '$lib/shareMeta.server';
+import type { Location, Collection } from '#lib/types.js';
+import { buildCollectionShareMeta } from '#lib/shareMeta.server.js';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -59,8 +59,8 @@ export const load = (async (event) => {
 }) satisfies PageServerLoad;
 
 import type { Actions } from '@sveltejs/kit';
-import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
-import { GUEST_COOKIE } from '$lib/server/django-proxy';
+import { backendApiUrl, fetchCSRFToken } from '#lib/index.server.js';
+import { GUEST_COOKIE } from '#lib/server/django-proxy.js';
 
 export const actions: Actions = {
 	delete: async (event) => {

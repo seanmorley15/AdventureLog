@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { apiErrorMessage } from '$lib/api';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { Trail, WandererTrail } from '$lib/types';
-	import { addToast } from '$lib/toasts';
-	import WandererCard from '$lib/components/cards/WandererCard.svelte';
+	import type { Trail, WandererTrail } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
+	import WandererCard from '#lib/components/cards/WandererCard.svelte';
 	import PlusIcon from '~icons/mdi/plus';
 	import LinkIcon from '~icons/mdi/link';
 

@@ -1,9 +1,9 @@
-import { getServerEndpoint } from '$lib/server/django-proxy';
-import { fetchAuthConfig } from '$lib/server/auth-config';
-import type { SignupLegalLinks } from '$lib/signup-legal';
+import { getServerEndpoint } from '#lib/server/django-proxy.js';
+import { fetchAuthConfig } from '#lib/server/auth-config.js';
+import type { SignupLegalLinks } from '#lib/signup-legal.js';
 
 export type { SignupLegalLinks };
-export { signupLegalRequired } from '$lib/signup-legal';
+export { signupLegalRequired } from '#lib/signup-legal.js';
 
 export async function fetchSignupLegalLinks(
 	fetchFn: typeof fetch,

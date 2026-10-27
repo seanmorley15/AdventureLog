@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { CalendarDisplayEvent } from '$lib/calendar/types';
-	import { groupEventsByDay } from '$lib/calendar/events';
+	import type { CalendarDisplayEvent } from '#lib/calendar/types.js';
+	import { groupEventsByDay } from '#lib/calendar/events.js';
 	import CalendarBlank from '~icons/mdi/calendar-blank';
 
 	interface Props {

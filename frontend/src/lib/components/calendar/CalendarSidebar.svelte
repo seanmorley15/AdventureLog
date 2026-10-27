@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { CalendarEventType, CalendarStats } from '$lib/calendar/types';
-	import { CALENDAR_EVENT_COLORS, CALENDAR_EVENT_TYPES } from '$lib/calendar/events';
+	import type { CalendarEventType, CalendarStats } from '#lib/calendar/types.js';
+	import { CALENDAR_EVENT_COLORS, CALENDAR_EVENT_TYPES } from '#lib/calendar/events.js';
 	import FilterIcon from '~icons/mdi/filter-variant';
 	import DownloadIcon from '~icons/mdi/download';
 	import ClearIcon from '~icons/mdi/close';

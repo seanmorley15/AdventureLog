@@ -1,13 +1,13 @@
 // @ts-ignore
 import { DateTime } from 'luxon';
 import type { Checklist, Collection, Lodging, Note, Transportation, Visit } from './types';
-import { isAllDay, isVisitAllDay, allDayDatePart } from '$lib';
+import { isAllDay, isVisitAllDay, allDayDatePart } from '#lib';
 import {
 	DEFAULT_DATE_FORMAT,
 	formatDisplayDate,
 	formatDisplayDateTime,
 	type DateFormatPreference
-} from '$lib/dateFormat';
+} from '#lib/dateFormat.js';
 
 /**
  * Convert a UTC ISO date to a datetime-local value in the specified timezone

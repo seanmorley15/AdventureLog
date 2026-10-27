@@ -3,8 +3,8 @@ import {
 	checkDuplicateLocations,
 	duplicateCheckFingerprint,
 	type DuplicateCheckInput
-} from '$lib/location-duplicates';
-import type { DuplicateLocationMatch } from '$lib/types';
+} from '#lib/location-duplicates.js';
+import type { DuplicateLocationMatch } from '#lib/types.js';
 
 export class LocationDuplicateChecker {
 	matches = $state.raw<DuplicateLocationMatch[]>([]);

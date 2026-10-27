@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { CollectionInvite } from '$lib/types';
+import type { CollectionInvite } from '#lib/types.js';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';

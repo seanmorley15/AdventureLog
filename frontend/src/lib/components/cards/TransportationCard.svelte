@@ -4,15 +4,15 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
-	import type { Collection, Transportation, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
+	import type { Collection, Transportation, User } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from '../DeleteWarning.svelte';
-	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
-	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
-	import { isAllDay } from '$lib';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import { TRANSPORTATION_TYPES_ICONS } from '#lib';
+	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import { isAllDay } from '#lib';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
 	import CardCarousel from '../CardCarousel.svelte';
 	import TransportationRoutePreview from './TransportationRoutePreview.svelte';
 
@@ -26,8 +26,8 @@
 	import Launch from '~icons/mdi/launch';
 	import Globe from '~icons/mdi/globe';
 	import { goto } from '$app/navigation';
-	import type { CollectionItineraryItem } from '$lib/types';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import type { CollectionItineraryItem } from '#lib/types.js';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	let isActionsMenuOpen = $state(false);
 	let openUpward = $state(false);

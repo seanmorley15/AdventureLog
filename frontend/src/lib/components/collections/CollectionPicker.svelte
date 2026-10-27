@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import {
 		fetchMembership,
 		linkLocationToCollection,
 		placementDays,
 		unlinkLocationFromCollection,
 		type CollectionMembership
-	} from '$lib/collection-membership';
+	} from '#lib/collection-membership.js';
 
 	import Collections from '~icons/mdi/folder-multiple';
 	import Search from '~icons/mdi/magnify';

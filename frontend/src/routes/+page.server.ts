@@ -1,6 +1,6 @@
 import { redirect, type Actions } from '@sveltejs/kit';
-import { getRandomBackground, themes } from '$lib';
-import { clearSessionCookie, djangoBrowserFetch } from '$lib/index.server';
+import { getRandomBackground, themes } from '#lib';
+import { clearSessionCookie, djangoBrowserFetch } from '#lib/index.server.js';
 import type { PageServerLoad } from './$types';
 
 export const load = (async (event) => {

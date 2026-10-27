@@ -7,9 +7,9 @@
 		CollectionItineraryItem,
 		Trail,
 		Visit
-	} from '$lib/types';
-	import { addToast } from '$lib/toasts';
-	import { errorMessage } from '$lib/collections/plan';
+	} from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
+	import { errorMessage } from '#lib/collections/plan.js';
 	import Hiking from '~icons/mdi/hiking';
 	import MapMarkerPath from '~icons/mdi/map-marker-path';
 	import CheckCircle from '~icons/mdi/check-circle';

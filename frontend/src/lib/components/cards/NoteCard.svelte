@@ -2,8 +2,8 @@
 	import { stopPropagation } from 'svelte/legacy';
 
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
-	import type { Collection, Note, User } from '$lib/types';
+	import { addToast } from '#lib/toasts.js';
+	import type { Collection, Note, User } from '#lib/types.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -23,9 +23,9 @@
 	import Launch from '~icons/mdi/launch';
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
-	import type { CollectionItineraryItem } from '$lib/types';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import type { CollectionItineraryItem } from '#lib/types.js';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	let isActionsMenuOpen = $state(false);
 	let openUpward = $state(false);

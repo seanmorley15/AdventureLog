@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import MapMarker from '~icons/mdi/map-marker';
 	import DetailMap from './DetailMap.svelte';
-	import type { EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import type { EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 
 	interface Props {
 		title: string;

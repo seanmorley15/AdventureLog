@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { addToast } from '$lib/toasts';
-	import { apiErrorMessage } from '$lib/api';
+	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { t } from 'svelte-i18n';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface CollectionInvite {
 		id: string;

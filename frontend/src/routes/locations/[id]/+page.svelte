@@ -1,38 +1,38 @@
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
 
-	import { createEmptyLocation } from '$lib/location-draft';
-	import type { Location } from '$lib/types';
-	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '$lib/sunriseSunset';
+	import { createEmptyLocation } from '#lib/location-draft.js';
+	import type { Location } from '#lib/types.js';
+	import { fetchSunriseSunset, visitDateKey, type SunriseSunset } from '#lib/sunriseSunset.js';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { openLocationDrawer } from '$lib/location-drawer.svelte';
+	import { page } from '$app/state';
+	import { openLocationDrawer } from '#lib/location-drawer.svelte.js';
 	import { GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
+	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
 
 	import WeatherSunset from '~icons/mdi/weather-sunset';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import { googleContentImage } from '$lib/images';
-	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { addToast } from '$lib/toasts';
-	import { getActivityColor, normalizeBasemapType, isVisitAllDay, copyToClipboard } from '$lib';
-	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
-	import TrailCard from '$lib/components/cards/TrailCard.svelte';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import { googleContentImage } from '#lib/images.js';
+	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import { getActivityColor, normalizeBasemapType, isVisitAllDay, copyToClipboard } from '#lib';
+	import ActivityCard from '#lib/components/cards/ActivityCard.svelte';
+	import TrailCard from '#lib/components/cards/TrailCard.svelte';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
-	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
+	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 	import ImageOutline from '~icons/mdi/image-outline';
-	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import SocialShareModal from '#lib/components/SocialShareModal.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import ContentCopy from '~icons/mdi/content-copy';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
@@ -55,21 +55,21 @@
 	import Folder from '~icons/mdi/folder-outline';
 	import Speedometer from '~icons/mdi/map-marker-distance';
 	import TrendingUp from '~icons/mdi/trending-up';
-	import DetailHeader from '$lib/components/detail/DetailHeader.svelte';
-	import DetailCard from '$lib/components/detail/DetailCard.svelte';
-	import DetailFact from '$lib/components/detail/DetailFact.svelte';
-	import LocationCollectionChips from '$lib/components/collections/LocationCollectionChips.svelte';
-	import DetailStat from '$lib/components/detail/DetailStat.svelte';
-	import DetailTabs, { type DetailTab } from '$lib/components/detail/DetailTabs.svelte';
-	import DetailPhotos from '$lib/components/detail/DetailPhotos.svelte';
-	import DetailMapPanel from '$lib/components/detail/DetailMapPanel.svelte';
-	import CountryFlag from '$lib/components/shared/CountryFlag.svelte';
-	import DetailMapPin from '$lib/components/detail/DetailMapPin.svelte';
-	import DetailMapPopup from '$lib/components/detail/DetailMapPopup.svelte';
-	import DetailVisibilityBadge from '$lib/components/detail/DetailVisibilityBadge.svelte';
-	import DetailNotFound from '$lib/components/detail/DetailNotFound.svelte';
-	import DetailLoading from '$lib/components/detail/DetailLoading.svelte';
-	import LocationPageHead from '$lib/components/locations/LocationPageHead.svelte';
+	import DetailHeader from '#lib/components/detail/DetailHeader.svelte';
+	import DetailCard from '#lib/components/detail/DetailCard.svelte';
+	import DetailFact from '#lib/components/detail/DetailFact.svelte';
+	import LocationCollectionChips from '#lib/components/collections/LocationCollectionChips.svelte';
+	import DetailStat from '#lib/components/detail/DetailStat.svelte';
+	import DetailTabs, { type DetailTab } from '#lib/components/detail/DetailTabs.svelte';
+	import DetailPhotos from '#lib/components/detail/DetailPhotos.svelte';
+	import DetailMapPanel from '#lib/components/detail/DetailMapPanel.svelte';
+	import CountryFlag from '#lib/components/shared/CountryFlag.svelte';
+	import DetailMapPin from '#lib/components/detail/DetailMapPin.svelte';
+	import DetailMapPopup from '#lib/components/detail/DetailMapPopup.svelte';
+	import DetailVisibilityBadge from '#lib/components/detail/DetailVisibilityBadge.svelte';
+	import DetailNotFound from '#lib/components/detail/DetailNotFound.svelte';
+	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
+	import LocationPageHead from '#lib/components/locations/LocationPageHead.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -90,7 +90,7 @@
 
 	// A link to one visit opens the Visits tab, then scrolls to it.
 	$effect(() => {
-		const hash = embedded ? scrollHash : $page.url.hash;
+		const hash = embedded ? scrollHash : page.url.hash;
 		if (!hash.startsWith('#visit-') || !adventure) return;
 		tab = 'visits';
 		void tick().then(() =>

@@ -5,14 +5,14 @@ import FormatListBulletedSquare from '~icons/mdi/format-list-bulleted-square';
 import Map from '~icons/mdi/map';
 import MapMarker from '~icons/mdi/map-marker';
 import AccountMultiple from '~icons/mdi/account-multiple';
-import type { ComponentType } from 'svelte';
+import type { Component } from 'svelte';
 
 export type QuickNavAction = {
 	id: string;
 	titleKey: string;
 	subtitleKey: string;
 	url: string;
-	icon: ComponentType;
+	icon: Component<any>;
 	keywords: string[];
 };
 

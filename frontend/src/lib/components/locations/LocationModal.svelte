@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount, untrack } from 'svelte';
-	import type { Collection, Location, User } from '$lib/types';
+	import type { Collection, Location, User } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
-	import { normalizeBasemapType } from '$lib';
-	import { createEmptyLocation } from '$lib/location-draft';
-	import { extractGooglePhotoUrls } from '$lib/map/places';
+	import { normalizeBasemapType } from '#lib';
+	import { createEmptyLocation } from '#lib/location-draft.js';
+	import { extractGooglePhotoUrls } from '#lib/map/places.js';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
@@ -63,6 +63,15 @@
 
 	// Derive edit mode immediately so the first paint never mounts Quick Start when editing
 	let isEditMode = $derived(Boolean(locationToEdit?.id));
+
+	let immichDefaultDate = $derived.by(() => {
+		const latest = (location.visits ?? [])
+			.map((visit) => new Date(visit.end_date || visit.start_date))
+			.filter((date) => !Number.isNaN(date.getTime()))
+			.sort((a, b) => +b - +a)[0];
+		if (latest) return latest.toISOString().split('T')[0];
+		return storedInitialVisitDate?.split('T')[0] ?? '';
+	});
 
 	function resolveInitialStepIndex(): number {
 		if (locationToEdit?.id && initialStep === 'visits') return 3;
@@ -450,6 +459,7 @@
 					itemId={location.id}
 					on:next={() => setStep(3)}
 					measurementSystem={user?.measurement_system || 'metric'}
+					defaultDate={immichDefaultDate}
 				/>
 			{/if}
 			{#if steps[3].selected}

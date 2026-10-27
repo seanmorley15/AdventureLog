@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { apiErrorMessage } from '$lib/api';
-	import type { ContentImage, ImageSource } from '$lib/types';
-	import { normalizeContentImage } from '$lib/images';
+	import { apiErrorMessage } from '#lib/api/index.js';
+	import type { ContentImage, ImageSource } from '#lib/types.js';
+	import { normalizeContentImage } from '#lib/images.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -15,7 +15,7 @@
 	import ImageIcon from '~icons/mdi/image';
 	import GoogleIcon from '~icons/mdi/google';
 
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import ImmichSelect from './ImmichSelect.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 
@@ -123,6 +123,7 @@
 		defaultSearchTerm?: string;
 		immichIntegration?: boolean;
 		copyImmichLocally?: boolean;
+		defaultDate?: string;
 		/** Google photo URLs from place search; imported only when the user chooses. */
 		pendingGooglePhotoUrls?: string[];
 		// Import temporary recommendation images (id starting with 'rec-') once objectId is available
@@ -136,6 +137,7 @@
 		defaultSearchTerm = '',
 		immichIntegration = false,
 		copyImmichLocally = false,
+		defaultDate = '',
 		pendingGooglePhotoUrls = $bindable([]),
 		importInProgress = $bindable(false)
 	}: Props = $props();
@@ -641,6 +643,7 @@
 						{objectId}
 						{contentType}
 						{copyImmichLocally}
+						{defaultDate}
 						on:localImage={handleImmichLocalImage}
 						on:remoteImmichSaved={handleImmichImageSaved}
 					/>

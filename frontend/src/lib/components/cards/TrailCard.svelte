@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { Trail } from '$lib/types';
+	import type { Trail } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 	import { page } from '$app/state';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	// Icons (only those used)
 	import Calendar from '~icons/mdi/calendar';

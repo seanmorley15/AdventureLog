@@ -2,13 +2,13 @@
 	import { run } from 'svelte/legacy';
 
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
-	import { browser } from '$app/environment';
+	import { page } from '$app/state';
+	import { browser } from '$app/env';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
-	import type { MediaUsage, Subscription, User } from '$lib/types';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { addToast } from '#lib/toasts.js';
+	import type { MediaUsage, Subscription, User } from '#lib/types.js';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	import CloudOutline from '~icons/mdi/cloud-outline';
 	import CreditCardOutline from '~icons/mdi/credit-card-outline';
@@ -29,6 +29,7 @@
 	const hasAccess = $derived(data.hasAccess ?? true);
 	const user: User | null = $derived(data.user ?? null);
 	const dateFormat = $derived(dateFormatFromUser(user));
+
 	const mediaUsage: MediaUsage = $derived(
 		data.mediaUsage ??
 			({
@@ -161,18 +162,22 @@
 			iconClass: 'text-base-content/60'
 		}
 	);
+
 	let trialEndsAt = $derived(
 		subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null
 	);
 	let periodEndsAt = $derived(
 		subscription?.current_period_ends_at ? new Date(subscription.current_period_ends_at) : null
 	);
+
 	let daysRemaining = $derived(
 		trialEndsAt ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay)) : null
 	);
+
 	let trialProgress = $derived(
 		daysRemaining !== null ? Math.min(100, Math.max(0, ((30 - daysRemaining) / 30) * 100)) : 0
 	);
+
 	let isActive = $derived(subscription?.status === 'active');
 	let isTrial = $derived(subscription?.status === 'trial');
 	let isPastDue = $derived(subscription?.status === 'past_due');
@@ -194,19 +199,25 @@
 			(mediaUsage.attachments_files ?? 0) +
 			(mediaUsage.profile_pics_files ?? 0)
 	);
+
 	let overallUsagePercent = $derived(
 		mediaLimitBytes ? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100)) : 0
 	);
+
 	let mediaLimitLabel = $derived(
 		mediaLimitBytes ? formatBytes(mediaLimitBytes) : $t('billing.unlimited')
 	);
+
 	run(() => {
-		if (browser && $page.form?.message && $page.form.message !== lastFormMessage) {
-			lastFormMessage = $page.form.message;
-			const action = $page.form.action ?? 'subscribe';
+		if (browser && page.form?.message && page.form.message !== lastFormMessage) {
+			lastFormMessage = page.form.message;
+
+			const action = page.form.action ?? 'subscribe';
+
 			const title =
 				action === 'portal' ? $t('billing.portal_error_title') : $t('billing.checkout_error_title');
-			addToast('error', `${title}: ${$page.form.message}`);
+
+			addToast('error', `${title}: ${page.form.message}`);
 		}
 	});
 </script>

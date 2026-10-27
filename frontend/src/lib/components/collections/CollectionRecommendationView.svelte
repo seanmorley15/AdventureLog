@@ -3,17 +3,17 @@
 	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { Marker } from 'svelte-maplibre';
-	import type { Collection, Location, Lodging, Recommendation, User } from '$lib/types';
-	import FullMap from '$lib/components/map/FullMap.svelte';
-	import MapNearbyRadiusLayer from '$lib/components/map/MapNearbyRadiusLayer.svelte';
-	import MapRecommendationsLayer from '$lib/components/map/MapRecommendationsLayer.svelte';
-	import RecommendationDetailsModal from '$lib/components/collections/RecommendationDetailsModal.svelte';
-	import LocationModal from '$lib/components/locations/LocationModal.svelte';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import { normalizeBasemapType } from '$lib';
-	import { googleContentImage } from '$lib/images';
-	import { addToast } from '$lib/toasts';
-	import { getMapViewportCenter } from '$lib/map/viewportCenter';
+	import type { Collection, Location, Lodging, Recommendation, User } from '#lib/types.js';
+	import FullMap from '#lib/components/map/FullMap.svelte';
+	import MapNearbyRadiusLayer from '#lib/components/map/MapNearbyRadiusLayer.svelte';
+	import MapRecommendationsLayer from '#lib/components/map/MapRecommendationsLayer.svelte';
+	import RecommendationDetailsModal from '#lib/components/collections/RecommendationDetailsModal.svelte';
+	import LocationModal from '#lib/components/locations/LocationModal.svelte';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
+	import { normalizeBasemapType } from '#lib';
+	import { googleContentImage } from '#lib/images.js';
+	import { addToast } from '#lib/toasts.js';
+	import { getMapViewportCenter } from '#lib/map/viewportCenter.js';
 	import {
 		fetchRecommendations,
 		nearbyRadiusOptions,
@@ -21,7 +21,7 @@
 		recommendationToLocationPrefill,
 		recommendationToQuickAddPayload,
 		resolveQuickAddPayload
-	} from '$lib/map/places';
+	} from '#lib/map/places.js';
 	import Compass from '~icons/mdi/compass';
 	import Lightbulb from '~icons/mdi/lightbulb-outline';
 	import MapMarker from '~icons/mdi/map-marker';

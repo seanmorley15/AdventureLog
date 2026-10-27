@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { CommentInboxItem } from '$lib/types';
+	import type { CommentInboxItem } from '#lib/types.js';
 	import CommentTextMultiple from '~icons/mdi/comment-text-multiple-outline';
 	import PersonAvatar from './collections/discussion/PersonAvatar.svelte';
 	import CheckAll from '~icons/mdi/check-all';

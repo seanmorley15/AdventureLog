@@ -1,5 +1,5 @@
 import { VALID_TIMEZONES } from './dateUtils';
-import type { CalendarApiEvent } from '$lib/calendar/types';
+import type { CalendarApiEvent } from '#lib/calendar/types.js';
 
 export type MoneyValue = {
 	amount: number | null;

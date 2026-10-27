@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Lost from '$lib/assets/undraw_lost.svg';
+	import Lost from '#lib/assets/undraw_lost.svg';
 	import { t } from 'svelte-i18n';
 	interface Props {
 		error: string | undefined;

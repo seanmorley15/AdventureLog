@@ -8,12 +8,12 @@
 		CollectionItineraryDay,
 		ContentImage,
 		Trail
-	} from '$lib/types';
-	import { parseImmichIntegration } from '$lib/integrations';
-	import EditorDialog from '$lib/components/shared/EditorDialog.svelte';
-	import TrailComposer from '$lib/components/trails/TrailComposer.svelte';
-	import ActivityComposer from '$lib/components/activities/ActivityComposer.svelte';
-	import ImageManagement from '$lib/components/ImageManagement.svelte';
+	} from '#lib/types.js';
+	import { parseImmichIntegration } from '#lib/integrations.js';
+	import EditorDialog from '#lib/components/shared/EditorDialog.svelte';
+	import TrailComposer from '#lib/components/trails/TrailComposer.svelte';
+	import ActivityComposer from '#lib/components/activities/ActivityComposer.svelte';
+	import ImageManagement from '#lib/components/ImageManagement.svelte';
 
 	interface Props {
 		collection: Collection;

@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { CollectionItineraryDay } from '$lib/types';
-	import { formatDisplayDate, type DateFormatPreference } from '$lib/dateFormat';
+	import type { CollectionItineraryDay } from '#lib/types.js';
+	import { formatDisplayDate, type DateFormatPreference } from '#lib/dateFormat.js';
 	import {
 		clockValue,
 		GLOBAL_TYPES,
 		SPAN_TYPES,
 		type PlacementPayload,
 		type PlanRow
-	} from '$lib/collections/plan';
+	} from '#lib/collections/plan.js';
 	import Close from '~icons/mdi/close';
 	import CalendarPlus from '~icons/mdi/calendar-plus';
 	import MapMarker from '~icons/mdi/map-marker';

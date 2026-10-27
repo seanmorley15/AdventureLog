@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { apiErrorMessage } from '$lib/api';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { onMount } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import type { CollectionComment, CommentThread, CommentThreadResponse } from '$lib/types';
-	import { addToast } from '$lib/toasts';
+	import type { CollectionComment, CommentThread, CommentThreadResponse } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import PersonAvatar from './PersonAvatar.svelte';
 	import PersonName from './PersonName.svelte';
 	import CommentOutline from '~icons/mdi/comment-outline';
@@ -74,7 +74,7 @@
 
 	// An unlisted story is readable only with its link secret. Readers carry it in
 	// ?s= on the page; every comment request needs it too, or the API answers 404.
-	let storySecret = $derived(thread === 'story' ? $page.url.searchParams.get('s') : null);
+	let storySecret = $derived(thread === 'story' ? page.url.searchParams.get('s') : null);
 
 	function withSecret(url: string) {
 		if (!storySecret) return url;

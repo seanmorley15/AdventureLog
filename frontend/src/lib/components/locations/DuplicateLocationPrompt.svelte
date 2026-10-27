@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { openLocationHref } from '$lib/location-drawer.svelte';
+	import { openLocationHref } from '#lib/location-drawer.svelte.js';
 	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import type { DuplicateLocationMatch } from '$lib/types';
+	import type { DuplicateLocationMatch } from '#lib/types.js';
 
 	import AlertIcon from '~icons/mdi/alert-circle-outline';
 	import OpenIcon from '~icons/mdi/open-in-new';

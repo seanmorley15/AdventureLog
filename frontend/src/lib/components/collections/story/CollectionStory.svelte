@@ -3,18 +3,18 @@
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import type { Collection, ContentImage } from '$lib/types';
+	import type { Collection, ContentImage } from '#lib/types.js';
 	import {
 		buildStory,
 		readingPosition,
 		type StoryChapter,
 		type StoryPin
-	} from '$lib/collections/story';
-	import { formatDisplayDate, type DateFormatPreference } from '$lib/dateFormat';
-	import { copyToClipboard } from '$lib/index';
-	import { addToast } from '$lib/toasts';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	} from '#lib/collections/story.js';
+	import { formatDisplayDate, type DateFormatPreference } from '#lib/dateFormat.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import { addToast } from '#lib/toasts.js';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import StoryEntryCard from './StoryEntryCard.svelte';
 	import StoryMap from './StoryMap.svelte';
 	import CommentThread from '../discussion/CommentThread.svelte';

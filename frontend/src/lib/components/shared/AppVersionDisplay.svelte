@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { appTitle, appVersion, appCodename } from '$lib/config';
+	import { appTitle, appVersion, appCodename } from '#lib/config.js';
 
 	interface Props {
 		size?: 'sm' | 'md';

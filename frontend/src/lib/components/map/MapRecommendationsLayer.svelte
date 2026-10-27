@@ -4,8 +4,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { Marker } from 'svelte-maplibre';
-	import type { Recommendation } from '$lib/types';
-	import { osmTagToEmoji } from '$lib';
+	import type { Recommendation } from '#lib/types.js';
+	import { osmTagToEmoji } from '#lib';
 
 	interface Props {
 		recommendations?: Recommendation[];

@@ -100,7 +100,7 @@ export default defineConfig({
             priceCurrency: "USD",
             description: "Free open-source self-hosted travel companion.",
           },
-          softwareVersion: "v0.13.0",
+          softwareVersion: "v0.13.1",
           license:
             "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
           screenshot,
@@ -159,7 +159,9 @@ export default defineConfig({
     }
 
     const description =
-      pageData.frontmatter.description ?? seo.description ?? pageData.description;
+      pageData.frontmatter.description ??
+      seo.description ??
+      pageData.description;
 
     return {
       title: seo.title ?? pageData.title,
@@ -247,9 +249,7 @@ export default defineConfig({
       {
         text: "Usage",
         collapsed: false,
-        items: [
-          { text: "How to Use AdventureLog", link: "/docs/usage/usage" },
-        ],
+        items: [{ text: "How to Use AdventureLog", link: "/docs/usage/usage" }],
       },
       {
         text: "Configuration",
@@ -333,7 +333,10 @@ export default defineConfig({
             text: "Storage & Email",
             collapsed: true,
             items: [
-              { text: "S3 Media Storage", link: "/docs/configuration/s3_storage" },
+              {
+                text: "S3 Media Storage",
+                link: "/docs/configuration/s3_storage",
+              },
               { text: "SMTP Email", link: "/docs/configuration/email" },
             ],
           },
@@ -382,6 +385,7 @@ export default defineConfig({
             text: "Development Timeline",
             link: "/docs/changelogs/development_timeline",
           },
+          { text: "v0.13.1", link: "/docs/changelogs/v0-13-1" },
           { text: "v0.13.0", link: "/docs/changelogs/v0-13-0" },
           { text: "v0.12.1", link: "/docs/changelogs/v0-12-1" },
           { text: "v0.12.0", link: "/docs/changelogs/v0-12-0" },

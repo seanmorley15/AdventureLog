@@ -1,4 +1,4 @@
-import { apiErrorMessage } from '$lib/api';
+import { apiErrorMessage } from '#lib/api/index.js';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 

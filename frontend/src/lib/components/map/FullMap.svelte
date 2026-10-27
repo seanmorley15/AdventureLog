@@ -20,11 +20,16 @@
 	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import { CircleLayer, GeoJSON, MapEvents, MapLibre, MarkerLayer } from 'svelte-maplibre';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
-	import { getBasemapUrl, getIsDarkMode } from '$lib';
-	import { getMapViewportCenter } from '$lib/map/viewportCenter';
-	import { guardMapRenderQueue } from '$lib/map/renderGuard';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
+	import type { MapMouseEvent } from 'maplibre-gl';
+	import { getBasemapUrl, getIsDarkMode } from '#lib';
+	import { getMapViewportCenter } from '#lib/map/viewportCenter.js';
+	import { guardMapRenderQueue } from '#lib/map/renderGuard.js';
+	import { configureMapLibreWorker } from '#lib/map/maplibreWorker.js';
+	import { expandCluster, toMapLibreClusterOptions } from '#lib/map/clusters.js';
+	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
+	import { resolveThemeColor, withAlpha } from '#lib/utils/resolveThemeColor.js';
+
+	configureMapLibreWorker();
 
 	type Feature = FullMapFeature;
 	type FeatureCollection = FullMapFeatureCollection;
@@ -161,8 +166,8 @@
 		if (map) guardMapRenderQueue(map);
 	});
 
-	function handleMapClick(e: CustomEvent<{ lngLat: { lng: number; lat: number } }>) {
-		dispatch('mapClick', e.detail);
+	function handleMapClick(e: MapMouseEvent) {
+		dispatch('mapClick', e);
 	}
 
 	function handleMapMove() {
@@ -264,13 +269,6 @@
 		}
 	);
 
-	type ClusterSource = {
-		getClusterExpansionZoom: (
-			clusterId: number,
-			callback: (error: unknown, zoom: number) => void
-		) => void;
-	};
-
 	function clusterPointCount(clusterProps: Record<string, unknown> | null): number {
 		const value = Number(clusterProps && clusterProps['point_count']);
 		return Number.isFinite(value) ? value : 0;
@@ -288,33 +286,23 @@
 		return clusterSmall;
 	}
 
-	function handleClusterClick(e: CustomEvent<LayerClickInfo>) {
-		dispatch('clusterClick', e.detail);
+	function handleClusterClick(info: LayerClickInfo) {
+		dispatch('clusterClick', info);
 
 		if (!expandClusterOnClick) return;
-		const { clusterId, features, map: eventMap, source } = e.detail ?? ({} as any);
+		const { clusterId, features, map: eventMap, source } = info ?? ({} as any);
 		if (!clusterId || !features?.length || !eventMap || !source) return;
 
 		const center = getPointCoordinates(features[0]);
 		if (!center) return;
 
-		const geoJsonSource = eventMap.getSource(source) as ClusterSource | undefined;
-		if (!geoJsonSource || typeof geoJsonSource.getClusterExpansionZoom !== 'function') return;
-
-		geoJsonSource.getClusterExpansionZoom(
-			Number(clusterId),
-			(error: unknown, zoomLevel: number) => {
-				if (error) {
-					console.error('Failed to expand cluster', error);
-					return;
-				}
-				eventMap.easeTo({ center, zoom: zoomLevel });
-			}
+		expandCluster(eventMap, source, clusterId, center).catch((error: unknown) =>
+			console.error('Failed to expand cluster', error)
 		);
 	}
 
-	function handleMarkerLayerClick(event: CustomEvent<any>) {
-		const feature = event.detail?.feature;
+	function handleMarkerLayerClick(info: { feature?: unknown }) {
+		const feature = info?.feature;
 		const markerProps = getMarkerProps(feature);
 		dispatch('markerClick', { feature, markerProps });
 	}
@@ -360,22 +348,28 @@
 		style={resolvedStyle}
 		class="{mapClass} fullmap-map"
 		standardControls={false}
+		zoomLevelsToOverscale={null}
 		{zoom}
 		{center}
 		{bounds}
-		on:load={(e) => dispatch('load', e.detail)}
-		on:error={(e) => dispatch('error', e.detail)}
+		onload={(loadedMap) => dispatch('load', loadedMap)}
+		onerror={(error) => dispatch('error', error)}
 	>
 		{#key styleNonce}
 			{#if effectiveGeoJson && Array.isArray(effectiveGeoJson.features) && effectiveGeoJson.features.length > 0}
 				{#if clusterEnabled}
-					<GeoJSON id={sourceId} data={effectiveGeoJson} cluster={clusterOptions} generateId>
+					<GeoJSON
+						id={sourceId}
+						data={effectiveGeoJson}
+						cluster={toMapLibreClusterOptions(clusterOptions)}
+						generateId
+					>
 						<CircleLayer
 							id={`${sourceId}-clusters`}
 							applyToClusters
 							hoverCursor="pointer"
 							paint={resolvedClusterCirclePaint}
-							on:click={handleClusterClick}
+							onclick={handleClusterClick}
 						/>
 						<!-- Render cluster counts as HTML so they don't depend on map glyph/font availability -->
 						<MarkerLayer applyToClusters>
@@ -396,7 +390,7 @@
 								{/if}
 							{/snippet}
 						</MarkerLayer>
-						<MarkerLayer applyToClusters={false} on:click={handleMarkerLayerClick}>
+						<MarkerLayer applyToClusters={false} onclick={handleMarkerLayerClick}>
 							{#snippet children({ feature: featureData }: { feature: unknown })}
 								{@const markerProps = getMarkerProps(featureData)}
 								{@const markerLngLat = getPointCoordinates(featureData)}
@@ -414,7 +408,7 @@
 					</GeoJSON>
 				{:else}
 					<GeoJSON id={sourceId} data={effectiveGeoJson} generateId>
-						<MarkerLayer applyToClusters={false} on:click={handleMarkerLayerClick}>
+						<MarkerLayer applyToClusters={false} onclick={handleMarkerLayerClick}>
 							{#snippet children({ feature: featureData }: { feature: unknown })}
 								{@const markerProps = getMarkerProps(featureData)}
 								{@const markerLngLat = getPointCoordinates(featureData)}
@@ -435,9 +429,9 @@
 		{/key}
 
 		{#if mapClickEnabled}
-			<MapEvents on:click={handleMapClick} on:moveend={handleMapMove} />
+			<MapEvents onclick={handleMapClick} onmoveend={handleMapMove} />
 		{:else}
-			<MapEvents on:moveend={handleMapMove} />
+			<MapEvents onmoveend={handleMapMove} />
 		{/if}
 		{@render children?.({ map })}
 		{@render overlays?.({ map })}

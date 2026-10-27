@@ -1,6 +1,6 @@
-import { getServerEndpoint } from '$lib/server/django-proxy';
-import { fetchAuthConfig } from '$lib/server/auth-config';
-import type { PasswordPolicy } from '$lib/password-policy';
+import { getServerEndpoint } from '#lib/server/django-proxy.js';
+import { fetchAuthConfig } from '#lib/server/auth-config.js';
+import type { PasswordPolicy } from '#lib/password-policy.js';
 
 export type { PasswordPolicy };
 

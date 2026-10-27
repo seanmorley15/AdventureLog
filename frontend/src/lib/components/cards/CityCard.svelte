@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { addToast } from '$lib/toasts';
-	import type { City } from '$lib/types';
+	import { addToast } from '#lib/toasts.js';
+	import type { City } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 
