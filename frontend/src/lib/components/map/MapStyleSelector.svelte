@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { getBasemapLabel, getBasemapOptions } from '#lib';
+	import { getBasemapLabel, getBasemapOptions, normalizeBasemapType } from '#lib';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
 	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 	import MapIcon from '~icons/mdi/map';
@@ -37,8 +38,11 @@
 	let openUpward = $state(false);
 	let dropdownEl: HTMLDivElement | undefined = $state();
 
+	// "Default" means the user's saved map style, falling back to the app default.
+	let userDefaultBasemap = $derived(normalizeBasemapType(page.data.user?.map_style));
+
 	function selectBasemap(value: string) {
-		basemapType = value;
+		basemapType = value === 'default' ? userDefaultBasemap : value;
 		dropdownOpen = false;
 	}
 
