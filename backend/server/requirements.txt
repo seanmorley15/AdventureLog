@@ -21,7 +21,7 @@ slippers==0.6.2
 django-allauth-ui==1.7.0
 django-widget-tweaks==1.5.1
 django-ical==1.9.2
-icalendar==6.1.0
+icalendar==7.3.0
 ijson==3.6.0
 tqdm==4.70.1
 overpy==0.7
