@@ -1,4 +1,4 @@
-import type { Checklist, Collection, Location, Lodging, Note, Transportation } from '$lib/types';
+import type { Checklist, Collection, Location, Lodging, Note, Transportation } from '#lib/types.js';
 
 export type CatalogSort = 'name-asc' | 'name-desc' | 'date-asc' | 'date-desc' | 'visited';
 

@@ -7,7 +7,7 @@
 		getPasswordRequirements,
 		type PasswordPolicy,
 		type RequirementStatus
-	} from '$lib/password-policy';
+	} from '#lib/password-policy.js';
 
 	interface Props {
 		policy: PasswordPolicy;

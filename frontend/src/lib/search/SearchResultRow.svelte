@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { getSearchTypeIcon } from '$lib/search/icons';
-	import type { SearchEntityType, SearchHit } from '$lib/search/types';
+	import { getSearchTypeIcon } from '#lib/search/icons.js';
+	import type { SearchEntityType, SearchHit } from '#lib/search/types.js';
 
 	interface Props {
 		hit: SearchHit;

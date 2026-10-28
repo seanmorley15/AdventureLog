@@ -8,7 +8,7 @@
 		Visit,
 		Activity,
 		User
-	} from '$lib/types';
+	} from '#lib/types.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { t } from 'svelte-i18n';
@@ -21,8 +21,8 @@
 		isAllDay,
 		isAllDayEnd,
 		allDayDatePart
-	} from '$lib';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	} from '#lib';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 	import ChartBar from '~icons/mdi/chart-bar';
 	import MapMarker from '~icons/mdi/map-marker';
 	import MapMarkerCheck from '~icons/mdi/map-marker-check';

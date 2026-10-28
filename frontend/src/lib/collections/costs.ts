@@ -1,5 +1,5 @@
-import type { Collection } from '$lib/types';
-import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+import type { Collection } from '#lib/types.js';
+import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
 
 export type CostCategory = 'lodging' | 'transportation' | 'location';
 

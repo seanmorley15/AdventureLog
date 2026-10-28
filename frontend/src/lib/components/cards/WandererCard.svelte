@@ -8,9 +8,9 @@
 	import CameraIcon from '~icons/mdi/camera';
 	import FileIcon from '~icons/mdi/file';
 	import LinkIcon from '~icons/mdi/link-variant';
-	import type { WandererTrail } from '$lib/types';
+	import type { WandererTrail } from '#lib/types.js';
 	import { page } from '$app/state';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface Props {
 		trail: WandererTrail;

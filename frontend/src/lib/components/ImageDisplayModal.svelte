@@ -4,9 +4,9 @@
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
-	import type { ContentImage } from '$lib/types';
+	import type { ContentImage } from '#lib/types.js';
 	import ImageSourceBadge from './ImageSourceBadge.svelte';
-	import { defaultImageSource } from '$lib/images';
+	import { defaultImageSource } from '#lib/images.js';
 	interface Props {
 		images?: ContentImage[];
 		initialIndex?: number;

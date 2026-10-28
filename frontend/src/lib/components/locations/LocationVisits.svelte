@@ -8,7 +8,7 @@
 		Activity,
 		Visit,
 		TransportationVisit
-	} from '$lib/types';
+	} from '#lib/types.js';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import { t } from 'svelte-i18n';
 	import {
@@ -20,11 +20,11 @@
 		toTimedLocalDefault,
 		formatDateInTimezone,
 		formatAllDayDate
-	} from '$lib/dateUtils';
-	import { dateFormatFromUser } from '$lib/dateFormat';
+	} from '#lib/dateUtils.js';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
+	import { isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '#lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
 
@@ -48,7 +48,7 @@
 	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
 	import DateInput from '../shared/DateInput.svelte';
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import CalendarTodayIcon from '~icons/mdi/calendar-today';
 
 	interface Props {

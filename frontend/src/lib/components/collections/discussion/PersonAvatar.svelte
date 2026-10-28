@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import LinkVariant from '~icons/mdi/link-variant';
 
 	interface Props {

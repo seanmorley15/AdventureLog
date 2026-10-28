@@ -2,8 +2,8 @@
 	import { createBubbler, preventDefault } from 'svelte/legacy';
 
 	const bubble = createBubbler();
-	import { isValidUrl } from '$lib';
-	import type { Collection, Note, User } from '$lib/types';
+	import { isValidUrl } from '#lib';
+	import type { Collection, Note, User } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';

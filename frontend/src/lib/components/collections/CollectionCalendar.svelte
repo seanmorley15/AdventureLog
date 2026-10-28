@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { DateTime } from 'luxon';
 	import { t } from 'svelte-i18n';
-	import type { Collection } from '$lib/types';
-	import type { DateFormatPreference } from '$lib/dateFormat';
-	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
-	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
-	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
-	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
+	import type { Collection } from '#lib/types.js';
+	import type { DateFormatPreference } from '#lib/dateFormat.js';
+	import CalendarComponent from '#lib/components/calendar/Calendar.svelte';
+	import EventDetailsModal from '#lib/components/calendar/EventDetailsModal.svelte';
+	import { buildCollectionCalendarEvents } from '#lib/calendar/events.js';
+	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '#lib/calendar/types.js';
 	import CalendarIcon from '~icons/mdi/calendar';
 
 	interface Props {
@@ -105,7 +105,6 @@
 					{events}
 					{initialDate}
 					height="auto"
-					dayMaxEvents={5}
 					bare={true}
 					on:eventClick={(e) => openEvent(e.detail)}
 				/>

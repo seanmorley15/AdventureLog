@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { apiErrorMessage } from '$lib/api';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
-	import { addToast } from '$lib/toasts';
-	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
+	import { addToast } from '#lib/toasts.js';
+	import type { Collection, ContentImage, SlimCollection } from '#lib/types.js';
 	import DateInput from '../shared/DateInput.svelte';
-	import { addDays, browserTimezone } from '$lib/collections/plan';
-	import { formatDisplayDate } from '$lib/dateFormat';
+	import { addDays, browserTimezone } from '#lib/collections/plan.js';
+	import { formatDisplayDate } from '#lib/dateFormat.js';
 
 	// Icons
 	import CollectionIcon from '~icons/mdi/folder-multiple';

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import LocationCard from '$lib/components/cards/LocationCard.svelte';
-	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
-	import type { Location, Collection, User } from '$lib/types.js';
+	import LocationCard from '#lib/components/cards/LocationCard.svelte';
+	import CollectionCard from '#lib/components/cards/CollectionCard.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import type { Location, Collection, User } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	// Icons
 	import Calendar from '~icons/mdi/calendar';

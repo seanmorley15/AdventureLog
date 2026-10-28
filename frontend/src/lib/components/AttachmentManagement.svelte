@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Attachment, User } from '$lib/types';
+	import type { Attachment, User } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -14,7 +14,7 @@
 	import CloseIcon from '~icons/mdi/close';
 	import LightbubOnIcon from '~icons/mdi/lightbulb-on';
 
-	import { addToast } from '$lib/toasts';
+	import { addToast } from '#lib/toasts.js';
 	import StravaGpxList from './transportation/StravaGpxList.svelte';
 
 	interface Props {

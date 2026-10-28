@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Lodging } from '$lib/types';
+	import type { Lodging } from '#lib/types.js';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
@@ -12,31 +12,31 @@
 	import TextBoxOutline from '~icons/mdi/text-box-outline';
 	import ImageMultiple from '~icons/mdi/image-multiple-outline';
 	import Paperclip from '~icons/mdi/paperclip';
-	import DetailHeader from '$lib/components/detail/DetailHeader.svelte';
-	import DetailCard from '$lib/components/detail/DetailCard.svelte';
-	import DetailFact from '$lib/components/detail/DetailFact.svelte';
-	import DetailDateTime from '$lib/components/detail/DetailDateTime.svelte';
-	import DetailVisibilityBadge from '$lib/components/detail/DetailVisibilityBadge.svelte';
-	import DetailMapPanel from '$lib/components/detail/DetailMapPanel.svelte';
-	import DetailMapPin from '$lib/components/detail/DetailMapPin.svelte';
-	import DetailMapPopup from '$lib/components/detail/DetailMapPopup.svelte';
-	import DetailPhotos from '$lib/components/detail/DetailPhotos.svelte';
-	import DetailNotFound from '$lib/components/detail/DetailNotFound.svelte';
-	import DetailLoading from '$lib/components/detail/DetailLoading.svelte';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { normalizeBasemapType, isAllDay, LODGING_TYPES_ICONS } from '$lib';
+	import DetailHeader from '#lib/components/detail/DetailHeader.svelte';
+	import DetailCard from '#lib/components/detail/DetailCard.svelte';
+	import DetailFact from '#lib/components/detail/DetailFact.svelte';
+	import DetailDateTime from '#lib/components/detail/DetailDateTime.svelte';
+	import DetailVisibilityBadge from '#lib/components/detail/DetailVisibilityBadge.svelte';
+	import DetailMapPanel from '#lib/components/detail/DetailMapPanel.svelte';
+	import DetailMapPin from '#lib/components/detail/DetailMapPin.svelte';
+	import DetailMapPopup from '#lib/components/detail/DetailMapPopup.svelte';
+	import DetailPhotos from '#lib/components/detail/DetailPhotos.svelte';
+	import DetailNotFound from '#lib/components/detail/DetailNotFound.svelte';
+	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
+	import { normalizeBasemapType, isAllDay, LODGING_TYPES_ICONS } from '#lib';
 	import MapMarker from '~icons/mdi/map-marker';
 	import CalendarRange from '~icons/mdi/calendar-range';
 	import BedOutline from '~icons/mdi/bed-outline';
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
-	import { dateFormatFromUser } from '$lib/dateFormat';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
-	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
+	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;

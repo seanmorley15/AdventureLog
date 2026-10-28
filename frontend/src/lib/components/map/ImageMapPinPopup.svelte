@@ -1,10 +1,8 @@
-<!-- @migration-task Error while migrating Svelte code: migrating this component would require adding a `$props` rune but there's already a variable named props.
-     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import CameraIcon from '~icons/mdi/camera';
-	import type { ImagePinProperties } from '$lib/map/imagePins';
-	import { getImagePinParentTypeKey } from '$lib/map/imagePins';
+	import type { ImagePinProperties } from '#lib/map/imagePins.js';
+	import { getImagePinParentTypeKey } from '#lib/map/imagePins.js';
 
 	export let props: ImagePinProperties;
 	export let visible = false;

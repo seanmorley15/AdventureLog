@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
-	import type { User } from '$lib/types.js';
+	import type { User } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 
@@ -108,9 +108,9 @@
 				</div>
 			{/if}
 
-			{#if $page.form?.deleteAccountError}
+			{#if page.form?.deleteAccountError}
 				<div class="alert alert-error py-2 text-sm">
-					<span>{$t($page.form.deleteAccountError)}</span>
+					<span>{$t(page.form.deleteAccountError)}</span>
 				</div>
 			{/if}
 

@@ -6,7 +6,7 @@
     "cytoscape-cose-bilkent": "^4.1.0",
     "dayjs": "^1.11.21",
     "debug": "^4.4.3",
-    "mermaid": "^11.16.0",
+    "mermaid": "^11.17.2",
     "vitepress": "^1.6.4",
     "vitepress-plugin-mermaid": "^2.0.17"
   },
@@ -17,11 +17,20 @@
   },
   "dependencies": {
     "prettier": "^3.9.6",
-    "vue": "^3.5.26"
+    "vue": "^3.5.42"
   },
   "pnpm": {
     "overrides": {
-      "postcss": "8.5.18"
+      "@vue/server-renderer": ">=3.5.42",
+      "dompurify": ">=3.4.17",
+      "esbuild": "^0.25.12",
+      "katex": ">=0.18.2",
+      "mdast-util-to-hast": ">=13.2.1",
+      "nanoid": ">=3.3.18",
+      "postcss": "8.5.31",
+      "rollup": ">=4.59.0",
+      "source-map-js": ">=1.2.2",
+      "vite": "^6.4.5"
     }
   }
 }

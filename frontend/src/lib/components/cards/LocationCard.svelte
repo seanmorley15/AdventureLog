@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { openLocationDrawer } from '$lib/location-drawer.svelte';
-	import type { Location, Collection, User, CollectionItineraryItem } from '$lib/types';
+	import { openLocationDrawer } from '#lib/location-drawer.svelte.js';
+	import type { Location, Collection, User, CollectionItineraryItem } from '#lib/types.js';
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
@@ -13,14 +13,14 @@
 	import MapMarker from '~icons/mdi/map-marker';
 	import LinkIcon from '~icons/mdi/link-variant';
 	import Check from '~icons/mdi/check';
-	import { addToast } from '$lib/toasts';
-	import { copyToClipboard } from '$lib/index';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import Link from '~icons/mdi/link-variant';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
 	import CollectionPicker from '../collections/CollectionPicker.svelte';
-	import { unlinkLocationFromCollection } from '$lib/collection-membership';
+	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -33,8 +33,8 @@
 	import CalendarRemove from '~icons/mdi/calendar-remove';
 	import Globe from '~icons/mdi/globe';
 	import ImageOutline from '~icons/mdi/image-outline';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	let isCollectionModalOpen: boolean = $state(false);
 	let isWarningModalOpen: boolean = $state(false);

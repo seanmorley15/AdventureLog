@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toasts, removeToast } from '$lib/toasts';
+	import { toasts, removeToast } from '#lib/toasts.js';
 	import { onMount } from 'svelte';
 
 	let toastList: any[] = $state([]);

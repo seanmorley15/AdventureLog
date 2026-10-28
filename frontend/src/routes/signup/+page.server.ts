@@ -1,7 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
-import { getRandomBackground, getRandomQuote } from '$lib';
+import { getRandomBackground, getRandomQuote } from '#lib';
 import {
 	csrfFail,
 	djangoBrowserFetch,
@@ -14,9 +14,9 @@ import {
 	requireCsrf,
 	setSessionFromResponse,
 	signupLegalRequired
-} from '$lib/index.server';
-import { hasPendingAllauthFlow } from '$lib/server/allauth-flows';
-import { getInviteKeyFromUrl, prepareInviteSignup } from '$lib/server/invite-signup';
+} from '#lib/index.server.js';
+import { hasPendingAllauthFlow } from '#lib/server/allauth-flows.js';
+import { getInviteKeyFromUrl, prepareInviteSignup } from '#lib/server/invite-signup.js';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {

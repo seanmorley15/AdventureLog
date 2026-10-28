@@ -5,4 +5,4 @@ if [ -z "${ORIGIN:-}" ] && [ -n "${SITE_URL:-}" ]; then
 fi
 
 echo "The origin to be set is: ${ORIGIN:-not set}"
-ORIGIN="${ORIGIN:-}" exec node build
+ORIGIN="${ORIGIN:-}" exec node start.js

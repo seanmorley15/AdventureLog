@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { addToast } from '$lib/toasts';
-	import { copyToClipboard } from '$lib/index';
+	import { addToast } from '#lib/toasts.js';
+	import { copyToClipboard } from '#lib/index.js';
 
 	import Share from '~icons/mdi/share-variant';
 	import Clear from '~icons/mdi/close';

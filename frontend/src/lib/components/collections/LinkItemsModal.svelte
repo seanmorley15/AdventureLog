@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { Collection, Pin } from '$lib/types';
-	import { objectsOfType, placementType, type PlanObjectType } from '$lib/collections/plan';
+	import type { Collection, Pin } from '#lib/types.js';
+	import { objectsOfType, placementType, type PlanObjectType } from '#lib/collections/plan.js';
 	import Close from '~icons/mdi/close';
 	import Magnify from '~icons/mdi/magnify';
 	import MapMarker from '~icons/mdi/map-marker';

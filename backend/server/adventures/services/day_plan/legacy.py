@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
-from pytz import timezone as pytz_timezone
+from zoneinfo import ZoneInfo
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from adventures.models import (
@@ -164,7 +164,7 @@ def _datetime_to_date_in_timezone(dt, timezone_str: str | None) -> date:
     # Convert to target timezone if provided, otherwise use UTC
     if timezone_str:
         try:
-            target_tz = pytz_timezone(timezone_str)
+            target_tz = ZoneInfo(timezone_str)
             dt = dt.astimezone(target_tz)
         except Exception:
             # If timezone conversion fails, use UTC

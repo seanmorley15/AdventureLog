@@ -1,4 +1,4 @@
-import { apiErrorMessage } from '$lib/api';
+import { apiErrorMessage } from '#lib/api/index.js';
 import type {
 	Checklist,
 	Collection,
@@ -8,7 +8,7 @@ import type {
 	Lodging,
 	Note,
 	Transportation
-} from '$lib/types';
+} from '#lib/types.js';
 
 export type PlanObjectType = 'location' | 'lodging' | 'transportation' | 'note' | 'checklist';
 export type PlanObject = Location | Lodging | Transportation | Note | Checklist;

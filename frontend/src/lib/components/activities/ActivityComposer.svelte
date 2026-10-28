@@ -2,12 +2,12 @@
 	import { onMount } from 'svelte';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
-	import type { Activity, StravaActivity, Trail } from '$lib/types';
-	import { SPORT_TYPE_CHOICES, isVisitAllDay, allDayDatePart } from '$lib';
-	import { addToast } from '$lib/toasts';
-	import DateInput from '$lib/components/shared/DateInput.svelte';
-	import TimezoneSelector from '$lib/components/TimezoneSelector.svelte';
-	import StravaActivityCard from '$lib/components/StravaActivityCard.svelte';
+	import type { Activity, StravaActivity, Trail } from '#lib/types.js';
+	import { SPORT_TYPE_CHOICES, isVisitAllDay, allDayDatePart } from '#lib';
+	import { addToast } from '#lib/toasts.js';
+	import DateInput from '#lib/components/shared/DateInput.svelte';
+	import TimezoneSelector from '#lib/components/TimezoneSelector.svelte';
+	import StravaActivityCard from '#lib/components/StravaActivityCard.svelte';
 	import RunFastIcon from '~icons/mdi/run-fast';
 	import UploadIcon from '~icons/mdi/upload';
 	import LoadingIcon from '~icons/mdi/loading';

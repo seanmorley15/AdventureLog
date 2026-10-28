@@ -18,12 +18,12 @@
 		Note,
 		Transportation,
 		Visit
-	} from '$lib/types';
-	import { addToast } from '$lib/toasts';
-	import { unlinkLocationFromCollection } from '$lib/collection-membership';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
-	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
-	import { createEmptyLocation } from '$lib/location-draft';
+	} from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
+	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
+	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
+	import { createEmptyLocation } from '#lib/location-draft.js';
 	import {
 		addDays,
 		browserTimezone,
@@ -44,19 +44,19 @@
 		type PlanObjectType,
 		type PlanResponse,
 		type PlanRow
-	} from '$lib/collections/plan';
+	} from '#lib/collections/plan.js';
 	import DayPlanRow from './DayPlanRow.svelte';
 	import DayFileDialog from './DayFileDialog.svelte';
 	import DayFileRows from './DayFileRows.svelte';
 	import DayPlacementModal from './DayPlacementModal.svelte';
 	import type { LinkScope } from './LinkItemsModal.svelte';
-	import LocationModal from '$lib/components/locations/LocationModal.svelte';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
+	import LocationModal from '#lib/components/locations/LocationModal.svelte';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
 	import TransportationModal, {
 		createEmptyTransportation
-	} from '$lib/components/transportation/TransportationModal.svelte';
-	import NoteModal from '$lib/components/NoteModal.svelte';
-	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
+	} from '#lib/components/transportation/TransportationModal.svelte';
+	import NoteModal from '#lib/components/NoteModal.svelte';
+	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
 	import Plus from '~icons/mdi/plus';
 	import RenameOutline from '~icons/mdi/rename-outline';
 	import TextBoxOutline from '~icons/mdi/text-box-outline';

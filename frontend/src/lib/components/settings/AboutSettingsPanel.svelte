@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { copyrightYear } from '$lib/config.js';
-	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
-	import type { User } from '$lib/types.js';
+	import { copyrightYear } from '#lib/config.js';
+	import AppVersionDisplay from '#lib/components/shared/AppVersionDisplay.svelte';
+	import type { User } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';

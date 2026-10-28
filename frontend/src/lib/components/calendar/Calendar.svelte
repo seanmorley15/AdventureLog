@@ -1,21 +1,14 @@
 <script lang="ts">
-	// @ts-ignore
-	import Calendar from '@event-calendar/core';
-	// @ts-ignore
-	import TimeGrid from '@event-calendar/time-grid';
-	// @ts-ignore
-	import DayGrid from '@event-calendar/day-grid';
-	// @ts-ignore
-	import Interaction from '@event-calendar/interaction';
+	import { Calendar, DayGrid, Interaction, TimeGrid } from '@event-calendar/core';
+	import '@event-calendar/core/index.css';
 	import { t } from 'svelte-i18n';
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { CalendarDisplayEvent } from '$lib/calendar/types';
+	import type { CalendarDisplayEvent } from '#lib/calendar/types.js';
 
 	interface Props {
 		events?: CalendarDisplayEvent[];
 		height?: string;
 		view?: string;
-		dayMaxEvents?: number;
 		initialDate?: string | Date | null;
 		bare?: boolean;
 	}
@@ -24,7 +17,6 @@
 		events = [],
 		height = 'auto',
 		view = 'dayGridMonth',
-		dayMaxEvents = 4,
 		initialDate = null,
 		bare = false
 	}: Props = $props();
@@ -54,22 +46,22 @@
 		},
 		height,
 		eventDisplay: 'block',
-		dayMaxEvents,
+		// Rows grow to fit their events; empty weeks stay short.
+		dayMaxEvents: false,
 		moreLinkText: (num: number) => $t('calendar.more_events', { values: { count: num } }),
-		eventClick: (info: { event: CalendarDisplayEvent }) => {
-			dispatch('eventClick', info.event);
+		eventClick: (info: Calendar.EventClickInfo) => {
+			dispatch('eventClick', info.event as unknown as CalendarDisplayEvent);
 		},
-		datesSet: (info: { start: Date; end: Date; view: { type: string } }) => {
+		datesSet: (info: Calendar.DatesSetInfo) => {
 			dispatch('datesSet', {
 				start: info.start,
 				end: info.end,
 				view: info.view.type
 			});
 		},
-		eventMouseEnter: (info: { el: HTMLElement }) => {
+		eventMouseEnter: (info: Calendar.MouseEnterInfo) => {
 			info.el.style.cursor = 'pointer';
-		},
-		themeSystem: 'standard'
+		}
 	});
 
 	onMount(() => {
@@ -77,6 +69,22 @@
 		const style = document.createElement('style');
 		style.id = 'adventurelog-calendar-styles';
 		style.textContent = `
+			/* Map the calendar's theme variables onto the app (daisyUI) theme so every part of it,
+			   including the weekday header, time sidebars and the "+N more" popup, follows light/dark. */
+			.ec.ec {
+				color-scheme: inherit;
+				--ec-bg-color: var(--color-base-100);
+				--ec-text-color: var(--color-base-content);
+				--ec-border-color: var(--color-base-300);
+				--ec-color-400: color-mix(in oklab, var(--color-base-content) 40%, var(--color-base-100));
+				--ec-color-300: var(--color-base-300);
+				--ec-color-200: var(--color-base-200);
+				--ec-color-100: var(--color-base-100);
+				--ec-color-50: var(--color-base-100);
+				--ec-today-bg-color: var(--color-base-200);
+				--ec-highlight-color: color-mix(in oklab, var(--color-primary) 15%, var(--color-base-100));
+				--ec-popup-bg-color: var(--color-base-100);
+			}
 			.ec-toolbar {
 				background: var(--color-base-200) !important;
 				border-radius: 0.75rem !important;

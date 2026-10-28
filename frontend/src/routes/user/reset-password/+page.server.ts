@@ -1,4 +1,4 @@
-import { csrfFail, djangoBrowserFetch, requireCsrf } from '$lib/index.server';
+import { csrfFail, djangoBrowserFetch, requireCsrf } from '#lib/index.server.js';
 import { fail, type Actions } from '@sveltejs/kit';
 
 export const actions: Actions = {

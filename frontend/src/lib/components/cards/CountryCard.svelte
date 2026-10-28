@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Country } from '$lib/types';
+	import type { Country } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 
 	import MapMarkerStar from '~icons/mdi/map-marker-star';

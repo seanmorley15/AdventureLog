@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
-	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
-	import type { Activity } from '$lib/types';
-	import { pinBounds, type StoryPin } from '$lib/collections/story';
+	import FullMap, { type FullMapFeatureCollection } from '#lib/components/map/FullMap.svelte';
+	import type { Activity } from '#lib/types.js';
+	import { pinBounds, type StoryPin } from '#lib/collections/story.js';
 
 	interface Props {
 		pins: StoryPin[];

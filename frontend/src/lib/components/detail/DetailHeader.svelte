@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { ContentImage } from '$lib/types';
+	import type { ContentImage } from '#lib/types.js';
 	import DetailBanner from './DetailBanner.svelte';
 	import Star from '~icons/mdi/star';
 	import StarOutline from '~icons/mdi/star-outline';

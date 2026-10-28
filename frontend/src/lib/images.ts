@@ -1,4 +1,4 @@
-import type { ContentImage, ImageSource } from '$lib/types';
+import type { ContentImage, ImageSource } from '#lib/types.js';
 
 export function normalizeContentImage(
 	partial: Partial<ContentImage> & Pick<ContentImage, 'id' | 'image'>

@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Collection, Lodging, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
+	import type { Collection, Lodging, User } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import { t } from 'svelte-i18n';
-	import { normalizeBasemapType } from '$lib';
+	import { normalizeBasemapType } from '#lib';
 	import Bed from '~icons/mdi/bed';
 	import LodgingQuickStart from './LodgingQuickStart.svelte';
 	import LodgingDetails from './LodgingDetails.svelte';
 	import MediaStep from '../shared/MediaStep.svelte';
-	import { inferLodgingTypeFromPlace } from '$lib/utils/lodgingType';
+	import { inferLodgingTypeFromPlace } from '#lib/utils/lodgingType.js';
 
 	const dispatch = createEventDispatcher();
 

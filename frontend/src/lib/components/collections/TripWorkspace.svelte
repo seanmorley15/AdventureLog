@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { Collection } from '$lib/types';
-	import { planPins } from '$lib/collections/plan';
-	import { CatalogFilters } from '$lib/collections/catalog.svelte';
+	import type { Collection } from '#lib/types.js';
+	import { planPins } from '#lib/collections/plan.js';
+	import { CatalogFilters } from '#lib/collections/catalog.svelte.js';
 	import CollectionMap from './CollectionMap.svelte';
 	import TripDayPlanner from './TripDayPlanner.svelte';
 	import type { LinkScope } from './LinkItemsModal.svelte';

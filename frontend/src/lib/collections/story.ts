@@ -19,8 +19,8 @@ import type {
 	StoryGroup,
 	Trail,
 	Transportation
-} from '$lib/types';
-import { dayPinColor, findObject, indexedDays, placementType } from '$lib/collections/plan';
+} from '#lib/types.js';
+import { dayPinColor, findObject, indexedDays, placementType } from '#lib/collections/plan.js';
 
 export const STORY_GROUP_NAMES: StoryGroup[] = [
 	'place_details',

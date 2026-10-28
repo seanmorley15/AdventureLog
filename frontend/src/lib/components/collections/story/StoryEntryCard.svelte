@@ -2,16 +2,16 @@
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
-	import type { ContentImage } from '$lib/types';
-	import type { StoryEntry } from '$lib/collections/story';
+	import type { ContentImage } from '#lib/types.js';
+	import type { StoryEntry } from '#lib/collections/story.js';
 	import {
 		formatDisplayDate,
 		formatDisplayDateTime,
 		formatDisplayTime,
 		type DateFormatPreference
-	} from '$lib/dateFormat';
-	import { getTransportIcon } from '$lib/calendar/events';
-	import { LODGING_TYPES_ICONS } from '$lib';
+	} from '#lib/dateFormat.js';
+	import { getTransportIcon } from '#lib/calendar/events.js';
+	import { LODGING_TYPES_ICONS } from '#lib';
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import MapMarker from '~icons/mdi/map-marker-outline';
 	import Star from '~icons/mdi/star';

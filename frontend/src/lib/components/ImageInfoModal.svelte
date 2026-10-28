@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Background } from '$lib/types';
+	import type { Background } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';

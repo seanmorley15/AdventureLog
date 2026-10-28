@@ -11,11 +11,11 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
-	import type { Location, Collection, User, SlimCollection, ContentImage } from '$lib/types';
-	import { addToast } from '$lib/toasts';
+	import type { Location, Collection, User, SlimCollection, ContentImage } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import { t } from 'svelte-i18n';
-	import { copyToClipboard } from '$lib/index';
-	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import { copyToClipboard } from '#lib/index.js';
+	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import TrashCan from '~icons/mdi/trashcan';
@@ -33,7 +33,7 @@
 	import FilePdfBox from '~icons/mdi/file-pdf-box';
 	import ContentCopy from '~icons/mdi/content-copy';
 	import ImageOutline from '~icons/mdi/image-outline';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	const dispatch = createEventDispatcher();
 

@@ -10,31 +10,31 @@
 		Collaborator,
 		Lodging,
 		StoryGroup
-	} from '$lib/types';
+	} from '#lib/types.js';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import Lost from '$lib/assets/undraw_lost.svg';
+	import { page } from '$app/state';
+	import Lost from '#lib/assets/undraw_lost.svg';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	import Calendar from '~icons/mdi/calendar';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
-	import { normalizeContentImage } from '$lib/images';
-	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
-	import TripWorkspace from '$lib/components/collections/TripWorkspace.svelte';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
+	import { normalizeContentImage } from '#lib/images.js';
+	import CollectionAllItems from '#lib/components/collections/CollectionAllItems.svelte';
+	import TripWorkspace from '#lib/components/collections/TripWorkspace.svelte';
 	import LinkVariant from '~icons/mdi/link-variant';
-	import LinkItemsModal from '$lib/components/collections/LinkItemsModal.svelte';
-	import type { LinkScope } from '$lib/components/collections/LinkItemsModal.svelte';
-	import { placementType, showsDayPlanner, type PlanObjectType } from '$lib/collections/plan';
-	import CollectionRecommendationView from '$lib/components/collections/CollectionRecommendationView.svelte';
-	import CollectionMap from '$lib/components/collections/CollectionMap.svelte';
-	import CollectionStats from '$lib/components/collections/CollectionStats.svelte';
-	import CollectionCosts from '$lib/components/collections/CollectionCosts.svelte';
-	import CollectionCalendar from '$lib/components/collections/CollectionCalendar.svelte';
-	import { DEFAULT_CURRENCY } from '$lib/money';
+	import LinkItemsModal from '#lib/components/collections/LinkItemsModal.svelte';
+	import type { LinkScope } from '#lib/components/collections/LinkItemsModal.svelte';
+	import { placementType, showsDayPlanner, type PlanObjectType } from '#lib/collections/plan.js';
+	import CollectionRecommendationView from '#lib/components/collections/CollectionRecommendationView.svelte';
+	import CollectionMap from '#lib/components/collections/CollectionMap.svelte';
+	import CollectionStats from '#lib/components/collections/CollectionStats.svelte';
+	import CollectionCosts from '#lib/components/collections/CollectionCosts.svelte';
+	import CollectionCalendar from '#lib/components/collections/CollectionCalendar.svelte';
+	import { DEFAULT_CURRENCY } from '#lib/money.js';
 	import FolderMultiple from '~icons/mdi/folder-multiple';
 	import FormatListBulleted from '~icons/mdi/format-list-bulleted';
 	import Timeline from '~icons/mdi/timeline';
@@ -52,26 +52,26 @@
 	import InformationOutline from '~icons/mdi/information-outline';
 	import TextBoxOutline from '~icons/mdi/text-box-outline';
 	import CheckCircleOutline from '~icons/mdi/check-circle-outline';
-	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
+	import SocialShareModal from '#lib/components/SocialShareModal.svelte';
 	import CollectionShareSheet, {
 		type ShareSheetTab
-	} from '$lib/components/collections/CollectionShareSheet.svelte';
-	import { STORY_GROUP_NAMES } from '$lib/collections/story';
-	import CollectionStory from '$lib/components/collections/story/CollectionStory.svelte';
-	import CollectionStoryTab from '$lib/components/collections/story/CollectionStoryTab.svelte';
+	} from '#lib/components/collections/CollectionShareSheet.svelte';
+	import { STORY_GROUP_NAMES } from '#lib/collections/story.js';
+	import CollectionStory from '#lib/components/collections/story/CollectionStory.svelte';
+	import CollectionStoryTab from '#lib/components/collections/story/CollectionStoryTab.svelte';
 	import BookOpenPageVariant from '~icons/mdi/book-open-page-variant';
 	import CommentMultipleOutline from '~icons/mdi/comment-multiple-outline';
-	import CollectionDiscussion from '$lib/components/collections/discussion/CollectionDiscussion.svelte';
+	import CollectionDiscussion from '#lib/components/collections/discussion/CollectionDiscussion.svelte';
 	import ShareVariant from '~icons/mdi/share-variant';
 	import EyeOutline from '~icons/mdi/eye-outline';
-	import { addToast } from '$lib/toasts';
-	import { linkLocationToCollection } from '$lib/collection-membership';
-	import NoteModal from '$lib/components/NoteModal.svelte';
-	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
-	import LocationModal from '$lib/components/locations/LocationModal.svelte';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import { linkLocationToCollection } from '#lib/collection-membership.js';
+	import NoteModal from '#lib/components/NoteModal.svelte';
+	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
+	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
+	import TransportationModal from '#lib/components/transportation/TransportationModal.svelte';
+	import LocationModal from '#lib/components/locations/LocationModal.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -270,7 +270,7 @@
 		if (!collection || isExportingPdf) return;
 		isExportingPdf = true;
 		try {
-			const secret = $page.url.searchParams.get('s');
+			const secret = page.url.searchParams.get('s');
 			const res = await fetch(
 				`/api/collections/${collection.id}/pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
 			);
@@ -408,9 +408,9 @@
 	}
 
 	function switchView(view: ViewType) {
-		const url = new URL($page.url);
+		const url = new URL(page.url.href);
 		url.searchParams.set('view', view);
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(url.toString(), { replace: true, reset: false });
 	}
 
 	async function handleOpenEdit(
@@ -463,12 +463,8 @@
 		try {
 			const response = await fetch(`/api/locations/${location.id}/`, {
 				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					collections: [...(location.collections || []), collection.id]
-				})
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ collections: [...(location.collections || []), collection.id] })
 			});
 
 			if (response.ok) {
@@ -647,8 +643,8 @@
 	// The link a reader shares: this page, keeping an unlisted story's secret.
 	let storyShareUrl = $derived.by(() => {
 		if (!collection || visibility === 'private') return null;
-		const url = new URL(`/collections/${collection.id}`, $page.url.origin);
-		const secret = $page.url.searchParams.get('s');
+		const url = new URL(`/collections/${collection.id}`, page.url.origin);
+		const secret = page.url.searchParams.get('s');
 		if (visibility === 'unlisted') {
 			if (!secret) return null;
 			url.searchParams.set('s', secret);
@@ -756,7 +752,7 @@
 	});
 	// Read view from URL params and validate it's available
 	run(() => {
-		const requested = $page.url.searchParams.get('view');
+		const requested = page.url.searchParams.get('view');
 		const view = (requested === 'itinerary' ? 'plan' : requested) as ViewType;
 		if (
 			view &&
@@ -1079,7 +1075,7 @@
 				shareUrl={storyShareUrl}
 				signInHref={data.user
 					? null
-					: `/login?next=${encodeURIComponent($page.url.pathname + $page.url.search)}`}
+					: `/login?next=${encodeURIComponent(page.url.pathname + page.url.search)}`}
 			/>
 		</div>
 	</div>

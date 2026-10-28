@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Category } from '$lib/types';
+	import type { Category } from '#lib/types.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 

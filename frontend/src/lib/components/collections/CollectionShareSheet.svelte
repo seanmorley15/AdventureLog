@@ -3,7 +3,7 @@
 </script>
 
 <script lang="ts">
-	import { apiErrorMessage } from '$lib/api';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type {
@@ -14,11 +14,11 @@
 		CommentAccess,
 		StoryGroup,
 		User
-	} from '$lib/types';
-	import { addToast } from '$lib/toasts';
-	import { STORY_GROUP_NAMES } from '$lib/collections/story';
-	import { copyToClipboard } from '$lib/index';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	} from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
+	import { STORY_GROUP_NAMES } from '#lib/collections/story.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import ShareVariant from '~icons/mdi/share-variant';
 	import Close from '~icons/mdi/close';
 	import ContentCopy from '~icons/mdi/content-copy';

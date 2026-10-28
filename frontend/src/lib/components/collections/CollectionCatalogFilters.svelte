@@ -2,8 +2,8 @@
 	import type { Snippet } from 'svelte';
 	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import DateInput from '$lib/components/shared/DateInput.svelte';
-	import { LODGING_TYPES_ICONS, TRANSPORTATION_TYPES_ICONS } from '$lib';
+	import DateInput from '#lib/components/shared/DateInput.svelte';
+	import { LODGING_TYPES_ICONS, TRANSPORTATION_TYPES_ICONS } from '#lib';
 	import {
 		CatalogFilters,
 		catalogCounts,
@@ -12,8 +12,8 @@
 		uniqueCategoryNames,
 		uniqueLodgingTypes,
 		uniqueTransportTypes
-	} from '$lib/collections/catalog.svelte';
-	import type { Collection } from '$lib/types';
+	} from '#lib/collections/catalog.svelte.js';
+	import type { Collection } from '#lib/types.js';
 	import Magnify from '~icons/mdi/magnify';
 	import FilterIcon from '~icons/mdi/filter-variant';
 	import CheckIcon from '~icons/mdi/check';

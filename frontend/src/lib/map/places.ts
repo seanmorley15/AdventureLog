@@ -1,11 +1,11 @@
-import { apiErrorMessage } from '$lib/api';
+import { apiErrorMessage } from '#lib/api/index.js';
 import type {
 	Location,
 	PlaceSearchResult,
 	Recommendation,
 	RecommendationResponse
-} from '$lib/types';
-import { googleContentImage } from '$lib/images';
+} from '#lib/types.js';
+import { googleContentImage } from '#lib/images.js';
 
 export type PlacesSearchMeta = {
 	provider_used?: string;
@@ -340,7 +340,7 @@ export async function fetchRecommendations(params: {
 	return data as RecommendationResponse;
 }
 
-export async function refetchPins(): Promise<import('$lib/types').Pin[]> {
+export async function refetchPins(): Promise<import('#lib/types.js').Pin[]> {
 	const response = await fetch('/api/locations/pins/');
 	if (!response.ok) return [];
 	return response.json();

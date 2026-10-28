@@ -2,7 +2,7 @@
 	import { stopPropagation } from 'svelte/legacy';
 
 	import ImageDisplayModal from '../ImageDisplayModal.svelte';
-	import type { ContentImage } from '$lib/types';
+	import type { ContentImage } from '#lib/types.js';
 
 	interface Props {
 		geojson: any;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { Collection } from '$lib/types';
-	import { indexedDays } from '$lib/collections/plan';
+	import type { Collection } from '#lib/types.js';
+	import { indexedDays } from '#lib/collections/plan.js';
 	import CommentThread from './CommentThread.svelte';
 	import ActivityFeed from './ActivityFeed.svelte';
 	import CommentMultiple from '~icons/mdi/comment-multiple-outline';

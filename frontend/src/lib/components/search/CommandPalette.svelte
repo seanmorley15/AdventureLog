@@ -1,22 +1,26 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { goto } from '$app/navigation';
-	import { openLocationHref } from '$lib/location-drawer.svelte';
-	import { debounce } from '$lib';
-	import { searchPlaces } from '$lib/map/places';
-	import { filterQuickNavActions, quickNavActions, type QuickNavAction } from '$lib/search/actions';
-	import { searchApp } from '$lib/search/api';
+	import { openLocationHref } from '#lib/location-drawer.svelte.js';
+	import { debounce } from '#lib';
+	import { searchPlaces } from '#lib/map/places.js';
+	import {
+		filterQuickNavActions,
+		quickNavActions,
+		type QuickNavAction
+	} from '#lib/search/actions.js';
+	import { searchApp } from '#lib/search/api.js';
 	import {
 		addRecentSearch,
 		closeCommandPalette,
 		commandPaletteInitialQuery,
 		commandPaletteOpen,
 		getRecentSearches
-	} from '$lib/search/palette';
-	import SearchResultRow from '$lib/search/SearchResultRow.svelte';
-	import type { PaletteItem, SearchHit, SearchTab } from '$lib/search/types';
+	} from '#lib/search/palette.js';
+	import SearchResultRow from '#lib/search/SearchResultRow.svelte';
+	import type { PaletteItem, SearchHit, SearchTab } from '#lib/search/types.js';
 	import Magnify from '~icons/mdi/magnify';
 	import MapMarker from '~icons/mdi/map-marker';
 	import { onMount, tick } from 'svelte';
@@ -286,18 +290,15 @@
 						type="button"
 						class="tab flex-1"
 						class:tab-active={activeTab === 'adventures'}
-						onclick={() => (activeTab = 'adventures')}
+						onclick={() => (activeTab = 'adventures')}>{$t('search.tab_adventures')}</button
 					>
-						{$t('search.tab_adventures')}
-					</button>
+
 					<button
 						type="button"
 						class="tab flex-1"
 						class:tab-active={activeTab === 'places'}
-						onclick={() => (activeTab = 'places')}
+						onclick={() => (activeTab = 'places')}>{$t('search.tab_places')}</button
 					>
-						{$t('search.tab_places')}
-					</button>
 				</div>
 			</div>
 

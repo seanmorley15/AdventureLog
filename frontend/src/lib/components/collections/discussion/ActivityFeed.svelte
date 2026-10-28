@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { CollectionActivityEvent } from '$lib/types';
+	import type { CollectionActivityEvent } from '#lib/types.js';
 	import PersonAvatar from './PersonAvatar.svelte';
 	import CalendarArrowRight from '~icons/mdi/calendar-arrow-right';
 	import SwapVertical from '~icons/mdi/swap-vertical';

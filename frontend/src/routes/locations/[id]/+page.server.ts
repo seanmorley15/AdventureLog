@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location } from '$lib/types';
-import { buildLocationShareMeta } from '$lib/shareMeta.server';
+import type { Location } from '#lib/types.js';
+import { buildLocationShareMeta } from '#lib/shareMeta.server.js';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -33,7 +33,7 @@ export const load = (async (event) => {
 }) satisfies PageServerLoad;
 
 import { redirect, type Actions } from '@sveltejs/kit';
-import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
+import { backendApiUrl, fetchCSRFToken } from '#lib/index.server.js';
 
 export const actions: Actions = {
 	delete: async (event) => {

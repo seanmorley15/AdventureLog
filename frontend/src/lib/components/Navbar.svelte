@@ -2,8 +2,7 @@
 	import { run } from 'svelte/legacy';
 
 	import { goto } from '$app/navigation';
-	import type { SubmitFunction } from '@sveltejs/kit';
-	import { openCommandPalette } from '$lib/search/palette';
+	import { openCommandPalette } from '#lib/search/palette.js';
 
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import Calendar from '~icons/mdi/calendar';
@@ -17,18 +16,18 @@
 	import Menu from '~icons/mdi/menu';
 	import Avatar from './Avatar.svelte';
 	import CommentInbox from './CommentInbox.svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import { t, locale, locales } from 'svelte-i18n';
-	import { themes } from '$lib';
-	import { enhance } from '$app/forms';
+	import { themes } from '#lib';
+	import { enhance, type SubmitFunction } from '$app/forms';
 	import { onMount } from 'svelte';
-	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
+	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
+
 	interface Props {
 		data: any;
 	}
 
 	let { data }: Props = $props();
-
 	let theme = $state('');
 	let query: string = $state('');
 	let isAboutModalOpen: boolean = $state(false);
@@ -38,8 +37,8 @@
 	let settingsMenuEl: HTMLDivElement | undefined = $state();
 
 	run(() => {
-		if ($page.url.pathname === '/search') {
-			query = $page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '';
+		if (page.url.pathname === '/search') {
+			query = page.url.searchParams.get('q') || page.url.searchParams.get('query') || '';
 		}
 	});
 
@@ -208,7 +207,7 @@
 								<a
 									href={item.path}
 									class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl"
-									class:btn-active={$page.url.pathname === item.path}
+									class:btn-active={page.url.pathname === item.path}
 									title={item.path === '/collections' && pendingInviteCount > 0
 										? `${$t(item.label)} (${pendingInviteCount} ${$t('invites.pending_invites')})`
 										: undefined}
@@ -282,8 +281,8 @@
 						<a
 							href={item.path}
 							class="btn btn-ghost gap-2 rounded-xl transition-all duration-200 hover:bg-base-200"
-							class:bg-primary-10={$page.url.pathname === item.path}
-							class:text-primary={$page.url.pathname === item.path}
+							class:bg-primary-10={page.url.pathname === item.path}
+							class:text-primary={page.url.pathname === item.path}
 							title={item.path === '/collections' && pendingInviteCount > 0
 								? `${$t(item.label)} (${pendingInviteCount} ${$t('invites.pending_invites')})`
 								: undefined}
@@ -377,27 +376,26 @@
 			>
 				<!-- Quick Actions -->
 				<div class="space-y-2 mb-4">
-					<button class="btn btn-ghost w-full justify-start gap-3" onclick={openAbout}>
-						{$t('navbar.about')}
-					</button>
+					<button class="btn btn-ghost w-full justify-start gap-3" onclick={openAbout}
+						>{$t('navbar.about')}</button
+					>
+
 					<button
 						class="btn btn-ghost w-full justify-start gap-3"
 						onclick={() => (window.location.href = 'https://adventurelog.app')}
+						>{$t('navbar.documentation')}</button
 					>
-						{$t('navbar.documentation')}
-					</button>
+
 					<button
 						class="btn btn-ghost w-full justify-start gap-3"
-						onclick={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}
+						onclick={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}>Discord</button
 					>
-						Discord
-					</button>
+
 					<button
 						class="btn btn-ghost w-full justify-start gap-3"
 						onclick={() => (window.location.href = 'https://seanmorley.com/sponsor')}
+						>{$t('navbar.support')} 💖</button
 					>
-						{$t('navbar.support')} 💖
-					</button>
 				</div>
 
 				<div class="divider my-3"></div>

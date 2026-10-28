@@ -1,7 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { fetchCSRFToken } from '$lib/index.server';
-import type { MediaUsage } from '$lib/types';
+import { fetchCSRFToken } from '#lib/index.server.js';
+import type { MediaUsage } from '#lib/types.js';
 
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
@@ -73,7 +73,7 @@ export const actions: Actions = {
 			return fail(500, { message: 'Missing checkout URL.', action: 'subscribe' });
 		}
 
-		throw redirect(303, data.url);
+		throw redirect(303, data.url, { external: true });
 	},
 	manageBilling: async (event) => {
 		if (!event.locals.user) {
@@ -113,6 +113,6 @@ export const actions: Actions = {
 			return fail(500, { message: 'Missing billing portal URL.', action: 'portal' });
 		}
 
-		throw redirect(303, data.url);
+		throw redirect(303, data.url, { external: true });
 	}
 };

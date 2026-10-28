@@ -1,8 +1,8 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Country } from '$lib/types';
+import type { Country } from '#lib/types.js';
 import { redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { fetchCSRFToken } from '$lib/index.server';
+import { fetchCSRFToken } from '#lib/index.server.js';
 
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Attachment } from 'svelte/attachments';
 	import { t } from 'svelte-i18n';
-	import type { Recommendation } from '$lib/types';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import { googleContentImage } from '$lib/images';
+	import type { Recommendation } from '#lib/types.js';
+	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
+	import { googleContentImage } from '#lib/images.js';
 	import Close from '~icons/mdi/close';
 	import MapMarker from '~icons/mdi/map-marker';
 	import InfoIcon from '~icons/mdi/information';

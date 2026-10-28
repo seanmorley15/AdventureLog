@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { normalizeBasemapType } from '$lib';
-	import CityCard from '$lib/components/cards/CityCard.svelte';
-	import { addToast } from '$lib/toasts';
-	import type { City, VisitedCity } from '$lib/types';
+	import { normalizeBasemapType } from '#lib';
+	import CityCard from '#lib/components/cards/CityCard.svelte';
+	import { addToast } from '#lib/toasts.js';
+	import type { City, VisitedCity } from '#lib/types.js';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
-	import ClusterMap from '$lib/components/ClusterMap.svelte';
+	import ClusterMap from '#lib/components/ClusterMap.svelte';
 	import type { ClusterOptions } from 'svelte-maplibre';
 
 	// Icons

@@ -23,4 +23,39 @@ process.on('uncaughtException', (error) => {
 	throw error;
 });
 
-await import('./build/index.js');
+// adapter-node 6 no longer reads the ORIGIN environment variable (the origin is a
+// build-time `paths.origin` option), but AdventureLog images are built once and
+// configured at runtime. Keep ORIGIN working by feeding it to the adapter through
+// its PROTOCOL_HEADER / HOST_HEADER mechanism using private header names that are
+// overwritten on every request, so clients can never spoof them.
+const PROTOCOL_HEADER = 'x-adventurelog-origin-protocol';
+const HOST_HEADER = 'x-adventurelog-origin-host';
+
+let configuredOrigin = null;
+if (process.env.ORIGIN) {
+	try {
+		const url = new URL(process.env.ORIGIN);
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+			throw new Error(`unsupported protocol ${url.protocol}`);
+		}
+		configuredOrigin = { protocol: url.protocol.slice(0, -1), host: url.host };
+		process.env.PROTOCOL_HEADER = PROTOCOL_HEADER;
+		process.env.HOST_HEADER = HOST_HEADER;
+		// The host already carries any non-default port.
+		delete process.env.PORT_HEADER;
+	} catch (error) {
+		console.warn(
+			`[adventurelog] Ignoring invalid ORIGIN "${process.env.ORIGIN}": ${error.message}`
+		);
+	}
+}
+
+const { server } = await import('./build/index.js');
+
+if (configuredOrigin) {
+	// Runs before the adapter's own request listener, which reads these headers.
+	server.prependListener('request', (req) => {
+		req.headers[PROTOCOL_HEADER] = configuredOrigin.protocol;
+		req.headers[HOST_HEADER] = configuredOrigin.host;
+	});
+}

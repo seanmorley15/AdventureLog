@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { ContentImage } from '$lib/types';
-	import ImageFrame from '$lib/components/ImageFrame.svelte';
+	import type { ContentImage } from '#lib/types.js';
+	import ImageFrame from '#lib/components/ImageFrame.svelte';
 	import ChevronLeft from '~icons/mdi/chevron-left';
 	import ChevronRight from '~icons/mdi/chevron-right';
 	import ImageMultiple from '~icons/mdi/image-multiple-outline';

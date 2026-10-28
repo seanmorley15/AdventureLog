@@ -24,6 +24,6 @@ To integrate Immich with AdventureLog, you need to have an Immich server running
    - Enter the URL of your Immich server, e.g. `https://immich.example.com/api`. Note that `localhost` or `127.0.0.1` will probably not work because Immich and AdventureLog are running on different docker networks. It is recommended to use the IP address of the server where Immich is running ex `http://my-server-ip:port` or a domain name.
    - Paste the API Key you obtained in the previous step.
    - Click `Connect` to save the settings.
-3. Now, when you are adding images to an adventure, you will see an option to search for images in Immich or upload from an album.
+3. Now, when you are adding images to an adventure, you will see an option to search for images in Immich or upload from an album. If that adventure has a visit, the date filter opens on the latest visit date. You can still choose another day.
 
 Enjoy the privacy and control of managing your travel media with Immich and AdventureLog! 🎉

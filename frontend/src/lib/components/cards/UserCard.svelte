@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import type { User } from '$lib/types';
+	import type { User } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import UserAvatar from '$lib/components/UserAvatar.svelte';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import Calendar from '~icons/mdi/calendar';
 	import Account from '~icons/mdi/account';
 	import ShieldAccount from '~icons/mdi/shield-account';
 	import ChevronRight from '~icons/mdi/chevron-right';
 	import { page } from '$app/state';
-	import { dateFormatFromUser, formatDisplayDate } from '$lib/dateFormat';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface Props {
 		sharing?: boolean;

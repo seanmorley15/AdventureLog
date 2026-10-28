@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { dragHandle } from 'svelte-dnd-action';
-	import type { Checklist, Location, Lodging, Note, Transportation } from '$lib/types';
-	import { formatDisplayTime, type DateFormatPreference } from '$lib/dateFormat';
-	import { applyDropdownFlip } from '$lib/utils/flipDropdown';
+	import type { Checklist, Location, Lodging, Note, Transportation } from '#lib/types.js';
+	import { formatDisplayTime, type DateFormatPreference } from '#lib/dateFormat.js';
+	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 	import {
 		clockValue,
 		recordedVisitId,
 		type LogVisitResult,
 		type PlanRow
-	} from '$lib/collections/plan';
-	import type { Collection } from '$lib/types';
+	} from '#lib/collections/plan.js';
+	import type { Collection } from '#lib/types.js';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Bed from '~icons/mdi/bed';
 	import Car from '~icons/mdi/car';

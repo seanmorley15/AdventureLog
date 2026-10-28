@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { Collection } from '$lib/types';
-	import { DEFAULT_CURRENCY } from '$lib/money';
-	import { buildCostEntries, summarizeCostEntries } from '$lib/collections/costs';
+	import type { Collection } from '#lib/types.js';
+	import { DEFAULT_CURRENCY } from '#lib/money.js';
+	import { buildCostEntries, summarizeCostEntries } from '#lib/collections/costs.js';
 
 	interface Props {
 		collection: Collection;

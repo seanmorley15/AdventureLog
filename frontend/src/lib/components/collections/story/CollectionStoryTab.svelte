@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import type { Collection } from '$lib/types';
-	import type { DateFormatPreference } from '$lib/dateFormat';
-	import { hiddenStoryGroups } from '$lib/collections/story';
-	import { copyToClipboard } from '$lib/index';
-	import { addToast } from '$lib/toasts';
+	import type { Collection } from '#lib/types.js';
+	import type { DateFormatPreference } from '#lib/dateFormat.js';
+	import { hiddenStoryGroups } from '#lib/collections/story.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import { addToast } from '#lib/toasts.js';
 	import CollectionStory from './CollectionStory.svelte';
 	import LockOutline from '~icons/mdi/lock-outline';
 	import Earth from '~icons/mdi/earth';

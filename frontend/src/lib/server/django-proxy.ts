@@ -1,4 +1,4 @@
-import { json, type RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
 
 export function getServerEndpoint(): string {
 	return process.env['PUBLIC_SERVER_URL'] || 'http://localhost:8000';
@@ -115,7 +115,7 @@ export async function proxyToDjango(event: RequestEvent) {
 
 	let csrfToken = await fetchCSRFToken();
 	if (!csrfToken) {
-		return json(
+		return Response.json(
 			{ detail: 'The server could not be reached for a CSRF token.', code: 'csrf_unavailable' },
 			{ status: 502 }
 		);
@@ -179,7 +179,7 @@ export async function proxyToDjango(event: RequestEvent) {
 			return new Response(null, { status: 499 });
 		}
 		console.error('Error forwarding request:', error);
-		return json(
+		return Response.json(
 			{ detail: 'The server could not be reached.', code: 'backend_unreachable' },
 			{ status: 502 }
 		);

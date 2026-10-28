@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { ImageSource } from '$lib/types';
+	import type { ImageSource } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 	import GoogleIcon from '~icons/mdi/google';
 	import WikipediaIcon from '~icons/mdi/wikipedia';
-	import ImmichLogo from '$lib/assets/immich.svg';
-	import { defaultImageSource } from '$lib/images';
+	import ImmichLogo from '#lib/assets/immich.svg';
+	import { defaultImageSource } from '#lib/images.js';
 
 	interface Props {
 		source?: ImageSource | null | undefined;

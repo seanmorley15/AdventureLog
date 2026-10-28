@@ -2,31 +2,31 @@
 	import { untrack } from 'svelte';
 	import { stopPropagation } from 'svelte/legacy';
 
-	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
+	import FullMap, { type FullMapFeatureCollection } from '#lib/components/map/FullMap.svelte';
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { LODGING_TYPES_ICONS, getActivityColor, normalizeBasemapType } from '$lib';
+	import { LODGING_TYPES_ICONS, getActivityColor, normalizeBasemapType } from '#lib';
 	import Plus from '~icons/mdi/plus';
 	import PinIcon from '~icons/mdi/map-marker';
 	import Clear from '~icons/mdi/close';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import ImageMapPinPopup from '$lib/components/map/ImageMapPinPopup.svelte';
+	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
+	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
+	import ImageMapPinPopup from '#lib/components/map/ImageMapPinPopup.svelte';
 	import {
 		collectCollectionImageGeoJson,
 		getImagePinNavigationUrl,
 		type ImagePinProperties
-	} from '$lib/map/imagePins';
+	} from '#lib/map/imagePins.js';
 	import { t } from 'svelte-i18n';
-	import type { Collection, Location, User } from '$lib/types';
-	import { dayPinColor, dayStopPath, pinCoversDay, type PlanPin } from '$lib/collections/plan';
+	import type { Collection, Location, User } from '#lib/types.js';
+	import { dayPinColor, dayStopPath, pinCoversDay, type PlanPin } from '#lib/collections/plan.js';
 	import {
 		CatalogFilters,
 		isWithinDateRange,
 		locationMatches,
 		lodgingMatches,
 		transportationMatches
-	} from '$lib/collections/catalog.svelte';
+	} from '#lib/collections/catalog.svelte.js';
 	import CollectionCatalogFilters from './CollectionCatalogFilters.svelte';
 	import MapMarkerPath from '~icons/mdi/map-marker-path';
 	import Numeric from '~icons/mdi/numeric';

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import FullMap from '$lib/components/map/FullMap.svelte';
-	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
-	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
-	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import type { EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
+	import FullMap from '#lib/components/map/FullMap.svelte';
+	import MapFloatingControls from '#lib/components/map/MapFloatingControls.svelte';
+	import MapTrackLayerControls from '#lib/components/map/MapTrackLayerControls.svelte';
+	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
+	import type { EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
 
 	interface Props {
 		center: [number, number];
