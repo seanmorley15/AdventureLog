@@ -309,7 +309,7 @@
 					initialVisitDate={storedInitialVisitDate}
 				/>
 			{/if}
-			{#if steps[1].selected}
+			{#if steps[1].selected && transportation}
 				<MediaStep
 					bind:images={transportation.images}
 					bind:attachments={transportation.attachments}
