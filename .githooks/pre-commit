@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# Git launched from an editor may not inherit the shell's PATH, so fall back to the newest nvm-installed Node 22 (which provides pnpm).
+if ! command -v pnpm >/dev/null 2>&1; then
+  nvm_bin="$(ls -d "${NVM_DIR:-$HOME/.nvm}"/versions/node/v22*/bin 2>/dev/null | tail -n 1)"
+  [ -n "$nvm_bin" ] && PATH="$nvm_bin:$PATH"
+fi
+
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root/frontend"
 

@@ -80,9 +80,15 @@
 		user = null,
 		collection = null,
 		initialVisitDate = null,
-		transportation = $bindable(createEmptyTransportation()),
+		transportation = $bindable(),
 		transportationToEdit = null
 	}: Props = $props();
+
+	// Svelte rejects binding an `undefined` value to a prop that has a fallback,
+	// so the default is applied here instead of in the prop declaration.
+	if (!transportation) {
+		transportation = createEmptyTransportation();
+	}
 
 	$effect.pre(() => {
 		if (initialVisitDate && !storedInitialVisitDate) {
@@ -307,7 +313,7 @@
 					initialVisitDate={storedInitialVisitDate}
 				/>
 			{/if}
-			{#if steps[1].selected}
+			{#if steps[1].selected && transportation}
 				<MediaStep
 					bind:images={transportation.images}
 					bind:attachments={transportation.attachments}
