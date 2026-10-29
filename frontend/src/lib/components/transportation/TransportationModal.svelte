@@ -76,9 +76,15 @@
 		user = null,
 		collection = null,
 		initialVisitDate = null,
-		transportation = $bindable(createEmptyTransportation()),
+		transportation = $bindable(),
 		transportationToEdit = null
 	}: Props = $props();
+
+	// Svelte rejects binding an `undefined` value to a prop that has a fallback,
+	// so the default is applied here instead of in the prop declaration.
+	if (!transportation) {
+		transportation = createEmptyTransportation();
+	}
 
 	$effect.pre(() => {
 		if (initialVisitDate && !storedInitialVisitDate) {
