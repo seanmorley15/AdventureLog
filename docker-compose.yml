@@ -34,7 +34,7 @@ services:
       start_period: 120s
 
   db:
-    image: postgis/postgis:16-3.5
+    image: postgis/postgis:18-3.6
     container_name: adventurelog-db
     restart: unless-stopped
     environment:
