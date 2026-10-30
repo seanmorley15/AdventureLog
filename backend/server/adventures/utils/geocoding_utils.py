@@ -275,7 +275,8 @@ def extractIsoCode(user, data):
     location_name = _clean_location_candidate(data.get("location_name") or data.get("name"))
 
     address = data.get("address", {}) or {}
-    country_code = address.get("ISO3166-1")
+    # Nominatim leaves out the ISO3166 keys for some places (e.g. Gibraltar)
+    country_code = address.get("ISO3166-1") or (address.get("country_code") or "").upper() or None
     state_name = address.get("state")
 
     preferred_iso_keys = (
@@ -340,6 +341,13 @@ def extractIsoCode(user, data):
                 country_code = region.country.country_code
             if region not in region_candidates:
                 region_candidates.insert(0, region)
+
+    if not region and country_code:
+        # Countries without subdivisions are imported as a single "<CC>-00" region
+        region = Region.objects.filter(id=f"{country_code}-00").first()
+        if region:
+            iso_code = region.id
+            region_candidates.append(region)
 
     if not region:
         return {"error": "No region found"}
