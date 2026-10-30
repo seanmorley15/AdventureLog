@@ -76,7 +76,11 @@ jobs:
             }
 
             function extractIssueNumbersFromBody(body) {
-              const text = body || "";
+              // Ignore HTML comments and inline code spans so template/example text
+              // such as `Closes #123` is never mistaken for a real issue link.
+              const text = (body || "")
+                .replace(/<!--[\s\S]*?-->/g, "")
+                .replace(/`[^`\n]*`/g, "");
               const numbers = new Set();
               const keyword = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/gi;
               let match;
