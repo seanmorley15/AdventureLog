@@ -7,6 +7,7 @@ from adventures.services.places.search import search_places
 from adventures.services.places.details import get_place_details
 from adventures.services.geocoding.reverse import reverse_geocode
 from adventures.throttling import ExternalGeocodeThrottle
+from adventures.utils.language import resolve_request_language
 
 
 class PlacesAPI(viewsets.ViewSet):
@@ -19,8 +20,9 @@ class PlacesAPI(viewsets.ViewSet):
             return Response({"error": "Query parameter is required"}, status=400)
 
         include_meta = request.query_params.get("include_meta", "").lower() in {"1", "true", "yes"}
+        language = resolve_request_language(request)
         try:
-            selection = search_places(query)
+            selection = search_places(query, language=language)
             if selection.error:
                 if include_meta:
                     return Response({
@@ -48,7 +50,7 @@ class PlacesAPI(viewsets.ViewSet):
             return Response({"error": "place_id parameter is required"}, status=400)
 
         name = request.query_params.get("name", "")
-        language = request.query_params.get("language", "en")
+        language = resolve_request_language(request)
 
         details = get_place_details(place_id, fallback_query=name, language=language)
         if isinstance(details, dict) and details.get("error"):
@@ -67,7 +69,8 @@ class PlacesAPI(viewsets.ViewSet):
         except ValueError:
             return Response({"error": "Invalid latitude or longitude"}, status=400)
 
-        selection = reverse_geocode(lat, lon, request.user)
+        language = resolve_request_language(request)
+        selection = reverse_geocode(lat, lon, request.user, language=language)
         data = selection.data if hasattr(selection, "data") else selection
         if isinstance(data, dict) and data.get("error"):
             return Response({"error": "An internal error occurred while processing the request"}, status=400)

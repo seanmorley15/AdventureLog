@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import requests
 
@@ -7,8 +7,20 @@ from adventures.providers.base import ProviderResult
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 
 
-def search_places(query: str, limit: int = 20, user_agent: str = "AdventureLog Server") -> ProviderResult[List[Dict]]:
+def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
     headers = {"User-Agent": user_agent}
+    if language:
+        headers["Accept-Language"] = language
+    return headers
+
+
+def search_places(
+    query: str,
+    limit: int = 20,
+    user_agent: str = "AdventureLog Server",
+    language: Optional[str] = None,
+) -> ProviderResult[List[Dict]]:
+    headers = _headers(user_agent, language)
     params = {
         "q": query,
         "format": "jsonv2",
