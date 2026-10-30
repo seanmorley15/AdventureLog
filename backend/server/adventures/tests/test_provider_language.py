@@ -13,6 +13,7 @@ from adventures.services.places.search import (
 )
 from adventures.utils.language import resolve_request_language
 from adventures.views.places_api_view import PlacesAPI
+from adventures.views.quick_add_utils import extract_google_place_details
 from adventures.views.reverse_geocode_view import ReverseGeocodeViewSet
 
 
@@ -144,6 +145,24 @@ class PlaceDetailsLanguageTests(SimpleTestCase):
         response = ReverseGeocodeViewSet.as_view({"get": "place_details"})(request)
 
         self.assertEqual(response.status_code, 200)
+        mock_details.assert_called_once_with(
+            "abc", fallback_query="Tokyo", language="ja"
+        )
+
+
+class QuickAddLanguageTests(SimpleTestCase):
+    @patch("adventures.views.quick_add_utils.get_place_details")
+    def test_extract_google_place_details_forwards_language(self, mock_details):
+        mock_details.return_value = {"description": "A place"}
+
+        place_id, details = extract_google_place_details(
+            {"place_id": "abc"},
+            fallback_query="Tokyo",
+            language="ja",
+        )
+
+        self.assertEqual(place_id, "abc")
+        self.assertEqual(details, {"description": "A place"})
         mock_details.assert_called_once_with(
             "abc", fallback_query="Tokyo", language="ja"
         )
