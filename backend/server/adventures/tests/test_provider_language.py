@@ -13,6 +13,7 @@ from adventures.services.places.search import (
 )
 from adventures.utils.language import resolve_request_language
 from adventures.views.places_api_view import PlacesAPI
+from adventures.views.reverse_geocode_view import ReverseGeocodeViewSet
 
 
 def _response(payload):
@@ -110,3 +111,39 @@ class PlacesAPIViewLanguageTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 200)
         mock_search.assert_called_once_with("Tokyo", language="ja")
+
+
+class PlaceDetailsLanguageTests(SimpleTestCase):
+    @patch("adventures.views.places_api_view.get_place_details")
+    def test_places_place_details_forwards_ui_locale(self, mock_details):
+        mock_details.return_value = {"description": "A place"}
+        request = APIRequestFactory().get(
+            "/api/places/place_details/",
+            {"place_id": "abc", "name": "Tokyo"},
+            HTTP_X_ADVENTURELOG_LOCALE="ja",
+        )
+        force_authenticate(request, user=Mock())
+
+        response = PlacesAPI.as_view({"get": "place_details"})(request)
+
+        self.assertEqual(response.status_code, 200)
+        mock_details.assert_called_once_with(
+            "abc", fallback_query="Tokyo", language="ja"
+        )
+
+    @patch("adventures.views.reverse_geocode_view.get_place_details")
+    def test_reverse_view_place_details_forwards_ui_locale(self, mock_details):
+        mock_details.return_value = {"description": "A place"}
+        request = APIRequestFactory().get(
+            "/api/reverse/place_details/",
+            {"place_id": "abc", "name": "Tokyo"},
+            HTTP_X_ADVENTURELOG_LOCALE="ja",
+        )
+        force_authenticate(request, user=Mock())
+
+        response = ReverseGeocodeViewSet.as_view({"get": "place_details"})(request)
+
+        self.assertEqual(response.status_code, 200)
+        mock_details.assert_called_once_with(
+            "abc", fallback_query="Tokyo", language="ja"
+        )

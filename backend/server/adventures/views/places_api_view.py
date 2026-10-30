@@ -50,7 +50,7 @@ class PlacesAPI(viewsets.ViewSet):
             return Response({"error": "place_id parameter is required"}, status=400)
 
         name = request.query_params.get("name", "")
-        language = request.query_params.get("language", "en")
+        language = resolve_request_language(request)
 
         details = get_place_details(place_id, fallback_query=name, language=language)
         if isinstance(details, dict) and details.get("error"):
