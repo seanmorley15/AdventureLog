@@ -59,7 +59,12 @@ def _reverse_geocode_quality(result: Dict[str, Any]) -> int:
     return score
 
 
-def reverse_geocode(lat: float, lon: float, user) -> ReverseGeocodeResult:
+def reverse_geocode(
+    lat: float,
+    lon: float,
+    user,
+    language: Optional[str] = None,
+) -> ReverseGeocodeResult:
     google_result = None
 
     api_key = getattr(settings, "GOOGLE_MAPS_API_KEY", None)
@@ -81,7 +86,7 @@ def reverse_geocode(lat: float, lon: float, user) -> ReverseGeocodeResult:
         if _reverse_geocode_quality(google_result) >= 5:
             return ReverseGeocodeResult(data=google_result, provider_used="google")
 
-    osm_payload = osm_reverse(lat, lon)
+    osm_payload = osm_reverse(lat, lon, language=language)
     osm_result = None
     if not osm_payload.error:
         osm_data = osm_payload.data

@@ -288,7 +288,11 @@ def _should_compare_osm(query: str, google_results: List[Dict[str, Any]]) -> boo
     return _score_search_results(google_results, query) < 1.5
 
 
-def search_places(query: str, max_results: int = 20) -> ProviderSearchResult:
+def search_places(
+    query: str,
+    max_results: int = 20,
+    language: Optional[str] = None,
+) -> ProviderSearchResult:
     normalized_query = str(query or "").strip()
     if not normalized_query:
         return ProviderSearchResult(
@@ -314,7 +318,7 @@ def search_places(query: str, max_results: int = 20) -> ProviderSearchResult:
 
     if google_results is None or _should_compare_osm(normalized_query, google_results):
         providers_attempted.append("osm")
-        osm_payload = osm_search(normalized_query, limit=max_results)
+        osm_payload = osm_search(normalized_query, limit=max_results, language=language)
         if osm_payload.error:
             osm_error = osm_payload.error
         else:

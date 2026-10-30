@@ -9,6 +9,7 @@ from adventures.services.geocoding.reverse import reverse_geocode as reverse_geo
 from adventures.services.places.details import get_place_details
 from adventures.services.places.search import search_places
 from adventures.throttling import ExternalGeocodeThrottle
+from adventures.utils.language import resolve_request_language
 
 class ReverseGeocodeViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -24,7 +25,8 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             lon = float(lon)
         except ValueError:
             return Response({"error": "Invalid latitude or longitude"}, status=400)
-        selection = reverse_geocode_service(lat, lon, self.request.user)
+        language = resolve_request_language(request)
+        selection = reverse_geocode_service(lat, lon, self.request.user, language=language)
         data = selection.data
         if 'error' in data:
             return Response({"error": "An internal error occurred while processing the request"}, status=400)
@@ -38,8 +40,9 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
 
         include_meta = request.query_params.get('include_meta', '').lower() in {'1', 'true', 'yes'}
 
+        language = resolve_request_language(request)
         try:
-            selection = search_places(query)
+            selection = search_places(query, language=language)
             if selection.error:
                 if include_meta:
                     return Response({
