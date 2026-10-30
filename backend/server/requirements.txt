@@ -11,14 +11,14 @@ pillow==13.0.0
 pillow-heif>=1.8.1,<2
 whitenoise==6.12.0
 django-storages==1.14.6
-boto3==1.43.118
+boto3==1.43.120
 django-resized==1.0.3
 django-geojson==4.2.0
 setuptools==84.2.1
 gunicorn==23.0.0
 qrcode==8.2
-slippers==0.6.2
-django-allauth-ui==1.7.0
+slippers==0.7.1
+django-allauth-ui==1.8.1
 django-widget-tweaks==1.5.1
 django-ical==1.9.2
 icalendar==6.1.0
