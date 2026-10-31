@@ -7,6 +7,27 @@ import requests
 from django.conf import settings
 from worldtravel.models import City, Region, VisitedCity, VisitedRegion
 
+# ISO 3166-2 subdivisions that also have their own ISO 3166-1 code. Geocoders may
+# report the subdivision (e.g. Åland as FI-01) while the travel database stores
+# them as separate countries (AX).
+SUBDIVISION_COUNTRY_CODES = {
+    "FI-01": "AX",
+    "NO-21": "SJ",
+    "NO-22": "SJ",
+    "CN-HK": "HK",
+    "CN-MO": "MO",
+    "CN-TW": "TW",
+    "NL-AW": "AW",
+    "NL-CW": "CW",
+    "NL-SX": "SX",
+    "US-AS": "AS",
+    "US-GU": "GU",
+    "US-MP": "MP",
+    "US-PR": "PR",
+    "US-UM": "UM",
+    "US-VI": "VI",
+}
+
 
 def _clean_location_candidate(value):
     if value is None:
@@ -341,15 +362,6 @@ def extractIsoCode(user, data):
             if region not in region_candidates:
                 region_candidates.insert(0, region)
 
-    if not region:
-        return {"error": "No region found"}
-
-    if not country_code:
-        country_code = region.country.country_code
-
-    region_visited = False
-    city_visited = False
-
     locality_keys = [
         "suburb",
         "neighbourhood",
@@ -368,6 +380,29 @@ def extractIsoCode(user, data):
         normalized = unicodedata.normalize("NFKD", value)
         ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
         return re.sub(r"[^a-z0-9]", "", ascii_only.lower())
+
+    if not region:
+        alias_country = next(
+            (SUBDIVISION_COUNTRY_CODES[c] for c in iso_candidates if c in SUBDIVISION_COUNTRY_CODES),
+            None,
+        )
+        if alias_country:
+            alias_regions = list(Region.objects.filter(country__country_code=alias_country))
+            locality_names = {_normalize_name(str(address[key])) for key in locality_keys if address.get(key)}
+            named_regions = [r for r in alias_regions if _normalize_name(r.name) in locality_names]
+            if named_regions or len(alias_regions) == 1:
+                region_candidates = named_regions + [r for r in alias_regions if r not in named_regions]
+                region = region_candidates[0]
+                country_code = alias_country
+
+    if not region:
+        return {"error": "No region found"}
+
+    if not country_code:
+        country_code = region.country.country_code
+
+    region_visited = False
+    city_visited = False
 
     def match_locality(key_name, target_region):
         value = address.get(key_name)
