@@ -1262,9 +1262,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
             # If no date range is set, don't delete anything
             return
         
-        # Delete itinerary items outside the date range
+        # Delete dated itinerary items outside the date range. Trip context
+        # items have no date, and exclude() would match them too.
         deleted_items = CollectionItineraryItem.objects.filter(
-            collection=collection
+            collection=collection, date__isnull=False
         ).exclude(
             date__range=[collection.start_date, collection.end_date]
         ).delete()
