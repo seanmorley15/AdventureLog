@@ -33,14 +33,15 @@ export const load = (async (event) => {
 
 	// Build API URL with nested=true for lighter payload
 	const statusParam = status ? `&status=${status}` : '';
-	const apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true${statusParam}`;
+	const sortParams = `order_by=${order_by}&order_direction=${order_direction}`;
+	const apiUrl = `${serverEndpoint}/api/collections/?${sortParams}&page=${page}&nested=true${statusParam}`;
 
 	try {
 		// Execute all API calls in parallel
 		const [collectionsRes, sharedRes, archivedRes, invitesRes] = await Promise.all([
 			fetch(apiUrl, { headers, credentials: 'include' }),
-			fetch(`${serverEndpoint}/api/collections/shared/?nested=true`, { headers }),
-			fetch(`${serverEndpoint}/api/collections/archived/?nested=true`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/shared/?${sortParams}&nested=true`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/archived/?${sortParams}&nested=true`, { headers }),
 			fetch(`${serverEndpoint}/api/collections/invites/`, { headers })
 		]);
 
