@@ -7,6 +7,14 @@ import requests
 from django.conf import settings
 from worldtravel.models import City, Region, VisitedCity, VisitedRegion
 
+# ISO 3166-2 subdivisions that the travel database stores as their own country.
+# Geocoders may report the subdivision (e.g. Åland as FI-01) instead of the country (AX).
+SUBDIVISION_COUNTRY_CODES = {
+    "FI-01": "AX",
+    "NL-CW": "CW",
+    "NL-SX": "SX",
+}
+
 
 def _clean_location_candidate(value):
     if value is None:
@@ -348,6 +356,20 @@ def extractIsoCode(user, data):
         if region:
             iso_code = region.id
             region_candidates.append(region)
+
+    if not region:
+        alias_country = next(
+            (SUBDIVISION_COUNTRY_CODES[c] for c in iso_candidates if c in SUBDIVISION_COUNTRY_CODES),
+            None,
+        )
+        if alias_country:
+            # Only countries imported as a single region are picked; locality names vary by language
+            alias_regions = list(Region.objects.filter(country__country_code=alias_country)[:2])
+            if len(alias_regions) == 1:
+                region = alias_regions[0]
+                iso_code = region.id
+                region_candidates = [region]
+                country_code = alias_country
 
     if not region:
         return {"error": "No region found"}
