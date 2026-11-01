@@ -221,7 +221,8 @@ def _transportation_events(user, range_start: date | None, range_end: date | Non
                 title=item.name or item.type or 'Transportation',
                 start=item.date,
                 end=item.end_date or item.date,
-                all_day=is_midnight_utc(item.date),
+                # all-day entries are saved without a time zone
+                all_day=is_midnight_utc(item.date) and not item.start_timezone,
                 timezone_name=item.start_timezone or item.end_timezone,
                 icon=icon,
                 category=item.type or 'Transportation',

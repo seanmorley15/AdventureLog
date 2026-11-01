@@ -346,6 +346,15 @@ export function isAllDay(dateStr: string): boolean {
 	return /^T00:00:00(\.0+)?(Z|[+-]00:00)?$/.test(dateStr.slice(10));
 }
 
+// The transportation form saves all-day entries without a time zone, so a timed
+// departure at 00:00 UTC keeps its zone and is not all-day.
+export function isTransportationAllDay(
+	dateStr: string | null | undefined,
+	timezone: string | null | undefined
+): boolean {
+	return !!dateStr && isAllDay(dateStr) && !timezone;
+}
+
 // Legacy itinerary visits stored end-of-day timestamps for all-day events.
 export function isAllDayEnd(dateStr: string): boolean {
 	if (!dateStr || !dateStr.includes('T')) return false;
