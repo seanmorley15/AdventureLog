@@ -11,6 +11,7 @@ from integrations.errors import IntegrationError, MfaRequired
 from integrations.models import EndurainIntegration
 
 from .connection import REQUEST_TIMEOUT_SECONDS, api_url, endurain_post, mobile_headers, normalize_server_url
+from .responses import problem_message
 
 logger = logging.getLogger(__name__)
 
@@ -119,15 +120,15 @@ def login_with_password(server_url: str, username: str, password: str) -> dict:
         ) from exc
 
     if response.status_code in (401, 403):
-        detail = data.get('detail', 'Invalid credentials.')
-        raise IntegrationError(str(detail), code='endurain.invalid_credentials', status_code=response.status_code)
+        detail = problem_message(data, 'Invalid credentials.')
+        raise IntegrationError(detail, code='endurain.invalid_credentials', status_code=response.status_code)
 
     if data.get('mfa_required'):
         raise MfaRequired(data.get('username') or username)
 
     if response.status_code >= 400:
-        detail = data.get('detail', 'Authentication failed.')
-        raise IntegrationError(str(detail), code='endurain.auth_failed', status_code=response.status_code)
+        detail = problem_message(data, 'Authentication failed.')
+        raise IntegrationError(detail, code='endurain.auth_failed', status_code=response.status_code)
 
     tokens = _parse_token_response(data)
     tokens['username'] = username
@@ -166,8 +167,8 @@ def verify_mfa(server_url: str, username: str, mfa_code: str) -> dict:
         ) from exc
 
     if response.status_code >= 400:
-        detail = data.get('detail', 'MFA verification failed.')
-        raise IntegrationError(str(detail), code='endurain.mfa_failed', status_code=response.status_code)
+        detail = problem_message(data, 'MFA verification failed.')
+        raise IntegrationError(detail, code='endurain.mfa_failed', status_code=response.status_code)
 
     tokens = _parse_token_response(data)
     tokens['username'] = username
@@ -205,8 +206,8 @@ def refresh_tokens(integration: EndurainIntegration) -> EndurainIntegration:
         ) from exc
 
     if response.status_code >= 400:
-        detail = data.get('detail', 'Token refresh failed.')
-        raise IntegrationError(str(detail), code='endurain.reconnect_required', status_code=response.status_code)
+        detail = problem_message(data, 'Token refresh failed.')
+        raise IntegrationError(detail, code='endurain.reconnect_required', status_code=response.status_code)
 
     tokens = _parse_token_response(data)
     integration.access_token = tokens['access_token']

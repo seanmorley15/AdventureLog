@@ -8,6 +8,7 @@ from integrations.errors import IntegrationError
 from integrations.models import EndurainIntegration
 
 from .client import api_request, fetch_activity_by_id
+from .responses import UNUSABLE_BODY, read_json
 
 
 STREAM_TYPE_ELEVATION = 4
@@ -79,17 +80,21 @@ def _fetch_activity_stream(
     activity_id: int,
     stream_type: int,
 ) -> dict | None:
-    response = api_request(
-        integration,
-        'GET',
+    # v0.20 moved streams under the activity. The old path remains for
+    # servers that still serve it; a non-JSON body means that path is gone.
+    paths = (
+        f'/activities/{activity_id}/streams/{stream_type}',
         f'/activities_streams/activity_id/{activity_id}/stream_type/{stream_type}',
     )
-    if response.status_code >= 400:
-        return None
-    try:
-        return response.json()
-    except ValueError:
-        return None
+    for path in paths:
+        response = api_request(integration, 'GET', path)
+        data = read_json(response)
+        if data is UNUSABLE_BODY or response.status_code == 404:
+            continue
+        if response.status_code >= 400 or not isinstance(data, dict):
+            return None
+        return data
+    return None
 
 
 def export_activity_gpx(integration: EndurainIntegration, activity_id: int) -> bytes:

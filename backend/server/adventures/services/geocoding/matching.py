@@ -6,6 +6,51 @@ import unicodedata
 from adventures.services.geocoding.naming import clean_location_candidate
 from worldtravel.models import City, Region, VisitedCity, VisitedRegion
 
+# ISO 3166-2 subdivisions that the travel database stores as their own country.
+# Geocoders may report the subdivision (e.g. Åland as FI-01) instead of the country (AX).
+SUBDIVISION_COUNTRY_CODES = {
+    "FI-01": "AX",
+    "NL-CW": "CW",
+    "NL-SX": "SX",
+}
+
+# Nominatim localizes Åland. The dataset stores the Swedish municipality name, and
+# Mariehamn is the one whose Finnish name differs. The municipality field is often
+# the sub-region ("Mariehamn sub-region", "Mariehamns stad", "Maarianhaminan kaupunki")
+# rather than the municipality itself.
+ALAND_LOCALIZED_NAMES = {
+    "maarianhamina": "mariehamn",
+    "maarianhaminankaupunki": "mariehamn",
+    "mariehamnsstad": "mariehamn",
+    "mariehamnsubregion": "mariehamn",
+}
+
+
+def _normalize_name(value):
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9]", "", ascii_only.lower())
+
+
+def _aland_name_keys(value):
+    """Normalized form, plus the Swedish municipality name when Nominatim localized it."""
+    key = _normalize_name(value)
+    alias = ALAND_LOCALIZED_NAMES.get(key)
+    if alias and alias != key:
+        return (key, alias)
+    return (key,)
+
+
+def _match_named_region(regions, value):
+    cleaned = clean_location_candidate(value)
+    if not cleaned:
+        return None
+    wanted = set(_aland_name_keys(cleaned))
+    for region in regions:
+        if _normalize_name(region.name) in wanted:
+            return region
+    return None
+
 
 def extract_iso_code(user, data):
     iso_code = None
@@ -16,7 +61,8 @@ def extract_iso_code(user, data):
     location_name = clean_location_candidate(data.get("location_name") or data.get("name"))
 
     address = data.get("address", {}) or {}
-    country_code = address.get("ISO3166-1")
+    # Nominatim leaves out the ISO3166 keys for some places (e.g. Gibraltar)
+    country_code = address.get("ISO3166-1") or (address.get("country_code") or "").upper() or None
     state_name = address.get("state")
 
     preferred_iso_keys = (
@@ -82,6 +128,35 @@ def extract_iso_code(user, data):
             if region not in region_candidates:
                 region_candidates.insert(0, region)
 
+    if not region and country_code:
+        # Countries without subdivisions are imported as a single "<CC>-00" region
+        region = Region.objects.filter(id=f"{country_code}-00").first()
+        if region:
+            iso_code = region.id
+            region_candidates.append(region)
+
+    if not region:
+        alias_country = next(
+            (SUBDIVISION_COUNTRY_CODES[c] for c in iso_candidates if c in SUBDIVISION_COUNTRY_CODES),
+            None,
+        )
+        if alias_country:
+            alias_regions = list(Region.objects.filter(country__country_code=alias_country))
+            if len(alias_regions) == 1:
+                # Curaçao and Sint Maarten import as one "<CC>-00" region.
+                region = alias_regions[0]
+            else:
+                # Åland imports as 16 municipalities. Nominatim puts the municipality
+                # in "municipality" or, when that field is the wider sub-region, in "town".
+                for field in ("municipality", "town"):
+                    region = _match_named_region(alias_regions, address.get(field))
+                    if region:
+                        break
+            if region:
+                iso_code = region.id
+                region_candidates = [region]
+                country_code = alias_country
+
     if not region:
         return {"error": "No region found"}
 
@@ -105,11 +180,6 @@ def extract_iso_code(user, data):
         "county",
     ]
 
-    def _normalize_name(value):
-        normalized = unicodedata.normalize("NFKD", value)
-        ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
-        return re.sub(r"[^a-z0-9]", "", ascii_only.lower())
-
     normalized_names_by_region = {}
 
     def normalized_city_names(target_region):
@@ -132,8 +202,12 @@ def extract_iso_code(user, data):
             return exact_match
 
         normalized_value = _normalize_name(value)
+        if target_region.country.country_code == "AX":
+            acceptable = set(_aland_name_keys(value))
+        else:
+            acceptable = {normalized_value}
         for candidate_id, candidate_name in normalized_city_names(target_region):
-            if candidate_name == normalized_value:
+            if candidate_name in acceptable:
                 return qs.filter(id=candidate_id).first()
 
         if key_name == "county":

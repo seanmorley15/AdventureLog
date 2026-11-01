@@ -204,6 +204,237 @@ class EndurainServicesTest(TestCase):
         self.assertEqual(tokens['username'], 'runner')
 
 
+    def test_normalize_activity_converts_utc_start_to_timezone(self):
+        activity = normalize_activity(
+            {
+                'id': 8,
+                'name': 'Evening Ride',
+                'activity_type': 4,
+                'distance': 1000,
+                'start_time': '2024-06-01T08:00:00Z',
+                'timezone': 'Europe/Berlin',
+            },
+            'https://endurain.example.com',
+        )
+        self.assertEqual(activity['start_date'], '2024-06-01T08:00:00Z')
+        self.assertTrue(activity['start_date_local'].startswith('2024-06-01T10:00:00'))
+
+    def _integration(self):
+        integration = MagicMock()
+        integration.endurain_user_id = 7
+        return integration
+
+    def _json_response(self, payload, status_code=200):
+        response = MagicMock()
+        response.status_code = status_code
+        response.headers = {'Content-Type': 'application/json'}
+        response.json.return_value = payload
+        return response
+
+    def _html_response(self):
+        response = MagicMock()
+        response.status_code = 200
+        response.headers = {'Content-Type': 'text/html; charset=utf-8'}
+        response.json.side_effect = ValueError('Expecting value')
+        return response
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_reads_v020_page(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.return_value = self._json_response(
+            {
+                'items': [{'id': 1, 'name': 'Run'}],
+                'total': 1,
+                'page': 1,
+                'num_records': 50,
+                'next': None,
+            }
+        )
+        integration = self._integration()
+
+        activities = fetch_user_activities(
+            integration,
+            start_date='2026-10-25T00:00:00Z',
+            end_date='2026-10-30',
+            page_number=2,
+            num_records=500,
+        )
+
+        self.assertEqual(activities, [{'id': 1, 'name': 'Run'}])
+        mock_request.assert_called_once_with(
+            integration,
+            'GET',
+            '/activities/users/7',
+            params={
+                'page_number': 2,
+                'num_records': 200,
+                'start_date': '2026-10-25',
+                'end_date': '2026-10-30',
+            },
+        )
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_treats_json_null_as_empty(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.return_value = self._json_response(None)
+
+        self.assertEqual(fetch_user_activities(self._integration()), [])
+        mock_request.assert_called_once()
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_falls_back_when_new_route_is_html(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.side_effect = [
+            self._html_response(),
+            self._json_response([{'id': 3}]),
+        ]
+
+        activities = fetch_user_activities(self._integration(), page_number=1, num_records=50)
+
+        self.assertEqual(activities, [{'id': 3}])
+        self.assertEqual(
+            mock_request.call_args_list[1].args[2],
+            '/activities/user/7/page_number/1/num_records/50',
+        )
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_falls_back_when_new_route_is_missing(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.side_effect = [
+            self._json_response({'detail': 'Not Found'}, status_code=404),
+            self._json_response({'records': [{'id': 4}]}),
+        ]
+
+        activities = fetch_user_activities(self._integration())
+
+        self.assertEqual(activities, [{'id': 4}])
+        self.assertEqual(mock_request.call_count, 2)
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_uses_problem_detail_and_does_not_fall_back(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.return_value = self._json_response(
+            {
+                'type': 'urn:endurain:error:invalid-input',
+                'title': 'Invalid input',
+                'status': 400,
+                'detail': 'start_date is invalid',
+            },
+            status_code=400,
+        )
+
+        with self.assertRaises(IntegrationError) as ctx:
+            fetch_user_activities(self._integration())
+
+        self.assertEqual(ctx.exception.user_message, 'start_date is invalid')
+        self.assertEqual(ctx.exception.code, 'endurain.fetch_failed')
+        self.assertEqual(ctx.exception.status_code, 400)
+        mock_request.assert_called_once()
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_reads_problem_title_without_detail(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.return_value = self._json_response(
+            {'title': 'Invalid input', 'status': 422},
+            status_code=422,
+        )
+
+        with self.assertRaises(IntegrationError) as ctx:
+            fetch_user_activities(self._integration())
+
+        self.assertEqual(ctx.exception.user_message, 'Invalid input')
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_fetch_user_activities_rejects_html_from_both_routes(self, mock_request):
+        from integrations.services.endurain import fetch_user_activities
+
+        mock_request.side_effect = [self._html_response(), self._html_response()]
+
+        with self.assertRaises(IntegrationError) as ctx:
+            fetch_user_activities(self._integration())
+
+        self.assertEqual(ctx.exception.code, 'endurain.invalid_response')
+        self.assertEqual(ctx.exception.status_code, 502)
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_validate_connection_accepts_activity_page(self, mock_request):
+        from integrations.services.endurain import validate_connection
+
+        mock_request.return_value = self._json_response(
+            {'items': [], 'total': 0, 'page': 1, 'num_records': 1, 'next': None}
+        )
+
+        validate_connection(self._integration())
+
+        self.assertEqual(mock_request.call_args.args[2], '/activities/users/7')
+        self.assertEqual(mock_request.call_args.kwargs['params']['num_records'], 1)
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_validate_connection_rejects_html_success(self, mock_request):
+        from integrations.services.endurain import validate_connection
+
+        mock_request.side_effect = [self._html_response(), self._html_response()]
+
+        with self.assertRaises(IntegrationError) as ctx:
+            validate_connection(self._integration())
+
+        self.assertEqual(ctx.exception.code, 'endurain.connection_failed')
+
+    @patch('integrations.services.endurain.client.api_request')
+    def test_validate_connection_maps_unauthorized_to_reconnect(self, mock_request):
+        from integrations.services.endurain import validate_connection
+
+        mock_request.return_value = self._json_response(
+            {'title': 'Unauthorized', 'detail': 'Token expired', 'status': 401},
+            status_code=401,
+        )
+
+        with self.assertRaises(IntegrationError) as ctx:
+            validate_connection(self._integration())
+
+        self.assertEqual(ctx.exception.code, 'endurain.reconnect_required')
+        self.assertEqual(ctx.exception.status_code, 401)
+
+    @patch('integrations.services.endurain.gpx.api_request')
+    def test_fetch_activity_stream_uses_nested_route(self, mock_request):
+        from integrations.services.endurain.gpx import _fetch_activity_stream
+
+        mock_request.return_value = self._json_response(
+            {'stream_type': 7, 'stream_waypoints': [{'lat': 1, 'lon': 2}]}
+        )
+
+        stream = _fetch_activity_stream(self._integration(), 11, 7)
+
+        self.assertEqual(stream['stream_type'], 7)
+        mock_request.assert_called_once_with(
+            mock_request.call_args.args[0],
+            'GET',
+            '/activities/11/streams/7',
+        )
+
+    @patch('integrations.services.endurain.gpx.api_request')
+    def test_fetch_activity_stream_falls_back_to_legacy_route(self, mock_request):
+        from integrations.services.endurain.gpx import _fetch_activity_stream
+
+        mock_request.side_effect = [
+            self._html_response(),
+            self._json_response({'stream_waypoints': [{'lat': 1, 'lon': 2}]}),
+        ]
+
+        stream = _fetch_activity_stream(self._integration(), 11, 7)
+
+        self.assertEqual(len(stream['stream_waypoints']), 1)
+        self.assertEqual(
+            mock_request.call_args_list[1].args[2],
+            '/activities_streams/activity_id/11/stream_type/7',
+        )
+
 class EndurainConnectionGuardTests(SimpleTestCase):
     """The pre-call host check can be sidestepped by a name that resolves differently the second time."""
 

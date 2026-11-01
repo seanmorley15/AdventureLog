@@ -3,7 +3,7 @@
 For **new features**, refactors, performance work, and other behavior changes, link an issue:
 
 ```
-Closes #123
+Closes #N
 ```
 
 The linked issue must be labeled `ready` or `in progress` before the contribution check passes. (`approved` means it will be done later — not open for contributors yet.)
@@ -27,7 +27,7 @@ Check one. The contribution bot reads these exact checkboxes.
 - [ ] Bug fix
 - [ ] Documentation update
 
-**Needs a Ready issue** (`Closes #123` on an issue labeled `ready` or `in progress`):
+**Needs a Ready issue** (a linked issue labeled `ready` or `in progress`):
 
 - [ ] New feature
 - [ ] Refactor / code cleanup

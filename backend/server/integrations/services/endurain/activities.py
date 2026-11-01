@@ -1,5 +1,7 @@
 """Turning an Endurain activity into the fields an AdventureLog activity has."""
 
+from datetime import datetime, timezone as dt_timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .connection import format_server_url
 
@@ -61,6 +63,21 @@ def _sport_type_name(activity_type: int | None) -> str:
     return ACTIVITY_TYPE_MAP.get(int(activity_type), 'Activity')
 
 
+def _local_start_time(start_time: str, timezone_name: str | None) -> str | None:
+    if not start_time or not timezone_name:
+        return None
+    try:
+        parsed = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt_timezone.utc)
+    try:
+        return parsed.astimezone(ZoneInfo(timezone_name)).isoformat()
+    except ZoneInfoNotFoundError:
+        return None
+
+
 def normalize_activity(activity: dict, server_url: str) -> dict:
     activity_id = activity.get('id')
     distance = float(activity.get('distance') or 0)
@@ -82,7 +99,13 @@ def normalize_activity(activity: dict, server_url: str) -> dict:
     sport_type = _sport_type_name(activity_type)
 
     start_date = activity.get('start_time') or activity.get('start_time_tz_applied') or ''
-    start_date_local = activity.get('start_time_tz_applied') or start_date
+    # v0.20 dropped start_time_tz_applied. start_time is UTC; timezone is the
+    # IANA zone the activity was recorded in.
+    start_date_local = (
+        activity.get('start_time_tz_applied')
+        or _local_start_time(str(start_date), activity.get('timezone'))
+        or start_date
+    )
 
     pace_per_km = None
     pace_per_mile = None
