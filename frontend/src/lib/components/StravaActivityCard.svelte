@@ -65,11 +65,16 @@
 		return `${minutes}:${secs.toString().padStart(2, '0')}/${unit}`;
 	}
 
+	// Endurain activities without GPS/sensor data report null metrics
+	function formatNumber(value: number | null | undefined, digits: number): string {
+		return value != null ? value.toFixed(digits) : '–';
+	}
+
 	function convertElevation(
-		meters: number,
+		meters: number | null,
 		system: 'metric' | 'imperial'
-	): { value: number; unit: string } {
-		if (system === 'imperial') {
+	): { value: number | null; unit: string } {
+		if (system === 'imperial' && meters != null) {
 			return { value: meters * 3.28084, unit: 'ft' };
 		}
 		return { value: meters, unit: 'm' };
@@ -219,7 +224,7 @@
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">{$t('adventures.distance')}</div>
-				<div class="stat-value text-lg">{distance.value.toFixed(2)}</div>
+				<div class="stat-value text-lg">{formatNumber(distance.value, 2)}</div>
 				<div class="stat-desc">{distance.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
@@ -229,12 +234,12 @@
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">{$t('adventures.avg_speed')}</div>
-				<div class="stat-value text-lg">{speed.value.toFixed(1)}</div>
+				<div class="stat-value text-lg">{formatNumber(speed.value, 1)}</div>
 				<div class="stat-desc">{speed.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">{$t('adventures.elevation')}</div>
-				<div class="stat-value text-lg">{elevation.value.toFixed(0)}</div>
+				<div class="stat-value text-lg">{formatNumber(elevation.value, 0)}</div>
 				<div class="stat-desc">{elevation.unit} {$t('adventures.gain')}</div>
 			</div>
 		</div>
@@ -279,7 +284,7 @@
 				</div>
 				<div class="text-sm">
 					<span class="font-medium">{$t('adventures.max_speed')}:</span>
-					{maxSpeed.value.toFixed(1)}
+					{formatNumber(maxSpeed.value, 1)}
 					{maxSpeed.unit}
 				</div>
 			</div>
