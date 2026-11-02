@@ -2,7 +2,7 @@ import os
 import uuid
 from django.conf import settings
 from django.contrib.gis.db import models as gis_models
-from django.db import models
+from django.db import models, transaction
 from django.utils.deconstruct import deconstructible
 from adventures.utils.geo import has_coordinates, point_to_lat_lon
 from adventures.managers import LocationManager
@@ -181,6 +181,8 @@ class Location(models.Model):
 
     objects = LocationManager()
 
+    _geocode_pending = False  # set while a background geocode waits for the commit
+
     def is_visited_status(self):
         return is_location_visited(self)
 
@@ -237,12 +239,19 @@ class Location(models.Model):
         if _skip_geocode or getattr(settings, 'DISABLE_BACKGROUND_GEOCODE', False):
             return result
 
-        if has_coordinates(self.coordinates):
-            thread = threading.Thread(target=background_geocode_and_assign, args=(str(self.id),))
-            thread.daemon = True  # Allows the thread to exit when the main program ends
-            thread.start()
+        if has_coordinates(self.coordinates) and not self._geocode_pending:
+            # The thread uses its own connection, so wait until it can see this row.
+            # A request can save a location several times, one geocode is enough.
+            self._geocode_pending = True
+            transaction.on_commit(self._start_background_geocode, using=using)
 
         return result
+
+    def _start_background_geocode(self):
+        self._geocode_pending = False
+        thread = threading.Thread(target=background_geocode_and_assign, args=(str(self.id),))
+        thread.daemon = True  # Allows the thread to exit when the main program ends
+        thread.start()
 
     def delete(self, *args, **kwargs):
         # Delete all associated images and attachments (handled by GenericRelation)
