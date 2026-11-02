@@ -55,16 +55,25 @@ class CountrySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     class Meta:
         model = Country
         exclude = ['coordinates']
-        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital']
+        read_only_fields = ['id', 'name', 'native_name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital']
 
 
 class RegionSerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     num_cities = serializers.SerializerMethodField()
     country_name = serializers.CharField(source='country.name', read_only=True)
+    territory_country_code = serializers.CharField(
+        source='territory.country_code', read_only=True, allow_null=True,
+        help_text='Set when this region is also a country of its own. Visits are marked on that country\'s pages.',
+    )
+    territory_country_name = serializers.CharField(source='territory.name', read_only=True, allow_null=True)
+
     class Meta:
         model = Region
-        exclude = ['coordinates']
-        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name']
+        exclude = ['coordinates', 'territory']
+        read_only_fields = [
+            'id', 'name', 'native_name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name',
+            'territory_country_code', 'territory_country_name',
+        ]
 
     @extend_schema_field(serializers.IntegerField())
     def get_num_cities(self, obj):

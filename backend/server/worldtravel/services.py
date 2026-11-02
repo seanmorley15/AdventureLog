@@ -1,4 +1,19 @@
-from .models import VisitedCity, VisitedRegion
+from .models import City, CityAlias, VisitedCity, VisitedRegion
+
+
+def resolve_city(city_id):
+    """
+    The city with this id, or the one it was merged into when the dataset listed the same town twice.
+
+    For ids that were saved before the merge, such as the ones in an old backup.
+    """
+    if not city_id:
+        return None
+    city = City.objects.filter(id=city_id).first()
+    if city is not None:
+        return city
+    alias = CityAlias.objects.filter(old_id=city_id).select_related('city').first()
+    return alias.city if alias else None
 
 
 def _mark_visited(model, fk_name, user_id, ids, dry_run):

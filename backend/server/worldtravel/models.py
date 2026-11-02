@@ -17,6 +17,7 @@ class Country(models.Model):
     country_code = models.CharField(max_length=2, unique=True) #iso2 code
     subregion = models.CharField(max_length=100, blank=True, null=True)
     capital = models.CharField(max_length=100, blank=True, null=True)
+    native_name = models.CharField(max_length=255, blank=True, null=True)  # the name in its own language
     coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
 
     class Meta:
@@ -39,7 +40,14 @@ class Country(models.Model):
 class Region(models.Model):
     id = models.CharField(primary_key=True)
     name = models.CharField(max_length=100)
+    native_name = models.CharField(max_length=255, blank=True, null=True)  # the name in its own language
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
+    # Set when the dataset lists this region of a country as a country of its own too (an
+    # overseas region of France that is also a Country). Geocoders report such a place under
+    # its parent, and this is how it is tied to the entry it should be filed under.
+    territory = models.ForeignKey(
+        Country, on_delete=models.SET_NULL, null=True, blank=True, related_name='territory_regions'
+    )
     coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
 
     def resolved_lat_lon(self):
@@ -85,6 +93,25 @@ class City(models.Model):
 
     def __str__(self):
         return self.name
+
+class CityAlias(models.Model):
+    """
+    An id a city used to have.
+
+    The world data listed some towns twice (Puerto Rico's under the country and under the US
+    region), and the import keeps one. This remembers the id of the one it dropped, so a backup
+    made before that still finds its city.
+    """
+
+    old_id = models.CharField(primary_key=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='aliases')
+
+    class Meta:
+        verbose_name_plural = "City aliases"
+
+    def __str__(self):
+        return f'{self.old_id} -> {self.city_id}'
+
 
 class VisitedRegion(models.Model):
     id = models.AutoField(primary_key=True)

@@ -2981,7 +2981,7 @@ export interface paths {
         put?: never;
         /**
          * Mark a region visited
-         * @description Regions you have visited. Visiting a location in a region marks it automatically.
+         * @description A region that is also a country of its own (such as `US-PR`) is marked visited from that country's page, and is refused with `409` and the `country_code` to use.
          */
         post: operations["visited_regions_create"];
         delete?: never;
@@ -3006,7 +3006,7 @@ export interface paths {
         post?: never;
         /**
          * Unmark a visited region
-         * @description Regions you have visited. Visiting a location in a region marks it automatically.
+         * @description A region the dataset also lists as a country (such as `US-PR`, Puerto Rico) is visited whenever that country is, so it can only be unmarked by unmarking the country's own regions.
          */
         delete: operations["visited_regions_destroy"];
         options?: never;
@@ -4298,6 +4298,7 @@ export interface components {
             readonly country_code: string;
             readonly subregion: string | null;
             readonly capital: string | null;
+            readonly native_name: string | null;
         };
         CsrfToken: {
             /** @description Send as `X-CSRFToken` on requests that change data. */
@@ -6177,7 +6178,11 @@ export interface components {
             readonly id: string;
             readonly num_cities: number;
             readonly country_name: string;
+            /** @description Set when this region is also a country of its own. Visits are marked on that country's pages. */
+            readonly territory_country_code: string | null;
+            readonly territory_country_name: string | null;
             readonly name: string;
+            readonly native_name: string | null;
             readonly country: number;
         };
         ReorderEntryRequest: {
@@ -17670,7 +17675,7 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description Already marked visited. */
+            /** @description Already marked visited, or marked from another country's page. */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -17773,6 +17778,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Error"];
                 };
+            };
+            /** @description The region is visited through the country it is also listed as. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

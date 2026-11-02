@@ -2,6 +2,8 @@
 	import { normalizeBasemapType } from '#lib';
 	import CityCard from '#lib/components/cards/CityCard.svelte';
 	import { addToast } from '#lib/toasts.js';
+	import { localName, visitFailureMessage } from '#lib/worldtravel.js';
+	import { invalidateAll } from '$app/navigation';
 	import type { City, VisitedCity } from '#lib/types.js';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
@@ -34,7 +36,20 @@
 
 	const allCities: City[] = $derived(data.props?.cities || []);
 	const region = $derived(data.props?.region || null);
+	const localRegionName = $derived(region ? localName(region.name, region.native_name) : null);
 	let description = $state('');
+
+	// The page is reused when one region opens another, and would keep the search and filter
+	// typed into the first.
+	let shownRegion = '';
+	$effect.pre(() => {
+		const id = region?.id ?? '';
+		if (id !== shownRegion) {
+			shownRegion = id;
+			searchQuery = '';
+			filterOption = 'all';
+		}
+	});
 
 	let visitedCities = $derived(
 		(data.props?.visitedCities || []).filter(
@@ -116,7 +131,10 @@
 		});
 		if (!res.ok) {
 			console.error('Failed to mark city as visited');
-			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${city.name}`);
+			addToast(
+				'error',
+				await visitFailureMessage(res, `${$t('worldtravel.failed_to_mark_visit')} ${city.name}`)
+			);
 			return;
 		} else {
 			visitedCities = [...visitedCities, await res.json()];
@@ -134,7 +152,12 @@
 		});
 		if (!res.ok) {
 			console.error('Failed to remove city visit');
-			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${city.name}`);
+			addToast(
+				'error',
+				await visitFailureMessage(res, `${$t('worldtravel.failed_to_mark_visit')} ${city.name}`)
+			);
+			// It was taken off the list before asking, so show what the server still has.
+			await invalidateAll();
 			return;
 		} else {
 			visitedCities = visitedCities.filter((visitedCity) => visitedCity.city !== city.id);
@@ -264,6 +287,11 @@
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
 										{$t('worldtravel.cities_in')}
 										{region?.name}
+										{#if localRegionName}
+											<span class="text-xl font-normal text-base-content/60"
+												>· {localRegionName}</span
+											>
+										{/if}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{filteredCities.length}

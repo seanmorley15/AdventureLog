@@ -10,10 +10,11 @@ from core.pagination import StandardResultsSetPagination
 from .models import City, Country, Region, VisitedCity, VisitedRegion
 from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedCitySerializer, VisitedRegionSerializer
 from .services import mark_regions_visited
+from .visited import country_behind_region, territory_of_region, umbrella_regions
 
 
 def _regions_with_city_counts():
-    return Region.objects.select_related('country').annotate(num_cities_annotated=Count('city', distinct=True))
+    return Region.objects.select_related('country', 'territory').annotate(num_cities_annotated=Count('city', distinct=True))
 
 
 @extend_schema_view(
@@ -101,8 +102,22 @@ class _VisitedPlaceViewSet(
     model = None
     place_field = None
 
+    def territory_to_mark_from(self, place):
+        """The country whose own pages a place has to be marked from, or None when it can be marked here."""
+        return None
+
     def perform_create(self, serializer):
         place = serializer.validated_data[self.place_field]
+        territory = self.territory_to_mark_from(place)
+        if territory is not None:
+            # The place is the same one as a country's, and is marked visited there.
+            raise APIError(
+                f'{territory.name} is a country of its own here. Mark this {self.place_field} visited from the '
+                f'{territory.name} page.',
+                code='conflict',
+                status=status.HTTP_409_CONFLICT,
+                country_code=territory.country_code,
+            )
         if self.model.objects.filter(user=self.request.user, **{self.place_field: place}).exists():
             raise APIError(
                 f'You have already visited this {self.place_field}.', code='conflict', status=status.HTTP_409_CONFLICT
@@ -117,7 +132,14 @@ class _VisitedPlaceViewSet(
     ),
     create=extend_schema(
         summary='Mark a region visited',
-        responses={201: VisitedRegionSerializer, 409: OpenApiResponse(description='Already marked visited.')},
+        description=(
+            'A region that is also a country of its own (such as `US-PR`) is marked visited from that '
+            'country\'s page, and is refused with `409` and the `country_code` to use.'
+        ),
+        responses={
+            201: VisitedRegionSerializer,
+            409: OpenApiResponse(description='Already marked visited, or marked from another country\'s page.'),
+        },
     ),
     retrieve=extend_schema(
         summary='Get a visited region',
@@ -125,7 +147,15 @@ class _VisitedPlaceViewSet(
     ),
     destroy=extend_schema(
         summary='Unmark a visited region',
+        description=(
+            'A region the dataset also lists as a country (such as `US-PR`, Puerto Rico) is visited '
+            'whenever that country is, so it can only be unmarked by unmarking the country\'s own regions.'
+        ),
         parameters=[OpenApiParameter('region', str, OpenApiParameter.PATH, description='The region id, e.g. `US-CA`.')],
+        responses={
+            204: None,
+            409: OpenApiResponse(description='The region is visited through the country it is also listed as.'),
+        },
     ),
 )
 class VisitedRegionViewSet(_VisitedPlaceViewSet):
@@ -137,12 +167,38 @@ class VisitedRegionViewSet(_VisitedPlaceViewSet):
     lookup_field = 'region'
     queryset = VisitedRegion.objects.all()
 
+    def territory_to_mark_from(self, place):
+        return territory_of_region(place)
+
     def get_queryset(self):
         queryset = VisitedRegion.objects.filter(user=self.request.user.id).select_related('region__country')
         country = self.request.query_params.get('country')
         if self.action == 'list' and country:
             queryset = queryset.filter(region__country__country_code=country)
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        rows = list(self.filter_queryset(self.get_queryset()))
+        # A region that is also a country is visited when that country is. It has no row of its own.
+        through_country = umbrella_regions(request.user.id)
+        if through_country:
+            regions = Region.objects.filter(id__in=through_country).select_related('country')
+            country = request.query_params.get('country')
+            if country:
+                regions = regions.filter(country__country_code=country)
+            rows += [VisitedRegion(user=request.user, region=region) for region in regions]
+        return Response(self.get_serializer(rows, many=True).data)
+
+    def destroy(self, request, *args, **kwargs):
+        country = country_behind_region(request.user.id, kwargs[self.lookup_field])
+        if country is not None:
+            raise APIError(
+                f'This region is visited through {country.name}. Unmark the regions of {country.name} instead.',
+                code='conflict',
+                status=status.HTTP_409_CONFLICT,
+                country_code=country.country_code,
+            )
+        return super().destroy(request, *args, **kwargs)
 
 
 @extend_schema_view(

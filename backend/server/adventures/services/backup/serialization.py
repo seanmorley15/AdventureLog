@@ -3,6 +3,7 @@
 import re
 from decimal import Decimal, InvalidOperation
 
+from adventures.services.geocoding.matching import find_region_for_point
 from core.geo import point_to_lat_lon
 from worldtravel.models import Country
 
@@ -194,6 +195,26 @@ def parse_money(value, currency=None, default_currency='USD'):
         normalized_currency = default_currency
 
     return amount, normalized_currency
+
+
+def resolve_territory_geography(region, city, latitude, longitude):
+    """
+    Where a place saved in a region that is also a country belongs now.
+
+    Such a place goes to the country's own region, as a newly geocoded one does: the region of
+    its city when the city is there, or else the region the position falls in. Returns
+    ``(region, city, country)``, with ``country`` None for any other place.
+    """
+    if region is None or not region.territory_id:
+        return region, city, None
+    territory = region.territory
+    if city is not None and city.region.country_id == territory.id:
+        return city.region, city, territory
+    try:
+        lat, lon = float(latitude), float(longitude)
+    except (TypeError, ValueError):
+        return None, city, territory
+    return find_region_for_point(territory.country_code, lat, lon), city, territory
 
 
 def resolve_import_country(data, region=None):

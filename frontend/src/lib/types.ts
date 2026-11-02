@@ -260,6 +260,8 @@ export type Country = {
 	subregion: string | null;
 	flag_url: string;
 	capital: string;
+	/** The name in the country's own language. */
+	native_name?: string | null;
 	num_regions: number;
 	num_visits: number;
 	longitude: number | null;
@@ -274,6 +276,11 @@ export type Region = {
 	longitude: number | null;
 	num_cities: number;
 	country_name: string;
+	/** The name in the region's own language. */
+	native_name?: string | null;
+	/** Set when this region is also a country of its own, whose pages visits are marked from. */
+	territory_country_code?: string | null;
+	territory_country_name?: string | null;
 };
 
 export type City = {
@@ -469,14 +476,15 @@ export type Background = {
 };
 
 export type ReverseGeocode = {
-	region_id: string;
-	region: string;
+	region_id: string | null;
+	region: string | null;
 	country: string;
+	country_id?: string;
 	region_visited: boolean;
 	city_visited: boolean;
 	display_name: string;
-	city: string;
-	city_id: string;
+	city: string | null;
+	city_id: string | null;
 	location_name: string;
 	provider_used?: string;
 	provider?: string;

@@ -32,8 +32,8 @@ from adventures.utils.collection_type import (
 )
 from core.geo import make_point
 from core.timezones import timezone_or_utc
-from worldtravel.models import City, Region
-from worldtravel.services import mark_cities_visited, mark_regions_visited
+from worldtravel.models import Region
+from worldtravel.services import mark_cities_visited, mark_regions_visited, resolve_city
 
 from . import serialization as ser
 
@@ -125,9 +125,8 @@ class BackupRestorer:
 
     def _visited_geography(self):
         for city_data in self.data.get('visited_cities', []):
-            try:
-                city = City.objects.get(id=city_data['city'])
-            except City.DoesNotExist:
+            city = resolve_city(city_data['city'])
+            if city is None:
                 continue
             if mark_cities_visited(self.user.id, [city.id]):
                 self.summary['visited_cities'] += 1
@@ -275,9 +274,12 @@ class BackupRestorer:
 
             price, price_currency = ser.parse_money(adv_data.get('price'), adv_data.get('price_currency'))
 
-            city = City.objects.filter(id=adv_data['city']).first() if adv_data.get('city') else None
+            city = resolve_city(adv_data.get('city'))
             region = Region.objects.filter(id=adv_data['region']).first() if adv_data.get('region') else None
-            country = ser.resolve_import_country(adv_data, region)
+            region, city, territory = ser.resolve_territory_geography(
+                region, city, adv_data.get('latitude'), adv_data.get('longitude')
+            )
+            country = territory or ser.resolve_import_country(adv_data, region)
 
             location = Location(
                 user=self.user,

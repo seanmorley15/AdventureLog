@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { addToast } from '#lib/toasts.js';
+	import { localName, visitFailureMessage } from '#lib/worldtravel.js';
 	import type { Region } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
@@ -20,8 +21,15 @@
 	let optimisticVisited = $state<boolean | null>(null);
 	let isVisited = $derived(optimisticVisited ?? visited);
 
+	let local = $derived(localName(region.name, region.native_name));
 	let countryCode = $derived(region.id.split('-')[0]);
-	let cityHref = $derived(`/worldtravel/${countryCode}/${region.id}`);
+	// A region that is also a country of its own opens that country, where its visits are marked.
+	let linkHref = $derived(
+		region.territory_country_code
+			? `/worldtravel/${region.territory_country_code}`
+			: `/worldtravel/${countryCode}/${region.id}`
+	);
+	let isLink = $derived(Boolean(region.territory_country_code) || region.num_cities > 0);
 
 	async function markVisited(e: MouseEvent) {
 		e.preventDefault();
@@ -40,7 +48,10 @@
 			);
 			dispatch('visit', data);
 		} else {
-			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
+			addToast(
+				'error',
+				await visitFailureMessage(res, `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`)
+			);
 		}
 	}
 
@@ -56,7 +67,10 @@
 			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
 			dispatch('remove', region);
 		} else {
-			addToast('error', `${$t('worldtravel.failed_to_remove_visit')} ${region.name}`);
+			addToast(
+				'error',
+				await visitFailureMessage(res, `${$t('worldtravel.failed_to_remove_visit')} ${region.name}`)
+			);
 		}
 	}
 </script>
@@ -64,25 +78,42 @@
 <div
 	class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row"
 >
-	<button
-		type="button"
-		class="btn btn-ghost btn-sm btn-square {isVisited
-			? 'text-success'
-			: 'text-base-content/30 hover:text-success'}"
-		title={isVisited ? $t('adventures.remove') : $t('adventures.mark_visited')}
-		onclick={isVisited ? removeVisit : markVisited}
-	>
-		{#if isVisited}
-			<CheckFilled class="w-5 h-5" />
-		{:else}
-			<Check class="w-5 h-5" />
-		{/if}
-	</button>
+	{#if region.territory_country_code}
+		<!-- Also a country of its own: visits are marked on that country's page, not here. -->
+		<a
+			href={linkHref}
+			class="btn btn-ghost btn-sm btn-square {isVisited ? 'text-success' : 'text-base-content/30'}"
+			title={region.territory_country_name}
+		>
+			{#if isVisited}
+				<CheckFilled class="w-5 h-5" />
+			{:else}
+				<Check class="w-5 h-5" />
+			{/if}
+		</a>
+	{:else}
+		<button
+			type="button"
+			class="btn btn-ghost btn-sm btn-square {isVisited
+				? 'text-success'
+				: 'text-base-content/30 hover:text-success'}"
+			title={isVisited ? $t('adventures.remove') : $t('adventures.mark_visited')}
+			onclick={isVisited ? removeVisit : markVisited}
+		>
+			{#if isVisited}
+				<CheckFilled class="w-5 h-5" />
+			{:else}
+				<Check class="w-5 h-5" />
+			{/if}
+		</button>
+	{/if}
 
-	{#if region.num_cities > 0}
-		<a href={cityHref} class="region-main text-inherit no-underline min-w-0">
+	{#if isLink}
+		<a href={linkHref} class="region-main text-inherit no-underline min-w-0">
 			<span class="font-semibold truncate group-hover:text-primary transition-colors min-w-0">
-				{region.name}
+				{region.name}{#if local}<span class="font-normal text-base-content/50">
+						· {local}</span
+					>{/if}
 			</span>
 			<span class="hidden sm:block text-sm text-base-content/60 truncate">
 				{region.country_name}
@@ -92,13 +123,17 @@
 				{region.num_cities}
 			</span>
 			<span class="btn btn-ghost btn-sm gap-1 hidden sm:flex justify-end pointer-events-none">
-				{$t('worldtravel.view_cities')}
+				{region.territory_country_name ?? $t('worldtravel.view_cities')}
 				<ChevronRight class="w-4 h-4" />
 			</span>
 		</a>
 	{:else}
 		<div class="region-main min-w-0">
-			<span class="font-semibold truncate min-w-0">{region.name}</span>
+			<span class="font-semibold truncate min-w-0">
+				{region.name}{#if local}<span class="font-normal text-base-content/50">
+						· {local}</span
+					>{/if}
+			</span>
 			<span class="hidden sm:block text-sm text-base-content/60 truncate">
 				{region.country_name}
 			</span>

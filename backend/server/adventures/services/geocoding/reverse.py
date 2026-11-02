@@ -76,7 +76,7 @@ def reverse_geocode(lat: float, lon: float, user) -> ReverseGeocodeResult:
             if normalized_google.get("error"):
                 google_result = normalized_google
             else:
-                google_result = extract_iso_code(user, normalized_google)
+                google_result = extract_iso_code(user, normalized_google, lat=lat, lon=lon)
                 if isinstance(google_result, dict) and "error" not in google_result:
                     google_result["provider_used"] = "google"
                     google_result["provider"] = "google"
@@ -90,7 +90,7 @@ def reverse_geocode(lat: float, lon: float, user) -> ReverseGeocodeResult:
     if not osm_payload.error:
         osm_data = osm_payload.data
         osm_data["location_name"] = extract_osm_location_name(osm_data)
-        osm_result = extract_iso_code(user, osm_data)
+        osm_result = extract_iso_code(user, osm_data, lat=lat, lon=lon)
         if isinstance(osm_result, dict) and "error" not in osm_result:
             osm_result["provider_used"] = "osm"
             osm_result["provider"] = "osm"

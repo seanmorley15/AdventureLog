@@ -6,7 +6,8 @@ from django.utils import timezone
 
 from adventures.models import Location, Collection, Activity, Visit
 from adventures.utils.sports_types import SPORT_CATEGORIES
-from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
+from worldtravel.models import City, Region, Country, VisitedCity
+from worldtravel.visited import visited_totals
 
 User = get_user_model()
 
@@ -253,11 +254,9 @@ class UserStatsService:
         trips_count = Collection.objects.filter(user=user.id).count()
         visited_city_count = VisitedCity.objects.filter(user=user.id).count()
         total_cities = City.objects.count()
-        visited_region_count = VisitedRegion.objects.filter(user=user.id).count()
+        # A place the dataset lists twice (Puerto Rico as a country and as a US region) counts once.
+        visited_region_count, visited_country_count = visited_totals(user.id)
         total_regions = Region.objects.count()
-        visited_country_count = (
-            VisitedRegion.objects.filter(user=user.id).values('region__country').distinct().count()
-        )
         total_countries = Country.objects.count()
 
         user_activities = Activity.objects.filter(user=user.id)

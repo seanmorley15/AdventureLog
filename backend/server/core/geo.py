@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from django.contrib.gis.geos import Point
@@ -54,3 +55,10 @@ def parse_lon_lat(longitude: Any, latitude: Any) -> tuple[float | None, float | 
     if lon == 0 and lat == 0:
         return None, None
     return lon, lat
+
+
+def distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance between two points, in kilometres."""
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    a = math.sin((phi2 - phi1) / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(math.radians(lon2 - lon1) / 2) ** 2
+    return 6371.0 * 2 * math.asin(min(1.0, math.sqrt(a)))

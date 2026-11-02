@@ -9966,8 +9966,9 @@ paths:
             API key was rejected (`authentication_failed`).
     post:
       operationId: visited_regions_create
-      description: Regions you have visited. Visiting a location in a region marks
-        it automatically.
+      description: A region that is also a country of its own (such as `US-PR`) is
+        marked visited from that country's page, and is refused with `409` and the
+        `country_code` to use.
       summary: Mark a region visited
       tags:
       - World travel
@@ -10015,7 +10016,7 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: You can see this resource but may not do this to it (`permission_denied`).
         '409':
-          description: Already marked visited.
+          description: Already marked visited, or marked from another country's page.
   /api/visited-regions/{region}/:
     get:
       operationId: visited_regions_retrieve
@@ -10063,8 +10064,9 @@ paths:
           description: The resource does not exist, or you cannot see it (`not_found`).
     delete:
       operationId: visited_regions_destroy
-      description: Regions you have visited. Visiting a location in a region marks
-        it automatically.
+      description: A region the dataset also lists as a country (such as `US-PR`,
+        Puerto Rico) is visited whenever that country is, so it can only be unmarked
+        by unmarking the country's own regions.
       summary: Unmark a visited region
       parameters:
       - in: path
@@ -10101,6 +10103,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '409':
+          description: The region is visited through the country it is also listed
+            as.
   /api/visited-regions/sync/:
     post:
       operationId: visited_regions_sync_create
@@ -12948,12 +12953,17 @@ components:
           type: string
           readOnly: true
           nullable: true
+        native_name:
+          type: string
+          readOnly: true
+          nullable: true
       required:
       - capital
       - country_code
       - flag_url
       - id
       - name
+      - native_name
       - num_regions
       - num_visits
       - subregion
@@ -17242,9 +17252,23 @@ components:
         country_name:
           type: string
           readOnly: true
+        territory_country_code:
+          type: string
+          readOnly: true
+          nullable: true
+          description: Set when this region is also a country of its own. Visits are
+            marked on that country's pages.
+        territory_country_name:
+          type: string
+          readOnly: true
+          nullable: true
         name:
           type: string
           readOnly: true
+        native_name:
+          type: string
+          readOnly: true
+          nullable: true
         country:
           type: integer
           readOnly: true
@@ -17253,7 +17277,10 @@ components:
       - country_name
       - id
       - name
+      - native_name
       - num_cities
+      - territory_country_code
+      - territory_country_name
     ReorderEntryRequest:
       type: object
       properties:

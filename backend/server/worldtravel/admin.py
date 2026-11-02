@@ -16,6 +16,7 @@ admin.site.login = secure_admin_login(admin.site.login)
 class CountryAdmin(CoordinatesDisplayMixin, AdventureLogGeoModelAdmin):
     list_display = (
         'name',
+        'native_name',
         'country_code',
         'subregion',
         'capital',
@@ -28,7 +29,7 @@ class CountryAdmin(CoordinatesDisplayMixin, AdventureLogGeoModelAdmin):
     readonly_fields = UUID_READONLY + ('display_coordinates_readonly',)
 
     fieldsets = (
-        (None, {'fields': ('name', 'country_code', 'subregion', 'capital')}),
+        (None, {'fields': ('name', 'native_name', 'country_code', 'subregion', 'capital')}),
         (
             'Geography',
             {
@@ -54,13 +55,14 @@ class CountryAdmin(CoordinatesDisplayMixin, AdventureLogGeoModelAdmin):
 class RegionAdmin(CoordinatesDisplayMixin, AdventureLogGeoModelAdmin):
     list_display = (
         'name',
+        'native_name',
         'country',
         'display_coordinates',
         'city_count',
         'visit_count',
     )
     list_filter = ('country', 'country__subregion')
-    search_fields = ('name', 'id', 'country__name', 'country__country_code')
+    search_fields = ('name', 'native_name', 'id', 'country__name', 'country__country_code')
     autocomplete_fields = ('country',)
     ordering = ('country__name', 'name')
     readonly_fields = UUID_READONLY + ('display_coordinates_readonly',)

@@ -25,6 +25,16 @@ class WorldtravelLatLonSerializerTests(TestCase):
             coordinates=make_point(-85.250488, 31.571836),
         )
 
+    def test_country_and_region_serializers_include_the_name_in_the_local_language(self):
+        self.country.native_name = 'United States of America'
+        self.region.native_name = 'Alabama'
+
+        self.assertEqual(CountrySerializer(self.country).data['native_name'], 'United States of America')
+        self.assertEqual(RegionSerializer(self.region).data['native_name'], 'Alabama')
+
+    def test_a_place_with_no_local_name_serializes_it_as_null(self):
+        self.assertIsNone(CountrySerializer(self.country).data['native_name'])
+
     def test_city_serializer_includes_lat_lon(self):
         data = CitySerializer(self.city).data
         self.assertIn('latitude', data)

@@ -17,7 +17,8 @@ from adventures.models import (
     Transportation,
 )
 from django.contrib.auth import get_user_model
-from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
+from worldtravel.models import City, Country, Region, VisitedCity
+from worldtravel.visited import visited_region_ids as visited_region_ids_for
 from core.errors import ServiceError
 
 
@@ -357,9 +358,7 @@ def _search_countries(term: str, fetch_limit: int) -> tuple[list[SearchHit], int
 
 
 def _search_regions(user: User, term: str, fetch_limit: int) -> tuple[list[SearchHit], int]:
-    visited_region_ids = set(
-        VisitedRegion.objects.filter(user=user).values_list('region_id', flat=True)
-    )
+    visited_region_ids = visited_region_ids_for(user.id)
     base_qs = Region.objects.filter(_icontains_filter(term, ('name',))).select_related('country')
     qs = base_qs.order_by('name')[: min(fetch_limit, REFERENCE_TYPE_LIMIT)]
     total = base_qs.count()
