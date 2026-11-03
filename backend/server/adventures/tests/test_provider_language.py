@@ -150,6 +150,24 @@ class PlaceDetailsLanguageTests(SimpleTestCase):
         )
 
 
+class WikipediaSummaryLanguageTests(SimpleTestCase):
+    def _host(self, tag):
+        from adventures.providers.places.wikipedia import fetch_summary
+
+        with patch(
+            "adventures.providers.places.wikipedia.get_or_fetch_cached",
+            side_effect=lambda *args, fetch_fn, **kwargs: fetch_fn(),
+        ), patch("adventures.providers.places.wikipedia.requests.get") as mock_get:
+            mock_get.return_value = _response({"type": "disambiguation"})
+            fetch_summary("Paris", language=tag)
+        return mock_get.call_args.args[0]
+
+    def test_region_tags_map_to_primary_wikipedia_host(self):
+        self.assertTrue(self._host("en-US").startswith("https://en.wikipedia.org/"))
+        self.assertTrue(self._host("pt-BR").startswith("https://pt.wikipedia.org/"))
+        self.assertTrue(self._host("zh-Hant").startswith("https://zh.wikipedia.org/"))
+
+
 class QuickAddLanguageTests(SimpleTestCase):
     @patch("adventures.views.quick_add_utils.get_place_details")
     def test_extract_google_place_details_forwards_language(self, mock_details):
