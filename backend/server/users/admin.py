@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.sessions.models import Session
 from django.utils.html import format_html_join
 from allauth.account.decorators import secure_admin_login
+from allauth.account.models import EmailAddress
 
 from main.admin_utils import TIMESTAMP_READONLY, admin_image_preview
 from users.legal import legal_links_required
@@ -76,6 +77,16 @@ class CustomUserAdmin(UserAdmin):
     )
 
     add_fieldsets = UserAdmin.add_fieldsets
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # Admin edits bypass allauth, so mirror the email into EmailAddress (shown in Settings > Emails).
+        if obj.email:
+            address, _ = EmailAddress.objects.get_or_create(
+                user=obj, email__iexact=obj.email, defaults={'email': obj.email}
+            )
+            if not address.primary:
+                address.set_as_primary()
 
     @admin.display(description='Avatar')
     def profile_preview(self, obj):
