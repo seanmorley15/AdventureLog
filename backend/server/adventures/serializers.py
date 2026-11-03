@@ -785,6 +785,8 @@ class LocationSerializer(CoordinateSerializerMixin, CustomModelSerializer):
         if visits_data is not None:
             instance.visits.all().delete()
             for visit_data in visits_data:
+                # Nested visits always belong to this location; ignore any client-sent location
+                visit_data.pop('location', None)
                 Visit.objects.create(location=instance, **visit_data)
 
         return instance
