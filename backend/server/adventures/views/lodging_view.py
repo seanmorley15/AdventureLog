@@ -8,6 +8,7 @@ from adventures.serializers import CollectionItineraryItemSerializer, LodgingSer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.throttling import ExternalGeocodeThrottle
+from adventures.utils.language import resolve_request_language
 from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
@@ -91,6 +92,7 @@ class LodgingViewSet(viewsets.ModelViewSet):
     def quick_add(self, request):
         """Create a lodging from lightweight map/place input in one server-side call."""
         payload = request.data if isinstance(request.data, dict) else {}
+        language = resolve_request_language(request)
 
         name = str(payload.get('name') or '').strip()
         if not name:
@@ -116,13 +118,13 @@ class LodgingViewSet(viewsets.ModelViewSet):
 
         reverse_data = {}
         try:
-            selection = reverse_geocode_service(latitude, longitude, request.user)
+            selection = reverse_geocode_service(latitude, longitude, request.user, language=language)
             if selection and selection.data and not selection.data.get('error'):
                 reverse_data = selection.data
         except Exception:
             reverse_data = {}
 
-        _, details = extract_google_place_details(payload, fallback_query=name)
+        _, details = extract_google_place_details(payload, fallback_query=name, language=language)
 
         rating = coerce_float(payload.get('rating'))
         if rating is None:

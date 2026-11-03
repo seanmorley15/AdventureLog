@@ -149,14 +149,14 @@ def resolve_quick_add_collection(collection_id, validate_permissions, permission
     return collection
 
 
-def extract_google_place_details(payload, fallback_query=""):
+def extract_google_place_details(payload, fallback_query="", language=None):
     place_id = str(payload.get("place_id") or "").strip() or None
     details = {}
 
     if not place_id:
         return place_id, details
 
-    details_result = get_place_details(place_id, fallback_query=fallback_query)
+    details_result = get_place_details(place_id, fallback_query=fallback_query, language=language)
     if isinstance(details_result, dict):
         if "error" not in details_result or details_result.get("description"):
             details = details_result

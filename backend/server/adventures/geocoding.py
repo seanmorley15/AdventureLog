@@ -41,15 +41,15 @@ def search_google(query):
     return payload.data or []
 
 
-def search_osm(query):
-    payload = osm_search_places(query)
+def search_osm(query, language=None):
+    payload = osm_search_places(query, language=language)
     if payload.error:
         return {"error": payload.error}
     return payload.data or []
 
 
-def search_places(query):
-    selection = search_places_service(query)
+def search_places(query, language=None):
+    selection = search_places_service(query, language=language)
     if selection.error:
         return {"error": selection.error}
     return selection.results
@@ -59,8 +59,8 @@ def get_place_details(place_id, fallback_query=None, language='en'):
     return get_place_details_service(place_id, fallback_query=fallback_query, language=language)
 
 
-def reverse_geocode(lat, lon, user):
-    selection = reverse_geocode_service(lat, lon, user)
+def reverse_geocode(lat, lon, user, language=None):
+    selection = reverse_geocode_service(lat, lon, user, language=language)
     return selection.data
 
 
@@ -75,16 +75,16 @@ def reverse_geocode_google(lat, lon, user):
     return payload.data or {}
 
 
-def reverse_geocode_osm(lat, lon, user):
-    payload = osm_reverse_geocode(lat, lon)
+def reverse_geocode_osm(lat, lon, user, language=None):
+    payload = osm_reverse_geocode(lat, lon, language=language)
     if payload.error:
         return {"error": payload.error}
     return payload.data or {}
 
 
-def search(query):
+def search(query, language=None):
     """Legacy helper returning a list or error dict."""
-    selection = search_places_service(query)
+    selection = search_places_service(query, language=language)
     if selection.error:
         return {"error": selection.error}
     return selection.results
