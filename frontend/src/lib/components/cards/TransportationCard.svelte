@@ -11,7 +11,7 @@
 	import { TRANSPORTATION_TYPES_ICONS } from '#lib';
 	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
 	import { dateFormatFromUser } from '#lib/dateFormat.js';
-	import { isAllDay } from '#lib';
+	import { isTransportationAllDay } from '#lib';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
 	import CardCarousel from '../CardCarousel.svelte';
 	import TransportationRoutePreview from './TransportationRoutePreview.svelte';
@@ -399,7 +399,7 @@
 		<!-- Date & Time Section -->
 		{#if transportation.date}
 			<div class="flex flex-col gap-1.5">
-				{#if isAllDay(transportation.date) && (!transportation.end_date || isAllDay(transportation.end_date))}
+				{#if isTransportationAllDay(transportation.date, transportation.start_timezone) && (!transportation.end_date || isTransportationAllDay(transportation.end_date, transportation.end_timezone ?? transportation.start_timezone))}
 					<!-- All-day event -->
 					<div class="flex items-center gap-2 text-sm">
 						<span class="font-medium text-base-content"

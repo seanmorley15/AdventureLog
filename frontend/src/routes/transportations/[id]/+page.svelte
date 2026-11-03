@@ -18,7 +18,7 @@
 	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
 	import ImageFrame from '#lib/components/ImageFrame.svelte';
 	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
-	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '#lib';
+	import { normalizeBasemapType, isTransportationAllDay, TRANSPORTATION_TYPES_ICONS } from '#lib';
 	import Star from '~icons/mdi/star';
 	import StarOutline from '~icons/mdi/star-outline';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -131,7 +131,7 @@
 
 		const formatDate = (date: string | null, timezone: string | null) => {
 			if (!date) return '';
-			if (isAllDay(date)) {
+			if (isTransportationAllDay(date, timezone)) {
 				return formatAllDayDate(date, dateFormat);
 			}
 			return formatDateInTimezone(date, timezone, dateFormat);
@@ -269,7 +269,7 @@
 		if (!start && !end) return null;
 
 		const formatLocal = (dateStr: string | null, zone: string | null) => {
-			if (!dateStr || isAllDay(dateStr)) return null;
+			if (!dateStr || isTransportationAllDay(dateStr, zone)) return null;
 			const dt = DateTime.fromISO(dateStr, { zone: zone ?? 'UTC' });
 			if (!dt.isValid) return null;
 			return dt.setZone(localTimeZone).toLocaleString(DateTime.DATETIME_MED);
@@ -735,7 +735,7 @@
 															{$t('adventures.start') ?? 'Start'}
 														</p>
 														<p class="text-base font-semibold">
-															{#if isAllDay(transportation.date)}
+															{#if isTransportationAllDay(transportation.date, transportation.start_timezone)}
 																{formatAllDayDate(transportation.date, dateFormat)}
 															{:else}
 																{formatDateInTimezone(
@@ -746,7 +746,7 @@
 															{/if}
 														</p>
 													</div>
-													{#if transportation.date && !isAllDay(transportation.date)}
+													{#if transportation.date && !isTransportationAllDay(transportation.date, transportation.start_timezone)}
 														<span
 															class="badge badge-ghost badge-xs"
 															class:tooltip={Boolean(getTimezoneTip(transportation.start_timezone))}
@@ -769,7 +769,7 @@
 															{$t('adventures.end') ?? 'End'}
 														</p>
 														<p class="text-base font-semibold">
-															{#if isAllDay(transportation.end_date)}
+															{#if isTransportationAllDay(transportation.end_date, transportation.end_timezone ?? transportation.start_timezone)}
 																{formatAllDayDate(transportation.end_date, dateFormat)}
 															{:else}
 																{formatDateInTimezone(
@@ -780,7 +780,7 @@
 															{/if}
 														</p>
 													</div>
-													{#if transportation.end_date && !isAllDay(transportation.end_date)}
+													{#if transportation.end_date && !isTransportationAllDay(transportation.end_date, transportation.end_timezone ?? transportation.start_timezone)}
 														<span
 															class="badge badge-ghost badge-xs"
 															class:tooltip={Boolean(

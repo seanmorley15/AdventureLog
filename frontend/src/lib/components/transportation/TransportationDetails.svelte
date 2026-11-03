@@ -29,7 +29,7 @@
 	import { normalizeBasemapType } from '#lib';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { isAllDay } from '#lib';
+	import { isTransportationAllDay } from '#lib';
 
 	const dispatch = createEventDispatcher();
 
@@ -481,7 +481,10 @@
 
 		// Determine if existing dates are all-day using shared helper
 		if (initialTransportation?.date) {
-			allDay = isAllDay(initialTransportation.date);
+			allDay = isTransportationAllDay(
+				initialTransportation.date,
+				initialTransportation.start_timezone
+			);
 		}
 
 		const departureZone = selectedStartTimezone || browserTimezone;
