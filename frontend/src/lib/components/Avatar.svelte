@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	// Icons
@@ -9,10 +8,8 @@
 	import Shield from '~icons/mdi/shield-account';
 	import Settings from '~icons/mdi/cog';
 	import Logout from '~icons/mdi/logout';
-	import Phone from '~icons/mdi/cellphone';
 	import CreditCard from '~icons/mdi/credit-card';
 
-	import MobileQR from '#lib/components/MobileQR.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 
@@ -22,11 +19,6 @@
 	}
 
 	let { user, cloudMode = false }: Props = $props();
-
-	let showMobileQR = $state(false);
-	let showDevMobileLogin = $state(false);
-	let typedBuffer = '';
-	const DEV_UNLOCK_KEYWORD = 'dev';
 
 	// Get display name
 	let displayName = $derived(
@@ -66,32 +58,6 @@
 				}
 			: null
 	);
-
-	function openMobileQR() {
-		showMobileQR = true;
-	}
-
-	function closeMobileQR() {
-		showMobileQR = false;
-	}
-
-	onMount(() => {
-		const handleKeydown = (event: KeyboardEvent) => {
-			if (event.metaKey || event.ctrlKey || event.altKey) return;
-			if (event.key.length !== 1) return;
-
-			typedBuffer = (typedBuffer + event.key.toLowerCase()).slice(-DEV_UNLOCK_KEYWORD.length);
-			if (typedBuffer === DEV_UNLOCK_KEYWORD) {
-				showDevMobileLogin = true;
-			}
-		};
-
-		window.addEventListener('keydown', handleKeydown);
-
-		return () => {
-			window.removeEventListener('keydown', handleKeydown);
-		};
-	});
 </script>
 
 <div
@@ -175,19 +141,6 @@
 				</li>
 			{/if}
 
-			{#if showDevMobileLogin}
-				<!-- Mobile Login (dev unlock) -->
-				<li>
-					<button
-						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						onclick={openMobileQR}
-					>
-						<Phone class="w-5 h-5 text-base-content/70" />
-						<span>{$t('navbar.mobile_login', { default: 'Mobile Login' })}</span>
-					</button>
-				</li>
-			{/if}
-
 			{#each menuItems.filter((item) => item.section === 'secondary') as item (item.path)}
 				<li>
 					<button
@@ -229,7 +182,3 @@
 		</form>
 	</ul>
 </div>
-
-{#if showMobileQR}
-	<MobileQR on:close={closeMobileQR} />
-{/if}

@@ -16,6 +16,10 @@ The steps for each service varies so please refer to the specific service's docu
 
 Providers are configured in the Django admin panel under **Social applications**. See the [Admin Panel](../guides/admin_panel.md) for access requirements.
 
+## Mobile app
+
+The mobile app signs in through the same providers using the system browser, and the server hands the app a one-time code afterwards. Nothing needs to be added to your identity provider: it only ever sees the usual AdventureLog login. The app's redirect address (`adventurelog://auth/callback`) is checked by AdventureLog itself, not by the provider.
+
 ## Linking Existing Accounts
 
 If you already have an AdventureLog account and would like to link it to a 3rd party service, you can do so by logging in to AdventureLog and navigating to the `Account Settings` page. From there, scroll down to `Social and OIDC Authentication` and click the `Launch Account Connections` button. If identity providers have been enabled on your instance, you will see a list of available services to link to.

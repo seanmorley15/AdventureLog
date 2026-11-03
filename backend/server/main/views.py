@@ -17,6 +17,10 @@ from adventures.access.file_permissions import (
     normalize_media_request_path,
 )
 
+# What this server can do that the mobile app checks for before using it.
+CAPABILITIES = ['mobile_auth_v1']
+
+
 class ServerInfoView(APIView):
     openapi_tags = ['Server']
     permission_classes = [AllowAny]
@@ -27,6 +31,11 @@ class ServerInfoView(APIView):
             'allow_public_collection_links': serializers.BooleanField(
                 help_text='Whether collections may be made public or unlisted on this server.'
             ),
+            'version': serializers.CharField(help_text='The AdventureLog release this server runs.'),
+            'capabilities': serializers.ListField(
+                child=serializers.CharField(),
+                help_text='Features clients can rely on, e.g. `mobile_auth_v1` (app sign-in with a session token).',
+            ),
         })
     )
     def get(self, request):
@@ -34,6 +43,8 @@ class ServerInfoView(APIView):
         return Response({
             'public_url': settings.PUBLIC_URL,
             'allow_public_collection_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+            'version': settings.ADVENTURELOG_RELEASE_VERSION,
+            'capabilities': CAPABILITIES,
         })
 
 
@@ -72,6 +83,13 @@ def _resolve_user(request):
                 user, _ = result
         except AuthenticationFailed:
             return None
+
+    if not user.is_authenticated:
+        token = request.META.get('HTTP_X_SESSION_TOKEN')
+        if token:
+            from users.authentication import user_from_session_token
+            # A bad token is treated as no user, like a bad API key.
+            return user_from_session_token(token)
 
     return user
 

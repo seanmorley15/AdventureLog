@@ -104,13 +104,14 @@ paths:
       operationId: account_retrieve
       description: |-
         Your profile plus what the app's header shows: how many collection invites are waiting
-        and how many comments you have not read. On hosted servers the subscription is included.
+                and how many comments you have not read. On hosted servers the subscription is included.
       summary: Get your account
       tags:
       - Account
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -149,6 +150,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -183,14 +185,15 @@ paths:
       operationId: account_destroy
       description: |-
         Permanently deletes the account and everything it owns. Send your username as
-        `confirmation`, and your `password` unless the account signs in only through a social
-        provider. On hosted servers the subscription is cancelled first. Ends the session.
+                `confirmation`, and your `password` unless the account signs in only through a social
+                provider. On hosted servers the subscription is cancelled first. Ends the session.
       summary: Delete your account
       tags:
       - Account
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -212,14 +215,14 @@ paths:
       operationId: account_api_keys_list
       description: |-
         Each key shows its name and the first characters (`key_prefix`) so you can tell them
-        apart. The key itself is never shown again after it is created. The mobile app's key is
-        listed too.
+                apart. The key itself is never shown again after it is created.
       summary: List your API keys
       tags:
       - Account
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -241,7 +244,7 @@ paths:
       operationId: account_api_keys_create
       description: |-
         The response carries the full `key` **once**. Store it now: only a hash is kept on the
-        server. Send it as `X-API-Key: <key>` or `Authorization: Api-Key <key>`.
+                server. Send it as `X-API-Key: <key>` or `Authorization: Api-Key <key>`.
       summary: Create an API key
       tags:
       - Account
@@ -260,6 +263,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -304,6 +308,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -332,13 +337,14 @@ paths:
       operationId: account_media_usage
       description: |-
         Bytes and file counts for images, attachments and profile pictures, and the storage
-        limit (`null` when the server sets none).
+                limit (`null` when the server sets none).
       summary: Get your media storage use
       tags:
       - Account
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -354,111 +360,19 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
-  /api/account/mobile-key/:
-    get:
-      operationId: account_mobile_key_retrieve
-      summary: Get the mobile app key
-      tags:
-      - Account
-      security:
-      - ApiKeyAuth: []
-      - ApiKeyAuthorization: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIKey'
-          description: ''
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: No valid credentials were sent (`not_authenticated`), or an
-            API key was rejected (`authentication_failed`).
-        '404':
-          description: No mobile key exists.
-    post:
-      operationId: account_mobile_key_create
-      description: |-
-        Creates the key and a QR code for the AdventureLog app to scan. The QR code holds JSON:
-        `{"version": 1, "server_url", "api_key", "code_words"}`. Like any key, it is shown only
-        in this response.
-      summary: Create the mobile app key
-      tags:
-      - Account
-      security:
-      - ApiKeyAuth: []
-      - ApiKeyAuthorization: []
-      - cookieAuth: []
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MobileKey'
-          description: ''
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-          description: The request was not valid. `fields` lists the problems for
-            each input.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: No valid credentials were sent (`not_authenticated`), or an
-            API key was rejected (`authentication_failed`).
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: You can see this resource but may not do this to it (`permission_denied`).
-        '409':
-          description: A mobile key already exists. Delete it first.
-    delete:
-      operationId: account_mobile_key_destroy
-      summary: Revoke the mobile app key
-      tags:
-      - Account
-      security:
-      - ApiKeyAuth: []
-      - ApiKeyAuthorization: []
-      - cookieAuth: []
-      responses:
-        '204':
-          description: The mobile key was revoked.
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: No valid credentials were sent (`not_authenticated`), or an
-            API key was rejected (`authentication_failed`).
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: You can see this resource but may not do this to it (`permission_denied`).
   /api/account/password-login/disable/:
     post:
       operationId: account_disable_password_login
       description: |-
         Only for accounts with a linked social provider, which then becomes the only way to sign
-        in. Answers `400 no_social_account` otherwise.
+                in. Answers `400 no_social_account` otherwise.
       summary: Turn off password sign-in
       tags:
       - Account
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -496,6 +410,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -537,6 +452,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -578,6 +494,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -629,6 +546,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -688,6 +606,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -752,6 +671,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -808,6 +728,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -836,7 +757,7 @@ paths:
       operationId: activities_log_visit
       description: |-
         Copies a trip-day activity onto the visit of one location stop on that day (creating
-        the visit when needed). The day activity stays on the day.
+                the visit when needed). The day activity stays on the day.
       summary: Log a day activity as a visit
       parameters:
       - in: path
@@ -862,6 +783,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -905,6 +827,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -939,6 +862,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -988,6 +912,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1045,6 +970,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1109,6 +1035,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1163,6 +1090,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -1191,13 +1119,14 @@ paths:
       operationId: auth_config_retrieve
       description: |-
         Whether sign-up is open, the password rules, optional terms and privacy links to show on
-        sign-up, and the social providers people can sign in with.
+                sign-up, and the social providers people can sign in with.
       summary: Get the sign-in configuration
       tags:
       - Authentication
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -1219,7 +1148,8 @@ paths:
                       terms_of_service_url: null
                       privacy_policy_url: null
                     social_providers:
-                    - provider: github
+                    - id: github
+                      provider: github
                       name: GitHub
                       url: https://adventurelog.example.com/accounts/github/login/
                       usage_required: false
@@ -1230,14 +1160,15 @@ paths:
       operationId: auth_csrf_retrieve
       description: |-
         Only needed with session (cookie) authentication: send the token as `X-CSRFToken` on
-        every request that changes data. Also sets the `csrftoken` cookie. API-key requests do
-        not need it.
+                every request that changes data. Also sets the `csrftoken` cookie. API-key requests do
+                not need it.
       summary: Get a CSRF token
       tags:
       - Authentication
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -1252,9 +1183,9 @@ paths:
       operationId: auth_invitations_retrieve
       description: |-
         Whether an email invitation can be used to sign up, and the email it was sent to.
-        When it can, the email is remembered in the session so the sign-up that follows is
-        tied to the invitation. Unusable invites still answer 200 with `valid: false` and a
-        `message`.
+                When it can, the email is remembered in the session so the sign-up that follows is
+                tied to the invitation. Unusable invites still answer 200 with `valid: false` and a
+                `message`.
       summary: Check an invitation
       parameters:
       - in: path
@@ -1267,6 +1198,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -1288,18 +1220,71 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/auth/mobile/token/:
+    post:
+      operationId: auth_mobile_token_create
+      description: |-
+        The last step of signing in to the mobile app with a provider (OIDC, GitHub...). The
+                code arrives in the app's redirect URI; `code_verifier` is the secret whose SHA-256 the
+                app sent as `code_challenge`. A code works once and for one minute, and any failed
+                attempt spends it. The response matches the other app sign-in responses: send
+                `meta.session_token` as `X-Session-Token`.
+      summary: Exchange a mobile sign-in code for a session token
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MobileTokenRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MobileTokenRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MobileTokenRequestRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MobileTokenResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/backup/export/:
     get:
       operationId: backup_export
       description: |-
         A zip file with every record you own and their media, in a format that
-        `POST /api/backup/import/` restores, also on another server.
+                `POST /api/backup/import/` restores, also on another server.
       summary: Export your account
       tags:
       - Backup
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1321,7 +1306,7 @@ paths:
       operationId: backup_import_data
       description: |-
         **Deletes everything in your account**, then loads the backup. Send `confirm=yes`. The
-        response counts what was restored.
+                response counts what was restored.
       summary: Restore your account from a backup
       tags:
       - Backup
@@ -1334,6 +1319,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1364,13 +1350,14 @@ paths:
       operationId: billing_checkout_session_create
       description: |-
         Hosted servers only. Creates a Stripe Checkout session and returns its URL. A trial that
-        has not ended carries over.
+                has not ended carries over.
       summary: Start a subscription checkout
       tags:
       - Billing
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1413,13 +1400,14 @@ paths:
       operationId: billing_portal_session_create
       description: |-
         Hosted servers only. Returns a Stripe Customer Portal URL where the subscription can be
-        changed or cancelled.
+                changed or cancelled.
       summary: Open the billing portal
       tags:
       - Billing
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1462,7 +1450,7 @@ paths:
       operationId: billing_webhooks_stripe_create
       description: |-
         Called by Stripe, not by clients. The `Stripe-Signature` header is verified with the
-        webhook secret, and each event is applied once.
+                webhook secret, and each event is applied once.
       summary: Receive a Stripe event
       tags:
       - Billing
@@ -1492,7 +1480,7 @@ paths:
       operationId: calendar_events
       description: |-
         Your dated records as events, sorted by start. Limit them to a date range with `start`
-        and `end`, and to some kinds with `types`.
+                and `end`, and to some kinds with `types`.
       summary: List calendar events
       parameters:
       - in: query
@@ -1520,6 +1508,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1552,6 +1541,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1579,6 +1569,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1618,6 +1609,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -1665,6 +1657,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1722,6 +1715,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1785,6 +1779,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1837,6 +1832,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -1864,8 +1860,8 @@ paths:
     get:
       operationId: checklists_list
       summary: List your records of this kind, newest change first. With `collection`,
-        list the ones in that collection instead, including records other members
-        added.
+        list the ones         in that collection instead, including records other
+        members added.
       parameters:
       - in: query
         name: collection
@@ -1878,6 +1874,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -1927,6 +1924,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -1977,6 +1975,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2037,6 +2036,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2103,6 +2103,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2158,6 +2159,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -2186,7 +2188,7 @@ paths:
       operationId: collections_list
       description: |-
         Your collections, or with `membership=shared` the ones shared with you, a page at a
-        time, as cards (no records inside).
+                time, as cards (no records inside).
       summary: List collections
       parameters:
       - in: query
@@ -2275,6 +2277,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2320,6 +2323,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -2353,7 +2357,7 @@ paths:
       operationId: collections_activity_list
       description: |-
         What changed in the collection and who did it, newest first. For the owner and
-        editors; only the owner sees membership changes. Viewers get 403.
+                editors; only the owner sees membership changes. Viewers get 403.
       summary: Get the activity feed
       parameters:
       - in: path
@@ -2375,6 +2379,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -2444,6 +2449,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -2478,7 +2484,7 @@ paths:
       operationId: collections_comments_create
       description: |-
         Replies are one level deep: a reply to a reply joins the same thread. Mentioned
-        members are notified by email.
+                members are notified by email.
       summary: Post a comment
       parameters:
       - in: path
@@ -2505,6 +2511,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -2550,6 +2557,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2583,7 +2591,7 @@ paths:
       operationId: collections_days_create
       description: |-
         Inserts a day at `position` (later days move up by one), or at the end. Answers with
-        the plan and the new day's id.
+                the plan and the new day's id.
       summary: Add a day
       parameters:
       - in: path
@@ -2609,6 +2617,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -2679,6 +2688,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2717,7 +2727,7 @@ paths:
       operationId: collections_days_destroy
       description: |-
         Later days move down by one. The day's stops go to `destination`. Answers with the
-        plan (not 204), like the other day changes.
+                plan (not 204), like the other day changes.
       summary: Delete a day
       parameters:
       - in: path
@@ -2756,6 +2766,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2810,6 +2821,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -2880,6 +2892,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -2950,6 +2963,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3003,6 +3017,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3048,6 +3063,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3081,8 +3097,8 @@ paths:
       operationId: collections_itinerary_items_create
       description: |-
         Day-based trips place it on `day_index` (or the day with `date`), across the trip with
-        `is_global`, or in Ideas. Placing a lodging or transportation sets its dates from the
-        day; placing a location never creates a visit.
+                `is_global`, or in Ideas. Placing a lodging or transportation sets its dates from the
+                day; placing a location never creates a visit.
       summary: Place a record in the plan
       parameters:
       - in: path
@@ -3109,6 +3125,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3177,6 +3194,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3208,8 +3226,8 @@ paths:
       operationId: collections_itinerary_items_partial_update
       description: |-
         Sending `day_index`, `is_global`, `order` or `span_end_index` moves it (the other items
-        close up). `is_optional`, `start_time`, `end_time` and `timezone` change it in place;
-        times on a lodging or transportation also change its dates.
+                close up). `is_optional`, `start_time`, `end_time` and `timezone` change it in place;
+                times on a lodging or transportation also change its dates.
       summary: Move or change an itinerary item
       parameters:
       - in: path
@@ -3242,6 +3260,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3307,6 +3326,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -3335,7 +3355,7 @@ paths:
       operationId: itinerary_items_log_visit
       description: |-
         Creates one visit to the location for this stop's day, or returns the one it already
-        logged.
+                logged.
       summary: Log a stop as visited
       parameters:
       - in: path
@@ -3368,6 +3388,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3408,7 +3429,7 @@ paths:
       operationId: itinerary_auto_generate
       description: |-
         For trips still keyed by date: places every dated record of the collection on its
-        date. Day-based trips answer `400 day_based`.
+                date. Day-based trips answer `400 day_based`.
       summary: Fill the plan from dates
       parameters:
       - in: path
@@ -3423,6 +3444,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -3462,7 +3484,7 @@ paths:
       operationId: itinerary_duration
       description: |-
         Sets the number of days and, optionally, the start date (null makes the trip undated).
-        Stops on days that are removed go to `destination`. The end date follows.
+                Stops on days that are removed go to `destination`. The end date follows.
       summary: Change the trip's length
       parameters:
       - in: path
@@ -3489,6 +3511,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3548,6 +3571,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3587,7 +3611,7 @@ paths:
       operationId: itinerary_reorder
       description: |-
         Moves many items at once, e.g. after a drag and drop. Lodging and transportation dates
-        move with their placements.
+                move with their placements.
       summary: Reorder items
       parameters:
       - in: path
@@ -3614,6 +3638,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3656,7 +3681,7 @@ paths:
       operationId: itinerary_shift
       description: |-
         Shifts a dated trip by `days`, or to a new `start_date`. Days, order and times stay;
-        visits already logged do not move.
+                visits already logged do not move.
       summary: Move the trip's dates
       parameters:
       - in: path
@@ -3682,6 +3707,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3721,8 +3747,8 @@ paths:
       operationId: collections_retrieve
       description: |-
         Members get the whole collection with its records and day plan. Anyone else who can
-        read it (a public or unlisted story, or a guest link with `X-Guest-Token`) gets the
-        story instead. Members can ask for the story with `as=story` to preview it.
+                read it (a public or unlisted story, or a guest link with `X-Guest-Token`) gets the
+                story instead. Members can ask for the story with `as=story` to preview it.
       summary: Get a collection
       parameters:
       - in: query
@@ -3749,6 +3775,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3814,6 +3841,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3876,6 +3904,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -3928,6 +3957,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -3956,7 +3986,7 @@ paths:
       operationId: collections_archive
       description: |-
         Owner only. The collection and everything in it, with media, for
-        `POST /api/collections/import/` on this or another server.
+                `POST /api/collections/import/` on this or another server.
       summary: Download as a zip archive
       parameters:
       - in: path
@@ -3971,6 +4001,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4004,7 +4035,7 @@ paths:
       operationId: collections_duplicate
       description: |-
         Owner only. Makes a private copy with everything in it and its day plan, without the
-        members or guest links.
+                members or guest links.
       summary: Copy a collection
       parameters:
       - in: path
@@ -4019,6 +4050,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -4058,8 +4090,8 @@ paths:
       operationId: collections_create_guest_link
       description: |-
         Owner only. Anyone with the link can open the collection without an account, as an
-        `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
-        settings with the new link's `token`.
+                `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
+                settings with the new link's `token`.
       summary: Create a guest link
       parameters:
       - in: path
@@ -4085,6 +4117,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -4145,6 +4178,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -4187,6 +4221,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4238,6 +4273,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -4273,7 +4309,7 @@ paths:
       operationId: collections_create_invite
       description: |-
         Owner only. Invites a user with a public profile as an `editor` or `viewer`. They join
-        when they accept. Returns the updated sharing settings.
+                when they accept. Returns the updated sharing settings.
       summary: Invite someone
       parameters:
       - in: path
@@ -4300,6 +4336,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -4358,6 +4395,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -4400,6 +4438,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -4467,6 +4506,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4526,6 +4566,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -4554,7 +4595,7 @@ paths:
       operationId: collections_pdf
       description: |-
         A printable day-by-day itinerary. Members get the whole plan; public readers get what
-        the story shows.
+                the story shows.
       summary: Download as PDF
       parameters:
       - in: path
@@ -4569,6 +4610,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4602,7 +4644,7 @@ paths:
       operationId: collections_share_image
       description: |-
         A branded PNG for social media with the cover photo, name, dates and a link. Public
-        collections can be fetched without signing in.
+                collections can be fetched without signing in.
       summary: Get a share card
       parameters:
       - in: path
@@ -4632,6 +4674,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4672,7 +4715,7 @@ paths:
       operationId: collections_shareable_users
       description: |-
         Users with a public profile who are not the owner, a member, or already invited.
-        Search with `q`; a `q` of one character returns nothing.
+                Search with `q`; a `q` of one character returns nothing.
       summary: Find people to invite
       parameters:
       - in: path
@@ -4700,6 +4743,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4741,7 +4785,7 @@ paths:
       operationId: collections_sharing
       description: |-
         Owner only. Members and their roles, invites waiting for an answer, guest links, and
-        the public story settings.
+                the public story settings.
       summary: Get the sharing settings
       parameters:
       - in: path
@@ -4756,6 +4800,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4788,8 +4833,8 @@ paths:
       operationId: collections_import_collection
       description: |-
         Adds the collection in an archive from `GET /api/collections/{id}/archive/` to your
-        account, next to what you have. `existing_locations` decides what happens to places
-        you already have.
+                account, next to what you have. `existing_locations` decides what happens to places
+                you already have.
       summary: Import a collection
       tags:
       - Collections
@@ -4802,6 +4847,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -4838,6 +4884,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4884,6 +4931,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -4929,6 +4977,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -4951,8 +5000,8 @@ paths:
       operationId: comments_inbox
       description: |-
         New comments on the plans of collections you belong to and on the stories you own,
-        newest first, without your own. `unread_count` counts those since you last marked
-        the inbox seen.
+                newest first, without your own. `unread_count` counts those since you last marked
+                the inbox seen.
       summary: Get your comment inbox
       parameters:
       - in: query
@@ -4967,6 +5016,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -4998,6 +5048,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5036,6 +5087,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5070,6 +5122,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5113,6 +5166,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5147,7 +5201,7 @@ paths:
       operationId: dashboard_retrieve
       description: |-
         Your stats, recently changed places, upcoming and current trips, upcoming events, and
-        how many invites are waiting.
+                how many invites are waiting.
       summary: Get the dashboard
       parameters:
       - in: query
@@ -5163,6 +5217,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5196,6 +5251,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5222,6 +5278,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5243,7 +5300,7 @@ paths:
       operationId: images_create
       description: |-
         Upload a file as `image` (multipart), or link a photo from your Immich server with
-        `immich_id`. The image belongs to the owner of the record it is added to.
+                `immich_id`. The image belongs to the owner of the record it is added to.
       summary: Add an image
       tags:
       - Media
@@ -5259,6 +5316,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -5313,6 +5371,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5368,6 +5427,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5430,6 +5490,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5485,6 +5546,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -5513,7 +5575,7 @@ paths:
       operationId: images_toggle_primary
       description: |-
         The primary image is the cover of its record. The record's other images stop being
-        primary. Answers 400 `already_primary` when it already is.
+                primary. Answers 400 `already_primary` when it already is.
       summary: Make an image the primary one
       parameters:
       - in: path
@@ -5528,6 +5590,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5567,8 +5630,8 @@ paths:
       operationId: images_fetch_from_url
       description: |-
         Downloads an image from a public web address and returns its bytes, so the browser can
-        use pictures from servers that do not allow cross-site requests. Only public internet
-        addresses are fetched.
+                use pictures from servers that do not allow cross-site requests. Only public internet
+                addresses are fetched.
       summary: Fetch a remote image
       tags:
       - Media
@@ -5587,6 +5650,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5631,8 +5695,8 @@ paths:
       operationId: images_import_from_urls
       description: |-
         Downloads up to 10 images and attaches them to a record, for example pictures from
-        `GET /api/places/images/` or a place search. Each address gets its own entry in
-        `results`.
+                `GET /api/places/images/` or a place search. Each address gets its own entry in
+                `results`.
       summary: Import images from web addresses
       tags:
       - Media
@@ -5651,6 +5715,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5697,6 +5762,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5725,6 +5791,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5749,6 +5816,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5774,6 +5842,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -5829,6 +5898,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5871,6 +5941,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5916,6 +5987,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -5947,8 +6019,8 @@ paths:
       operationId: endurain_connect
       description: |-
         Signs in to your Endurain server with your username and password and keeps the tokens
-        it returns. When the account uses two-factor sign-in, answers 202 and you finish with
-        `mfa/`.
+                it returns. When the account uses two-factor sign-in, answers 202 and you finish with
+                `mfa/`.
       summary: Connect Endurain
       tags:
       - Integrations
@@ -5967,6 +6039,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -6023,6 +6096,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -6057,6 +6131,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6078,7 +6153,7 @@ paths:
       operationId: integrations_immich_create
       description: |-
         Checks the address and API key against the server before saving. The key is never
-        returned.
+                returned.
       summary: Connect Immich
       tags:
       - Integrations
@@ -6097,6 +6172,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -6143,6 +6219,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6178,6 +6255,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -6206,6 +6284,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6243,6 +6322,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6273,8 +6353,8 @@ paths:
       operationId: immich_asset
       description: |-
         Serves a photo from the owner's Immich server. Anyone who can see a record the photo
-        is on can load it, also without signing in for public records; the owner can load
-        any photo from their server.
+                is on can load it, also without signing in for public records; the owner can load
+                any photo from their server.
       summary: Show an Immich photo
       parameters:
       - in: path
@@ -6295,6 +6375,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -6344,6 +6425,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6379,6 +6461,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -6403,7 +6486,7 @@ paths:
       operationId: strava_activities
       description: |-
         Newest first, a page at a time, optionally between two dates. Strava's own paging:
-        there is no total count.
+                there is no total count.
       summary: List your Strava activities
       parameters:
       - in: query
@@ -6436,6 +6519,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6478,6 +6562,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6511,13 +6596,14 @@ paths:
       operationId: strava_authorize
       description: |-
         Returns the Strava page where you approve access. Strava then sends the browser to
-        `callback/`, which finishes the connection.
+                `callback/`, which finishes the connection.
       summary: Start connecting Strava
       tags:
       - Integrations
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6557,6 +6643,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '302':
@@ -6582,6 +6669,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6620,6 +6708,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -6649,7 +6738,7 @@ paths:
       operationId: integrations_wanderer_partial_update
       description: |-
         Send what changes; leave out `api_key` to keep the current one. Checked again before
-        saving.
+                saving.
       summary: Change your Wanderer connection
       tags:
       - Integrations
@@ -6667,6 +6756,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6700,6 +6790,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -6724,13 +6815,14 @@ paths:
       operationId: wanderer_trails
       description: |-
         Query parameters (`filter`, `sort`, `page`, `perPage`, ...) are passed to Wanderer's
-        trail list as they are; the trail author is included.
+                trail list as they are; the trail author is included.
       summary: List Wanderer trails
       tags:
       - Integrations
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6756,8 +6848,8 @@ paths:
       operationId: locations_list
       description: |-
         The places you own, a page at a time, in a light form (no trails, files or GPS
-        tracks). Filter by category, visited status and whether they are in a collection.
-        Places in collections shared with you are listed with the collection.
+                tracks). Filter by category, visited status and whether they are in a collection.
+                Places in collections shared with you are listed with the collection.
       summary: List your locations
       parameters:
       - in: query
@@ -6823,6 +6915,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6867,6 +6960,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -6914,6 +7008,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -6972,6 +7067,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7035,6 +7131,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7086,6 +7183,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -7114,7 +7212,7 @@ paths:
       operationId: locations_collection_memberships
       description: |-
         The collections the place is in, then the ones you could add it to, with what you are
-        allowed to do in each.
+                allowed to do in each.
       summary: List the location's collections
       parameters:
       - in: path
@@ -7135,6 +7233,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7196,6 +7295,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7254,6 +7354,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7286,7 +7387,7 @@ paths:
       operationId: locations_duplicate
       description: |-
         Copies a place you can see into your own account, with its photos, files and trails
-        but not its visits. Optionally puts the copy in a collection.
+                but not its visits. Optionally puts the copy in a collection.
       summary: Copy a location
       parameters:
       - in: path
@@ -7312,6 +7413,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -7351,7 +7453,7 @@ paths:
       operationId: locations_share_image
       description: |-
         A branded PNG for social media with the place's photo, name and a link. Public places
-        can be fetched without signing in.
+                can be fetched without signing in.
       summary: Get a share card
       parameters:
       - in: path
@@ -7382,6 +7484,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7443,6 +7546,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7484,7 +7588,7 @@ paths:
       operationId: locations_check_duplicates
       description: |-
         Your existing locations that are probably the same place as one being added, by name
-        and distance, best match first.
+                and distance, best match first.
       summary: Find likely duplicates
       tags:
       - Locations
@@ -7502,6 +7606,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7535,13 +7640,14 @@ paths:
       operationId: locations_pins
       description: |-
         Every location you own with just what a map needs: name, coordinates, category and
-        whether you have visited it.
+                whether you have visited it.
       summary: List map pins
       tags:
       - Locations
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7564,9 +7670,9 @@ paths:
       operationId: locations_quick_add
       description: |-
         Creates a location from a place picked on the map or from search, in one call: finds
-        the country, region and city, picks or creates the category, optionally adds it to a
-        collection and a trip day, and imports a few photos. Everything is undone if any
-        step fails.
+                the country, region and city, picks or creates the category, optionally adds it to a
+                collection and a trip day, and imports a few photos. Everything is undone if any
+                step fails.
       summary: Add a location from a map pin
       tags:
       - Locations
@@ -7585,6 +7691,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -7624,8 +7731,8 @@ paths:
       operationId: locations_suggest
       description: |-
         Your own places for adding to a collection, a page at a time. With `q`, search by name.
-        With `collection`, places closest to the middle of that collection come first;
-        otherwise A to Z.
+                With `collection`, places closest to the middle of that collection come first;
+                otherwise A to Z.
       summary: Suggest your locations
       parameters:
       - in: query
@@ -7658,6 +7765,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7684,8 +7792,8 @@ paths:
     get:
       operationId: lodgings_list
       summary: List your records of this kind, newest change first. With `collection`,
-        list the ones in that collection instead, including records other members
-        added.
+        list the ones         in that collection instead, including records other
+        members added.
       parameters:
       - in: query
         name: collection
@@ -7698,6 +7806,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7747,6 +7856,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -7797,6 +7907,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7857,6 +7968,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7923,6 +8035,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -7978,6 +8091,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -8006,8 +8120,8 @@ paths:
       operationId: lodgings_quick_add
       description: |-
         Creates a lodging from a place picked on the map or from search, in one call: looks up
-        the address, optionally adds it to a collection and its itinerary, and imports up to a
-        few photos. Everything is undone if any step fails.
+                the address, optionally adds it to a collection and its itinerary, and imports up to a
+                few photos. Everything is undone if any step fails.
       summary: Add a stay from a map pin
       tags:
       - Trip items
@@ -8026,6 +8140,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -8064,8 +8179,8 @@ paths:
     get:
       operationId: notes_list
       summary: List your records of this kind, newest change first. With `collection`,
-        list the ones in that collection instead, including records other members
-        added.
+        list the ones         in that collection instead, including records other
+        members added.
       parameters:
       - in: query
         name: collection
@@ -8078,6 +8193,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8127,6 +8243,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -8177,6 +8294,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8237,6 +8355,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8303,6 +8422,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8358,6 +8478,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -8386,7 +8507,7 @@ paths:
       operationId: places_describe
       description: |-
         A short plain-text description of a place or topic from Wikipedia, or from Google's
-        place summary and reviews with `source=google`.
+                place summary and reviews with `source=google`.
       summary: Get a description
       parameters:
       - in: query
@@ -8425,6 +8546,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8492,6 +8614,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8527,7 +8650,7 @@ paths:
       operationId: places_images
       description: |-
         Up to eight pictures of a place or topic from Wikipedia, for importing into a record
-        with `POST /api/images/import-from-urls/`.
+                with `POST /api/images/import-from-urls/`.
       summary: Find pictures
       parameters:
       - in: query
@@ -8548,6 +8671,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8585,7 +8709,7 @@ paths:
       operationId: places_reverse
       description: |-
         The country, region and city at a point, matched to AdventureLog's world data, and
-        whether you have visited them.
+                whether you have visited them.
       summary: Reverse geocode a point
       parameters:
       - in: query
@@ -8616,6 +8740,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8651,7 +8776,7 @@ paths:
       operationId: places_search
       description: |-
         Finds places by name or address, or what is at a `lat,lon` point. When every provider
-        fails the answer is still 200, with no results and a `warning`.
+                fails the answer is still 200, with no results and a `warning`.
       summary: Search for places
       parameters:
       - in: query
@@ -8674,6 +8799,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8707,8 +8833,8 @@ paths:
       operationId: recommendations_list
       description: |-
         Places to stay (`lodging`), eat (`food`) or see (`tourism`) within `radius` meters of a
-        point, ranked by quality and distance and de-duplicated across providers. Give the point
-        as `lat` and `lon`, or as a `location` name to look up first.
+                point, ranked by quality and distance and de-duplicated across providers. Give the point
+                as `lat` and `lon`, or as a `location` name to look up first.
       summary: Find recommendations nearby
       parameters:
       - in: query
@@ -8772,6 +8898,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8827,6 +8954,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8866,6 +8994,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8909,6 +9038,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -8943,7 +9073,7 @@ paths:
       operationId: search_list
       description: |-
         Locations, collections, lodging, transportation, notes, checklists, activities,
-        countries, regions, cities and people you can see, best matches first.
+                countries, regions, cities and people you can see, best matches first.
       summary: Search everything
       parameters:
       - in: query
@@ -8978,6 +9108,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9011,6 +9142,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -9031,6 +9163,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9061,6 +9194,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9102,6 +9236,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -9149,6 +9284,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9206,6 +9342,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9268,6 +9405,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9320,6 +9458,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -9347,8 +9486,8 @@ paths:
     get:
       operationId: transportations_list
       summary: List your records of this kind, newest change first. With `collection`,
-        list the ones in that collection instead, including records other members
-        added.
+        list the ones         in that collection instead, including records other
+        members added.
       parameters:
       - in: query
         name: collection
@@ -9361,6 +9500,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9410,6 +9550,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -9460,6 +9601,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9520,6 +9662,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9586,6 +9729,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9641,6 +9785,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -9674,6 +9819,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -9690,7 +9836,7 @@ paths:
       operationId: users_retrieve
       description: |-
         The user, their public locations, and their public collections. Private profiles are
-        404 to everyone but their owner.
+                404 to everyone but their owner.
       summary: Get a public profile
       parameters:
       - in: path
@@ -9703,6 +9849,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -9729,7 +9876,7 @@ paths:
       operationId: users_stats_retrieve
       description: |-
         Counts of places, trips, visited countries, regions and cities, and activity totals.
-        Available for public profiles and for yourself.
+                Available for public profiles and for yourself.
       summary: Get a user's travel stats
       parameters:
       - in: path
@@ -9742,6 +9889,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       - {}
       responses:
@@ -9779,6 +9927,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9824,6 +9973,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -9871,6 +10021,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -9914,6 +10065,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -9954,6 +10106,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10001,6 +10154,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -10049,6 +10203,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10094,6 +10249,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -10125,13 +10281,14 @@ paths:
       operationId: visited_regions_sync_create
       description: |-
         Marks the region and city of every location you have visited, using the place data
-        already stored, and returns the ones that were new.
+                already stored, and returns the ones that were new.
       summary: Mark regions visited from your places
       tags:
       - World travel
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10171,6 +10328,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10210,6 +10368,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '201':
@@ -10259,6 +10418,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10318,6 +10478,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10380,6 +10541,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '200':
@@ -10434,6 +10596,7 @@ paths:
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
       - cookieAuth: []
       responses:
         '204':
@@ -15137,50 +15300,35 @@ components:
       - profile_pics_bytes
       - profile_pics_files
       - total_bytes
-    MobileKey:
+    MobileTokenRequestRequest:
       type: object
-      description: |-
-        Read serializer for APIKey – never exposes the key_hash or the raw token.
-        The raw token is injected by the view only at creation time via an extra
-        ``key`` field that is *not* part of the model serializer.
       properties:
-        id:
+        code:
           type: string
-          format: uuid
-          readOnly: true
-        name:
+          minLength: 1
+          description: The one-time code from the app's redirect URI.
+        code_verifier:
           type: string
-          maxLength: 100
-        key_prefix:
+          minLength: 1
+          description: The PKCE secret whose SHA-256 was sent as `code_challenge`.
+        redirect_uri:
           type: string
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        last_used_at:
-          type: string
-          format: date-time
-          readOnly: true
-          nullable: true
-        key:
-          type: string
-          readOnly: true
-          description: The full key. It is returned only in this response and cannot
-            be shown again.
-        qr_code:
-          type: string
-          readOnly: true
-          description: A PNG data URI of a QR code holding the server URL and the
-            key, for the mobile app to scan.
+          minLength: 1
+          description: The same redirect URI the sign-in started with.
       required:
-      - created_at
-      - id
-      - key
-      - key_prefix
-      - last_used_at
-      - name
-      - qr_code
+      - code
+      - code_verifier
+      - redirect_uri
+    MobileTokenResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        meta:
+          $ref: '#/components/schemas/_MobileTokenMeta'
+      required:
+      - meta
+      - status
     Note:
       type: object
       description: A model serializer that shows the owning ``user`` by uuid.
@@ -17518,9 +17666,20 @@ components:
           type: boolean
           description: Whether collections may be made public or unlisted on this
             server.
+        version:
+          type: string
+          description: The AdventureLog release this server runs.
+        capabilities:
+          type: array
+          items:
+            type: string
+          description: Features clients can rely on, e.g. `mobile_auth_v1` (app sign-in
+            with a session token).
       required:
       - allow_public_collection_links
+      - capabilities
       - public_url
+      - version
     ShareableUser:
       type: object
       properties:
@@ -19676,6 +19835,17 @@ components:
       required:
       - privacy_policy_url
       - terms_of_service_url
+    _MobileTokenMeta:
+      type: object
+      properties:
+        is_authenticated:
+          type: boolean
+        session_token:
+          type: string
+          description: Send as `X-Session-Token` on every request.
+      required:
+      - is_authenticated
+      - session_token
     _PasswordPolicy:
       type: object
       properties:
@@ -19750,6 +19920,10 @@ components:
     _SocialProvider:
       type: object
       properties:
+        id:
+          type: string
+          description: Pass as `provider` to `/accounts/mobile/start/`, e.g. `oidc/authentik`
+            or `github`.
         provider:
           type: string
           description: e.g. `github`, `openid_connect`.
@@ -19763,6 +19937,7 @@ components:
           type: boolean
           description: True when password sign-in is disabled on this server.
       required:
+      - id
       - name
       - provider
       - url
@@ -19811,6 +19986,12 @@ components:
       in: header
       name: Authorization
       description: The same key as `Api-Key al_xxxxxxxx…`.
+    SessionTokenAuth:
+      type: apiKey
+      in: header
+      name: X-Session-Token
+      description: The `meta.session_token` returned by `POST /api/auth/app/v1/auth/login`
+        (or by `POST /api/auth/mobile/token/`). Used by the mobile app.
     cookieAuth:
       type: apiKey
       in: cookie

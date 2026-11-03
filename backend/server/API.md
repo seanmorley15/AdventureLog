@@ -125,10 +125,33 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
 
 - `DEFAULT_PERMISSION_CLASSES` is `IsAuthenticated`. A public endpoint says so with `AllowAny` (or a
   read-public permission class), and the schema then marks it as needing no credentials.
-- Credentials: an API key (`X-API-Key: al_…` or `Authorization: Api-Key al_…`, `users.authentication`), or the
-  session cookie with `X-CSRFToken` on unsafe methods. API-key requests skip CSRF
-  (`users.middleware.DisableCSRFForAPIKeyMiddleware`).
+- Credentials: an API key (`X-API-Key: al_…` or `Authorization: Api-Key al_…`, `users.authentication`), an app
+  session token (`X-Session-Token`, what the mobile app signs in with: `POST /api/auth/app/v1/auth/login`),
+  or the session cookie with `X-CSRFToken` on unsafe methods. Requests with a header credential skip CSRF
+  (`users.middleware.DisableCSRFForHeaderCredentialsMiddleware`).
 - Who may read or change a record is decided in `adventures/access/` and `adventures/permissions.py`.
+
+## Mobile app sign-in
+
+The mobile app signs in as the user, not with a pasted key, and keeps the `X-Session-Token` it is given.
+
+- **Username and password** (and the second factor): allauth's headless *app* client,
+  `POST /api/auth/app/v1/auth/login`, then `POST …/auth/2fa/authenticate` with the token from the `401`.
+  Signing out is `DELETE /api/auth/app/v1/auth/session`.
+- **A provider (OIDC, GitHub…)**: the app never talks to the provider. It opens the system browser at
+  `/accounts/mobile/start/?provider=<id>&code_challenge=<S256>&code_challenge_method=S256&state=<random>&redirect_uri=<uri>`
+  (`id` is `social_providers[].id` from `GET /api/auth/config/`). The browser signs in the usual way and
+  lands on `/accounts/mobile/complete/`, which sends the app to `redirect_uri?code=…&state=…`. The app then
+  trades the code at `POST /api/auth/mobile/token/` `{code, code_verifier, redirect_uri}` for
+  `meta.session_token`. Codes work once, for a minute; a failed attempt spends the code and a replayed one ends the
+  session it made. `redirect_uri` must match `MOBILE_AUTH_REDIRECT_URIS` exactly. Nothing about the provider
+  (client, audience, redirect) needs changing on the server.
+- Both give the same token. It is the Django session key: it shows under Settings → Security → Sessions, can be
+  revoked there, and is extended while in use (`users.authentication.SessionTokenAuthentication`).
+- `GET /api/server-info/` lists `capabilities`; the app needs `mobile_auth_v1`.
+- Through the web app's `/api/` proxy, multipart and body-less writes are refused unless they carry an `Origin`
+  header equal to the site's own address (SvelteKit's form CSRF check). A native client should send
+  `Origin: <the server address it was given>` on writes. JSON writes are not affected.
 
 ## Adding an endpoint
 
@@ -205,7 +228,7 @@ The API was reorganised for consistency. Every change is below; the frontend was
 | `GET /auth/user-media-usage/` | `GET /api/account/media-usage/` |
 | `POST`/`DELETE /auth/disable-password/` | `POST /api/account/password-login/disable/`, `…/enable/` |
 | `/auth/api-keys/` | `/api/account/api-keys/` |
-| `/auth/mobile-qr/` (a second key: 400) | `/api/account/mobile-key/` (409) |
+| `/auth/mobile-qr/` (a second key: 400) | removed: the mobile app signs in with the account, see [Mobile app sign-in](#mobile-app-sign-in) |
 | `/auth/users/`, `/auth/user/{username}/` (`adventures` key) | `/api/users/`, `/api/users/{username}/` (`locations` key) |
 | `GET /api/stats/counts/{username}/` | `GET /api/users/{username}/stats/` |
 | `GET /public-url/` (`PUBLIC_URL`) | `GET /api/server-info/` (`public_url`, `allow_public_collection_links`) |

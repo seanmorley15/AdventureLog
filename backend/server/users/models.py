@@ -203,3 +203,25 @@ class APIKey(models.Model):
                 candidate.key_hash_v2, candidate.key_hash = fast_hash, None
                 return candidate
         return None
+
+class MobileAuthCode(models.Model):
+    """
+    A one-time code that carries a browser sign-in back to the mobile app.
+
+    Only a hash of the code is stored. The app redeems it, with the PKCE verifier matching
+    ``code_challenge``, for an app session. See ``users.services.mobile_auth``.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    code_hash = models.CharField(max_length=64, unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mobile_auth_codes')
+    code_challenge = models.CharField(max_length=43)
+    redirect_uri = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    # The app session this code produced, so a replayed code can take it back.
+    session_key = models.CharField(max_length=40, blank=True, default='')
+
+    def __str__(self):
+        return f'Mobile sign-in code for {self.user_id}'

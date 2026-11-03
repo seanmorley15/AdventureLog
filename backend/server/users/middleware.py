@@ -28,14 +28,16 @@ class EfficientSessionMiddleware:
         return self.get_response(request)
 
     def _maybe_maintain_session(self, request):
-        user = getattr(request, 'user', None)
         session = getattr(request, 'session', None)
-        if user is None or session is None:
-            return
-        if not getattr(user, 'is_authenticated', False):
-            return
         # Only act on existing cookie sessions — never create sessions for API-key auth.
-        if not session.session_key:
+        # This check comes first on purpose: ``request.user`` is lazy and caches its first
+        # value, and allauth's app client (``X-Session-Token``, no cookie) swaps in its own
+        # session later. Reading the user here would pin it to AnonymousUser, and the app's
+        # own session route could then never see it signed in (or sign it out).
+        if session is None or not session.session_key:
+            return
+        user = getattr(request, 'user', None)
+        if user is None or not getattr(user, 'is_authenticated', False):
             return
 
         if not session.get(self.SESSION_TRACKED_KEY):
@@ -52,12 +54,16 @@ class EfficientSessionMiddleware:
             session.modified = True
 
 
-class DisableCSRFForAPIKeyMiddleware(MiddlewareMixin):
-    """Exempt requests carrying an AdventureLog API key from CSRF enforcement.
+class DisableCSRFForHeaderCredentialsMiddleware(MiddlewareMixin):
+    """Exempt requests that carry a header credential from CSRF enforcement.
+
+    An API key (``X-API-Key`` / ``Authorization: Api-Key``) or an app session token
+    (``X-Session-Token``) is sent deliberately by a client; a browser never attaches one on its
+    own, so there is nothing for a forged cross-site request to ride on.
 
     DRF's own SessionAuthentication is the only built-in class that enforces
     CSRF, so this middleware is mainly a safety net for non-DRF views and to
-    ensure the Django CSRF middleware itself doesn't reject API-key requests
+    ensure the Django CSRF middleware itself doesn't reject these requests
     before they reach DRF.
     """
 
@@ -66,7 +72,7 @@ class DisableCSRFForAPIKeyMiddleware(MiddlewareMixin):
         if settings.SESSION_COOKIE_NAME in request.COOKIES:
             return
 
-        if request.headers.get('X-API-Key'):
+        if request.headers.get('X-API-Key') or request.headers.get('X-Session-Token'):
             setattr(request, '_dont_enforce_csrf_checks', True)
             return
 

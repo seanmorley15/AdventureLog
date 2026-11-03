@@ -10,13 +10,15 @@ from rest_framework.views import APIView
 
 from core.public_url import get_public_url
 from users.serializers import AuthConfigSerializer, CsrfTokenSerializer
+from users.services import mobile_auth
 
 
 def _social_providers():
     providers = []
     for app in SocialApp.objects.filter(sites=settings.SITE_ID):
-        path = f'oidc/{app.provider_id}' if app.provider == 'openid_connect' else app.provider
+        path = mobile_auth.provider_path(app)
         providers.append({
+            'id': path,
             'provider': app.provider,
             'name': app.name,
             'url': f'{get_public_url()}/accounts/{path}/login/',
@@ -41,6 +43,7 @@ class AuthConfigView(APIView):
                     'password_policy': {'min_length': 8, 'validators_enabled': True},
                     'legal_links': {'terms_of_service_url': None, 'privacy_policy_url': None},
                     'social_providers': [{
+                        'id': 'github',
                         'provider': 'github',
                         'name': 'GitHub',
                         'url': 'https://adventurelog.example.com/accounts/github/login/',

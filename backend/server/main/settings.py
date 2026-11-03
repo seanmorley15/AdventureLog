@@ -95,7 +95,7 @@ INSTALLED_APPS = (
 # ---------------------------------------------------------------------------
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'users.middleware.DisableCSRFForAPIKeyMiddleware',
+    'users.middleware.DisableCSRFForHeaderCredentialsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -412,6 +412,8 @@ RATE_LIMIT_RATES = {
     'external_sunrise_sunset': getenv('RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET', '30/minute'),
     # Always applied on Endurain connect/MFA (see EndurainAuthThrottle).
     'endurain_auth': getenv('RATE_LIMIT_ENDURAIN_AUTH', '10/minute'),
+    # Always applied on the mobile app's sign-in code exchange (see MobileAuthThrottle).
+    'mobile_auth': getenv('RATE_LIMIT_MOBILE_AUTH', '20/minute'),
 }
 
 SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60 * 60 * 24 * 30)))
@@ -501,6 +503,7 @@ ACCOUNT_RATE_LIMITS = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'users.authentication.APIKeyAuthentication',
+        'users.authentication.SessionTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     # Endpoints are closed unless a view opens them with an explicit permission class.
@@ -515,6 +518,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': RATE_LIMIT_RATES if ENABLE_RATE_LIMITS else {
         # Endurain auth throttle is always-on and needs its rate registered.
         'endurain_auth': RATE_LIMIT_RATES['endurain_auth'],
+        'mobile_auth': RATE_LIMIT_RATES['mobile_auth'],
     },
 }
 
@@ -628,6 +632,14 @@ LOGGING = {
 PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhost:8000')
 
 # Major release version of AdventureLog, not including the patch version date.
+# Mobile app sign-in through the server's browser providers (see users/services/mobile_auth.py).
+# The app's redirect URIs are matched exactly. The default is the official app's.
+MOBILE_AUTH_REDIRECT_URIS = [
+    uri.strip() for uri in getenv('MOBILE_AUTH_REDIRECT_URIS', 'adventurelog://auth/callback').split(',') if uri.strip()
+]
+MOBILE_AUTH_HANDOFF_SECONDS = 10 * 60  # how long the browser has to finish signing in
+MOBILE_AUTH_CODE_SECONDS = 60  # how long the app has to redeem the code
+
 ADVENTURELOG_RELEASE_VERSION = 'v0.13.1'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags

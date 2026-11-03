@@ -29,7 +29,6 @@
 			"dim": "Dim"
 		},
 		"navigation": "Navigation",
-		"mobile_login": "Mobile Login",
 		"billing": "Billing",
 		"access_paused": "Access paused",
 		"trial_days_left": "Trial: {days}d left"

@@ -84,6 +84,7 @@ See [Caching](caching.md) for what is cached and how to use Redis.
 | `DISABLE_REGISTRATION` | No | Block new account signups. | `False` |
 | `DISABLE_REGISTRATION_MESSAGE` | No | Message shown when registration is disabled. | Custom message |
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
+| `MOBILE_AUTH_REDIRECT_URIS` | No | Comma-separated redirect URIs the mobile app may use when signing in with a social/OIDC provider. Only needed for a custom-built app. | `adventurelog://auth/callback` |
 | `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
 | `ACCOUNT_EMAIL_VERIFICATION` | No | `none` (skip), `optional` (send link, still allow login), or `mandatory` (block login until verified). Requires working email (SMTP or console). | `none` |
 | `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |

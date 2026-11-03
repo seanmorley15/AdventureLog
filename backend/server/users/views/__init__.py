@@ -3,10 +3,10 @@
 from .account import AccountViewSet
 from .api_keys import APIKeyDetailView, APIKeyListCreateView
 from .auth_config import AuthConfigView, CsrfTokenView
-from .mobile import MobileKeyView
+from .mobile_auth import MobileTokenView
 from .public import PublicUserDetailView, PublicUserListView, PublicUserStatsView
 
 __all__ = [
     'APIKeyDetailView', 'APIKeyListCreateView', 'AccountViewSet', 'AuthConfigView', 'CsrfTokenView',
-    'MobileKeyView', 'PublicUserDetailView', 'PublicUserListView', 'PublicUserStatsView',
+    'MobileTokenView', 'PublicUserDetailView', 'PublicUserListView', 'PublicUserStatsView',
 ]

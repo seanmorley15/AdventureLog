@@ -2,6 +2,7 @@ from django.conf import settings
 from django.http import JsonResponse
 
 from cloud.utils import get_or_create_subscription, has_access
+from users.authentication import user_from_session_token
 from users.models import APIKey
 
 
@@ -44,6 +45,11 @@ class CloudAccessMiddleware:
                 api_key_instance = APIKey.authenticate(api_key)
                 if api_key_instance:
                     user = api_key_instance.user
+
+        if user is None:
+            session_token = request.headers.get("X-Session-Token")
+            if session_token:
+                user = user_from_session_token(session_token)
 
         if user is None:
             return self.get_response(request)

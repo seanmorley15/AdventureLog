@@ -3,6 +3,7 @@ from django.urls import include, path, re_path
 from django.views.generic import RedirectView, TemplateView
 
 from users.invitations.views import AcceptInviteView
+from users.views import mobile_auth
 from .views import FrontendSignupRedirectView, health_check, serve_protected_media
 
 urlpatterns = [
@@ -25,6 +26,9 @@ urlpatterns = [
     re_path(r'^accounts/profile/$', RedirectView.as_view(url='/', permanent=True), name='profile-redirect'),
     # Signup happens in the SvelteKit frontend via the headless API.
     path('accounts/signup/', FrontendSignupRedirectView.as_view(), name='server_signup_redirect'),
+    # The mobile app signs in through the browser; see users/services/mobile_auth.py.
+    path('accounts/mobile/start/', mobile_auth.start, name='mobile-auth-start'),
+    path('accounts/mobile/complete/', mobile_auth.complete, name='mobile-auth-complete'),
     # Server-rendered allauth: social sign-in and the OAuth callbacks registered with providers.
     path('accounts/', include('allauth.urls')),
 ]

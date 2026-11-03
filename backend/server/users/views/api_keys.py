@@ -19,8 +19,7 @@ class APIKeyListCreateView(APIView):
         List your API keys
 
         Each key shows its name and the first characters (`key_prefix`) so you can tell them
-        apart. The key itself is never shown again after it is created. The mobile app's key is
-        listed too.
+        apart. The key itself is never shown again after it is created.
         """
         keys = APIKey.objects.filter(user=request.user)
         return Response(APIKeySerializer(keys, many=True).data)

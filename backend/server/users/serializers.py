@@ -229,16 +229,6 @@ class APIKeyCreatedSerializer(APIKeySerializer):
         fields = APIKeySerializer.Meta.fields + ['key']
 
 
-class MobileKeySerializer(APIKeyCreatedSerializer):
-    qr_code = serializers.CharField(
-        read_only=True,
-        help_text='A PNG data URI of a QR code holding the server URL and the key, for the mobile app to scan.',
-    )
-
-    class Meta(APIKeyCreatedSerializer.Meta):
-        fields = APIKeyCreatedSerializer.Meta.fields + ['qr_code']
-
-
 class MediaUsageSerializer(serializers.Serializer):
     total_bytes = serializers.IntegerField()
     images_bytes = serializers.IntegerField()
@@ -276,10 +266,27 @@ class _LegalLinksSerializer(serializers.Serializer):
 
 
 class _SocialProviderSerializer(serializers.Serializer):
+    id = serializers.CharField(help_text='Pass as `provider` to `/accounts/mobile/start/`, e.g. `oidc/authentik` or `github`.')
     provider = serializers.CharField(help_text='e.g. `github`, `openid_connect`.')
     name = serializers.CharField()
     url = serializers.URLField(help_text='Open this in the browser to sign in with the provider.')
     usage_required = serializers.BooleanField(help_text='True when password sign-in is disabled on this server.')
+
+
+class MobileTokenRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(help_text='The one-time code from the app\'s redirect URI.')
+    code_verifier = serializers.CharField(help_text='The PKCE secret whose SHA-256 was sent as `code_challenge`.')
+    redirect_uri = serializers.CharField(help_text='The same redirect URI the sign-in started with.')
+
+
+class _MobileTokenMetaSerializer(serializers.Serializer):
+    is_authenticated = serializers.BooleanField()
+    session_token = serializers.CharField(help_text='Send as `X-Session-Token` on every request.')
+
+
+class MobileTokenResponseSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    meta = _MobileTokenMetaSerializer()
 
 
 class AuthConfigSerializer(serializers.Serializer):

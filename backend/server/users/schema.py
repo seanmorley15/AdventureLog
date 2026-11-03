@@ -1,4 +1,4 @@
-"""How API keys appear in the OpenAPI schema (a drf-spectacular extension)."""
+"""How API keys and app session tokens appear in the OpenAPI schema (a drf-spectacular extension)."""
 
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
@@ -28,3 +28,21 @@ class APIKeyScheme(OpenApiAuthenticationExtension):
                 'description': 'The same key as `Api-Key al_xxxxxxxx…`.',
             },
         ]
+
+
+class SessionTokenScheme(OpenApiAuthenticationExtension):
+    """``users.authentication.SessionTokenAuthentication``: the token a native app signs in with."""
+
+    target_class = 'users.authentication.SessionTokenAuthentication'
+    name = 'SessionTokenAuth'
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'X-Session-Token',
+            'description': (
+                'The `meta.session_token` returned by `POST /api/auth/app/v1/auth/login` '
+                '(or by `POST /api/auth/mobile/token/`). Used by the mobile app.'
+            ),
+        }
