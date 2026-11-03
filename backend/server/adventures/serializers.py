@@ -698,7 +698,11 @@ class LocationSerializer(CoordinateSerializerMixin, CustomModelSerializer):
         if category_data:
             user = self.context['request'].user
             name = category_data.get('name', '').lower()
-            existing_category = Category.objects.filter(user=user, name=name).first()
+            # Clients may send the display name (e.g. "Tours & Activities") rather than the slug
+            existing_category = (
+                Category.objects.filter(user=user, name=name).first()
+                or Category.objects.filter(user=user, display_name__iexact=name).first()
+            )
             if existing_category:
                 return existing_category
             category_data['name'] = name
