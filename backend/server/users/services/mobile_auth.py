@@ -154,6 +154,10 @@ def redeem_code(request, *, code, code_verifier, redirect_uri):
             row.delete()
             outcome = None
         else:
+            # Spend the code while the row lock is still held, so a concurrent redemption
+            # sees it as used instead of also passing the checks above.
+            row.used_at = timezone.now()
+            row.save(update_fields=['used_at'])
             outcome = row
     # Raise outside the transaction, or the deletes above would be rolled back.
     if outcome is None:
@@ -161,7 +165,7 @@ def redeem_code(request, *, code, code_verifier, redirect_uri):
         raise InvalidGrant()
 
     token = _start_app_session(request, outcome.user)
-    MobileAuthCode.objects.filter(pk=outcome.pk).update(used_at=timezone.now(), session_key=token)
+    MobileAuthCode.objects.filter(pk=outcome.pk).update(session_key=token)
     return token
 
 
