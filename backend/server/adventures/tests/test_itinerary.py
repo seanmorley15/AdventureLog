@@ -1,3 +1,6 @@
+import datetime
+
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.test import APITestCase
 
 from adventures.models import Collection, CollectionItineraryItem, Location
@@ -66,3 +69,31 @@ class ItineraryAPITestCase(APITestCase):
         self.assertEqual(itinerary[0]['content_type'], 'location')
         self.assertEqual(itinerary[0]['object_name'], 'location')
         self.assertEqual(itinerary[0]['object_id'], str(self.location.id))
+    def test_changing_collection_dates_keeps_trip_context_items(self):
+        self.collection.start_date = datetime.date(2026, 11, 2)
+        self.collection.end_date = datetime.date(2026, 11, 5)
+        self.collection.save()
+        global_item = CollectionItineraryItem.objects.create(
+            collection=self.collection,
+            content_type=ContentType.objects.get_for_model(Location),
+            object_id=self.location.id,
+            is_global=True,
+            order=0,
+        )
+        outside_item = CollectionItineraryItem.objects.create(
+            collection=self.collection,
+            content_type=ContentType.objects.get_for_model(Location),
+            object_id=self.location.id,
+            date=datetime.date(2026, 11, 5),
+            order=1,
+        )
+
+        response = self.client.patch(
+            f'/api/collections/{self.collection.id}/',
+            {'start_date': '2026-11-02', 'end_date': '2026-11-04'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(CollectionItineraryItem.objects.filter(id=global_item.id).exists())
+        self.assertFalse(CollectionItineraryItem.objects.filter(id=outside_item.id).exists())
