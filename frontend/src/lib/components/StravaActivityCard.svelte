@@ -47,7 +47,13 @@
 		return sportTypeConfig[type] || sportTypeConfig.default;
 	}
 
-	function formatTime(seconds: number): string {
+	function formatStat(value: number | null | undefined, digits: number): string {
+		if (value == null || Number.isNaN(value)) return '—';
+		return value.toFixed(digits);
+	}
+
+	function formatTime(seconds: number | null | undefined): string {
+		if (seconds == null || Number.isNaN(seconds)) return '—';
 		const hours = Math.floor(seconds / 3600);
 		const minutes = Math.floor((seconds % 3600) / 60);
 		const secs = Math.floor(seconds % 60);
@@ -65,19 +71,16 @@
 		return `${minutes}:${secs.toString().padStart(2, '0')}/${unit}`;
 	}
 
-	// Endurain activities without GPS/sensor data report null metrics
-	function formatNumber(value: number | null | undefined, digits: number): string {
-		return value != null ? value.toFixed(digits) : '–';
-	}
-
 	function convertElevation(
-		meters: number | null,
+		meters: number | null | undefined,
 		system: 'metric' | 'imperial'
 	): { value: number | null; unit: string } {
-		if (system === 'imperial' && meters != null) {
-			return { value: meters * 3.28084, unit: 'ft' };
+		const unit = system === 'imperial' ? 'ft' : 'm';
+		if (meters == null || Number.isNaN(meters)) return { value: null, unit };
+		if (system === 'imperial') {
+			return { value: meters * 3.28084, unit };
 		}
-		return { value: meters, unit: 'm' };
+		return { value: meters, unit };
 	}
 
 	function handleImportActivity() {
@@ -188,7 +191,6 @@
 								/>
 							</svg>
 						</div>
-						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 						<ul
 							tabindex="-1"
 							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-sm"
@@ -224,7 +226,7 @@
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">{$t('adventures.distance')}</div>
-				<div class="stat-value text-lg">{formatNumber(distance.value, 2)}</div>
+				<div class="stat-value text-lg">{formatStat(distance.value, 2)}</div>
 				<div class="stat-desc">{distance.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
@@ -234,12 +236,12 @@
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">{$t('adventures.avg_speed')}</div>
-				<div class="stat-value text-lg">{formatNumber(speed.value, 1)}</div>
+				<div class="stat-value text-lg">{formatStat(speed.value, 1)}</div>
 				<div class="stat-desc">{speed.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">{$t('adventures.elevation')}</div>
-				<div class="stat-value text-lg">{formatNumber(elevation.value, 0)}</div>
+				<div class="stat-value text-lg">{formatStat(elevation.value, 0)}</div>
 				<div class="stat-desc">{elevation.unit} {$t('adventures.gain')}</div>
 			</div>
 		</div>
@@ -284,7 +286,7 @@
 				</div>
 				<div class="text-sm">
 					<span class="font-medium">{$t('adventures.max_speed')}:</span>
-					{formatNumber(maxSpeed.value, 1)}
+					{formatStat(maxSpeed.value, 1)}
 					{maxSpeed.unit}
 				</div>
 			</div>

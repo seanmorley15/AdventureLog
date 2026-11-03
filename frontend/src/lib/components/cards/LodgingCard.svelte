@@ -120,7 +120,7 @@
 	}
 
 	async function deleteTransportation() {
-		let res = await fetch(`/api/lodging/${lodging.id}`, {
+		let res = await fetch(`/api/lodgings/${lodging.id}`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json'
@@ -141,9 +141,12 @@
 
 	async function removeFromItinerary() {
 		let itineraryItemId = itineraryItem?.id;
-		let res = await fetch(`/api/itineraries/${itineraryItemId}`, {
-			method: 'DELETE'
-		});
+		let res = await fetch(
+			`/api/collections/${itineraryItem?.collection}/itinerary-items/${itineraryItemId}/`,
+			{
+				method: 'DELETE'
+			}
+		);
 		if (res.ok) {
 			addToast('info', $t('itinerary.item_remove_success'));
 			dispatch('removeFromItinerary', itineraryItem);

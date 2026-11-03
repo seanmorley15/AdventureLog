@@ -2,7 +2,8 @@ from typing import Dict, List, Optional
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
+from core.cache import cached_provider
 
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 
@@ -14,6 +15,12 @@ def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
     return headers
 
 
+# Names come back in the requested language, so the language is part of the key.
+@cached_provider(
+    'osm_search',
+    lambda query, limit=20, user_agent=None, language=None, **k: (query, limit, language or ''),
+    60 * 60 * 24,
+)
 def search_places(
     query: str,
     limit: int = 20,

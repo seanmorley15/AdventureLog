@@ -57,10 +57,37 @@ Country and region reference data comes from [dr5hn/countries-states-cities-data
 
 ```bash
 docker exec -it <backend-container> bash
-python manage.py download-countries --force
+python manage.py download_countries --force
 ```
 
 Region data version is pinned per AdventureLog release in `settings.py` and is not auto-updated on every deploy.
+
+### Territories such as Guadeloupe and Puerto Rico
+
+The dataset lists some places twice: as a country and as a region of another country (Guadeloupe as a country and as a region of France, Puerto Rico as a country and as a region of the United States). Geocoders report them under the larger country, so AdventureLog ties each pair together when it imports the data, and files new places under the territory's own country.
+
+Upgrading from an earlier version repeats the world-data import once on the next start, since the links and native-language names are new. It takes a few minutes, needs the same RAM as a first boot, and keeps your visited regions. If you start with `SKIP_WORLD_DATA=1`, run `python manage.py download_countries` once yourself.
+
+Places you saved before the update stay under the larger country. To move them, check what would change and then apply it:
+
+```bash
+python manage.py reassign_territory_locations
+python manage.py reassign_territory_locations --apply
+```
+
+It uses the stored world data only and makes no geocoding requests. Visited regions and cities follow the places that moved.
+
+### Visited places stay in sync
+
+A territory and the region it is also listed as are one place, and a visit counts once. You mark it visited on the territory's own pages, and the region under the larger country mirrors that:
+
+- On the United States page, Puerto Rico shows as visited whenever any region of the Puerto Rico country is. Opening it takes you to the Puerto Rico page, with a fresh search and filter, instead of a second list of the same place.
+- The world data lists Puerto Rico's cities twice, 78 under the country and 255 under the United States region. The import merges them onto the country: a city with the same name on both sides is the same town and appears once, and the others move to the nearest Puerto Rico region. The region under the United States keeps no cities of its own.
+- The statistics and the country list count a Puerto Rico trip once, for Puerto Rico, and not again for the United States.
+
+This applies to every place the world data lists twice, not just Puerto Rico: the other US territories (Guam, the US Virgin Islands, American Samoa, the Northern Mariana Islands, the US Minor Outlying Islands), the French overseas territories, Hong Kong and Macau under China, and Svalbard under Norway. Only Puerto Rico, Hong Kong and New Caledonia list cities under the larger country, so those are the ones whose cities are merged.
+
+Visits to a merged city move to the city it was merged into, and so do your places that were in it. Visits you marked on the larger country's region before the update stay as they were and are counted once in the statistics. `reassign_territory_locations --apply` tidies up the ones that came from your places.
 
 ## What happens during an update
 

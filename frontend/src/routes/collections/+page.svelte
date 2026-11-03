@@ -1,12 +1,12 @@
 <script lang="ts">
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { run } from 'svelte/legacy';
 
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CollectionCard from '#lib/components/cards/CollectionCard.svelte';
-	import CollectionLink from '#lib/components/CollectionLink.svelte';
-	import CollectionModal from '#lib/components/CollectionModal.svelte';
+	import CollectionModal from '#lib/components/collections/CollectionModal.svelte';
 	import NotFound from '#lib/components/NotFound.svelte';
 	import type { Collection, CollectionInvite, SlimCollection } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
@@ -60,12 +60,12 @@
 		currentPage = data.props.currentPage || 1;
 		orderBy = data.props.order_by || 'updated_at';
 		orderDirection = data.props.order_direction || 'asc';
-		statusFilter = data.props.status || '';
+		statusFilter = data.props.type === 'folder' ? 'folder' : data.props.status || '';
 		invites = data.props.invites || [];
 	});
 
 	let sidebarOpen = $state(false);
-	let collectionToEdit: Collection | null = $state(null);
+	let collectionToEdit: Collection | SlimCollection | null = $state(null);
 
 	let currentCollections = $derived(
 		activeView === 'owned'
@@ -128,10 +128,12 @@
 
 	async function updateStatusFilter(status: string) {
 		const url = new URL(page.url.href);
-		if (status) {
+		url.searchParams.delete('status');
+		url.searchParams.delete('type');
+		if (status === 'folder') {
+			url.searchParams.set('type', 'folder');
+		} else if (status) {
 			url.searchParams.set('status', status);
-		} else {
-			url.searchParams.delete('status');
 		}
 		url.searchParams.set('page', '1'); // Reset to first page when filter changes
 		currentPage = 1;
@@ -145,6 +147,7 @@
 	let importInputEl: HTMLInputElement | null = $state(null);
 	let importFormEl: HTMLFormElement | null = $state(null);
 	let isImporting: boolean = $state(false);
+	let linkExistingPlaces: boolean = $state(true);
 
 	function triggerImport() {
 		importInputEl?.click();
@@ -228,18 +231,8 @@
 		activeView = 'owned';
 	}
 
-	async function editCollection(event: CustomEvent<SlimCollection>) {
-		const slim = event.detail;
-		try {
-			const res = await fetch(`/api/collections/${slim.id}?nested=true`);
-			if (res.ok) {
-				collectionToEdit = (await res.json()) as Collection;
-			} else {
-				collectionToEdit = slim as unknown as Collection;
-			}
-		} catch (e) {
-			collectionToEdit = slim as unknown as Collection;
-		}
+	function editCollection(event: CustomEvent<SlimCollection>) {
+		collectionToEdit = event.detail;
 		isShowingCollectionModal = true;
 	}
 
@@ -247,7 +240,7 @@
 	let collectionIdToLeave: string | null = $state(null);
 
 	async function leaveCollection() {
-		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave`, {
+		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave/`, {
 			method: 'POST'
 		});
 		if (res.ok) {
@@ -284,7 +277,7 @@
 	// Invite functions
 	async function acceptInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/accept-invite/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/accept/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -292,40 +285,14 @@
 			});
 
 			if (res.ok) {
-				// Try to parse returned collection data
-				let data: any = null;
-				try {
-					data = await res.json();
-				} catch (e) {
-					data = null;
-				}
-
-				// Remove invite from list
+				// The answer is the collection just joined, as a card.
+				const joined = (await res.json()) as SlimCollection;
 				invites = invites.filter((i) => i.id !== invite.id);
 				addToast('success', `${$t('invites.accepted')} "${invite.name}"`);
-
-				// If API returned the accepted collection, add it to sharedCollections immediately
-				if (data && (data.collection || data.result || data.id)) {
-					// Normalize expected shapes: {collection: {...}} or collection object directly
-					const newCollection = data.collection ? data.collection : data;
-					// Prepend so it's visible at top
-					sharedCollections = [newCollection as SlimCollection, ...sharedCollections];
-				} else {
-					// Fallback: refresh shared collections from API
-					try {
-						const sharedRes = await fetch(`/api/collections/shared/?nested=true`);
-						if (sharedRes.ok) {
-							const sharedData = await sharedRes.json();
-							// Prefer results if paginated
-							sharedCollections = sharedData.results ? sharedData.results : sharedData;
-						}
-					} catch (e) {
-						// ignore fallback errors; user already got success toast
-					}
-				}
+				sharedCollections = [joined, ...sharedCollections];
 			} else {
-				const error = await res.json();
-				addToast('error', error.error || $t('invites.accept_failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('invites.accept_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('invites.accept_failed'));
@@ -334,7 +301,7 @@
 
 	async function declineInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/decline-invite/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/decline/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -346,8 +313,8 @@
 				invites = invites.filter((i) => i.id !== invite.id);
 				addToast('success', `${$t('invites.declined')} "${invite.name}"`);
 			} else {
-				const error = await res.json();
-				addToast('error', error.error || $t('invites.decline_failed'));
+				const error = await res.json().catch(() => null);
+				addToast('error', apiErrorMessage(error, $t('invites.decline_failed')));
 			}
 		} catch (error) {
 			addToast('error', $t('invites.decline_failed'));
@@ -837,6 +804,17 @@
 						<Archive class="w-5 h-5" />
 						{$t('adventures.import_from_file')}
 					</button>
+					<label
+						class="flex items-start gap-3 px-1 cursor-pointer"
+						title={$t('adventures.import_link_existing_help')}
+					>
+						<input
+							type="checkbox"
+							class="checkbox checkbox-primary checkbox-sm mt-0.5"
+							bind:checked={linkExistingPlaces}
+						/>
+						<span class="text-sm">{$t('adventures.import_link_existing')}</span>
+					</label>
 					<form
 						bind:this={importFormEl}
 						method="POST"
@@ -857,6 +835,11 @@
 							};
 						}}
 					>
+						<input
+							type="hidden"
+							name="existing_locations"
+							value={linkExistingPlaces ? 'link' : 'create'}
+						/>
 						<input
 							bind:this={importInputEl}
 							type="file"

@@ -10,7 +10,8 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"api:types": "openapi-typescript ../backend/server/openapi/schema.yaml -o src/lib/api/schema.d.ts"
 	},
 	"devDependencies": {
 		"@event-calendar/core": "^5.18.1",
@@ -25,6 +26,7 @@
 		"@types/qrcode": "^1.5.5",
 		"baseline-browser-mapping": "^2.11.33",
 		"daisyui": "^5.7.50",
+		"openapi-typescript": "7.13.0",
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.57.2",
@@ -45,6 +47,7 @@
 		"dompurify": "^3.4.17",
 		"emoji-picker-element": "^1.26.3",
 		"gsap": "^3.15.0",
+		"layerchart": "^2.8.0",
 		"luxon": "^3.6.1",
 		"maplibre-gl": "^6.16.0",
 		"marked": "^15.0.11",

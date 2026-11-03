@@ -5,6 +5,18 @@ from cloud.utils import get_or_create_subscription, has_access
 from users.models import APIKey
 
 
+# Paths under /api/ an account without a subscription can still use: signing in, the account
+# itself (which says whether it has access), paying, and reading the docs.
+EXEMPT_PREFIXES = (
+    '/api/auth/',
+    '/api/account/',
+    '/api/billing/',
+    '/api/server-info/',
+    '/api/docs/',
+    '/api/schema/',
+)
+
+
 class CloudAccessMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -16,7 +28,7 @@ class CloudAccessMiddleware:
         if not request.path.startswith("/api/"):
             return self.get_response(request)
 
-        if request.path.startswith("/api/billing/"):
+        if request.path.startswith(EXEMPT_PREFIXES):
             return self.get_response(request)
 
         user = request.user if request.user.is_authenticated else None

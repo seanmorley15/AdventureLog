@@ -44,6 +44,7 @@
 	import UploadIcon from '~icons/mdi/upload';
 	import FileIcon from '~icons/mdi/file';
 	import CloseIcon from '~icons/mdi/close';
+	import ActivityComposer from '../activities/ActivityComposer.svelte';
 	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
 	import DateInput from '../shared/DateInput.svelte';
@@ -104,6 +105,11 @@
 	let expandedEndurainVisits: { [visitId: string]: boolean } = $state({});
 	let uploadingActivity: { [visitId: string]: boolean } = $state({});
 	let showActivityUpload: { [visitId: string]: boolean } = $state({});
+	let activityPanel: Record<string, 'form' | 'strava' | 'endurain'> = $state({});
+
+	function openActivityComposer(visitId: string, panel: 'form' | 'strava' | 'endurain') {
+		activityPanel = { ...activityPanel, [visitId]: panel };
+	}
 	let pendingActivityImport: {
 		[visitId: string]: { activity: StravaActivity; provider: 'strava' | 'endurain' } | null;
 	} = $state({});
@@ -1139,7 +1145,7 @@
 					<button
 						class="btn btn-outline btn-info btn-xs gap-1"
 						title={$t('adventures.view_strava_activities')}
-						onclick={() => toggleVisitActivities(visit)}
+						onclick={() => openActivityComposer(visit.id, 'strava')}
 					>
 						<RunFastIcon class="w-3 h-3" />
 						Strava
@@ -1153,7 +1159,7 @@
 					<button
 						class="btn btn-outline btn-secondary btn-xs gap-1"
 						title={$t('adventures.view_endurain_activities')}
-						onclick={() => toggleEndurainVisitActivities(visit)}
+						onclick={() => openActivityComposer(visit.id, 'endurain')}
 					>
 						<RunFastIcon class="w-3 h-3" />
 						Endurain
@@ -1166,7 +1172,7 @@
 				<button
 					class="btn btn-outline btn-success btn-xs gap-1"
 					title={$t('adventures.add_activity')}
-					onclick={() => showActivityUploadForm(visit.id)}
+					onclick={() => openActivityComposer(visit.id, 'form')}
 				>
 					<UploadIcon class="w-3 h-3" />
 					{$t('adventures.add_activity')}
@@ -1327,459 +1333,35 @@
 										</div>
 									{/if}
 
-									<!-- Activity Upload Form -->
-									{#if showActivityUpload[visit.id]}
-										<div class="mt-4 pt-4 border-t border-base-300">
-											<div class="flex items-center justify-between mb-3">
-												<div class="flex items-center gap-2">
-													<UploadIcon class="w-4 h-4 text-success" />
-													<h4 class="font-medium text-sm">
-														{#if isStravaImportPending(visit.id)}
-															{$t('adventures.complete_strava_import')}
-														{:else}
-															{$t('adventures.add_new_activity')}
-														{/if}
-													</h4>
-												</div>
-												<button
-													class="btn btn-ghost btn-xs"
-													onclick={() => hideActivityUploadForm(visit.id)}
-												>
-													<CloseIcon class="w-3 h-3" />
-												</button>
-											</div>
-
-											{#if isStravaImportPending(visit.id)}
-												<div class="alert alert-info mb-4">
-													<div class="flex items-center gap-2">
-														<RunFastIcon class="w-4 h-4" />
-														<div class="text-sm">
-															<div class="font-medium">
-																{$t('adventures.strava_activity_ready')}
-															</div>
-															<div class="text-xs opacity-75">
-																{$t('adventures.gpx_file_downloaded')}
-															</div>
-														</div>
-													</div>
-												</div>
-											{/if}
-
-											<div class="bg-base-200/50 p-4 rounded-lg">
-												{#if isStravaImportPending(visit.id)}
-													<!-- Highlight GPX upload for Strava imports -->
-													<div class="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-lg">
-														<div class="flex items-center gap-2 mb-2">
-															<FileIcon class="w-4 h-4 text-warning" />
-															<label class="field-label text-warning mb-0" for="gpx-file-{visit.id}"
-																>{$t('adventures.gpx_file_required')} *</label
-															>
-														</div>
-														<div class="flex gap-2">
-															<input
-																id="gpx-file-{visit.id}"
-																type="file"
-																accept=".gpx"
-																class="file-input file-input-warning flex-1"
-																onchange={handleGpxFileChange}
-															/>
-															<button
-																type="button"
-																class="btn btn-warning btn-sm gap-1"
-																onclick={() => {
-																	const stravaActivity = pendingActivityImport[visit.id]?.activity;
-																	if (stravaActivity && stravaActivity.export_gpx) {
-																		window.open(stravaActivity.export_gpx, '_blank');
+									{#if activityPanel[visit.id]}
+										<div class="mt-4 border-t border-base-300 pt-4">
+											{#key activityPanel[visit.id]}
+												<ActivityComposer
+													visitId={visit.id}
+													dateStart={visit.start_date}
+													dateEnd={visit.end_date}
+													timezone={visit.timezone}
+													{trails}
+													{measurementSystem}
+													initialPanel={activityPanel[visit.id]}
+													onSaved={(activity) => {
+														visits = (visits ?? []).map((item) =>
+															item.id === visit.id
+																? {
+																		...item,
+																		activities: [...(item.activities || []), activity]
 																	}
-																}}
-															>
-																<UploadIcon class="w-3 h-3" />
-																{$t('adventures.download_gpx')}
-															</button>
-														</div>
-														<div class="text-xs text-warning/80 mt-1">
-															{$t('adventures.upload_gpx_file')}
-														</div>
-													</div>
-												{/if}
-
-												<p class="text-xs text-base-content/60 mb-3">
-													{$t('adventures.required_fields_hint')}
-												</p>
-
-												<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-													<div class="md:col-span-2">
-														<label class="field-label text-xs" for="activity-name-{visit.id}">
-															{$t('adventures.activity_name')}
-															<span class="text-error">*</span>
-														</label>
-														<input
-															id="activity-name-{visit.id}"
-															type="text"
-															class="input input-sm w-full mt-1"
-															placeholder={$t('adventures.activity_name_placeholder')}
-															bind:value={activityForm.name}
-															required
-														/>
-													</div>
-
-													<div>
-														<label class="field-label text-xs" for="sport-type-{visit.id}">
-															{$t('adventures.sport_type')}
-															<span class="text-error">*</span>
-														</label>
-														<select
-															id="sport-type-{visit.id}"
-															class="select select-sm w-full mt-1"
-															bind:value={activityForm.sport_type}
-															disabled={isStravaImportPending(visit.id)}
-															required
-														>
-															{#each SPORT_TYPE_CHOICES as sportType (sportType.key)}
-																<option value={sportType.key}
-																	>{sportType.icon} {sportType.label}</option
-																>
-															{/each}
-														</select>
-													</div>
-
-													<div>
-														<label class="field-label text-xs" for="start-date-{visit.id}"
-															>{$t('adventures.start_date')}</label
-														>
-														<DateInput
-															id="start-date-{visit.id}"
-															bind:value={activityForm.start_date}
-															showTime={true}
-															size="sm"
-															clearable={false}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<div>
-														<TimezoneSelector
-															bind:selectedTimezone={activityForm.timezone}
-															size="sm"
-														/>
-													</div>
-
-													<div>
-														<label class="field-label text-xs" for="distance-{visit.id}"
-															>{$t('adventures.distance')} ({distanceUnit})</label
-														>
-														<input
-															id="distance-{visit.id}"
-															type="number"
-															step="0.01"
-															min="0"
-															class="input input-sm w-full mt-1"
-															placeholder={distancePlaceholder}
-															bind:value={activityForm.distance}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<div>
-														<label class="field-label text-xs" for="moving-time-{visit.id}"
-															>{$t('adventures.moving_time')} (HH:MM:SS)</label
-														>
-														<input
-															id="moving-time-{visit.id}"
-															type="text"
-															class="input input-sm w-full mt-1"
-															placeholder="0:25:30"
-															bind:value={activityForm.moving_time}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													<div>
-														<label class="field-label text-xs" for="elapsed-time-{visit.id}"
-															>{$t('adventures.elapsed_time')} (HH:MM:SS)</label
-														>
-														<input
-															id="elapsed-time-{visit.id}"
-															type="text"
-															class="input input-sm w-full mt-1"
-															placeholder="0:30:00"
-															bind:value={activityForm.elapsed_time}
-															readonly={isStravaImportPending(visit.id)}
-														/>
-													</div>
-
-													{#if !activityForm.gpx_file}
-														<div>
-															<label class="field-label text-xs" for="elevation-gain-{visit.id}"
-																>{$t('adventures.elevation_gain')} ({elevationUnit})</label
-															>
-															<input
-																id="elevation-gain-{visit.id}"
-																type="number"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder={elevationPlaceholder}
-																bind:value={activityForm.elevation_gain}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="elevation-loss-{visit.id}"
-																>{$t('adventures.elevation_loss')} ({elevationUnit})</label
-															>
-															<input
-																id="elevation-loss-{visit.id}"
-																type="number"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder={elevationPlaceholder}
-																bind:value={activityForm.elevation_loss}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-													{/if}
-
-													{#if trails && trails.length > 0}
-														<div class="md:col-span-2">
-															<label class="field-label text-xs" for="trail-select-{visit.id}"
-																>{$t('adventures.trail')}</label
-															>
-															<select
-																id="trail-select-{visit.id}"
-																class="select select-sm w-full mt-1"
-																bind:value={activityForm.trail}
-															>
-																<option value="">—</option>
-																{#each trails as trail (trail.id)}
-																	<option value={trail.id}>{trail.name}</option>
-																{/each}
-															</select>
-														</div>
-													{/if}
-
-													{#if !isStravaImportPending(visit.id)}
-														<div class="md:col-span-2">
-															<label class="field-label text-xs" for="gpx-file-manual-{visit.id}"
-																>{$t('adventures.gpx_file')}</label
-															>
-															<input
-																id="gpx-file-manual-{visit.id}"
-																type="file"
-																accept=".gpx"
-																class="file-input file-input-sm w-full mt-1"
-																onchange={handleGpxFileChange}
-															/>
-															<p class="text-xs text-base-content/60 mt-1">
-																{$t('adventures.activity_gpx_optional_hint')}
-															</p>
-														</div>
-													{/if}
-
-													<div class="md:col-span-2">
-														<button
-															type="button"
-															class="btn btn-ghost btn-sm px-0"
-															onclick={() => (showActivityExtras = !showActivityExtras)}
-														>
-															{showActivityExtras
-																? $t('adventures.hide_details')
-																: $t('adventures.more_details')}
-														</button>
-													</div>
-
-													{#if showActivityExtras}
-														<div>
-															<label class="field-label text-xs" for="calories-{visit.id}"
-																>{$t('adventures.calories')}</label
-															>
-															<input
-																id="calories-{visit.id}"
-																type="number"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder="300"
-																bind:value={activityForm.calories}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="rest-time-{visit.id}"
-																>{$t('adventures.rest_time')} (s)</label
-															>
-															<input
-																id="rest-time-{visit.id}"
-																type="number"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder="60"
-																bind:value={activityForm.rest_time}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														{#if !activityForm.gpx_file}
-															<div>
-																<label class="field-label text-xs" for="elevation-high-{visit.id}"
-																	>{$t('adventures.elevation_high')} ({elevationUnit})</label
-																>
-																<input
-																	id="elevation-high-{visit.id}"
-																	type="number"
-																	class="input input-sm w-full mt-1"
-																	placeholder={elevationPlaceholder}
-																	bind:value={activityForm.elev_high}
-																	readonly={isStravaImportPending(visit.id)}
-																/>
-															</div>
-															<div>
-																<label class="field-label text-xs" for="elevation-low-{visit.id}"
-																	>{$t('adventures.elevation_low')} ({elevationUnit})</label
-																>
-																<input
-																	id="elevation-low-{visit.id}"
-																	type="number"
-																	class="input input-sm w-full mt-1"
-																	placeholder={elevationPlaceholder}
-																	bind:value={activityForm.elev_low}
-																	readonly={isStravaImportPending(visit.id)}
-																/>
-															</div>
-														{/if}
-														<div>
-															<label class="field-label text-xs" for="average-speed-{visit.id}"
-																>{$t('adventures.average_speed')} ({speedUnit})</label
-															>
-															<input
-																id="average-speed-{visit.id}"
-																type="number"
-																step="0.1"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder={speedPlaceholder}
-																bind:value={activityForm.average_speed}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="max-speed-{visit.id}"
-																>{$t('adventures.max_speed')} ({speedUnit})</label
-															>
-															<input
-																id="max-speed-{visit.id}"
-																type="number"
-																step="0.1"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder={speedPlaceholder}
-																bind:value={activityForm.max_speed}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="average-cadence-{visit.id}"
-																>{$t('adventures.average_cadence')} (rpm)</label
-															>
-															<input
-																id="average-cadence-{visit.id}"
-																type="number"
-																step="any"
-																min="0"
-																class="input input-sm w-full mt-1"
-																placeholder="80"
-																bind:value={activityForm.average_cadence}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="start-lat-{visit.id}"
-																>{$t('adventures.start_lat')} (°)</label
-															>
-															<input
-																id="start-lat-{visit.id}"
-																type="number"
-																step="any"
-																class="input input-sm w-full mt-1"
-																placeholder="37.7749"
-																bind:value={activityForm.start_lat}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="start-lng-{visit.id}"
-																>{$t('adventures.start_lng')} (°)</label
-															>
-															<input
-																id="start-lng-{visit.id}"
-																type="number"
-																step="any"
-																class="input input-sm w-full mt-1"
-																placeholder="-122.4194"
-																bind:value={activityForm.start_lng}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="end-lat-{visit.id}"
-																>{$t('adventures.end_lat')} (°)</label
-															>
-															<input
-																id="end-lat-{visit.id}"
-																type="number"
-																step="any"
-																class="input input-sm w-full mt-1"
-																placeholder="37.7749"
-																bind:value={activityForm.end_lat}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-														<div>
-															<label class="field-label text-xs" for="end-lng-{visit.id}"
-																>{$t('adventures.end_lng')} (°)</label
-															>
-															<input
-																id="end-lng-{visit.id}"
-																type="number"
-																step="any"
-																class="input input-sm w-full mt-1"
-																placeholder="-122.4194"
-																bind:value={activityForm.end_lng}
-																readonly={isStravaImportPending(visit.id)}
-															/>
-														</div>
-													{/if}
-												</div>
-
-												<div class="flex justify-end gap-2 mt-4">
-													<button
-														class="btn btn-ghost btn-sm"
-														onclick={() => hideActivityUploadForm(visit.id)}
-														disabled={uploadingActivity[visit.id]}
-													>
-														Cancel
-													</button>
-													<button
-														class="btn btn-success btn-sm gap-2"
-														onclick={() => uploadActivity(visit.id)}
-														disabled={uploadingActivity[visit.id] ||
-															!activityForm.name.trim() ||
-															(isStravaImportPending(visit.id) && !activityForm.gpx_file)}
-													>
-														{#if uploadingActivity[visit.id]}
-															<LoadingIcon class="w-3 h-3 animate-spin" />
-															{#if isStravaImportPending(visit.id)}
-																{$t('adventures.importing')}...
-															{:else}
-																{$t('adventures.uploading')}...
-															{/if}
-														{:else if isStravaImportPending(visit.id)}
-															<UploadIcon class="w-3 h-3" />
-															{$t('adventures.complete_import')}
-														{:else}
-															<UploadIcon class="w-3 h-3" />
-															{$t('adventures.upload_activity')}
-														{/if}
-													</button>
-												</div>
-											</div>
+																: item
+														);
+														delete activityPanel[visit.id];
+														activityPanel = { ...activityPanel };
+													}}
+													onCancel={() => {
+														delete activityPanel[visit.id];
+														activityPanel = { ...activityPanel };
+													}}
+												/>
+											{/key}
 										</div>
 									{/if}
 
@@ -1805,90 +1387,6 @@
 													/>
 												{/each}
 											</div>
-										</div>
-									{/if}
-
-									<!-- Strava Activities Section -->
-									{#if stravaEnabled && expandedVisits[visit.id]}
-										<div class="mt-4 pt-4 border-t border-base-300">
-											<div class="flex items-center gap-2 mb-3">
-												<RunFastIcon class="w-4 h-4 text-info" />
-												<h4 class="font-medium text-sm">
-													{$t('adventures.strava_activities_during_visit')}
-												</h4>
-												{#if loadingActivities[visit.id]}
-													<LoadingIcon class="w-4 h-4 animate-spin text-info" />
-												{/if}
-											</div>
-
-											{#if loadingActivities[visit.id]}
-												<div class="text-center py-4">
-													<div class="loading loading-spinner loading-sm"></div>
-													<p class="text-xs text-base-content/60 mt-2">
-														{$t('adventures.loading_activities')}...
-													</p>
-												</div>
-											{:else if visitActivities[visit.id] && visitActivities[visit.id].length > 0}
-												<div class="space-y-2">
-													{#each visitActivities[visit.id] as activity (activity.id)}
-														<div class="pl-4">
-															<StravaActivityCard
-																{activity}
-																on:import={(event) => handleStravaActivityImport(event, visit.id)}
-																{measurementSystem}
-															/>
-														</div>
-													{/each}
-												</div>
-											{:else}
-												<div class="text-center py-4 text-base-content/60">
-													<div class="text-2xl mb-2">🏃‍♂️</div>
-													<p class="text-xs">{$t('adventures.no_strava_activities')}</p>
-												</div>
-											{/if}
-										</div>
-									{/if}
-
-									<!-- Endurain Activities Section -->
-									{#if endurainEnabled && expandedEndurainVisits[visit.id]}
-										<div class="mt-4 pt-4 border-t border-base-300">
-											<div class="flex items-center gap-2 mb-3">
-												<RunFastIcon class="w-4 h-4 text-secondary" />
-												<h4 class="font-medium text-sm">
-													{$t('adventures.endurain_activities_during_visit')}
-												</h4>
-												{#if loadingEndurainActivities[visit.id]}
-													<LoadingIcon class="w-4 h-4 animate-spin text-secondary" />
-												{/if}
-											</div>
-
-											{#if loadingEndurainActivities[visit.id]}
-												<div class="text-center py-4">
-													<div class="loading loading-spinner loading-sm"></div>
-													<p class="text-xs text-base-content/60 mt-2">
-														{$t('adventures.loading_activities')}...
-													</p>
-												</div>
-											{:else if endurainVisitActivities[visit.id] && endurainVisitActivities[visit.id].length > 0}
-												<div class="space-y-2">
-													{#each endurainVisitActivities[visit.id] as activity (activity.id)}
-														<div class="pl-4">
-															<StravaActivityCard
-																{activity}
-																provider="endurain"
-																on:import={(event) => handleEndurainActivityImport(event, visit.id)}
-																importing={importingEndurainActivity[visit.id]}
-																{measurementSystem}
-															/>
-														</div>
-													{/each}
-												</div>
-											{:else}
-												<div class="text-center py-4 text-base-content/60">
-													<div class="text-2xl mb-2">🏃‍♂️</div>
-													<p class="text-xs">{$t('adventures.no_endurain_activities')}</p>
-												</div>
-											{/if}
 										</div>
 									{/if}
 								</div>

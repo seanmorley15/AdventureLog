@@ -1,0 +1,393 @@
+# django-allauth headless sign-in routes used by the AdventureLog web app.
+#
+# These are not DRF views, so drf-spectacular cannot see them. core.openapi.merge_fragments adds
+# this file to the generated schema. main.tests.test_openapi checks every path here still
+# resolves, so an allauth upgrade that moves one fails the tests.
+#
+# Paths have no trailing slash. `browser` is for cookie sessions (the web app); the same routes
+# exist under `/api/auth/app/v1/` for token clients (`X-Session-Token`).
+# Reference: https://docs.allauth.org/en/latest/headless/openapi-specification/
+
+paths:
+  /api/auth/browser/v1/config:
+    get:
+      operationId: allauth_config
+      summary: Get allauth's configuration
+      description: Which sign-in methods, MFA types and social providers allauth has turned on.
+      tags: [Authentication]
+      security: [{}]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+
+  /api/auth/browser/v1/auth/session:
+    get:
+      operationId: allauth_session_get
+      summary: Get the current session
+      description: '`200` with the user when signed in. `401` when not, with the `flows` that can be started.'
+      tags: [Authentication]
+      security: [{}]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+    delete:
+      operationId: allauth_session_delete
+      summary: Sign out
+      tags: [Authentication]
+      responses:
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+
+  /api/auth/browser/v1/auth/login:
+    post:
+      operationId: allauth_login
+      summary: Sign in with a password
+      description: >-
+        Sets the `sessionid` cookie. When the account has two-factor sign-in, answers `401`
+        with a pending `mfa_authenticate` flow: finish with `POST .../auth/2fa/authenticate`.
+        Requires `X-CSRFToken` (see `GET /api/auth/csrf/`).
+      tags: [Authentication]
+      security: [{}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                username: {type: string}
+                email: {type: string, format: email}
+                password: {type: string, format: password}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+        '409': {description: Already signed in.}
+
+  /api/auth/browser/v1/auth/signup:
+    post:
+      operationId: allauth_signup
+      summary: Sign up
+      description: >-
+        Creates an account. Refused (`403`) when registration is disabled, unless an invite
+        checked with `GET /api/auth/invitations/{key}/` is pending in the session.
+      tags: [Authentication]
+      security: [{}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username: {type: string}
+                email: {type: string, format: email}
+                password: {type: string, format: password}
+                first_name: {type: string}
+                last_name: {type: string}
+                accept_terms: {type: boolean, description: Required when the server has terms links.}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+        '403': {description: Sign-up is closed.}
+
+  /api/auth/browser/v1/auth/2fa/authenticate:
+    post:
+      operationId: allauth_2fa_authenticate
+      summary: Finish signing in with a two-factor code
+      tags: [Authentication]
+      security: [{}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: {type: string, description: A TOTP or recovery code.}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+
+  /api/auth/browser/v1/auth/reauthenticate:
+    post:
+      operationId: allauth_reauthenticate
+      summary: Confirm your password
+      description: Some account changes (MFA, email) need a recent password check.
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: {type: string, format: password}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+
+  /api/auth/browser/v1/auth/password/request:
+    post:
+      operationId: allauth_password_request
+      summary: Request a password reset email
+      tags: [Authentication]
+      security: [{}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: {type: string, format: email}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+
+  /api/auth/browser/v1/auth/password/reset:
+    post:
+      operationId: allauth_password_reset
+      summary: Reset a password with the emailed key
+      tags: [Authentication]
+      security: [{}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, password]
+              properties:
+                key: {type: string}
+                password: {type: string, format: password}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+
+  /api/auth/browser/v1/auth/email/verify:
+    post:
+      operationId: allauth_email_verify
+      summary: Verify an email address with the emailed key
+      tags: [Authentication]
+      security: [{}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key]
+              properties:
+                key: {type: string}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+
+  /api/auth/browser/v1/auth/sessions:
+    get:
+      operationId: allauth_sessions_list
+      summary: List your sessions
+      description: Every browser and device signed in to your account.
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+    delete:
+      operationId: allauth_sessions_delete
+      summary: Sign out other sessions
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessions]
+              properties:
+                sessions: {type: array, items: {type: integer}}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+
+  /api/auth/browser/v1/account/password/change:
+    post:
+      operationId: allauth_password_change
+      summary: Change your password
+      description: Leave out `current_password` when the account has none yet (social sign-in).
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [new_password]
+              properties:
+                current_password: {type: string, format: password}
+                new_password: {type: string, format: password}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+
+  /api/auth/browser/v1/account/email:
+    get:
+      operationId: allauth_email_list
+      summary: List your email addresses
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+    post:
+      operationId: allauth_email_add
+      summary: Add an email address
+      tags: [Authentication]
+      requestBody: {$ref: '#/components/requestBodies/AllauthEmail'}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+    put:
+      operationId: allauth_email_resend
+      summary: Resend the verification email
+      tags: [Authentication]
+      requestBody: {$ref: '#/components/requestBodies/AllauthEmail'}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+    patch:
+      operationId: allauth_email_primary
+      summary: Make an email address primary
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, primary]
+              properties:
+                email: {type: string, format: email}
+                primary: {type: boolean, enum: [true]}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+    delete:
+      operationId: allauth_email_remove
+      summary: Remove an email address
+      tags: [Authentication]
+      requestBody: {$ref: '#/components/requestBodies/AllauthEmail'}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+
+  /api/auth/browser/v1/account/authenticators:
+    get:
+      operationId: allauth_authenticators_list
+      summary: List your two-factor methods
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+
+  /api/auth/browser/v1/account/authenticators/totp:
+    get:
+      operationId: allauth_totp_get
+      summary: Get TOTP setup
+      description: '`404` with a new `secret` and `totp_url` (for a QR code) when TOTP is not set up yet.'
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '404': {$ref: '#/components/responses/AllauthOk'}
+    post:
+      operationId: allauth_totp_activate
+      summary: Turn on TOTP
+      description: Send a code from the authenticator app to confirm. Needs a recent reauthentication.
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: {type: string}
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '400': {$ref: '#/components/responses/AllauthError'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+    delete:
+      operationId: allauth_totp_deactivate
+      summary: Turn off TOTP
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+
+  /api/auth/browser/v1/account/authenticators/recovery-codes:
+    get:
+      operationId: allauth_recovery_codes_get
+      summary: Get your recovery codes
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+    post:
+      operationId: allauth_recovery_codes_regenerate
+      summary: Make new recovery codes
+      tags: [Authentication]
+      responses:
+        '200': {$ref: '#/components/responses/AllauthOk'}
+        '401': {$ref: '#/components/responses/AllauthUnauthenticated'}
+
+components:
+  schemas:
+    AllauthResponse:
+      type: object
+      description: django-allauth's success envelope.
+      properties:
+        status: {type: integer, example: 200}
+        data: {type: object, description: 'The result: a user, a list of emails, authenticators...'}
+        meta: {type: object, description: 'e.g. `{"is_authenticated": true}`.'}
+    AllauthErrorResponse:
+      type: object
+      description: django-allauth's error envelope.
+      properties:
+        status: {type: integer, example: 400}
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              message: {type: string}
+              code: {type: string, example: password_too_short}
+              param: {type: string, example: password}
+  responses:
+    AllauthOk:
+      description: Done.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/AllauthResponse'}
+    AllauthError:
+      description: Invalid input.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/AllauthErrorResponse'}
+    AllauthUnauthenticated:
+      description: >-
+        Not (fully) signed in. `data.flows` lists what can happen next, e.g. a pending
+        `mfa_authenticate` or `verify_email` flow, or `reauthenticate`.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/AllauthResponse'}
+  requestBodies:
+    AllauthEmail:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email: {type: string, format: email}

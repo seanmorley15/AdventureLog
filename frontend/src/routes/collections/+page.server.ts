@@ -20,9 +20,16 @@ export const load = (async (event) => {
 	}
 
 	// Get sorting and filtering parameters from URL
-	const order_by = event.url.searchParams.get('order_by') || 'updated_at';
+	const requestedOrder = event.url.searchParams.get('order_by') || 'updated_at';
+	const order_by = ['updated_at', 'name', 'start_date'].includes(requestedOrder)
+		? requestedOrder
+		: 'updated_at';
 	const order_direction = event.url.searchParams.get('order_direction') || 'desc';
-	const status = event.url.searchParams.get('status') || '';
+	const rawStatus = event.url.searchParams.get('status') || '';
+	const rawType = event.url.searchParams.get('type') || '';
+	// Older links used status=folder. The list API filters that with type=folder.
+	const type = rawStatus === 'folder' ? 'folder' : rawType;
+	const status = rawStatus === 'folder' ? '' : rawStatus;
 	const page = event.url.searchParams.get('page') || '1';
 	const currentPage = parseInt(page);
 
@@ -31,17 +38,26 @@ export const load = (async (event) => {
 		Cookie: `sessionid=${sessionId}`
 	};
 
-	// Build API URL with nested=true for lighter payload
-	const statusParam = status ? `&status=${status}` : '';
-	const apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true${statusParam}`;
+	// The page keeps order_by/order_direction in its own URL; the API takes one `ordering`.
+	const ordering = `${order_direction === 'desc' ? '-' : ''}${order_by}`;
+	const params = new URLSearchParams({ ordering, page });
+	if (status === 'upcoming' || status === 'in_progress' || status === 'completed') {
+		params.set('status', status);
+	}
+	if (type === 'folder' || type === 'trip') {
+		params.set('type', type);
+	}
+	// The shared and archived tabs show everything, as before: one large page.
+	const allOf = (extra: Record<string, string>) =>
+		new URLSearchParams({ ordering: '-updated_at', page_size: '1000', ...extra });
 
 	try {
 		// Execute all API calls in parallel
 		const [collectionsRes, sharedRes, archivedRes, invitesRes] = await Promise.all([
-			fetch(apiUrl, { headers, credentials: 'include' }),
-			fetch(`${serverEndpoint}/api/collections/shared/?nested=true`, { headers }),
-			fetch(`${serverEndpoint}/api/collections/archived/?nested=true`, { headers }),
-			fetch(`${serverEndpoint}/api/collections/invites/`, { headers })
+			fetch(`${serverEndpoint}/api/collections/?${params}`, { headers, credentials: 'include' }),
+			fetch(`${serverEndpoint}/api/collections/?${allOf({ membership: 'shared' })}`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/?${allOf({ archived: 'true' })}`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/invitations/`, { headers })
 		]);
 
 		// Check if main collections request failed (most critical)
@@ -53,8 +69,8 @@ export const load = (async (event) => {
 		// Parse responses in parallel
 		const [collectionsData, sharedData, archivedData, invitesData] = await Promise.all([
 			collectionsRes.json(),
-			sharedRes.ok ? sharedRes.json() : [],
-			archivedRes.ok ? archivedRes.json() : [],
+			sharedRes.ok ? sharedRes.json() : { results: [] },
+			archivedRes.ok ? archivedRes.json() : { results: [] },
 			invitesRes.ok ? invitesRes.json() : []
 		]);
 
@@ -64,12 +80,13 @@ export const load = (async (event) => {
 				next: collectionsData.next,
 				previous: collectionsData.previous,
 				count: collectionsData.count,
-				sharedCollections: sharedData as SlimCollection[],
+				sharedCollections: sharedData.results as SlimCollection[],
 				currentPage,
 				order_by,
 				order_direction,
 				status,
-				archivedCollections: archivedData as SlimCollection[],
+				type,
+				archivedCollections: archivedData.results as SlimCollection[],
 				invites: invitesData
 			}
 		};
@@ -101,6 +118,9 @@ export const actions: Actions = {
 			// Create FormData for the API request
 			const apiFormData = new FormData();
 			apiFormData.append('file', file);
+			// 'link' reuses places the user already has; 'create' makes new copies.
+			const existingLocations = formData.get('existing_locations') === 'create' ? 'create' : 'link';
+			apiFormData.append('existing_locations', existingLocations);
 
 			let res = await fetch(`${serverEndpoint}/api/collections/import/`, {
 				method: 'POST',
@@ -115,9 +135,8 @@ export const actions: Actions = {
 			if (!res.ok) {
 				const errorData = await res.json();
 				return fail(res.status, {
-					message: errorData.code
-						? `settings.restore_error_${errorData.code}`
-						: 'settings.generic_error',
+					message: 'settings.restore_error',
+					values: { detail: errorData.detail ?? '' },
 					details: errorData
 				});
 			}

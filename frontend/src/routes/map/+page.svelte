@@ -24,6 +24,7 @@
 	import { createEmptyLocation } from '#lib/location-draft.js';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
+	import { openLocationDrawer, openLocationHref } from '#lib/location-drawer.svelte.js';
 	import { getActivityColor, normalizeBasemapType } from '#lib';
 	import { page } from '$app/state';
 	import { addToast } from '#lib/toasts.js';
@@ -32,6 +33,7 @@
 	import {
 		enrichPlace,
 		fetchRecommendations,
+		nearbyRadiusOptions,
 		placeToLocationPrefill,
 		placeToQuickAddPayload,
 		quickAddLocation,
@@ -458,7 +460,7 @@
 	}
 
 	async function fetchVisitedCities() {
-		const response = await fetch('/api/visitedcity');
+		const response = await fetch('/api/visited-cities/');
 		visitedCities = await response.json();
 	}
 
@@ -569,7 +571,7 @@
 	}
 
 	function handleViewImageParent(event: CustomEvent<{ href: string }>) {
-		goto(event.detail.href);
+		if (!openLocationHref(event.detail.href)) goto(event.detail.href);
 	}
 
 	function attachViewportCenterSync() {
@@ -660,7 +662,7 @@
 	}
 
 	function handleViewFull(event: CustomEvent<{ pinId: string }>) {
-		goto(`/locations/${event.detail.pinId}`);
+		openLocationDrawer(event.detail.pinId);
 	}
 
 	function backToControls() {
@@ -1009,25 +1011,7 @@
 		typeString ? typeString.split(',').filter((item) => item !== '') : []
 	);
 	let isMetric = $derived(data.user?.measurement_system !== 'imperial');
-	let recRadiusOptions = $derived(
-		isMetric
-			? [
-					{ value: 1000, label: '1 km' },
-					{ value: 2000, label: '2 km' },
-					{ value: 5000, label: '5 km' },
-					{ value: 10000, label: '10 km' },
-					{ value: 20000, label: '20 km' },
-					{ value: 50000, label: '50 km' }
-				]
-			: [
-					{ value: 1609, label: '1 mi' },
-					{ value: 3219, label: '2 mi' },
-					{ value: 8047, label: '5 mi' },
-					{ value: 16093, label: '10 mi' },
-					{ value: 32187, label: '20 mi' },
-					{ value: 80467, label: '50 mi' }
-				]
-	);
+	let recRadiusOptions = $derived(nearbyRadiusOptions(isMetric));
 	run(() => {
 		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
 		filteredPins = pins.filter((pin) => {

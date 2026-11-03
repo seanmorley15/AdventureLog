@@ -59,6 +59,134 @@ export type Collaborator = {
 	public_profile?: boolean;
 	is_owner: boolean;
 	is_current_user?: boolean;
+	role?: CollectionRole;
+};
+
+export type CollectionVisibility = 'private' | 'unlisted' | 'public';
+/** Who may comment on the published story. Members comment on the plan by role. */
+export type CommentAccess = 'off' | 'signed_in' | 'link_holders';
+export type CommentThread = 'plan' | 'story';
+
+export type CollectionComment = {
+	id: string;
+	is_story: boolean;
+	parent: string | null;
+	day?: string | null;
+	day_index: number | null;
+	placement?: string | null;
+	body: string;
+	created_at: string;
+	edited_at: string | null;
+	author: {
+		name: string;
+		username: string | null;
+		uuid: string | null;
+		profile_pic: string | null;
+		can_view_profile?: boolean;
+		is_guest: boolean;
+	};
+	mentions?: string[];
+	can_edit: boolean;
+	can_delete: boolean;
+	replies?: CollectionComment[];
+};
+
+export type CommentThreadResponse = {
+	thread: CommentThread;
+	comment_access: CommentAccess;
+	can_post: boolean;
+	comments: CollectionComment[];
+};
+
+export type CommentInboxItem = {
+	id: string;
+	collection: { id: string; name: string };
+	thread: CommentThread;
+	day_index: number | null;
+	author_name: string;
+	author?: {
+		name: string;
+		username: string | null;
+		profile_pic: string | null;
+		can_view_profile: boolean;
+	};
+	excerpt: string;
+	created_at: string;
+	mentions_me: boolean;
+	unread: boolean;
+};
+
+export type CollectionActivityEvent = {
+	id: string;
+	verb:
+		| 'day_moved'
+		| 'item_moved'
+		| 'anchor_changed'
+		| 'comment_added'
+		| 'member_added'
+		| 'member_removed';
+	actor_name: string;
+	actor?: {
+		username: string | null;
+		profile_pic: string | null;
+		can_view_profile: boolean;
+	};
+	data: Record<string, any>;
+	created_at: string;
+};
+export type CollectionRole = 'owner' | 'editor' | 'viewer';
+export type StoryGroup =
+	| 'place_details'
+	| 'costs'
+	| 'reservations'
+	| 'attachments'
+	| 'lodging_address'
+	| 'coordinates'
+	| 'gpx'
+	| 'note_text'
+	| 'checklist_text';
+
+/** Who is looking at a collection. `public` readers get the story payload only. */
+export type CollectionAudience = {
+	role: CollectionRole | 'public';
+	is_owner: boolean;
+	can_edit: boolean;
+	is_member: boolean;
+	is_guest: boolean;
+};
+
+export type CollectionGuestLink = {
+	id: string;
+	token: string;
+	role: 'editor' | 'viewer';
+	label: string;
+	expires_at: string | null;
+	revoked_at: string | null;
+	created_at: string;
+	is_active: boolean;
+};
+
+export type CollectionSharingPerson = {
+	uuid: string;
+	username: string;
+	first_name: string | null;
+	last_name: string | null;
+	profile_pic?: string | null;
+	role: 'editor' | 'viewer';
+};
+
+/** The owner's Share sheet state from `/api/collections/<id>/sharing/`. */
+export type CollectionSharing = {
+	owner: Omit<CollectionSharingPerson, 'role'>;
+	members: CollectionSharingPerson[];
+	invites: CollectionSharingPerson[];
+	guest_links: CollectionGuestLink[];
+	visibility: CollectionVisibility;
+	story_groups: Record<StoryGroup, boolean>;
+	comment_access: CommentAccess;
+	share_secret: string;
+	allow_public_links: boolean;
+	is_admin?: boolean;
 };
 
 export type ImageSource = 'upload' | 'google' | 'wikipedia' | 'url' | 'immich';
@@ -72,6 +200,13 @@ export type ContentImage = {
 	source_url?: string | null;
 	latitude?: number | null;
 	longitude?: number | null;
+	content_type?: string;
+	object_id?: string;
+};
+
+export type DayImage = ContentImage & {
+	content_type: string;
+	object_id: string;
 };
 
 export type Location = {
@@ -125,6 +260,8 @@ export type Country = {
 	subregion: string | null;
 	flag_url: string;
 	capital: string;
+	/** The name in the country's own language. */
+	native_name?: string | null;
 	num_regions: number;
 	num_visits: number;
 	longitude: number | null;
@@ -139,6 +276,11 @@ export type Region = {
 	longitude: number | null;
 	num_cities: number;
 	country_name: string;
+	/** The name in the region's own language. */
+	native_name?: string | null;
+	/** Set when this region is also a country of its own, whose pages visits are marked from. */
+	territory_country_code?: string | null;
+	territory_country_name?: string | null;
 };
 
 export type City = {
@@ -185,11 +327,21 @@ export type Collection = {
 	name: string;
 	description: string;
 	is_public: boolean;
+	visibility?: CollectionVisibility;
+	story_groups?: Partial<Record<StoryGroup, boolean>>;
+	comment_access?: CommentAccess;
+	audience?: CollectionAudience | null;
+	allow_public_links?: boolean;
+	share_secret?: string;
+	story_preview?: boolean;
 	locations: Location[];
 	created_at?: string | null;
 	updated_at?: string | null;
 	start_date: string | null;
 	end_date: string | null;
+	type: 'folder' | 'trip';
+	timezone?: string;
+	day_count?: number | null; // Set only for day-based trips
 	transportations?: Transportation[];
 	notes?: Note[];
 	lodging?: Lodging[];
@@ -202,7 +354,10 @@ export type Collection = {
 	primary_image_id?: string | null;
 	itinerary: CollectionItineraryItem[];
 	itinerary_days: CollectionItineraryDay[]; // Day metadata (names/descriptions)
-	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
+	day_activities?: Activity[];
+	day_trails?: Trail[];
+	day_images?: DayImage[];
+	status: 'upcoming' | 'in_progress' | 'completed' | null;
 	days_until_start: number | null;
 };
 
@@ -212,8 +367,12 @@ export type SlimCollection = {
 	name: string;
 	description: string;
 	is_public: boolean;
+	visibility?: CollectionVisibility;
 	start_date: string | null;
 	end_date: string | null;
+	type: 'folder' | 'trip';
+	timezone?: string;
+	day_count?: number | null;
 	is_archived: boolean;
 	link: string | null;
 	created_at: string;
@@ -223,7 +382,7 @@ export type SlimCollection = {
 	shared_with: string[];
 	collaborators?: Collaborator[];
 	primary_image?: ContentImage | null;
-	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
+	status: 'upcoming' | 'in_progress' | 'completed' | null;
 	days_until_start: number | null;
 };
 
@@ -281,6 +440,7 @@ export type Note = {
 	links: string[] | null;
 	date: string | null; // ISO 8601 date string
 	is_public: boolean;
+	is_private?: boolean; // Hidden from the published story
 	collection: number | null;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
@@ -303,6 +463,7 @@ export type ChecklistItem = {
 	user: string;
 	name: string;
 	is_checked: boolean;
+	is_private?: boolean; // Hidden from the published story
 	checklist: number;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
@@ -315,14 +476,15 @@ export type Background = {
 };
 
 export type ReverseGeocode = {
-	region_id: string;
-	region: string;
+	region_id: string | null;
+	region: string | null;
 	country: string;
+	country_id?: string;
 	region_visited: boolean;
 	city_visited: boolean;
 	display_name: string;
-	city: string;
-	city_id: string;
+	city: string | null;
+	city_id: string | null;
 	location_name: string;
 	provider_used?: string;
 	provider?: string;
@@ -451,7 +613,11 @@ export type Trail = {
 	id: string;
 	user: string;
 	name: string;
-	location: string; // UUID of the location
+	location: string | null; // UUID of the location, when the trail belongs to a place
+	day?: string | null;
+	collection?: string | null;
+	span_end_index?: number | null;
+	day_index?: number | null;
 	created_at: string; // ISO 8601 date string
 	link?: string | null; // Optional link to the trail
 	wanderer_id?: string | null;
@@ -520,7 +686,13 @@ export type StravaActivity = {
 export type Activity = {
 	id: string;
 	user: string;
-	visit: string;
+	visit: string | null;
+	day?: string | null;
+	collection?: string | null;
+	day_index?: number | null;
+	promoted_activity?: string | null;
+	promoted_visit?: string | null;
+	promoted_location?: string | null;
 	trail: string | null;
 	gpx_file: string | null;
 	geojson: any | undefined; // GeoJSON representation of the activity
@@ -705,7 +877,8 @@ export type MapSearchMode = 'my' | 'places' | 'nearby';
 export type CollectionItineraryDay = {
 	id: string;
 	collection: string; // UUID of the collection
-	date: string; // ISO 8601 date string (YYYY-MM-DD)
+	index?: number | null; // 1-based position in a day-based trip
+	date: string | null; // ISO 8601 date string (YYYY-MM-DD); null for unanchored day-based trips
 	name: string | null; // Optional custom name for the day
 	description: string | null; // Optional description for the day
 	created_at: string; // ISO 8601 date string
@@ -727,9 +900,36 @@ export type CollectionItineraryItem = {
 	date: string | null; // ISO 8601 date string
 	is_global?: boolean; // Trip-wide item (no specific date)
 	order: number; // Manual order within a day
+	day?: string | null; // UUID of the itinerary day (day-based trips)
+	day_index?: number | null;
+	span_end_index?: number | null; // Last day covered by a spanning placement
+	is_optional?: boolean;
+	start_time?: string | null; // HH:MM:SS
+	end_time?: string | null;
+	timezone?: string | null;
+	logged_visit?: string | null; // UUID of the visit created by Log visit
 	created_at: string; // ISO 8601 date string
+	updated_at?: string;
 	start_datetime: string | null; // Computed property - ISO 8601 date string
 	end_datetime: string | null; // Computed property - ISO 8601 date string
+};
+
+export type DayPlanState = {
+	collection: {
+		id: string;
+		start_date: string | null;
+		end_date: string | null;
+		timezone: string;
+		day_count: number | null;
+		updated_at: string;
+	};
+	itinerary: CollectionItineraryItem[];
+	itinerary_days: CollectionItineraryDay[];
+	lodging: Lodging[];
+	transportations: Transportation[];
+	day_activities?: Activity[];
+	day_trails?: Trail[];
+	day_images?: DayImage[];
 };
 
 export type ActivityRecord = {

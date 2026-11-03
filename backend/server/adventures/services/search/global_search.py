@@ -16,8 +16,13 @@ from adventures.models import (
     Note,
     Transportation,
 )
-from users.models import CustomUser as User
-from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
+from django.contrib.auth import get_user_model
+from worldtravel.models import City, Country, Region, VisitedCity
+from worldtravel.visited import visited_region_ids as visited_region_ids_for
+from core.errors import ServiceError
+
+
+User = get_user_model()
 
 
 ALL_SEARCH_TYPES = frozenset(
@@ -57,10 +62,9 @@ TYPE_SORT_PRIORITY: dict[str, int] = {
 }
 
 
-class SearchValidationError(ValueError):
+class SearchValidationError(ServiceError, ValueError):
     def __init__(self, message: str):
-        super().__init__(message)
-        self.message = message
+        super().__init__(message, code='invalid')
 
 
 def _tokenize(term: str) -> list[str]:
@@ -77,12 +81,12 @@ def _icontains_filter(term: str, field_names: tuple[str, ...]) -> Q:
     if not term:
         return filters
 
-    for field in field_names:
-        filters |= Q(**{f'{field}__icontains': term})
+    for field_name in field_names:
+        filters |= Q(**{f'{field_name}__icontains': term})
 
     for token in _tokenize(term):
-        for field in field_names:
-            filters |= Q(**{f'{field}__icontains': token})
+        for field_name in field_names:
+            filters |= Q(**{f'{field_name}__icontains': token})
 
     return filters
 
@@ -354,9 +358,7 @@ def _search_countries(term: str, fetch_limit: int) -> tuple[list[SearchHit], int
 
 
 def _search_regions(user: User, term: str, fetch_limit: int) -> tuple[list[SearchHit], int]:
-    visited_region_ids = set(
-        VisitedRegion.objects.filter(user=user).values_list('region_id', flat=True)
-    )
+    visited_region_ids = visited_region_ids_for(user.id)
     base_qs = Region.objects.filter(_icontains_filter(term, ('name',))).select_related('country')
     qs = base_qs.order_by('name')[: min(fetch_limit, REFERENCE_TYPE_LIMIT)]
     total = base_qs.count()

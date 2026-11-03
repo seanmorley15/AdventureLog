@@ -8,14 +8,28 @@ import {
 
 const ALLOWED_THEME_NAMES = new Set(themes.map((theme) => theme.name));
 
+/** Routes handled by the Django proxy (`routes/api/[...path]`). */
+export function isBackendProxyPath(pathname: string): boolean {
+	return pathname.startsWith('/api/');
+}
+
 export const authHook: Handle = async ({ event, resolve }) => {
 	event.cookies.delete('csrftoken', { path: '/' });
 	event.locals.subscription = null;
 	event.locals.hasAccess = true;
 	event.locals.cloudMode = false;
+	event.locals.pendingInviteCount = 0;
+	event.locals.unreadCommentCount = 0;
 
 	try {
 		if (event.url.pathname.startsWith('/immich/')) {
+			return await resolve(event);
+		}
+
+		// The /api routes only proxy to Django, which authenticates the session
+		// itself. Looking the user up here would add a backend round-trip to every call.
+		if (isBackendProxyPath(event.url.pathname)) {
+			event.locals.user = null;
 			return await resolve(event);
 		}
 
@@ -29,7 +43,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		const serverEndpoint = getServerEndpoint();
 		const cookie = event.request.headers.get('cookie') || '';
 
-		const userFetch = await event.fetch(`${serverEndpoint}/auth/current-user/`, {
+		const userFetch = await event.fetch(`${serverEndpoint}/api/account/`, {
 			headers: { cookie }
 		});
 
@@ -49,6 +63,8 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		event.locals.subscription = payload.subscription || null;
 		event.locals.hasAccess = payload.has_access ?? true;
 		event.locals.cloudMode = payload.cloud_mode ?? false;
+		event.locals.pendingInviteCount = payload.pending_invite_count ?? 0;
+		event.locals.unreadCommentCount = payload.unread_comment_count ?? 0;
 		setSessionFromResponse(event, userFetch);
 	} catch (error) {
 		console.error('Error in authHook:', error);

@@ -23,3 +23,10 @@ AUTH_PASSWORD_VALIDATORS = []
 
 # Location.save starts a geocode thread that outlives the test transaction.
 DISABLE_BACKGROUND_GEOCODE = True
+
+# Production serves static files from a manifest that `collectstatic` writes; a test that renders a
+# template (the admin, for one) has no such manifest.
+STORAGES = {
+    **STORAGES,  # noqa: F405
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}

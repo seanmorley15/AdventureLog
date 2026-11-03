@@ -1,9 +1,12 @@
 import hashlib
+import hmac
 import secrets
 import uuid
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django_resized import ResizedImageField
 
 
@@ -94,14 +97,20 @@ class APIKey(models.Model):
 
     Security design:
     - A 32-byte cryptographically random token is generated with the prefix ``al_``.
-    - Only a PBKDF2-HMAC-SHA256 derived hash of the full token is persisted;
-        the plaintext is returned exactly once at creation time and never stored.
+    - Only a SHA-256 hash of the full token is persisted; the plaintext is returned
+        exactly once at creation time and never stored. The token is 256 random bits,
+        so it needs no salt or slow hash, and checking a key costs almost nothing.
+    - Keys made before this scheme carry a salted PBKDF2 hash in ``key_hash``. They
+        are checked the slow way once, then moved to the fast hash.
     - The first 12 characters of the token are kept as ``key_prefix`` so users can
         identify their keys without revealing the secret.
     """
 
     _KEY_HASH_ITERATIONS = 600000
     _KEY_HASH_SALT_NAMESPACE = "users.APIKey"
+    _FAST_HASH_NAMESPACE = "adventurelog.api-key.v2:"
+    # last_used_at is a hint for the key list, so it is written at most this often.
+    _LAST_USED_RESOLUTION = timedelta(minutes=5)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -109,7 +118,9 @@ class APIKey(models.Model):
     )
     name = models.CharField(max_length=100)
     key_prefix = models.CharField(max_length=12, editable=False)
-    key_hash = models.CharField(max_length=64, unique=True, editable=False)
+    # Legacy salted PBKDF2 hash. Empty once the key has been moved to key_hash_v2.
+    key_hash = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
+    key_hash_v2 = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
 
@@ -120,8 +131,12 @@ class APIKey(models.Model):
         return f"{self.user.username} – {self.name} ({self.key_prefix}…)"
 
     @classmethod
-    def _hash_raw_key(cls, raw_key: str) -> str:
-        """Derive a computationally expensive hash for API key persistence."""
+    def _fast_hash(cls, raw_key: str) -> str:
+        return hashlib.sha256((cls._FAST_HASH_NAMESPACE + raw_key).encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _legacy_hash(cls, raw_key: str) -> str:
+        """The expensive salted hash that keys made before the fast hash were stored under."""
         salt = f"{cls._KEY_HASH_SALT_NAMESPACE}:{settings.SECRET_KEY}".encode("utf-8")
         return hashlib.pbkdf2_hmac(
             "sha256",
@@ -139,13 +154,11 @@ class APIKey(models.Model):
         user once and must never be stored anywhere after that.
         """
         raw_key = f"al_{secrets.token_urlsafe(32)}"
-        key_hash = cls._hash_raw_key(raw_key)
-        key_prefix = raw_key[:12]
         instance = cls.objects.create(
             user=user,
             name=name,
-            key_prefix=key_prefix,
-            key_hash=key_hash,
+            key_prefix=raw_key[:12],
+            key_hash_v2=cls._fast_hash(raw_key),
         )
         return instance, raw_key
 
@@ -154,14 +167,39 @@ class APIKey(models.Model):
         """
         Look up an APIKey by its raw value.
 
-        Returns the matching ``APIKey`` instance (updating ``last_used_at``) or
-        ``None`` if not found.
+        Returns the matching ``APIKey`` instance (recording when it was last used) or
+        ``None`` if there is no such key or its user is deactivated.
         """
-        key_hash = cls._hash_raw_key(raw_key)
-        try:
-            api_key = cls.objects.select_related('user').get(key_hash=key_hash)
-        except cls.DoesNotExist:
+        fast_hash = cls._fast_hash(raw_key)
+        api_key = cls.objects.select_related('user').filter(key_hash_v2=fast_hash).first()
+        if api_key is None:
+            api_key = cls._authenticate_legacy(raw_key, fast_hash)
+        if api_key is None or not api_key.user.is_active:
             return None
-        from django.utils import timezone
-        cls.objects.filter(pk=api_key.pk).update(last_used_at=timezone.now())
+
+        now = timezone.now()
+        if api_key.last_used_at is None or now - api_key.last_used_at >= cls._LAST_USED_RESOLUTION:
+            cls.objects.filter(pk=api_key.pk).update(last_used_at=now)
+            api_key.last_used_at = now
         return api_key
+
+    @classmethod
+    def _authenticate_legacy(cls, raw_key: str, fast_hash: str):
+        """
+        Check a key that is still stored under the old PBKDF2 hash, and move it to the
+        fast hash. The slow hash is computed only when a stored legacy key shares this
+        key's 12-character prefix, so a made-up key never costs more than a lookup.
+        """
+        candidates = list(
+            cls.objects.select_related('user').filter(key_hash_v2__isnull=True, key_prefix=raw_key[:12])
+        )
+        if not candidates:
+            return None
+
+        legacy_hash = cls._legacy_hash(raw_key)
+        for candidate in candidates:
+            if candidate.key_hash and hmac.compare_digest(candidate.key_hash, legacy_hash):
+                cls.objects.filter(pk=candidate.pk).update(key_hash_v2=fast_hash, key_hash=None)
+                candidate.key_hash_v2, candidate.key_hash = fast_hash, None
+                return candidate
+        return None

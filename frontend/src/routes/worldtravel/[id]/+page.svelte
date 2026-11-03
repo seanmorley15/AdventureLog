@@ -7,6 +7,8 @@
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import type { PageData } from './$types';
 	import { addToast } from '#lib/toasts.js';
+	import { localName, matchesName, visitFailureMessage } from '#lib/worldtravel.js';
+	import { invalidateAll } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 
 	// Icons
@@ -45,6 +47,7 @@
 
 	// Statistics
 	let numRegions: number = $derived(country?.num_regions || 0);
+	let localCountryName = $derived(country ? localName(country.name, country.native_name) : null);
 	let numVisitedRegions: number = $state(0);
 
 	$effect.pre(() => {
@@ -53,6 +56,18 @@
 				index === self.findIndex((t) => t.region === visitedRegion.region)
 		);
 		numVisitedRegions = country?.num_visits || 0;
+	});
+
+	// The page is reused when one country opens another (the United States opening Puerto Rico),
+	// and would keep the search and filter typed into the first.
+	let shownCountry = '';
+	$effect.pre(() => {
+		const code = country?.country_code ?? '';
+		if (code !== shownCountry) {
+			shownCountry = code;
+			searchQuery = '';
+			filterOption = 'all';
+		}
 	});
 
 	let visitedCount = $derived(visitedRegions.length);
@@ -67,7 +82,7 @@
 			filteredRegions = regions;
 		} else {
 			filteredRegions = regions.filter((region) =>
-				region.name.toLowerCase().includes(searchQuery.toLowerCase())
+				matchesName(searchQuery, region.name, region.native_name)
 			);
 		}
 
@@ -108,14 +123,17 @@
 	}
 
 	async function markVisited(region: Region) {
-		let res = await fetch(`/api/visitedregion/`, {
+		let res = await fetch(`/api/visited-regions/`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ region: region.id })
 		});
 		if (!res.ok) {
 			console.error('Failed to mark region as visited');
-			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
+			addToast(
+				'error',
+				await visitFailureMessage(res, `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`)
+			);
 			return;
 		} else {
 			visitedRegions = [...visitedRegions, await res.json()];
@@ -127,13 +145,18 @@
 	}
 
 	async function removeVisit(region: Region) {
-		let res = await fetch(`/api/visitedregion/${region.id}`, {
+		let res = await fetch(`/api/visited-regions/${region.id}/`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'DELETE'
 		});
 		if (!res.ok) {
 			console.error($t('worldtravel.region_failed_visited'));
-			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
+			addToast(
+				'error',
+				await visitFailureMessage(res, `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`)
+			);
+			// It was taken off the list before asking, so show what the server still has.
+			await invalidateAll();
 			return;
 		} else {
 			visitedRegions = visitedRegions.filter((visitedRegion) => visitedRegion.region !== region.id);
@@ -289,6 +312,11 @@
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
 										{$t('worldtravel.regions_in')}
 										{country?.name}
+										{#if localCountryName}
+											<span class="text-xl font-normal text-base-content/60"
+												>· {localCountryName}</span
+											>
+										{/if}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{filteredRegions.length}

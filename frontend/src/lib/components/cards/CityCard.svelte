@@ -20,7 +20,7 @@
 
 	async function markVisited(e: MouseEvent) {
 		e.stopPropagation();
-		const res = await fetch(`/api/visitedcity/`, {
+		const res = await fetch(`/api/visited-cities/`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ city: city.id })
@@ -40,7 +40,7 @@
 
 	async function removeVisit(e: MouseEvent) {
 		e.stopPropagation();
-		const res = await fetch(`/api/visitedcity/${city.id}`, {
+		const res = await fetch(`/api/visited-cities/${city.id}/`, {
 			method: 'DELETE'
 		});
 		if (res.ok) {

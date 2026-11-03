@@ -99,6 +99,9 @@
 	const maxDate = $derived(max ? max.split('T')[0] : undefined);
 
 	const sizeClass = $derived(size === 'xs' ? 'input-xs' : size === 'sm' ? 'input-sm' : '');
+	const clearPadding = $derived(size === 'xs' ? 'pr-6' : size === 'sm' ? 'pr-8' : 'pr-10');
+	const clearIconClass = $derived(size === 'xs' ? 'size-3.5' : 'size-4');
+	const clearHitClass = $derived(size === 'xs' ? 'w-6' : size === 'sm' ? 'w-8' : 'w-9');
 
 	const canClearDate = $derived(!!(clearable && datePart && !readonly && !disabled));
 	const canClearTime = $derived(!!(clearable && hasTime && !readonly && !disabled));

@@ -42,12 +42,11 @@ class DeleteAccountTestCase(APITestCase):
 
     def test_delete_account_requires_authentication(self):
         self.client.force_authenticate(user=None)
-        response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
+        response = self.client.delete("/api/account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 401)
 
     def test_delete_account_rejects_wrong_confirmation(self):
-        response = self.client.post(
-            "/auth/delete-account/",
+        response = self.client.delete("/api/account/",
             self._delete_payload(confirmation="wrongname"),
             format="json",
         )
@@ -55,8 +54,7 @@ class DeleteAccountTestCase(APITestCase):
         self.assertTrue(User.objects.filter(username="deleteuser").exists())
 
     def test_delete_account_rejects_wrong_password(self):
-        response = self.client.post(
-            "/auth/delete-account/",
+        response = self.client.delete("/api/account/",
             self._delete_payload(password="wrongpassword"),
             format="json",
         )
@@ -70,7 +68,7 @@ class DeleteAccountTestCase(APITestCase):
         api_key, _ = APIKey.generate(user=self.user, name="Test Key")
         user_id = self.user.id
 
-        response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
+        response = self.client.delete("/api/account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 204)
         self.assertFalse(User.objects.filter(username="deleteuser").exists())
         self.assertFalse(Category.objects.filter(user_id=user_id).exists())
@@ -82,7 +80,7 @@ class DeleteAccountTestCase(APITestCase):
     def test_delete_account_with_allauth_email_address(self):
         self._create_email_address()
 
-        response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
+        response = self.client.delete("/api/account/", self._delete_payload(), format="json")
 
         self.assertEqual(response.status_code, 204)
         self.assertFalse(User.objects.filter(username="deleteuser").exists())
@@ -97,7 +95,7 @@ class DeleteAccountTestCase(APITestCase):
         subscription.status = Subscription.STATUS_ACTIVE
         subscription.save()
 
-        response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
+        response = self.client.delete("/api/account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 204)
         mock_stripe.Subscription.cancel.assert_called_once_with("sub_test123")
         mock_stripe.Customer.delete.assert_called_once_with("cus_test123")
@@ -114,7 +112,7 @@ class DeleteAccountTestCase(APITestCase):
             "failed", param="id"
         )
 
-        response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
+        response = self.client.delete("/api/account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 502)
         self.assertEqual(
             response.json()["detail"],
@@ -127,6 +125,6 @@ class DeleteAccountTestCase(APITestCase):
         self.user.is_staff = True
         self.user.save()
 
-        response = self.client.post("/auth/delete-account/", self._delete_payload(), format="json")
+        response = self.client.delete("/api/account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 403)
         self.assertTrue(User.objects.filter(username="deleteuser").exists())

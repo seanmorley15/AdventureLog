@@ -3,19 +3,24 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 from typing import Iterable
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, prefetch_related_objects
+from icalendar import Calendar, Event, vCalAddress, vText
 from django.utils import timezone
 
 from adventures.models import (
+    Activity,
     Checklist,
     Collection,
+    CollectionItineraryItem,
     Location,
     Lodging,
     Note,
     Transportation,
     Visit,
 )
-from adventures.utils.datetime_utils import is_midnight_utc
+from core.dates import is_midnight_utc
+from core.parsing import parse_iso_date
+from adventures.services.day_plan import local_date, projected_date, span_bounds
 
 CALENDAR_EVENT_COLORS = {
     'visit': '#3b82f6',
@@ -24,18 +29,19 @@ CALENDAR_EVENT_COLORS = {
     'collection': '#10b981',
     'note': '#6366f1',
     'checklist': '#14b8a6',
+    'stop': '#0ea5e9',
+    'activity': '#ef4444',
 }
 
 ALL_EVENT_TYPES = tuple(CALENDAR_EVENT_COLORS.keys())
 
-
-def _parse_date_param(value: str | None) -> date | None:
-    if not value:
-        return None
-    try:
-        return date.fromisoformat(value[:10])
-    except ValueError:
-        return None
+TRANSPORT_ICONS = {
+    'flight': '✈️',
+    'train': '🚆',
+    'bus': '🚌',
+    'car': '🚗',
+    'boat': '🚢',
+}
 
 
 def _parse_types_param(value: str | None) -> set[str]:
@@ -43,6 +49,46 @@ def _parse_types_param(value: str | None) -> set[str]:
         return set(ALL_EVENT_TYPES)
     requested = {item.strip().lower() for item in value.split(',') if item.strip()}
     return requested & set(ALL_EVENT_TYPES) or set(ALL_EVENT_TYPES)
+
+
+def _member_collections(user):
+    return Collection.objects.filter(Q(user=user.id) | Q(shared_with=user.id)).distinct()
+
+
+def _calendar_collections(user):
+    """
+    Collections whose events reach this user's calendar.
+
+    Archived collections are left out, and so are trips with no anchor: their
+    days have no calendar date yet. That holds for the owner too.
+    """
+    return (
+        _member_collections(user)
+        .exclude(is_archived=True)
+        .exclude(type=Collection.Type.TRIP, start_date__isnull=True)
+    )
+
+
+def _is_day_plan_q():
+    """A trip planned by days. A folder keeps saved days hidden, so it is not one."""
+    return Q(type=Collection.Type.TRIP, itinerary_days__index__isnull=False)
+
+
+def _child_queryset(model, user):
+    """
+    Lodging, transport, notes, and checklists the user sees outside a day plan.
+
+    Children of a day-based trip are emitted from their placements instead, and
+    children of hidden collections are dropped.
+    """
+    visible = _calendar_collections(user).exclude(_is_day_plan_q()).values('id')
+    return (
+        model.objects.filter(
+            Q(user=user.id, collection__isnull=True) | Q(collection__in=visible)
+        )
+        .select_related('collection')
+        .distinct()
+    )
 
 
 def _to_iso(value: datetime | date | None) -> str | None:
@@ -129,11 +175,9 @@ def _visit_events(
     range_end: date | None,
 ) -> list[dict]:
     events: list[dict] = []
+    # A visit stays on the place: only the place's owner sees it, on its own dates.
     locations = (
-        Location.objects.filter(
-            Q(user=user.id)
-            | Q(collections__shared_with=user.id)
-        )
+        Location.objects.filter(user=user.id)
         .filter(visits__isnull=False)
         .select_related('category')
         .prefetch_related(
@@ -149,7 +193,8 @@ def _visit_events(
     )
 
     for location in locations:
-        collection = location.collections.first()
+        # .first() would bypass the prefetch and query once per place; pick by pk in memory.
+        collection = min(location.collections.all(), key=lambda c: c.pk, default=None)
         collection_id = str(collection.id) if collection else None
         collection_name = collection.name if collection else None
         category_name = location.category.name if location.category else 'Adventure'
@@ -188,21 +233,7 @@ def _visit_events(
 
 def _transportation_events(user, range_start: date | None, range_end: date | None) -> list[dict]:
     events: list[dict] = []
-    transportations = (
-        Transportation.objects.filter(
-            Q(user=user.id) | Q(collection__shared_with=user.id)
-        )
-        .select_related('collection')
-        .distinct()
-    )
-
-    transport_icons = {
-        'flight': '✈️',
-        'train': '🚆',
-        'bus': '🚌',
-        'car': '🚗',
-        'boat': '🚢',
-    }
+    transportations = _child_queryset(Transportation, user)
 
     for item in transportations:
         if not item.date:
@@ -211,7 +242,7 @@ def _transportation_events(user, range_start: date | None, range_end: date | Non
             continue
 
         route = ' → '.join(filter(None, [item.from_location, item.to_location]))
-        icon = transport_icons.get((item.type or '').lower(), '🛣️')
+        icon = TRANSPORT_ICONS.get((item.type or '').lower(), '🛣️')
         collection_id = str(item.collection_id) if item.collection_id else None
 
         events.append(
@@ -251,11 +282,7 @@ def _lodging_calendar_end(check_in: datetime | None, check_out: datetime | None)
 
 def _lodging_events(user, range_start: date | None, range_end: date | None) -> list[dict]:
     events: list[dict] = []
-    stays = (
-        Lodging.objects.filter(Q(user=user.id) | Q(collection__shared_with=user.id))
-        .select_related('collection')
-        .distinct()
-    )
+    stays = _child_queryset(Lodging, user)
 
     for stay in stays:
         start = stay.check_in or stay.check_out
@@ -290,9 +317,7 @@ def _lodging_events(user, range_start: date | None, range_end: date | None) -> l
 
 def _collection_events(user, range_start: date | None, range_end: date | None) -> list[dict]:
     events: list[dict] = []
-    collections = Collection.objects.filter(
-        Q(user=user.id) | Q(shared_with=user.id)
-    ).distinct()
+    collections = _calendar_collections(user)
 
     for collection in collections:
         if not collection.start_date:
@@ -325,12 +350,7 @@ def _collection_events(user, range_start: date | None, range_end: date | None) -
 
 def _note_events(user, range_start: date | None, range_end: date | None) -> list[dict]:
     events: list[dict] = []
-    notes = (
-        Note.objects.filter(Q(user=user.id) | Q(collection__shared_with=user.id))
-        .filter(date__isnull=False)
-        .select_related('collection')
-        .distinct()
-    )
+    notes = _child_queryset(Note, user).filter(date__isnull=False)
 
     for note in notes:
         if not _event_overlaps_range(note.date, note.date, range_start, range_end):
@@ -361,12 +381,7 @@ def _note_events(user, range_start: date | None, range_end: date | None) -> list
 
 def _checklist_events(user, range_start: date | None, range_end: date | None) -> list[dict]:
     events: list[dict] = []
-    checklists = (
-        Checklist.objects.filter(Q(user=user.id) | Q(collection__shared_with=user.id))
-        .filter(date__isnull=False)
-        .select_related('collection')
-        .distinct()
-    )
+    checklists = _child_queryset(Checklist, user).filter(date__isnull=False)
 
     for checklist in checklists:
         if not _event_overlaps_range(checklist.date, checklist.date, range_start, range_end):
@@ -394,6 +409,175 @@ def _checklist_events(user, range_start: date | None, range_end: date | None) ->
     return events
 
 
+def _plan_clock(day, clock, tz_name):
+    """A placement's local time on a projected day, as an aware datetime."""
+    from zoneinfo import ZoneInfo
+
+    try:
+        tz = ZoneInfo(tz_name) if tz_name else dt_timezone.utc
+    except Exception:
+        tz = dt_timezone.utc
+    return datetime.combine(day, clock, tzinfo=tz)
+
+
+def _owner_visit_days(user, location_ids) -> set[tuple[str, date]]:
+    """(location, date) pairs already on this user's calendar through a visit."""
+    covered = set()
+    visits = Visit.objects.filter(
+        location__user=user.id, location_id__in=location_ids, start_date__isnull=False
+    ).select_related('location')
+    for visit in visits:
+        start = local_date(visit.start_date, visit.timezone)
+        end = local_date(visit.end_date, visit.timezone) or start
+        current = start
+        while current <= end:
+            covered.add((str(visit.location_id), current))
+            current += timedelta(days=1)
+    return covered
+
+
+def _plan_events(user, range_start: date | None, range_end: date | None) -> list[dict]:
+    """
+    One event per non-optional placement on an anchored, unarchived day plan.
+
+    Owner and collaborators get the same plan. Ideas, trip-wide items, and
+    optional placements have no date and are left out. A span is one event.
+    """
+    events: list[dict] = []
+    collections = (
+        _calendar_collections(user)
+        .filter(_is_day_plan_q(), start_date__isnull=False)
+        .distinct()
+    )
+    collections = list(collections)
+    if not collections:
+        return events
+    by_id = {c.id: c for c in collections}
+
+    items = list(
+        CollectionItineraryItem.objects.filter(
+            collection_id__in=by_id.keys(),
+            day__isnull=False,
+            day__index__isnull=False,
+            is_global=False,
+            is_optional=False,
+        )
+        .select_related('day', 'content_type')
+        .prefetch_related('item')
+        .order_by('day__index', 'order')
+    )
+    # Each stop reads its place's category: load them for every place at once.
+    prefetch_related_objects(
+        [i.item for i in items if i.content_type.model == 'location' and i.item is not None],
+        'category',
+    )
+    location_ids = [i.object_id for i in items if i.content_type.model == 'location']
+    visit_days = _owner_visit_days(user, location_ids) if location_ids else set()
+
+    for item in items:
+        collection = by_id[item.collection_id]
+        model = item.content_type.model
+        obj = item.item
+        if obj is None:
+            continue
+        start_index, end_index = span_bounds(item)
+        first_day = projected_date(collection.start_date, start_index)
+        last_day = projected_date(collection.start_date, end_index)
+        tz_name = item.timezone or collection.timezone
+        common = {
+            'collection_id': str(collection.id),
+            'collection_name': collection.name,
+        }
+
+        if model == 'lodging':
+            start = obj.check_in or obj.check_out or first_day
+            end = _lodging_calendar_end(obj.check_in, obj.check_out) or last_day
+            if not _event_overlaps_range(start, end, range_start, range_end):
+                continue
+            events.append(_build_event(
+                event_id=f'lodging-{obj.id}', event_type='lodging', title=obj.name,
+                start=start, end=end, all_day=True, timezone_name=obj.timezone, icon='🏨',
+                category=obj.type or 'Lodging', location_label=obj.location or '',
+                description=obj.description or '', url=f'/lodging/{obj.id}',
+                resource_id=str(obj.id), **common,
+            ))
+            continue
+
+        if model == 'transportation':
+            start = obj.date or first_day
+            end = obj.end_date or (obj.date if obj.date else last_day)
+            if not _event_overlaps_range(start, end, range_start, range_end):
+                continue
+            all_day = not isinstance(start, datetime) or is_midnight_utc(start)
+            route = ' → '.join(filter(None, [obj.from_location, obj.to_location]))
+            events.append(_build_event(
+                event_id=f'transportation-{obj.id}', event_type='transportation',
+                title=obj.name or obj.type or 'Transportation', start=start, end=end,
+                all_day=all_day, timezone_name=obj.start_timezone or obj.end_timezone,
+                icon=TRANSPORT_ICONS.get((obj.type or '').lower(), '🛣️'),
+                category=obj.type or 'Transportation', location_label=route,
+                description=obj.description or '', url=f'/transportations/{obj.id}',
+                resource_id=str(obj.id), **common,
+            ))
+            continue
+
+        if model == 'location' and (str(obj.id), first_day) in visit_days:
+            # The owner's visit on this place and date is already an event.
+            continue
+
+        if not _event_overlaps_range(first_day, last_day, range_start, range_end):
+            continue
+        start, end, all_day = first_day, last_day, True
+        if item.start_time:
+            start = _plan_clock(first_day, item.start_time, tz_name)
+            end = _plan_clock(last_day, item.end_time, tz_name) if item.end_time else start
+            if end < start:
+                end = start
+            all_day = False
+
+        if model == 'location':
+            category = obj.category
+            events.append(_build_event(
+                event_id=f'stop-{item.id}', event_type='stop', title=obj.name,
+                start=start, end=end, all_day=all_day, timezone_name=tz_name if not all_day else None,
+                icon=category.icon if category else '📍',
+                category=category.name if category else 'Stop',
+                location_label=obj.location or '', description=obj.description or '',
+                url=f'/collections/{collection.id}', resource_id=str(obj.id), **common,
+            ))
+        elif model == 'note':
+            events.append(_build_event(
+                event_id=f'note-{obj.id}', event_type='note', title=obj.name,
+                start=start, end=end, all_day=all_day, timezone_name=None, icon='📝',
+                category='Note', description=obj.content or '',
+                url=f'/collections/{collection.id}', resource_id=str(obj.id), **common,
+            ))
+        elif model == 'checklist':
+            events.append(_build_event(
+                event_id=f'checklist-{obj.id}', event_type='checklist', title=obj.name,
+                start=start, end=end, all_day=all_day, timezone_name=None, icon='✅',
+                category='Checklist', url=f'/collections/{collection.id}',
+                resource_id=str(obj.id), **common,
+            ))
+
+    activities = Activity.objects.filter(
+        day__collection_id__in=by_id.keys(), day__index__isnull=False
+    ).select_related('day')
+    for activity in activities:
+        collection = by_id[activity.day.collection_id]
+        day = projected_date(collection.start_date, activity.day.index)
+        if not _event_overlaps_range(day, day, range_start, range_end):
+            continue
+        events.append(_build_event(
+            event_id=f'activity-{activity.id}', event_type='activity', title=activity.name,
+            start=day, end=day, all_day=True, timezone_name=None, icon='🥾',
+            category=activity.sport_type or 'Activity', url=f'/collections/{collection.id}',
+            resource_id=str(activity.id), collection_id=str(collection.id),
+            collection_name=collection.name,
+        ))
+    return events
+
+
 _EVENT_BUILDERS = {
     'visit': _visit_events,
     'transportation': _transportation_events,
@@ -411,16 +595,18 @@ def get_calendar_events_for_user(
     end: str | None = None,
     types: str | None = None,
 ) -> list[dict]:
-    range_start = _parse_date_param(start)
-    range_end = _parse_date_param(end)
+    range_start = parse_iso_date(start)
+    range_end = parse_iso_date(end)
     selected_types = _parse_types_param(types)
 
     events: list[dict] = []
-    for event_type in ALL_EVENT_TYPES:
-        if event_type not in selected_types:
-            continue
-        builder = _EVENT_BUILDERS[event_type]
-        events.extend(builder(user, range_start, range_end))
+    for event_type, builder in _EVENT_BUILDERS.items():
+        if event_type in selected_types:
+            events.extend(builder(user, range_start, range_end))
+    events.extend(
+        event for event in _plan_events(user, range_start, range_end)
+        if event['type'] in selected_types
+    )
 
     events.sort(key=lambda item: item.get('start') or '')
     return events
@@ -428,3 +614,63 @@ def get_calendar_events_for_user(
 
 def iter_calendar_events_for_ics(user) -> Iterable[dict]:
     return get_calendar_events_for_user(user)
+
+
+def _parse_event_datetime(value: str | None):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+
+
+def build_ics_calendar(user) -> bytes:
+    """Every calendar event of the user as an iCalendar (RFC 5545) file."""
+    name = f'{user.first_name} {user.last_name}'.strip() or user.username
+    cal = Calendar()
+    cal.add('prodid', '-//AdventureLog Calendar//adventurelog.app//')
+    cal.add('version', '2.0')
+    cal.add('calscale', 'GREGORIAN')
+    cal.add('method', 'PUBLISH')
+    cal.add('x-wr-calname', 'AdventureLog')
+
+    for item in iter_calendar_events_for_ics(user):
+        start_dt = _parse_event_datetime(item.get('start'))
+        if not start_dt:
+            continue
+        end_dt = _parse_event_datetime(item.get('end')) or start_dt
+
+        event = Event()
+        event.add('uid', f"{item['id']}@adventurelog")
+        event.add('summary', f"{item.get('icon', '')} {item.get('title', 'Event')}".strip())
+        event.add('dtstamp', datetime.now())
+        event.add('transp', 'TRANSPARENT')
+        event.add('class', 'PRIVATE')
+        event.add('created', datetime.now())
+        event.add('last-modified', datetime.now())
+        if item.get('description'):
+            event.add('description', item['description'])
+        if item.get('location_label'):
+            event.add('location', item['location_label'])
+        if item.get('url'):
+            event.add('url', item['url'])
+        categories = [item.get('category', 'Adventure')]
+        if item.get('collection_name'):
+            categories.append(item['collection_name'])
+        event.add('categories', categories)
+
+        if item.get('all_day'):
+            event.add('dtstart', start_dt.date())
+            event.add('dtend', end_dt.date() + timedelta(days=1))
+        else:
+            event.add('dtstart', start_dt)
+            event.add('dtend', end_dt if end_dt >= start_dt else start_dt)
+
+        organizer = vCalAddress(f'MAILTO:{user.email}')
+        organizer.params['cn'] = vText(name)
+        event.add('organizer', organizer)
+        cal.add_component(event)
+
+    return cal.to_ical()
+

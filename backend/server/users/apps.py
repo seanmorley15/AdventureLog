@@ -8,4 +8,6 @@ class UsersConfig(AppConfig):
     def ready(self):
         # Ensure signal handlers are registered
         import users.signals  # noqa: F401
+        # Registers the API key scheme with drf-spectacular.
+        import users.schema  # noqa: F401
 

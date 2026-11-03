@@ -42,7 +42,9 @@
 		lodging: 'calendar.type_lodging',
 		collection: 'calendar.type_collection',
 		note: 'calendar.type_note',
-		checklist: 'calendar.type_checklist'
+		checklist: 'calendar.type_checklist',
+		stop: 'calendar.type_stop',
+		activity: 'calendar.type_activity'
 	};
 
 	function toggleType(type: CalendarEventType) {

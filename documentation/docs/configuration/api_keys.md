@@ -43,9 +43,21 @@ response = requests.get("https://your-adventurelog-instance.com/api/locations/",
 print(response.json())
 ```
 
+List endpoints such as `/api/locations/` are paged: the response is `{"count", "next", "previous", "results"}`, and `next` is the address of the following page.
+
+## Browse the API
+
+Every endpoint is documented at `https://your-adventurelog-instance.com/api/docs/` (Swagger UI), with a single-page version at `/api/docs/redoc/` and the OpenAPI document at `/api/schema/`. Click **Authorize** and paste your key to try requests from the page.
+
+Errors always have the same body, so a script can check `code`:
+
+```json
+{ "detail": "Not found.", "code": "not_found" }
+```
+
 ## Managing Keys
 
-All your keys are listed under **Settings → Security**. Each entry shows:
+All your keys are listed under **Settings → Security** (or `GET /api/account/api-keys/`). Each entry shows:
 
 | Field         | Description                                                 |
 | ------------- | ----------------------------------------------------------- |
@@ -60,7 +72,7 @@ Click **Revoke** next to any key to permanently delete it. Revoked keys stop wor
 
 ## Security Notes
 
-- Raw key values are never stored — only a SHA-256 hash is kept on the server.
+- Raw key values are never stored — only a SHA-256 hash is kept on the server. Keys created by older versions, which were stored with salted PBKDF2, are moved to the new hash the first time they are used.
 - API key requests bypass CSRF checks, so keep your keys secure and treat them like passwords.
 - Create separate keys for separate use cases so you can revoke individual access without affecting others.
 - If a key is ever exposed, revoke it immediately and generate a new one.

@@ -1,26 +1,44 @@
 from django.http import JsonResponse
-from django.middleware.csrf import get_token
-from os import getenv
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.views.generic import RedirectView
 from django.views.static import serve
 from django.core.files.storage import default_storage
-from adventures.utils.file_permissions import (
-    checkFilePermission,
+from adventures.access.file_permissions import (
+    check_file_permission,
+    is_day_owned_media,
     is_public_media_path,
     is_protected_media_path,
     normalize_media_request_path,
 )
 
-def get_csrf_token(request):
-    csrf_token = get_token(request)
-    return JsonResponse({'csrfToken': csrf_token})
+class ServerInfoView(APIView):
+    openapi_tags = ['Server']
+    permission_classes = [AllowAny]
 
-def get_public_url(request):
-    return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
+    @extend_schema(
+        responses=inline_serializer('ServerInfo', fields={
+            'public_url': serializers.URLField(help_text='The address of this server, used in links and media URLs.'),
+            'allow_public_collection_links': serializers.BooleanField(
+                help_text='Whether collections may be made public or unlisted on this server.'
+            ),
+        })
+    )
+    def get(self, request):
+        """Get server information"""
+        return Response({
+            'public_url': settings.PUBLIC_URL,
+            'allow_public_collection_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+        })
+
 
 def health_check(request):
+    """For container health checks and monitors. Not part of the API."""
     from django.db import connection
     try:
         connection.ensure_connection()
@@ -85,13 +103,15 @@ def serve_protected_media(request, path):
         return HttpResponseForbidden()
 
     user = _resolve_user(request)
-    if user is None:
-        return HttpResponseForbidden()
-
     media_type = path_parts[0] + '/'
     file_id = path_parts[1]
+    authenticated = bool(user and getattr(user, 'is_authenticated', False))
 
-    if checkFilePermission(file_id, user, media_type):
+    # Owners and members, guest links (cookie), and story readers. See check_file_permission.
+    if check_file_permission(file_id, user if authenticated else None, media_type, request):
         return _serve_media_file(request, normalized_path)
+
+    if is_day_owned_media(file_id, media_type):
+        return HttpResponseNotFound()
 
     return HttpResponseForbidden()

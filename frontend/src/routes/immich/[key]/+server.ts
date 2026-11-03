@@ -33,7 +33,7 @@ export const GET: RequestHandler = async (event) => {
 		const integrationId = integrationData.id;
 
 		// Proxy the request to the backend{
-		const res = await fetch(`${endpoint}/api/integrations/immich/${integrationId}/get/${key}`, {
+		const res = await fetch(`${endpoint}/api/integrations/immich/assets/${integrationId}/${key}/`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

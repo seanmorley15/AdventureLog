@@ -1,11 +1,11 @@
 from django.urls import path
 
-from .views import CreateCheckoutSessionView, CreatePortalSessionView, StripeWebhookView, SubscriptionStatusView
+from .views import CreateCheckoutSessionView, CreatePortalSessionView, StripeWebhookView
 
 
 urlpatterns = [
-    path("create-checkout-session/", CreateCheckoutSessionView.as_view(), name="billing-checkout"),
-    path("create-portal-session/", CreatePortalSessionView.as_view(), name="billing-portal"),
+    path("checkout-session/", CreateCheckoutSessionView.as_view(), name="billing-checkout"),
+    path("portal-session/", CreatePortalSessionView.as_view(), name="billing-portal"),
+    # Configured in the Stripe dashboard; keep this path stable.
     path("webhooks/stripe/", StripeWebhookView.as_view(), name="stripe-webhook"),
-    path("subscription/", SubscriptionStatusView.as_view(), name="billing-subscription"),
 ]

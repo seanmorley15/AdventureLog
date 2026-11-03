@@ -17,7 +17,7 @@ export const actions: Actions = {
 			return csrfFail();
 		}
 
-		const res = await djangoBrowserFetch(event, '/auth/browser/v1/auth/password/request', {
+		const res = await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/password/request', {
 			method: 'POST',
 			csrfToken,
 			headers: { 'Content-Type': 'application/json' },

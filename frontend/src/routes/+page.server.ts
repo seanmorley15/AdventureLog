@@ -36,7 +36,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await djangoBrowserFetch(event, '/auth/browser/v1/auth/session', {
+			await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/session', {
 				method: 'DELETE',
 				headers: { 'Content-Type': 'application/json' }
 			});

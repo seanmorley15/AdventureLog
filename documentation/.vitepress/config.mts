@@ -260,6 +260,10 @@ export default defineConfig({
             link: "/docs/configuration/environment_variables",
           },
           {
+            text: "Caching",
+            link: "/docs/configuration/caching",
+          },
+          {
             text: "Operations & Maintenance",
             link: "/docs/configuration/operations",
           },

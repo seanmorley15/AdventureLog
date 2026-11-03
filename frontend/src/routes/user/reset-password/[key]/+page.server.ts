@@ -50,7 +50,7 @@ export const actions: Actions = {
 			return csrfFail();
 		}
 
-		const response = await djangoBrowserFetch(event, '/auth/browser/v1/auth/password/reset', {
+		const response = await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/password/reset', {
 			method: 'POST',
 			csrfToken,
 			headers: { 'Content-Type': 'application/json' },

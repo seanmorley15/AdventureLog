@@ -2,3 +2,6 @@
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Generated from the backend OpenAPI schema (pnpm run api:types)
+src/lib/api/schema.d.ts

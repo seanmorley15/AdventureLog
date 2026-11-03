@@ -19,8 +19,8 @@ from django.core.files.storage import default_storage
 
 from adventures.models import ContentImage
 from adventures.services.images.metadata import resolve_coordinates_for_image
-from adventures.utils.geo import point_to_lat_lon
-from integrations.models import ImmichIntegration
+from core.geo import point_to_lat_lon
+from integrations.facade import immich_integrations_by_user
 
 User = get_user_model()
 
@@ -81,10 +81,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f'Processing {total} image(s)...')
 
-        immich_by_user = {
-            integration.user_id: integration
-            for integration in ImmichIntegration.objects.all()
-        }
+        immich_by_user = immich_integrations_by_user()
 
         stats = {
             'processed': 0,

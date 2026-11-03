@@ -1,0 +1,9 @@
+# Tools for developing and checking the backend. Not installed in the production image.
+-r requirements.txt
+
+# Unused and undefined names (see .flake8).
+flake8>=7,<8
+# Which app may import which (see .importlinter).
+import-linter>=2,<3
+# Lets `manage.py test --parallel` show a failure's traceback instead of a pickling error.
+tblib>=3,<4

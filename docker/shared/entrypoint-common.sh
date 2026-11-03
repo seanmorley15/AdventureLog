@@ -39,22 +39,30 @@ run_migrations() {
 create_superuser_if_needed() {
 	if [[ -n "${DJANGO_ADMIN_USERNAME:-}" && -n "${DJANGO_ADMIN_PASSWORD:-}" && -n "${DJANGO_ADMIN_EMAIL:-}" ]]; then
 		echo "Creating superuser..."
-		python manage.py shell <<EOF
+		# Credentials are read from the environment inside Python, never pasted into the code,
+		# so quotes or other special characters in a password cannot break startup.
+		python manage.py shell <<'EOF'
+import os
+
 from django.contrib.auth import get_user_model
 from allauth.account.models import EmailAddress
 
 User = get_user_model()
 
-if not User.objects.filter(username='$DJANGO_ADMIN_USERNAME').exists():
+username = os.environ['DJANGO_ADMIN_USERNAME']
+email = os.environ['DJANGO_ADMIN_EMAIL']
+password = os.environ['DJANGO_ADMIN_PASSWORD']
+
+if not User.objects.filter(username=username).exists():
     superuser = User.objects.create_superuser(
-        username='$DJANGO_ADMIN_USERNAME',
-        email='$DJANGO_ADMIN_EMAIL',
-        password='$DJANGO_ADMIN_PASSWORD'
+        username=username,
+        email=email,
+        password=password
     )
     print("Superuser created successfully.")
     EmailAddress.objects.create(
         user=superuser,
-        email='$DJANGO_ADMIN_EMAIL',
+        email=email,
         verified=True,
         primary=True
     )
@@ -67,18 +75,18 @@ EOF
 
 run_download_countries() {
 	if [[ "${SKIP_WORLD_DATA:-}" == "1" ]]; then
-		>&2 echo "SKIP_WORLD_DATA=1 — skipping download-countries"
+		>&2 echo "SKIP_WORLD_DATA=1 — skipping download_countries"
 		return 0
 	fi
 
-	>&2 echo "Running download-countries (first boot may take several minutes; ensure ~2GB RAM is available)..."
-	python manage.py download-countries
+	>&2 echo "Running download_countries (first boot may take several minutes; ensure ~2GB RAM is available)..."
+	python manage.py download_countries
 	local download_exit=$?
 	if [[ "$download_exit" -eq 137 ]]; then
-		>&2 echo "WARNING: download-countries was interrupted (likely out of memory). Retry with more RAM or set SKIP_WORLD_DATA=1."
+		>&2 echo "WARNING: download_countries was interrupted (likely out of memory). Retry with more RAM or set SKIP_WORLD_DATA=1."
 		exit 1
 	elif [[ "$download_exit" -ne 0 ]]; then
-		>&2 echo "ERROR: download-countries failed."
+		>&2 echo "ERROR: download_countries failed."
 		exit 1
 	fi
 }

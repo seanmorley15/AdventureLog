@@ -73,7 +73,8 @@ INSTALLED_APPS = (
     'allauth.socialaccount.providers.openid_connect',
     'allauth.usersessions',
     'invitations',
-    'drf_yasg',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     'djmoney',
     'corsheaders',
     'adventures',
@@ -83,7 +84,6 @@ INSTALLED_APPS = (
     'cloud.apps.CloudConfig',
     'integrations',
     'django.contrib.gis',
-    # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
     'slippers',
     'django.contrib.humanize',
@@ -95,11 +95,11 @@ INSTALLED_APPS = (
 # ---------------------------------------------------------------------------
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'adventures.middleware.DisableCSRFForAPIKeyMiddleware',
+    'users.middleware.DisableCSRFForAPIKeyMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'adventures.middleware.OverrideHostMiddleware',
+    'core.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'users.middleware.EfficientSessionMiddleware',
@@ -112,13 +112,55 @@ MIDDLEWARE = (
 # ---------------------------------------------------------------------------
 # Caching
 # ---------------------------------------------------------------------------
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': '127.0.0.1:11211',
-        'TIMEOUT': 60 * 60 * 24,  # Optional: 1 day cache
+def _build_caches():
+    """
+    The cache backend, chosen by CACHE_BACKEND.
+
+    - memcached (default): the memcached bundled in the Docker image.
+    - redis: an external Redis (REDIS_URL), for advanced deployments.
+    - locmem / dummy: per-process memory, or no caching, for debugging.
+    Unknown values fall back to memcached.
+    """
+    backend = getenv('CACHE_BACKEND', 'memcached').strip().lower()
+    timeout = 60 * 60 * 24
+    prefix = getenv('CACHE_KEY_PREFIX', '').strip()
+    base = {'TIMEOUT': timeout, 'KEY_PREFIX': prefix}
+
+    if backend == 'redis':
+        return {
+            'default': {
+                **base,
+                'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+                'LOCATION': getenv('REDIS_URL', 'redis://127.0.0.1:6379/0'),
+            }
+        }
+    if backend == 'locmem':
+        return {'default': {**base, 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+    if backend == 'dummy':
+        return {'default': {**base, 'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+    if backend != 'memcached':
+        print(f"Unknown CACHE_BACKEND '{backend}', using memcached.")
+    return {
+        'default': {
+            **base,
+            'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+            'LOCATION': getenv('MEMCACHED_LOCATION', '127.0.0.1:11211'),
+            'OPTIONS': {
+                # A memcached outage is a cache miss, not a 500.
+                'ignore_exc': True,
+                'no_delay': True,
+                'use_pooling': True,
+            },
+        }
     }
-}
+
+
+CACHES = _build_caches()
+
+# Sessions read from the cache first and fall back to the database, which stays the
+# source of truth. The cached copy is short-lived (see main/sessions.py).
+SESSION_ENGINE = 'main.sessions'
+SESSION_CACHE_SECONDS = int(getenv('SESSION_CACHE_SECONDS', '300'))
 
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
@@ -287,6 +329,8 @@ ALLAUTH_UI_THEME = "dim"
 # Authentication & Accounts
 # ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
+# New unlisted and public collection links. Collections that are already public stay readable either way.
+ALLOW_PUBLIC_COLLECTION_LINKS = getenv('ALLOW_PUBLIC_COLLECTION_LINKS', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 TERMS_OF_SERVICE_URL = getenv('TERMS_OF_SERVICE_URL', '').strip()
 PRIVACY_POLICY_URL = getenv('PRIVACY_POLICY_URL', '').strip()
@@ -299,7 +343,7 @@ INVITATIONS_ADAPTER = ACCOUNT_ADAPTER
 INVITATIONS_ACCEPT_INVITE_AFTER_SIGNUP = True
 INVITATIONS_EMAIL_SUBJECT_PREFIX = 'AdventureLog: '
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
-ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
+ACCOUNT_SIGNUP_FORM_CLASS = 'users.invitations.forms.CustomSignupForm'
 
 # Avoid a django_session write on every request. EfficientSessionMiddleware
 # extends expiry at most once per SESSION_TOUCH_INTERVAL_SECONDS instead.
@@ -314,7 +358,7 @@ USERSESSIONS_TRACK_ACTIVITY = False
 LOGIN_REDIRECT_URL = FRONTEND_URL  # Redirect to frontend after login
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
-INVITATIONS_INVITE_FORM = 'users.form_overrides.UseAdminInviteForm'
+INVITATIONS_INVITE_FORM = 'users.invitations.forms.UseAdminInviteForm'
 INVITATIONS_SIGNUP_REDIRECT_URL = f"{FRONTEND_URL}/signup"
 INVITATIONS_SIGNUP_REDIRECT = f"{FRONTEND_URL}/signup"
 INVITATIONS_CONFIRMATION_URL_NAME = 'accept-invite'
@@ -374,6 +418,8 @@ SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60
 WIKIPEDIA_DESC_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_DESC_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
+# Google Maps Platform results are cached for at most this long (their terms limit caching).
+GOOGLE_API_CACHE_TIMEOUT = min(int(getenv('GOOGLE_API_CACHE_TIMEOUT', str(60 * 60 * 24))), 60 * 60 * 24 * 30)
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
@@ -417,6 +463,10 @@ else:
     EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
 
+# True only when real SMTP is set up. Optional mail (comment mentions) checks this flag
+# rather than EMAIL_HOST, which Django defaults to 'localhost'.
+SMTP_CONFIGURED = EMAIL_BACKEND.endswith('smtp.EmailBackend') and bool(getenv('EMAIL_HOST'))
+
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.resend.com'
 # EMAIL_USE_TLS = False
@@ -453,7 +503,10 @@ REST_FRAMEWORK = {
         'users.authentication.APIKeyAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    # Endpoints are closed unless a view opens them with an explicit permission class.
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'EXCEPTION_HANDLER': 'core.exceptions.api_exception_handler',
+    'DEFAULT_SCHEMA_CLASS': 'core.openapi.AutoSchema',
     # DRF 3.18 reports many=True validation errors as a dict keyed by index; keep the list format.
     'LIST_SERIALIZER_ERRORS_AS_DICT': False,
     'DEFAULT_THROTTLE_CLASSES': [
@@ -464,6 +517,55 @@ REST_FRAMEWORK = {
         'endurain_auth': RATE_LIMIT_RATES['endurain_auth'],
     },
 }
+
+# ---------------------------------------------------------------------------
+# API documentation (drf-spectacular). See API.md.
+# ---------------------------------------------------------------------------
+from main import openapi as _openapi  # noqa: E402
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': _openapi.TITLE,
+    'DESCRIPTION': _openapi.DESCRIPTION,
+    'VERSION': _openapi.VERSION,
+    'TAGS': _openapi.TAGS,
+    'SCHEMA_PATH_PREFIX': r'/api/',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_PUBLIC': True,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    # Separate request and response components, so read-only and write-only fields are exact.
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'filter': True,
+        'displayOperationId': False,
+    },
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+        'core.openapi.merge_fragments',
+    ],
+    # Choice sets used by several fields get one shared name instead of a generated one.
+    'ENUM_NAME_OVERRIDES': {
+        'TimezoneEnum': 'core.timezones.TIMEZONES',
+        'LodgingTypeEnum': 'adventures.models.choices.LODGING_TYPES',
+        'CollectionRoleEnum': 'adventures.models.collection.CollectionMember.Role',
+        'CollectionVisibilityEnum': 'adventures.models.collection.Collection.Visibility',
+        'CollectionTypeEnum': 'adventures.models.collection.Collection.Type',
+        'TripStatusEnum': ['upcoming', 'in_progress', 'completed'],
+        'ImageSourceEnum': 'adventures.models.media.ContentImage.Source',
+        'ItineraryContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist'],
+        'PlaceableContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist', 'visit'],
+        'ImageContentTypeEnum': [
+            'location', 'transportation', 'note', 'lodging', 'visit', 'collectionitineraryday', 'activity', 'trail',
+        ],
+    },
+}
+
+# Hand-written OpenAPI paths for routes that are not DRF views (django-allauth headless).
+OPENAPI_FRAGMENTS = [str(BASE_DIR / 'openapi' / 'allauth.yaml')]
 
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (

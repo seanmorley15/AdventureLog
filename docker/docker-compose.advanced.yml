@@ -44,6 +44,20 @@ services:
       retries: 5
       start_period: 10s
 
+  # Optional: Redis as the cache instead of the bundled memcached.
+  # 1. Uncomment this service and the `redis` entry under `server.depends_on`.
+  # 2. In .env.advanced set CACHE_BACKEND=redis and REDIS_URL=redis://redis:6379/0
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: adventurelog-redis
+  #   restart: unless-stopped
+  #   command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+
   server:
     # build:
     #   context: ..
@@ -58,6 +72,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      # redis:
+      #   condition: service_healthy
     volumes:
       - adventurelog_media:/code/media/
     healthcheck:

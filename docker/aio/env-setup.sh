@@ -28,7 +28,18 @@ fi
 export PGPASSWORD="${POSTGRES_PASSWORD}"
 
 if [[ -z "${SECRET_KEY:-}" ]]; then
-	export SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+	# Generate the key once and reuse it. A new key on every start logs everyone out and
+	# stops API keys working. The media volume is the directory every deployment persists.
+	secret_key_file="/code/media/.secret_key"
+	if [[ -s "$secret_key_file" ]]; then
+		SECRET_KEY="$(<"$secret_key_file")"
+	else
+		SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')"
+		if ! (umask 077 && mkdir -p "$(dirname "$secret_key_file")" && printf '%s' "$SECRET_KEY" >"$secret_key_file") 2>/dev/null; then
+			echo "WARNING: could not save a generated SECRET_KEY to $secret_key_file. Set SECRET_KEY to keep sessions and API keys across restarts." >&2
+		fi
+	fi
+	export SECRET_KEY
 fi
 
 export DJANGO_ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"

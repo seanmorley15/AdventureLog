@@ -9,14 +9,14 @@ _LANGUAGE_RE = re.compile(r"^[A-Za-z]{2,8}(?:[-_][A-Za-z0-9]{1,8})*$")
 def resolve_request_language(request) -> str:
     """Pick the user's preferred language tag for external lookups.
 
-    Precedence: explicit ?language=, the UI locale forwarded by the SvelteKit
+    Precedence: explicit ?lang=, the UI locale forwarded by the SvelteKit
     proxy (X-AdventureLog-Locale), the locale cookie for direct API clients,
     the browser Accept-Language header, then LANGUAGE_CODE. Always returns a
     single validated tag so it is safe to use as an HTTP header value.
     """
     params = getattr(request, "query_params", {})
     candidates = (
-        params.get("language"),
+        params.get("lang"),
         request.headers.get("X-AdventureLog-Locale"),
         request.COOKIES.get("locale"),
         request.headers.get("Accept-Language", ""),

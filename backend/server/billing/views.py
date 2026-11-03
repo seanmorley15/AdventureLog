@@ -8,13 +8,15 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cloud.utils import get_or_create_subscription
+from core.exceptions import APIError
 from .models import StripeWebhookEvent, Subscription
-from .serializers import SubscriptionSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -152,37 +154,36 @@ def _handle_stripe_webhook_event(event_type: str, data: dict) -> None:
             _apply_stripe_subscription(subscription, stripe_subscription)
 
 
-class SubscriptionStatusView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        subscription = get_or_create_subscription(request.user)
-        serializer = SubscriptionSerializer(subscription)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+_BILLING_ERRORS = {
+    404: OpenApiResponse(description='Billing is turned off on this server (`billing_disabled`).'),
+    409: OpenApiResponse(description='Nothing to do: already subscribed, or no billing profile yet (`conflict`).'),
+    502: OpenApiResponse(description='Stripe could not be reached (`upstream_error`).'),
+    503: OpenApiResponse(description='Stripe is not configured on this server (`billing_not_configured`).'),
+}
 
 
 class CreateCheckoutSessionView(APIView):
-    permission_classes = [IsAuthenticated]
+    openapi_tags = ['Billing']
 
+    @extend_schema(request=None, responses={200: inline_serializer('BillingSessionURL', fields={
+            'url': serializers.URLField(help_text='Send the browser here. Stripe returns it to /subscribe.'),
+        }), **_BILLING_ERRORS})
     def post(self, request):
+        """
+        Start a subscription checkout
+
+        Hosted servers only. Creates a Stripe Checkout session and returns its URL. A trial that
+        has not ended carries over.
+        """
         if not settings.CLOUD_MODE:
-            return Response(
-                {"detail": "Cloud billing is disabled for this instance."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            raise APIError("Cloud billing is disabled for this instance.", code="billing_disabled", status=status.HTTP_404_NOT_FOUND)
 
         if not settings.STRIPE_SECRET_KEY or not settings.STRIPE_PRICE_ID:
-            return Response(
-                {"detail": "Stripe is not configured."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+            raise APIError("Stripe is not configured.", code="billing_not_configured", status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         subscription = get_or_create_subscription(request.user)
         if subscription.status == Subscription.STATUS_ACTIVE:
-            return Response(
-                {"detail": "Subscription already active."},
-                status=status.HTTP_409_CONFLICT,
-            )
+            raise APIError("Subscription already active.", code="conflict", status=status.HTTP_409_CONFLICT)
 
         stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -235,36 +236,33 @@ class CreateCheckoutSessionView(APIView):
             session = stripe.checkout.Session.create(**checkout_params)
         except stripe.error.StripeError as exc:
             logger.exception('Failed to create Stripe checkout session: %s', exc)
-            return Response(
-                {"detail": "Unable to create checkout session at this time."},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            raise APIError("Unable to create checkout session at this time.", code="upstream_error", status=status.HTTP_502_BAD_GATEWAY)
 
         return Response({"url": session.url}, status=status.HTTP_200_OK)
 
 
 class CreatePortalSessionView(APIView):
-    permission_classes = [IsAuthenticated]
+    openapi_tags = ['Billing']
 
+    @extend_schema(request=None, responses={200: inline_serializer('BillingPortalURL', fields={
+            'url': serializers.URLField(help_text='Send the browser here. Stripe returns it to /subscribe.'),
+        }), **_BILLING_ERRORS})
     def post(self, request):
+        """
+        Open the billing portal
+
+        Hosted servers only. Returns a Stripe Customer Portal URL where the subscription can be
+        changed or cancelled.
+        """
         if not settings.CLOUD_MODE:
-            return Response(
-                {"detail": "Cloud billing is disabled for this instance."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            raise APIError("Cloud billing is disabled for this instance.", code="billing_disabled", status=status.HTTP_404_NOT_FOUND)
 
         if not settings.STRIPE_SECRET_KEY:
-            return Response(
-                {"detail": "Stripe is not configured."},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
+            raise APIError("Stripe is not configured.", code="billing_not_configured", status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         subscription = get_or_create_subscription(request.user)
         if not subscription.stripe_customer_id:
-            return Response(
-                {"detail": "No Stripe customer exists for this account."},
-                status=status.HTTP_409_CONFLICT,
-            )
+            raise APIError("No Stripe customer exists for this account.", code="conflict", status=status.HTTP_409_CONFLICT)
 
         stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -275,20 +273,33 @@ class CreatePortalSessionView(APIView):
             )
         except stripe.error.StripeError as exc:
             logger.exception('Failed to create Stripe billing portal session: %s', exc)
-            return Response(
-                {"detail": "Unable to create billing portal session at this time."},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
+            raise APIError("Unable to create billing portal session at this time.", code="upstream_error", status=status.HTTP_502_BAD_GATEWAY)
 
         return Response({"url": session.url}, status=status.HTTP_200_OK)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(APIView):
+    openapi_tags = ['Billing']
     authentication_classes = []
-    permission_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = []
 
+    @extend_schema(
+        request={'application/json': {'type': 'object', 'description': 'A Stripe event.'}},
+        responses={
+            200: OpenApiResponse(description='Handled, or already handled.'),
+            400: OpenApiResponse(description='The payload or its `Stripe-Signature` header is not valid.'),
+            503: OpenApiResponse(description='Stripe is not configured on this server.'),
+        },
+    )
     def post(self, request):
+        """
+        Receive a Stripe event
+
+        Called by Stripe, not by clients. The `Stripe-Signature` header is verified with the
+        webhook secret, and each event is applied once.
+        """
         if not settings.STRIPE_SECRET_KEY or not settings.STRIPE_WEBHOOK_SECRET:
             return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 

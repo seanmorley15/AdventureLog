@@ -20,11 +20,15 @@ export const CALENDAR_EVENT_COLORS: Record<CalendarEventType, string> = {
 	lodging: '#8b5cf6',
 	collection: '#10b981',
 	note: '#6366f1',
-	checklist: '#14b8a6'
+	checklist: '#14b8a6',
+	stop: '#0ea5e9',
+	activity: '#ef4444'
 };
 
 export const CALENDAR_EVENT_TYPES: CalendarEventType[] = [
 	'visit',
+	'stop',
+	'activity',
 	'transportation',
 	'lodging',
 	'collection',

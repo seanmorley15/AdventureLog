@@ -3,6 +3,7 @@
 
 	import { browser } from '$app/env';
 	import { goto } from '$app/navigation';
+	import { openLocationHref } from '#lib/location-drawer.svelte.js';
 	import { debounce } from '#lib';
 	import { searchPlaces } from '#lib/map/places.js';
 	import {
@@ -94,7 +95,7 @@
 			addRecentSearch(searchTerm);
 		}
 		closeDialog();
-		goto(url);
+		if (!openLocationHref(url)) goto(url);
 	}
 
 	function handleSelectItem(item: PaletteItem) {

@@ -23,7 +23,7 @@ export const load = (async (event) => {
 	let dashboard: DashboardData = { ...emptyDashboard };
 
 	try {
-		const res = await event.fetch(`${serverEndpoint}/api/stats/dashboard/`, {
+		const res = await event.fetch(`${serverEndpoint}/api/dashboard/`, {
 			headers: {
 				Cookie: `sessionid=${event.cookies.get('sessionid')}`
 			},

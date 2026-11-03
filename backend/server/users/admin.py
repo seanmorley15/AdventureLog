@@ -4,7 +4,7 @@ from django.contrib.sessions.models import Session
 from django.utils.html import format_html_join
 from allauth.account.decorators import secure_admin_login
 
-from main.admin_utils import TIMESTAMP_READONLY, admin_image_preview
+from core.admin import admin_image_preview
 from users.legal import legal_links_required
 from users.models import APIKey, CustomUser
 
@@ -112,7 +112,7 @@ class APIKeyAdmin(admin.ModelAdmin):
     list_filter = ('user',)
     search_fields = ('name', 'key_prefix', 'user__username')
     autocomplete_fields = ('user',)
-    readonly_fields = ('id', 'key_prefix', 'key_hash', 'created_at', 'last_used_at')
+    readonly_fields = ('id', 'key_prefix', 'key_hash', 'key_hash_v2', 'created_at', 'last_used_at')
     ordering = ('-created_at',)
 
     fieldsets = (
@@ -120,7 +120,7 @@ class APIKeyAdmin(admin.ModelAdmin):
         (
             'Key metadata',
             {
-                'fields': ('id', 'key_prefix', 'key_hash', 'created_at', 'last_used_at'),
+                'fields': ('id', 'key_prefix', 'key_hash', 'key_hash_v2', 'created_at', 'last_used_at'),
                 'description': 'Plaintext API keys are only shown once at creation and are never stored.',
             },
         ),

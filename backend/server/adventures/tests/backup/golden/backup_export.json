@@ -1,0 +1,725 @@
+{
+  "backup_schema": 6,
+  "categories": [
+    {
+      "display_name": "Food & Drink",
+      "icon": "🍜",
+      "name": "food"
+    },
+    {
+      "display_name": "General",
+      "icon": "🌍",
+      "name": "general"
+    }
+  ],
+  "checklists": [
+    {
+      "collection_export_id": 1,
+      "date": "2026-05-31",
+      "export_id": 0,
+      "is_public": false,
+      "items": [
+        {
+          "is_checked": true,
+          "is_private": false,
+          "name": "Passport"
+        },
+        {
+          "is_checked": false,
+          "is_private": true,
+          "name": "Gift"
+        }
+      ],
+      "name": "Before leaving"
+    }
+  ],
+  "collections": [
+    {
+      "comment_access": "off",
+      "comments": [],
+      "description": "Someday",
+      "end_date": null,
+      "export_id": 0,
+      "guest_links": [],
+      "is_archived": false,
+      "is_public": false,
+      "link": null,
+      "members": [],
+      "name": "Wishlist",
+      "shared_with_user_ids": [],
+      "start_date": null,
+      "story_groups": {},
+      "timezone": "UTC",
+      "type": "folder",
+      "visibility": "private"
+    },
+    {
+      "comment_access": "signed_in",
+      "comments": [
+        {
+          "author_guest_token": null,
+          "author_name": "Owner",
+          "author_user_uuid": "<user-owner>",
+          "body": "Plan looks good",
+          "created_at": "<created_at>",
+          "day_index": null,
+          "edited_at": null,
+          "export_id": 0,
+          "is_story": false,
+          "mention_uuids": [],
+          "parent_export_id": null,
+          "placement_ref": null
+        },
+        {
+          "author_guest_token": null,
+          "author_name": "Friend",
+          "author_user_uuid": "<user-friend>",
+          "body": "Agreed",
+          "created_at": "<created_at>",
+          "day_index": 2,
+          "edited_at": null,
+          "export_id": 1,
+          "is_story": false,
+          "mention_uuids": [
+            "<user-owner>"
+          ],
+          "parent_export_id": 0,
+          "placement_ref": null
+        },
+        {
+          "author_guest_token": null,
+          "author_name": "Owner",
+          "author_user_uuid": "<user-owner>",
+          "body": "Book the hut early",
+          "created_at": "<created_at>",
+          "day_index": null,
+          "edited_at": null,
+          "export_id": 2,
+          "is_story": false,
+          "mention_uuids": [],
+          "parent_export_id": null,
+          "placement_ref": 1
+        },
+        {
+          "author_guest_token": "<token-1>",
+          "author_name": "Family",
+          "author_user_uuid": null,
+          "body": "Lovely story",
+          "created_at": "<created_at>",
+          "day_index": null,
+          "edited_at": null,
+          "export_id": 3,
+          "is_story": true,
+          "mention_uuids": [],
+          "parent_export_id": null,
+          "placement_ref": null
+        }
+      ],
+      "description": "Summer in the Alps",
+      "end_date": "2026-06-05",
+      "export_id": 1,
+      "guest_links": [
+        {
+          "expires_at": null,
+          "label": "Family",
+          "revoked_at": null,
+          "role": "editor",
+          "token": "<token-1>"
+        }
+      ],
+      "is_archived": false,
+      "is_public": false,
+      "link": "https://example.com/alps",
+      "members": [
+        {
+          "role": "viewer",
+          "user_uuid": "<user-friend>"
+        }
+      ],
+      "name": "Alps",
+      "primary_image": {
+        "content_type": "location",
+        "filename": "<file-1>",
+        "image_index": 0,
+        "immich_id": null,
+        "location_export_id": 0
+      },
+      "shared_with_user_ids": [
+        "<user-friend>"
+      ],
+      "start_date": "2026-06-01",
+      "story_groups": {
+        "costs": true
+      },
+      "timezone": "Europe/Paris",
+      "type": "trip",
+      "visibility": "unlisted"
+    }
+  ],
+  "day_activities": [
+    {
+      "average_cadence": null,
+      "average_speed": null,
+      "calories": 0.0,
+      "collection_export_id": 1,
+      "day_index": 3,
+      "distance": 5000.0,
+      "elapsed_time": null,
+      "elev_high": null,
+      "elev_low": null,
+      "elevation_gain": null,
+      "elevation_loss": 0.0,
+      "end_lat": 45.91,
+      "end_lng": 6.13,
+      "external_service_id": "strava-7",
+      "gpx_filename": "<file-15>",
+      "images": [],
+      "max_speed": null,
+      "moving_time": 0.0,
+      "name": "Morning run",
+      "rest_time": null,
+      "sport_type": "Run",
+      "start_date": null,
+      "start_date_local": null,
+      "start_lat": 45.9,
+      "start_lng": 6.12,
+      "timezone": null,
+      "trail_export_id": 0
+    }
+  ],
+  "day_images": [
+    {
+      "collection_export_id": 1,
+      "day_index": null,
+      "filename": "<file-16>",
+      "immich_id": null,
+      "is_primary": false,
+      "latitude": null,
+      "longitude": null,
+      "source": "upload",
+      "source_url": null
+    },
+    {
+      "collection_export_id": 1,
+      "day_index": 3,
+      "filename": "<file-17>",
+      "immich_id": null,
+      "is_primary": false,
+      "latitude": null,
+      "longitude": null,
+      "source": "upload",
+      "source_url": null
+    }
+  ],
+  "day_trails": [
+    {
+      "collection_export_id": 1,
+      "day_index": 3,
+      "export_id": 0,
+      "images": [
+        {
+          "filename": "<file-14>",
+          "immich_id": null,
+          "is_primary": false,
+          "latitude": null,
+          "longitude": null,
+          "source": "upload",
+          "source_url": null
+        }
+      ],
+      "link": "https://example.com/loop",
+      "name": "Lake loop",
+      "span_end_index": 4,
+      "wanderer_author_domain": null,
+      "wanderer_author_username": null,
+      "wanderer_id": null
+    },
+    {
+      "collection_export_id": 1,
+      "day_index": null,
+      "export_id": 1,
+      "images": [],
+      "link": "https://example.com/ridge",
+      "name": "Someday ridge",
+      "span_end_index": null,
+      "wanderer_author_domain": null,
+      "wanderer_author_username": null,
+      "wanderer_id": null
+    }
+  ],
+  "export_date": "<export_date>",
+  "itinerary_days": [
+    {
+      "collection_export_id": 1,
+      "date": "2026-06-01",
+      "description": "Notes for day 1",
+      "index": 1,
+      "name": "Day 1"
+    },
+    {
+      "collection_export_id": 1,
+      "date": "2026-06-02",
+      "description": "Notes for day 2",
+      "index": 2,
+      "name": "Day 2"
+    },
+    {
+      "collection_export_id": 1,
+      "date": "2026-06-03",
+      "description": "Notes for day 3",
+      "index": 3,
+      "name": "Day 3"
+    },
+    {
+      "collection_export_id": 1,
+      "date": "2026-06-04",
+      "description": "Notes for day 4",
+      "index": 4,
+      "name": "Day 4"
+    },
+    {
+      "collection_export_id": 1,
+      "date": "2026-06-05",
+      "description": "Notes for day 5",
+      "index": 5,
+      "name": "Day 5"
+    }
+  ],
+  "itinerary_items": [
+    {
+      "collection_export_id": 1,
+      "content_type": "transportation",
+      "date": "2026-06-01",
+      "day_index": 1,
+      "end_time": "10:30:00",
+      "is_global": false,
+      "is_optional": false,
+      "item_reference": 0,
+      "logged_visit_ref": null,
+      "order": 0,
+      "span_end_index": null,
+      "start_time": "07:00:00",
+      "timezone": "Europe/Paris"
+    },
+    {
+      "collection_export_id": 1,
+      "content_type": "location",
+      "date": "2026-06-02",
+      "day_index": 2,
+      "end_time": null,
+      "is_global": false,
+      "is_optional": true,
+      "item_reference": 0,
+      "logged_visit_ref": [
+        0,
+        0
+      ],
+      "order": 0,
+      "span_end_index": null,
+      "start_time": null,
+      "timezone": null
+    },
+    {
+      "collection_export_id": 1,
+      "content_type": "lodging",
+      "date": "2026-06-02",
+      "day_index": 2,
+      "end_time": null,
+      "is_global": false,
+      "is_optional": false,
+      "item_reference": 0,
+      "logged_visit_ref": null,
+      "order": 1,
+      "span_end_index": 4,
+      "start_time": null,
+      "timezone": null
+    },
+    {
+      "collection_export_id": 1,
+      "content_type": "location",
+      "date": "2026-06-03",
+      "day_index": 3,
+      "end_time": null,
+      "is_global": false,
+      "is_optional": false,
+      "item_reference": 1,
+      "logged_visit_ref": null,
+      "order": 0,
+      "span_end_index": null,
+      "start_time": null,
+      "timezone": null
+    },
+    {
+      "collection_export_id": 1,
+      "content_type": "note",
+      "date": null,
+      "day_index": null,
+      "end_time": null,
+      "is_global": true,
+      "is_optional": false,
+      "item_reference": 0,
+      "logged_visit_ref": null,
+      "order": 0,
+      "span_end_index": null,
+      "start_time": null,
+      "timezone": null
+    },
+    {
+      "collection_export_id": 1,
+      "content_type": "checklist",
+      "date": null,
+      "day_index": null,
+      "end_time": null,
+      "is_global": true,
+      "is_optional": false,
+      "item_reference": 0,
+      "logged_visit_ref": null,
+      "order": 1,
+      "span_end_index": null,
+      "start_time": null,
+      "timezone": null
+    }
+  ],
+  "locations": [
+    {
+      "attachments": [
+        {
+          "filename": "<file-8>",
+          "name": "Reservation"
+        }
+      ],
+      "category_name": "food",
+      "city": "FR-ARA-1",
+      "collection_export_ids": [
+        1
+      ],
+      "country": "<country-pk>",
+      "country_code": "FR",
+      "description": "High hut",
+      "export_id": 0,
+      "images": [
+        {
+          "filename": "<file-1>",
+          "immich_id": null,
+          "is_primary": true,
+          "latitude": null,
+          "longitude": null,
+          "source": "upload",
+          "source_url": null
+        },
+        {
+          "filename": "<file-7>",
+          "immich_id": null,
+          "is_primary": false,
+          "latitude": null,
+          "longitude": null,
+          "source": "upload",
+          "source_url": null
+        },
+        {
+          "filename": null,
+          "immich_id": "immich-1",
+          "is_primary": false,
+          "latitude": null,
+          "longitude": null,
+          "source": "immich",
+          "source_url": null
+        }
+      ],
+      "is_public": true,
+      "latitude": "45.85",
+      "link": "https://example.com/hut",
+      "location": "Saint-Gervais",
+      "longitude": "6.85",
+      "name": "Refuge du Goûter",
+      "price": "120.00",
+      "price_currency": "EUR",
+      "rating": 4.5,
+      "region": "FR-ARA",
+      "tags": [
+        "hut",
+        "alpine"
+      ],
+      "trails": [
+        {
+          "created_at": "<created_at>",
+          "images": [
+            {
+              "filename": "<file-6>",
+              "immich_id": null,
+              "is_primary": false,
+              "latitude": null,
+              "longitude": null,
+              "source": "upload",
+              "source_url": null
+            }
+          ],
+          "link": null,
+          "name": "Tête Rousse route",
+          "wanderer_author_domain": "wanderer.example",
+          "wanderer_author_username": "ana",
+          "wanderer_id": "w-1"
+        }
+      ],
+      "visits": [
+        {
+          "activities": [
+            {
+              "average_cadence": 80.0,
+              "average_speed": 1.2,
+              "calories": 2100.0,
+              "distance": 7200.5,
+              "elapsed_time": 21600.0,
+              "elev_high": 3800.0,
+              "elev_low": 2200.0,
+              "elevation_gain": 1600.0,
+              "elevation_loss": 10.0,
+              "end_lat": 45.86,
+              "end_lng": 6.86,
+              "external_service_id": "ext-9",
+              "gpx_filename": "<file-2>",
+              "images": [
+                {
+                  "filename": "<file-3>",
+                  "immich_id": null,
+                  "is_primary": false,
+                  "latitude": null,
+                  "longitude": null,
+                  "source": "upload",
+                  "source_url": null
+                }
+              ],
+              "max_speed": 2.5,
+              "moving_time": 18000.0,
+              "name": "Ascent",
+              "rest_time": 1800.0,
+              "sport_type": "Hike",
+              "start_date": "2026-06-02T07:00:00+00:00",
+              "start_date_local": "2026-06-02T09:00:00+00:00",
+              "start_lat": 45.85,
+              "start_lng": 6.85,
+              "timezone": "Europe/Paris",
+              "trail_name": "Tête Rousse route"
+            }
+          ],
+          "attachments": [
+            {
+              "filename": "<file-5>",
+              "name": "Visit log"
+            }
+          ],
+          "end_date": "2026-06-02T17:00:00+00:00",
+          "export_id": 0,
+          "images": [
+            {
+              "filename": "<file-4>",
+              "immich_id": null,
+              "is_primary": false,
+              "latitude": null,
+              "longitude": null,
+              "source": "upload",
+              "source_url": null
+            }
+          ],
+          "notes": "Clear skies",
+          "start_date": "2026-06-02T09:00:00+00:00",
+          "timezone": "Europe/Paris"
+        },
+        {
+          "activities": [],
+          "attachments": [],
+          "end_date": null,
+          "export_id": 1,
+          "images": [],
+          "notes": "Earlier visit",
+          "start_date": "2025-08-01T00:00:00+00:00",
+          "timezone": null
+        }
+      ]
+    },
+    {
+      "attachments": [],
+      "category_name": "general",
+      "city": null,
+      "collection_export_ids": [
+        0,
+        1
+      ],
+      "country": "<country-pk>",
+      "country_code": "FR",
+      "description": null,
+      "export_id": 1,
+      "images": [],
+      "is_public": false,
+      "latitude": "45.9",
+      "link": null,
+      "location": null,
+      "longitude": "6.12",
+      "name": "Café du Lac",
+      "price": null,
+      "price_currency": null,
+      "rating": null,
+      "region": "FR-ARA",
+      "tags": null,
+      "trails": [],
+      "visits": []
+    },
+    {
+      "attachments": [],
+      "category_name": "general",
+      "city": null,
+      "collection_export_ids": [],
+      "country": null,
+      "country_code": null,
+      "description": null,
+      "export_id": 2,
+      "images": [],
+      "is_public": false,
+      "latitude": null,
+      "link": null,
+      "location": null,
+      "longitude": null,
+      "name": "Spare place",
+      "price": null,
+      "price_currency": null,
+      "rating": null,
+      "region": null,
+      "tags": null,
+      "trails": [],
+      "visits": []
+    }
+  ],
+  "lodging": [
+    {
+      "attachments": [
+        {
+          "filename": "<file-13>",
+          "name": "Booking"
+        }
+      ],
+      "check_in": "2026-06-02T15:00:00+00:00",
+      "check_out": "2026-06-04T10:00:00+00:00",
+      "collection_export_id": 1,
+      "description": "Cosy",
+      "export_id": 0,
+      "images": [
+        {
+          "filename": "<file-12>",
+          "immich_id": null,
+          "is_primary": false,
+          "latitude": null,
+          "longitude": null,
+          "source": "upload",
+          "source_url": null
+        }
+      ],
+      "is_public": false,
+      "latitude": "45.92",
+      "link": "https://example.com/chalet",
+      "location": "Chamonix",
+      "longitude": "6.87",
+      "name": "Chalet Mont-Blanc",
+      "price": "0.00",
+      "price_currency": "EUR",
+      "rating": 5.0,
+      "reservation_number": "CH-77",
+      "timezone": "Europe/Paris",
+      "type": "cabin"
+    }
+  ],
+  "notes": [
+    {
+      "attachments": [],
+      "collection_export_id": 1,
+      "content": "Layers",
+      "date": "2026-05-30",
+      "export_id": 0,
+      "images": [
+        {
+          "filename": "<file-11>",
+          "immich_id": null,
+          "is_primary": false,
+          "latitude": null,
+          "longitude": null,
+          "source": "upload",
+          "source_url": null
+        }
+      ],
+      "is_private": true,
+      "is_public": false,
+      "links": [
+        "https://example.com/gear"
+      ],
+      "name": "Packing"
+    },
+    {
+      "attachments": [],
+      "collection_export_id": null,
+      "content": "No collection",
+      "date": null,
+      "export_id": 1,
+      "images": [],
+      "is_private": false,
+      "is_public": false,
+      "links": null,
+      "name": "Loose note"
+    }
+  ],
+  "transportation": [
+    {
+      "attachments": [
+        {
+          "filename": "<file-10>",
+          "name": "Ticket"
+        }
+      ],
+      "collection_export_id": 1,
+      "date": "2026-06-01T07:00:00+00:00",
+      "description": "Paris to Annecy",
+      "destination_latitude": "45.9",
+      "destination_longitude": "6.12",
+      "end_code": "NCY",
+      "end_date": "2026-06-01T10:30:00+00:00",
+      "end_timezone": "Europe/Paris",
+      "export_id": 0,
+      "flight_number": null,
+      "from_location": "Paris",
+      "images": [
+        {
+          "filename": "<file-9>",
+          "immich_id": null,
+          "is_primary": false,
+          "latitude": null,
+          "longitude": null,
+          "source": "upload",
+          "source_url": null
+        }
+      ],
+      "is_public": true,
+      "link": "https://example.com/tgv",
+      "name": "TGV to Annecy",
+      "origin_latitude": "48.84",
+      "origin_longitude": "2.37",
+      "price": "89.00",
+      "price_currency": "EUR",
+      "rating": 4.0,
+      "start_code": "PAR",
+      "start_timezone": "Europe/Paris",
+      "to_location": "Annecy",
+      "type": "train"
+    }
+  ],
+  "user_email": "bk-owner@example.com",
+  "user_username": "bk-owner",
+  "version": "test",
+  "visited_cities": [
+    {
+      "city": "FR-ARA-1"
+    }
+  ],
+  "visited_regions": [
+    {
+      "region": "FR-ARA"
+    }
+  ]
+}

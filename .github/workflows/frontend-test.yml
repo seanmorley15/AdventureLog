@@ -7,10 +7,12 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "backend/server/openapi/schema.yaml"
       - ".github/workflows/frontend-test.yml"
   push:
     paths:
       - "frontend/**"
+      - "backend/server/openapi/schema.yaml"
       - ".github/workflows/frontend-test.yml"
 
 jobs:
@@ -38,6 +40,13 @@ jobs:
       - name: run lint
         working-directory: frontend
         run: pnpm run lint
+
+      # The API types are generated from the backend schema; they must be up to date.
+      - name: check generated API types
+        working-directory: frontend
+        run: |
+          pnpm run api:types
+          git diff --exit-code src/lib/api/schema.d.ts
 
       - name: run svelte check
         working-directory: frontend

@@ -45,6 +45,17 @@ The term "Location" is now used instead of "Adventure" - the usage remains the s
 - **Note**: a note is a collection exclusive feature that allows you to add notes to your trip. This can be used to add additional information about your trip, such as a summary of the trip or a list of things to do. Notes can be assigned to a specific day of the trip to help organize the information.
 - **Checklist**: a checklist is a collection exclusive feature that allows you to add a checklist to your trip. This can be used to create a list of things to do during your trip or for planning purposes like packing lists. Checklists can be assigned to a specific day of the trip to help organize the information.
 
+##### Exporting and importing a collection
+
+A collection can be saved to a ZIP file and added to any AdventureLog account, which is handy for moving a trip to another server or keeping a copy. Open the collection's menu and choose **Export ZIP**. On the Collections page, choose **Import from file**.
+
+- **What the file contains:** the collection and everything in it: locations with their visits, trails, activities, photos and attachments, plus transportation, lodging, notes, checklists, the day-by-day plan, and comments.
+- **What it leaves out:** who the collection is shared with and any guest links, so the file can be passed around without giving anyone access. Comments keep the name of whoever wrote them but are not linked to their accounts. Your world travel visits are not included; use a full backup from Settings for those.
+- **Importing:** the collection is added next to what you already have. If you already have a collection with the same name, the new one is called "Name (1)".
+- **Places you already have:** with **Use places I already have** on (the default), a place in the file that matches one in your account is added to the new collection instead of being copied, and its visits and photos in your account are left as they are. Turn it off to create a new copy of every place.
+
+A full backup from Settings is a different file. It replaces everything in your account, so it cannot be imported as a collection, and a collection file cannot be restored as a full backup. Collection files exported by older versions can still be imported.
+
 #### World Travel
 
 - **World Travel**: the world travel feature of AdventureLog allows you to track the countries, regions, and cities you have visited during your lifetime. You can add visits to countries, regions, and cities, and view statistics about your travels. The world travel feature is a fun way to visualize where you have been and where you want to go next.

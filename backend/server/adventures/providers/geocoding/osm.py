@@ -1,9 +1,12 @@
-import socket
 from typing import Dict, Optional
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
+from core.cache import cached_provider, coordinate_key
+from core.net import is_resolvable
+
+GEOCODE_CACHE_TIMEOUT = 60 * 60 * 24 * 7  # Nominatim asks clients to cache results
 
 REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
 
@@ -15,21 +18,23 @@ def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
     return headers
 
 
-def _is_host_resolvable(hostname: str) -> bool:
-    try:
-        socket.gethostbyname(hostname)
-        return True
-    except socket.error:
-        return False
-
-
+@cached_provider(
+    'osm_reverse',
+    # Names come back in the requested language, so the language is part of the key.
+    lambda lat, lon, user_agent=None, language=None, **k: (
+        coordinate_key(lat, 5),
+        coordinate_key(lon, 5),
+        language or '',
+    ),
+    GEOCODE_CACHE_TIMEOUT,
+)
 def reverse_geocode(
     lat: float,
     lon: float,
     user_agent: str = "AdventureLog Server",
     language: Optional[str] = None,
 ) -> ProviderResult[Dict]:
-    if not _is_host_resolvable("nominatim.openstreetmap.org"):
+    if not is_resolvable("nominatim.openstreetmap.org"):
         return ProviderResult(error="Unable to resolve OpenStreetMap service")
 
     params = {

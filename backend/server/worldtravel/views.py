@@ -1,161 +1,271 @@
-from django.shortcuts import get_object_or_404
-from .models import Country, Region, VisitedRegion, City, VisitedCity
-from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count, Q
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view, inline_serializer
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, action
-from django.contrib.gis.geos import Point
-from adventures.models import Location
+from rest_framework.views import APIView
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def regions_by_country(request, country_code):
-    country = get_object_or_404(Country, country_code=country_code)
-    regions = Region.objects.filter(country=country).select_related('country').order_by('name')
-    serializer = RegionSerializer(regions, many=True)
-    return Response(serializer.data)
+from core.exceptions import APIError
+from core.pagination import StandardResultsSetPagination
+from .models import City, Country, Region, VisitedCity, VisitedRegion
+from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedCitySerializer, VisitedRegionSerializer
+from .services import mark_regions_visited
+from .visited import country_behind_region, territory_of_region, umbrella_regions
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def visits_by_country(request, country_code):
-    country = get_object_or_404(Country, country_code=country_code)
-    visits = VisitedRegion.objects.filter(region__country=country, user=request.user.id).select_related('region__country')
-    serializer = VisitedRegionSerializer(visits, many=True)
-    return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def cities_by_region(request, region_id):
-    region = get_object_or_404(Region, id=region_id)
-    cities = City.objects.filter(region=region).order_by('name')
-    serializer = CitySerializer(cities, many=True)
-    return Response(serializer.data)
+def _regions_with_city_counts():
+    return Region.objects.select_related('country', 'territory').annotate(num_cities_annotated=Count('city', distinct=True))
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def visits_by_region(request, region_id):
-    region = get_object_or_404(Region, id=region_id)
-    visits = VisitedCity.objects.filter(city__region=region, user=request.user.id)
-    serializer = VisitedCitySerializer(visits, many=True)
-    return Response(serializer.data)
 
-# view called spin the globe that return a random country, a random region in that country and a random city in that region
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def globespin(request):
-    country = Country.objects.order_by('?').first()
-    data = {
-        "country": CountrySerializer(country).data,
-    }
-    
-    regions = Region.objects.filter(country=country).select_related('country')
-    if regions.exists():
-        region = regions.order_by('?').first()
-        data["region"] = RegionSerializer(region).data
-        
-        cities = City.objects.filter(region=region)
-        if cities.exists():
-            city = cities.order_by('?').first()
-            data["city"] = CitySerializer(city).data
-    
-    return Response(data)
-
+@extend_schema_view(
+    list=extend_schema(description='Every country, A to Z, with how many of its regions you have visited.'),
+    retrieve=extend_schema(
+        parameters=[OpenApiParameter('country_code', str, OpenApiParameter.PATH, description='ISO 3166-1 alpha-2, e.g. `US`.')]
+    ),
+)
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Country.objects.all().order_by('name')
+    """Countries of the world. Reference data, the same for everyone."""
+
+    openapi_tags = ['World travel']
+    openapi_resource_plural = 'countries'
     serializer_class = CountrySerializer
-    permission_classes = [IsAuthenticated]
+    lookup_field = 'country_code'
+    queryset = Country.objects.all()
 
-    @action(detail=False, methods=['get'])
-    def check_point_in_region(self, request):
-        lat = float(request.query_params.get('lat'))
-        lon = float(request.query_params.get('lon'))
-        point = Point(lon, lat, srid=4326)
-        region = Region.objects.filter(geometry__contains=point).first()
-        if region:
-            return Response({'in_region': True, 'region_name': region.name, 'region_id': region.id})
-        else:
-            return Response({'in_region': False})
+    def get_queryset(self):
+        # Region and visit counts come from the same query instead of two per country.
+        return Country.objects.annotate(
+            num_regions_annotated=Count('region', distinct=True),
+            num_visits_annotated=Count(
+                'region__visitedregion',
+                filter=Q(region__visitedregion__user=self.request.user.id),
+                distinct=True,
+            ),
+        ).order_by('name')
 
-    @action(detail=False, methods=['post'])
-    def region_check_all_adventures(self, request):
-        adventures = Location.objects.filter(user=request.user.id, type='visited')
-        count = 0
-        for adventure in adventures:
-            if adventure.coordinates:
-                try:
-                    point = adventure.coordinates
-                    region = Region.objects.filter(geometry__contains=point).first()
-                    if region:
-                        if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
-                            VisitedRegion.objects.create(user=request.user, region=region)
-                            count += 1
-                except Exception as e:
-                    print(f"Error processing adventure {adventure.id}: {e}")
-                    continue
-        return Response({'regions_visited': count})
+    @extend_schema(
+        parameters=[OpenApiParameter('country_code', str, OpenApiParameter.PATH, description='ISO 3166-1 alpha-2, e.g. `US`.')],
+        responses=RegionSerializer(many=True),
+    )
+    @action(detail=True, methods=['get'])
+    def regions(self, request, country_code=None):
+        """List a country's regions"""
+        country = self.get_object()
+        regions = _regions_with_city_counts().filter(country=country).order_by('name')
+        return Response(RegionSerializer(regions, many=True, context={'request': request}).data)
 
+
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[OpenApiParameter('country', str, description='Only this country (ISO alpha-2 code).')],
+    ),
+)
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Region.objects.select_related('country').all()
+    """States, provinces and other first-level divisions of a country."""
+
+    openapi_tags = ['World travel']
     serializer_class = RegionSerializer
-    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    queryset = Region.objects.all()
 
-class VisitedRegionViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        queryset = _regions_with_city_counts().order_by('name')
+        country = self.request.query_params.get('country')
+        if self.action == 'list' and country:
+            queryset = queryset.filter(country__country_code=country)
+        return queryset
+
+    @extend_schema(responses=CitySerializer(many=True))
+    @action(detail=True, methods=['get'])
+    def cities(self, request, pk=None):
+        """List a region's cities"""
+        region = self.get_object()
+        cities = City.objects.filter(region=region).select_related('region__country').order_by('name')
+        return Response(CitySerializer(cities, many=True, context={'request': request}).data)
+
+
+class _VisitedPlaceViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Shared behaviour of visited regions and visited cities.
+
+    The path id is the region or city itself, not the record, so ``GET``, ``DELETE`` and the
+    ``region``/``city`` field all name the same thing.
+    """
+
+    openapi_tags = ['World travel']
+    model = None
+    place_field = None
+
+    def territory_to_mark_from(self, place):
+        """The country whose own pages a place has to be marked from, or None when it can be marked here."""
+        return None
+
+    def perform_create(self, serializer):
+        place = serializer.validated_data[self.place_field]
+        territory = self.territory_to_mark_from(place)
+        if territory is not None:
+            # The place is the same one as a country's, and is marked visited there.
+            raise APIError(
+                f'{territory.name} is a country of its own here. Mark this {self.place_field} visited from the '
+                f'{territory.name} page.',
+                code='conflict',
+                status=status.HTTP_409_CONFLICT,
+                country_code=territory.country_code,
+            )
+        if self.model.objects.filter(user=self.request.user, **{self.place_field: place}).exists():
+            raise APIError(
+                f'You have already visited this {self.place_field}.', code='conflict', status=status.HTTP_409_CONFLICT
+            )
+        serializer.save(user=self.request.user)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary='List your visited regions',
+        parameters=[OpenApiParameter('country', str, description='Only regions of this country (ISO alpha-2 code).')],
+    ),
+    create=extend_schema(
+        summary='Mark a region visited',
+        description=(
+            'A region that is also a country of its own (such as `US-PR`) is marked visited from that '
+            'country\'s page, and is refused with `409` and the `country_code` to use.'
+        ),
+        responses={
+            201: VisitedRegionSerializer,
+            409: OpenApiResponse(description='Already marked visited, or marked from another country\'s page.'),
+        },
+    ),
+    retrieve=extend_schema(
+        summary='Get a visited region',
+        parameters=[OpenApiParameter('region', str, OpenApiParameter.PATH, description='The region id, e.g. `US-CA`.')],
+    ),
+    destroy=extend_schema(
+        summary='Unmark a visited region',
+        description=(
+            'A region the dataset also lists as a country (such as `US-PR`, Puerto Rico) is visited '
+            'whenever that country is, so it can only be unmarked by unmarking the country\'s own regions.'
+        ),
+        parameters=[OpenApiParameter('region', str, OpenApiParameter.PATH, description='The region id, e.g. `US-CA`.')],
+        responses={
+            204: None,
+            409: OpenApiResponse(description='The region is visited through the country it is also listed as.'),
+        },
+    ),
+)
+class VisitedRegionViewSet(_VisitedPlaceViewSet):
+    """Regions you have visited. Visiting a location in a region marks it automatically."""
+
     serializer_class = VisitedRegionSerializer
-    permission_classes = [IsAuthenticated]
+    model = VisitedRegion
+    place_field = 'region'
+    lookup_field = 'region'
+    queryset = VisitedRegion.objects.all()
+
+    def territory_to_mark_from(self, place):
+        return territory_of_region(place)
 
     def get_queryset(self):
-        return VisitedRegion.objects.filter(user=self.request.user.id).select_related('region__country')
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        queryset = VisitedRegion.objects.filter(user=self.request.user.id).select_related('region__country')
+        country = self.request.query_params.get('country')
+        if self.action == 'list' and country:
+            queryset = queryset.filter(region__country__country_code=country)
+        return queryset
 
-    def create(self, request, *args, **kwargs):
-        request.data['user'] = request.user
-        if VisitedRegion.objects.filter(user=request.user.id, region=request.data['region']).exists():
-            return Response({"error": "Region already visited by user."}, status=400)
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
-    def destroy(self, request, **kwargs):
-        region = get_object_or_404(Region, id=kwargs['pk'])
-        visited_region = VisitedRegion.objects.filter(user=request.user.id, region=region)
-        if visited_region.exists():
-            visited_region.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({"error": "Visited region not found."}, status=status.HTTP_404_NOT_FOUND)
-    
-class VisitedCityViewSet(viewsets.ModelViewSet):
+    def list(self, request, *args, **kwargs):
+        rows = list(self.filter_queryset(self.get_queryset()))
+        # A region that is also a country is visited when that country is. It has no row of its own.
+        through_country = umbrella_regions(request.user.id)
+        if through_country:
+            regions = Region.objects.filter(id__in=through_country).select_related('country')
+            country = request.query_params.get('country')
+            if country:
+                regions = regions.filter(country__country_code=country)
+            rows += [VisitedRegion(user=request.user, region=region) for region in regions]
+        return Response(self.get_serializer(rows, many=True).data)
+
+    def destroy(self, request, *args, **kwargs):
+        country = country_behind_region(request.user.id, kwargs[self.lookup_field])
+        if country is not None:
+            raise APIError(
+                f'This region is visited through {country.name}. Unmark the regions of {country.name} instead.',
+                code='conflict',
+                status=status.HTTP_409_CONFLICT,
+                country_code=country.country_code,
+            )
+        return super().destroy(request, *args, **kwargs)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary='List your visited cities',
+        parameters=[OpenApiParameter('region', str, description='Only cities of this region (region id).')],
+    ),
+    create=extend_schema(
+        summary='Mark a city visited',
+        description='Also marks its region visited.',
+        responses={201: VisitedCitySerializer, 409: OpenApiResponse(description='Already marked visited.')},
+    ),
+    retrieve=extend_schema(
+        summary='Get a visited city',
+        parameters=[OpenApiParameter('city', str, OpenApiParameter.PATH, description='The city id.')],
+    ),
+    destroy=extend_schema(
+        summary='Unmark a visited city',
+        parameters=[OpenApiParameter('city', str, OpenApiParameter.PATH, description='The city id.')],
+    ),
+)
+class VisitedCityViewSet(_VisitedPlaceViewSet):
+    """Cities you have visited."""
+
     serializer_class = VisitedCitySerializer
-    permission_classes = [IsAuthenticated]
+    model = VisitedCity
+    place_field = 'city'
+    lookup_field = 'city'
+    openapi_resource_plural = 'visited cities'
+    queryset = VisitedCity.objects.all()
 
     def get_queryset(self):
-        return VisitedCity.objects.filter(user=self.request.user.id)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        queryset = VisitedCity.objects.filter(user=self.request.user.id).select_related('city__region__country')
+        region = self.request.query_params.get('region')
+        if self.action == 'list' and region:
+            queryset = queryset.filter(city__region=region)
+        return queryset
 
-    def create(self, request, *args, **kwargs):
-        request.data['user'] = request.user
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        # Ensure a VisitedRegion exists for the city
-        region = serializer.validated_data['city'].region
-        if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
-            VisitedRegion.objects.create(user=request.user, region=region)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
-    def destroy(self, request, **kwargs):
-        city = get_object_or_404(City, id=kwargs['pk'])
-        visited_city = VisitedCity.objects.filter(user=request.user.id, city=city)
-        if visited_city.exists():
-            visited_city.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response({"error": "Visited city not found."}, status=status.HTTP_404_NOT_FOUND)
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        mark_regions_visited(self.request.user.id, [serializer.instance.city.region_id])
+
+
+class GlobeSpinView(APIView):
+    openapi_tags = ['World travel']
+
+    @extend_schema(
+        responses=inline_serializer('GlobeSpin', fields={
+            'country': CountrySerializer(),
+            'region': RegionSerializer(required=False, help_text='Absent when the country has no regions.'),
+            'city': CitySerializer(required=False, help_text='Absent when the region has no cities.'),
+        })
+    )
+    def get(self, request):
+        """
+        Spin the globe
+
+        A random country, a random region in it, and a random city in that region.
+        """
+        country = Country.objects.order_by('?').first()
+        if country is None:
+            raise APIError('No countries are loaded on this server.', code='not_found', status=status.HTTP_404_NOT_FOUND)
+        data = {'country': CountrySerializer(country, context={'request': request}).data}
+        region = Region.objects.filter(country=country).select_related('country').order_by('?').first()
+        if region is not None:
+            data['region'] = RegionSerializer(region).data
+            city = City.objects.filter(region=region).order_by('?').first()
+            if city is not None:
+                data['city'] = CitySerializer(city).data
+        return Response(data)

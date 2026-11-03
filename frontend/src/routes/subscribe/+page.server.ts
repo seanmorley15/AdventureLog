@@ -15,7 +15,7 @@ export const load: PageServerLoad = async (event) => {
 	let mediaUsage: MediaUsage | null = null;
 
 	if (sessionId) {
-		const mediaUsageFetch = await event.fetch(`${endpoint}/auth/user-media-usage/`, {
+		const mediaUsageFetch = await event.fetch(`${endpoint}/api/account/media-usage/`, {
 			headers: {
 				Cookie: `sessionid=${sessionId}`
 			}
@@ -50,7 +50,7 @@ export const actions: Actions = {
 			return fail(500, { message: 'Unable to start checkout.', action: 'subscribe' });
 		}
 
-		const res = await event.fetch(`${endpoint}/api/billing/create-checkout-session/`, {
+		const res = await event.fetch(`${endpoint}/api/billing/checkout-session/`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export const actions: Actions = {
 			return fail(500, { message: 'Unable to open billing portal.', action: 'portal' });
 		}
 
-		const res = await event.fetch(`${endpoint}/api/billing/create-portal-session/`, {
+		const res = await event.fetch(`${endpoint}/api/billing/portal-session/`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
