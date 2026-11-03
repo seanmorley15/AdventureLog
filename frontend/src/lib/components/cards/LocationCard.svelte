@@ -88,6 +88,7 @@
 		collection?: Collection | null;
 		readOnly?: boolean;
 		compact?: boolean; // For compact grid display in itinerary
+		hasDragHandle?: boolean;
 		itineraryItem?: CollectionItineraryItem | null;
 		isEditLoading?: boolean;
 		adventure: Location;
@@ -99,6 +100,7 @@
 		collection = null,
 		readOnly = false,
 		compact = false,
+		hasDragHandle = false,
 		itineraryItem = null,
 		isEditLoading = false,
 		adventure = $bindable()
@@ -312,9 +314,9 @@
 		<CardCarousel images={adventure.images} icon={adventure.category?.icon} name={adventure.name} />
 
 		<!-- Status Overlay (icon-only) -->
-		<div class="absolute top-2 left-4 flex items-center gap-3">
+		{#snippet visitedBadge(tooltipSide: string)}
 			<div
-				class="tooltip tooltip-right"
+				class="tooltip {tooltipSide}"
 				data-tip={adventure.is_visited ? $t('adventures.visited') : $t('adventures.not_visited')}
 			>
 				{#if adventure.is_visited}
@@ -327,10 +329,20 @@
 					</div>
 				{/if}
 			</div>
-		</div>
+		{/snippet}
+
+		<!-- The drag handle takes the top-left corner, so the status moves next to the privacy icon -->
+		{#if !hasDragHandle}
+			<div class="absolute top-2 left-4 flex items-center gap-3">
+				{@render visitedBadge('tooltip-right')}
+			</div>
+		{/if}
 
 		<!-- Privacy Indicator -->
-		<div class="absolute top-2 right-4">
+		<div class="absolute top-2 right-4 flex items-center gap-3">
+			{#if hasDragHandle}
+				{@render visitedBadge('tooltip-left')}
+			{/if}
 			<div
 				class="tooltip tooltip-left"
 				data-tip={adventure.is_public ? $t('adventures.public') : $t('adventures.private')}

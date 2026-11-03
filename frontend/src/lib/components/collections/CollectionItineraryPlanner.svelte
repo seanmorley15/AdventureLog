@@ -14,7 +14,12 @@
 	} from '#lib/types.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { dndzone, TRIGGERS, SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action';
+	import {
+		dragHandleZone,
+		dragHandle,
+		TRIGGERS,
+		SHADOW_ITEM_MARKER_PROPERTY_NAME
+	} from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import CalendarBlank from '~icons/mdi/calendar-blank';
 	import Bed from '~icons/mdi/bed';
@@ -947,11 +952,15 @@
 		return false;
 	}
 
+	// Replace the day object rather than mutating it
+	function setDayItems(dayIndex: number, items: ResolvedItineraryItem[]) {
+		days = days.map((day, i) => (i === dayIndex ? { ...day, items } : day));
+	}
+
 	function handleDndConsider(dayIndex: number, e: CustomEvent) {
 		const { items: newItems } = e.detail;
 		// Update the local state immediately for smooth drag feedback
-		days[dayIndex].items = newItems;
-		days = [...days];
+		setDayItems(dayIndex, newItems);
 	}
 
 	function handleDndConsiderGlobal(e: CustomEvent) {
@@ -981,8 +990,7 @@
 		const { items: newItems, info } = e.detail;
 
 		// Update local state
-		days[dayIndex].items = newItems;
-		days = [...days];
+		setDayItems(dayIndex, newItems);
 
 		// Save to backend if item was actually moved (not just considered)
 		if (
@@ -1927,7 +1935,7 @@
 						</div>
 					{:else}
 						<div
-							use:dndzone={{
+							use:dragHandleZone={{
 								items: globalItems,
 								flipDurationMs,
 								dropTargetStyle: { outline: 'none', border: 'none' },
@@ -1948,7 +1956,7 @@
 									{#if resolvedObj}
 										{#if canModify}
 											<div
-												class="absolute left-2 top-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+												class="absolute left-2 top-2 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"
 												title={$t('itinerary.drag_to_reorder')}
 											>
 												<div
@@ -1956,6 +1964,7 @@
 													aria-label={$t('itinerary.drag_to_reorder')}
 													role="button"
 													tabindex="0"
+													use:dragHandle
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
@@ -1986,6 +1995,7 @@
 												{user}
 												{collection}
 												compact={true}
+												hasDragHandle={canModify}
 											/>
 										{:else if objectType === 'transportation'}
 											<TransportationCard
@@ -2302,7 +2312,7 @@
 							</div>
 						{:else}
 							<div
-								use:dndzone={{
+								use:dragHandleZone={{
 									items: day.items,
 									flipDurationMs,
 									dropTargetStyle: { outline: 'none', border: 'none' },
@@ -2329,7 +2339,7 @@
 											<!-- Drag Handle Container -->
 											{#if canModify}
 												<div
-													class="absolute left-2 top-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+													class="absolute left-2 top-2 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"
 													title={$t('itinerary.drag_to_reorder')}
 												>
 													<div
@@ -2337,6 +2347,7 @@
 														aria-label={$t('itinerary.drag_to_reorder')}
 														role="button"
 														tabindex="0"
+														use:dragHandle
 													>
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
@@ -2382,6 +2393,7 @@
 														{user}
 														{collection}
 														compact={true}
+														hasDragHandle={canModify}
 														on:changeDay={(e) =>
 															handleOpenDayPickerForItem(
 																e.detail.type,
