@@ -941,12 +941,21 @@ class NoteSerializer(CustomModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
     
 class ChecklistItemSerializer(CustomModelSerializer):
+        # Writable so ChecklistSerializer.update() can match existing items
+        id = serializers.UUIDField(required=False)
+
         class Meta:
             model = ChecklistItem
             fields = [
                 'id', 'user', 'name', 'is_checked', 'checklist', 'created_at', 'updated_at'
             ]
-            read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'checklist']
+            read_only_fields = ['created_at', 'updated_at', 'user', 'checklist']
+
+        def to_internal_value(self, data):
+            # The web client sends new items with an empty id
+            if isinstance(data, dict) and data.get('id') == '':
+                data = {key: value for key, value in data.items() if key != 'id'}
+            return super().to_internal_value(data)
   
 class ChecklistSerializer(CustomModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
@@ -965,6 +974,7 @@ class ChecklistSerializer(CustomModelSerializer):
         for item_data in items_data:
             # Remove user from item_data to avoid constraint issues
             item_data.pop('user', None)
+            item_data.pop('id', None)
             # Set user from the parent checklist
             ChecklistItem.objects.create(
                 checklist=checklist, 
@@ -991,7 +1001,7 @@ class ChecklistSerializer(CustomModelSerializer):
             # Remove user from item_data to avoid constraint issues
             item_data.pop('user', None)
             
-            item_id = item_data.get('id')
+            item_id = item_data.pop('id', None)
             if item_id:
                 if item_id in current_item_ids:
                     item = current_items.get(id=item_id)
