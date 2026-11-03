@@ -1,6 +1,7 @@
 import hashlib
 import secrets
 import uuid
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -102,6 +103,8 @@ class APIKey(models.Model):
 
     _KEY_HASH_ITERATIONS = 600000
     _KEY_HASH_SALT_NAMESPACE = "users.APIKey"
+    _AUTH_CACHE_TIMEOUT = 300
+    _LAST_USED_UPDATE_INTERVAL = timedelta(minutes=1)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -157,11 +160,35 @@ class APIKey(models.Model):
         Returns the matching ``APIKey`` instance (updating ``last_used_at``) or
         ``None`` if not found.
         """
-        key_hash = cls._hash_raw_key(raw_key)
-        try:
-            api_key = cls.objects.select_related('user').get(key_hash=key_hash)
-        except cls.DoesNotExist:
-            return None
+        from django.core.cache import cache
         from django.utils import timezone
-        cls.objects.filter(pk=api_key.pk).update(last_used_at=timezone.now())
+
+        # Remember verified keys so PBKDF2 doesn't run on every request. Keys are
+        # 256-bit random, so a plain SHA-256 is enough for the cache key. Only the
+        # pk is cached: a revoked key no longer resolves and gets the full check.
+        cache_key = f"apikey:{hashlib.sha256(raw_key.encode('utf-8')).hexdigest()}"
+        try:
+            cached_pk = cache.get(cache_key)
+        except Exception:
+            cached_pk = None
+
+        api_key = None
+        if cached_pk is not None:
+            api_key = cls.objects.select_related('user').filter(pk=cached_pk).first()
+
+        if api_key is None:
+            key_hash = cls._hash_raw_key(raw_key)
+            try:
+                api_key = cls.objects.select_related('user').get(key_hash=key_hash)
+            except cls.DoesNotExist:
+                return None
+            try:
+                cache.set(cache_key, api_key.pk, cls._AUTH_CACHE_TIMEOUT)
+            except Exception:
+                pass
+
+        now = timezone.now()
+        if api_key.last_used_at is None or now - api_key.last_used_at >= cls._LAST_USED_UPDATE_INTERVAL:
+            cls.objects.filter(pk=api_key.pk).update(last_used_at=now)
+            api_key.last_used_at = now
         return api_key
