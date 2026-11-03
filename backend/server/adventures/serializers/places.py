@@ -8,7 +8,19 @@ services in ``adventures.services.places`` normalize it. They are not model seri
 from rest_framework import serializers
 
 
-class PlaceSearchQuerySerializer(serializers.Serializer):
+class LanguageQuerySerializer(serializers.Serializer):
+    """The `lang` parameter shared by every lookup that returns names or text."""
+
+    lang = serializers.CharField(
+        required=False,
+        help_text=(
+            "Language for names and text, e.g. `de`. Defaults to the signed-in user's interface language "
+            "(`X-AdventureLog-Locale`, then `Accept-Language`)."
+        ),
+    )
+
+
+class PlaceSearchQuerySerializer(LanguageQuerySerializer):
     q = serializers.CharField(
         help_text='What to look for: a name or address, or `lat,lon` to find what is at a point.'
     )
@@ -46,10 +58,9 @@ class PlaceSearchResponseSerializer(serializers.Serializer):
     )
 
 
-class PlaceDetailsQuerySerializer(serializers.Serializer):
+class PlaceDetailsQuerySerializer(LanguageQuerySerializer):
     place_id = serializers.CharField(help_text='A `place_id` from a search result.')
     name = serializers.CharField(required=False, default='', help_text='Used to search again if the id is unknown.')
-    lang = serializers.CharField(required=False, default='en', help_text='Language for names and text.')
 
 
 class PlaceDetailsSerializer(serializers.Serializer):
@@ -66,7 +77,7 @@ class PlaceDetailsSerializer(serializers.Serializer):
     provider_used = serializers.CharField(allow_null=True)
 
 
-class ReverseGeocodeQuerySerializer(serializers.Serializer):
+class ReverseGeocodeQuerySerializer(LanguageQuerySerializer):
     lat = serializers.FloatField(min_value=-90, max_value=90)
     lon = serializers.FloatField(min_value=-180, max_value=180)
 

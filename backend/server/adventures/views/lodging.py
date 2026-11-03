@@ -10,6 +10,7 @@ from adventures.serializers.quick_add import LodgingQuickAddResultSerializer, Qu
 from adventures.views.mixins import CollectionOwnedViewSetMixin
 from adventures.utils.query_optimization import media_prefetches
 from adventures.throttling import ExternalGeocodeThrottle
+from adventures.utils.language import resolve_request_language
 from adventures.services.quick_add import finish_quick_add, prepare_lodging_quick_add
 
 class LodgingViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
@@ -50,7 +51,10 @@ class LodgingViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
         # Anything that fails inside rolls the whole thing back, so a refusal leaves no half-made lodging.
         with transaction.atomic():
             prepared = prepare_lodging_quick_add(
-                request.user, payload, can_add_to_collection=lambda collection: can_edit(request, collection)
+                request.user,
+                payload,
+                can_add_to_collection=lambda collection: can_edit(request, collection),
+                language=resolve_request_language(request),
             )
             serializer = self.get_serializer(data=prepared.serializer_payload)
             serializer.is_valid(raise_exception=True)

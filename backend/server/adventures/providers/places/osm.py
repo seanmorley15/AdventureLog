@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import requests
 
@@ -8,9 +8,26 @@ from core.cache import cached_provider
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
 
 
-@cached_provider('osm_search', lambda query, limit=20, *a, **k: (query, limit), 60 * 60 * 24)
-def search_places(query: str, limit: int = 20, user_agent: str = "AdventureLog Server") -> ProviderResult[List[Dict]]:
+def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
     headers = {"User-Agent": user_agent}
+    if language:
+        headers["Accept-Language"] = language
+    return headers
+
+
+# Names come back in the requested language, so the language is part of the key.
+@cached_provider(
+    'osm_search',
+    lambda query, limit=20, user_agent=None, language=None, **k: (query, limit, language or ''),
+    60 * 60 * 24,
+)
+def search_places(
+    query: str,
+    limit: int = 20,
+    user_agent: str = "AdventureLog Server",
+    language: Optional[str] = None,
+) -> ProviderResult[List[Dict]]:
+    headers = _headers(user_agent, language)
     params = {
         "q": query,
         "format": "jsonv2",

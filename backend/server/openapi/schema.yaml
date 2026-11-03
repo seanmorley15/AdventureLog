@@ -8471,8 +8471,8 @@ paths:
         schema:
           type: string
           minLength: 1
-          default: en
-        description: Language for names and text.
+        description: Language for names and text, e.g. `de`. Defaults to the signed-in
+          user's interface language (`X-AdventureLog-Locale`, then `Accept-Language`).
       - in: query
         name: name
         schema:
@@ -8589,6 +8589,13 @@ paths:
       summary: Reverse geocode a point
       parameters:
       - in: query
+        name: lang
+        schema:
+          type: string
+          minLength: 1
+        description: Language for names and text, e.g. `de`. Defaults to the signed-in
+          user's interface language (`X-AdventureLog-Locale`, then `Accept-Language`).
+      - in: query
         name: lat
         schema:
           type: number
@@ -8647,6 +8654,13 @@ paths:
         fails the answer is still 200, with no results and a `warning`.
       summary: Search for places
       parameters:
+      - in: query
+        name: lang
+        schema:
+          type: string
+          minLength: 1
+        description: Language for names and text, e.g. `de`. Defaults to the signed-in
+          user's interface language (`X-AdventureLog-Locale`, then `Accept-Language`).
       - in: query
         name: q
         schema:

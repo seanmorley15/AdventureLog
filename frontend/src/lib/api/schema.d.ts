@@ -16140,7 +16140,7 @@ export interface operations {
     places_details: {
         parameters: {
             query: {
-                /** @description Language for names and text. */
+                /** @description Language for names and text, e.g. `de`. Defaults to the signed-in user's interface language (`X-AdventureLog-Locale`, then `Accept-Language`). */
                 lang?: string;
                 /** @description Used to search again if the id is unknown. */
                 name?: string;
@@ -16265,6 +16265,8 @@ export interface operations {
     places_reverse: {
         parameters: {
             query: {
+                /** @description Language for names and text, e.g. `de`. Defaults to the signed-in user's interface language (`X-AdventureLog-Locale`, then `Accept-Language`). */
+                lang?: string;
                 lat: number;
                 lon: number;
             };
@@ -16321,6 +16323,8 @@ export interface operations {
     places_search: {
         parameters: {
             query: {
+                /** @description Language for names and text, e.g. `de`. Defaults to the signed-in user's interface language (`X-AdventureLog-Locale`, then `Accept-Language`). */
+                lang?: string;
                 /** @description What to look for: a name or address, or `lat,lon` to find what is at a point. */
                 q: string;
             };

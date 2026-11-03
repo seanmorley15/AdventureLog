@@ -62,6 +62,9 @@ const FORBIDDEN_PROXY_HEADERS = new Set([
 	'upgrade'
 ]);
 
+/** BCP-47-ish tag only: no lists, q-values, or header-injection payloads. */
+const LOCALE_RE = /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/;
+
 function sanitizeProxyRequestHeaders(headers: Headers): Record<string, string> {
 	const result: Record<string, string> = {};
 	for (const [key, value] of headers) {
@@ -112,6 +115,15 @@ export async function proxyToDjango(event: RequestEvent) {
 
 	const headers = new Headers(request.headers);
 	cookies.delete('csrftoken', { path: '/' });
+	const proxyHeaders = sanitizeProxyRequestHeaders(headers);
+	// Never trust a client-supplied locale header; only the cookie-derived one.
+	for (const key of Object.keys(proxyHeaders)) {
+		if (key.toLowerCase() === 'x-adventurelog-locale') delete proxyHeaders[key];
+	}
+	const locale = event.locals.locale;
+	if (locale && LOCALE_RE.test(locale)) {
+		proxyHeaders['X-AdventureLog-Locale'] = locale;
+	}
 
 	let csrfToken = await fetchCSRFToken();
 	if (!csrfToken) {
@@ -133,7 +145,7 @@ export async function proxyToDjango(event: RequestEvent) {
 			fetch(targetUrl, {
 				method: request.method,
 				headers: {
-					...sanitizeProxyRequestHeaders(headers),
+					...proxyHeaders,
 					'X-CSRFToken': token,
 					...(guestToken ? { 'X-Guest-Token': guestToken } : {}),
 					Cookie: `csrftoken=${token}${sessionId ? `; sessionid=${sessionId}` : ''}`

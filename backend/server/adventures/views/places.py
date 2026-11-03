@@ -27,6 +27,7 @@ from adventures.services.geocoding.reverse import reverse_geocode
 from adventures.services.places.details import get_place_details
 from adventures.services.places.search import search_places
 from adventures.throttling import ExternalGeocodeThrottle, ExternalWikipediaThrottle
+from adventures.utils.language import resolve_request_language
 from core.exceptions import APIError
 from core.serializers import validated
 
@@ -58,7 +59,7 @@ class PlacesViewSet(viewsets.ViewSet):
         fails the answer is still 200, with no results and a `warning`.
         """
         query = validated(PlaceSearchQuerySerializer, request.query_params)['q'].strip()
-        selection = search_places(query)
+        selection = search_places(query, language=resolve_request_language(request))
         body = {
             'count': 0 if selection.error else len(selection.results),
             'results': [] if selection.error else selection.results,
@@ -81,7 +82,9 @@ class PlacesViewSet(viewsets.ViewSet):
         Address, contact details, rating and a short description for a `place_id` from a search.
         """
         params = validated(PlaceDetailsQuerySerializer, request.query_params)
-        details = get_place_details(params['place_id'].strip(), fallback_query=params['name'], language=params['lang'])
+        details = get_place_details(
+            params['place_id'].strip(), fallback_query=params['name'], language=resolve_request_language(request)
+        )
         if isinstance(details, dict) and details.get('error') and not details.get('description'):
             raise APIError(details['error'], code='upstream_error', status=status.HTTP_502_BAD_GATEWAY)
         return Response(details)
@@ -99,7 +102,9 @@ class PlacesViewSet(viewsets.ViewSet):
         whether you have visited them.
         """
         params = validated(ReverseGeocodeQuerySerializer, request.query_params)
-        selection = reverse_geocode(params['lat'], params['lon'], request.user)
+        selection = reverse_geocode(
+            params['lat'], params['lon'], request.user, language=resolve_request_language(request)
+        )
         data = selection.data
         if isinstance(data, dict) and data.get('error'):
             raise APIError(

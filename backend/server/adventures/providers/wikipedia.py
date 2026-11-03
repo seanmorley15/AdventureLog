@@ -29,7 +29,10 @@ def fetch_summary(query: str, language: str = "en") -> ProviderResult[Optional[s
     if not normalized_query:
         return ProviderResult(error="Missing query")
 
-    normalized_language = (language or "en").strip().lower() or "en"
+    # Wikipedia hosts only accept a primary subtag ("en", not "en-US" or "pt_BR").
+    normalized_language = (
+        (language or "en").strip().lower().replace("_", "-").split("-", 1)[0] or "en"
+    )
 
     def fetch() -> Optional[str]:
         return _fetch_summary_uncached(normalized_query, normalized_language)
@@ -56,7 +59,7 @@ def _fetch_summary_uncached(query: str, language: str) -> Optional[str]:
     for candidate in candidates:
         try:
             encoded_query = quote(candidate, safe="")
-            url = f"https://{language.split('-', 1)[0]}.wikipedia.org/api/rest_v1/page/summary/{encoded_query}"
+            url = f"https://{language}.wikipedia.org/api/rest_v1/page/summary/{encoded_query}"
             response = requests.get(
                 url,
                 headers={"User-Agent": "AdventureLog Server"},

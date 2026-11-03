@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import requests
 
@@ -11,12 +11,29 @@ GEOCODE_CACHE_TIMEOUT = 60 * 60 * 24 * 7  # Nominatim asks clients to cache resu
 REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
 
 
+def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
+    headers = {"User-Agent": user_agent}
+    if language:
+        headers["Accept-Language"] = language
+    return headers
+
+
 @cached_provider(
     'osm_reverse',
-    lambda lat, lon, *a, **k: (coordinate_key(lat, 5), coordinate_key(lon, 5)),
+    # Names come back in the requested language, so the language is part of the key.
+    lambda lat, lon, user_agent=None, language=None, **k: (
+        coordinate_key(lat, 5),
+        coordinate_key(lon, 5),
+        language or '',
+    ),
     GEOCODE_CACHE_TIMEOUT,
 )
-def reverse_geocode(lat: float, lon: float, user_agent: str = "AdventureLog Server") -> ProviderResult[Dict]:
+def reverse_geocode(
+    lat: float,
+    lon: float,
+    user_agent: str = "AdventureLog Server",
+    language: Optional[str] = None,
+) -> ProviderResult[Dict]:
     if not is_resolvable("nominatim.openstreetmap.org"):
         return ProviderResult(error="Unable to resolve OpenStreetMap service")
 
@@ -29,7 +46,7 @@ def reverse_geocode(lat: float, lon: float, user_agent: str = "AdventureLog Serv
         "lat": lat,
         "lon": lon,
     }
-    headers = {"User-Agent": user_agent}
+    headers = _headers(user_agent, language)
 
     try:
         response = requests.get(REVERSE_URL, headers=headers, params=params, timeout=(1, 5))

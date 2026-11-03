@@ -47,6 +47,7 @@ from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
+from adventures.utils.language import resolve_request_language
 from adventures.views.mixins import PaginatedResponseMixin
 from core import pagination
 from core.exceptions import APIError
@@ -235,7 +236,10 @@ class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
         # Anything that fails inside rolls the whole thing back, so a refusal leaves no half-made place.
         with transaction.atomic():
             prepared = prepare_location_quick_add(
-                request.user, payload, can_add_to_collection=lambda collection: can_edit(request, collection)
+                request.user,
+                payload,
+                can_add_to_collection=lambda collection: can_edit(request, collection),
+                language=resolve_request_language(request),
             )
             serializer = self.get_serializer(data=prepared.serializer_payload)
             serializer.is_valid(raise_exception=True)

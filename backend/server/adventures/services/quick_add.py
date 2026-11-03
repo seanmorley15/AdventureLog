@@ -85,14 +85,14 @@ def resolve_quick_add_collection(collection_id, can_add: Callable[[Collection], 
     return collection
 
 
-def extract_google_place_details(payload, fallback_query=""):
+def extract_google_place_details(payload, fallback_query="", language=None):
     place_id = str(payload.get("place_id") or "").strip() or None
     details = {}
 
     if not place_id:
         return place_id, details
 
-    details_result = get_place_details(place_id, fallback_query=fallback_query)
+    details_result = get_place_details(place_id, fallback_query=fallback_query, language=language)
     if isinstance(details_result, dict):
         if "error" not in details_result or details_result.get("description"):
             details = details_result
@@ -282,10 +282,10 @@ def read_quick_add_basics(payload):
     return name, latitude, longitude
 
 
-def lookup_reverse_geocode(user, latitude, longitude):
+def lookup_reverse_geocode(user, latitude, longitude, language=None):
     """The address data for a point, or an empty dict when it cannot be found."""
     try:
-        selection = reverse_geocode_service(latitude, longitude, user)
+        selection = reverse_geocode_service(latitude, longitude, user, language=language)
         if selection and selection.data and not selection.data.get('error'):
             return selection.data
     except Exception:
@@ -331,7 +331,7 @@ def normalize_quick_add_category(raw_category, user):
     return {'name': name, 'display_name': display_name or name, 'icon': icon}
 
 
-def prepare_location_quick_add(user, payload, can_add_to_collection):
+def prepare_location_quick_add(user, payload, can_add_to_collection, language=None):
     """Work out the place to create from a quick-add payload. Creates nothing."""
     name, latitude, longitude = read_quick_add_basics(payload)
     collection = resolve_quick_add_collection(
@@ -341,10 +341,10 @@ def prepare_location_quick_add(user, payload, can_add_to_collection):
     )
 
     try:
-        _, details = extract_google_place_details(payload, fallback_query=name)
+        _, details = extract_google_place_details(payload, fallback_query=name, language=language)
     except Exception:
         details = {}
-    reverse_data = lookup_reverse_geocode(user, latitude, longitude)
+    reverse_data = lookup_reverse_geocode(user, latitude, longitude, language=language)
 
     rating = coerce_float(payload.get('rating'))
     if rating is None:
@@ -380,7 +380,7 @@ def prepare_location_quick_add(user, payload, can_add_to_collection):
     )
 
 
-def prepare_lodging_quick_add(user, payload, can_add_to_collection):
+def prepare_lodging_quick_add(user, payload, can_add_to_collection, language=None):
     """Work out the lodging to create from a quick-add payload. Creates nothing."""
     name, latitude, longitude = read_quick_add_basics(payload)
     collection = resolve_quick_add_collection(
@@ -389,8 +389,8 @@ def prepare_lodging_quick_add(user, payload, can_add_to_collection):
         'You do not have permission to add this lodging to the selected collection.',
     )
 
-    reverse_data = lookup_reverse_geocode(user, latitude, longitude)
-    _, details = extract_google_place_details(payload, fallback_query=name)
+    reverse_data = lookup_reverse_geocode(user, latitude, longitude, language=language)
+    _, details = extract_google_place_details(payload, fallback_query=name, language=language)
 
     rating = coerce_float(payload.get('rating'))
     if rating is None:
