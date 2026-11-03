@@ -5,10 +5,11 @@ from adventures.models import CollectionItineraryItem, Note
 from adventures.permissions import ensure_can_change_collection
 from adventures.serializers import NoteSerializer
 from adventures.views.mixins import CollectionOwnedViewSetMixin
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 from rest_framework import viewsets
 
 
-class NoteViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
+class NoteViewSet(ConditionalWritesMixin, ClientIdsMixin, CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
     """
     Notes: text with optional links and a date, on their own or in a collection.
 

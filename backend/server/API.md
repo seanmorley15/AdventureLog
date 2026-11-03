@@ -60,6 +60,7 @@ Paths and their non-standard names come from `main/api_urls.py`, `adventures/url
 | 403 | You can see the resource but may not do this. |
 | 404 | It does not exist **or you cannot see it**. Do not leak existence with a 403. |
 | 409 | It conflicts with the current state (already exists, concurrent reorder). |
+| 412 | `If-Match` was sent and the record has changed since (see [Writing from an offline client](#writing-from-an-offline-client)). |
 | 413 | An upload would exceed the owner's media storage. |
 | 429 | Rate limited (only when `ENABLE_RATE_LIMITS` is on, except Endurain sign-in, which is always limited). |
 | 502 / 503 / 504 | An outside service failed, is not configured, or timed out. |
@@ -95,6 +96,7 @@ Codes clients rely on (keep them stable):
 | `validation_error` | Any 400 with `fields`. |
 | `not_authenticated`, `authentication_failed`, `permission_denied`, `not_found`, `method_not_allowed`, `throttled` | DRF's own errors. |
 | `conflict` | Already exists, or a database conflict. |
+| `precondition_failed` | `412`: the record changed since the `If-Match` version. The body adds `current`, the record as it is now. |
 | `media_quota_exceeded` | Uploads, backups and archives over the storage limit. |
 | `subscription_required` | 402 on hosted servers. |
 | `date_required`, `destination_required`, `stop_required`, `already_planned`, `no_anchor`, `not_day_based`, `day_based`, `order_conflict` | The day plan. |
@@ -148,10 +150,43 @@ The mobile app signs in as the user, not with a pasted key, and keeps the `X-Ses
   (client, audience, redirect) needs changing on the server.
 - Both give the same token. It is the Django session key: it shows under Settings → Security → Sessions, can be
   revoked there, and is extended while in use (`users.authentication.SessionTokenAuthentication`).
-- `GET /api/server-info/` lists `capabilities`; the app needs `mobile_auth_v1`.
+- `GET /api/server-info/` lists `capabilities`; the app needs `mobile_auth_v1` to sign in, and uses
+  `conditional_writes_v1` and `client_ids_v1` to write safely (below).
 - Through the web app's `/api/` proxy, multipart and body-less writes are refused unless they carry an `Origin`
   header equal to the site's own address (SvelteKit's form CSRF check). A native client should send
   `Origin: <the server address it was given>` on writes. JSON writes are not affected.
+
+## Writing from an offline client
+
+A client that keeps a copy of the data and changes it later can end up changing a record that someone else has
+since changed, or repeating a create whose answer it never received. Two opt-in features cover this. Neither
+changes anything for a client (the web app) that does not use them. The code is `core/sync.py`; the viewsets of
+locations, visits, notes and checklists use it.
+
+**Conditional writes** (`conditional_writes_v1`). Reading or writing one of those records returns an `ETag`
+(`"<microseconds since 1970 of updated_at>"`). Send it back as `If-Match` on `PATCH`, `PUT` or `DELETE`
+(or `*` for "any existing record"):
+
+- the record is unchanged: the request goes through as usual, and the response has the new `ETag`;
+- the record has changed: nothing is changed and the answer is `412` with code `precondition_failed`. The body is
+  the usual error plus `current` (the record as it is now), and the `ETag` header is its tag.
+
+A request with `If-Match` runs in one transaction that locks the record, so two writers holding the same version
+cannot both succeed. Only a record's own `updated_at` is compared: a change to something it merely contains (a
+location's visits are their own records) does not change the location's tag.
+
+**Client-chosen ids** (`client_ids_v1`). `POST` accepts an optional `id` (a UUID) for the new record. Repeating
+the request is then safe:
+
+| The `id` is... | Answer |
+|---|---|
+| not used by any record | `201`, the record is created with that id. |
+| used by a record the requester can see | `200` with that record as it is stored. The request body is not validated or applied again. |
+| used by a record the requester cannot see | `409 conflict`. |
+| not a UUID | `400 validation_error`. |
+
+A visit cannot be created together with its location (`POST /api/locations/` does not take `visits`), so a client
+that creates both sends two requests, the location first.
 
 ## Adding an endpoint
 

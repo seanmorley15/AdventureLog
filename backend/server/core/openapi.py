@@ -17,8 +17,10 @@ from pathlib import Path
 import yaml
 from django.conf import settings
 from drf_spectacular.openapi import AutoSchema as SpectacularAutoSchema
-from drf_spectacular.utils import OpenApiResponse
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse
 from rest_framework import permissions, serializers
+
+from core.sync import ConditionalWritesMixin
 
 
 class ErrorSerializer(serializers.Serializer):
@@ -36,12 +38,29 @@ class ValidationErrorSerializer(ErrorSerializer):
     )
 
 
+class PreconditionFailedSerializer(ErrorSerializer):
+    current = serializers.DictField(
+        help_text='The record as it is now, so the client can show or merge the difference. '
+        'The `ETag` response header is its current tag.'
+    )
+
+
+IF_MATCH_PARAMETER = OpenApiParameter(
+    'If-Match',
+    str,
+    OpenApiParameter.HEADER,
+    required=False,
+    description='The `ETag` of the version this change is based on, or `*`. When the record has changed since, '
+    'nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless.',
+)
+
 ERROR_DESCRIPTIONS = {
     '400': 'The request was not valid. `fields` lists the problems for each input.',
     '401': 'No valid credentials were sent (`not_authenticated`), or an API key was rejected '
     '(`authentication_failed`).',
     '403': 'You can see this resource but may not do this to it (`permission_denied`).',
     '404': "The resource does not exist, or you cannot see it (`not_found`).",
+    '412': 'The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now.',
     '429': 'Too many requests (`throttled`). Wait and retry.',
 }
 
@@ -154,9 +173,20 @@ class AutoSchema(SpectacularAutoSchema):
             add('403', ErrorSerializer)
         if has_path_params:
             add('404', ErrorSerializer)
+        if self._is_conditional_write():
+            add('412', PreconditionFailedSerializer)
         if getattr(self.view, 'throttle_classes', None):
             add('429', ErrorSerializer)
         return dict(sorted(responses.items()))
+
+    def _is_conditional_write(self):
+        return isinstance(self.view, ConditionalWritesMixin) and self.method in ('PUT', 'PATCH', 'DELETE')
+
+    def get_override_parameters(self):
+        parameters = super().get_override_parameters()
+        if self._is_conditional_write():
+            parameters = [*parameters, IF_MATCH_PARAMETER]
+        return parameters
 
     def _has_query_parameters(self):
         return any(

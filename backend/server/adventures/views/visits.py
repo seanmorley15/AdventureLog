@@ -7,6 +7,7 @@ from adventures.models import Visit
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import VisitSerializer
 from adventures.services.geocoding.assignment import geocode_and_assign_location
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
 
 @extend_schema_view(
@@ -17,7 +18,7 @@ from adventures.services.geocoding.assignment import geocode_and_assign_location
     ),
     partial_update=extend_schema(description='The location of a visit cannot be changed.'),
 )
-class VisitViewSet(viewsets.ModelViewSet):
+class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet):
     """
     Visits: the dates you were at a location, with notes and a time zone.
 

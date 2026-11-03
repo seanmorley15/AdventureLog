@@ -303,6 +303,8 @@ class DiscoveryTests(MobileAuthTestCase):
         body = self.client.get('/api/server-info/').json()
 
         self.assertIn('mobile_auth_v1', body['capabilities'])
+        self.assertIn('conditional_writes_v1', body['capabilities'])
+        self.assertIn('client_ids_v1', body['capabilities'])
         self.assertIsInstance(body['version'], str)
 
     def test_each_provider_has_the_id_the_app_passes_to_start(self):

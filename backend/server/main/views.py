@@ -18,7 +18,7 @@ from adventures.access.file_permissions import (
 )
 
 # What this server can do that the mobile app checks for before using it.
-CAPABILITIES = ['mobile_auth_v1']
+CAPABILITIES = ['mobile_auth_v1', 'conditional_writes_v1', 'client_ids_v1']
 
 
 class ServerInfoView(APIView):
@@ -34,7 +34,9 @@ class ServerInfoView(APIView):
             'version': serializers.CharField(help_text='The AdventureLog release this server runs.'),
             'capabilities': serializers.ListField(
                 child=serializers.CharField(),
-                help_text='Features clients can rely on, e.g. `mobile_auth_v1` (app sign-in with a session token).',
+                help_text='Features clients can rely on: `mobile_auth_v1` (app sign-in with a session token), '
+                '`conditional_writes_v1` (`ETag` and `If-Match`) and `client_ids_v1` '
+                '(a client may choose the id of what it creates).',
             ),
         })
     )

@@ -640,7 +640,7 @@ MOBILE_AUTH_REDIRECT_URIS = [
 MOBILE_AUTH_HANDOFF_SECONDS = 10 * 60  # how long the browser has to finish signing in
 MOBILE_AUTH_CODE_SECONDS = 60  # how long the app has to redeem the code
 
-ADVENTURELOG_RELEASE_VERSION = 'v0.13.1'
+ADVENTURELOG_RELEASE_VERSION = 'v0.14.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v3.2'

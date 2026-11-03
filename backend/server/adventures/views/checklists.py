@@ -6,9 +6,12 @@ from adventures.models import Checklist, CollectionItineraryItem
 from adventures.permissions import ensure_can_change_collection
 from adventures.serializers import ChecklistSerializer
 from adventures.views.mixins import CollectionOwnedViewSetMixin
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
 
-class ChecklistViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
+class ChecklistViewSet(
+    ConditionalWritesMixin, ClientIdsMixin, CollectionOwnedViewSetMixin, viewsets.ModelViewSet
+):
     """
     Checklists with items to tick off, on their own or in a collection.
 

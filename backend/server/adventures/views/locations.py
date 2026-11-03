@@ -54,6 +54,7 @@ from core.exceptions import APIError
 from core.geo import point_to_lat_lon
 from core.parsing import as_uuid
 from core.serializers import validated
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ PNG_RESPONSE = {(200, 'image/png'): OpenApiResponse(response=bytes, description=
     ),
     destroy=extend_schema(description='Only the owner can delete a location.'),
 )
-class LocationViewSet(PaginatedResponseMixin, viewsets.ModelViewSet):
+class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseMixin, viewsets.ModelViewSet):
     """
     Locations: places you have been or want to go, with visits, photos, files, trails and activities.
 
