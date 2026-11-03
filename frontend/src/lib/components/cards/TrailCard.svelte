@@ -33,9 +33,11 @@
 			: `${meters.toFixed(1)} m`;
 	}
 
-	function getDuration(minutes: number) {
-		const hours = Math.floor(minutes / 60);
-		const mins = minutes % 60;
+	// Wanderer reports trail duration in seconds
+	function getDuration(seconds: number) {
+		const totalMinutes = Math.round(seconds / 60);
+		const hours = Math.floor(totalMinutes / 60);
+		const mins = totalMinutes % 60;
 		return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
 	}
 

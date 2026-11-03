@@ -8,6 +8,7 @@ import socket
 import time
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import gpxpy
 import gpxpy.gpx
@@ -28,6 +29,8 @@ STREAM_TYPE_LAT_LON = 7
 TOKEN_REFRESH_BUFFER_SECONDS = 300
 MFA_PENDING_TTL_SECONDS = 300
 REQUEST_TIMEOUT_SECONDS = 15
+# Endurain v0.20 caps page size at 200 and rejects larger num_records values.
+MAX_ACTIVITY_PAGE_SIZE = 200
 # Cloud metadata / link-local targets that must never be reachable via server_url.
 _BLOCKED_HOSTNAMES = frozenset({
     'metadata.google.internal',
@@ -261,6 +264,56 @@ def decode_jwt_sub(access_token: str) -> int | None:
         return None
 
 
+def _problem_message(data, default: str) -> str:
+    """Read a human-readable error from either a legacy or RFC 9457 body."""
+    if isinstance(data, dict):
+        for key in ('detail', 'title'):
+            value = data.get(key)
+            if value:
+                return str(value)
+    return default
+
+
+def _is_html_response(response: requests.Response) -> bool:
+    raw = response.headers.get('Content-Type', '')
+    if not isinstance(raw, str):
+        return False
+    media_type = raw.split(';', 1)[0].strip().lower()
+    return media_type in {'text/html', 'application/xhtml+xml'}
+
+
+# Distinct from a JSON null body, which older list routes used for "no activities".
+_UNUSABLE_BODY = object()
+
+
+def _read_json(response: requests.Response):
+    """Parse a JSON body. HTML and other non-JSON payloads are unusable."""
+    if _is_html_response(response):
+        return _UNUSABLE_BODY
+    try:
+        return response.json()
+    except ValueError:
+        return _UNUSABLE_BODY
+
+
+def _extract_activities(data) -> list[dict] | None:
+    """Pull activity records out of the shapes Endurain has returned.
+
+    v0.20+ list routes return ``{"items": [...], "total", "page", ...}``.
+    Older routes returned a bare list or a dict keyed by ``records`` / ``activities``.
+    """
+    if data is None:
+        return []
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for key in ('items', 'records', 'activities'):
+            value = data.get(key)
+            if isinstance(value, list):
+                return value
+    return None
+
+
 def _parse_token_response(data: dict) -> dict:
     if not data.get('access_token') or not data.get('refresh_token'):
         raise IntegrationError(
@@ -314,15 +367,15 @@ def login_with_password(server_url: str, username: str, password: str) -> dict:
         ) from exc
 
     if response.status_code in (401, 403):
-        detail = data.get('detail', 'Invalid credentials.')
-        raise IntegrationError(str(detail), code='endurain.invalid_credentials', status_code=response.status_code)
+        detail = _problem_message(data, 'Invalid credentials.')
+        raise IntegrationError(detail, code='endurain.invalid_credentials', status_code=response.status_code)
 
     if data.get('mfa_required'):
         raise MfaRequired(data.get('username') or username)
 
     if response.status_code >= 400:
-        detail = data.get('detail', 'Authentication failed.')
-        raise IntegrationError(str(detail), code='endurain.auth_failed', status_code=response.status_code)
+        detail = _problem_message(data, 'Authentication failed.')
+        raise IntegrationError(detail, code='endurain.auth_failed', status_code=response.status_code)
 
     tokens = _parse_token_response(data)
     tokens['username'] = username
@@ -361,8 +414,8 @@ def verify_mfa(server_url: str, username: str, mfa_code: str) -> dict:
         ) from exc
 
     if response.status_code >= 400:
-        detail = data.get('detail', 'MFA verification failed.')
-        raise IntegrationError(str(detail), code='endurain.mfa_failed', status_code=response.status_code)
+        detail = _problem_message(data, 'MFA verification failed.')
+        raise IntegrationError(detail, code='endurain.mfa_failed', status_code=response.status_code)
 
     tokens = _parse_token_response(data)
     tokens['username'] = username
@@ -400,8 +453,8 @@ def refresh_tokens(integration: EndurainIntegration) -> EndurainIntegration:
         ) from exc
 
     if response.status_code >= 400:
-        detail = data.get('detail', 'Token refresh failed.')
-        raise IntegrationError(str(detail), code='endurain.reconnect_required', status_code=response.status_code)
+        detail = _problem_message(data, 'Token refresh failed.')
+        raise IntegrationError(detail, code='endurain.reconnect_required', status_code=response.status_code)
 
     tokens = _parse_token_response(data)
     integration.access_token = tokens['access_token']
@@ -467,23 +520,28 @@ def _request(
 
 
 def validate_connection(integration: EndurainIntegration) -> None:
-    response = _request(
-        integration,
-        'GET',
-        f'/activities/user/{integration.endurain_user_id}/page_number/1/num_records/1',
-    )
-    if response.status_code in (401, 403):
-        raise IntegrationError(
-            'Endurain rejected the stored credentials.',
-            code='endurain.reconnect_required',
-            status_code=response.status_code,
-        )
-    if response.status_code >= 400:
-        raise IntegrationError(
-            'Could not verify Endurain connection.',
-            code='endurain.connection_failed',
-            status_code=response.status_code,
-        )
+    """Confirm the stored token can read this user's activities.
+
+    A removed route on Endurain v0.20+ is answered with the web app's HTML and
+    a 200, so a status check alone reports a healthy connection. Require a
+    parseable activity list instead.
+    """
+    try:
+        fetch_user_activities(integration, page_number=1, num_records=1)
+    except IntegrationError as exc:
+        if exc.status_code in (401, 403):
+            raise IntegrationError(
+                'Endurain rejected the stored credentials.',
+                code='endurain.reconnect_required',
+                status_code=exc.status_code,
+            ) from exc
+        if exc.code == 'endurain.invalid_response':
+            raise IntegrationError(
+                'Could not verify Endurain connection.',
+                code='endurain.connection_failed',
+                status_code=exc.status_code,
+            ) from exc
+        raise
 
 
 def _parse_date_param(value: str | None) -> date | None:
@@ -497,6 +555,35 @@ def _parse_date_param(value: str | None) -> date | None:
         return None
 
 
+def _activity_list_attempts(
+    integration: EndurainIntegration,
+    *,
+    page_number: int,
+    num_records: int,
+    date_params: dict,
+) -> list[tuple[str, dict | None]]:
+    """Current Endurain list route, then the pre-v0.20 path.
+
+    v0.20 replaced ``/activities/user/{id}/page_number/{n}/num_records/{m}``
+    with ``/activities/users/{id}`` and moved paging into the query string.
+    The previous path is tried only when the new one is missing: the web app
+    answers an unknown route with HTML, and older servers answer it with 404.
+    """
+    user_id = integration.endurain_user_id
+    current_params = {
+        'page_number': page_number,
+        'num_records': num_records,
+        **date_params,
+    }
+    legacy_path = (
+        f'/activities/user/{user_id}/page_number/{page_number}/num_records/{num_records}'
+    )
+    return [
+        (f'/activities/users/{user_id}', current_params),
+        (legacy_path, date_params or None),
+    ]
+
+
 def fetch_user_activities(
     integration: EndurainIntegration,
     *,
@@ -505,47 +592,84 @@ def fetch_user_activities(
     page_number: int = 1,
     num_records: int = 50,
 ) -> list[dict]:
-    params = {}
+    page_number = max(1, int(page_number))
+    num_records = min(MAX_ACTIVITY_PAGE_SIZE, max(1, int(num_records)))
+    date_params = {}
     parsed_start = _parse_date_param(start_date)
     parsed_end = _parse_date_param(end_date)
     if parsed_start:
-        params['start_date'] = parsed_start.isoformat()
+        date_params['start_date'] = parsed_start.isoformat()
     if parsed_end:
-        params['end_date'] = parsed_end.isoformat()
+        date_params['end_date'] = parsed_end.isoformat()
 
-    response = _request(
+    attempts = _activity_list_attempts(
         integration,
-        'GET',
-        f'/activities/user/{integration.endurain_user_id}/page_number/{page_number}/num_records/{num_records}',
-        params=params or None,
+        page_number=page_number,
+        num_records=num_records,
+        date_params=date_params,
     )
-    if response.status_code >= 400:
-        try:
-            detail = response.json().get('detail', 'Failed to fetch activities.')
-        except ValueError:
-            detail = 'Failed to fetch activities.'
-        raise IntegrationError(str(detail), code='endurain.fetch_failed', status_code=response.status_code)
+    for index, (path, params) in enumerate(attempts):
+        response = _request(integration, 'GET', path, params=params)
+        data = _read_json(response)
+        route_missing = data is _UNUSABLE_BODY or response.status_code == 404
+        if route_missing and index < len(attempts) - 1:
+            continue
+        if data is _UNUSABLE_BODY:
+            break
+        if response.status_code >= 400:
+            raise IntegrationError(
+                _problem_message(data, 'Failed to fetch activities.'),
+                code='endurain.fetch_failed',
+                status_code=response.status_code,
+            )
+        activities = _extract_activities(data)
+        if activities is None and index < len(attempts) - 1:
+            continue
+        if activities is not None:
+            return activities
 
-    data = response.json()
-    if data is None:
-        return []
-    if isinstance(data, dict):
-        return data.get('records') or data.get('activities') or []
-    if isinstance(data, list):
-        return data
-    return []
+    raise IntegrationError(
+        'Endurain returned an invalid response.',
+        code='endurain.invalid_response',
+        status_code=502,
+    )
 
 
 def fetch_activity_by_id(integration: EndurainIntegration, activity_id: int) -> dict:
     response = _request(integration, 'GET', f'/activities/{activity_id}')
+    data = _read_json(response)
+    if data is _UNUSABLE_BODY:
+        raise IntegrationError(
+            'Endurain returned an invalid response.',
+            code='endurain.invalid_response',
+            status_code=502,
+        )
     if response.status_code == 404:
         raise IntegrationError('Activity not found.', code='endurain.activity_not_found', status_code=404)
     if response.status_code >= 400:
-        raise IntegrationError('Failed to fetch activity.', code='endurain.fetch_failed', status_code=response.status_code)
-    data = response.json()
-    if not data:
+        raise IntegrationError(
+            _problem_message(data, 'Failed to fetch activity.'),
+            code='endurain.fetch_failed',
+            status_code=response.status_code,
+        )
+    if not isinstance(data, dict) or not data:
         raise IntegrationError('Activity not found.', code='endurain.activity_not_found', status_code=404)
     return data
+
+
+def _local_start_time(start_time: str, timezone_name: str | None) -> str | None:
+    if not start_time or not timezone_name:
+        return None
+    try:
+        parsed = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt_timezone.utc)
+    try:
+        return parsed.astimezone(ZoneInfo(timezone_name)).isoformat()
+    except ZoneInfoNotFoundError:
+        return None
 
 
 def _sport_type_name(activity_type: int | None) -> str:
@@ -575,7 +699,13 @@ def normalize_activity(activity: dict, server_url: str) -> dict:
     sport_type = _sport_type_name(activity_type)
 
     start_date = activity.get('start_time') or activity.get('start_time_tz_applied') or ''
-    start_date_local = activity.get('start_time_tz_applied') or start_date
+    # v0.20 dropped start_time_tz_applied. start_time is UTC; timezone is the
+    # IANA zone the activity was recorded in.
+    start_date_local = (
+        activity.get('start_time_tz_applied')
+        or _local_start_time(str(start_date), activity.get('timezone'))
+        or start_date
+    )
 
     pace_per_km = None
     pace_per_mile = None
@@ -698,17 +828,21 @@ def _fetch_activity_stream(
     activity_id: int,
     stream_type: int,
 ) -> dict | None:
-    response = _request(
-        integration,
-        'GET',
+    # v0.20 moved streams under the activity. The old path remains for
+    # servers that still serve it; a non-JSON body means that path is gone.
+    paths = (
+        f'/activities/{activity_id}/streams/{stream_type}',
         f'/activities_streams/activity_id/{activity_id}/stream_type/{stream_type}',
     )
-    if response.status_code >= 400:
-        return None
-    try:
-        return response.json()
-    except ValueError:
-        return None
+    for path in paths:
+        response = _request(integration, 'GET', path)
+        data = _read_json(response)
+        if data is _UNUSABLE_BODY or response.status_code == 404:
+            continue
+        if response.status_code >= 400 or not isinstance(data, dict):
+            return None
+        return data
+    return None
 
 
 def export_activity_gpx(integration: EndurainIntegration, activity_id: int) -> bytes:
