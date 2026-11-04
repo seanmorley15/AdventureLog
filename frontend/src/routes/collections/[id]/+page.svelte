@@ -3,7 +3,7 @@
 
 	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '#lib/types.js';
 	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import Lost from '#lib/assets/undraw_lost.svg';
 	import { t } from 'svelte-i18n';
@@ -37,6 +37,7 @@
 	import Plus from '~icons/mdi/plus';
 	import FilePdfBox from '~icons/mdi/file-pdf-box';
 	import ImageOutline from '~icons/mdi/image-outline';
+	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import SocialShareModal from '#lib/components/SocialShareModal.svelte';
 	import { addToast } from '#lib/toasts.js';
 	import NoteModal from '#lib/components/NoteModal.svelte';
@@ -45,6 +46,7 @@
 	import TransportationModal from '#lib/components/transportation/TransportationModal.svelte';
 	import LocationModal from '#lib/components/locations/LocationModal.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import CollectionModal from '#lib/components/CollectionModal.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -74,6 +76,7 @@
 	let isTransportationModalOpen: boolean = $state(false);
 	let isChecklistModalOpen: boolean = $state(false);
 	let isNoteModalOpen: boolean = $state(false);
+	let isCollectionModalOpen: boolean = $state(false);
 	// Edit placeholders used when creating new items from FAB dropdown
 	let adventureToEdit: any = $state(null);
 	let transportationToEdit: any = $state(null);
@@ -369,6 +372,7 @@
 		isTransportationModalOpen = false;
 		isChecklistModalOpen = false;
 		isNoteModalOpen = false;
+		isCollectionModalOpen = false;
 		adventureToEdit = null;
 		transportationToEdit = null;
 		noteToEdit = null;
@@ -560,6 +564,8 @@
 			return false;
 		})()
 	);
+	// Only the owner can edit collection details, matching the collection card menu
+	let canEditCollection = $derived(!!collection && (data.user as any)?.uuid === collection.user);
 	// Public collections: anyone can export/share; private: owner or shared users only
 	let canExportCollection = $derived(!!collection?.is_public || canModifyCollection);
 	// Define available views based on collection type
@@ -702,6 +708,17 @@
 		name={collection.name}
 		isPublic={!!collection.is_public}
 		on:close={() => (isSocialShareModalOpen = false)}
+	/>
+{/if}
+
+{#if isCollectionModalOpen && collection && canEditCollection}
+	<CollectionModal
+		collectionToEdit={collection}
+		on:close={() => (isCollectionModalOpen = false)}
+		on:save={async () => {
+			isCollectionModalOpen = false;
+			await invalidateAll();
+		}}
 	/>
 {/if}
 
@@ -1042,6 +1059,15 @@
 			</div>
 			{#if canExportCollection}
 				<div class="flex flex-wrap gap-2">
+					{#if canEditCollection}
+						<button
+							class="btn btn-outline btn-primary gap-2"
+							onclick={() => (isCollectionModalOpen = true)}
+						>
+							<FileDocumentEdit class="w-5 h-5" aria-hidden="true" />
+							<span>{$t('adventures.edit_collection')}</span>
+						</button>
+					{/if}
 					<button
 						class="btn btn-outline btn-primary gap-2"
 						onclick={() => (isSocialShareModalOpen = true)}
