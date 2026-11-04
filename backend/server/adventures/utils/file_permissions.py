@@ -39,14 +39,14 @@ def _check_content_object_permission(content_object, user):
     if hasattr(content_object, 'user') and content_object.user == user:
         return True
 
-    # Check collection-based permissions
+    # Check collection-based permissions (public collections expose all of their items)
     if hasattr(content_object, 'collections') and content_object.collections.exists():
         for collection in content_object.collections.all():
-            if collection.user == user or collection.shared_with.filter(id=user.id).exists():
+            if collection.is_public or collection.user == user or collection.shared_with.filter(id=user.id).exists():
                 return True
         return False
     elif hasattr(content_object, 'collection') and content_object.collection:
-        if content_object.collection.user == user or content_object.collection.shared_with.filter(id=user.id).exists():
+        if content_object.collection.is_public or content_object.collection.user == user or content_object.collection.shared_with.filter(id=user.id).exists():
             return True
         return False
     else:

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from adventures.models import Activity, Location, Visit
+from adventures.models import Activity, Collection, ContentImage, Location, Transportation, Visit
 
 User = get_user_model()
 
@@ -97,3 +97,25 @@ class ProtectedMediaTestCase(TestCase):
         response = self.client.get(f'/media/{public_gpx_path}')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self._response_body(response), b'PUBLIC_GPX_DATA')
+
+    def test_anonymous_user_can_view_image_of_private_item_in_public_collection(self):
+        collection = Collection.objects.create(user=self.owner, name='Public Trip', is_public=True)
+        transportation = Transportation.objects.create(
+            user=self.owner,
+            type='plane',
+            name='Flight Home',
+            is_public=False,
+            collection=collection,
+        )
+        image_path = 'images/flight-home.webp'
+        self._write_media_file(image_path, b'FLIGHT_IMAGE')
+        ContentImage.objects.create(user=self.owner, image=image_path, content_object=transportation)
+
+        response = self.client.get(f'/media/{image_path}')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._response_body(response), b'FLIGHT_IMAGE')
+
+        collection.is_public = False
+        collection.save()
+        response = self.client.get(f'/media/{image_path}')
+        self.assertEqual(response.status_code, 403)
