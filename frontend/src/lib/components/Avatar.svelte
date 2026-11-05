@@ -164,10 +164,11 @@
 		<!-- Secondary Menu Items -->
 		<div class="space-y-1 mb-3">
 			{#if adminMenuItem}
+				<!-- Full page load: reverse proxies route /admin to Django, so client-side navigation 404s -->
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						onclick={() => goto(adminMenuItem.path)}
+						onclick={() => (window.location.href = adminMenuItem.path)}
 					>
 						<adminMenuItem.icon class="w-5 h-5 text-warning" />
 						<span class="text-warning font-medium">{$t(adminMenuItem.label)}</span>
