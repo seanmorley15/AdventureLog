@@ -38,9 +38,10 @@ run_migrations() {
 
 create_superuser_if_needed() {
 	if [[ -n "${DJANGO_ADMIN_USERNAME:-}" && -n "${DJANGO_ADMIN_PASSWORD:-}" && -n "${DJANGO_ADMIN_EMAIL:-}" ]]; then
-		echo "Creating superuser..."
 		# Credentials are read from the environment inside Python, never pasted into the code,
 		# so quotes or other special characters in a password cannot break startup.
+		# Create the env user only on first boot. Later starts must not insert again when
+		# the configured username changed but the email is still taken by an existing admin.
 		python manage.py shell <<'EOF'
 import os
 
@@ -53,7 +54,10 @@ username = os.environ['DJANGO_ADMIN_USERNAME']
 email = os.environ['DJANGO_ADMIN_EMAIL']
 password = os.environ['DJANGO_ADMIN_PASSWORD']
 
-if not User.objects.filter(username=username).exists():
+if User.objects.filter(is_superuser=True).exists():
+    print("Superuser already exists.")
+else:
+    print("Creating superuser...")
     superuser = User.objects.create_superuser(
         username=username,
         email=email,
@@ -67,8 +71,6 @@ if not User.objects.filter(username=username).exists():
         primary=True
     )
     print("EmailAddress object created successfully for AllAuth.")
-else:
-    print("Superuser already exists.")
 EOF
 	fi
 }

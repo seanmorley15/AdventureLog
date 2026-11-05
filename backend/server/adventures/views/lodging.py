@@ -8,12 +8,13 @@ from adventures.access.audience import can_edit
 from adventures.serializers import LodgingSerializer, add_quick_add_extras
 from adventures.serializers.quick_add import LodgingQuickAddResultSerializer, QuickAddSerializer
 from adventures.views.mixins import CollectionOwnedViewSetMixin
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 from adventures.utils.query_optimization import media_prefetches
 from adventures.throttling import ExternalGeocodeThrottle
 from adventures.utils.language import resolve_request_language
 from adventures.services.quick_add import finish_quick_add, prepare_lodging_quick_add
 
-class LodgingViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
+class LodgingViewSet(ConditionalWritesMixin, ClientIdsMixin, CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
     """
     Places to stay, on their own or in a collection.
 

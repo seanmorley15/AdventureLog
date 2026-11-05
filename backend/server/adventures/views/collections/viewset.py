@@ -45,6 +45,7 @@ from adventures.serializers.collection_detail import (
 from django.contrib.auth import get_user_model
 from core import pagination
 from core.exceptions import APIError
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 from core.serializers import validated
 from adventures.services import day_plan
 
@@ -69,7 +70,7 @@ from .sharing import SharingActionsMixin
     partial_update=extend_schema(description='Owner only. Like PUT, for the fields you send.'),
     destroy=extend_schema(description='Owner only. Deletes the collection; records in it that belong to you stay.'),
 )
-class CollectionViewSet(SharingActionsMixin, ExportActionsMixin, PaginatedResponseMixin, viewsets.ModelViewSet):
+class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMixin, ExportActionsMixin, PaginatedResponseMixin, viewsets.ModelViewSet):
     """
     Collections group places, stays, journeys, notes and checklists. A **folder** is a plain group;
     a **trip** has dates or a number of days and a day plan.

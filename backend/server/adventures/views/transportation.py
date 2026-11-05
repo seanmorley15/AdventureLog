@@ -4,9 +4,10 @@ from adventures.models import Transportation
 from adventures.serializers import TransportationSerializer
 from adventures.utils.query_optimization import media_prefetches
 from adventures.views.mixins import CollectionOwnedViewSetMixin
+from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
 
-class TransportationViewSet(CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
+class TransportationViewSet(ConditionalWritesMixin, ClientIdsMixin, CollectionOwnedViewSetMixin, viewsets.ModelViewSet):
     """
     Flights, trains, drives and other journeys, on their own or in a collection.
 
