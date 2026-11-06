@@ -149,7 +149,8 @@ class CollectionCommentViewSet(CollectionScopedMixin, viewsets.ViewSet):
             excerpt=body[:140],
         )
         page = request.build_absolute_uri(f'/collections/{collection.pk}') if mentioned else None
-        transaction.on_commit(lambda: notify_mentions(comment, mentioned, page))
+        # Queued in this transaction: the e-mail jobs exist exactly when the comment does.
+        notify_mentions(comment, mentioned, page)
         return Response(serialize_comment(comment, request, story=is_story), status=status.HTTP_201_CREATED)
 
 

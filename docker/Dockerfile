@@ -57,19 +57,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       nginx \
       memcached \
       supervisor \
-      cron \
       fonts-noto-core \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=backend-builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=backend-builder /usr/local/bin /usr/local/bin
 COPY backend/server /code/
 COPY docker/shared/entrypoint-common.sh /code/scripts/entrypoint-common.sh
-COPY backend/cron/adventurelog /etc/cron.d/adventurelog
-COPY backend/scripts/run-cron-job.sh /code/scripts/run-cron-job.sh
-COPY backend/scripts/write-cron-env.sh /code/scripts/write-cron-env.sh
-RUN chmod +x /code/scripts/entrypoint-common.sh /code/scripts/run-cron-job.sh /code/scripts/write-cron-env.sh \
-    && chmod 0644 /etc/cron.d/adventurelog \
-    && mkdir -p /code/static /code/media /var/log/adventurelog /var/lock
+RUN chmod +x /code/scripts/entrypoint-common.sh \
+    && mkdir -p /code/static /code/media
 RUN python3 manage.py collectstatic --noinput --verbosity 2
 
 # ---------------------------------------------------------------------------

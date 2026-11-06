@@ -63,6 +63,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'storages',
     'django.contrib.sites',
+    # Background jobs. Listed early so its app is ready before the apps that define tasks.
+    'procrastinate.contrib.django',
     'rest_framework',
     'allauth',
     'allauth.account',
@@ -79,6 +81,7 @@ INSTALLED_APPS = (
     'corsheaders',
     'adventures',
     'worldtravel',
+    'jobs',
     'users',
     'billing.apps.BillingConfig',
     'cloud.apps.CloudConfig',
@@ -597,6 +600,24 @@ CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# ---------------------------------------------------------------------------
+# Background jobs (Procrastinate: a queue stored in Postgres, run by a worker process)
+# ---------------------------------------------------------------------------
+# The worker is `manage.py procrastinate worker`. The container starts it under supervisord
+# (WORKER_ENABLED=false turns that off when a separate worker container is used).
+# The worker imports the `tasks.py` of every installed app. See "Background jobs" in API.md.
+WORKER_CONCURRENCY = int(getenv('WORKER_CONCURRENCY', '3'))
+# Run user-facing jobs (exports, imports) inside the request instead of queueing them.
+# For a development server without a worker; the API answers the same way.
+JOBS_RUN_INLINE = getenv('JOBS_RUN_INLINE', 'false').lower() == 'true'
+# How long a finished export stays downloadable before it is deleted.
+JOB_RESULT_TTL_HOURS = int(getenv('JOB_RESULT_TTL_HOURS', '24'))
+# Worker settings: a worker that stops sending heartbeats for this long lost its jobs.
+PROCRASTINATE_WORKER_DEFAULTS = {
+    'update_heartbeat_interval': 10,
+    'stalled_worker_timeout': 60,
+}
 
 # ---------------------------------------------------------------------------
 # Logging

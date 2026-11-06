@@ -1,6 +1,7 @@
 [importlinter]
 root_packages =
     core
+    jobs
     worldtravel
     adventures
     users
@@ -17,7 +18,7 @@ layers =
     cloud : billing
     users | integrations
     adventures
-    worldtravel
+    worldtravel | jobs
     core
 ignore_imports =
     # Tests and data migrations may reach across apps.

@@ -66,6 +66,7 @@ services:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
+    stop_grace_period: 70s
     env_file: ../.env.advanced
     ports:
       - "${BACKEND_PORT:-8016}:80"

@@ -122,12 +122,14 @@ export const actions: Actions = {
 			const existingLocations = formData.get('existing_locations') === 'create' ? 'create' : 'link';
 			apiFormData.append('existing_locations', existingLocations);
 
+			// The import runs in a background job; the page follows it (see lib/jobs.ts).
 			let res = await fetch(`${serverEndpoint}/api/collections/import/`, {
 				method: 'POST',
 				headers: {
 					Referer: event.url.origin,
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken
+					'X-CSRFToken': csrfToken,
+					Prefer: 'respond-async'
 				},
 				body: apiFormData
 			});
@@ -139,6 +141,11 @@ export const actions: Actions = {
 					values: { detail: errorData.detail ?? '' },
 					details: errorData
 				});
+			}
+
+			if (res.status === 202) {
+				const job = await res.json();
+				return { success: true, jobId: job.id as string };
 			}
 
 			return { success: true };

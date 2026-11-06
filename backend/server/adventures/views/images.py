@@ -36,6 +36,9 @@ import requests
 from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
 from core.exceptions import APIError
 from core.serializers import validated
+from jobs.registry import start_job
+from jobs.responses import accepted, wants_async
+from jobs.serializers import BackgroundJobSerializer
 
 from adventures.services.images.fetch import (
     download_remote_image,
@@ -275,6 +278,7 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         responses={
             201: OpenApiResponse(ImageImportResultSerializer, description='Every image was imported.'),
             200: OpenApiResponse(ImageImportResultSerializer, description='Some images were imported; see `results`.'),
+            202: OpenApiResponse(BackgroundJobSerializer, description='With `Prefer: respond-async`: the import started.'),
             400: OpenApiResponse(description='None could be imported (`import_failed`, with `results`), or invalid input.'),
         },
     )
@@ -289,12 +293,26 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         Downloads up to 10 images and attaches them to a record, for example pictures from
         `GET /api/places/images/` or a place search. Each address gets its own entry in
         `results`.
+
+        Send `Prefer: respond-async` to download them in the background: the answer is `202` with
+        a job, and its `result` has `created_ids`, `results` and the counts when it succeeds.
         """
         params = validated(ImageImportFromUrlsSerializer, request.data)
         urls = [str(url).strip() for url in params['urls'] if str(url).strip()]
         content_object = self._get_and_validate_content_object(params['content_type'], params['object_id'])
 
         owner = self._content_owner(content_object, request.user)
+
+        if wants_async(request):
+            return accepted(
+                start_job(
+                    request.user, 'image_import',
+                    params={
+                        'content_type': params['content_type'], 'object_id': str(params['object_id']),
+                        'urls': urls, 'source': params.get('source'),
+                    },
+                )
+            )
 
         explicit_source = params.get('source')
         import_summary = import_remote_images_for_object(

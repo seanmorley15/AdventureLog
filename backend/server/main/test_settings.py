@@ -30,3 +30,10 @@ STORAGES = {
     **STORAGES,  # noqa: F405
     'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 }
+
+# Background jobs are not run by a worker in tests. Tests queue them for real (into the test
+# database) and run what is queued with `jobs.testing.run_pending_jobs`.
+JOBS_RUN_INLINE = False
+
+# Procrastinate logs a line for every job a test queues.
+LOGGING = {**LOGGING, 'loggers': {**LOGGING['loggers'], 'procrastinate': {'level': 'WARNING'}}}  # noqa: F405

@@ -3,7 +3,7 @@
 import logging
 
 from adventures.models import Location
-from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
+from adventures.services.geocoding.reverse import UNAVAILABLE_MESSAGE, reverse_geocode as reverse_geocode_service
 from core.geo import has_coordinates, point_to_lat_lon
 from worldtravel.models import City, Country, Region
 from worldtravel.services import mark_cities_visited, mark_regions_visited
@@ -11,7 +11,17 @@ from worldtravel.services import mark_cities_visited, mark_regions_visited
 logger = logging.getLogger(__name__)
 
 
-def geocode_and_assign_location(location_id: str):
+class GeocodeUnavailable(Exception):
+    """No geocoding provider answered. A background job tries again later."""
+
+
+def geocode_and_assign_location(location_id: str, raise_if_unavailable: bool = False):
+    """
+    Look up a place's country, region and city and save them.
+
+    Failures are logged and swallowed, so a request that calls this never breaks. A background
+    job passes ``raise_if_unavailable`` to hear when the providers did not answer, and retry.
+    """
     logger.debug("Starting geocode for location %s", location_id)
     try:
         location = Location.objects.get(id=location_id)
@@ -22,6 +32,8 @@ def geocode_and_assign_location(location_id: str):
         is_visited = location.is_visited_status()
         selection = reverse_geocode_service(latitude, longitude, location.user)
         result = selection.data
+        if raise_if_unavailable and result.get('error') == UNAVAILABLE_MESSAGE:
+            raise GeocodeUnavailable(f'No provider answered for location {location_id}')
 
         if 'region_id' in result:
             region = Region.objects.filter(id=result['region_id']).first()
@@ -42,10 +54,11 @@ def geocode_and_assign_location(location_id: str):
             if country:
                 location.country = country
 
-        # Save updated location info
-        # Save updated location info, skip geocode threading
+        # Save updated location info, without queueing another geocode
         location.save(update_fields=["region", "city", "country"], _skip_geocode=True)
 
+    except GeocodeUnavailable:
+        raise
     except Exception:
         logger.exception("Geocode failed for location %s", location_id)
 

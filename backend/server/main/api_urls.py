@@ -20,6 +20,7 @@ urlpatterns = [
 
     path('', include(account_router.urls)),
     path('', include('users.urls')),
+    path('', include('jobs.urls')),
     path('server-info/', ServerInfoView.as_view(), name='server-info'),
     path('integrations/', include('integrations.urls')),
     path('billing/', include('billing.urls')),

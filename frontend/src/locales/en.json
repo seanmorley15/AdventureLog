@@ -1,4 +1,12 @@
 {
+	"jobs": {
+		"preparing": "Preparing your file. This can take a while for a large account.",
+		"restoring": "Restoring in the background. You can keep using the app.",
+		"importing": "Importing in the background.",
+		"failed": "The job failed.",
+		"timeout": "This is taking a while. It keeps running on the server, so check back later.",
+		"download_ready": "Your file is ready."
+	},
 	"navbar": {
 		"collections": "Collections",
 		"map": "Map",

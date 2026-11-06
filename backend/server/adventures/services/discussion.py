@@ -112,33 +112,43 @@ def smtp_configured():
     return bool(getattr(settings, 'SMTP_CONFIGURED', False))
 
 
+def send_mention_email(comment, user, page_url=None, fail_silently=True):
+    """E-mail one mentioned member. With ``fail_silently=False`` a mail error is raised, for a job to retry."""
+    lines = [
+        f'{comment.author_name or "Someone"} mentioned you in {comment.collection.name}:',
+        '',
+        comment.body,
+    ]
+    if page_url:
+        lines += ['', page_url]
+    return send_mail(
+        subject=f'{getattr(settings, "INVITATIONS_EMAIL_SUBJECT_PREFIX", "")}'
+        f'New mention in {comment.collection.name}',
+        message='\n'.join(lines),
+        from_email=None,
+        recipient_list=[user.email],
+        fail_silently=fail_silently,
+    )
+
+
 def notify_mentions(comment, users, page_url=None):
-    """Email mentioned members, only when the server already has SMTP set up."""
+    """
+    Queue an e-mail to each mentioned member, only when the server already has SMTP set up.
+
+    One job per person, so a mail error retries that person's e-mail and nobody gets two.
+    Returns how many e-mails were queued.
+    """
     if not users or not smtp_configured():
         return 0
-    sent = 0
+    from adventures.tasks import send_mention_email_task
+
+    queued = 0
     for user in users:
         if not user.email or user.id == comment.author_user_id:
             continue
-        lines = [
-            f'{comment.author_name or "Someone"} mentioned you in {comment.collection.name}:',
-            '',
-            comment.body,
-        ]
-        if page_url:
-            lines += ['', page_url]
-        try:
-            sent += send_mail(
-                subject=f'{getattr(settings, "INVITATIONS_EMAIL_SUBJECT_PREFIX", "")}'
-                f'New mention in {comment.collection.name}',
-                message='\n'.join(lines),
-                from_email=None,
-                recipient_list=[user.email],
-                fail_silently=True,
-            )
-        except Exception:  # pragma: no cover - mail must never block a comment
-            logger.exception('Could not email mention for comment %s', comment.pk)
-    return sent
+        send_mention_email_task.defer(comment_id=str(comment.pk), user_id=str(user.pk), page_url=page_url)
+        queued += 1
+    return queued
 
 
 def person_summary(user, viewer=None, *, only_public=False):

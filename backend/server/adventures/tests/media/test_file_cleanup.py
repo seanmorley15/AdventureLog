@@ -24,7 +24,24 @@ from adventures.models import (
     Lodging,
     Visit,
 )
+from jobs.testing import queued_jobs, run_pending_jobs
 from users.models import CustomUser
+
+
+class RunsQueuedCleanup:
+    """A delete queues the removal of its files; a worker runs it once the delete has committed."""
+
+    def after_delete_the_worker_runs(self):
+        return _AfterDelete()
+
+
+class _AfterDelete:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        if exc_type is None:
+            run_pending_jobs('adventures.delete_stored_file')
 
 
 def png_file(name='photo.png'):
@@ -33,7 +50,7 @@ def png_file(name='photo.png'):
     return ContentFile(buffer.getvalue(), name=name)
 
 
-class StoredFileCleanupTests(TestCase):
+class StoredFileCleanupTests(RunsQueuedCleanup, TestCase):
     def setUp(self):
         media_root = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, media_root, ignore_errors=True)
@@ -67,17 +84,15 @@ class StoredFileCleanupTests(TestCase):
         attachment.file.save('notes.txt', ContentFile(b'hello'), save=True)
         return attachment
 
-    def test_deleting_a_place_removes_its_photo_and_attachment_files_after_commit(self):
+    def test_deleting_a_place_removes_its_photo_and_attachment_files_when_the_worker_runs(self):
         image_name = self.add_image().image.name
         attachment_name = self.add_attachment().file.name
         self.assertTrue(default_storage.exists(image_name))
 
-        with self.captureOnCommitCallbacks(execute=False) as callbacks:
-            self.location.delete()
-            # Nothing is removed from disk until the database delete has committed.
-            self.assertTrue(default_storage.exists(image_name))
-        for callback in callbacks:
-            callback()
+        self.location.delete()
+        # Nothing is removed from disk until the worker runs the clean-up the delete queued.
+        self.assertTrue(default_storage.exists(image_name))
+        run_pending_jobs('adventures.delete_stored_file')
 
         self.assertFalse(default_storage.exists(image_name))
         self.assertFalse(default_storage.exists(attachment_name))
@@ -87,13 +102,14 @@ class StoredFileCleanupTests(TestCase):
         image_name = self.add_image().image.name
         location_id = self.location.pk
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             try:
                 with transaction.atomic():
                     self.location.delete()
                     raise RuntimeError('roll back')
             except RuntimeError:
                 pass
+        self.assertEqual(queued_jobs('adventures.delete_stored_file').count(), 0)
 
         self.assertTrue(default_storage.exists(image_name))
         self.assertTrue(Location.objects.filter(pk=location_id).exists())
@@ -106,11 +122,11 @@ class StoredFileCleanupTests(TestCase):
         )
         shared_name = first.image.name
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             first.delete()
         self.assertTrue(default_storage.exists(shared_name))
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             second.delete()
         self.assertFalse(default_storage.exists(shared_name))
 
@@ -118,7 +134,7 @@ class StoredFileCleanupTests(TestCase):
         image_name = self.add_image().image.name
         attachment_name = self.add_attachment().file.name
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             self.user.delete()
 
         self.assertFalse(default_storage.exists(image_name))
@@ -128,7 +144,7 @@ class StoredFileCleanupTests(TestCase):
         visit = Visit.objects.create(location=self.location, start_date=None)
         image_name = self.add_image(visit).image.name
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             visit.delete()
 
         self.assertFalse(default_storage.exists(image_name))
@@ -138,7 +154,7 @@ class StoredFileCleanupTests(TestCase):
         image_name = self.add_image(lodging).image.name
         attachment_name = self.add_attachment(lodging).file.name
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             lodging.delete()
 
         self.assertFalse(default_storage.exists(image_name))
@@ -151,7 +167,7 @@ class StoredFileCleanupTests(TestCase):
         name = activity.gpx_file.name
         self.assertTrue(default_storage.exists(name))
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             Activity.objects.filter(pk=activity.pk).delete()
 
         self.assertFalse(default_storage.exists(name))
@@ -174,7 +190,7 @@ class StoredFileCleanupTests(TestCase):
         )
         names = [activity.gpx_file.name, photo.image.name]
 
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.after_delete_the_worker_runs():
             trip.delete()
 
         for name in names:

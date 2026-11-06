@@ -9,6 +9,7 @@ dependencies point, and how to find your way from a URL to the code and its test
 |---|---|
 | `core` | Helpers with no knowledge of any app: geo and date maths, parsing, caching, pagination, the outbound HTTP rules (`net.py`), base serializers, the API's error handling (`errors.py`, `exceptions.py`), its schema generation (`openapi.py`) and routers (`routers.py`), shared test helpers (`testing.py`). |
 | `worldtravel` | Countries, regions, cities and which of them a user has visited. |
+| `jobs` | Background work: the `BackgroundJob` a user can follow, the `job_task`/`start_job` helpers, the scheduled maintenance, and the admin and API for both. It does not know any other app; they queue jobs through it. See [Background jobs](API.md#background-jobs). |
 | `adventures` | The product: places, collections, trips and their day plan, transport, lodging, notes, media, comments, sharing, backups. |
 | `users` | Accounts, sign-in and API keys, public profiles, invitations. |
 | `integrations` | Immich, Strava, Wanderer and Endurain. |
@@ -16,7 +17,7 @@ dependencies point, and how to find your way from a URL to the code and its test
 | `main` | The project: settings, root URLs, sessions. |
 
 Dependencies point **down** this list: `main` -> `cloud`/`billing` -> `users`/`integrations` -> `adventures` ->
-`worldtravel` -> `core`. `.importlinter` enforces it in CI (`lint-imports`). There are two deliberate
+`worldtravel`/`jobs` -> `core`. `.importlinter` enforces it in CI (`lint-imports`). There are two deliberate
 exceptions, both listed there: `adventures` reaches `integrations` only through `integrations/facade.py`,
 and a place embeds its owner's profile from `users.serializers`.
 
@@ -89,6 +90,11 @@ Calls to a fixed vendor (Google, OpenStreetMap, Wikipedia, Strava) can use plain
 migrations can run the engine against historical models. Keep the package `__init__` free of imports of
 `adventures.models`; `files.py` and `legacy.py` do import them, which is why they are imported by path.
 
+**Slow or fallible work is a task, not a thread.** Queue it from `tasks.py` with `task.defer(...)` in the transaction
+that caused it (a `Location` save queues its geocoding, a comment queues its e-mails); never start a `threading.Thread` or
+send mail inline. A worker process in the same container runs the queue, so a restart loses nothing and failures retry.
+Long exports and imports are `@job_task`s a user follows through `/api/jobs/`.
+
 **The backup format is a promise.** A file written today must still import tomorrow. To add a field, add it to
 `exporter.py` and `restorer.py` (tolerate it being absent), then regenerate the golden files with
 `REGEN_GOLDEN=1` and read the diff. Bump `BACKUP_SCHEMA` (`utils/collection_type.py`) only when old files need
@@ -103,10 +109,12 @@ different handling.
 adventures/tests/   access/  backup/  collections/  day_plan/  geocoding/  locations/
                     media/  providers/  search/  stats/
 core/tests/         integrations/tests/ (immich, strava, wanderer, endurain)
+jobs/tests/         (the queue, the jobs API, clean-up, admin)
 users/tests/        worldtravel/tests/   main/tests/   billing/tests/   cloud/tests/
 ```
 
 Shared setup is in plain modules, never imported from another test file: `core/testing.py` (`make_user`),
+`jobs/testing.py` (`run_pending_jobs`, `queued_jobs`: tasks are queued for real, then run in the test's own thread),
 `adventures/tests/factories.py` (`build_rich_account`: one account that touches every record type),
 `adventures/tests/base.py` and `adventures/tests/day_plan/base.py`.
 

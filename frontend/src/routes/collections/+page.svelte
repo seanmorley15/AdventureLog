@@ -3,6 +3,7 @@
 	import { run } from 'svelte/legacy';
 
 	import { enhance } from '$app/forms';
+	import { jobErrorMessage, waitForJob } from '#lib/jobs.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CollectionCard from '#lib/components/cards/CollectionCard.svelte';
@@ -821,7 +822,22 @@
 						action="?/restoreData"
 						enctype="multipart/form-data"
 						use:enhance={({}) => {
-							return ({ result }) => {
+							return async ({ result }) => {
+								// The import runs in a background job: keep the dialog open until it finishes.
+								if (result?.type === 'success' && result.data?.jobId) {
+									try {
+										await waitForJob(result.data.jobId as string);
+										isImporting = false;
+										addToast('success', $t('adventures.import_success') || 'Imported collection');
+										setTimeout(() => {
+											window.location.reload();
+										}, 1000);
+									} catch (e) {
+										isImporting = false;
+										addToast('error', jobErrorMessage(e, $t('adventures.import_failed')));
+									}
+									return;
+								}
 								isImporting = false;
 								if (result?.type === 'success') {
 									addToast('success', $t('adventures.import_success') || 'Imported collection');

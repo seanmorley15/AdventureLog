@@ -61,6 +61,8 @@ Paths and their non-standard names come from `main/api_urls.py`, `adventures/url
 | 404 | It does not exist **or you cannot see it**. Do not leak existence with a 403. |
 | 409 | It conflicts with the current state (already exists, concurrent reorder). |
 | 412 | `If-Match` was sent and the record has changed since (see [Writing from an offline client](#writing-from-an-offline-client)). |
+| 202 | The work was queued; poll the job in `Location` (see [Background jobs](#background-jobs)). |
+| 410 | A job's file expired and was deleted (`job_expired`). |
 | 413 | An upload would exceed the owner's media storage. |
 | 429 | Rate limited (only when `ENABLE_RATE_LIMITS` is on, except Endurain sign-in, which is always limited). |
 | 502 / 503 / 504 | An outside service failed, is not configured, or timed out. |
@@ -187,6 +189,67 @@ the request is then safe:
 
 A visit cannot be created together with its location (`POST /api/locations/` does not take `visits`), so a client
 that creates both sends two requests, the location first.
+
+## Background jobs
+
+Slow work (exports, restores, imports, PDFs) can run in a worker process instead of the request, so it is not cut off by
+the gateway timeout and a restart does not lose it. The worker runs inside the app container; the queue is a table in
+Postgres ([Procrastinate](https://procrastinate.readthedocs.io)). Nothing else is needed.
+
+### For a client
+
+An endpoint that supports it answers `202 Accepted` with a **job** and a `Location: /api/jobs/{id}/` header:
+
+| Start it with | Result |
+|---|---|
+| `POST /api/backup/export/` | a zip of the account |
+| `POST /api/collections/{id}/archive/` | a zip of one collection (owner) |
+| `POST /api/collections/{id}/pdf/` | a PDF itinerary (signed in) |
+| `POST /api/backup/import/` with `Prefer: respond-async` | `result.summary`: what was restored |
+| `POST /api/collections/import/` with `Prefer: respond-async` | `result.collection_id` and `result.summary` |
+| `POST /api/images/import-from-urls/` with `Prefer: respond-async` | `result.created_ids`, `results`, counts |
+
+Without `Prefer: respond-async` the imports, and the `GET` downloads, work as before and answer in the request.
+
+Poll `GET /api/jobs/{id}/` (every second or two) until `status` is `succeeded`, `failed` or `cancelled`. A failed job has
+`error` (safe to show) and `error_code`, the same codes the synchronous endpoint would have answered with. A succeeded
+export has a `download_url`; the file is deleted after `JOB_RESULT_TTL_HOURS` (24) and then answers `410 job_expired`.
+`DELETE /api/jobs/{id}/` cancels a queued job, or removes a finished one with its file; a running job answers `409`.
+
+Imports check the cheap things first (it is a zip, `confirm=yes`, you may change the record) and answer `400` at once.
+What only the worker can know (a damaged backup, a full quota) arrives as a failed job, and an account restore changes
+nothing unless the whole file loads.
+
+### For a developer
+
+Declare the work once, then start it. The function takes the job row and returns the summary to show:
+
+```python
+# adventures/tasks.py
+@job_task('account_export')                    # needs_input=True if it reads an upload
+def account_export(job):
+    with build_archive_file(BackupExporter(job.user)) as archive:
+        save_result_file(job, archive, 'backup.zip', 'application/zip')
+
+# in a view
+return accepted(start_job(request.user, 'account_export', params={...}, upload=None))
+```
+
+- `start_job` creates the `BackgroundJob` row and queues the task **in one transaction**, so a job exists exactly when
+  the request's changes do. An uploaded file is saved to storage first (`jobs/<user>/<job>/`), because the worker is
+  another process; those paths are never served by `/media/`.
+- A `ServiceError` raised by the function (a `BackupError`, for one) fails the job with its message and code. Any other
+  exception is logged, shown to the user as a generic failure, and re-raised so the queue records the traceback.
+- Small tasks that react to something (geocode a place, e-mail a mention, delete a file) are plain
+  `@app.task(retry=RetryStrategy(...))` functions in the app's `tasks.py`; queue them with `task.defer(...)`, in the
+  transaction that caused them. Use `queueing_lock` to collapse repeats, and `lock` to keep two from running together.
+- Scheduled work is `@app.periodic(cron=...)` on a task in `tasks.py` (UTC); see `jobs/tasks.py`. There is no cron daemon.
+- Imports: `jobs` sits beside `worldtravel` in the layers (`.importlinter`); apps above it queue jobs, and `jobs` never
+  imports them.
+- Tests: tasks are queued for real into the test database. `jobs.testing.run_pending_jobs()` runs what is queued in the
+  test's own thread and transaction; `queued_jobs()` asserts what a view queued.
+- Development: `manage.py devworker` runs the worker and restarts it on code changes (the dev compose file starts it next
+  to `runserver`). `JOBS_RUN_INLINE=true` runs jobs during the request instead, for a process without a worker.
 
 ## Adding an endpoint
 

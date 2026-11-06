@@ -10,6 +10,7 @@ from adventures.models import Activity, Collection, CollectionComment, Collectio
 from adventures.tests.base import AudienceTestBase, make_user
 from adventures.tests.day_plan.base import plan_request
 from adventures.access.audience import resolve_audience
+from jobs.testing import queued_jobs, run_pending_jobs
 
 COMMENTS = '/api/comments/'
 
@@ -97,16 +98,20 @@ class PlanCommentTests(CommentTestBase):
     @override_settings(SMTP_CONFIGURED=True)
     def test_mentions_match_members_only_and_email_when_smtp_is_set(self):
         self.as_user(self.owner)
-        with self.captureOnCommitCallbacks(execute=True):
-            response = self.post(body='@editor and @viewer, look. @stranger too.')
+        response = self.post(body='@editor and @viewer, look. @stranger too.')
         self.assertEqual(sorted(response.json()['mentions']), ['editor', 'viewer'])
+        # One e-mail job per person, queued with the comment; nothing is sent during the request.
+        self.assertEqual(queued_jobs('adventures.send_mention_email').count(), 2)
+        self.assertEqual(len(mail.outbox), 0)
+        run_pending_jobs()
         self.assertEqual(sorted(m.to[0] for m in mail.outbox), ['editor@example.com', 'viewer@example.com'])
 
     @override_settings(SMTP_CONFIGURED=False)
     def test_no_email_without_smtp(self):
         self.as_user(self.owner)
-        with self.captureOnCommitCallbacks(execute=True):
-            self.post(body='@editor hello')
+        self.post(body='@editor hello')
+        run_pending_jobs()
+        self.assertEqual(queued_jobs().count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_inbox_lists_new_comments_until_seen(self):

@@ -1,4 +1,4 @@
-import threading
+import logging
 import uuid
 
 from django.conf import settings
@@ -6,7 +6,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
-from django.db import connection, models, transaction
+from django.db import models, transaction
 from djmoney.models.fields import MoneyField
 
 from .managers import LocationManager
@@ -16,6 +16,29 @@ from core.timezones import TIMEZONES
 from worldtravel.models import City, Country, Region
 
 from .base import User, default_user
+
+
+logger = logging.getLogger(__name__)
+
+
+def _queue_geocode(location_id):
+    """
+    Queue a job that fills in the place's country, region and city.
+
+    The job is queued in the saving transaction, so it exists exactly when the place does and the
+    worker finds the row. Places queued twice before the job runs share one job, which reads the
+    coordinates when it runs. A queue that cannot be written to never fails the save.
+    """
+    from adventures.tasks import geocode_location
+    from procrastinate.exceptions import AlreadyEnqueued
+
+    try:
+        with transaction.atomic():
+            geocode_location.configure(queueing_lock=f'geocode:{location_id}').defer(location_id=location_id)
+    except AlreadyEnqueued:
+        pass
+    except Exception:
+        logger.exception('Could not queue geocoding for location %s', location_id)
 
 
 def _coordinate_key(point):
@@ -132,7 +155,7 @@ class Location(models.Model):
                 # For now, we'll re-raise the error
                 raise e
 
-        # Skip threading when called from the geocode worker, and during tests.
+        # Skip when called from the geocode job itself, and during tests.
         if _skip_geocode or getattr(settings, 'DISABLE_BACKGROUND_GEOCODE', False):
             return result
 
@@ -143,23 +166,7 @@ class Location(models.Model):
         key = _coordinate_key(self.coordinates)
         if key is not None and key != getattr(self, '_geocoded_key', None):
             self._geocoded_key = key
-            location_id = str(self.id)
-
-            def run_geocode():
-                try:
-                    from adventures.services.geocoding.assignment import geocode_and_assign_location
-                    geocode_and_assign_location(location_id)
-                finally:
-                    # The thread opened its own database connection; close it so it does not leak.
-                    connection.close()
-
-            def start_geocode():
-                thread = threading.Thread(target=run_geocode)
-                thread.daemon = True  # Allows the thread to exit when the main program ends
-                thread.start()
-
-            # Wait for the row to be committed: the thread reads it back by id.
-            transaction.on_commit(start_geocode)
+            _queue_geocode(str(self.id))
 
         return result
 

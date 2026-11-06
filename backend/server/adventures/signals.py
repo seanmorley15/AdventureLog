@@ -1,6 +1,5 @@
 import logging
 
-from django.db import transaction
 from django.db.models.signals import m2m_changed, post_delete
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
@@ -72,17 +71,11 @@ def _delete_file_when_unreferenced(model, field_name, file):
     """
     if not file or not file.name:
         return
-    name, storage = file.name, file.storage
+    from adventures.tasks import delete_stored_file
 
-    def delete():
-        if model.objects.filter(**{field_name: name}).exists():
-            return
-        try:
-            storage.delete(name)
-        except Exception:
-            logger.exception('Could not delete stored file %s', name)
-
-    transaction.on_commit(delete)
+    # Queued in the deleting transaction: a rolled-back delete queues nothing, and a failed
+    # storage call is retried instead of leaving the file behind.
+    delete_stored_file.defer(model_label=model._meta.label, field_name=field_name, name=file.name)
 
 
 @receiver(post_delete, sender=ContentImage)

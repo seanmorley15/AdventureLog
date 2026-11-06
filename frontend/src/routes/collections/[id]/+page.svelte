@@ -65,6 +65,7 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '#lib/toasts.js';
+	import { jobErrorMessage, runExport } from '#lib/jobs.js';
 	import { linkLocationToCollection } from '#lib/collection-membership.js';
 	import NoteModal from '#lib/components/NoteModal.svelte';
 	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
@@ -270,28 +271,35 @@
 		if (!collection || isExportingPdf) return;
 		isExportingPdf = true;
 		try {
-			const secret = page.url.searchParams.get('s');
-			const res = await fetch(
-				`/api/collections/${collection.id}/pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
-			);
-			if (!res.ok) {
-				addToast('error', $t('adventures.export_pdf_failed'));
-				return;
+			if (data.user && !page.url.searchParams.get('s')) {
+				// Signed in: the PDF is made in the background and downloads when it is ready.
+				addToast('info', $t('jobs.preparing'));
+				await runExport(`/api/collections/${collection.id}/pdf/`);
+			} else {
+				// A guest link carries its secret in the address, so make the PDF now.
+				const secret = page.url.searchParams.get('s');
+				const res = await fetch(
+					`/api/collections/${collection.id}/pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
+				);
+				if (!res.ok) {
+					addToast('error', $t('adventures.export_pdf_failed'));
+					return;
+				}
+				const blob = await res.blob();
+				const safeName =
+					String(collection.name)
+						.replace(/[^\w\s-]/g, '')
+						.replace(/\s+/g, '_') || 'collection';
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `${safeName}_itinerary.pdf`;
+				a.click();
+				URL.revokeObjectURL(url);
 			}
-			const blob = await res.blob();
-			const safeName =
-				String(collection.name)
-					.replace(/[^\w\s-]/g, '')
-					.replace(/\s+/g, '_') || 'collection';
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `${safeName}_itinerary.pdf`;
-			a.click();
-			URL.revokeObjectURL(url);
 			addToast('success', $t('adventures.export_pdf_success'));
-		} catch {
-			addToast('error', $t('adventures.export_pdf_failed'));
+		} catch (e) {
+			addToast('error', jobErrorMessage(e, $t('adventures.export_pdf_failed')));
 		} finally {
 			isExportingPdf = false;
 		}

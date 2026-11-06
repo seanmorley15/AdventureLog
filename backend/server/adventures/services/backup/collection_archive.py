@@ -20,10 +20,16 @@ from .restorer import (
 from .service import DATA_FILE, ArchiveFile, build_archive, ensure_schema_supported, read_data_file
 
 
-def export_collection_archive(user, collection):
+def collection_archive_filename(collection):
     # The name ends up in a Content-Disposition header, so keep it to one safe line.
     name = re.sub(r'["\r\n\\]', '', collection.name).replace(' ', '_')
-    return ArchiveFile(content=build_archive(BackupExporter(user, collection)), filename=f'collection-{name}.zip')
+    return f'collection-{name}.zip'
+
+
+def export_collection_archive(user, collection):
+    return ArchiveFile(
+        content=build_archive(BackupExporter(user, collection)), filename=collection_archive_filename(collection)
+    )
 
 
 def _read_collection_data(archive):

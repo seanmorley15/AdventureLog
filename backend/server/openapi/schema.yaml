@@ -1278,6 +1278,10 @@ paths:
       description: |-
         A zip file with every record you own and their media, in a format that
                 `POST /api/backup/import/` restores, also on another server.
+
+                `POST` starts the export in the background and answers `202` with a job. Poll
+                `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
+                during the request, which can time out for a large account.
       summary: Export your account
       tags:
       - Backup
@@ -1301,12 +1305,60 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
+    post:
+      operationId: backup_export_start
+      description: |-
+        A zip file with every record you own and their media, in a format that
+                `POST /api/backup/import/` restores, also on another server.
+
+                `POST` starts the export in the background and answers `202` with a job. Poll
+                `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
+                during the request, which can time out for a large account.
+      summary: Export your account
+      tags:
+      - Backup
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: The export started; see `Location`.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
   /api/backup/import/:
     post:
       operationId: backup_import_data
       description: |-
         **Deletes everything in your account**, then loads the backup. Send `confirm=yes`. The
                 response counts what was restored.
+
+                Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
+                and the counts are in the job's `result.summary` when it succeeds. Nothing is deleted if
+                the file turns out not to be usable.
       summary: Restore your account from a backup
       tags:
       - Backup
@@ -1328,6 +1380,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BackupImportResult'
           description: ''
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: 'With `Prefer: respond-async`: the restore started.'
         '400':
           description: Not a valid backup (`invalid_backup`) or not confirmed.
         '401':
@@ -3859,6 +3917,13 @@ paths:
       summary: Update the collection and clean up out-of-range itinerary items when
         dates change.
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -3918,11 +3983,25 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     patch:
       operationId: collections_partial_update
       description: Owner only. Like PUT, for the fields you send.
       summary: Update a collection
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -3981,12 +4060,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     delete:
       operationId: collections_destroy
       description: Owner only. Deletes the collection; records in it that belong to
         you stay.
       summary: Delete a collection
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -4023,12 +4116,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
   /api/collections/{id}/archive/:
     get:
       operationId: collections_archive
       description: |-
         Owner only. The collection and everything in it, with media, for
                 `POST /api/collections/import/` on this or another server.
+
+                `POST` builds it in the background and answers `202` with a job. Poll
+                `GET /api/jobs/{id}/` and download the file from its `download_url`.
       summary: Download as a zip archive
       parameters:
       - in: path
@@ -4053,6 +4156,63 @@ paths:
                 type: string
                 format: binary
           description: The archive.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+    post:
+      operationId: collections_archive_start
+      description: |-
+        Owner only. The collection and everything in it, with media, for
+                `POST /api/collections/import/` on this or another server.
+
+                `POST` builds it in the background and answers `202` with a job. Poll
+                `GET /api/jobs/{id}/` and download the file from its `download_url`.
+      summary: Download as a zip archive
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      tags:
+      - Collections
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: The export started; see `Location`.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
         '401':
           content:
             application/json:
@@ -4201,6 +4361,13 @@ paths:
         revoked.
       summary: Revoke a guest link
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -4244,6 +4411,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
   /api/collections/{id}/invitation/accept/:
     post:
       operationId: collections_accept_invite
@@ -4418,6 +4592,13 @@ paths:
       operationId: collections_revoke_invite
       summary: Withdraw an invite
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -4461,6 +4642,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
   /api/collections/{id}/leave/:
     post:
       operationId: collections_leave
@@ -4518,6 +4706,13 @@ paths:
         answered yet.
       summary: Change a member's role
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -4583,12 +4778,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     delete:
       operationId: collections_member_delete
       description: Owner only. Places they created in the collection belong to the
         owner and stay.
       summary: Remove a member
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -4632,12 +4841,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
   /api/collections/{id}/pdf/:
     get:
       operationId: collections_pdf
       description: |-
         A printable day-by-day itinerary. Members get the whole plan; public readers get what
                 the story shows.
+
+                `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
+                `GET /api/jobs/{id}/` and download the file from its `download_url`.
       summary: Download as PDF
       parameters:
       - in: path
@@ -4662,6 +4881,63 @@ paths:
                 type: string
                 format: binary
           description: The PDF.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+    post:
+      operationId: collections_pdf_start
+      description: |-
+        A printable day-by-day itinerary. Members get the whole plan; public readers get what
+                the story shows.
+
+                `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
+                `GET /api/jobs/{id}/` and download the file from its `download_url`.
+      summary: Download as PDF
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      tags:
+      - Collections
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: The PDF is being made; see `Location`.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
         '401':
           content:
             application/json:
@@ -4877,6 +5153,9 @@ paths:
         Adds the collection in an archive from `GET /api/collections/{id}/archive/` to your
                 account, next to what you have. `existing_locations` decides what happens to places
                 you already have.
+
+                Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
+                and its `result` has the new `collection_id` and a `summary` when it succeeds.
       summary: Import a collection
       tags:
       - Collections
@@ -4898,6 +5177,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/CollectionImportResult'
           description: ''
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: 'With `Prefer: respond-async`: the import started.'
         '400':
           description: Not a valid collection archive (`invalid_backup`).
         '401':
@@ -5739,6 +6024,9 @@ paths:
         Downloads up to 10 images and attaches them to a record, for example pictures from
                 `GET /api/places/images/` or a place search. Each address gets its own entry in
                 `results`.
+
+                Send `Prefer: respond-async` to download them in the background: the answer is `202` with
+                a job, and its `result` has `created_ids`, `results` and the counts when it succeeds.
       summary: Import images from web addresses
       tags:
       - Media
@@ -5772,6 +6060,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImageImportResult'
           description: Every image was imported.
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: 'With `Prefer: respond-async`: the import started.'
         '400':
           description: None could be imported (`import_failed`, with `results`), or
             invalid input.
@@ -6885,6 +7179,172 @@ paths:
           description: You have not connected Wanderer (`wanderer.not_connected`).
         '502':
           description: Wanderer failed (`upstream_error`).
+  /api/jobs/:
+    get:
+      operationId: jobs_list
+      description: The 50 most recent, newest first.
+      summary: List your jobs
+      tags:
+      - Jobs
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BackgroundJob'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+  /api/jobs/{id}/:
+    get:
+      operationId: jobs_retrieve
+      description: |-
+        Poll this until `status` is `succeeded`, `failed` or `cancelled`. A succeeded job has a
+                `result` summary and, for exports, a `download_url`.
+      summary: Get a job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this background job.
+        required: true
+      tags:
+      - Jobs
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundJob'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+    delete:
+      operationId: jobs_destroy
+      description: |-
+        A job that has not started is cancelled. A finished job is removed together with its
+                file. A running job cannot be stopped.
+      summary: Cancel or remove a job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this background job.
+        required: true
+      tags:
+      - Jobs
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: The job was cancelled, or removed with its files.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+        '409':
+          description: The job is running and cannot be stopped (`job_running`).
+  /api/jobs/{id}/download/:
+    get:
+      operationId: jobs_download
+      description: Only the owner can. The file is deleted when `expires_at` passes.
+      summary: Download a job's file
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this background job.
+        required: true
+      tags:
+      - Jobs
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: The file the job made.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          description: No such job, or it has no file.
+        '410':
+          description: The file expired and was deleted (`job_expired`).
   /api/locations/:
     get:
       operationId: locations_list
@@ -8042,6 +8502,13 @@ paths:
         belongs to the collection owner and can be changed by its editors.
       summary: Replace a lodging
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -8101,6 +8568,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     patch:
       operationId: lodgings_partial_update
       description: |-
@@ -8110,6 +8584,13 @@ paths:
         belongs to the collection owner and can be changed by its editors.
       summary: Update a lodging
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -8168,6 +8649,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     delete:
       operationId: lodgings_destroy
       description: |-
@@ -8177,6 +8665,13 @@ paths:
         belongs to the collection owner and can be changed by its editors.
       summary: Delete a lodging
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -8213,6 +8708,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
   /api/lodgings/quick-add/:
     post:
       operationId: lodgings_quick_add
@@ -9778,6 +10280,13 @@ paths:
         A journey in a collection belongs to the collection owner and can be changed by its editors.
       summary: Replace a transportation
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -9837,6 +10346,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     patch:
       operationId: transportations_partial_update
       description: |-
@@ -9846,6 +10362,13 @@ paths:
         A journey in a collection belongs to the collection owner and can be changed by its editors.
       summary: Update a transportation
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -9904,6 +10427,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
     delete:
       operationId: transportations_destroy
       description: |-
@@ -9913,6 +10443,13 @@ paths:
         A journey in a collection belongs to the collection owner and can be changed by its editors.
       summary: Delete a transportation
       parameters:
+      - in: header
+        name: If-Match
+        schema:
+          type: string
+        description: The `ETag` of the version this change is based on, or `*`. When
+          the record has changed since, nothing is changed and the answer is `412
+          precondition_failed`. Leave it out to change the record regardless.
       - in: path
         name: id
         schema:
@@ -9949,6 +10486,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '412':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailed'
+          description: The record changed since the `If-Match` version (`precondition_failed`).
+            `current` is the record now.
   /api/users/:
     get:
       operationId: users_list
@@ -11811,6 +12355,84 @@ components:
             $ref: '#/components/schemas/CollectionItineraryItem'
       required:
       - items
+    BackgroundJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/BackgroundJobStatusEnum'
+          readOnly: true
+        result:
+          readOnly: true
+          nullable: true
+        error:
+          type: string
+          readOnly: true
+        error_code:
+          type: string
+          readOnly: true
+        filename:
+          type: string
+          readOnly: true
+        download_url:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Where to download the file, once the job has succeeded and
+            until `expires_at`. Otherwise null.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - download_url
+      - error
+      - error_code
+      - expires_at
+      - filename
+      - finished_at
+      - id
+      - kind
+      - result
+      - started_at
+      - status
+    BackgroundJobStatusEnum:
+      enum:
+      - queued
+      - running
+      - succeeded
+      - failed
+      - cancelled
+      type: string
+      description: |-
+        * `queued` - Queued
+        * `running` - Running
+        * `succeeded` - Succeeded
+        * `failed` - Failed
+        * `cancelled` - Cancelled
     BackupImportRequest:
       type: object
       properties:
@@ -19641,6 +20263,9 @@ tags:
   description: The home screen summary.
 - name: Backup
   description: Export and restore your whole account.
+- name: Jobs
+  description: 'Exports, imports and PDFs that run in the background: poll them and
+    download the result.'
 - name: World travel
   description: Countries, regions and cities, and which of them you have visited.
 - name: Integrations

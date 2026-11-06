@@ -3,6 +3,7 @@
 
 	import { page } from '$app/state';
 	import { addToast } from '#lib/toasts.js';
+	import { jobErrorMessage, waitForJob } from '#lib/jobs.js';
 	import { sanitizeBasemapType } from '#lib';
 	import type {
 		EndurainIntegration,
@@ -263,8 +264,31 @@
 			}
 		}
 		if (browser && page.form?.error) addToast('error', $t('settings.update_error'));
-		if (browser && page.form) isRestoring = false;
+		if (browser && page.form?.restoreJobId) {
+			followRestoreJob(page.form.restoreJobId);
+		} else if (browser && page.form) {
+			isRestoring = false;
+		}
 	});
+
+	// A restore runs on the server in the background; stay on "restoring" until it has finished.
+	let followedRestoreJob: string | null = null;
+	async function followRestoreJob(id: string) {
+		if (followedRestoreJob === id) return;
+		followedRestoreJob = id;
+		isRestoring = true;
+		addToast('info', $t('jobs.restoring'));
+		try {
+			await waitForJob(id);
+			window.location.href = '/settings?page=success';
+		} catch (e) {
+			isRestoring = false;
+			addToast(
+				'error',
+				$t('settings.restore_error', { values: { detail: jobErrorMessage(e, '') } })
+			);
+		}
+	}
 
 	async function checkVisitedRegions() {
 		const res = await fetch('/api/visited-regions/sync/', {

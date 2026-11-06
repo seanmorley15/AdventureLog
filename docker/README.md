@@ -42,7 +42,7 @@ docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml up
 
 - **`frontend-build`** — pnpm install, Vite build, production prune (used by `frontend` and Standard Deployment)
 - **`backend-builder`** — pip install with GDAL dev headers
-- **`backend-runtime`** — Django app, collectstatic, cron scripts (extended by `backend` and Standard Deployment)
+- **`backend-runtime`** — Django app, collectstatic (extended by `backend` and Standard Deployment)
 
 Image-specific layers only add nginx/supervisord configs, entrypoints, and (for Standard Deployment) Node + frontend artifacts.
 

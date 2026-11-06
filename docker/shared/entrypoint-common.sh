@@ -98,5 +98,4 @@ finalize_startup() {
 		cat /code/adventurelog.txt
 	fi
 
-	/code/scripts/write-cron-env.sh
 }

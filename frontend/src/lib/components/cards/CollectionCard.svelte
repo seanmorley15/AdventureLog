@@ -4,6 +4,7 @@
 	import type { Location, Collection, User, SlimCollection, ContentImage } from '#lib/types.js';
 	import { addToast } from '#lib/toasts.js';
 	import { t } from 'svelte-i18n';
+	import { jobErrorMessage, runExport } from '#lib/jobs.js';
 	import { copyToClipboard } from '#lib/index.js';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 	import { inclusiveDayCount } from '#lib/dateUtils.js';
@@ -84,48 +85,34 @@
 		dispatch('edit', collection);
 	}
 
-	async function downloadCollectionBlob(
-		url: string,
-		filename: string,
-		successKey: string,
-		failedKey: string
-	) {
+	let isExporting = $state(false);
+
+	/** Exports run on the server in the background: start one, wait for the file, then save it. */
+	async function exportCollectionFile(url: string, successKey: string, failedKey: string) {
+		if (isExporting) return;
+		isExporting = true;
+		addToast('info', $t('jobs.preparing'));
 		try {
-			const res = await fetch(url);
-			if (!res.ok) {
-				addToast('error', $t(failedKey) || 'Export failed');
-				return;
-			}
-			const blob = await res.blob();
-			const objectUrl = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = objectUrl;
-			a.download = filename;
-			a.click();
-			URL.revokeObjectURL(objectUrl);
-			addToast('success', $t(successKey) || 'Exported collection');
+			await runExport(url);
+			addToast('success', $t(successKey));
 		} catch (e) {
-			addToast('error', $t(failedKey) || 'Export failed');
+			addToast('error', jobErrorMessage(e, $t(failedKey)));
+		} finally {
+			isExporting = false;
 		}
 	}
 
 	async function exportCollectionZip() {
-		await downloadCollectionBlob(
+		await exportCollectionFile(
 			`/api/collections/${collection.id}/archive/`,
-			`collection-${String(collection.name).replace(/\s+/g, '_')}.zip`,
 			'adventures.export_success',
 			'adventures.export_failed'
 		);
 	}
 
 	async function exportCollectionPdf() {
-		const safeName =
-			String(collection.name)
-				.replace(/[^\w\s-]/g, '')
-				.replace(/\s+/g, '_') || 'collection';
-		await downloadCollectionBlob(
+		await exportCollectionFile(
 			`/api/collections/${collection.id}/pdf/`,
-			`${safeName}_itinerary.pdf`,
 			'adventures.export_pdf_success',
 			'adventures.export_pdf_failed'
 		);

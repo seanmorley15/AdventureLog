@@ -17,6 +17,10 @@ from adventures.services.geocoding.naming import (
 )
 
 
+# The error of a lookup where no provider answered at all (as opposed to one that found nothing).
+UNAVAILABLE_MESSAGE = "Unable to reverse geocode location."
+
+
 @dataclass
 class ReverseGeocodeResult:
     data: Dict[str, Any]
@@ -113,4 +117,4 @@ def reverse_geocode(
     if google_result:
         return ReverseGeocodeResult(data=google_result, provider_used="google")
 
-    return ReverseGeocodeResult(data=osm_result or {"error": "Unable to reverse geocode location."}, provider_used=None)
+    return ReverseGeocodeResult(data=osm_result or {"error": UNAVAILABLE_MESSAGE}, provider_used=None)

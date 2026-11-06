@@ -357,12 +357,14 @@ export const actions: Actions = {
 			apiFormData.append('file', file);
 			apiFormData.append('confirm', 'yes');
 
+			// The restore runs in a background job; the page follows it (see lib/jobs.ts).
 			let res = await fetch(`${endpoint}/api/backup/import/`, {
 				method: 'POST',
 				headers: {
 					Referer: event.url.origin,
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken
+					'X-CSRFToken': csrfToken,
+					Prefer: 'respond-async'
 				},
 				body: apiFormData
 			});
@@ -374,6 +376,11 @@ export const actions: Actions = {
 					values: { detail: errorData.detail ?? '' },
 					details: errorData
 				});
+			}
+
+			if (res.status === 202) {
+				const job = await res.json();
+				return { restoreJobId: job.id as string };
 			}
 
 			return { success: true };

@@ -122,6 +122,7 @@ TAGS = [
     {'name': 'Search', 'description': 'Search across everything you can see.'},
     {'name': 'Dashboard', 'description': 'The home screen summary.'},
     {'name': 'Backup', 'description': 'Export and restore your whole account.'},
+    {'name': 'Jobs', 'description': 'Exports, imports and PDFs that run in the background: poll them and download the result.'},
     {'name': 'World travel', 'description': 'Countries, regions and cities, and which of them you have visited.'},
     {'name': 'Integrations', 'description': 'Immich, Strava, Wanderer and Endurain.'},
     {'name': 'Billing', 'description': 'Subscriptions on hosted (cloud) servers.'},

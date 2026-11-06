@@ -381,10 +381,23 @@ export interface paths {
          * Export your account
          * @description A zip file with every record you own and their media, in a format that
          *             `POST /api/backup/import/` restores, also on another server.
+         *
+         *             `POST` starts the export in the background and answers `202` with a job. Poll
+         *             `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
+         *             during the request, which can time out for a large account.
          */
         get: operations["backup_export"];
         put?: never;
-        post?: never;
+        /**
+         * Export your account
+         * @description A zip file with every record you own and their media, in a format that
+         *             `POST /api/backup/import/` restores, also on another server.
+         *
+         *             `POST` starts the export in the background and answers `202` with a job. Poll
+         *             `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
+         *             during the request, which can time out for a large account.
+         */
+        post: operations["backup_export_start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -404,6 +417,10 @@ export interface paths {
          * Restore your account from a backup
          * @description **Deletes everything in your account**, then loads the backup. Send `confirm=yes`. The
          *             response counts what was restored.
+         *
+         *             Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
+         *             and the counts are in the job's `result.summary` when it succeeds. Nothing is deleted if
+         *             the file turns out not to be usable.
          */
         post: operations["backup_import_data"];
         delete?: never;
@@ -1066,10 +1083,21 @@ export interface paths {
          * Download as a zip archive
          * @description Owner only. The collection and everything in it, with media, for
          *             `POST /api/collections/import/` on this or another server.
+         *
+         *             `POST` builds it in the background and answers `202` with a job. Poll
+         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         get: operations["collections_archive"];
         put?: never;
-        post?: never;
+        /**
+         * Download as a zip archive
+         * @description Owner only. The collection and everything in it, with media, for
+         *             `POST /api/collections/import/` on this or another server.
+         *
+         *             `POST` builds it in the background and answers `202` with a job. Poll
+         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
+         */
+        post: operations["collections_archive_start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1269,10 +1297,21 @@ export interface paths {
          * Download as PDF
          * @description A printable day-by-day itinerary. Members get the whole plan; public readers get what
          *             the story shows.
+         *
+         *             `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
+         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         get: operations["collections_pdf"];
         put?: never;
-        post?: never;
+        /**
+         * Download as PDF
+         * @description A printable day-by-day itinerary. Members get the whole plan; public readers get what
+         *             the story shows.
+         *
+         *             `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
+         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
+         */
+        post: operations["collections_pdf_start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1356,6 +1395,9 @@ export interface paths {
          * @description Adds the collection in an archive from `GET /api/collections/{id}/archive/` to your
          *             account, next to what you have. `existing_locations` decides what happens to places
          *             you already have.
+         *
+         *             Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
+         *             and its `result` has the new `collection_id` and a `summary` when it succeeds.
          */
         post: operations["collections_import_collection"];
         delete?: never;
@@ -1665,6 +1707,9 @@ export interface paths {
          * @description Downloads up to 10 images and attaches them to a record, for example pictures from
          *             `GET /api/places/images/` or a place search. Each address gets its own entry in
          *             `results`.
+         *
+         *             Send `Prefer: respond-async` to download them in the background: the answer is `202` with
+         *             a job, and its `result` has `created_ids`, `results` and the counts when it succeeds.
          */
         post: operations["images_import_from_urls"];
         delete?: never;
@@ -2072,6 +2117,72 @@ export interface paths {
          *             trail list as they are; the trail author is included.
          */
         get: operations["wanderer_trails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List your jobs
+         * @description The 50 most recent, newest first.
+         */
+        get: operations["jobs_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a job
+         * @description Poll this until `status` is `succeeded`, `failed` or `cancelled`. A succeeded job has a
+         *             `result` summary and, for exports, a `download_url`.
+         */
+        get: operations["jobs_retrieve"];
+        put?: never;
+        post?: never;
+        /**
+         * Cancel or remove a job
+         * @description A job that has not started is cancelled. A finished job is removed together with its
+         *             file. A running job cannot be stopped.
+         */
+        delete: operations["jobs_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/download/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a job's file
+         * @description Only the owner can. The file is deleted when `expires_at` passes.
+         */
+        get: operations["jobs_download"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3646,6 +3757,35 @@ export interface components {
         AutoGenerateResult: {
             items: components["schemas"]["CollectionItineraryItem"][];
         };
+        BackgroundJob: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly kind: string;
+            readonly status: components["schemas"]["BackgroundJobStatusEnum"];
+            readonly result: unknown;
+            readonly error: string;
+            readonly error_code: string;
+            readonly filename: string;
+            /** @description Where to download the file, once the job has succeeded and until `expires_at`. Otherwise null. */
+            readonly download_url: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly started_at: string | null;
+            /** Format: date-time */
+            readonly finished_at: string | null;
+            /** Format: date-time */
+            readonly expires_at: string | null;
+        };
+        /**
+         * @description * `queued` - Queued
+         *     * `running` - Running
+         *     * `succeeded` - Succeeded
+         *     * `failed` - Failed
+         *     * `cancelled` - Cancelled
+         * @enum {string}
+         */
+        BackgroundJobStatusEnum: "queued" | "running" | "succeeded" | "failed" | "cancelled";
         BackupImportRequest: {
             /**
              * Format: binary
@@ -8319,6 +8459,53 @@ export interface operations {
             };
         };
     };
+    backup_export_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The export started; see `Location`. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     backup_import_data: {
         parameters: {
             query?: never;
@@ -8338,6 +8525,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BackupImportResult"];
+                };
+            };
+            /** @description With `Prefer: respond-async`: the restore started. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
                 };
             };
             /** @description Not a valid backup (`invalid_backup`) or not confirmed. */
@@ -10828,7 +11024,10 @@ export interface operations {
     collections_update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -10887,12 +11086,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     collections_destroy: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -10935,12 +11146,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     collections_partial_update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -10999,6 +11222,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     collections_archive: {
@@ -11020,6 +11252,65 @@ export interface operations {
                 };
                 content: {
                     "application/zip": string;
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    collections_archive_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The export started; see `Location`. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -11176,7 +11467,10 @@ export interface operations {
     collections_revoke_guest_link: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -11219,6 +11513,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
                 };
             };
         };
@@ -11405,7 +11708,10 @@ export interface operations {
     collections_revoke_invite: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -11448,6 +11754,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
                 };
             };
         };
@@ -11512,7 +11827,10 @@ export interface operations {
     collections_member_delete: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -11557,12 +11875,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     collections_member_patch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this collection. */
                 id: string;
@@ -11623,6 +11953,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     collections_pdf: {
@@ -11644,6 +11983,65 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": string;
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    collections_pdf_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The PDF is being made; see `Location`. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -11869,6 +12267,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CollectionImportResult"];
+                };
+            };
+            /** @description With `Prefer: respond-async`: the import started. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
                 };
             };
             /** @description Not a valid collection archive (`invalid_backup`). */
@@ -12789,6 +13196,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImageImportResult"];
+                };
+            };
+            /** @description With `Prefer: respond-async`: the import started. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
                 };
             };
             /** @description None could be imported (`import_failed`, with `results`), or invalid input. */
@@ -14138,6 +14554,193 @@ export interface operations {
             };
         };
     };
+    jobs_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"][];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    jobs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this background job. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundJob"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    jobs_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this background job. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job was cancelled, or removed with its files. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The job is running and cannot be stopped (`job_running`). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    jobs_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this background job. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file the job made. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No such job, or it has no file. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The file expired and was deleted (`job_expired`). */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     locations_list: {
         parameters: {
             query?: {
@@ -15221,7 +15824,10 @@ export interface operations {
     lodgings_update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this lodging. */
                 id: string;
@@ -15280,12 +15886,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     lodgings_destroy: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this lodging. */
                 id: string;
@@ -15328,12 +15946,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     lodgings_partial_update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this lodging. */
                 id: string;
@@ -15390,6 +16020,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
                 };
             };
         };
@@ -16873,7 +17512,10 @@ export interface operations {
     transportations_update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this transportation. */
                 id: string;
@@ -16932,12 +17574,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     transportations_destroy: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this transportation. */
                 id: string;
@@ -16980,12 +17634,24 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
         };
     };
     transportations_partial_update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
+                "If-Match"?: string;
+            };
             path: {
                 /** @description A UUID string identifying this transportation. */
                 id: string;
@@ -17042,6 +17708,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreconditionFailed"];
                 };
             };
         };

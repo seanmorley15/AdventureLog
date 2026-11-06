@@ -2,7 +2,7 @@
 Django management command to synchronize visited regions and cities based on user locations.
 
 This command processes all users' visited locations and marks their regions and cities as visited.
-It's designed to be run periodically (e.g., nightly cron job) to keep visited regions/cities up to date.
+It's designed to be run periodically (the background worker runs it nightly) to keep visited regions/cities up to date.
 
 Usage:
     python manage.py sync_visited_regions

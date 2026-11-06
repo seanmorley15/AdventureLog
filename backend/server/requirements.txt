@@ -7,7 +7,8 @@ drf-spectacular==0.30.0
 drf-spectacular-sidecar==2026.9.1  # Swagger UI and ReDoc served locally, not from a CDN
 django-cors-headers==4.9.0
 python-dotenv==1.2.4
-psycopg2-binary==2.9.13
+psycopg[binary,pool]==3.3.8  # Django uses psycopg 3 when installed; the job worker needs it for LISTEN/NOTIFY
+procrastinate[django]==3.10.0  # Postgres-backed background jobs; the worker runs inside the app container
 pillow==13.0.0
 pillow-heif>=1.8.1,<2
 whitenoise==6.12.0

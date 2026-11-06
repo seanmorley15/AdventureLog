@@ -7,6 +7,7 @@ services:
     image: ghcr.io/seanmorley15/adventurelog:latest
     container_name: adventurelog
     restart: unless-stopped
+    stop_grace_period: 70s
     env_file: .env
     environment:
       SITE_URL: ${SITE_URL:-http://localhost:8015}

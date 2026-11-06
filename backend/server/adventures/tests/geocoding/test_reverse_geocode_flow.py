@@ -180,3 +180,33 @@ class BackgroundGeocodeAssignTests(GeocodeFixtureMixin, TestCase):
 
         location.refresh_from_db()
         self.assertIsNone(location.region_id)
+
+
+class GeocodeUnavailableTests(TestCase):
+    """A background job must hear when no provider answered, so it can retry."""
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='unavailable-user', email='unavailable-user@example.com', password='testpassword123'
+        )
+        self.location = Location.objects.create(user=self.user, name='Reine', coordinates=make_point(13.0, 67.9))
+
+    def _unavailable(self):
+        from adventures.services.geocoding.reverse import UNAVAILABLE_MESSAGE, ReverseGeocodeResult
+
+        return patch(
+            'adventures.services.geocoding.assignment.reverse_geocode_service',
+            return_value=ReverseGeocodeResult(data={'error': UNAVAILABLE_MESSAGE}, provider_used=None),
+        )
+
+    def test_the_job_raises_when_no_provider_answers(self):
+        from adventures.services.geocoding.assignment import GeocodeUnavailable, geocode_and_assign_location
+
+        with self._unavailable(), self.assertRaises(GeocodeUnavailable):
+            geocode_and_assign_location(str(self.location.id), raise_if_unavailable=True)
+
+    def test_a_request_that_geocodes_never_raises(self):
+        from adventures.services.geocoding.assignment import geocode_and_assign_location
+
+        with self._unavailable():
+            geocode_and_assign_location(str(self.location.id))

@@ -25,14 +25,28 @@ class ArchiveFile:
     filename: str
 
 
-def build_archive(exporter):
-    """The zip of an exporter's JSON and files, as bytes."""
-    data = exporter.build()
-    with tempfile.TemporaryFile(suffix='.zip') as spool:
+def build_archive_file(exporter):
+    """
+    The zip of an exporter's JSON and files, as an open temporary file at its start.
+
+    The caller closes it. A file keeps a big account out of memory, unlike ``build_archive``.
+    """
+    spool = tempfile.TemporaryFile(suffix='.zip')
+    try:
+        data = exporter.build()
         with zipfile.ZipFile(spool, 'w', zipfile.ZIP_DEFLATED) as archive:
             archive.writestr(DATA_FILE, json.dumps(data, indent=2))
             exporter.write_media(archive)
         spool.seek(0)
+        return spool
+    except BaseException:
+        spool.close()
+        raise
+
+
+def build_archive(exporter):
+    """The zip of an exporter's JSON and files, as bytes."""
+    with build_archive_file(exporter) as spool:
         return spool.read()
 
 
@@ -55,12 +69,13 @@ def ensure_schema_supported(data):
         raise BackupError('Invalid backup schema.')
 
 
-def export_account_backup(user):
+def account_backup_filename(user):
     stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    return ArchiveFile(
-        content=build_archive(BackupExporter(user)),
-        filename=f'adventurelog_backup_{user.username}_{stamp}.zip',
-    )
+    return f'adventurelog_backup_{user.username}_{stamp}.zip'
+
+
+def export_account_backup(user):
+    return ArchiveFile(content=build_archive(BackupExporter(user)), filename=account_backup_filename(user))
 
 
 def restore_account_backup(upload, user):
