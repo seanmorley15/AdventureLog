@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { stopPropagation } from 'svelte/legacy';
-
 	import { addToast } from '#lib/toasts.js';
 	import type { Checklist, Collection, User } from '#lib/types.js';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
 
@@ -11,7 +9,6 @@
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
 	import DeleteWarning from '../DeleteWarning.svelte';
-	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import CheckCircle from '~icons/mdi/check-circle';
 	import CheckboxBlankCircleOutline from '~icons/mdi/checkbox-blank-circle-outline';
@@ -19,35 +16,9 @@
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '#lib/types.js';
-	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
+	import CardActionsMenu from './parts/CardActionsMenu.svelte';
+	import ClipboardListOutline from '~icons/mdi/clipboard-list-outline';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
-
-	let isActionsMenuOpen = $state(false);
-	let openUpward = $state(false);
-	let actionsMenuRef: HTMLDivElement | null = $state(null);
-	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => (isActionsMenuOpen = false);
-
-	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen) return;
-		const target = event.target as Node | null;
-		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
-			isActionsMenuOpen = false;
-		}
-	}
-
-	function closeAllChecklistMenus() {
-		window.dispatchEvent(new CustomEvent(ACTIONS_CLOSE_EVENT));
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleDocumentClick);
-		window.addEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		return () => {
-			document.removeEventListener('click', handleDocumentClick);
-			window.removeEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		};
-	});
 
 	interface Props {
 		checklist: Checklist;
@@ -76,6 +47,8 @@
 	);
 
 	const dateFormat = $derived(dateFormatFromUser(user));
+
+	let doneCount = $derived(checklist.items.filter((item) => item.is_checked).length);
 
 	const normalizeDateForApi = (date: string | Date | null | undefined): string | null => {
 		if (!date) return null;
@@ -176,7 +149,7 @@
 {#if isWarningModalOpen}
 	<DeleteWarning
 		title={$t('adventures.delete_checklist')}
-		button_text="Delete"
+		button_text={$t('adventures.delete')}
 		description={$t('adventures.checklist_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
@@ -279,65 +252,42 @@
 	</dialog>
 {/if}
 <div
-	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card h-full flex flex-col rounded-2xl border border-base-300/60 bg-base-100 shadow-xs transition-colors hover:border-base-300"
 	aria-label="checklist-card"
 >
-	<div class="card-body p-4 space-y-3">
-		<!-- Header -->
-		<div class="flex items-start justify-between gap-3">
-			<div class="flex-1 min-w-0">
-				<h2 class="text-lg font-semibold line-clamp-2">{checklist.name}</h2>
-				<div class="flex flex-wrap items-center gap-2 mt-2">
-					<div class="badge badge-primary badge-sm">{$t('adventures.checklist')}</div>
-				</div>
+	<div class="flex flex-1 flex-col gap-3 p-4">
+		<div class="flex items-start gap-3">
+			<div
+				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+				aria-hidden="true"
+			>
+				<ClipboardListOutline class="h-5 w-5 text-primary" />
+			</div>
+			<div class="min-w-0 flex-1">
+				<h2 class="line-clamp-2 text-lg font-semibold leading-snug">{checklist.name}</h2>
+				<p class="text-sm text-base-content/60">{$t('adventures.checklist')}</p>
 			</div>
 
-			<div class="flex items-center gap-2">
+			<div class="-mr-1 -mt-1 flex shrink-0 items-center">
 				<button
-					class="btn btn-square btn-sm p-1 text-base-content"
+					class="btn btn-ghost btn-square btn-sm"
 					onclick={() => (isDetailsOpen = true)}
 					aria-label={$t('adventures.view')}
 					type="button"
 				>
-					<Launch class="w-5 h-5" />
+					<Launch class="h-5 w-5" />
 				</button>
-
 				{#if canEdit}
-					<div
-						class="dropdown dropdown-end relative z-50"
-						class:dropdown-open={isActionsMenuOpen}
-						class:dropdown-top={openUpward}
-						bind:this={actionsMenuRef}
-					>
-						<button
-							type="button"
-							class="btn btn-square btn-sm p-1 text-base-content"
-							aria-haspopup="menu"
-							onclick={stopPropagation(() => {
-								if (isActionsMenuOpen) {
-									isActionsMenuOpen = false;
-									return;
-								}
-								closeAllChecklistMenus();
-								openUpward = shouldFlipDropdownUp(actionsMenuRef);
-								isActionsMenuOpen = true;
-							})}
-						>
-							<DotsHorizontal class="w-5 h-5" />
-						</button>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
-						>
+					<CardActionsMenu label={$t('cards.item_actions')}>
+						{#snippet children({ close })}
 							<li>
 								<button
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										editChecklist();
 									}}
-									class="flex items-center gap-2"
 								>
-									<FileDocumentEdit class="w-4 h-4" />
+									<FileDocumentEdit class="h-4 w-4" />
 									{$t('lodging.edit')}
 								</button>
 							</li>
@@ -347,133 +297,135 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												dispatch('moveToGlobal', { type: 'checklist', id: checklist.id });
 											}}
-											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4" />
-											{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
+											<Globe class="h-4 w-4" />
+											{$t('itinerary.move_to_trip_context')}
 										</button>
 									</li>
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												changeDay();
 											}}
-											class="flex items-center gap-2"
 										>
-											<Calendar class="w-4 h-4 text" />
+											<Calendar class="h-4 w-4" />
 											{$t('itinerary.change_day')}
 										</button>
 									</li>
 								{/if}
 								<li>
 									<button
+										class="text-error"
 										onclick={() => {
-											isActionsMenuOpen = false;
+											close();
 											removeFromItinerary();
 										}}
-										class="text-error flex items-center gap-2"
 									>
-										<CalendarRemove class="w-4 h-4 text-error" />
-										{#if itineraryItem.is_global}
-											{$t('itinerary.remove_from_trip_context') || 'Remove from Trip Context'}
-										{:else}
-											{$t('itinerary.remove_from_itinerary')}
-										{/if}
+										<CalendarRemove class="h-4 w-4" />
+										{itineraryItem.is_global
+											? $t('itinerary.remove_from_trip_context')
+											: $t('itinerary.remove_from_itinerary')}
 									</button>
 								</li>
 							{/if}
 							<div class="divider my-1"></div>
 							<li>
 								<button
-									class="text-error flex items-center gap-2"
+									class="text-error"
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										isWarningModalOpen = true;
 									}}
 								>
-									<TrashCan class="w-4 h-4" />
+									<TrashCan class="h-4 w-4" />
 									{$t('adventures.delete')}
 								</button>
 							</li>
-						</ul>
-					</div>
+						{/snippet}
+					</CardActionsMenu>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Checklist Items Preview -->
 		{#if checklist.items.length > 0}
 			<div class="space-y-1.5">
-				{#each checklist.items.slice(0, 3) as item}
-					{#if canEdit}
-						<button
-							type="button"
-							onclick={() => toggleItemStatus(item.id)}
-							disabled={updatingItemId === item.id}
-							class="flex w-full items-center gap-1.5 rounded-lg px-2 py-0.5 text-left text-sm text-base-content/80 transition-colors hover:bg-base-200/80 disabled:opacity-60"
-						>
-							{#if updatingItemId === item.id}
-								<span class="loading loading-spinner loading-xs text-primary"></span>
-							{:else if item.is_checked}
-								<CheckCircle class="w-4 h-4 text-success shrink-0" />
-							{:else}
-								<CheckboxBlankCircleOutline class="w-4 h-4 shrink-0" />
-							{/if}
-							<span
-								class="truncate"
-								class:line-through={item.is_checked}
-								class:opacity-60={item.is_checked}
+				<div class="flex items-center gap-2">
+					<progress
+						class="progress progress-primary h-1.5 flex-1"
+						value={doneCount}
+						max={checklist.items.length}
+						aria-label={$t('cards.items_done', {
+							values: { done: doneCount, total: checklist.items.length }
+						})}
+					></progress>
+					<span class="shrink-0 text-xs text-base-content/60">
+						{$t('cards.items_done', {
+							values: { done: doneCount, total: checklist.items.length }
+						})}
+					</span>
+				</div>
+
+				<div class="space-y-0.5">
+					{#each checklist.items.slice(0, 3) as item}
+						{#if canEdit}
+							<button
+								type="button"
+								onclick={() => toggleItemStatus(item.id)}
+								disabled={updatingItemId === item.id}
+								class="flex w-full items-center gap-2 rounded-lg px-2 py-1 text-left text-sm text-base-content/80 transition-colors hover:bg-base-200 disabled:opacity-60"
 							>
-								{item.name}
-							</span>
-						</button>
-					{:else}
-						<div class="flex items-center gap-1.5 text-sm text-base-content/70">
-							{#if item.is_checked}
-								<CheckCircle class="w-4 h-4 text-success shrink-0" />
-							{:else}
-								<CheckboxBlankCircleOutline class="w-4 h-4 shrink-0" />
-							{/if}
-							<span
-								class="truncate"
-								class:line-through={item.is_checked}
-								class:opacity-60={item.is_checked}
-							>
-								{item.name}
-							</span>
-						</div>
+								{#if updatingItemId === item.id}
+									<span class="loading loading-spinner loading-xs text-primary"></span>
+								{:else if item.is_checked}
+									<CheckCircle class="h-4 w-4 shrink-0 text-success" />
+								{:else}
+									<CheckboxBlankCircleOutline class="h-4 w-4 shrink-0" />
+								{/if}
+								<span
+									class="truncate"
+									class:line-through={item.is_checked}
+									class:opacity-60={item.is_checked}
+								>
+									{item.name}
+								</span>
+							</button>
+						{:else}
+							<div class="flex items-center gap-2 px-2 py-1 text-sm text-base-content/70">
+								{#if item.is_checked}
+									<CheckCircle class="h-4 w-4 shrink-0 text-success" />
+								{:else}
+									<CheckboxBlankCircleOutline class="h-4 w-4 shrink-0" />
+								{/if}
+								<span
+									class="truncate"
+									class:line-through={item.is_checked}
+									class:opacity-60={item.is_checked}
+								>
+									{item.name}
+								</span>
+							</div>
+						{/if}
+					{/each}
+					{#if checklist.items.length > 3}
+						<p class="pl-8 text-sm text-base-content/60">
+							+{checklist.items.length - 3}
+							{$t('checklist.more_items')}
+						</p>
 					{/if}
-				{/each}
-				{#if checklist.items.length > 3}
-					<div class="text-sm text-base-content/60 pl-6">
-						+{checklist.items.length - 3}
-						{$t('checklist.more_items')}
-					</div>
-				{/if}
+				</div>
 			</div>
 		{/if}
 
-		<!-- Inline Stats -->
-		<div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
-			{#if checklist.date && checklist.date !== ''}
-				<div class="flex items-center gap-1">
-					<Calendar class="w-4 h-4 text-primary" />
-					<span>{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}</span>
-				</div>
-			{/if}
-
-			{#if checklist.items.length > 0}
-				{@const completedCount = checklist.items.filter((item) => item.is_checked).length}
-				<div class="badge badge-ghost badge-sm">
-					{completedCount}/{checklist.items.length}
-					{$t('checklist.completed')}
-				</div>
-			{/if}
-		</div>
+		{#if checklist.date && checklist.date !== ''}
+			<div class="mt-auto flex items-center gap-1.5 pt-1 text-sm text-base-content/70">
+				<Calendar class="h-4 w-4 text-primary" />
+				{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}
+			</div>
+		{/if}
 	</div>
 </div>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
 	import { isAllDay } from '#lib';
-	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
+	import { formatAllDayDate, formatDateInTimezone, timezoneInfo } from '#lib/dateUtils.js';
 	import type { DateFormatPreference } from '#lib/dateFormat.js';
 	import DetailFact from './DetailFact.svelte';
 	import CalendarRange from '~icons/mdi/calendar-range';
@@ -19,16 +19,12 @@
 
 	let { label, value, timezone = null, dateFormat, icon = CalendarRange }: Props = $props();
 
-	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
 	let allDay = $derived(isAllDay(value));
-	let zoneLabel = $derived(timezone ?? localTimeZone);
-	let differs = $derived(!!timezone && timezone !== localTimeZone);
-	let tip = $derived(
-		zoneLabel === localTimeZone
-			? null
-			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${zoneLabel}. ${
-					$t('adventures.your_time') ?? 'Your time'
-				}: ${localTimeZone}.`
+	let zone = $derived(
+		timezoneInfo(timezone, {
+			tripZone: $t('adventures.trip_timezone') ?? 'Trip TZ',
+			yourTime: $t('adventures.your_time') ?? 'Your time'
+		})
 	);
 </script>
 
@@ -43,10 +39,10 @@
 	{#if !allDay}
 		<span
 			class="badge badge-ghost badge-sm ml-1 align-middle"
-			class:tooltip={Boolean(tip)}
-			data-tip={tip ?? undefined}
+			class:tooltip={Boolean(zone.tip)}
+			data-tip={zone.tip ?? undefined}
 		>
-			{differs ? zoneLabel : ($t('adventures.local') ?? 'Local')}
+			{zone.differs ? zone.label : ($t('adventures.local') ?? 'Local')}
 		</span>
 	{/if}
 </DetailFact>

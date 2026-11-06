@@ -1,90 +1,32 @@
 <script lang="ts">
-	import { run, stopPropagation } from 'svelte/legacy';
-
-	import { createEventDispatcher, onMount } from 'svelte';
-	import TrashCanOutline from '~icons/mdi/trash-can-outline';
-	import FileDocumentEdit from '~icons/mdi/file-document-edit';
-	import type { Collection, Transportation, User } from '#lib/types.js';
-	import { addToast } from '#lib/toasts.js';
+	import { createEventDispatcher } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import DeleteWarning from '../DeleteWarning.svelte';
-	import { TRANSPORTATION_TYPES_ICONS } from '#lib';
-	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
+	import type { Collection, CollectionItineraryItem, Transportation, User } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import { dateFormatFromUser } from '#lib/dateFormat.js';
-	import { isAllDay } from '#lib';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
-	import CardCarousel from '../CardCarousel.svelte';
-	import TransportationRoutePreview from './TransportationRoutePreview.svelte';
+	import { getTransportationTypeIcon } from '#lib/typeIcons.js';
 
-	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
-	import Star from '~icons/mdi/star';
-	import StarOutline from '~icons/mdi/star-outline';
-	import Calendar from '~icons/mdi/calendar';
-	import DotsHorizontal from '~icons/mdi/dots-horizontal';
+	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
+	import Calendar from '~icons/mdi/calendar';
 	import Launch from '~icons/mdi/launch';
 	import Globe from '~icons/mdi/globe';
-	import { goto } from '$app/navigation';
-	import type { CollectionItineraryItem } from '#lib/types.js';
-	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
+	import Cash from '~icons/mdi/cash';
+	import TimerOutline from '~icons/mdi/timer-outline';
+	import MapMarkerDistance from '~icons/mdi/map-marker-distance';
 
-	let isActionsMenuOpen = $state(false);
-	let openUpward = $state(false);
-	let actionsMenuRef: HTMLDivElement | null = $state(null);
-	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => (isActionsMenuOpen = false);
-
-	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen) return;
-		const target = event.target as Node | null;
-		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
-			isActionsMenuOpen = false;
-		}
-	}
-
-	function closeAllTransportationMenus() {
-		window.dispatchEvent(new CustomEvent(ACTIONS_CLOSE_EVENT));
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleDocumentClick);
-		window.addEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		return () => {
-			document.removeEventListener('click', handleDocumentClick);
-			window.removeEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		};
-	});
-
-	function getTransportationIcon(type: string) {
-		if (type in TRANSPORTATION_TYPES_ICONS) {
-			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
-		} else {
-			return '🚗';
-		}
-	}
-
-	function renderStars(rating: number) {
-		const stars = [];
-		for (let i = 1; i <= 5; i++) {
-			stars.push(i <= rating);
-		}
-		return stars;
-	}
+	import DeleteWarning from '../DeleteWarning.svelte';
+	import CardCarousel from '../CardCarousel.svelte';
+	import TransportationRoutePreview from './TransportationRoutePreview.svelte';
+	import CardActionsMenu from './parts/CardActionsMenu.svelte';
+	import CardEndpoints from './parts/CardEndpoints.svelte';
+	import CardRating from './parts/CardRating.svelte';
+	import CardVisibility from './parts/CardVisibility.svelte';
 
 	const dispatch = createEventDispatcher();
-
-	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-
-	const getTimezoneLabel = (zone?: string | null) => zone ?? localTimeZone;
-	const getTimezoneTip = (zone?: string | null) => {
-		const label = getTimezoneLabel(zone);
-		return label === localTimeZone
-			? null
-			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${label}. ${
-					$t('adventures.your_time') ?? 'Your time'
-				}: ${localTimeZone}.`;
-	};
 
 	interface Props {
 		transportation: Transportation;
@@ -103,6 +45,7 @@
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(user));
+	let isWarningModalOpen: boolean = $state(false);
 
 	const toMiles = (km: any) => (Number(km) * 0.621371).toFixed(1);
 
@@ -117,41 +60,61 @@
 		return parts.join(' ');
 	};
 
-	function changeDay() {
-		dispatch('changeDay', { type: 'transportation', item: transportation, forcePicker: true });
-	}
-
-	let travelDurationLabel: string | null = $state(null);
-	run(() => {
-		travelDurationLabel = formatTravelDuration(transportation?.travel_duration_minutes ?? null);
-	});
-
-	let showMoreDetails = $state(false);
-
-	let hasCodePair = $derived(Boolean(transportation?.start_code && transportation?.end_code));
-	let routeFromLabel = $derived(
-		hasCodePair
-			? transportation.start_code
-			: (transportation.from_location ?? transportation.start_code ?? null)
+	let ModeIcon = $derived(getTransportationTypeIcon(transportation.type));
+	let durationLabel = $derived(formatTravelDuration(transportation.travel_duration_minutes));
+	let distanceLabel = $derived(
+		transportation.distance && !isNaN(+transportation.distance)
+			? user?.measurement_system === 'imperial'
+				? `${toMiles(transportation.distance)} mi`
+				: `${(+transportation.distance).toFixed(1)} km`
+			: null
 	);
-	let routeToLabel = $derived(
-		hasCodePair
-			? transportation.end_code
-			: (transportation.to_location ?? transportation.end_code ?? null)
-	);
-	let hasExpandableDetails = $derived(Boolean(transportation?.end_date || travelDurationLabel));
-	run(() => {
-		if (!hasExpandableDetails) showMoreDetails = false;
-	});
-	let transportationPriceLabel = $derived(
+	let priceLabel = $derived(
 		formatMoney(toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY))
 	);
 
 	let routeGeojson = $derived(
 		transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null
 	);
+	let hasPhotos = $derived((transportation.images?.length ?? 0) > 0);
+	let hasMedia = $derived(!!routeGeojson || hasPhotos);
 
-	let isWarningModalOpen: boolean = $state(false);
+	let isOwnerOrCollaborator = $derived(
+		transportation.user === user?.uuid ||
+			!!(collection && user && collection.shared_with?.includes(user.uuid))
+	);
+
+	// Codes (JFK → LHR) read faster than names, so use them when both ends have one.
+	let hasCodePair = $derived(Boolean(transportation.start_code && transportation.end_code));
+	let start = $derived({
+		label: $t('cards.departs'),
+		code: hasCodePair ? transportation.start_code : null,
+		place: hasCodePair ? null : (transportation.from_location ?? transportation.start_code),
+		value: transportation.date,
+		timezone: transportation.start_timezone
+	});
+	let hasEnd = $derived(
+		Boolean(
+			transportation.end_date ||
+			transportation.to_location ||
+			transportation.end_code ||
+			hasCodePair
+		)
+	);
+	let end = $derived(
+		hasEnd
+			? {
+					label: $t('cards.arrives'),
+					code: hasCodePair ? transportation.end_code : null,
+					place: hasCodePair ? null : (transportation.to_location ?? transportation.end_code),
+					value: transportation.end_date,
+					timezone: transportation.end_timezone ?? transportation.start_timezone
+				}
+			: null
+	);
+	let showRoute = $derived(
+		Boolean(transportation.date || transportation.from_location || transportation.start_code)
+	);
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -171,6 +134,10 @@
 			isWarningModalOpen = false;
 			dispatch('delete', transportation.id);
 		}
+	}
+
+	function changeDay() {
+		dispatch('changeDay', { type: 'transportation', item: transportation, forcePicker: true });
 	}
 
 	async function removeFromItinerary() {
@@ -193,7 +160,7 @@
 {#if isWarningModalOpen}
 	<DeleteWarning
 		title={$t('adventures.delete_transportation')}
-		button_text="Delete"
+		button_text={$t('adventures.delete')}
 		description={$t('adventures.transportation_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
@@ -202,111 +169,77 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card h-full flex flex-col rounded-2xl border border-base-300/60 bg-base-100 shadow-xs transition-colors hover:border-base-300"
 	aria-label="transportation-card"
 >
-	<!-- Image Section with Overlay -->
-	<div class="relative overflow-hidden rounded-t-2xl">
-		{#if routeGeojson}
-			<TransportationRoutePreview
-				geojson={routeGeojson}
-				name={transportation.name}
-				images={transportation.images}
-			/>
-		{:else}
-			<CardCarousel
-				images={transportation.images}
-				icon={getTransportationIcon(transportation.type)}
-				name={transportation.name}
-			/>
-		{/if}
-
-		<!-- Privacy Indicator -->
-		<div class="absolute top-2 right-4">
-			<div
-				class="tooltip tooltip-left"
-				data-tip={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
-			>
-				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
-					role="img"
-					aria-label={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
-				>
-					{#if transportation.is_public}
-						<Eye class="w-4 h-4" />
-					{:else}
-						<EyeOff class="w-4 h-4" />
-					{/if}
-				</div>
+	<!-- A GPX route or photos get a media band; otherwise the card opens on the journey itself. -->
+	{#if hasMedia}
+		<div class="relative overflow-hidden rounded-t-2xl">
+			{#if routeGeojson}
+				<TransportationRoutePreview
+					geojson={routeGeojson}
+					name={transportation.name}
+					images={transportation.images}
+				/>
+			{:else}
+				<CardCarousel images={transportation.images} icon={ModeIcon} name={transportation.name} />
+			{/if}
+			<div class="absolute right-2 top-2">
+				<CardVisibility visibility={transportation.is_public ? 'public' : 'private'} />
 			</div>
 		</div>
+	{/if}
 
-		<!-- Category Badge -->
-		{#if transportation.type}
-			<div class="absolute bottom-4 left-4">
-				<div class="badge badge-primary shadow-lg font-medium">
-					{$t(`transportation.modes.${transportation.type}`)}
-					{getTransportationIcon(transportation.type)}
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<div class="card-body p-4 space-y-3 min-w-0">
-		<!-- Header -->
-		<div class="flex items-start justify-between gap-3">
-			<a
-				href="/transportations/{transportation.id}"
-				class="hover:text-primary transition-colors duration-200 line-clamp-2 text-lg font-semibold"
+	<div class="flex min-w-0 flex-1 flex-col gap-3 p-4">
+		<div class="flex items-start gap-3">
+			<div
+				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+				aria-hidden="true"
 			>
-				{transportation.name}
-			</a>
+				<ModeIcon class="h-5 w-5 text-primary" />
+			</div>
+			<div class="min-w-0 flex-1">
+				<a
+					href="/transportations/{transportation.id}"
+					class="line-clamp-2 text-lg font-semibold leading-snug transition-colors hover:text-primary"
+				>
+					{transportation.name}
+				</a>
+				<p class="flex flex-wrap items-center gap-x-2 text-sm text-base-content/60">
+					{$t(`transportation.modes.${transportation.type}`)}
+					{#if transportation.type === 'plane' && transportation.flight_number}
+						<span class="badge badge-primary badge-sm font-medium">
+							{transportation.flight_number}
+						</span>
+					{/if}
+				</p>
+			</div>
 
-			<div class="flex items-center gap-2">
+			<div class="-mr-1 -mt-1 flex shrink-0 items-center">
+				{#if !hasMedia}
+					<CardVisibility
+						visibility={transportation.is_public ? 'public' : 'private'}
+						onPhoto={false}
+					/>
+				{/if}
 				<button
-					class="btn btn-square btn-sm p-1 text-base-content"
-					aria-label="open-details"
+					class="btn btn-ghost btn-square btn-sm"
+					aria-label={$t('adventures.open_details')}
 					onclick={() => goto(`/transportations/${transportation.id}`)}
 				>
-					<Launch class="w-5 h-5" />
+					<Launch class="h-5 w-5" />
 				</button>
-
-				{#if !readOnly && (transportation.user === user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid)))}
-					<div
-						class="dropdown dropdown-end relative z-50"
-						class:dropdown-open={isActionsMenuOpen}
-						class:dropdown-top={openUpward}
-						bind:this={actionsMenuRef}
-					>
-						<button
-							type="button"
-							class="btn btn-square btn-sm p-1 text-base-content"
-							aria-haspopup="menu"
-							onclick={stopPropagation(() => {
-								if (isActionsMenuOpen) {
-									isActionsMenuOpen = false;
-									return;
-								}
-								closeAllTransportationMenus();
-								openUpward = shouldFlipDropdownUp(actionsMenuRef);
-								isActionsMenuOpen = true;
-							})}
-						>
-							<DotsHorizontal class="w-4 h-4" />
-						</button>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
-						>
+				{#if !readOnly && isOwnerOrCollaborator}
+					<CardActionsMenu label={$t('cards.item_actions')}>
+						{#snippet children({ close })}
 							<li>
 								<button
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										editTransportation();
 									}}
-									class="flex items-center gap-2"
 								>
-									<FileDocumentEdit class="w-4 h-4" />
+									<FileDocumentEdit class="h-4 w-4" />
 									{$t('transportation.edit')}
 								</button>
 							</li>
@@ -316,224 +249,106 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												dispatch('moveToGlobal', { type: 'transportation', id: transportation.id });
 											}}
-											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4" />
-											{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
+											<Globe class="h-4 w-4" />
+											{$t('itinerary.move_to_trip_context')}
 										</button>
 									</li>
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												changeDay();
 											}}
-											class="flex items-center gap-2"
 										>
-											<Calendar class="w-4 h-4 text" />
+											<Calendar class="h-4 w-4" />
 											{$t('itinerary.change_day')}
 										</button>
 									</li>
 								{/if}
 								<li>
 									<button
+										class="text-error"
 										onclick={() => {
-											isActionsMenuOpen = false;
+											close();
 											removeFromItinerary();
 										}}
-										class="text-error flex items-center gap-2"
 									>
-										<CalendarRemove class="w-4 h-4 text-error" />
-										{#if itineraryItem.is_global}
-											{$t('itinerary.remove_from_trip_context') || 'Remove from Trip Context'}
-										{:else}
-											{$t('itinerary.remove_from_itinerary')}
-										{/if}
+										<CalendarRemove class="h-4 w-4" />
+										{itineraryItem.is_global
+											? $t('itinerary.remove_from_trip_context')
+											: $t('itinerary.remove_from_itinerary')}
 									</button>
 								</li>
 							{/if}
 							<div class="divider my-1"></div>
 							<li>
 								<button
-									class="text-error flex items-center gap-2"
+									class="text-error"
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										isWarningModalOpen = true;
 									}}
 								>
-									<TrashCanOutline class="w-4 h-4" />
+									<TrashCanOutline class="h-4 w-4" />
 									{$t('adventures.delete')}
 								</button>
 							</li>
-						</ul>
-					</div>
+						{/snippet}
+					</CardActionsMenu>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Route & Flight Info -->
-		{#if routeFromLabel || routeToLabel}
-			<div class="flex items-center gap-2 min-w-0">
-				{#if routeFromLabel}
-					<span class="text-base font-semibold text-base-content truncate max-w-[10rem]"
-						>{routeFromLabel}</span
-					>
-				{/if}
-				{#if routeFromLabel && routeToLabel}
-					<span class="text-primary text-lg">→</span>
-				{/if}
-				{#if routeToLabel}
-					<span class="text-base font-semibold text-base-content truncate max-w-[10rem]"
-						>{routeToLabel}</span
-					>
-				{/if}
-				{#if hasCodePair && transportation.type === 'plane' && transportation.flight_number}
-					<div class="divider divider-horizontal mx-1"></div>
-					<span class="badge badge-primary badge-sm font-medium"
-						>{transportation.flight_number}</span
-					>
-				{/if}
-			</div>
+		{#if showRoute}
+			<CardEndpoints {start} {end} {dateFormat}>
+				{#snippet between()}
+					<ModeIcon class="h-4 w-4 text-primary" />
+					{#if durationLabel}
+						<span class="inline-flex items-center gap-1 whitespace-nowrap font-medium">
+							<TimerOutline class="h-3.5 w-3.5" />
+							{durationLabel}
+						</span>
+					{/if}
+					{#if distanceLabel}
+						<span class="inline-flex items-center gap-1 whitespace-nowrap">
+							<MapMarkerDistance class="h-3.5 w-3.5" />
+							{distanceLabel}
+						</span>
+					{/if}
+				{/snippet}
+			</CardEndpoints>
 		{/if}
 
-		<!-- Date & Time Section -->
-		{#if transportation.date}
-			<div class="flex flex-col gap-1.5">
-				{#if isAllDay(transportation.date) && (!transportation.end_date || isAllDay(transportation.end_date))}
-					<!-- All-day event -->
-					<div class="flex items-center gap-2 text-sm">
-						<span class="font-medium text-base-content"
-							>{formatAllDayDate(transportation.date, dateFormat)}</span
-						>
-						{#if transportation.end_date && transportation.end_date !== transportation.date}
-							<span class="text-base-content/40">→</span>
-							<span class="font-medium text-base-content"
-								>{formatAllDayDate(transportation.end_date, dateFormat)}</span
-							>
-						{/if}
-					</div>
-				{:else}
-					<!-- Compact departure card with tidy layout -->
-					<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-						<div class="flex items-start justify-between gap-2">
-							<div class="flex flex-col gap-0.5 min-w-0">
-								<span class="text-xs text-base-content/60">Departure</span>
-								<span class="text-sm font-semibold text-base-content">
-									{formatDateInTimezone(
-										transportation.date,
-										transportation.start_timezone,
-										dateFormat
-									)}
-								</span>
-							</div>
-							{#if hasCodePair}
-								<span class="badge badge-outline badge-sm font-medium whitespace-nowrap">
-									{transportation.start_code} → {transportation.end_code}
-								</span>
-							{/if}
-						</div>
-
-						<div class="flex items-center gap-2 text-xs text-base-content/70">
-							<div
-								class="tooltip"
-								data-tip={getTimezoneTip(transportation.start_timezone) ?? undefined}
-							>
-								<span class="badge badge-ghost badge-sm">
-									{getTimezoneLabel(transportation.start_timezone)}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					{#if hasExpandableDetails}
-						<div class="flex justify-end">
-							<button
-								class="btn btn-ghost btn-xs"
-								aria-expanded={showMoreDetails}
-								onclick={() => (showMoreDetails = !showMoreDetails)}
-								type="button"
-							>
-								{showMoreDetails
-									? ($t('common.show_less') ?? 'Hide details')
-									: ($t('common.show_more') ?? 'Show more')}
-							</button>
-						</div>
+		{#if transportation.rating || priceLabel || (!end && (durationLabel || distanceLabel))}
+			<div class="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-sm">
+				<CardRating rating={transportation.rating} />
+				{#if priceLabel}
+					<span class="inline-flex items-center gap-1 text-base-content/70">
+						<Cash class="h-4 w-4" />
+						{priceLabel}
+					</span>
+				{/if}
+				<!-- With no far end there's no connecting line, so duration and distance go here. -->
+				{#if !end}
+					{#if durationLabel}
+						<span class="inline-flex items-center gap-1 text-base-content/70">
+							<TimerOutline class="h-4 w-4" />
+							{durationLabel}
+						</span>
 					{/if}
-
-					{#if showMoreDetails && hasExpandableDetails}
-						<div class="flex flex-col gap-1">
-							{#if transportation.end_date}
-								<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-									<div class="flex items-center justify-between gap-2">
-										<div class="flex flex-col gap-0.5 min-w-0">
-											<span class="text-xs text-base-content/60">Arrival</span>
-											<span class="text-sm font-semibold text-base-content">
-												{formatDateInTimezone(
-													transportation.end_date,
-													transportation.end_timezone ?? transportation.start_timezone,
-													dateFormat
-												)}
-											</span>
-										</div>
-									</div>
-
-									<div class="flex items-center gap-2 text-xs text-base-content/70">
-										<div
-											class="tooltip"
-											data-tip={getTimezoneTip(
-												transportation.end_timezone ?? transportation.start_timezone
-											) ?? undefined}
-										>
-											<span class="badge badge-ghost badge-sm">
-												{getTimezoneLabel(
-													transportation.end_timezone ?? transportation.start_timezone
-												)}
-											</span>
-										</div>
-									</div>
-								</div>
-							{/if}
-						</div>
+					{#if distanceLabel}
+						<span class="inline-flex items-center gap-1 text-base-content/70">
+							<MapMarkerDistance class="h-4 w-4" />
+							{distanceLabel}
+						</span>
 					{/if}
 				{/if}
 			</div>
 		{/if}
-
-		<!-- Stats & Rating -->
-		<div class="flex flex-wrap items-center gap-2 text-sm">
-			{#if transportationPriceLabel}
-				<span class="badge badge-ghost badge-sm">💰 {transportationPriceLabel}</span>
-			{/if}
-			{#if transportation.distance && !isNaN(+transportation.distance)}
-				<span class="badge badge-ghost badge-sm">
-					🌍 {user?.measurement_system === 'imperial'
-						? `${toMiles(transportation.distance)} mi`
-						: `${(+transportation.distance).toFixed(1)} km`}
-				</span>
-			{/if}
-
-			{#if travelDurationLabel}
-				<span class="badge badge-ghost badge-sm">⏱️ {travelDurationLabel}</span>
-			{/if}
-
-			{#if transportation.rating}
-				<div class="flex items-center gap-1">
-					<div class="flex -ml-1">
-						{#each renderStars(transportation.rating) as filled}
-							{#if filled}
-								<Star class="w-4 h-4 text-warning fill-current" />
-							{:else}
-								<StarOutline class="w-4 h-4 text-base-content/30" />
-							{/if}
-						{/each}
-					</div>
-					<span class="text-xs text-base-content/60">({transportation.rating}/5)</span>
-				</div>
-			{/if}
-		</div>
 	</div>
 </div>
 

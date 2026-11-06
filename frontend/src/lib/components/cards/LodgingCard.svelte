@@ -1,97 +1,34 @@
 <script lang="ts">
-	import { run, stopPropagation } from 'svelte/legacy';
-
-	import { createEventDispatcher, onMount } from 'svelte';
-	import TrashCanOutline from '~icons/mdi/trash-can-outline';
-	import FileDocumentEdit from '~icons/mdi/file-document-edit';
-	import type { Collection, Lodging, User } from '#lib/types.js';
-	import { addToast } from '#lib/toasts.js';
+	import { createEventDispatcher } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import DeleteWarning from '../DeleteWarning.svelte';
-	import { LODGING_TYPES_ICONS } from '#lib';
-	import { formatDateInTimezone } from '#lib/dateUtils.js';
-	import { formatAllDayDate } from '#lib/dateUtils.js';
+	import type { Collection, CollectionItineraryItem, Lodging, User } from '#lib/types.js';
+	import { addToast } from '#lib/toasts.js';
 	import { dateFormatFromUser } from '#lib/dateFormat.js';
-	import { isAllDay } from '#lib';
+	import { nightsBetween } from '#lib/dateUtils.js';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
-	import CardCarousel from '../CardCarousel.svelte';
-	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
-	import Star from '~icons/mdi/star';
-	import StarOutline from '~icons/mdi/star-outline';
-	import MapMarker from '~icons/mdi/map-marker';
-	import DotsHorizontal from '~icons/mdi/dots-horizontal';
+	import { getLodgingTypeIcon } from '#lib/typeIcons.js';
+
+	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
+	import Calendar from '~icons/mdi/calendar';
+	import CalendarRange from '~icons/mdi/calendar-range';
 	import Launch from '~icons/mdi/launch';
 	import Globe from '~icons/mdi/globe';
-	import { goto } from '$app/navigation';
-	import Calendar from '~icons/mdi/calendar';
-	import type { CollectionItineraryItem } from '#lib/types.js';
-	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
+	import MapMarkerOutline from '~icons/mdi/map-marker-outline';
+	import WeatherNight from '~icons/mdi/weather-night';
+	import TicketConfirmationOutline from '~icons/mdi/ticket-confirmation-outline';
+	import Cash from '~icons/mdi/cash';
 
-	let isActionsMenuOpen = $state(false);
-	let openUpward = $state(false);
-	let actionsMenuRef: HTMLDivElement | null = $state(null);
-	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => (isActionsMenuOpen = false);
-
-	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen) return;
-		const target = event.target as Node | null;
-		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
-			isActionsMenuOpen = false;
-		}
-	}
-
-	function closeAllLodgingMenus() {
-		window.dispatchEvent(new CustomEvent(ACTIONS_CLOSE_EVENT));
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleDocumentClick);
-		window.addEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		return () => {
-			document.removeEventListener('click', handleDocumentClick);
-			window.removeEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		};
-	});
+	import DeleteWarning from '../DeleteWarning.svelte';
+	import CardCarousel from '../CardCarousel.svelte';
+	import CardActionsMenu from './parts/CardActionsMenu.svelte';
+	import CardEndpoints from './parts/CardEndpoints.svelte';
+	import CardRating from './parts/CardRating.svelte';
+	import CardVisibility from './parts/CardVisibility.svelte';
 
 	const dispatch = createEventDispatcher();
-
-	function getLodgingIcon(type: string) {
-		if (type in LODGING_TYPES_ICONS) {
-			return LODGING_TYPES_ICONS[type as keyof typeof LODGING_TYPES_ICONS];
-		} else {
-			return '🏨';
-		}
-	}
-
-	function renderStars(rating: number) {
-		const stars = [];
-		for (let i = 1; i <= 5; i++) {
-			stars.push(i <= rating);
-		}
-		return stars;
-	}
-
-	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-	const getTimezoneLabel = (zone?: string | null) => zone ?? localTimeZone;
-	const getTimezoneTip = (zone?: string | null) => {
-		const label = getTimezoneLabel(zone);
-		return label === localTimeZone
-			? null
-			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${label}. ${
-					$t('adventures.your_time') ?? 'Your time'
-				}: ${localTimeZone}.`;
-	};
-	const shouldShowTzBadge = (zone?: string | null) => {
-		if (!zone) return false;
-		return getTimezoneLabel(zone) !== localTimeZone;
-	};
-	const hasTimePortion = (date: string | null) => !!date && !isAllDay(date);
-	const isTimedStay = (date: string | null) => hasTimePortion(date);
-
-	let showMoreDetails = $state(false);
 
 	interface Props {
 		lodging: Lodging;
@@ -112,14 +49,36 @@
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(user));
-
 	let isWarningModalOpen: boolean = $state(false);
 
-	function editTransportation() {
+	let TypeIcon = $derived(getLodgingTypeIcon(lodging.type));
+	let hasPhotos = $derived((lodging.images?.length ?? 0) > 0);
+	let isOwnerOrCollaborator = $derived(
+		lodging.user == user?.uuid ||
+			!!(collection && user && collection.shared_with?.includes(user.uuid))
+	);
+	let nights = $derived(nightsBetween(lodging.check_in, lodging.check_out, lodging.timezone));
+	let priceLabel = $derived(
+		formatMoney(toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY))
+	);
+
+	// With both dates it's a stay; with one it's just that day, so show only what exists.
+	let start = $derived(
+		lodging.check_in
+			? { label: $t('adventures.check_in'), value: lodging.check_in, timezone: lodging.timezone }
+			: { label: $t('adventures.check_out'), value: lodging.check_out, timezone: lodging.timezone }
+	);
+	let end = $derived(
+		lodging.check_in && lodging.check_out
+			? { label: $t('adventures.check_out'), value: lodging.check_out, timezone: lodging.timezone }
+			: null
+	);
+
+	function editLodging() {
 		dispatch('edit', lodging);
 	}
 
-	async function deleteTransportation() {
+	async function deleteLodging() {
 		let res = await fetch(`/api/lodgings/${lodging.id}`, {
 			method: 'DELETE',
 			headers: {
@@ -154,121 +113,73 @@
 			addToast('error', $t('itinerary.item_remove_error'));
 		}
 	}
-	let lodgingPriceLabel = $derived(
-		formatMoney(toMoneyValue(lodging.price, lodging.price_currency, DEFAULT_CURRENCY))
-	);
-	let hasExpandableDetails = $derived(
-		Boolean(lodging.check_out && (isTimedStay(lodging.check_out) || isTimedStay(lodging.check_in)))
-	);
-	run(() => {
-		if (!hasExpandableDetails) showMoreDetails = false;
-	});
 </script>
 
 {#if isWarningModalOpen}
 	<DeleteWarning
 		title={$t('adventures.delete_lodging')}
-		button_text="Delete"
+		button_text={$t('adventures.delete')}
 		description={$t('adventures.lodging_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
-		on:confirm={deleteTransportation}
+		on:confirm={deleteLodging}
 	/>
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card h-full flex flex-col rounded-2xl border border-base-300/60 bg-base-100 shadow-xs transition-colors hover:border-base-300"
 	aria-label="lodging-card"
 >
-	<!-- Image Section with Overlay -->
-	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel images={lodging.images} icon={getLodgingIcon(lodging.type)} name={lodging.name} />
-
-		<!-- Privacy Indicator -->
-		<div class="absolute top-2 right-4">
-			<div
-				class="tooltip tooltip-left"
-				data-tip={lodging.is_public ? $t('adventures.public') : $t('adventures.private')}
-			>
-				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
-					role="img"
-					aria-label={lodging.is_public ? $t('adventures.public') : $t('adventures.private')}
-				>
-					{#if lodging.is_public}
-						<Eye class="w-4 h-4" />
-					{:else}
-						<EyeOff class="w-4 h-4" />
-					{/if}
-				</div>
+	<!-- No photos means no empty image block: the card opens straight on the details. -->
+	{#if hasPhotos}
+		<div class="relative overflow-hidden rounded-t-2xl">
+			<CardCarousel images={lodging.images} icon={TypeIcon} name={lodging.name} />
+			<div class="absolute right-2 top-2">
+				<CardVisibility visibility={lodging.is_public ? 'public' : 'private'} />
 			</div>
 		</div>
+	{/if}
 
-		<!-- Category Badge -->
-		{#if lodging.type}
-			<div class="absolute bottom-4 left-4">
-				<div class="badge badge-primary shadow-lg font-medium">
-					{$t(`lodging.${lodging.type}`)}
-					{getLodgingIcon(lodging.type)}
-				</div>
-			</div>
-		{/if}
-	</div>
-	<div class="card-body p-4 space-y-3 min-w-0">
-		<!-- Header -->
-		<div class="flex items-start justify-between gap-3">
-			<a
-				href="/lodging/{lodging.id}"
-				class="hover:text-primary transition-colors duration-200 line-clamp-2 text-lg font-semibold"
+	<div class="flex min-w-0 flex-1 flex-col gap-3 p-4">
+		<div class="flex items-start gap-3">
+			<div
+				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+				aria-hidden="true"
 			>
-				{lodging.name}
-			</a>
+				<TypeIcon class="h-5 w-5 text-primary" />
+			</div>
+			<div class="min-w-0 flex-1">
+				<a
+					href="/lodging/{lodging.id}"
+					class="line-clamp-2 text-lg font-semibold leading-snug transition-colors hover:text-primary"
+				>
+					{lodging.name}
+				</a>
+				<p class="text-sm text-base-content/60">{$t(`lodging.${lodging.type}`)}</p>
+			</div>
 
-			<div class="flex items-center gap-2">
+			<div class="-mr-1 -mt-1 flex shrink-0 items-center">
+				{#if !hasPhotos}
+					<CardVisibility visibility={lodging.is_public ? 'public' : 'private'} onPhoto={false} />
+				{/if}
 				<button
-					class="btn btn-square btn-sm p-1 text-base-content"
-					aria-label="open-details"
+					class="btn btn-ghost btn-square btn-sm"
+					aria-label={$t('adventures.open_details')}
 					onclick={() => goto(`/lodging/${lodging.id}`)}
 				>
-					<Launch class="w-5 h-5" />
+					<Launch class="h-5 w-5" />
 				</button>
-
-				{#if !readOnly && (lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid)))}
-					<div
-						class="dropdown dropdown-end relative z-50"
-						class:dropdown-open={isActionsMenuOpen}
-						class:dropdown-top={openUpward}
-						bind:this={actionsMenuRef}
-					>
-						<button
-							type="button"
-							class="btn btn-square btn-sm p-1 text-base-content"
-							aria-haspopup="menu"
-							onclick={stopPropagation(() => {
-								if (isActionsMenuOpen) {
-									isActionsMenuOpen = false;
-									return;
-								}
-								closeAllLodgingMenus();
-								openUpward = shouldFlipDropdownUp(actionsMenuRef);
-								isActionsMenuOpen = true;
-							})}
-						>
-							<DotsHorizontal class="w-4 h-4" />
-						</button>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
-						>
+				{#if !readOnly && isOwnerOrCollaborator}
+					<CardActionsMenu label={$t('cards.item_actions')}>
+						{#snippet children({ close })}
 							<li>
 								<button
 									onclick={() => {
-										isActionsMenuOpen = false;
-										editTransportation();
+										close();
+										editLodging();
 									}}
-									class="flex items-center gap-2"
 								>
-									<FileDocumentEdit class="w-4 h-4" />
+									<FileDocumentEdit class="h-4 w-4" />
 									{$t('transportation.edit')}
 								</button>
 							</li>
@@ -278,265 +189,107 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												dispatch('moveToGlobal', { type: 'lodging', id: lodging.id });
 											}}
-											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4" />
-											{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
+											<Globe class="h-4 w-4" />
+											{$t('itinerary.move_to_trip_context')}
 										</button>
 									</li>
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												changeDay();
 											}}
-											class="flex items-center gap-2"
 										>
-											<Calendar class="w-4 h-4 text" />
+											<Calendar class="h-4 w-4" />
 											{$t('itinerary.change_day')}
 										</button>
 									</li>
 								{/if}
 								<li>
 									<button
+										class="text-error"
 										onclick={() => {
-											isActionsMenuOpen = false;
+											close();
 											removeFromItinerary();
 										}}
-										class="text-error flex items-center gap-2"
 									>
-										<CalendarRemove class="w-4 h-4 text-error" />
-										{#if itineraryItem.is_global}
-											{$t('itinerary.remove_from_trip_context') || 'Remove from Trip Context'}
-										{:else}
-											{$t('itinerary.remove_from_itinerary')}
-										{/if}
+										<CalendarRemove class="h-4 w-4" />
+										{itineraryItem.is_global
+											? $t('itinerary.remove_from_trip_context')
+											: $t('itinerary.remove_from_itinerary')}
 									</button>
 								</li>
 							{/if}
 							<div class="divider my-1"></div>
 							<li>
 								<button
-									class="text-error flex items-center gap-2"
+									class="text-error"
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										isWarningModalOpen = true;
 									}}
 								>
-									<TrashCanOutline class="w-4 h-4" />
+									<TrashCanOutline class="h-4 w-4" />
 									{$t('adventures.delete')}
 								</button>
 							</li>
-						</ul>
-					</div>
+						{/snippet}
+					</CardActionsMenu>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Location -->
 		{#if lodging.location}
-			<div class="flex items-center gap-2 text-sm text-base-content/70 min-w-0">
-				<MapMarker class="w-4 h-4 text-primary shrink-0" />
+			<p class="flex min-w-0 items-center gap-1.5 text-sm text-base-content/70">
+				<MapMarkerOutline class="h-4 w-4 shrink-0 text-primary" />
 				<span class="truncate">{lodging.location}</span>
-			</div>
+			</p>
 		{/if}
 
-		<!-- Check-in & Check-out Section -->
 		{#if lodging.check_in || lodging.check_out}
-			<div class="flex flex-col gap-1.5">
-				{#if lodging.check_in && lodging.check_out}
-					<!-- Both dates present -->
-					{#if isAllDay(lodging.check_in) && isAllDay(lodging.check_out)}
-						<!-- All-day dates -->
-						<div class="flex items-center gap-2 text-sm">
-							<span class="font-medium text-base-content"
-								>{formatAllDayDate(lodging.check_in, dateFormat)}</span
-							>
-							<span class="text-primary">→</span>
-							<span class="font-medium text-base-content"
-								>{formatAllDayDate(lodging.check_out, dateFormat)}</span
-							>
-						</div>
-					{:else}
-						<!-- Timed dates with tidy mini cards and toggle -->
-						<div class="flex flex-col gap-2">
-							<!-- Check-in Card (always shown) -->
-							<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-								<div class="flex items-start justify-between gap-2">
-									<div class="flex flex-col gap-0.5 min-w-0">
-										<span class="text-xs text-base-content/60">Check-in</span>
-										<span class="text-sm font-semibold text-base-content">
-											{#if isAllDay(lodging.check_in)}
-												{formatAllDayDate(lodging.check_in, dateFormat)}
-											{:else}
-												{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
-											{/if}
-										</span>
-									</div>
-								</div>
-
-								{#if hasTimePortion(lodging.check_in) && shouldShowTzBadge(lodging.timezone)}
-									<div class="flex items-center gap-2 text-xs text-base-content/70">
-										<div class="tooltip" data-tip={getTimezoneTip(lodging.timezone) ?? undefined}>
-											<span class="badge badge-ghost badge-sm">
-												{getTimezoneLabel(lodging.timezone)}
-											</span>
-										</div>
-									</div>
-								{/if}
-							</div>
-
-							{#if hasExpandableDetails}
-								<div class="flex justify-end">
-									<button
-										class="btn btn-ghost btn-xs"
-										aria-expanded={showMoreDetails}
-										onclick={() => (showMoreDetails = !showMoreDetails)}
-										type="button"
-									>
-										{showMoreDetails
-											? ($t('common.show_less') ?? 'Hide details')
-											: ($t('common.show_more') ?? 'Show more')}
-									</button>
-								</div>
-							{/if}
-
-							{#if showMoreDetails && hasExpandableDetails}
-								<!-- Check-out Card (expandable) -->
-								<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-									<div class="flex items-start justify-between gap-2">
-										<div class="flex flex-col gap-0.5 min-w-0">
-											<span class="text-xs text-base-content/60">Check-out</span>
-											<span class="text-sm font-semibold text-base-content">
-												{#if isAllDay(lodging.check_out)}
-													{formatAllDayDate(lodging.check_out, dateFormat)}
-												{:else}
-													{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
-												{/if}
-											</span>
-										</div>
-									</div>
-
-									{#if hasTimePortion(lodging.check_out) && shouldShowTzBadge(lodging.timezone)}
-										<div class="flex items-center gap-2 text-xs text-base-content/70">
-											<div class="tooltip" data-tip={getTimezoneTip(lodging.timezone) ?? undefined}>
-												<span class="badge badge-ghost badge-sm">
-													{getTimezoneLabel(lodging.timezone)}
-												</span>
-											</div>
-										</div>
-									{/if}
-								</div>
-							{/if}
-						</div>
+			<CardEndpoints {start} {end} {dateFormat}>
+				{#snippet between()}
+					<WeatherNight class="h-4 w-4 text-primary" />
+					{#if nights}
+						<span class="whitespace-nowrap font-medium">
+							{$t('detail.nights', { values: { count: nights } })}
+						</span>
 					{/if}
-				{:else if lodging.check_in}
-					<!-- Check-in only -->
-					<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-						<div class="flex items-start justify-between gap-2">
-							<div class="flex flex-col gap-0.5">
-								<span class="text-xs text-base-content/60">Check-in</span>
-								<span class="text-sm font-semibold text-base-content">
-									{#if isAllDay(lodging.check_in)}
-										{formatAllDayDate(lodging.check_in, dateFormat)}
-									{:else}
-										{formatDateInTimezone(lodging.check_in, lodging.timezone, dateFormat)}
-									{/if}
-								</span>
-							</div>
-						</div>
-
-						{#if hasTimePortion(lodging.check_in) && shouldShowTzBadge(lodging.timezone)}
-							<div class="flex items-center gap-2 text-xs text-base-content/70">
-								<div class="tooltip" data-tip={getTimezoneTip(lodging.timezone) ?? undefined}>
-									<span class="badge badge-ghost badge-sm">
-										{getTimezoneLabel(lodging.timezone)}
-									</span>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{:else if lodging.check_out}
-					<!-- Check-out only -->
-					<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-						<div class="flex items-start justify-between gap-2">
-							<div class="flex flex-col gap-0.5">
-								<span class="text-xs text-base-content/60">Check-out</span>
-								<span class="text-sm font-semibold text-base-content">
-									{#if isAllDay(lodging.check_out)}
-										{formatAllDayDate(lodging.check_out, dateFormat)}
-									{:else}
-										{formatDateInTimezone(lodging.check_out, lodging.timezone, dateFormat)}
-									{/if}
-								</span>
-							</div>
-						</div>
-
-						{#if hasTimePortion(lodging.check_out) && shouldShowTzBadge(lodging.timezone)}
-							<div class="flex items-center gap-2 text-xs text-base-content/70">
-								<div class="tooltip" data-tip={getTimezoneTip(lodging.timezone) ?? undefined}>
-									<span class="badge badge-ghost badge-sm">
-										{getTimezoneLabel(lodging.timezone)}
-									</span>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-			</div>
+				{/snippet}
+			</CardEndpoints>
 		{/if}
 
-		<!-- Rating & Info Badges -->
-		<div class="flex flex-wrap items-center gap-2 text-sm">
-			{#if isMultiDay}
-				<span class="badge badge-info badge-sm gap-1">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-3 w-3"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-						/>
-					</svg>
-					{$t('itinerary.multi_day')}
-				</span>
-			{/if}
-
-			{#if lodging.rating}
-				<div class="flex items-center gap-1">
-					<div class="flex -ml-1">
-						{#each renderStars(lodging.rating) as filled}
-							{#if filled}
-								<Star class="w-4 h-4 text-warning fill-current" />
-							{:else}
-								<StarOutline class="w-4 h-4 text-base-content/30" />
-							{/if}
-						{/each}
-					</div>
-					<span class="text-xs text-base-content/60">({lodging.rating}/5)</span>
-				</div>
-			{/if}
-
-			{#if lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
-				{#if lodging.reservation_number}
-					<span class="badge badge-primary badge-sm font-medium">
-						{$t('adventures.reservation')}: {lodging.reservation_number}
+		{#if isMultiDay || lodging.rating || (isOwnerOrCollaborator && (lodging.reservation_number || priceLabel))}
+			<div class="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-sm">
+				{#if isMultiDay}
+					<span class="badge badge-info badge-sm gap-1">
+						<CalendarRange class="h-3.5 w-3.5" />
+						{$t('itinerary.multi_day')}
 					</span>
 				{/if}
-				{#if lodgingPriceLabel}
-					<span class="badge badge-ghost badge-sm">💰 {lodgingPriceLabel}</span>
+				<CardRating rating={lodging.rating} />
+				{#if isOwnerOrCollaborator}
+					{#if lodging.reservation_number}
+						<span class="inline-flex min-w-0 items-center gap-1 text-base-content/70">
+							<TicketConfirmationOutline class="h-4 w-4 shrink-0" />
+							<span class="truncate font-mono text-xs">
+								{$t('cards.confirmation', { values: { code: lodging.reservation_number } })}
+							</span>
+						</span>
+					{/if}
+					{#if priceLabel}
+						<span class="inline-flex items-center gap-1 text-base-content/70">
+							<Cash class="h-4 w-4" />
+							{priceLabel}
+						</span>
+					{/if}
 				{/if}
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</div>
 </div>
 

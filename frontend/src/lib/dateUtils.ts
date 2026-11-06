@@ -6,6 +6,8 @@ import {
 	DEFAULT_DATE_FORMAT,
 	formatDisplayDate,
 	formatDisplayDateTime,
+	prefersHour12,
+	resolveDateFormatLocale,
 	type DateFormatPreference
 } from '#lib/dateFormat.js';
 
@@ -114,6 +116,90 @@ export function formatDateInTimezone(
 	preference: DateFormatPreference = DEFAULT_DATE_FORMAT
 ): string {
 	return formatDisplayDateTime(utcDate, preference, timezone);
+}
+
+/** The viewer's own IANA time zone. */
+export function localTimeZone(): string {
+	return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+}
+
+/**
+ * Describe the zone a time was entered in. `differs` is true only when it isn't the viewer's
+ * zone, so callers can show a zone chip just when it matters.
+ */
+export function timezoneInfo(
+	zone: string | null | undefined,
+	labels: { tripZone: string; yourTime: string }
+): { label: string; differs: boolean; tip: string | null } {
+	const local = localTimeZone();
+	const label = zone ?? local;
+	const differs = !!zone && zone !== local;
+	return {
+		label,
+		differs,
+		tip: differs ? `${labels.tripZone}: ${label}. ${labels.yourTime}: ${local}.` : null
+	};
+}
+
+/** A timed value split into a date and a clock time, both in `timezone`. */
+export function formatDateTimeParts(
+	utcDate: string,
+	timezone: string | null,
+	preference: DateFormatPreference = DEFAULT_DATE_FORMAT
+): { date: string; time: string } {
+	const full = formatDisplayDateTime(utcDate, preference, timezone);
+	try {
+		const locale = resolveDateFormatLocale(preference);
+		const when = new Date(utcDate);
+		const date = new Intl.DateTimeFormat(locale, {
+			timeZone: timezone || undefined,
+			year: 'numeric',
+			month: preference === 'ymd' ? '2-digit' : 'short',
+			day: preference === 'ymd' ? '2-digit' : 'numeric'
+		}).format(when);
+		const time = new Intl.DateTimeFormat(locale, {
+			timeZone: timezone || undefined,
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: prefersHour12(preference)
+		}).format(when);
+		return { date, time };
+	} catch {
+		return { date: full, time: '' };
+	}
+}
+
+/** Whole calendar days from `start` to `end`, inclusive of both (a one-day trip is 1). */
+export function inclusiveDayCount(
+	start: string | null | undefined,
+	end: string | null | undefined
+): number | null {
+	if (!start || !end) return null;
+	const a = DateTime.fromISO(start.split('T')[0]);
+	const b = DateTime.fromISO(end.split('T')[0]);
+	if (!a.isValid || !b.isValid) return null;
+	return Math.max(1, Math.round(b.diff(a, 'days').days) + 1);
+}
+
+/**
+ * Nights between a check-in and a check-out. Timed values are compared as calendar days in the
+ * zone they were entered in, so a 23:00 check-in doesn't shift to the next day.
+ */
+export function nightsBetween(
+	checkIn: string | null | undefined,
+	checkOut: string | null | undefined,
+	timezone?: string | null
+): number | null {
+	if (!checkIn || !checkOut) return null;
+	const day = (value: string) =>
+		isAllDay(value)
+			? DateTime.fromISO(value.split('T')[0])
+			: DateTime.fromISO(value, { zone: timezone || 'utc' }).startOf('day');
+	const a = day(checkIn);
+	const b = day(checkOut);
+	if (!a.isValid || !b.isValid) return null;
+	const nights = Math.round(b.diff(a, 'days').days);
+	return nights > 0 ? nights : null;
 }
 
 export function formatUTCDate(utcDate: string | null): string {

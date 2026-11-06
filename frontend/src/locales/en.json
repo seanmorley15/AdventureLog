@@ -2115,5 +2115,24 @@
 		"checkout_canceled": "Checkout was canceled. No changes were made.",
 		"checkout_error_title": "Checkout failed",
 		"portal_error_title": "Unable to open billing portal"
+	},
+	"cards": {
+		"departs": "Departs",
+		"arrives": "Arrives",
+		"visit_count": "{count, plural, one {# visit} other {# visits}}",
+		"last_visit": "Last visit {date}",
+		"link_location": "Link location",
+		"in_days": "{count, plural, one {In # day} other {In # days}}",
+		"starts_today": "Starts today",
+		"day_of": "Day {day} of {total}",
+		"day_count": "{count, plural, one {# day} other {# days}}",
+		"location_count": "{count, plural, one {# location} other {# locations}}",
+		"confirmation": "Conf. {code}",
+		"items_done": "{done} of {total} done",
+		"more_links": "+{count} more",
+		"open_card": "Open {name}",
+		"added_by": "Added by {name}",
+		"collection_actions": "Collection actions",
+		"item_actions": "More actions"
 	}
 }

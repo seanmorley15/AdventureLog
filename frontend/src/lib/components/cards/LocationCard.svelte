@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import { openLocationDrawer } from '#lib/location-drawer.svelte.js';
 	import type { Location, Collection, User, CollectionItineraryItem } from '#lib/types.js';
 	const dispatch = createEventDispatcher();
@@ -9,68 +9,37 @@
 	import ContentCopy from '~icons/mdi/content-copy';
 	import TrashCan from '~icons/mdi/trash-can-outline';
 	import Calendar from '~icons/mdi/calendar';
-	import Clock from '~icons/mdi/clock-outline';
-	import MapMarker from '~icons/mdi/map-marker';
+	import MapMarkerOutline from '~icons/mdi/map-marker-outline';
 	import LinkIcon from '~icons/mdi/link-variant';
 	import Check from '~icons/mdi/check';
-	import { addToast } from '#lib/toasts.js';
-	import { copyToClipboard } from '#lib/index.js';
-	import UserAvatar from '#lib/components/UserAvatar.svelte';
-	import Link from '~icons/mdi/link-variant';
+	import CheckCircle from '~icons/mdi/check-circle';
+	import CircleOutline from '~icons/mdi/circle-outline';
+	import Cash from '~icons/mdi/cash';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
-	import CollectionPicker from '../collections/CollectionPicker.svelte';
-	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
-	import DotsHorizontal from '~icons/mdi/dots-horizontal';
-	import DeleteWarning from '../DeleteWarning.svelte';
-	import CardCarousel from '../CardCarousel.svelte';
-	import { t } from 'svelte-i18n';
-	import Star from '~icons/mdi/star';
-	import StarOutline from '~icons/mdi/star-outline';
-	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
-	import SocialShareModal from '../SocialShareModal.svelte';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
 	import Globe from '~icons/mdi/globe';
 	import ImageOutline from '~icons/mdi/image-outline';
+	import { addToast } from '#lib/toasts.js';
+	import { copyToClipboard } from '#lib/index.js';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import CollectionPicker from '../collections/CollectionPicker.svelte';
+	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
+	import DeleteWarning from '../DeleteWarning.svelte';
+	import CardCarousel from '../CardCarousel.svelte';
+	import CardActionsMenu from './parts/CardActionsMenu.svelte';
+	import CardRating from './parts/CardRating.svelte';
+	import CardVisibility from './parts/CardVisibility.svelte';
+	import CountryFlag from '../shared/CountryFlag.svelte';
+	import SocialShareModal from '../SocialShareModal.svelte';
+	import { t } from 'svelte-i18n';
+	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
-	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	let isCollectionModalOpen: boolean = $state(false);
 	let isWarningModalOpen: boolean = $state(false);
 	let isSocialShareModalOpen: boolean = $state(false);
 	let copied: boolean = $state(false);
-	let isActionsMenuOpen: boolean = $state(false);
-	let openUpward = $state(false);
-	let actionsMenuRef: HTMLDivElement | null = $state(null);
-	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => {
-		if (isEditLoading) return;
-		isActionsMenuOpen = false;
-	};
-
-	let wasEditLoading = false;
-
-	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen || isEditLoading) return;
-		const target = event.target as Node | null;
-		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
-			isActionsMenuOpen = false;
-		}
-	}
-
-	function closeAllLocationMenus() {
-		window.dispatchEvent(new CustomEvent(ACTIONS_CLOSE_EVENT));
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleDocumentClick);
-		window.addEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		return () => {
-			document.removeEventListener('click', handleDocumentClick);
-			window.removeEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		};
-	});
 
 	async function copyLink() {
 		try {
@@ -109,15 +78,25 @@
 		(adventure.tags?.length ?? 0) > 3 ? (adventure.tags?.length ?? 0) - 3 : 0
 	);
 
-	// Helper functions for display
+	const dateFormat = $derived(dateFormatFromUser(user));
 
-	function renderStars(rating: number) {
-		const stars = [];
-		for (let i = 1; i <= 5; i++) {
-			stars.push(i <= rating);
-		}
-		return stars;
-	}
+	// Visits only come with the full location record, not the slim list used on /locations.
+	let visitCount = $derived(adventure.visits?.length ?? 0);
+	let lastVisitDate = $derived.by(() => {
+		const dates = (adventure.visits ?? [])
+			.map((v) => v.end_date || v.start_date)
+			.filter(Boolean)
+			.sort();
+		const latest = dates[dates.length - 1];
+		return latest ? formatDisplayDate(latest, dateFormat) : '';
+	});
+
+	// "Abisko, Norrbotten" reads better than the raw address when the place is structured.
+	let placeLine = $derived(
+		[adventure.city?.name, adventure.region?.name].filter(Boolean).join(', ') ||
+			adventure.location ||
+			''
+	);
 
 	function changeDay() {
 		dispatch('changeDay', { type: 'location', item: adventure, forcePicker: true });
@@ -232,15 +211,6 @@
 	function link() {
 		dispatch('link', adventure);
 	}
-	$effect(() => {
-		if (isEditLoading) {
-			isActionsMenuOpen = true;
-			wasEditLoading = true;
-		} else if (wasEditLoading) {
-			isActionsMenuOpen = false;
-			wasEditLoading = false;
-		}
-	});
 	let adventurePriceLabel = $derived(
 		formatMoney(toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY))
 	);
@@ -286,174 +256,69 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card h-full flex flex-col rounded-2xl border border-base-300/60 bg-base-100 shadow-xs transition-colors hover:border-base-300"
 	aria-label="location-card"
 >
-	<!-- Image Section with Overlay -->
 	<div class="relative overflow-hidden rounded-t-2xl">
 		<CardCarousel images={adventure.images} icon={adventure.category?.icon} name={adventure.name} />
 
-		<!-- Status Overlay (icon-only) -->
-		<div class="absolute top-2 left-4 flex items-center gap-3">
-			<div
-				class="tooltip tooltip-right"
-				data-tip={adventure.is_visited ? $t('adventures.visited') : $t('adventures.not_visited')}
-			>
-				{#if adventure.is_visited}
-					<div class="badge badge-sm badge-success p-1 rounded-full shadow-xs">
-						<Calendar class="w-4 h-4" />
-					</div>
-				{:else}
-					<div class="badge badge-sm badge-warning p-1 rounded-full shadow-xs">
-						<Clock class="w-4 h-4" />
-					</div>
-				{/if}
-			</div>
+		<div class="absolute right-2 top-2">
+			<CardVisibility visibility={adventure.is_public ? 'public' : 'private'} />
 		</div>
 
-		<!-- Privacy Indicator -->
-		<div class="absolute top-2 right-4">
-			<div
-				class="tooltip tooltip-left"
-				data-tip={adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
-			>
-				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-xs"
-					role="img"
-					aria-label={adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
-				>
-					{#if adventure.is_public}
-						<Eye class="w-4 h-4" />
-					{:else}
-						<EyeOff class="w-4 h-4" />
-					{/if}
-				</div>
-			</div>
-		</div>
-
-		<!-- Category Badge -->
 		{#if adventure.category}
-			<div class="absolute bottom-4 left-4">
-				<a
-					href="/locations?types={adventure.category.name}"
-					class="badge badge-primary shadow-lg font-medium cursor-pointer hover:brightness-110 transition-all"
-				>
-					{adventure.category.display_name}
-					{adventure.category.icon}
-				</a>
-			</div>
-		{/if}
-
-		<!-- Creator Avatar -->
-		{#if adventure.user && collection}
-			<div class="absolute bottom-4 right-4">
-				<div class="tooltip tooltip-left" data-tip={creatorDisplayName}>
-					<div class="avatar">
-						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow-sm overflow-hidden">
-							{#if adventure.user}
-								<UserAvatar
-									user={adventure.user}
-									alt={creatorDisplayName}
-									className="w-7 h-7 rounded-full"
-									textClass="text-[10px]"
-								/>
-							{/if}
-						</div>
-					</div>
-				</div>
-			</div>
+			<a
+				href="/locations?types={adventure.category.name}"
+				class="absolute bottom-2 left-2 inline-flex max-w-[60%] items-center gap-1.5 rounded-full bg-base-100/85 px-2.5 py-1 text-xs font-medium text-base-content shadow-xs backdrop-blur-sm transition-colors hover:bg-base-100"
+			>
+				<span aria-hidden="true">{adventure.category.icon}</span>
+				<span class="truncate">{adventure.category.display_name}</span>
+			</a>
 		{/if}
 	</div>
 
-	<!-- Content Section -->
-	<div
-		class="card-body space-y-2"
-		class:p-3={compact}
-		class:p-4={!compact}
-		class:space-y-2={compact}
-		class:space-y-3={!compact}
-	>
-		<!-- Header: title + compact actions -->
+	<div class="flex flex-1 flex-col gap-3 {compact ? 'p-3' : 'p-4'}">
 		<div class="flex items-start justify-between gap-2">
 			<a
 				href="/locations/{adventure.id}"
-				class="hover:text-primary transition-colors duration-200 line-clamp-2"
-				class:text-base={compact}
-				class:text-lg={!compact}
-				class:font-semibold={!compact}
-				class:font-medium={compact}
+				class="line-clamp-2 min-w-0 font-semibold leading-snug transition-colors hover:text-primary {compact
+					? 'text-base'
+					: 'text-lg'}"
 			>
 				{adventure.name}
 			</a>
 
-			<div class="flex items-center gap-2">
+			<div class="-mr-1 -mt-1 flex shrink-0 items-center">
 				<button
-					class="btn btn-square btn-sm p-1 text-base-content"
-					aria-label="open-details"
+					class="btn btn-ghost btn-square btn-sm"
+					aria-label={$t('adventures.open_details')}
 					onclick={() => openLocationDrawer(adventure.id)}
 				>
-					<Launch class="w-5 h-5" />
+					<Launch class="h-5 w-5" />
 				</button>
 				{#if !readOnly}
 					{#if (adventure.user && adventure.user.uuid == user?.uuid) || (collection && user && collection.shared_with?.includes(user.uuid)) || (collection && user && collection.user == user.uuid)}
-						<div
-							class="dropdown dropdown-end relative z-50"
-							class:dropdown-open={isActionsMenuOpen}
-							class:dropdown-top={openUpward}
-							bind:this={actionsMenuRef}
+						<CardActionsMenu
+							label={$t('adventures.location_actions') || 'Location actions'}
+							busy={isEditLoading}
 						>
-							<button
-								type="button"
-								class="btn btn-square btn-sm p-1 text-base-content"
-								aria-haspopup="menu"
-								aria-label={$t('adventures.location_actions') || 'Location actions'}
-								onclick={(e) => {
-									e.stopPropagation();
-									if (isEditLoading) return;
-									if (isActionsMenuOpen) {
-										isActionsMenuOpen = false;
-										return;
-									}
-									closeAllLocationMenus();
-									openUpward = shouldFlipDropdownUp(actionsMenuRef);
-									isActionsMenuOpen = true;
-								}}
-							>
-								<DotsHorizontal class="w-5 h-5" />
-							</button>
-							<ul
-								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
-							>
+							{#snippet children({ close })}
 								<li>
-									<button
-										onclick={() => {
-											editAdventure();
-										}}
-										class="flex items-center gap-2"
-										disabled={isEditLoading}
-									>
+									<button onclick={editAdventure} disabled={isEditLoading}>
 										{#if isEditLoading}
 											<span class="loading loading-spinner loading-xs"></span>
 										{:else}
-											<FileDocumentEdit class="w-4 h-4" />
+											<FileDocumentEdit class="h-4 w-4" />
 										{/if}
 										{$t('adventures.edit_location')}
 									</button>
 								</li>
 								<li>
-									<button
-										type="button"
-										onclick={() => {
-											editVisits();
-										}}
-										class="flex items-center gap-2"
-										disabled={isEditLoading}
-									>
+									<button type="button" onclick={editVisits} disabled={isEditLoading}>
 										{#if isEditLoading}
 											<span class="loading loading-spinner loading-xs"></span>
 										{:else}
-											<Calendar class="w-4 h-4" />
+											<Calendar class="h-4 w-4" />
 										{/if}
 										{$t('adventures.manage_visits')}
 									</button>
@@ -462,13 +327,12 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												duplicateAdventure();
 											}}
-											class="flex items-center gap-2"
 											disabled={isDuplicating}
 										>
-											<ContentCopy class="w-4 h-4" />
+											<ContentCopy class="h-4 w-4" />
 											{isDuplicating ? '...' : $t('adventures.duplicate')}
 										</button>
 									</li>
@@ -477,12 +341,11 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												removeFromThisCollection();
 											}}
-											class="flex items-center gap-2"
 										>
-											<LinkVariantRemove class="w-4 h-4" />
+											<LinkVariantRemove class="h-4 w-4" />
 											<span class="truncate">
 												{$t('collection.remove_from_named', { values: { name: collection.name } })}
 											</span>
@@ -493,47 +356,42 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												isCollectionModalOpen = true;
 											}}
-											class="flex items-center gap-2"
 										>
-											<Plus class="w-4 h-4" />
+											<Plus class="h-4 w-4" />
 											{$t('collection.manage_collections')}
 										</button>
 									</li>
 								{/if}
-
 								{#if adventure.is_public}
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												copyLink();
 											}}
-											class="flex items-center gap-2"
 										>
 											{#if copied}
-												<Check class="w-4 h-4 text-success" />
+												<Check class="h-4 w-4 text-success" />
 												<span>{$t('adventures.link_copied')}</span>
 											{:else}
-												<LinkIcon class="w-4 h-4" />
+												<LinkIcon class="h-4 w-4" />
 												{$t('adventures.copy_link')}
 											{/if}
 										</button>
 									</li>
 								{/if}
-
 								{#if adventure.user && adventure.user.uuid == user?.uuid}
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												isSocialShareModalOpen = true;
 											}}
-											class="flex items-center gap-2"
 										>
-											<ImageOutline class="w-4 h-4" />
+											<ImageOutline class="h-4 w-4" />
 											{$t('social_share.share_externally')}
 										</button>
 									</li>
@@ -545,118 +403,122 @@
 										<li>
 											<button
 												onclick={() => {
-													isActionsMenuOpen = false;
+													close();
 													dispatch('moveToGlobal', { type: 'location', id: adventure.id });
 												}}
-												class="flex items-center gap-2"
 											>
-												<Globe class="w-4 h-4" />
+												<Globe class="h-4 w-4" />
 												{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
 											</button>
 										</li>
 										<li>
 											<button
 												onclick={() => {
-													isActionsMenuOpen = false;
+													close();
 													changeDay();
 												}}
-												class="flex items-center gap-2"
 											>
-												<Calendar class="w-4 h-4" />
+												<Calendar class="h-4 w-4" />
 												{$t('itinerary.change_day')}
 											</button>
 										</li>
 										<li>
 											<button
+												class="text-error"
 												onclick={() => {
-													isActionsMenuOpen = false;
+													close();
 													removeFromItinerary();
 												}}
-												class="text-error flex items-center gap-2"
 											>
-												<CalendarRemove class="w-4 h-4 text-error" />
+												<CalendarRemove class="h-4 w-4" />
 												{$t('itinerary.remove_from_itinerary')}
 											</button>
 										</li>
-									{/if}
-									{#if itineraryItem.is_global}
+									{:else}
 										<li>
 											<button
+												class="text-error"
 												onclick={() => {
-													isActionsMenuOpen = false;
+													close();
 													removeFromItinerary();
 												}}
-												class="text-error flex items-center gap-2"
 											>
-												<CalendarRemove class="w-4 h-4 text-error" />
+												<CalendarRemove class="h-4 w-4" />
 												{$t('itinerary.remove_from_trip_context')}
 											</button>
 										</li>
 									{/if}
 								{/if}
 
-								{#if user.uuid == adventure.user?.uuid}
+								{#if user?.uuid == adventure.user?.uuid}
 									<div class="divider my-1"></div>
 									<li>
 										<button
 											id="delete_adventure"
 											data-umami-event="Delete Adventure"
-											class="text-error flex items-center gap-2"
+											class="text-error"
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												isWarningModalOpen = true;
 											}}
 										>
-											<TrashCan class="w-4 h-4" />
+											<TrashCan class="h-4 w-4" />
 											{$t('adventures.delete')}
 										</button>
 									</li>
 								{/if}
-							</ul>
-						</div>
+							{/snippet}
+						</CardActionsMenu>
 					{/if}
 				{/if}
 			</div>
 		</div>
 
-		<!-- Inline stats: location, rating, visits -->
-		<div
-			class="flex flex-wrap items-center text-base-content/70 min-w-0"
-			class:gap-2={compact}
-			class:gap-3={!compact}
-			class:text-xs={compact}
-			class:text-sm={!compact}
-		>
-			{#if adventure.location}
-				<div class="flex items-center gap-1 min-w-0">
-					<MapMarker class="w-4 h-4 text-primary" />
-					<span class="truncate max-w-[18rem]">{adventure.location}</span>
-				</div>
-			{/if}
+		{#if placeLine}
+			<p class="-mt-1.5 flex min-w-0 items-center gap-1.5 text-sm text-base-content/70">
+				{#if adventure.country}
+					<CountryFlag
+						src={adventure.country.flag_url}
+						code={adventure.country.country_code}
+						name={adventure.country.name}
+					/>
+				{:else}
+					<MapMarkerOutline class="h-4 w-4 shrink-0 text-primary" />
+				{/if}
+				<span class="truncate">{placeLine}</span>
+			</p>
+		{/if}
 
-			{#if adventure.rating}
-				<div class="flex items-center gap-1">
-					<div class="flex -ml-1">
-						{#each renderStars(adventure.rating) as filled}
-							{#if filled}
-								<Star class="w-4 h-4 text-warning fill-current" />
-							{:else}
-								<StarOutline class="w-4 h-4 text-base-content/30" />
-							{/if}
-						{/each}
-					</div>
-					<span class="text-xs text-base-content/60">({adventure.rating}/5)</span>
-				</div>
+		<!-- Status first, then the facts that vary place to place. -->
+		<div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+			{#if adventure.is_visited}
+				<span class="inline-flex items-center gap-1.5 font-medium text-success">
+					<CheckCircle class="h-4 w-4" />
+					{$t('adventures.visited')}
+				</span>
+			{:else}
+				<span class="inline-flex items-center gap-1.5 text-base-content/60">
+					<CircleOutline class="h-4 w-4" />
+					{$t('adventures.not_visited')}
+				</span>
 			{/if}
-
+			{#if visitCount > 0}
+				<span class="text-base-content/60">
+					{$t('cards.visit_count', { values: { count: visitCount } })}{#if lastVisitDate}
+						· {lastVisitDate}{/if}
+				</span>
+			{/if}
+			<CardRating rating={adventure.rating} />
 			{#if adventurePriceLabel}
-				<span class="badge badge-ghost badge-sm whitespace-nowrap">💰 {adventurePriceLabel}</span>
+				<span class="inline-flex items-center gap-1 text-base-content/70">
+					<Cash class="h-4 w-4" />
+					{adventurePriceLabel}
+				</span>
 			{/if}
 		</div>
 
-		<!-- Tags (compact) -->
 		{#if displayActivityTypes.length > 0}
-			<div class="flex flex-wrap gap-2">
+			<div class="flex flex-wrap gap-1.5">
 				{#each displayActivityTypes as tag}
 					<span class="badge badge-ghost badge-sm">{tag}</span>
 				{/each}
@@ -665,17 +527,30 @@
 				{/if}
 			</div>
 		{/if}
-	</div>
 
-	{#if !readOnly}
-		{#if type == 'link'}
-			<div class="card-body p-4 pt-0">
-				<button class="btn btn-primary btn-block btn-sm" onclick={link}>
-					<Link class="w-4 h-4 mr-2" />
-					Link Adventure
-				</button>
+		{#if adventure.user && collection}
+			<div class="mt-auto flex items-center gap-2 pt-1 text-xs text-base-content/60">
+				<UserAvatar
+					user={adventure.user}
+					alt={creatorDisplayName}
+					className="h-5 w-5 shrink-0 rounded-full"
+					imgClass="h-5 w-5 shrink-0 rounded-full object-cover"
+					textClass="text-[9px]"
+				/>
+				<span class="truncate">
+					{$t('cards.added_by', { values: { name: creatorDisplayName } })}
+				</span>
 			</div>
 		{/if}
+	</div>
+
+	{#if !readOnly && type == 'link'}
+		<div class="px-4 pb-4">
+			<button class="btn btn-primary btn-block btn-sm" onclick={link}>
+				<LinkIcon class="h-4 w-4" />
+				{$t('cards.link_location')}
+			</button>
+		</div>
 	{/if}
 </div>
 

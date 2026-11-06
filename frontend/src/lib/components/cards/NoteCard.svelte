@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { stopPropagation } from 'svelte/legacy';
-
 	import { t } from 'svelte-i18n';
 	import { addToast } from '#lib/toasts.js';
 	import type { Collection, Note, User } from '#lib/types.js';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	import { marked } from 'marked'; // Import the markdown parser
@@ -16,7 +14,6 @@
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
 	import DeleteWarning from '../DeleteWarning.svelte';
-	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import LinkVariant from '~icons/mdi/link-variant';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
@@ -24,35 +21,9 @@
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '#lib/types.js';
-	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
+	import CardActionsMenu from './parts/CardActionsMenu.svelte';
+	import NoteTextOutline from '~icons/mdi/note-text-outline';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
-
-	let isActionsMenuOpen = $state(false);
-	let openUpward = $state(false);
-	let actionsMenuRef: HTMLDivElement | null = $state(null);
-	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => (isActionsMenuOpen = false);
-
-	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen) return;
-		const target = event.target as Node | null;
-		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
-			isActionsMenuOpen = false;
-		}
-	}
-
-	function closeAllNoteMenus() {
-		window.dispatchEvent(new CustomEvent(ACTIONS_CLOSE_EVENT));
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleDocumentClick);
-		window.addEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		return () => {
-			document.removeEventListener('click', handleDocumentClick);
-			window.removeEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		};
-	});
 
 	interface Props {
 		note: Note;
@@ -122,7 +93,7 @@
 {#if isWarningModalOpen}
 	<DeleteWarning
 		title={$t('adventures.delete_note')}
-		button_text="Delete"
+		button_text={$t('adventures.delete')}
 		description={$t('adventures.note_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
@@ -201,65 +172,42 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow-sm hover:shadow-md transition-all duration-200 border border-base-300 group"
+	class="card h-full flex flex-col rounded-2xl border border-base-300/60 bg-base-100 shadow-xs transition-colors hover:border-base-300"
 	aria-label="note-card"
 >
-	<div class="card-body p-4 space-y-3">
-		<!-- Header -->
-		<div class="flex items-start justify-between gap-3">
-			<div class="flex-1 min-w-0">
-				<h2 class="text-lg font-semibold line-clamp-2">{note.name}</h2>
-				<div class="flex flex-wrap items-center gap-2 mt-2">
-					<div class="badge badge-primary badge-sm">{$t('adventures.note')}</div>
-				</div>
+	<div class="flex flex-1 flex-col gap-3 p-4">
+		<div class="flex items-start gap-3">
+			<div
+				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10"
+				aria-hidden="true"
+			>
+				<NoteTextOutline class="h-5 w-5 text-primary" />
+			</div>
+			<div class="min-w-0 flex-1">
+				<h2 class="line-clamp-2 text-lg font-semibold leading-snug">{note.name}</h2>
+				<p class="text-sm text-base-content/60">{$t('adventures.note')}</p>
 			</div>
 
-			<div class="flex items-center gap-2">
+			<div class="-mr-1 -mt-1 flex shrink-0 items-center">
 				<button
-					class="btn btn-square btn-sm p-1 text-base-content"
+					class="btn btn-ghost btn-square btn-sm"
 					onclick={() => (isDetailsOpen = true)}
 					aria-label={$t('adventures.view')}
 					type="button"
 				>
-					<Launch class="w-5 h-5" />
+					<Launch class="h-5 w-5" />
 				</button>
-
 				{#if canEdit}
-					<div
-						class="dropdown dropdown-end relative z-50"
-						class:dropdown-open={isActionsMenuOpen}
-						class:dropdown-top={openUpward}
-						bind:this={actionsMenuRef}
-					>
-						<button
-							type="button"
-							class="btn btn-square btn-sm p-1 text-base-content"
-							aria-haspopup="menu"
-							onclick={stopPropagation(() => {
-								if (isActionsMenuOpen) {
-									isActionsMenuOpen = false;
-									return;
-								}
-								closeAllNoteMenus();
-								openUpward = shouldFlipDropdownUp(actionsMenuRef);
-								isActionsMenuOpen = true;
-							})}
-						>
-							<DotsHorizontal class="w-5 h-5" />
-						</button>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
-						>
+					<CardActionsMenu label={$t('cards.item_actions')}>
+						{#snippet children({ close })}
 							<li>
 								<button
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										editNote();
 									}}
-									class="flex items-center gap-2"
 								>
-									<FileDocumentEdit class="w-4 h-4" />
+									<FileDocumentEdit class="h-4 w-4" />
 									{$t('lodging.edit')}
 								</button>
 							</li>
@@ -269,107 +217,93 @@
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												dispatch('moveToGlobal', { type: 'note', id: note.id });
 											}}
-											class="flex items-center gap-2"
 										>
-											<Globe class="w-4 h-4" />
+											<Globe class="h-4 w-4" />
 											{$t('itinerary.move_to_trip_context')}
 										</button>
 									</li>
 									<li>
 										<button
 											onclick={() => {
-												isActionsMenuOpen = false;
+												close();
 												changeDay();
 											}}
-											class="flex items-center gap-2"
 										>
-											<CalendarRemove class="w-4 h-4 text" />
+											<Calendar class="h-4 w-4" />
 											{$t('itinerary.change_day')}
 										</button>
 									</li>
 								{/if}
 								<li>
 									<button
+										class="text-error"
 										onclick={() => {
-											isActionsMenuOpen = false;
+											close();
 											removeFromItinerary();
 										}}
-										class="text-error flex items-center gap-2"
 									>
-										<CalendarRemove class="w-4 h-4 text-error" />
-										{#if itineraryItem.is_global}
-											{$t('itinerary.remove_from_trip_context') || 'Remove from Trip Context'}
-										{:else}
-											{$t('itinerary.remove_from_itinerary')}
-										{/if}
+										<CalendarRemove class="h-4 w-4" />
+										{itineraryItem.is_global
+											? $t('itinerary.remove_from_trip_context')
+											: $t('itinerary.remove_from_itinerary')}
 									</button>
 								</li>
 							{/if}
 							<div class="divider my-1"></div>
 							<li>
 								<button
-									class="text-error flex items-center gap-2"
+									class="text-error"
 									onclick={() => {
-										isActionsMenuOpen = false;
+										close();
 										isWarningModalOpen = true;
 									}}
 								>
-									<TrashCan class="w-4 h-4" />
+									<TrashCan class="h-4 w-4" />
 									{$t('adventures.delete')}
 								</button>
 							</li>
-						</ul>
-					</div>
+						{/snippet}
+					</CardActionsMenu>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Note Content Preview -->
 		{#if note.content && note.content?.length > 0}
 			<article
-				class="prose prose-sm max-w-none overflow-hidden max-h-32 text-sm text-base-content/70 line-clamp-4"
+				class="prose prose-sm line-clamp-4 max-h-32 max-w-none overflow-hidden text-sm text-base-content/70"
 			>
 				{@html renderMarkdown(note.content || '')}
 			</article>
 		{/if}
 
-		<!-- Inline Stats -->
-		<div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
-			{#if note.date && note.date !== ''}
-				<div class="flex items-center gap-1">
-					<Calendar class="w-4 h-4 text-primary" />
-					<span>{formatDisplayDate(note.date, dateFormat, { timeZone: 'UTC' })}</span>
-				</div>
-			{/if}
-
-			{#if note.links && note.links?.length > 0}
-				<div class="badge badge-ghost badge-sm">
-					<LinkVariant class="w-3 h-3 mr-1" />
-					{note.links.length}
-					{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
-				</div>
-			{/if}
-		</div>
-
-		<!-- Links Preview (compact) -->
-		{#if note.links && note.links?.length > 0}
-			<div class="flex flex-wrap gap-2">
-				{#each note.links.slice(0, 2) as link}
-					<a
-						class="badge badge-outline badge-sm hover:badge-primary transition-colors"
-						href={link}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						<LinkVariant class="w-3 h-3 mr-1" />
-						{link.split('//')[1]?.split('/', 1)[0]}
-					</a>
-				{/each}
-				{#if note.links.length > 2}
-					<span class="badge badge-ghost badge-sm">+{note.links.length - 2}</span>
+		{#if (note.date && note.date !== '') || (note.links && note.links.length > 0)}
+			<div class="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-sm">
+				{#if note.date && note.date !== ''}
+					<span class="inline-flex items-center gap-1.5 text-base-content/70">
+						<Calendar class="h-4 w-4 text-primary" />
+						{formatDisplayDate(note.date, dateFormat, { timeZone: 'UTC' })}
+					</span>
+				{/if}
+				{#if note.links && note.links.length > 0}
+					{#each note.links.slice(0, 2) as link}
+						<a
+							class="badge badge-ghost badge-sm gap-1 transition-colors hover:badge-primary"
+							href={link}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<LinkVariant class="h-3 w-3" />
+							{link.split('//')[1]?.split('/', 1)[0] ?? link}
+						</a>
+					{/each}
+					{#if note.links.length > 2}
+						<span class="badge badge-ghost badge-sm">
+							{$t('cards.more_links', { values: { count: note.links.length - 2 } })}
+						</span>
+					{/if}
 				{/if}
 			</div>
 		{/if}
