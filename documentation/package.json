@@ -2,9 +2,9 @@
   "name": "adventurelog-documentation",
   "devDependencies": {
     "@braintree/sanitize-url": "^7.1.2",
-    "cytoscape": "^3.34.0",
+    "cytoscape": "^3.34.4",
     "cytoscape-cose-bilkent": "^4.1.0",
-    "dayjs": "^1.11.21",
+    "dayjs": "^1.11.23",
     "debug": "^4.4.3",
     "mermaid": "^11.17.2",
     "vitepress": "^1.6.4",
@@ -16,7 +16,7 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.10",
     "vue": "^3.5.42"
   },
   "pnpm": {
