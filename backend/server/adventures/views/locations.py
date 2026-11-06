@@ -48,6 +48,7 @@ from adventures.services.quick_add import finish_quick_add, prepare_location_qui
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
 from adventures.utils.language import resolve_request_language
+from adventures.utils.query_optimization import optimize_locations
 from adventures.views.mixins import PaginatedResponseMixin
 from core import pagination
 from core.exceptions import APIError
@@ -123,11 +124,23 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         include_public = self.action in self.PUBLIC_ACTIONS
         if not user.is_authenticated:
             if include_public:
-                return Location.objects.retrieve_locations(user, include_public=True).order_by('-updated_at')
+                return self._load_detail(
+                    Location.objects.retrieve_locations(user, include_public=True).order_by('-updated_at')
+                )
             return Location.objects.none()
-        return Location.objects.retrieve_locations(
-            user, include_public=include_public, include_owned=True, include_shared=True
-        ).order_by('-updated_at')
+        return self._load_detail(
+            Location.objects.retrieve_locations(
+                user, include_public=include_public, include_owned=True, include_shared=True
+            ).order_by('-updated_at')
+        )
+
+    def _load_detail(self, queryset):
+        """Fetch the images, attachments, trails, visits and owners a detail page shows in a few
+        queries instead of one set per related row. Only for reads: after a write the serializer
+        must see fresh rows, not what was prefetched."""
+        if self.action == 'retrieve':
+            return optimize_locations(queryset)
+        return queryset
 
     # ==================== LIST ====================
 

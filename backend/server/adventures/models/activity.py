@@ -130,7 +130,7 @@ class Activity(models.Model):
     )
 
     # GPX File
-    gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_file_extension], blank=True, null=True)
+    gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_file_extension], blank=True, null=True, db_index=True)
 
     # Descriptive
     name = models.CharField(max_length=200)

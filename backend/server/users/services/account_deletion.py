@@ -1,13 +1,15 @@
 import logging
 
-import stripe
-from stripe.error import InvalidRequestError
 from django.conf import settings
 from django.db import transaction
 
 from adventures.models import Collection, CollectionInvite
 from adventures.services.account_data import clear_user_adventure_data
 from core.errors import ServiceError
+from core.lazy import lazy_module
+
+# stripe costs ~40 MB and ~3 s to import; load it only when billing code actually runs.
+stripe = lazy_module('stripe')
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,8 @@ def cancel_stripe_billing(user) -> None:
         subscription = user.subscription
     except Exception:
         return
+
+    from stripe.error import InvalidRequestError
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
 

@@ -24,7 +24,7 @@ def location_prefetches():
         Prefetch('images', queryset=ContentImage.objects.select_related('user')),
         Prefetch('attachments', queryset=ContentAttachment.objects.select_related('user')),
         Prefetch('trails', queryset=Trail.objects.select_related('user')),
-        Prefetch('visits__activities', queryset=Activity.objects.select_related('user')),
+        Prefetch('visits__activities', queryset=Activity.objects.select_related('user', 'day', 'promoted_activity__visit')),
         'collections',
     ]
 

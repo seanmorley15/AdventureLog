@@ -16,24 +16,21 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	// let sessionId = event.cookies.get('sessionid');
 	let stats = null;
 
-	let res = await event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/stats/`, {
-		headers: {
-			'Content-Type': 'application/json',
-			Cookie: `sessionid=${event.cookies.get('sessionid')}`
-		}
-	});
+	const headers = {
+		'Content-Type': 'application/json',
+		Cookie: `sessionid=${event.cookies.get('sessionid')}`
+	};
+	// Stats and profile do not depend on each other: ask for both at once.
+	const [res, userData] = await Promise.all([
+		event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/stats/`, { headers }),
+		event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/`, { headers })
+	]);
 	if (!res.ok) {
 		console.error('Failed to fetch user stats');
 	} else {
 		stats = await res.json();
 	}
 
-	let userData = await event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/`, {
-		headers: {
-			'Content-Type': 'application/json',
-			Cookie: `sessionid=${event.cookies.get('sessionid')}`
-		}
-	});
 	if (!userData.ok) {
 		return error(404, 'Not found');
 	}

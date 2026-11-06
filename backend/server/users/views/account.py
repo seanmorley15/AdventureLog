@@ -71,9 +71,14 @@ class AccountViewSet(viewsets.GenericViewSet):
         and how many comments you have not read. On hosted servers the subscription is included.
         """
         user = request.user
+        user_data = CustomUserDetailsSerializer(user, context={'request': request}).data
+        # The serializer already counted the pending invites; do not run the query twice.
+        pending_invites = user_data.get('pending_collection_invite_count')
+        if pending_invites is None:
+            pending_invites = CollectionInvite.objects.filter(invited_user=user).count()
         return Response({
-            'user': CustomUserDetailsSerializer(user, context={'request': request}).data,
-            'pending_invite_count': CollectionInvite.objects.filter(invited_user=user).count(),
+            'user': user_data,
+            'pending_invite_count': pending_invites,
             'unread_comment_count': unread_comment_count(user),
             **self.account_extras(user),
         })

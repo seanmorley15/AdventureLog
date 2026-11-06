@@ -50,16 +50,18 @@ export const GET: RequestHandler = async (event) => {
 			});
 		}
 
-		// Get the image as a Blob
-		const image = await res.blob();
-
-		// Create a Response to pass the image back
-		return new Response(image, {
-			status: res.status,
-			headers: {
-				'Content-Type': res.headers.get('Content-Type') || 'image/jpeg'
-			}
-		});
+		// Pass the image through as a stream instead of holding the whole file in memory.
+		// An asset id always maps to the same bytes, so the browser may keep its own copy for an
+		// hour. Never a shared cache, and Vary: Cookie stops one account's cached photo being shown
+		// to another account on the same browser.
+		const headers: Record<string, string> = {
+			'Content-Type': res.headers.get('Content-Type') || 'image/jpeg',
+			'Cache-Control': 'private, max-age=3600',
+			Vary: 'Cookie'
+		};
+		const contentLength = res.headers.get('Content-Length');
+		if (contentLength) headers['Content-Length'] = contentLength;
+		return new Response(res.body, { status: res.status, headers });
 	} catch (error) {
 		console.error('Error proxying request:', error);
 		return new Response(JSON.stringify({ error: 'Failed to fetch image' }), {

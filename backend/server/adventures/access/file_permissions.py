@@ -94,8 +94,8 @@ def check_file_permission(fileId, user, mediaType, request=None):
         image_path = f"images/{fileId}"
         # Use filter() instead of get() to handle multiple ContentImage entries
         # pointing to the same file (e.g. after location duplication)
-        content_images = ContentImage.objects.filter(image=image_path)
-        if not content_images.exists():
+        content_images = list(ContentImage.objects.filter(image=image_path))
+        if not content_images:
             return False
         # Grant access if ANY associated content object permits it.
         return any(can_read_content_image(content_image, user, request) for content_image in content_images)
@@ -111,8 +111,8 @@ def check_file_permission(fileId, user, mediaType, request=None):
             return False
     elif mediaType == 'activities/':
         activity_path = f"activities/{fileId}"
-        activities = Activity.objects.filter(gpx_file=activity_path)
-        if not activities.exists():
+        activities = list(Activity.objects.filter(gpx_file=activity_path).select_related('visit'))
+        if not activities:
             return False
         for activity in activities:
             if activity.visit_id:

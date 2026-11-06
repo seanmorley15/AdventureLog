@@ -139,7 +139,9 @@ export async function proxyToDjango(event: RequestEvent) {
 	const isUnsafe = request.method !== 'GET' && request.method !== 'HEAD';
 
 	try {
-		// Bytes, not text: request.text() UTF-8-decodes and corrupts binary uploads.
+		// Bytes, not text: request.text() UTF-8-decodes and corrupts binary uploads. The request
+		// stays buffered (bounded by BODY_SIZE_LIMIT) because a stale CSRF token resends it below,
+		// and a stream can only be read once.
 		const body = isUnsafe ? await request.arrayBuffer() : undefined;
 		const send = (token: string) =>
 			fetch(targetUrl, {
@@ -177,12 +179,12 @@ export async function proxyToDjango(event: RequestEvent) {
 			});
 		}
 
-		const responseData = await response.arrayBuffer();
-
 		const cleanHeaders = new Headers(response.headers);
 		cleanHeaders.delete('set-cookie');
 
-		return new Response(responseData, {
+		// Stream the body through. Buffering it (arrayBuffer) held every export and download in
+		// memory, and glibc rarely gives that memory back, so the process stayed large.
+		return new Response(response.body, {
 			status: response.status,
 			headers: cleanHeaders
 		});

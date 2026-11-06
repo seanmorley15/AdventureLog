@@ -51,6 +51,7 @@ class ContentImage(models.Model):
         upload_to=PathAndRename('images/'),
         blank=True,
         null=True,
+        db_index=True,  # every protected image request looks the row up by path
     )
     immich_id = models.CharField(max_length=200, null=True, blank=True)
     is_primary = models.BooleanField(default=False)
@@ -104,7 +105,7 @@ class ContentAttachment(models.Model):
     """Generic attachment model that can be attached to any content type"""
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
-    file = models.FileField(upload_to=PathAndRename('attachments/'), validators=[validate_file_extension])
+    file = models.FileField(upload_to=PathAndRename('attachments/'), validators=[validate_file_extension], db_index=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     
     # Generic foreign key fields

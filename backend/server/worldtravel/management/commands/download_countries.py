@@ -8,7 +8,7 @@ import gc
 import tempfile
 import sqlite3
 from contextlib import contextmanager
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
 from django.core.files.storage import default_storage
 
 from django.conf import settings
@@ -101,6 +101,43 @@ class Command(BaseCommand):
             except OSError:
                 pass
 
+    def _download_json(self, storage_path):
+        """Stream the dataset (~45 MB) to a temp file, then store it. Returns False if the download fails.
+
+        Nothing reaches storage unless the whole file arrived, and the file is never held in memory.
+        """
+        url = (
+            'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/'
+            f'{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json'
+        )
+        try:
+            with requests.get(url, stream=True, timeout=(10, 60)) as res, tempfile.TemporaryFile() as tmp:
+                if res.status_code != 200:
+                    return False
+                for chunk in res.iter_content(chunk_size=1024 * 1024):
+                    tmp.write(chunk)
+                tmp.seek(0)
+                default_storage.save(storage_path, File(tmp))
+        except requests.RequestException:
+            return False
+        return True
+
+    def _remove_old_json(self, current_path):
+        """Delete datasets from earlier versions; each is ~45 MB and nothing reads them again."""
+        try:
+            _, names = default_storage.listdir('')
+        except Exception:
+            return  # A storage that cannot list files just keeps them.
+        for name in names:
+            is_old_dataset = name == 'countries_states_cities.json' or (
+                name.startswith('countries+regions+states-') and name.endswith('.json')
+            )
+            if is_old_dataset and name != current_path:
+                try:
+                    default_storage.delete(name)
+                except Exception:
+                    pass
+
     def handle(self, **options):
         force = options['force']
         batch_size = options['batch_size']
@@ -111,13 +148,11 @@ class Command(BaseCommand):
             self.stdout.write('Downloading JSON file...')
             if force and default_storage.exists(countries_json_path):
                 default_storage.delete(countries_json_path)
-            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
-            if res.status_code == 200:
-                default_storage.save(countries_json_path, ContentFile(res.content))
-                self.stdout.write(self.style.SUCCESS('JSON file downloaded successfully'))
-            else:
+            if not self._download_json(countries_json_path):
                 self.stdout.write(self.style.ERROR('Error downloading JSON file'))
                 return
+            self.stdout.write(self.style.SUCCESS('JSON file downloaded successfully'))
+            self._remove_old_json(countries_json_path)
         elif default_storage.size(countries_json_path) == 0:
             self.stdout.write(self.style.ERROR('JSON file is empty'))
             return

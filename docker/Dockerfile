@@ -49,6 +49,9 @@ FROM python:3.13-slim AS backend-runtime
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
+# glibc opens up to 8 malloc arenas per core for threaded programs and rarely gives the memory
+# back, so RSS only grows after heavy requests. Two arenas keeps threads fast and memory flat.
+ENV MALLOC_ARENA_MAX=2
 WORKDIR /code
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
@@ -78,6 +81,10 @@ LABEL org.opencontainers.image.title="AdventureLog Frontend" \
       org.opencontainers.image.licenses="GPL-3.0"
 WORKDIR /app
 ENV NODE_ENV=production
+# V8 sizes its heap from the host's memory and collects lazily, so an idle SSR server keeps
+# far more than it needs. Override NODE_OPTIONS to raise the cap for very large collections.
+ENV NODE_OPTIONS=--max-old-space-size=256
+ENV MALLOC_ARENA_MAX=2
 COPY --from=frontend-build /app/build ./build
 COPY --from=frontend-build /app/node_modules ./node_modules
 COPY --from=frontend-build /app/package.json ./package.json

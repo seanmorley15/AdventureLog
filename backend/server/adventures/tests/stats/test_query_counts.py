@@ -12,7 +12,7 @@ from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
-from adventures.models import Activity, Category, Collection, Location, Lodging, Note, Visit, CollectionItineraryItem, ContentAttachment, ContentImage, Transportation
+from adventures.models import Activity, Category, Collection, CollectionItineraryDay, Location, Lodging, Note, Visit, CollectionItineraryItem, ContentAttachment, ContentImage, Transportation
 from adventures.serializers import TransportationSerializer
 from adventures.services.day_plan import convert_collection, get_day_by_index, place_object
 from adventures.tests.base import make_user
@@ -332,3 +332,67 @@ class CurrentUserCountsTests(APITestCase):
         body = self.client.get('/api/account/').json()
         self.assertEqual(body['pending_invite_count'], 1)
         self.assertEqual(body['unread_comment_count'], 0)
+
+
+class ActivityListQueryTests(QueryCountTestBase):
+    """The activities list reads the owner, day and promoted copy of every row."""
+
+    def add_activities(self, trip, count, offset=0):
+        place = Location.objects.create(user=self.user, name='Trailhead')
+        for index in range(count):
+            n = offset + index
+            day = CollectionItineraryDay.objects.create(collection=trip, date=date(2026, 6, 1) + timedelta(days=n), index=n + 1)
+            visit = Visit.objects.create(location=place, start_date=timezone.now(), end_date=timezone.now())
+            copy = Activity.objects.create(user=self.user, visit=visit, name=f'Logged {n}')
+            Activity.objects.create(user=self.user, day=day, name=f'Hike {n}', promoted_activity=copy)
+            Activity.objects.create(user=self.user, visit=visit, name=f'Run {n}')
+
+    def test_listing_activities_does_not_query_once_per_activity(self):
+        trip = Collection.objects.create(user=self.user, name='Trip')
+        self.add_activities(trip, 2)
+        self.client.get('/api/activities/')
+        few, response = count_queries(lambda: self.client.get('/api/activities/'))
+        self.assertEqual(response.status_code, 200)
+        rows_few = len(response.json())
+
+        self.add_activities(trip, 6, offset=2)
+        cache.clear()
+        self.client.get('/api/activities/')
+        many, response = count_queries(lambda: self.client.get('/api/activities/'))
+        self.assertGreater(len(response.json()), rows_few)
+        self.assertEqual(few, many)
+
+
+class LocationDetailQueryTests(QueryCountTestBase):
+    """A location page shows its photos, files, trails and visits; none may cost a query each."""
+
+    def setUp(self):
+        super().setUp()
+        media_root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media_root, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media_root)
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def add_content(self, place, count):
+        from adventures.tests.factories import _attachment, _image
+
+        for index in range(count):
+            _image(self.user, place, name=f'photo-{place.images.count()}-{index}.png')
+            _attachment(self.user, place, f'notes-{place.attachments.count()}-{index}')
+            visit = Visit.objects.create(location=place, start_date=timezone.now(), end_date=timezone.now())
+            Activity.objects.create(user=self.user, visit=visit, name=f'Walk {index}')
+
+    def test_location_detail_does_not_query_once_per_related_row(self):
+        place = Location.objects.create(user=self.user, name='Old town')
+        self.add_content(place, 1)
+        url = f'/api/locations/{place.id}/'
+        self.client.get(url)
+        few, response = count_queries(lambda: self.client.get(url))
+        self.assertEqual(response.status_code, 200)
+
+        self.add_content(place, 5)
+        self.client.get(url)
+        many, response = count_queries(lambda: self.client.get(url))
+        self.assertEqual(len(response.json()['images']), 6)
+        self.assertEqual(few, many)

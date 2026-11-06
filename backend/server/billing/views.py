@@ -1,7 +1,6 @@
 from datetime import datetime, timezone as dt_timezone
 import logging
 
-import stripe
 from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -16,7 +15,11 @@ from rest_framework.views import APIView
 
 from cloud.utils import get_or_create_subscription
 from core.exceptions import APIError
+from core.lazy import lazy_module
 from .models import StripeWebhookEvent, Subscription
+
+# stripe costs ~40 MB and ~3 s to import; load it only when billing code actually runs.
+stripe = lazy_module('stripe')
 
 logger = logging.getLogger(__name__)
 

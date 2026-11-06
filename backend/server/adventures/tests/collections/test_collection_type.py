@@ -2,7 +2,7 @@ import importlib
 import io
 import json
 import zipfile
-from datetime import date
+from datetime import date, timedelta
 
 from django.apps import apps
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -112,8 +112,9 @@ class CollectionTypeApiTests(APITestCase):
             {
                 'name': 'Weekend',
                 'type': 'trip',
-                'start_date': '2026-11-01',
-                'end_date': '2026-11-03',
+                # Relative to today: fixed dates turn 'upcoming' into 'completed' once they pass.
+                'start_date': (date.today() + timedelta(days=30)).isoformat(),
+                'end_date': (date.today() + timedelta(days=32)).isoformat(),
             },
             format='json',
         )
@@ -384,3 +385,9 @@ class CollectionTypeBackupTests(APITestCase):
         self.assertEqual(collection.type, 'folder')
         self.assertEqual(collection.start_date, date(2025, 1, 1))
         self.assertEqual(collection.end_date, date(2025, 1, 3))
+
+
+class AnonymousCollectionListTests(APITestCase):
+    def test_listing_collections_without_signing_in_is_401(self):
+        response = self.client.get('/api/collections/')
+        self.assertEqual(response.status_code, 401, response.content)

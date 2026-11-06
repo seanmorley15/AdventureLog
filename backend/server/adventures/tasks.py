@@ -17,16 +17,6 @@ from django.core.management import call_command
 from procrastinate import RetryStrategy
 from procrastinate.contrib.django import app
 
-from adventures.services.backup import (
-    LINK_EXISTING_LOCATIONS,
-    BackupError,
-    BackupExporter,
-    account_backup_filename,
-    build_archive_file,
-    collection_archive_filename,
-    restore_account_backup,
-    restore_collection_archive,
-)
 from core.errors import ServiceError
 from jobs.registry import job_task
 from jobs.storage import open_input, save_result_file
@@ -102,6 +92,8 @@ ZIP = 'application/zip'
 @job_task('account_export')
 def account_export(job):
     """Everything the user owns, as one zip."""
+    from adventures.services.backup import BackupExporter, account_backup_filename, build_archive_file
+
     with build_archive_file(BackupExporter(job.user)) as archive:
         save_result_file(job, archive, account_backup_filename(job.user), ZIP)
 
@@ -110,6 +102,7 @@ def account_export(job):
 def collection_archive_export(job):
     """One collection and what belongs to it, as a zip."""
     from adventures.models import Collection
+    from adventures.services.backup import BackupExporter, build_archive_file, collection_archive_filename
 
     collection = Collection.objects.get(pk=job.params['collection_id'])
     with build_archive_file(BackupExporter(job.user, collection)) as archive:
@@ -129,6 +122,8 @@ def collection_pdf_export(job):
 @job_task('account_restore', needs_input=True)
 def account_restore(job):
     """Replace the user's account with a backup. All or nothing: a failure rolls everything back."""
+    from adventures.services.backup import BackupError, restore_account_backup
+
     with open_input(job) as upload:
         try:
             summary = restore_account_backup(upload, job.user)
@@ -146,6 +141,8 @@ def account_restore(job):
 @job_task('collection_import', needs_input=True)
 def collection_import(job):
     """Add the collection in an archive to the user's account."""
+    from adventures.services.backup import LINK_EXISTING_LOCATIONS, BackupError, restore_collection_archive
+
     with open_input(job) as upload:
         try:
             result = restore_collection_archive(

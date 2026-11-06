@@ -61,6 +61,8 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `DJANGO_ADMIN_EMAIL` | Yes | First-boot superuser email. | `admin@example.com` |
 | `GUNICORN_WORKERS` | No | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers. | `2` |
 | `GUNICORN_THREADS` | No | Threads per Gunicorn worker. Each thread holds its own database connection. | `4` |
+| `GUNICORN_TIMEOUT` | No | Seconds a Gunicorn worker may spend on one request before it is restarted. | `120` |
+| `GUNICORN_MAX_REQUESTS` | No | Requests after which a Gunicorn worker is restarted, so memory grown by a heavy request is returned. `0` never restarts. Each restart can fail one in-flight request, so keep it high. | `10000` |
 | `WORKER_ENABLED` | No | Set to `false` to idle the [background worker](background_jobs.md) in this container. | `true` |
 | `WORKER_CONCURRENCY` | No | Background jobs the worker runs at the same time. | `3` |
 | `JOB_RESULT_TTL_HOURS` | No | Hours a finished export stays downloadable. | `24` |

@@ -73,14 +73,22 @@ class ActivityViewSet(viewsets.ModelViewSet):
         day_filter = member_collections_q(self.request, 'day__collection__')
         day_filter |= member_collections_q(self.request, 'collection__')
         if not authenticated:
-            return Activity.objects.filter(day_filter).distinct()
+            return self._with_related(Activity.objects.filter(day_filter)).distinct()
 
         # Place activities, through the visit's location.
         location_filter = Q(visit__location__user=user)
         location_filter |= Q(visit__location__collections__shared_with=user)
         location_filter |= Q(visit__location__collections__user=user)
 
-        return Activity.objects.filter(location_filter | day_filter).distinct()
+        return self._with_related(Activity.objects.filter(location_filter | day_filter)).distinct()
+
+    @staticmethod
+    def _with_related(queryset):
+        """Load what ActivitySerializer reads per row (owner, day index, promoted copy's visit).
+
+        Without this each activity in a list costs up to three more queries.
+        """
+        return queryset.select_related('user', 'day', 'promoted_activity__visit')
 
     def _storage_owner(self, visit, day, ideas):
         if day is not None:
