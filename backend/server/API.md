@@ -187,8 +187,11 @@ the request is then safe:
 | used by a record the requester cannot see | `409 conflict`. |
 | not a UUID | `400 validation_error`. |
 
-A visit cannot be created together with its location (`POST /api/locations/` does not take `visits`), so a client
-that creates both sends two requests, the location first.
+`POST /api/locations/` accepts an optional `visits` list to create a place and its visits in one request.
+Nested visits do not need a `location`: the new place is their parent. Their `id` and `location` inputs are
+ignored on creation; the response includes their generated ids and parent. Retrying the location's
+client-chosen id returns the stored place and visits without creating them again. The standalone
+`POST /api/visits/` endpoint still requires `location`.
 
 ## Background jobs
 

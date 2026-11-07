@@ -45,6 +45,29 @@ print(response.json())
 
 List endpoints such as `/api/locations/` are paged: the response is `{"count", "next", "previous", "results"}`, and `next` is the address of the following page.
 
+### Create a location with visits
+
+Send a `visits` list to `POST /api/locations/` to create a location and its visits together:
+
+```bash
+curl https://your-adventurelog-instance.com/api/locations/ \
+  -H "X-API-Key: al_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Museum",
+    "visits": [{
+      "start_date": "2025-11-13T09:00:00+01:00",
+      "end_date": "2025-11-13T17:00:00+01:00",
+      "timezone": "Europe/Madrid",
+      "notes": "First visit"
+    }]
+  }'
+```
+
+Each nested visit belongs to the new location, so leave out its `id` and `location` fields. The response includes the saved visits with their generated IDs and parent location ID. If any visit is invalid or cannot be saved, the location and visits are not created.
+
+The `visits` list is optional and may be empty. To add a visit to an existing location, use `POST /api/visits/` with its `location` ID.
+
 ## Browse the API
 
 Every endpoint is documented at `https://your-adventurelog-instance.com/api/docs/` (Swagger UI), with a single-page version at `/api/docs/redoc/` and the OpenAPI document at `/api/schema/`. Click **Authorize** and paste your key to try requests from the page.

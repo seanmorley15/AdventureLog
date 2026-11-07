@@ -384,4 +384,4 @@ class LocationVisitSerializer(VisitSerializer):
     id = serializers.UUIDField(required=False)
 
     class Meta(VisitSerializer.Meta):
-        read_only_fields = ['created_at', 'updated_at']
+        read_only_fields = ['location', 'created_at', 'updated_at']
