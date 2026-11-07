@@ -14,7 +14,7 @@ export interface paths {
         /**
          * Get your account
          * @description Your profile plus what the app's header shows: how many collection invites are waiting
-         *             and how many comments you have not read. On hosted servers the subscription is included.
+         *     and how many comments you have not read. On hosted servers the subscription is included.
          */
         get: operations["account_retrieve"];
         put?: never;
@@ -22,8 +22,8 @@ export interface paths {
         /**
          * Delete your account
          * @description Permanently deletes the account and everything it owns. Send your username as
-         *             `confirmation`, and your `password` unless the account signs in only through a social
-         *             provider. On hosted servers the subscription is cancelled first. Ends the session.
+         *     `confirmation`, and your `password` unless the account signs in only through a social
+         *     provider. On hosted servers the subscription is cancelled first. Ends the session.
          */
         delete: operations["account_destroy"];
         options?: never;
@@ -47,14 +47,14 @@ export interface paths {
         /**
          * List your API keys
          * @description Each key shows its name and the first characters (`key_prefix`) so you can tell them
-         *             apart. The key itself is never shown again after it is created.
+         *     apart. The key itself is never shown again after it is created.
          */
         get: operations["account_api_keys_list"];
         put?: never;
         /**
          * Create an API key
          * @description The response carries the full `key` **once**. Store it now: only a hash is kept on the
-         *             server. Send it as `X-API-Key: <key>` or `Authorization: Api-Key <key>`.
+         *     server. Send it as `X-API-Key: <key>` or `Authorization: Api-Key <key>`.
          */
         post: operations["account_api_keys_create"];
         delete?: never;
@@ -90,7 +90,7 @@ export interface paths {
         /**
          * Get your media storage use
          * @description Bytes and file counts for images, attachments and profile pictures, and the storage
-         *             limit (`null` when the server sets none).
+         *     limit (`null` when the server sets none).
          */
         get: operations["account_media_usage"];
         put?: never;
@@ -113,7 +113,7 @@ export interface paths {
         /**
          * Turn off password sign-in
          * @description Only for accounts with a linked social provider, which then becomes the only way to sign
-         *             in. Answers `400 no_social_account` otherwise.
+         *     in. Answers `400 no_social_account` otherwise.
          */
         post: operations["account_disable_password_login"];
         delete?: never;
@@ -215,7 +215,7 @@ export interface paths {
         /**
          * Log a day activity as a visit
          * @description Copies a trip-day activity onto the visit of one location stop on that day (creating
-         *             the visit when needed). The day activity stays on the day.
+         *     the visit when needed). The day activity stays on the day.
          */
         post: operations["activities_log_visit"];
         delete?: never;
@@ -290,7 +290,7 @@ export interface paths {
         /**
          * Get the sign-in configuration
          * @description Whether sign-up is open, the password rules, optional terms and privacy links to show on
-         *             sign-up, and the social providers people can sign in with.
+         *     sign-up, and the social providers people can sign in with.
          */
         get: operations["auth_config_retrieve"];
         put?: never;
@@ -311,8 +311,8 @@ export interface paths {
         /**
          * Get a CSRF token
          * @description Only needed with session (cookie) authentication: send the token as `X-CSRFToken` on
-         *             every request that changes data. Also sets the `csrftoken` cookie. API-key requests do
-         *             not need it.
+         *     every request that changes data. Also sets the `csrftoken` cookie. API-key requests do
+         *     not need it.
          */
         get: operations["auth_csrf_retrieve"];
         put?: never;
@@ -333,9 +333,9 @@ export interface paths {
         /**
          * Check an invitation
          * @description Whether an email invitation can be used to sign up, and the email it was sent to.
-         *             When it can, the email is remembered in the session so the sign-up that follows is
-         *             tied to the invitation. Unusable invites still answer 200 with `valid: false` and a
-         *             `message`.
+         *     When it can, the email is remembered in the session so the sign-up that follows is
+         *     tied to the invitation. Unusable invites still answer 200 with `valid: false` and a
+         *     `message`.
          */
         get: operations["auth_invitations_retrieve"];
         put?: never;
@@ -358,10 +358,10 @@ export interface paths {
         /**
          * Exchange a mobile sign-in code for a session token
          * @description The last step of signing in to the mobile app with a provider (OIDC, GitHub...). The
-         *             code arrives in the app's redirect URI; `code_verifier` is the secret whose SHA-256 the
-         *             app sent as `code_challenge`. A code works once and for one minute, and any failed
-         *             attempt spends it. The response matches the other app sign-in responses: send
-         *             `meta.session_token` as `X-Session-Token`.
+         *     code arrives in the app's redirect URI; `code_verifier` is the secret whose SHA-256 the
+         *     app sent as `code_challenge`. A code works once and for one minute, and any failed
+         *     attempt spends it. The response matches the other app sign-in responses: send
+         *     `meta.session_token` as `X-Session-Token`.
          */
         post: operations["auth_mobile_token_create"];
         delete?: never;
@@ -380,22 +380,22 @@ export interface paths {
         /**
          * Export your account
          * @description A zip file with every record you own and their media, in a format that
-         *             `POST /api/backup/import/` restores, also on another server.
+         *     `POST /api/backup/import/` restores, also on another server.
          *
-         *             `POST` starts the export in the background and answers `202` with a job. Poll
-         *             `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
-         *             during the request, which can time out for a large account.
+         *     `POST` starts the export in the background and answers `202` with a job. Poll
+         *     `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
+         *     during the request, which can time out for a large account.
          */
         get: operations["backup_export"];
         put?: never;
         /**
          * Export your account
          * @description A zip file with every record you own and their media, in a format that
-         *             `POST /api/backup/import/` restores, also on another server.
+         *     `POST /api/backup/import/` restores, also on another server.
          *
-         *             `POST` starts the export in the background and answers `202` with a job. Poll
-         *             `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
-         *             during the request, which can time out for a large account.
+         *     `POST` starts the export in the background and answers `202` with a job. Poll
+         *     `GET /api/jobs/{id}/` and download the file from its `download_url`. `GET` builds the file
+         *     during the request, which can time out for a large account.
          */
         post: operations["backup_export_start"];
         delete?: never;
@@ -416,11 +416,11 @@ export interface paths {
         /**
          * Restore your account from a backup
          * @description **Deletes everything in your account**, then loads the backup. Send `confirm=yes`. The
-         *             response counts what was restored.
+         *     response counts what was restored.
          *
-         *             Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
-         *             and the counts are in the job's `result.summary` when it succeeds. Nothing is deleted if
-         *             the file turns out not to be usable.
+         *     Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
+         *     and the counts are in the job's `result.summary` when it succeeds. Nothing is deleted if
+         *     the file turns out not to be usable.
          */
         post: operations["backup_import_data"];
         delete?: never;
@@ -441,7 +441,7 @@ export interface paths {
         /**
          * Start a subscription checkout
          * @description Hosted servers only. Creates a Stripe Checkout session and returns its URL. A trial that
-         *             has not ended carries over.
+         *     has not ended carries over.
          */
         post: operations["billing_checkout_session_create"];
         delete?: never;
@@ -462,7 +462,7 @@ export interface paths {
         /**
          * Open the billing portal
          * @description Hosted servers only. Returns a Stripe Customer Portal URL where the subscription can be
-         *             changed or cancelled.
+         *     changed or cancelled.
          */
         post: operations["billing_portal_session_create"];
         delete?: never;
@@ -483,7 +483,7 @@ export interface paths {
         /**
          * Receive a Stripe event
          * @description Called by Stripe, not by clients. The `Stripe-Signature` header is verified with the
-         *             webhook secret, and each event is applied once.
+         *     webhook secret, and each event is applied once.
          */
         post: operations["billing_webhooks_stripe_create"];
         delete?: never;
@@ -502,7 +502,7 @@ export interface paths {
         /**
          * List calendar events
          * @description Your dated records as events, sorted by start. Limit them to a date range with `start`
-         *             and `end`, and to some kinds with `types`.
+         *     and `end`, and to some kinds with `types`.
          */
         get: operations["calendar_events"];
         put?: never;
@@ -596,7 +596,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List your records of this kind, newest change first. With `collection`, list the ones         in that collection instead, including records other members added. */
+        /** List your records of this kind, newest change first. With `collection`, list the ones in that collection instead, including records other members added. */
         get: operations["checklists_list"];
         put?: never;
         /**
@@ -667,7 +667,7 @@ export interface paths {
         /**
          * List collections
          * @description Your collections, or with `membership=shared` the ones shared with you, a page at a
-         *             time, as cards (no records inside).
+         *     time, as cards (no records inside).
          */
         get: operations["collections_list"];
         put?: never;
@@ -692,7 +692,7 @@ export interface paths {
         /**
          * Get the activity feed
          * @description What changed in the collection and who did it, newest first. For the owner and
-         *             editors; only the owner sees membership changes. Viewers get 403.
+         *     editors; only the owner sees membership changes. Viewers get 403.
          */
         get: operations["collections_activity_list"];
         put?: never;
@@ -719,7 +719,7 @@ export interface paths {
         /**
          * Post a comment
          * @description Replies are one level deep: a reply to a reply joins the same thread. Mentioned
-         *             members are notified by email.
+         *     members are notified by email.
          */
         post: operations["collections_comments_create"];
         delete?: never;
@@ -741,7 +741,7 @@ export interface paths {
         /**
          * Add a day
          * @description Inserts a day at `position` (later days move up by one), or at the end. Answers with
-         *             the plan and the new day's id.
+         *     the plan and the new day's id.
          */
         post: operations["collections_days_create"];
         delete?: never;
@@ -763,7 +763,7 @@ export interface paths {
         /**
          * Delete a day
          * @description Later days move down by one. The day's stops go to `destination`. Answers with the
-         *             plan (not 204), like the other day changes.
+         *     plan (not 204), like the other day changes.
          */
         delete: operations["collections_days_destroy"];
         options?: never;
@@ -871,8 +871,8 @@ export interface paths {
         /**
          * Place a record in the plan
          * @description Day-based trips place it on `day_index` (or the day with `date`), across the trip with
-         *             `is_global`, or in Ideas. Placing a lodging or transportation sets its dates from the
-         *             day; placing a location never creates a visit.
+         *     `is_global`, or in Ideas. Placing a lodging or transportation sets its dates from the
+         *     day; placing a location never creates a visit.
          */
         post: operations["collections_itinerary_items_create"];
         delete?: never;
@@ -907,8 +907,8 @@ export interface paths {
         /**
          * Move or change an itinerary item
          * @description Sending `day_index`, `is_global`, `order` or `span_end_index` moves it (the other items
-         *             close up). `is_optional`, `start_time`, `end_time` and `timezone` change it in place;
-         *             times on a lodging or transportation also change its dates.
+         *     close up). `is_optional`, `start_time`, `end_time` and `timezone` change it in place;
+         *     times on a lodging or transportation also change its dates.
          */
         patch: operations["collections_itinerary_items_partial_update"];
         trace?: never;
@@ -925,7 +925,7 @@ export interface paths {
         /**
          * Log a stop as visited
          * @description Creates one visit to the location for this stop's day, or returns the one it already
-         *             logged.
+         *     logged.
          */
         post: operations["itinerary_items_log_visit"];
         delete?: never;
@@ -946,7 +946,7 @@ export interface paths {
         /**
          * Fill the plan from dates
          * @description For trips still keyed by date: places every dated record of the collection on its
-         *             date. Day-based trips answer `400 day_based`.
+         *     date. Day-based trips answer `400 day_based`.
          */
         post: operations["itinerary_auto_generate"];
         delete?: never;
@@ -967,7 +967,7 @@ export interface paths {
         /**
          * Change the trip's length
          * @description Sets the number of days and, optionally, the start date (null makes the trip undated).
-         *             Stops on days that are removed go to `destination`. The end date follows.
+         *     Stops on days that are removed go to `destination`. The end date follows.
          */
         post: operations["itinerary_duration"];
         delete?: never;
@@ -1008,7 +1008,7 @@ export interface paths {
         /**
          * Reorder items
          * @description Moves many items at once, e.g. after a drag and drop. Lodging and transportation dates
-         *             move with their placements.
+         *     move with their placements.
          */
         post: operations["itinerary_reorder"];
         delete?: never;
@@ -1029,7 +1029,7 @@ export interface paths {
         /**
          * Move the trip's dates
          * @description Shifts a dated trip by `days`, or to a new `start_date`. Days, order and times stay;
-         *             visits already logged do not move.
+         *     visits already logged do not move.
          */
         post: operations["itinerary_shift"];
         delete?: never;
@@ -1048,8 +1048,8 @@ export interface paths {
         /**
          * Get a collection
          * @description Members get the whole collection with its records and day plan. Anyone else who can
-         *             read it (a public or unlisted story, or a guest link with `X-Guest-Token`) gets the
-         *             story instead. Members can ask for the story with `as=story` to preview it.
+         *     read it (a public or unlisted story, or a guest link with `X-Guest-Token`) gets the
+         *     story instead. Members can ask for the story with `as=story` to preview it.
          */
         get: operations["collections_retrieve"];
         /**
@@ -1082,20 +1082,20 @@ export interface paths {
         /**
          * Download as a zip archive
          * @description Owner only. The collection and everything in it, with media, for
-         *             `POST /api/collections/import/` on this or another server.
+         *     `POST /api/collections/import/` on this or another server.
          *
-         *             `POST` builds it in the background and answers `202` with a job. Poll
-         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
+         *     `POST` builds it in the background and answers `202` with a job. Poll
+         *     `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         get: operations["collections_archive"];
         put?: never;
         /**
          * Download as a zip archive
          * @description Owner only. The collection and everything in it, with media, for
-         *             `POST /api/collections/import/` on this or another server.
+         *     `POST /api/collections/import/` on this or another server.
          *
-         *             `POST` builds it in the background and answers `202` with a job. Poll
-         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
+         *     `POST` builds it in the background and answers `202` with a job. Poll
+         *     `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         post: operations["collections_archive_start"];
         delete?: never;
@@ -1116,7 +1116,7 @@ export interface paths {
         /**
          * Copy a collection
          * @description Owner only. Makes a private copy with everything in it and its day plan, without the
-         *             members or guest links.
+         *     members or guest links.
          */
         post: operations["collections_duplicate"];
         delete?: never;
@@ -1137,8 +1137,8 @@ export interface paths {
         /**
          * Create a guest link
          * @description Owner only. Anyone with the link can open the collection without an account, as an
-         *             `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
-         *             settings with the new link's `token`.
+         *     `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
+         *     settings with the new link's `token`.
          */
         post: operations["collections_create_guest_link"];
         delete?: never;
@@ -1216,7 +1216,7 @@ export interface paths {
         /**
          * Invite someone
          * @description Owner only. Invites a user with a public profile as an `editor` or `viewer`. They join
-         *             when they accept. Returns the updated sharing settings.
+         *     when they accept. Returns the updated sharing settings.
          */
         post: operations["collections_create_invite"];
         delete?: never;
@@ -1296,20 +1296,20 @@ export interface paths {
         /**
          * Download as PDF
          * @description A printable day-by-day itinerary. Members get the whole plan; public readers get what
-         *             the story shows.
+         *     the story shows.
          *
-         *             `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
-         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
+         *     `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
+         *     `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         get: operations["collections_pdf"];
         put?: never;
         /**
          * Download as PDF
          * @description A printable day-by-day itinerary. Members get the whole plan; public readers get what
-         *             the story shows.
+         *     the story shows.
          *
-         *             `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
-         *             `GET /api/jobs/{id}/` and download the file from its `download_url`.
+         *     `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
+         *     `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         post: operations["collections_pdf_start"];
         delete?: never;
@@ -1328,7 +1328,7 @@ export interface paths {
         /**
          * Get a share card
          * @description A branded PNG for social media with the cover photo, name, dates and a link. Public
-         *             collections can be fetched without signing in.
+         *     collections can be fetched without signing in.
          */
         get: operations["collections_share_image"];
         put?: never;
@@ -1349,7 +1349,7 @@ export interface paths {
         /**
          * Find people to invite
          * @description Users with a public profile who are not the owner, a member, or already invited.
-         *             Search with `q`; a `q` of one character returns nothing.
+         *     Search with `q`; a `q` of one character returns nothing.
          */
         get: operations["collections_shareable_users"];
         put?: never;
@@ -1370,7 +1370,7 @@ export interface paths {
         /**
          * Get the sharing settings
          * @description Owner only. Members and their roles, invites waiting for an answer, guest links, and
-         *             the public story settings.
+         *     the public story settings.
          */
         get: operations["collections_sharing"];
         put?: never;
@@ -1393,11 +1393,11 @@ export interface paths {
         /**
          * Import a collection
          * @description Adds the collection in an archive from `GET /api/collections/{id}/archive/` to your
-         *             account, next to what you have. `existing_locations` decides what happens to places
-         *             you already have.
+         *     account, next to what you have. `existing_locations` decides what happens to places
+         *     you already have.
          *
-         *             Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
-         *             and its `result` has the new `collection_id` and a `summary` when it succeeds.
+         *     Send `Prefer: respond-async` to run it in the background: the answer is `202` with a job,
+         *     and its `result` has the new `collection_id` and a `summary` when it succeeds.
          */
         post: operations["collections_import_collection"];
         delete?: never;
@@ -1460,8 +1460,8 @@ export interface paths {
         /**
          * Get your comment inbox
          * @description New comments on the plans of collections you belong to and on the stories you own,
-         *             newest first, without your own. `unread_count` counts those since you last marked
-         *             the inbox seen.
+         *     newest first, without your own. `unread_count` counts those since you last marked
+         *     the inbox seen.
          */
         get: operations["comments_inbox"];
         put?: never;
@@ -1556,7 +1556,7 @@ export interface paths {
         /**
          * Get the dashboard
          * @description Your stats, recently changed places, upcoming and current trips, upcoming events, and
-         *             how many invites are waiting.
+         *     how many invites are waiting.
          */
         get: operations["dashboard_retrieve"];
         put?: never;
@@ -1603,7 +1603,7 @@ export interface paths {
         /**
          * Add an image
          * @description Upload a file as `image` (multipart), or link a photo from your Immich server with
-         *             `immich_id`. The image belongs to the owner of the record it is added to.
+         *     `immich_id`. The image belongs to the owner of the record it is added to.
          */
         post: operations["images_create"];
         delete?: never;
@@ -1662,7 +1662,7 @@ export interface paths {
         /**
          * Make an image the primary one
          * @description The primary image is the cover of its record. The record's other images stop being
-         *             primary. Answers 400 `already_primary` when it already is.
+         *     primary. Answers 400 `already_primary` when it already is.
          */
         post: operations["images_toggle_primary"];
         delete?: never;
@@ -1683,8 +1683,8 @@ export interface paths {
         /**
          * Fetch a remote image
          * @description Downloads an image from a public web address and returns its bytes, so the browser can
-         *             use pictures from servers that do not allow cross-site requests. Only public internet
-         *             addresses are fetched.
+         *     use pictures from servers that do not allow cross-site requests. Only public internet
+         *     addresses are fetched.
          */
         post: operations["images_fetch_from_url"];
         delete?: never;
@@ -1705,11 +1705,11 @@ export interface paths {
         /**
          * Import images from web addresses
          * @description Downloads up to 10 images and attaches them to a record, for example pictures from
-         *             `GET /api/places/images/` or a place search. Each address gets its own entry in
-         *             `results`.
+         *     `GET /api/places/images/` or a place search. Each address gets its own entry in
+         *     `results`.
          *
-         *             Send `Prefer: respond-async` to download them in the background: the answer is `202` with
-         *             a job, and its `result` has `created_ids`, `results` and the counts when it succeeds.
+         *     Send `Prefer: respond-async` to download them in the background: the answer is `202` with
+         *     a job, and its `result` has `created_ids`, `results` and the counts when it succeeds.
          */
         post: operations["images_import_from_urls"];
         delete?: never;
@@ -1845,8 +1845,8 @@ export interface paths {
         /**
          * Connect Endurain
          * @description Signs in to your Endurain server with your username and password and keeps the tokens
-         *             it returns. When the account uses two-factor sign-in, answers 202 and you finish with
-         *             `mfa/`.
+         *     it returns. When the account uses two-factor sign-in, answers 202 and you finish with
+         *     `mfa/`.
          */
         post: operations["endurain_connect"];
         delete?: never;
@@ -1888,7 +1888,7 @@ export interface paths {
         /**
          * Connect Immich
          * @description Checks the address and API key against the server before saving. The key is never
-         *             returned.
+         *     returned.
          */
         post: operations["integrations_immich_create"];
         /**
@@ -1949,8 +1949,8 @@ export interface paths {
         /**
          * Show an Immich photo
          * @description Serves a photo from the owner's Immich server. Anyone who can see a record the photo
-         *             is on can load it, also without signing in for public records; the owner can load
-         *             any photo from their server.
+         *     is on can load it, also without signing in for public records; the owner can load
+         *     any photo from their server.
          */
         get: operations["immich_asset"];
         put?: never;
@@ -2008,7 +2008,7 @@ export interface paths {
         /**
          * List your Strava activities
          * @description Newest first, a page at a time, optionally between two dates. Strava's own paging:
-         *             there is no total count.
+         *     there is no total count.
          */
         get: operations["strava_activities"];
         put?: never;
@@ -2046,7 +2046,7 @@ export interface paths {
         /**
          * Start connecting Strava
          * @description Returns the Strava page where you approve access. Strava then sends the browser to
-         *             `callback/`, which finishes the connection.
+         *     `callback/`, which finishes the connection.
          */
         get: operations["strava_authorize"];
         put?: never;
@@ -2099,7 +2099,7 @@ export interface paths {
         /**
          * Change your Wanderer connection
          * @description Send what changes; leave out `api_key` to keep the current one. Checked again before
-         *             saving.
+         *     saving.
          */
         patch: operations["integrations_wanderer_partial_update"];
         trace?: never;
@@ -2114,7 +2114,7 @@ export interface paths {
         /**
          * List Wanderer trails
          * @description Query parameters (`filter`, `sort`, `page`, `perPage`, ...) are passed to Wanderer's
-         *             trail list as they are; the trail author is included.
+         *     trail list as they are; the trail author is included.
          */
         get: operations["wanderer_trails"];
         put?: never;
@@ -2155,7 +2155,7 @@ export interface paths {
         /**
          * Get a job
          * @description Poll this until `status` is `succeeded`, `failed` or `cancelled`. A succeeded job has a
-         *             `result` summary and, for exports, a `download_url`.
+         *     `result` summary and, for exports, a `download_url`.
          */
         get: operations["jobs_retrieve"];
         put?: never;
@@ -2163,7 +2163,7 @@ export interface paths {
         /**
          * Cancel or remove a job
          * @description A job that has not started is cancelled. A finished job is removed together with its
-         *             file. A running job cannot be stopped.
+         *     file. A running job cannot be stopped.
          */
         delete: operations["jobs_destroy"];
         options?: never;
@@ -2201,8 +2201,8 @@ export interface paths {
         /**
          * List your locations
          * @description The places you own, a page at a time, in a light form (no trails, files or GPS
-         *             tracks). Filter by category, visited status and whether they are in a collection.
-         *             Places in collections shared with you are listed with the collection.
+         *     tracks). Filter by category, visited status and whether they are in a collection.
+         *     Places in collections shared with you are listed with the collection.
          */
         get: operations["locations_list"];
         put?: never;
@@ -2259,7 +2259,7 @@ export interface paths {
         /**
          * List the location's collections
          * @description The collections the place is in, then the ones you could add it to, with what you are
-         *             allowed to do in each.
+         *     allowed to do in each.
          */
         get: operations["locations_collection_memberships"];
         put?: never;
@@ -2306,7 +2306,7 @@ export interface paths {
         /**
          * Copy a location
          * @description Copies a place you can see into your own account, with its photos, files and trails
-         *             but not its visits. Optionally puts the copy in a collection.
+         *     but not its visits. Optionally puts the copy in a collection.
          */
         post: operations["locations_duplicate"];
         delete?: never;
@@ -2325,7 +2325,7 @@ export interface paths {
         /**
          * Get a share card
          * @description A branded PNG for social media with the place's photo, name and a link. Public places
-         *             can be fetched without signing in.
+         *     can be fetched without signing in.
          */
         get: operations["locations_share_image"];
         put?: never;
@@ -2368,7 +2368,7 @@ export interface paths {
         /**
          * Find likely duplicates
          * @description Your existing locations that are probably the same place as one being added, by name
-         *             and distance, best match first.
+         *     and distance, best match first.
          */
         post: operations["locations_check_duplicates"];
         delete?: never;
@@ -2387,7 +2387,7 @@ export interface paths {
         /**
          * List map pins
          * @description Every location you own with just what a map needs: name, coordinates, category and
-         *             whether you have visited it.
+         *     whether you have visited it.
          */
         get: operations["locations_pins"];
         put?: never;
@@ -2410,9 +2410,9 @@ export interface paths {
         /**
          * Add a location from a map pin
          * @description Creates a location from a place picked on the map or from search, in one call: finds
-         *             the country, region and city, picks or creates the category, optionally adds it to a
-         *             collection and a trip day, and imports a few photos. Everything is undone if any
-         *             step fails.
+         *     the country, region and city, picks or creates the category, optionally adds it to a
+         *     collection and a trip day, and imports a few photos. Everything is undone if any
+         *     step fails.
          */
         post: operations["locations_quick_add"];
         delete?: never;
@@ -2431,8 +2431,8 @@ export interface paths {
         /**
          * Suggest your locations
          * @description Your own places for adding to a collection, a page at a time. With `q`, search by name.
-         *             With `collection`, places closest to the middle of that collection come first;
-         *             otherwise A to Z.
+         *     With `collection`, places closest to the middle of that collection come first;
+         *     otherwise A to Z.
          */
         get: operations["locations_suggest"];
         put?: never;
@@ -2450,7 +2450,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List your records of this kind, newest change first. With `collection`, list the ones         in that collection instead, including records other members added. */
+        /** List your records of this kind, newest change first. With `collection`, list the ones in that collection instead, including records other members added. */
         get: operations["lodgings_list"];
         put?: never;
         /**
@@ -2523,8 +2523,8 @@ export interface paths {
         /**
          * Add a stay from a map pin
          * @description Creates a lodging from a place picked on the map or from search, in one call: looks up
-         *             the address, optionally adds it to a collection and its itinerary, and imports up to a
-         *             few photos. Everything is undone if any step fails.
+         *     the address, optionally adds it to a collection and its itinerary, and imports up to a
+         *     few photos. Everything is undone if any step fails.
          */
         post: operations["lodgings_quick_add"];
         delete?: never;
@@ -2540,7 +2540,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List your records of this kind, newest change first. With `collection`, list the ones         in that collection instead, including records other members added. */
+        /** List your records of this kind, newest change first. With `collection`, list the ones in that collection instead, including records other members added. */
         get: operations["notes_list"];
         put?: never;
         /**
@@ -2611,7 +2611,7 @@ export interface paths {
         /**
          * Get a description
          * @description A short plain-text description of a place or topic from Wikipedia, or from Google's
-         *             place summary and reviews with `source=google`.
+         *     place summary and reviews with `source=google`.
          */
         get: operations["places_describe"];
         put?: never;
@@ -2652,7 +2652,7 @@ export interface paths {
         /**
          * Find pictures
          * @description Up to eight pictures of a place or topic from Wikipedia, for importing into a record
-         *             with `POST /api/images/import-from-urls/`.
+         *     with `POST /api/images/import-from-urls/`.
          */
         get: operations["places_images"];
         put?: never;
@@ -2673,7 +2673,7 @@ export interface paths {
         /**
          * Reverse geocode a point
          * @description The country, region and city at a point, matched to AdventureLog's world data, and
-         *             whether you have visited them.
+         *     whether you have visited them.
          */
         get: operations["places_reverse"];
         put?: never;
@@ -2694,7 +2694,7 @@ export interface paths {
         /**
          * Search for places
          * @description Finds places by name or address, or what is at a `lat,lon` point. When every provider
-         *             fails the answer is still 200, with no results and a `warning`.
+         *     fails the answer is still 200, with no results and a `warning`.
          */
         get: operations["places_search"];
         put?: never;
@@ -2715,8 +2715,8 @@ export interface paths {
         /**
          * Find recommendations nearby
          * @description Places to stay (`lodging`), eat (`food`) or see (`tourism`) within `radius` meters of a
-         *             point, ranked by quality and distance and de-duplicated across providers. Give the point
-         *             as `lat` and `lon`, or as a `location` name to look up first.
+         *     point, ranked by quality and distance and de-duplicated across providers. Give the point
+         *     as `lat` and `lon`, or as a `location` name to look up first.
          */
         get: operations["recommendations_list"];
         put?: never;
@@ -2794,7 +2794,7 @@ export interface paths {
         /**
          * Search everything
          * @description Locations, collections, lodging, transportation, notes, checklists, activities,
-         *             countries, regions, cities and people you can see, best matches first.
+         *     countries, regions, cities and people you can see, best matches first.
          */
         get: operations["search_list"];
         put?: never;
@@ -2905,7 +2905,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List your records of this kind, newest change first. With `collection`, list the ones         in that collection instead, including records other members added. */
+        /** List your records of this kind, newest change first. With `collection`, list the ones in that collection instead, including records other members added. */
         get: operations["transportations_list"];
         put?: never;
         /**
@@ -2996,7 +2996,7 @@ export interface paths {
         /**
          * Get a public profile
          * @description The user, their public locations, and their public collections. Private profiles are
-         *             404 to everyone but their owner.
+         *     404 to everyone but their owner.
          */
         get: operations["users_retrieve"];
         put?: never;
@@ -3017,7 +3017,7 @@ export interface paths {
         /**
          * Get a user's travel stats
          * @description Counts of places, trips, visited countries, regions and cities, and activity totals.
-         *             Available for public profiles and for yourself.
+         *     Available for public profiles and for yourself.
          */
         get: operations["users_stats_retrieve"];
         put?: never;
@@ -3136,7 +3136,7 @@ export interface paths {
         /**
          * Mark regions visited from your places
          * @description Marks the region and city of every location you have visited, using the place data
-         *             already stored, and returns the ones that were new.
+         *     already stored, and returns the ones that were new.
          */
         post: operations["visited_regions_sync_create"];
         delete?: never;
@@ -5017,7 +5017,7 @@ export interface components {
             readonly trails: components["schemas"]["Trail"][];
             /** Format: decimal */
             price?: string | null;
-            readonly price_currency: string | null;
+            readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         LocationDuplicateRequestRequest: {
             /**
@@ -5059,7 +5059,7 @@ export interface components {
             readonly user: unknown;
             /** Format: decimal */
             readonly price: string | null;
-            readonly price_currency: string | null;
+            readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
         };
         /** @description The ``images`` and ``attachments`` fields of records that carry photos and files. */
         LocationQuickAddResult: {
@@ -5095,7 +5095,7 @@ export interface components {
             readonly trails: components["schemas"]["Trail"][];
             /** Format: decimal */
             price?: string | null;
-            readonly price_currency: string | null;
+            readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
             /** @description Present when `itinerary_date` placed it on a day. */
             quick_add_itinerary_item?: components["schemas"]["CollectionItineraryItem"];
             /** @description Present when some photos failed to import. */
@@ -5143,7 +5143,7 @@ export interface components {
             notes?: string | null;
             readonly activities: components["schemas"]["Activity"][];
             /** Format: uuid */
-            location: string;
+            readonly location: string;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -5163,8 +5163,6 @@ export interface components {
             end_date?: string | null;
             timezone?: (components["schemas"]["TimezoneEnum"] | components["schemas"]["BlankEnum"] | components["schemas"]["NullEnum"]) | null;
             notes?: string | null;
-            /** Format: uuid */
-            location: string;
         };
         /** @description The ``images`` and ``attachments`` fields of records that carry photos and files. */
         Lodging: {
@@ -5187,7 +5185,7 @@ export interface components {
             reservation_number?: string | null;
             /** Format: decimal */
             price?: string | null;
-            readonly price_currency: string | null;
+            readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
             /** Format: double */
             latitude?: number | null;
             /** Format: double */
@@ -5226,7 +5224,7 @@ export interface components {
             reservation_number?: string | null;
             /** Format: decimal */
             price?: string | null;
-            readonly price_currency: string | null;
+            readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
             /** Format: double */
             latitude?: number | null;
             /** Format: double */
@@ -5871,6 +5869,317 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /**
+         * @description * `XUA` - ADB Unit of Account
+         *     * `AFN` - Afghan Afghani
+         *     * `AFA` - Afghan Afghani (1927–2002)
+         *     * `ALL` - Albanian Lek
+         *     * `ALK` - Albanian Lek (1946–1965)
+         *     * `DZD` - Algerian Dinar
+         *     * `ADP` - Andorran Peseta
+         *     * `AOA` - Angolan Kwanza
+         *     * `AOK` - Angolan Kwanza (1977–1991)
+         *     * `AON` - Angolan New Kwanza (1990–2000)
+         *     * `AOR` - Angolan Readjusted Kwanza (1995–1999)
+         *     * `ARA` - Argentine Austral
+         *     * `ARS` - Argentine Peso
+         *     * `ARM` - Argentine Peso (1881–1970)
+         *     * `ARP` - Argentine Peso (1983–1985)
+         *     * `ARL` - Argentine Peso Ley (1970–1983)
+         *     * `AMD` - Armenian Dram
+         *     * `AWG` - Aruban Florin
+         *     * `AUD` - Australian Dollar
+         *     * `ATS` - Austrian Schilling
+         *     * `AZN` - Azerbaijani Manat
+         *     * `AZM` - Azerbaijani Manat (1993–2006)
+         *     * `BSD` - Bahamian Dollar
+         *     * `BHD` - Bahraini Dinar
+         *     * `BDT` - Bangladeshi Taka
+         *     * `BBD` - Barbadian Dollar
+         *     * `BYN` - Belarusian Ruble
+         *     * `BYB` - Belarusian Ruble (1994–1999)
+         *     * `BYR` - Belarusian Ruble (2000–2016)
+         *     * `BEF` - Belgian Franc
+         *     * `BEC` - Belgian Franc (convertible)
+         *     * `BEL` - Belgian Franc (financial)
+         *     * `BZD` - Belize Dollar
+         *     * `BMD` - Bermudan Dollar
+         *     * `BTN` - Bhutanese Ngultrum
+         *     * `BOB` - Bolivian Boliviano
+         *     * `BOL` - Bolivian Boliviano (1863–1963)
+         *     * `BOV` - Bolivian Mvdol
+         *     * `BOP` - Bolivian Peso
+         *     * `VED` - Bolívar Soberano
+         *     * `BAM` - Bosnia-Herzegovina Convertible Mark
+         *     * `BAD` - Bosnia-Herzegovina Dinar (1992–1994)
+         *     * `BAN` - Bosnia-Herzegovina New Dinar (1994–1997)
+         *     * `BWP` - Botswanan Pula
+         *     * `BRC` - Brazilian Cruzado (1986–1989)
+         *     * `BRZ` - Brazilian Cruzeiro (1942–1967)
+         *     * `BRE` - Brazilian Cruzeiro (1990–1993)
+         *     * `BRR` - Brazilian Cruzeiro (1993–1994)
+         *     * `BRN` - Brazilian New Cruzado (1989–1990)
+         *     * `BRB` - Brazilian New Cruzeiro (1967–1986)
+         *     * `BRL` - Brazilian Real
+         *     * `GBP` - British Pound
+         *     * `BND` - Brunei Dollar
+         *     * `BGL` - Bulgarian Hard Lev
+         *     * `BGN` - Bulgarian Lev
+         *     * `BGO` - Bulgarian Lev (1879–1952)
+         *     * `BGM` - Bulgarian Socialist Lev
+         *     * `BUK` - Burmese Kyat
+         *     * `BIF` - Burundian Franc
+         *     * `XPF` - CFP Franc
+         *     * `KHR` - Cambodian Riel
+         *     * `CAD` - Canadian Dollar
+         *     * `CVE` - Cape Verdean Escudo
+         *     * `KYD` - Cayman Islands Dollar
+         *     * `XAF` - Central African CFA Franc
+         *     * `CLE` - Chilean Escudo
+         *     * `CLP` - Chilean Peso
+         *     * `CLF` - Chilean Unit of Account (UF)
+         *     * `CNX` - Chinese People’s Bank Dollar
+         *     * `CNY` - Chinese Yuan
+         *     * `CNH` - Chinese Yuan (offshore)
+         *     * `COP` - Colombian Peso
+         *     * `COU` - Colombian Real Value Unit
+         *     * `KMF` - Comorian Franc
+         *     * `CDF` - Congolese Franc
+         *     * `CRC` - Costa Rican Colón
+         *     * `HRD` - Croatian Dinar
+         *     * `HRK` - Croatian Kuna
+         *     * `CUC` - Cuban Convertible Peso
+         *     * `CUP` - Cuban Peso
+         *     * `CYP` - Cypriot Pound
+         *     * `CZK` - Czech Koruna
+         *     * `CSK` - Czechoslovak Hard Koruna
+         *     * `DKK` - Danish Krone
+         *     * `DJF` - Djiboutian Franc
+         *     * `DOP` - Dominican Peso
+         *     * `NLG` - Dutch Guilder
+         *     * `XCD` - East Caribbean Dollar
+         *     * `DDM` - East German Mark
+         *     * `ECS` - Ecuadorian Sucre
+         *     * `ECV` - Ecuadorian Unit of Constant Value
+         *     * `EGP` - Egyptian Pound
+         *     * `GQE` - Equatorial Guinean Ekwele
+         *     * `ERN` - Eritrean Nakfa
+         *     * `EEK` - Estonian Kroon
+         *     * `ETB` - Ethiopian Birr
+         *     * `EUR` - Euro
+         *     * `XBA` - European Composite Unit
+         *     * `XEU` - European Currency Unit
+         *     * `XBB` - European Monetary Unit
+         *     * `XBC` - European Unit of Account (XBC)
+         *     * `XBD` - European Unit of Account (XBD)
+         *     * `FKP` - Falkland Islands Pound
+         *     * `FJD` - Fijian Dollar
+         *     * `FIM` - Finnish Markka
+         *     * `FRF` - French Franc
+         *     * `XFO` - French Gold Franc
+         *     * `XFU` - French UIC-Franc
+         *     * `GMD` - Gambian Dalasi
+         *     * `GEK` - Georgian Kupon Larit
+         *     * `GEL` - Georgian Lari
+         *     * `DEM` - German Mark
+         *     * `GHS` - Ghanaian Cedi
+         *     * `GHC` - Ghanaian Cedi (1979–2007)
+         *     * `GIP` - Gibraltar Pound
+         *     * `XAU` - Gold
+         *     * `GRD` - Greek Drachma
+         *     * `GTQ` - Guatemalan Quetzal
+         *     * `GWP` - Guinea-Bissau Peso
+         *     * `GNF` - Guinean Franc
+         *     * `GNS` - Guinean Syli
+         *     * `GYD` - Guyanaese Dollar
+         *     * `HTG` - Haitian Gourde
+         *     * `HNL` - Honduran Lempira
+         *     * `HKD` - Hong Kong Dollar
+         *     * `HUF` - Hungarian Forint
+         *     * `IMP` - IMP
+         *     * `ISK` - Icelandic Króna
+         *     * `ISJ` - Icelandic Króna (1918–1981)
+         *     * `INR` - Indian Rupee
+         *     * `IDR` - Indonesian Rupiah
+         *     * `IRR` - Iranian Rial
+         *     * `IQD` - Iraqi Dinar
+         *     * `IEP` - Irish Pound
+         *     * `ILS` - Israeli New Shekel
+         *     * `ILP` - Israeli Pound
+         *     * `ILR` - Israeli Shekel (1980–1985)
+         *     * `ITL` - Italian Lira
+         *     * `JMD` - Jamaican Dollar
+         *     * `JPY` - Japanese Yen
+         *     * `JOD` - Jordanian Dinar
+         *     * `KZT` - Kazakhstani Tenge
+         *     * `KES` - Kenyan Shilling
+         *     * `KWD` - Kuwaiti Dinar
+         *     * `KGS` - Kyrgystani Som
+         *     * `LAK` - Laotian Kip
+         *     * `LVL` - Latvian Lats
+         *     * `LVR` - Latvian Ruble
+         *     * `LBP` - Lebanese Pound
+         *     * `LSL` - Lesotho Loti
+         *     * `LRD` - Liberian Dollar
+         *     * `LYD` - Libyan Dinar
+         *     * `LTL` - Lithuanian Litas
+         *     * `LTT` - Lithuanian Talonas
+         *     * `LUL` - Luxembourg Financial Franc
+         *     * `LUC` - Luxembourgian Convertible Franc
+         *     * `LUF` - Luxembourgian Franc
+         *     * `MOP` - Macanese Pataca
+         *     * `MKD` - Macedonian Denar
+         *     * `MKN` - Macedonian Denar (1992–1993)
+         *     * `MGA` - Malagasy Ariary
+         *     * `MGF` - Malagasy Franc
+         *     * `MWK` - Malawian Kwacha
+         *     * `MYR` - Malaysian Ringgit
+         *     * `MVR` - Maldivian Rufiyaa
+         *     * `MVP` - Maldivian Rupee (1947–1981)
+         *     * `MLF` - Malian Franc
+         *     * `MTL` - Maltese Lira
+         *     * `MTP` - Maltese Pound
+         *     * `MRU` - Mauritanian Ouguiya
+         *     * `MRO` - Mauritanian Ouguiya (1973–2017)
+         *     * `MUR` - Mauritian Rupee
+         *     * `MXV` - Mexican Investment Unit
+         *     * `MXN` - Mexican Peso
+         *     * `MXP` - Mexican Silver Peso (1861–1992)
+         *     * `MDC` - Moldovan Cupon
+         *     * `MDL` - Moldovan Leu
+         *     * `MCF` - Monegasque Franc
+         *     * `MNT` - Mongolian Tugrik
+         *     * `MAD` - Moroccan Dirham
+         *     * `MAF` - Moroccan Franc
+         *     * `MZE` - Mozambican Escudo
+         *     * `MZN` - Mozambican Metical
+         *     * `MZM` - Mozambican Metical (1980–2006)
+         *     * `MMK` - Myanmar Kyat
+         *     * `NAD` - Namibian Dollar
+         *     * `NPR` - Nepalese Rupee
+         *     * `ANG` - Netherlands Antillean Guilder
+         *     * `TWD` - New Taiwan Dollar
+         *     * `NZD` - New Zealand Dollar
+         *     * `NIO` - Nicaraguan Córdoba
+         *     * `NIC` - Nicaraguan Córdoba (1988–1991)
+         *     * `NGN` - Nigerian Naira
+         *     * `KPW` - North Korean Won
+         *     * `NOK` - Norwegian Krone
+         *     * `OMR` - Omani Rial
+         *     * `PKR` - Pakistani Rupee
+         *     * `XPD` - Palladium
+         *     * `PAB` - Panamanian Balboa
+         *     * `PGK` - Papua New Guinean Kina
+         *     * `PYG` - Paraguayan Guarani
+         *     * `PEI` - Peruvian Inti
+         *     * `PEN` - Peruvian Sol
+         *     * `PES` - Peruvian Sol (1863–1965)
+         *     * `PHP` - Philippine Peso
+         *     * `XPT` - Platinum
+         *     * `PLN` - Polish Zloty
+         *     * `PLZ` - Polish Zloty (1950–1995)
+         *     * `PTE` - Portuguese Escudo
+         *     * `GWE` - Portuguese Guinea Escudo
+         *     * `QAR` - Qatari Riyal
+         *     * `XRE` - RINET Funds
+         *     * `RHD` - Rhodesian Dollar
+         *     * `RON` - Romanian Leu
+         *     * `ROL` - Romanian Leu (1952–2006)
+         *     * `RUB` - Russian Ruble
+         *     * `RUR` - Russian Ruble (1991–1998)
+         *     * `RWF` - Rwandan Franc
+         *     * `SVC` - Salvadoran Colón
+         *     * `WST` - Samoan Tala
+         *     * `SAR` - Saudi Riyal
+         *     * `RSD` - Serbian Dinar
+         *     * `CSD` - Serbian Dinar (2002–2006)
+         *     * `SCR` - Seychellois Rupee
+         *     * `SLE` - Sierra Leonean Leone
+         *     * `SLL` - Sierra Leonean Leone (1964—2022)
+         *     * `XAG` - Silver
+         *     * `SGD` - Singapore Dollar
+         *     * `SKK` - Slovak Koruna
+         *     * `SIT` - Slovenian Tolar
+         *     * `SBD` - Solomon Islands Dollar
+         *     * `SOS` - Somali Shilling
+         *     * `ZAR` - South African Rand
+         *     * `ZAL` - South African Rand (financial)
+         *     * `KRH` - South Korean Hwan (1953–1962)
+         *     * `KRW` - South Korean Won
+         *     * `KRO` - South Korean Won (1945–1953)
+         *     * `SSP` - South Sudanese Pound
+         *     * `SUR` - Soviet Rouble
+         *     * `ESP` - Spanish Peseta
+         *     * `ESA` - Spanish Peseta (A account)
+         *     * `ESB` - Spanish Peseta (convertible account)
+         *     * `XDR` - Special Drawing Rights
+         *     * `LKR` - Sri Lankan Rupee
+         *     * `SHP` - St. Helena Pound
+         *     * `XSU` - Sucre
+         *     * `SDD` - Sudanese Dinar (1992–2007)
+         *     * `SDG` - Sudanese Pound
+         *     * `SDP` - Sudanese Pound (1957–1998)
+         *     * `SRD` - Surinamese Dollar
+         *     * `SRG` - Surinamese Guilder
+         *     * `SZL` - Swazi Lilangeni
+         *     * `SEK` - Swedish Krona
+         *     * `CHF` - Swiss Franc
+         *     * `SYP` - Syrian Pound
+         *     * `STN` - São Tomé & Príncipe Dobra
+         *     * `STD` - São Tomé & Príncipe Dobra (1977–2017)
+         *     * `TVD` - TVD
+         *     * `TJR` - Tajikistani Ruble
+         *     * `TJS` - Tajikistani Somoni
+         *     * `TZS` - Tanzanian Shilling
+         *     * `XTS` - Testing Currency Code
+         *     * `THB` - Thai Baht
+         *     * `TPE` - Timorese Escudo
+         *     * `TOP` - Tongan Paʻanga
+         *     * `TTD` - Trinidad & Tobago Dollar
+         *     * `TND` - Tunisian Dinar
+         *     * `TRY` - Turkish Lira
+         *     * `TRL` - Turkish Lira (1922–2005)
+         *     * `TMT` - Turkmenistani Manat
+         *     * `TMM` - Turkmenistani Manat (1993–2009)
+         *     * `USD` - US Dollar
+         *     * `USN` - US Dollar (Next day)
+         *     * `USS` - US Dollar (Same day)
+         *     * `UGX` - Ugandan Shilling
+         *     * `UGS` - Ugandan Shilling (1966–1987)
+         *     * `UAH` - Ukrainian Hryvnia
+         *     * `UAK` - Ukrainian Karbovanets
+         *     * `AED` - United Arab Emirates Dirham
+         *     * `UYW` - Uruguayan Nominal Wage Index Unit
+         *     * `UYU` - Uruguayan Peso
+         *     * `UYP` - Uruguayan Peso (1975–1993)
+         *     * `UYI` - Uruguayan Peso (Indexed Units)
+         *     * `UZS` - Uzbekistani Som
+         *     * `VUV` - Vanuatu Vatu
+         *     * `VES` - Venezuelan Bolívar
+         *     * `VEB` - Venezuelan Bolívar (1871–2008)
+         *     * `VEF` - Venezuelan Bolívar (2008–2018)
+         *     * `VND` - Vietnamese Dong
+         *     * `VNN` - Vietnamese Dong (1978–1985)
+         *     * `CHE` - WIR Euro
+         *     * `CHW` - WIR Franc
+         *     * `XOF` - West African CFA Franc
+         *     * `YDD` - Yemeni Dinar
+         *     * `YER` - Yemeni Rial
+         *     * `YUN` - Yugoslavian Convertible Dinar (1990–1992)
+         *     * `YUD` - Yugoslavian Hard Dinar (1966–1990)
+         *     * `YUM` - Yugoslavian New Dinar (1994–2002)
+         *     * `YUR` - Yugoslavian Reformed Dinar (1992–1993)
+         *     * `ZWN` - ZWN
+         *     * `ZRN` - Zairean New Zaire (1993–1998)
+         *     * `ZRZ` - Zairean Zaire (1971–1993)
+         *     * `ZMW` - Zambian Kwacha
+         *     * `ZMK` - Zambian Kwacha (1968–2012)
+         *     * `ZWD` - Zimbabwean Dollar (1980–2008)
+         *     * `ZWR` - Zimbabwean Dollar (2008)
+         *     * `ZWL` - Zimbabwean Dollar (2009–2024)
+         * @enum {string}
+         */
+        PriceCurrencyEnum: "XUA" | "AFN" | "AFA" | "ALL" | "ALK" | "DZD" | "ADP" | "AOA" | "AOK" | "AON" | "AOR" | "ARA" | "ARS" | "ARM" | "ARP" | "ARL" | "AMD" | "AWG" | "AUD" | "ATS" | "AZN" | "AZM" | "BSD" | "BHD" | "BDT" | "BBD" | "BYN" | "BYB" | "BYR" | "BEF" | "BEC" | "BEL" | "BZD" | "BMD" | "BTN" | "BOB" | "BOL" | "BOV" | "BOP" | "VED" | "BAM" | "BAD" | "BAN" | "BWP" | "BRC" | "BRZ" | "BRE" | "BRR" | "BRN" | "BRB" | "BRL" | "GBP" | "BND" | "BGL" | "BGN" | "BGO" | "BGM" | "BUK" | "BIF" | "XPF" | "KHR" | "CAD" | "CVE" | "KYD" | "XAF" | "CLE" | "CLP" | "CLF" | "CNX" | "CNY" | "CNH" | "COP" | "COU" | "KMF" | "CDF" | "CRC" | "HRD" | "HRK" | "CUC" | "CUP" | "CYP" | "CZK" | "CSK" | "DKK" | "DJF" | "DOP" | "NLG" | "XCD" | "DDM" | "ECS" | "ECV" | "EGP" | "GQE" | "ERN" | "EEK" | "ETB" | "EUR" | "XBA" | "XEU" | "XBB" | "XBC" | "XBD" | "FKP" | "FJD" | "FIM" | "FRF" | "XFO" | "XFU" | "GMD" | "GEK" | "GEL" | "DEM" | "GHS" | "GHC" | "GIP" | "XAU" | "GRD" | "GTQ" | "GWP" | "GNF" | "GNS" | "GYD" | "HTG" | "HNL" | "HKD" | "HUF" | "IMP" | "ISK" | "ISJ" | "INR" | "IDR" | "IRR" | "IQD" | "IEP" | "ILS" | "ILP" | "ILR" | "ITL" | "JMD" | "JPY" | "JOD" | "KZT" | "KES" | "KWD" | "KGS" | "LAK" | "LVL" | "LVR" | "LBP" | "LSL" | "LRD" | "LYD" | "LTL" | "LTT" | "LUL" | "LUC" | "LUF" | "MOP" | "MKD" | "MKN" | "MGA" | "MGF" | "MWK" | "MYR" | "MVR" | "MVP" | "MLF" | "MTL" | "MTP" | "MRU" | "MRO" | "MUR" | "MXV" | "MXN" | "MXP" | "MDC" | "MDL" | "MCF" | "MNT" | "MAD" | "MAF" | "MZE" | "MZN" | "MZM" | "MMK" | "NAD" | "NPR" | "ANG" | "TWD" | "NZD" | "NIO" | "NIC" | "NGN" | "KPW" | "NOK" | "OMR" | "PKR" | "XPD" | "PAB" | "PGK" | "PYG" | "PEI" | "PEN" | "PES" | "PHP" | "XPT" | "PLN" | "PLZ" | "PTE" | "GWE" | "QAR" | "XRE" | "RHD" | "RON" | "ROL" | "RUB" | "RUR" | "RWF" | "SVC" | "WST" | "SAR" | "RSD" | "CSD" | "SCR" | "SLE" | "SLL" | "XAG" | "SGD" | "SKK" | "SIT" | "SBD" | "SOS" | "ZAR" | "ZAL" | "KRH" | "KRW" | "KRO" | "SSP" | "SUR" | "ESP" | "ESA" | "ESB" | "XDR" | "LKR" | "SHP" | "XSU" | "SDD" | "SDG" | "SDP" | "SRD" | "SRG" | "SZL" | "SEK" | "CHF" | "SYP" | "STN" | "STD" | "TVD" | "TJR" | "TJS" | "TZS" | "XTS" | "THB" | "TPE" | "TOP" | "TTD" | "TND" | "TRY" | "TRL" | "TMT" | "TMM" | "USD" | "USN" | "USS" | "UGX" | "UGS" | "UAH" | "UAK" | "AED" | "UYW" | "UYU" | "UYP" | "UYI" | "UZS" | "VUV" | "VES" | "VEB" | "VEF" | "VND" | "VNN" | "CHE" | "CHW" | "XOF" | "YDD" | "YER" | "YUN" | "YUD" | "YUM" | "YUR" | "ZWN" | "ZRN" | "ZRZ" | "ZMW" | "ZMK" | "ZWD" | "ZWR" | "ZWL";
         /** @description A user as anyone else sees them: the account-only fields are left out. */
         PublicProfile: {
             /** Format: uri */
@@ -6804,7 +7113,7 @@ export interface components {
             rating?: number | null;
             /** Format: decimal */
             price?: string | null;
-            readonly price_currency: string | null;
+            readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
             link?: (string) | null;
             /** Format: date-time */
             date?: string | null;

@@ -286,6 +286,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
         validated_data = self._pop_lat_lon(validated_data)
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
+        visits_data = validated_data.pop('visits', [])
         
         location = Location.objects.create(**validated_data)
 
@@ -299,6 +300,8 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             location.collections.set(collections_data)
             
         location.save()
+        if visits_data:
+            self._sync_visits(location, visits_data)
 
         return location
 
