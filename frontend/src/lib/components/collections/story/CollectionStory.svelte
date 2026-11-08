@@ -268,12 +268,18 @@
 				<div class="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/90">
 					{#if owner}
 						<a href={`/profile/${owner.username}`} class="flex items-center gap-2 hover:underline">
-							<UserAvatar
-								user={owner}
-								alt={owner.username}
-								className="h-8 w-8 rounded-full ring-2 ring-white/70"
-								textClass="text-xs"
-							/>
+							<!-- A fixed-size circle: UserAvatar fills its parent. -->
+							<span
+								class="inline-flex h-8 w-8 shrink-0 overflow-hidden rounded-full ring-2 ring-white/70"
+							>
+								<UserAvatar
+									user={owner}
+									alt={owner.username}
+									className="h-full w-full"
+									imgClass="h-full w-full object-cover"
+									textClass="text-xs"
+								/>
+							</span>
 							<span>
 								{$t('story.by', {
 									values: {

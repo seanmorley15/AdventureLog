@@ -1900,7 +1900,8 @@ export interface paths {
         head?: never;
         /**
          * Change your Immich connection
-         * @description Send what changes; the connection is checked again before saving.
+         * @description Send what changes. Leave out `api_key`, or send it blank, to keep the current one.
+         *             Checked again before saving.
          */
         patch: operations["integrations_immich_partial_update"];
         trace?: never;

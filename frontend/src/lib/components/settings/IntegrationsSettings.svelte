@@ -109,6 +109,17 @@
 			: $t('immich.immich_error');
 	}
 
+	function immichRequestBody(isUpdate: boolean) {
+		const apiKey = newImmichIntegration.api_key.trim();
+		const body: { server_url: string; copy_locally: boolean; api_key?: string } = {
+			server_url: newImmichIntegration.server_url,
+			copy_locally: newImmichIntegration.copy_locally
+		};
+		// The saved key is not shown. A blank field on edit means leave it alone.
+		if (!isUpdate || apiKey) body.api_key = apiKey;
+		return body;
+	}
+
 	async function enableImmichIntegration() {
 		const isUpdate = !!immichIntegration?.id;
 		// One connection per user, at one address: create it, or change it in place.
@@ -119,7 +130,7 @@
 			const res = await fetch(url, {
 				method,
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(newImmichIntegration)
+				body: JSON.stringify(immichRequestBody(isUpdate))
 			});
 			const data = await res.json();
 
@@ -443,7 +454,11 @@
 								bind:value={newImmichIntegration.api_key}
 								class="input input-primary focus:input-primary w-full"
 								placeholder={$t('immich.api_key_placeholder')}
+								autocomplete="off"
 							/>
+							{#if newImmichIntegration.id}
+								<p class="mt-1 text-sm text-base-content/70">{$t('immich.api_key_keep')}</p>
+							{/if}
 						</div>
 
 						<div class="flex flex-col">

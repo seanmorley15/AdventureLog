@@ -6537,7 +6537,9 @@ paths:
           description: Already connected (`immich.integration_exists`). Use PATCH.
     patch:
       operationId: integrations_immich_partial_update
-      description: Send what changes; the connection is checked again before saving.
+      description: |-
+        Send what changes. Leave out `api_key`, or send it blank, to keep the current one.
+                Checked again before saving.
       summary: Change your Immich connection
       tags:
       - Integrations

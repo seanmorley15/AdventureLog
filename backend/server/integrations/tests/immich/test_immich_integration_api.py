@@ -61,3 +61,39 @@ class ImmichIntegrationApiTests(APITestCase):
         self.assertNotIn('api_key', response.json())
         integration.refresh_from_db()
         self.assertEqual(integration.api_key, 'rotated-key')
+
+    @patch(
+        'integrations.views.immich.ImmichViewSet._validate_immich_connection',
+        return_value=(True, 'http://immich.example.com/api', None),
+    )
+    def test_update_with_blank_api_key_keeps_the_saved_key(self, _validate):
+        integration = self._create_integration()
+
+        response = self.client.patch(
+            '/api/integrations/immich/',
+            {'copy_locally': False, 'api_key': ''},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        integration.refresh_from_db()
+        self.assertEqual(integration.api_key, 'secret-immich-key')
+        self.assertFalse(integration.copy_locally)
+
+    @patch(
+        'integrations.views.immich.ImmichViewSet._validate_immich_connection',
+        return_value=(True, 'http://immich.example.com/api', None),
+    )
+    def test_update_without_api_key_keeps_the_saved_key(self, _validate):
+        integration = self._create_integration()
+
+        response = self.client.patch(
+            '/api/integrations/immich/',
+            {'copy_locally': False},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        integration.refresh_from_db()
+        self.assertEqual(integration.api_key, 'secret-immich-key')
+        self.assertFalse(integration.copy_locally)

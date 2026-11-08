@@ -1663,6 +1663,7 @@
 		"immich_integration_desc": "Connect your Immich photo management server",
 		"localhost_note": "Note: localhost will most likely not work unless you have setup docker networks accordingly. It is recommended to use the IP address of the server or the domain name.",
 		"api_key_placeholder": "Enter your Immich API key",
+		"api_key_keep": "Leave blank to keep the current key",
 		"need_help": "Need help setting this up? Check out the",
 		"copy_locally": "Copy Images Locally",
 		"copy_locally_desc": "Copy images to the server for offline access. Uses more disk space.",

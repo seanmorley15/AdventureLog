@@ -134,10 +134,18 @@ class ImmichViewSet(viewsets.GenericViewSet):
         """
         Change your Immich connection
 
-        Send what changes; the connection is checked again before saving.
+        Send what changes. Leave out `api_key`, or send it blank, to keep the current one.
+        Checked again before saving.
         """
         integration = self.get_integration()
-        serializer = self.get_serializer(integration, data=request.data, partial=True)
+        data = request.data.copy()
+        api_key = data.get('api_key') if hasattr(data, 'get') else None
+        # The settings form leaves the key blank unless the user types a new one.
+        if api_key is not None and not str(api_key).strip():
+            if getattr(data, '_mutable', True) is False:
+                data._mutable = True
+            data.pop('api_key')
+        serializer = self.get_serializer(integration, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         server_url = self._checked_server_url(
             serializer.validated_data.get('server_url', integration.server_url),
