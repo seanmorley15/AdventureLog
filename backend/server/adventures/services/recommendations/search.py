@@ -75,9 +75,9 @@ def get_recommendations(
         if radius > MAX_OVERPASS_RADIUS_M:
             warnings.append('OpenStreetMap results are limited to a 10 km radius.')
         query = build_overpass_query(spec, origin[0], origin[1], radius)
-        # As a top-up, never let a slow public mirror hold up results Google already gave.
+        # As a top-up, never let a slow public mirror hold up results Google already gave (5 s total budget).
         osm_payload = osm_reco_provider.execute_overpass_query(
-            query, timeout=12 if osm_only else 8, max_mirrors=3 if osm_only else 2
+            query, timeout=15 if osm_only else 5, max_mirrors=3 if osm_only else 2
         )
         if osm_payload.error:
             osm_failed = True

@@ -9,6 +9,7 @@
 		Location,
 		Collaborator,
 		Lodging,
+		SlimCollection,
 		StoryGroup
 	} from '#lib/types.js';
 	import type { PageData } from './$types';
@@ -63,6 +64,8 @@
 	import CommentMultipleOutline from '~icons/mdi/comment-multiple-outline';
 	import CollectionDiscussion from '#lib/components/collections/discussion/CollectionDiscussion.svelte';
 	import ShareVariant from '~icons/mdi/share-variant';
+	import PencilIcon from '~icons/mdi/pencil';
+	import CollectionModal from '#lib/components/collections/CollectionModal.svelte';
 	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '#lib/toasts.js';
 	import { jobErrorMessage, runExport } from '#lib/jobs.js';
@@ -309,7 +312,42 @@
 		(data.user as { default_currency?: string } | null)?.default_currency || DEFAULT_CURRENCY
 	);
 
+	let isCollectionModalOpen = $state(false);
+
+	// Merge the saved details into the open collection immediately, then quietly refetch so
+	// derived data (itinerary days, status, audience) catches up without a page reload.
+	async function handleCollectionSaved(event: CustomEvent<SlimCollection>) {
+		isCollectionModalOpen = false;
+		if (!collection) return;
+		const saved = event.detail;
+		const id = collection.id;
+		collection = {
+			...collection,
+			name: saved.name,
+			description: saved.description,
+			is_public: saved.is_public,
+			start_date: saved.start_date,
+			end_date: saved.end_date,
+			type: saved.type,
+			timezone: saved.timezone,
+			day_count: saved.day_count,
+			link: saved.link,
+			status: saved.status,
+			days_until_start: saved.days_until_start,
+			primary_image: saved.primary_image
+		} as Collection;
+		try {
+			const res = await fetch(`/api/collections/${id}/`);
+			if (res.ok && collection?.id === id) {
+				collection = { ...collection, ...((await res.json()) as Collection) };
+			}
+		} catch (e) {
+			console.warn('Unable to refresh collection after edit', e);
+		}
+	}
+
 	function resetCollectionPageUiState() {
+		isCollectionModalOpen = false;
 		currentSlide = 0;
 		isLocationModalOpen = false;
 		isLodgingModalOpen = false;
@@ -912,6 +950,13 @@
 	/>
 {/if}
 
+{#if isCollectionModalOpen && collection && canModifyCollection}
+	<CollectionModal
+		collectionToEdit={collection}
+		on:close={() => (isCollectionModalOpen = false)}
+		on:save={handleCollectionSaved}
+	/>
+{/if}
 {#if isShareSheetOpen && collection && isOwner}
 	<CollectionShareSheet
 		bind:collection
@@ -1182,6 +1227,15 @@
 				</div>
 				{#if canExportCollection}
 					<div class="flex shrink-0 gap-2">
+						{#if canModifyCollection}
+							<button
+								class="btn btn-outline btn-primary btn-sm gap-2"
+								onclick={() => (isCollectionModalOpen = true)}
+							>
+								<PencilIcon class="h-4 w-4" />
+								<span class="hidden lg:inline">{$t('adventures.edit_collection')}</span>
+							</button>
+						{/if}
 						{#if isOwner}
 							<button class="btn btn-primary btn-sm gap-2" onclick={() => openShareSheet('people')}>
 								<ShareVariant class="h-4 w-4" />

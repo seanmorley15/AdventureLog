@@ -419,6 +419,7 @@
 										color={chapter.color}
 										pinLabel={pinLabels.get(entry.key) ?? null}
 										active={focusKey === entry.key || hoverEntry === entry.key}
+										{embedded}
 										onPhotos={(images, index, name) => (lightbox = { images, index, name })}
 									/>
 								</li>

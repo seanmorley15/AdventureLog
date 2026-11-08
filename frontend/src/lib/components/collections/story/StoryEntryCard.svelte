@@ -27,9 +27,18 @@
 		pinLabel?: string | null;
 		active?: boolean;
 		onPhotos?: (images: ContentImage[], index: number, name: string) => void;
+		embedded?: boolean;
 	}
 
-	let { entry, dateFormat, color, pinLabel = null, active = false, onPhotos }: Props = $props();
+	let {
+		entry,
+		dateFormat,
+		color,
+		pinLabel = null,
+		active = false,
+		onPhotos,
+		embedded = false
+	}: Props = $props();
 
 	const DESCRIPTION_COLLAPSE_CHARS = 420;
 	let expanded = $state(false);
@@ -105,13 +114,15 @@
 		<div
 			class="grid gap-0.5 overflow-hidden rounded-t-2xl {mosaic.length === 1
 				? 'grid-cols-1'
-				: 'grid-cols-2'}"
+				: 'grid-cols-2'} {embedded ? 'max-h-72' : ''}"
 		>
 			{#each mosaic as image, i (image.id ?? image.image)}
 				<button
 					type="button"
 					class="relative overflow-hidden bg-base-200 {mosaic.length === 1
-						? 'aspect-[16/9]'
+						? embedded
+							? 'aspect-[21/9]'
+							: 'aspect-[16/9]'
 						: mosaic.length === 3 && i === 0
 							? 'row-span-2 aspect-auto h-full'
 							: 'aspect-[4/3]'}"
