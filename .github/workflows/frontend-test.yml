@@ -52,6 +52,26 @@ jobs:
         working-directory: frontend
         run: pnpm run check
 
+      - name: unit tests with coverage
+        working-directory: frontend
+        run: pnpm run test:coverage
+
+      - name: install Chromium for component tests
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: component tests
+        working-directory: frontend
+        run: pnpm run test:component
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: build frontend
         working-directory: frontend
         run: pnpm run build

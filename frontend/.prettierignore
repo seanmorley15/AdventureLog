@@ -5,3 +5,10 @@ yarn.lock
 
 # Generated from the backend OpenAPI schema (pnpm run api:types)
 src/lib/api/schema.d.ts
+
+# Test output
+coverage
+test-results
+playwright-report
+blob-report
+.vitest

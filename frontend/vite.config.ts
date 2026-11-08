@@ -3,10 +3,11 @@ import adapterNode from '@sveltejs/adapter-node';
 import adapterVercel from '@sveltejs/adapter-vercel';
 
 // vite.config.js
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import Icons from 'unplugin-icons/vite';
+import { playwright } from '@vitest/browser-playwright';
 
 let adapter;
 
@@ -34,5 +35,37 @@ export default defineConfig({
 	ssr: {
 		// LayerChart ships Svelte source. Vite must compile it during server render.
 		noExternal: ['layerchart']
+	},
+	test: {
+		projects: [
+			{
+				extends: true,
+				test: {
+					name: 'unit',
+					environment: 'node',
+					include: ['src/**/*.test.ts'],
+					exclude: ['src/**/*.svelte.test.ts'],
+					env: { TZ: 'UTC' }
+				}
+			},
+			{
+				extends: true,
+				test: {
+					name: 'component',
+					include: ['src/**/*.svelte.test.ts'],
+					browser: {
+						enabled: true,
+						headless: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium' }]
+					}
+				}
+			}
+		],
+		coverage: {
+			provider: 'v8',
+			include: ['src/lib/**/*.ts'],
+			exclude: ['src/lib/api/schema.d.ts', 'src/**/*.test.ts', 'src/lib/test-utils/**']
+		}
 	}
 });

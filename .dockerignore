@@ -5,11 +5,11 @@
 .vscode
 **/.DS_Store
 
-# Local env and secrets
-.env
-.env.*
-!.env.example
-!.env.advanced.example
+# Local env and secrets (any depth: backend/server/.env must not be baked into images)
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.advanced.example
 
 # Documentation and plans (not needed in runtime images)
 documentation/

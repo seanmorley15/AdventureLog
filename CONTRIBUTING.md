@@ -195,3 +195,7 @@ These are great starting points for new contributors.
 Everyone participating in AdventureLog is expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Reports can be sent confidentially to `contact@adventurelog.app`.
+
+## Frontend tests
+
+See [frontend/TESTING.md](frontend/TESTING.md) for running and writing unit, component and end-to-end tests.
