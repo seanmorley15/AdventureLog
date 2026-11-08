@@ -16,11 +16,9 @@ export type NewLocation = {
 /** Open the "New Location" wizard from the locations page. */
 export async function openNewLocation(page: Page): Promise<Locator> {
 	await page.goto('/locations');
-	// The floating "+" menu is on the page whether or not there are locations. Its button has
-	// no accessible name (icon only), so it is found by position.
-	const floating = page.locator('div.fixed.bottom-6.right-6');
-	await floating.locator('[role="button"]').click();
-	await floating.getByRole('button', { name: 'Location' }).click();
+	// The floating "+" menu is on the page whether or not there are locations.
+	await page.getByRole('button', { name: 'Create New', exact: true }).click();
+	await page.getByRole('button', { name: 'Location', exact: true }).click();
 	const dialog = page.getByRole('dialog', { name: 'New Location' });
 	await expect(dialog).toBeVisible();
 	return dialog;

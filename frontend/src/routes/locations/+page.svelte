@@ -67,6 +67,13 @@
 		});
 	});
 
+	// Bumped whenever the data behind the header count and category sidebar may have changed.
+	let categoriesVersion = $state(0);
+	async function refreshAfterEdit() {
+		categoriesVersion += 1;
+		await invalidate('locations:list');
+	}
+
 	let is_category_modal_open: boolean = $state(false);
 	let adventureToEdit: Location | null = $state(null);
 	let isLocationModalOpen: boolean = $state(false);
@@ -199,6 +206,7 @@
 		on:close={() => {
 			isLocationModalOpen = false;
 			locationModalInitialStep = null;
+			refreshAfterEdit();
 		}}
 		user={data.user}
 		locationToEdit={adventureToEdit}
@@ -208,7 +216,12 @@
 {/if}
 
 {#if is_category_modal_open}
-	<CategoryModal on:close={() => (is_category_modal_open = false)} />
+	<CategoryModal
+		on:close={() => {
+			is_category_modal_open = false;
+			refreshAfterEdit();
+		}}
+	/>
 {/if}
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
@@ -355,7 +368,11 @@
 								<Tag class="w-5 h-5" />
 								{$t('adventures.categories')}
 							</h3>
-							<CategoryFilterDropdown types={categoryTypes} on:change={onCategoryChange} />
+							<CategoryFilterDropdown
+								types={categoryTypes}
+								refreshKey={categoriesVersion}
+								on:change={onCategoryChange}
+							/>
 							<button
 								type="button"
 								onclick={() => (is_category_modal_open = true)}
@@ -511,6 +528,8 @@
 			<div
 				tabindex="0"
 				role="button"
+				aria-haspopup="menu"
+				aria-label={$t('adventures.create_new')}
 				class="btn btn-primary btn-circle w-16 h-16 shadow-2xl hover:shadow-primary/25 transition-all duration-200"
 			>
 				<Plus class="w-8 h-8" />

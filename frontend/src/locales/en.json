@@ -568,7 +568,14 @@
 		"collection_duplicate_success": "Collection duplicated successfully! Redirecting...",
 		"collection_duplicate_error": "Failed to duplicate collection.",
 		"add_details": "Add details",
-		"sun_times": "Sun Times"
+		"sun_times": "Sun Times",
+		"error_occurred": "Something went wrong. Please try again.",
+		"failed_to_fetch_activities": "Could not load activities.",
+		"found_activities": "{count, plural, one {# activity found} other {# activities found}}",
+		"no_strava_activities_found": "No Strava activities found for these dates.",
+		"strava_not_connected": "Strava is not connected.",
+		"transport_start": "Departure",
+		"transport_end": "Arrival"
 	},
 	"worldtravel": {
 		"country_list": "Country List",
@@ -1270,7 +1277,9 @@
 		"photos": "Photos",
 		"fullscreen_failed": "Could not toggle fullscreen.",
 		"map_style": "Map style",
-		"stats": "Stats"
+		"stats": "Stats",
+		"hide_image_pins": "Hide image pins",
+		"show_image_pins": "Show image pins"
 	},
 	"detail": {
 		"open_photo": "Open photos of {name}",
@@ -1582,7 +1591,8 @@
 		"select_category": "Select Category",
 		"category_name": "Category Name",
 		"add_new_category": "Add New Category",
-		"name_required": "Category name is required"
+		"name_required": "Category name is required",
+		"no_categories_yet": "No categories yet."
 	},
 	"dashboard": {
 		"welcome_back": "Welcome back",
@@ -1793,7 +1803,8 @@
 		"accept": "Accept",
 		"invited_on": "Invited on",
 		"no_invites_desc": "Make sure your profile is public so users can invite you.",
-		"by": "by"
+		"by": "by",
+		"fetch_failed": "Could not load your invites."
 	},
 	"strava": {
 		"strava_integration_desc": "Connect to Strava to easily import your activties into locations and visits",
@@ -1982,7 +1993,8 @@
 	},
 	"common": {
 		"show_less": "Hide details",
-		"show_more": "Show more"
+		"show_more": "Show more",
+		"refresh": "Refresh"
 	},
 	"collections": {
 		"not_found": "Collection Not Found",
@@ -2135,7 +2147,8 @@
 		"checkout_success": "Subscription updated successfully!",
 		"checkout_canceled": "Checkout was canceled. No changes were made.",
 		"checkout_error_title": "Checkout failed",
-		"portal_error_title": "Unable to open billing portal"
+		"portal_error_title": "Unable to open billing portal",
+		"alert_trial_active_description": "Your trial is active."
 	},
 	"cards": {
 		"departs": "Departs",

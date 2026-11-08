@@ -9,9 +9,11 @@
 	let types_arr: string[] = $state([]);
 	interface Props {
 		types: string;
+		/** Change this value to make the dropdown reload the categories (and their counts). */
+		refreshKey?: number;
 	}
 
-	let { types = $bindable() }: Props = $props();
+	let { types = $bindable(), refreshKey = 0 }: Props = $props();
 	let adventure_types: Category[] = $state([]);
 	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
@@ -23,7 +25,7 @@
 		})
 	);
 
-	onMount(async () => {
+	async function loadCategories() {
 		try {
 			const categoryFetch = await fetch('/api/categories');
 			const categoryData = await categoryFetch.json();
@@ -31,6 +33,16 @@
 		} catch (err) {
 			console.error('Failed to load categories:', err);
 			adventure_types = [];
+		}
+	}
+
+	onMount(loadCategories);
+
+	let lastRefreshKey = refreshKey;
+	$effect(() => {
+		if (refreshKey !== lastRefreshKey) {
+			lastRefreshKey = refreshKey;
+			loadCategories();
 		}
 	});
 

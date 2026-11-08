@@ -73,12 +73,8 @@ test.describe('locations', () => {
 		await expect(drawer.getByText('Mosaic terrace')).toBeVisible();
 	});
 
-	// BUG: after a location is created, the header count ("0 Locations") and the category
-	// sidebar ("No categories found") stay stale until the page is reloaded, even though the
-	// new card is already listed. `test.fail()` keeps the suite green while that is true and
-	// goes red the day it is fixed: delete the line then.
+	// Regression: the header count and category sidebar used to stay stale until a reload.
 	test('the header count and category filters update without a reload', async ({ page }) => {
-		test.fail();
 		const dialog = await openNewLocation(page);
 		await createLocationThroughWizard(page, dialog, {
 			name: 'Casa Batlló',
@@ -87,7 +83,9 @@ test.describe('locations', () => {
 		});
 
 		await expect(page.getByText('Casa Batlló').first()).toBeVisible();
-		await expect(page.getByText(/\b[1-9]\d* Locations/)).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'My Locations' }).locator('..')).toContainText(
+			/\b[1-9]\d*\s+Locations/
+		);
 		await expect(page.getByText('No categories found.')).toBeHidden();
 	});
 });

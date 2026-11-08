@@ -18,6 +18,8 @@
 	let isLoading = $state(false);
 	let error: string | null = $state(null);
 	let showActivities = $state(false);
+	// Only show (and query) Strava once we know the user has connected it.
+	let connected = $state(false);
 
 	async function fetchStravaActivities() {
 		if (!start_date || !end_date) {
@@ -82,14 +84,22 @@
 		}
 	}
 
-	onMount(() => {
-		if (start_date && end_date) {
+	onMount(async () => {
+		try {
+			const response = await fetch('/api/integrations/');
+			if (response.ok) {
+				connected = Boolean((await response.json()).strava?.user);
+			}
+		} catch {
+			connected = false;
+		}
+		if (connected && start_date && end_date) {
 			fetchStravaActivities();
 		}
 	});
 </script>
 
-{#if start_date && end_date}
+{#if connected && start_date && end_date}
 	<div class="mt-4">
 		<button
 			type="button"

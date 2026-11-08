@@ -1,4 +1,5 @@
 TIMEZONES = [
+  "UTC",
   "Africa/Abidjan",
   "Africa/Accra",
   "Africa/Addis_Ababa",
@@ -463,7 +464,7 @@ TIMEZONES = [
   "Pacific/Wallis"
 ]
 
-_VALID_TIMEZONES = frozenset(TIMEZONES) | {"UTC"}
+_VALID_TIMEZONES = frozenset(TIMEZONES)
 
 
 def timezone_or_utc(value):

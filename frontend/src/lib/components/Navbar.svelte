@@ -309,7 +309,7 @@
 		{#if showFullNav}
 			<button
 				type="button"
-				class="hidden lg:flex input input-sm items-center gap-2 w-64 text-left"
+				class="hidden lg:flex input input-sm items-center gap-2 w-64 xl:w-48 2xl:w-64 text-left"
 				onclick={() => openSearch()}
 			>
 				<Magnify class="w-4 h-4 opacity-60 shrink-0" />

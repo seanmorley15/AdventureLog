@@ -185,6 +185,14 @@ test('plan a trip to Paris', async ({ page }) => {
 		await expect(page.getByRole('heading', { name: 'Paris 2027', level: 1 })).toBeVisible();
 	});
 
+	await test.step('the collections list shows the description as plain text', async () => {
+		await page.goto('/collections');
+		const card = page.locator('.card', { hasText: 'Paris 2027' }).first();
+		await expect(card).toContainText('Four days of art and food.');
+		await page.goBack();
+		await expect(page.getByRole('heading', { name: 'Paris 2027', level: 1 })).toBeVisible();
+	});
+
 	await test.step('the other tabs agree with the plan', async () => {
 		const tab = (name: string) => page.getByRole('tab', { name });
 		// Switching tabs navigates, so wait for the new tab to be the selected one.

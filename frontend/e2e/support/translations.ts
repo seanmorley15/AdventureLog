@@ -1,6 +1,5 @@
 import type { Page } from '@playwright/test';
 import en from '../../src/locales/en.json' with { type: 'json' };
-import { KNOWN_MISSING_KEYS } from '../../src/locales/known-missing-keys';
 
 // Only text that starts with a real top-level section of en.json ("navbar.", "auth.", ...) can
 // be a missing key. Anything else that merely looks like one, such as "example.com", cannot.
@@ -10,7 +9,7 @@ const KEY_SHAPE = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/;
 
 /**
  * Visible text nodes that look like an untranslated i18n key ("section.some_key") because the
- * key is missing from the locale file. Keys already tracked as known gaps are ignored.
+ * key is missing from the locale file.
  */
 export async function rawTranslationKeys(page: Page): Promise<string[]> {
 	const candidates = await page.evaluate(() => {
@@ -30,8 +29,5 @@ export async function rawTranslationKeys(page: Page): Promise<string[]> {
 		}
 		return [...found];
 	});
-	const known = new Set<string>(KNOWN_MISSING_KEYS);
-	return candidates.filter(
-		(text) => KEY_SHAPE.test(text) && SECTIONS.has(text.split('.')[0]) && !known.has(text)
-	);
+	return candidates.filter((text) => KEY_SHAPE.test(text) && SECTIONS.has(text.split('.')[0]));
 }

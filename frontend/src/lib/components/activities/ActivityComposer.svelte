@@ -299,7 +299,7 @@
 			const response = await fetch('/api/integrations');
 			if (response.ok) {
 				const integrations = await response.json();
-				stravaEnabled = Boolean(integrations.strava?.exists);
+				stravaEnabled = Boolean(integrations.strava?.user);
 				endurainEnabled = Boolean(integrations.endurain?.exists);
 			}
 		} catch {

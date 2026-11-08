@@ -1,9 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { KNOWN_MISSING_KEYS } from './known-missing-keys';
-
-const KNOWN_MISSING = new Set(KNOWN_MISSING_KEYS);
 
 const SRC = join(import.meta.dirname, '..');
 
@@ -48,17 +45,12 @@ function usedKeys() {
 describe('English translations', () => {
 	const used = usedKeys();
 
-	it('define every statically referenced key (beyond the known baseline)', () => {
+	it('define every statically referenced key', () => {
 		const missing = [...used]
-			.filter(([key]) => !defined.has(key) && !KNOWN_MISSING.has(key))
+			.filter(([key]) => !defined.has(key))
 			.map(([key, files]) => `${key}  (${[...new Set(files)].join(', ')})`)
 			.sort();
 
 		expect(missing, 'new keys used in code but missing from locales/en.json').toEqual([]);
-	});
-
-	it('keep the known-missing baseline honest', () => {
-		const fixed = [...KNOWN_MISSING].filter((key) => defined.has(key) || !used.has(key));
-		expect(fixed, 'now defined or unused: remove these from KNOWN_MISSING').toEqual([]);
 	});
 });

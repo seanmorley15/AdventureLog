@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { stripMarkdown } from '#lib/markdown.js';
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
 	import type { Location, Collection, User, SlimCollection, ContentImage } from '#lib/types.js';
@@ -321,7 +322,9 @@
 
 	<div class="flex flex-1 flex-col gap-3 p-4">
 		{#if collection.description}
-			<p class="line-clamp-2 text-sm text-base-content/70">{collection.description}</p>
+			<p class="line-clamp-2 text-sm text-base-content/70">
+				{stripMarkdown(collection.description, 400)}
+			</p>
 		{/if}
 
 		<div class="flex items-start justify-between gap-3">

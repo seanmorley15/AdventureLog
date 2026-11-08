@@ -980,26 +980,16 @@
 			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		}
 
-		// Check if Strava is enabled by making a simple API call
-		try {
-			const response = await fetch('/api/integrations/strava/activities', {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-			stravaEnabled = response.ok;
-		} catch {
-			stravaEnabled = false;
-		}
-
+		// Only talk to Strava / Endurain when the user has connected them.
 		try {
 			const integrationsRes = await fetch('/api/integrations/');
 			if (integrationsRes.ok) {
 				const integrations = await integrationsRes.json();
+				stravaEnabled = Boolean(integrations.strava?.user);
 				endurainEnabled = Boolean(integrations.endurain?.exists);
 			}
 		} catch {
+			stravaEnabled = false;
 			endurainEnabled = false;
 		}
 

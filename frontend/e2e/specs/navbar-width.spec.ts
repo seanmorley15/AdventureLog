@@ -1,16 +1,10 @@
 import { test, expect } from '../fixtures';
 
-// BUG: with a viewport between about 1280 and 1327px wide, the navbar's "..." settings button
-// (language, theme and About) is laid out past the right edge of the window. The page does not
-// scroll horizontally, so it cannot be reached. At 1280px it is 46px outside the window; from
-// 1328px up, and below 1280px (where the navbar is compact), it fits. 1280px is a very common
-// laptop width, and Playwright's own default desktop viewport.
-//
-// `test.fail()` keeps the suite green while that is true and turns red when it is fixed:
-// delete the line then.
+// Regression: between about 1280 and 1327px the navbar's "..." settings button (language,
+// theme and About) used to be laid out past the right edge of the window and could not be
+// reached. 1280px is a very common laptop width.
 test.describe('navbar at 1280px', () => {
 	test.use({ viewport: { width: 1280, height: 800 } });
-	test.fail();
 
 	test('the settings menu button is inside the window', async ({ page }) => {
 		await page.goto('/dashboard');

@@ -7,14 +7,7 @@ import type { Page } from '@playwright/test';
 const IGNORED_CONSOLE_ERRORS: RegExp[] = [
 	// Requests for third-party hosts are blocked on purpose by stubExternalNetwork().
 	/Failed to load resource: net::ERR_FAILED/,
-	/net::ERR_BLOCKED_BY_CLIENT/,
-	// The Visits step asks for Strava activities even when Strava isn't connected, and the
-	// 404 "not connected" answer is logged by Chrome as a console error. It is not user-visible,
-	// but the app could skip the request when the integration is off.
-	/status of 404.*\/api\/integrations\/strava\/activities/,
-	// The Transportation form does the same probe and console.errors the "not connected" answer
-	// (with the untranslated key adventures.strava_not_connected, see known-missing-keys.ts).
-	/Error fetching Strava activities/
+	/net::ERR_BLOCKED_BY_CLIENT/
 ];
 
 export type GuardIssue = { kind: 'pageerror' | 'console' | 'http'; detail: string };
