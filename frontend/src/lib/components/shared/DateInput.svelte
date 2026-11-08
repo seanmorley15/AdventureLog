@@ -10,6 +10,8 @@
 		formatDisplayDate,
 		formatDisplayTime,
 		getFirstDayOfWeek,
+		getDateInputHint,
+		parseTypedDate,
 		prefersHour12,
 		resolveDateFormatLocale
 	} from '#lib/dateFormat.js';
@@ -42,7 +44,7 @@
 		disabled = false,
 		readonly = false,
 		showTime = false,
-		placeholder = 'Pick a date',
+		placeholder,
 		size = 'md',
 		clearable = true,
 		onchange,
@@ -61,6 +63,11 @@
 
 	const preference = $derived(normalizeDateFormat(page.data?.user?.date_format));
 	const locale = $derived(resolveDateFormatLocale(preference));
+	// Month/weekday names follow the app language; the date *format* (order) follows the preference.
+	// YMD maps to a Swedish locale for ISO-style numbers, which would otherwise yield Swedish month names.
+	const nameLocale = $derived(
+		preference === 'ymd' ? page.data?.locale || navigator.language || 'en-US' : locale
+	);
 	const firstDayOfWeek = $derived(getFirstDayOfWeek(preference));
 
 	const uniqueId = $derived(id || `${uid}-date`);
@@ -73,7 +80,8 @@
 	const hasTime = $derived(!!(value && value.includes('T')));
 	const timePart = $derived(hasTime ? value?.split('T')[1]?.substring(0, 5) || '00:00' : '00:00');
 
-	const displayDate = $derived(datePart ? formatDisplayDate(datePart, preference) : placeholder);
+	const displayDate = $derived(datePart ? formatDisplayDate(datePart, preference) : '');
+	const hint = $derived(placeholder ?? getDateInputHint(preference));
 	const hour12 = $derived(prefersHour12(preference));
 	const displayTime = $derived(hasTime ? formatDisplayTime(timePart, preference) : 'Pick a time');
 	const hourOptions = $derived(
@@ -109,6 +117,64 @@
 
 	let popoverElement: HTMLDivElement | undefined = $state();
 
+	// Typed entry: edits stay in `draft` until Enter/blur, then are parsed and committed.
+	let editing = $state(false);
+	let draft = $state('');
+	let invalid = $state(false);
+
+	function startEditing(event: FocusEvent) {
+		editing = true;
+		draft = displayDate;
+		invalid = false;
+		(event.currentTarget as HTMLInputElement).select();
+	}
+
+	function commitDraft() {
+		if (!editing) return;
+		editing = false;
+		const text = draft.trim();
+
+		if (!text) {
+			if (datePart) handleClearDate();
+			invalid = false;
+			return;
+		}
+
+		const parsed = parseTypedDate(text, preference);
+		const outOfRange = !!parsed && ((minDate && parsed < minDate) || (maxDate && parsed > maxDate));
+		if (!parsed || outOfRange) {
+			invalid = true;
+			return;
+		}
+
+		invalid = false;
+		if (parsed === datePart) return;
+		value = showTime && hasTime ? `${parsed}T${timePart}` : showTime ? `${parsed}T00:00` : parsed;
+		onchange?.(value);
+	}
+
+	function openCalendar() {
+		if (disabled || readonly || !popoverElement) return;
+		if (!popoverElement.matches(':popover-open')) popoverElement.showPopover();
+	}
+
+	function handleDateKeydown(event: KeyboardEvent) {
+		if (event.key === 'Tab') {
+			popoverElement?.hidePopover();
+		} else if (event.key === 'Enter') {
+			event.preventDefault();
+			popoverElement?.hidePopover();
+			commitDraft();
+			(event.currentTarget as HTMLInputElement).select();
+			editing = true;
+			draft = displayDate;
+		} else if (event.key === 'Escape') {
+			editing = false;
+			invalid = false;
+			(event.currentTarget as HTMLInputElement).blur();
+		}
+	}
+
 	function handleCalendarChange(e: Event) {
 		const target = e.currentTarget as HTMLElement & { value: string };
 		const newDate = target.value;
@@ -124,16 +190,78 @@
 		popoverElement?.hidePopover();
 	}
 
-	const listenForCalendarChange: Attachment<HTMLElement> = (element) => {
+	// Calendar navigation: jump by year / pick month+year without paging month by month.
+	let calendarElement: (HTMLElement & { focusedDate?: string }) | undefined = $state();
+	let viewDate = $state(''); // YYYY-MM-DD of the month being shown
+
+	const todayIso = $derived.by(() => {
+		const now = new Date();
+		return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+	});
+	const viewYear = $derived(Number((viewDate || datePart || todayIso).slice(0, 4)));
+	const viewMonth = $derived(Number((viewDate || datePart || todayIso).slice(5, 7)));
+	const monthNames = $derived(
+		Array.from({ length: 12 }, (_, i) => {
+			try {
+				return new Intl.DateTimeFormat(nameLocale, { month: 'long' }).format(new Date(2000, i, 1));
+			} catch {
+				return String(i + 1);
+			}
+		})
+	);
+	const yearOptions = $derived.by(() => {
+		const current = new Date().getFullYear();
+		const from = Math.min(minDate ? Number(minDate.slice(0, 4)) : current - 100, viewYear);
+		const to = Math.max(maxDate ? Number(maxDate.slice(0, 4)) : current + 20, viewYear);
+		return Array.from({ length: to - from + 1 }, (_, i) => to - i); // newest first
+	});
+
+	function clampIso(iso: string) {
+		if (minDate && iso < minDate) return minDate;
+		if (maxDate && iso > maxDate) return maxDate;
+		return iso;
+	}
+
+	function goTo(year: number, month: number) {
+		// Normalise overflow (month 0 / 13) and keep day within the target month
+		const base = new Date(year, month - 1, 1);
+		const y = base.getFullYear();
+		const m = base.getMonth() + 1;
+		const day = Math.min(Number((viewDate || datePart || todayIso).slice(8, 10)) || 1, 28);
+		const iso = clampIso(
+			`${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+		);
+		viewDate = iso;
+		if (calendarElement) calendarElement.focusedDate = iso;
+	}
+
+	const attachCalendar: Attachment<HTMLElement> = (element) => {
+		calendarElement = element as HTMLElement & { focusedDate?: string };
+		const onFocusDay = (event: Event) => {
+			const d = (event as CustomEvent<Date>).detail;
+			if (d instanceof Date) {
+				viewDate = `${String(d.getFullYear()).padStart(4, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+			}
+		};
 		element.addEventListener('change', handleCalendarChange);
-		return () => element.removeEventListener('change', handleCalendarChange);
+		element.addEventListener('focusday', onFocusDay);
+		return () => {
+			element.removeEventListener('change', handleCalendarChange);
+			element.removeEventListener('focusday', onFocusDay);
+			if (calendarElement === element) calendarElement = undefined;
+		};
 	};
 
 	const capturePopover: Attachment<HTMLDivElement> = (element) => {
 		popoverElement = element;
+		const onToggle = (event: Event) => {
+			if ((event as ToggleEvent).newState === 'open') viewDate = datePart;
+		};
+		element.addEventListener('toggle', onToggle);
 		const detachFlip = attachPopoverFlip(element, () => document.getElementById(uniqueId), 320);
 		return () => {
 			detachFlip();
+			element.removeEventListener('toggle', onToggle);
 			if (popoverElement === element) popoverElement = undefined;
 		};
 	};
@@ -203,24 +331,47 @@
 <div class={['date-field flex w-full min-w-0 flex-col', showTime && 'is-timed', className]}>
 	<div class="date-field-row">
 		<div class={['date-input-date', canClearDate && 'join']}>
-			<button
-				popovertarget={popoverId}
+			<div
 				class={[
-					'input date-input-trigger justify-start font-normal',
+					'input date-input-trigger font-normal',
 					sizeClass,
 					controlHeightClass,
-					canClearDate && 'join-item'
+					canClearDate && 'join-item',
+					invalid && 'input-error'
 				]}
-				id={uniqueId}
 				style:anchor-name={anchorName}
-				disabled={disabled || readonly}
-				type="button"
 			>
-				<CalendarIcon
-					class={size === 'md' ? 'size-4 shrink-0 opacity-60' : 'size-3.5 shrink-0 opacity-60'}
+				<button
+					type="button"
+					popovertarget={popoverId}
+					class="date-input-calendar-btn"
+					disabled={disabled || readonly}
+					aria-label="Open calendar"
+					tabindex="-1"
+				>
+					<CalendarIcon class={size === 'md' ? 'size-4 shrink-0' : 'size-3.5 shrink-0'} />
+				</button>
+				<input
+					id={uniqueId}
+					type="text"
+					inputmode="text"
+					autocomplete="off"
+					class="date-input-text"
+					placeholder={hint}
+					value={editing ? draft : displayDate}
+					{disabled}
+					{readonly}
+					aria-invalid={invalid}
+					onfocus={startEditing}
+					oninput={(e) => {
+						draft = (e.currentTarget as HTMLInputElement).value;
+						invalid = false;
+					}}
+					onclick={openCalendar}
+					onblur={commitDraft}
+					onkeydown={handleDateKeydown}
 				/>
-				<span class={['truncate min-w-0', !datePart && 'text-base-content/50']}>{displayDate}</span>
-			</button>
+			</div>
 
 			{#if canClearDate}
 				<button
@@ -278,13 +429,53 @@
 	style:position-anchor={anchorName}
 >
 	{#if callyReady}
+		<div class="cal-nav">
+			<button
+				type="button"
+				class="btn btn-ghost btn-xs btn-square"
+				aria-label="Previous year"
+				onclick={() => goTo(viewYear - 1, viewMonth)}>«</button
+			>
+			<select
+				class="select select-xs cal-select"
+				aria-label="Month"
+				value={viewMonth}
+				onchange={(e) => goTo(viewYear, Number(e.currentTarget.value))}
+			>
+				{#each monthNames as name, i (i)}
+					<option value={i + 1}>{name}</option>
+				{/each}
+			</select>
+			<select
+				class="select select-xs cal-select cal-year"
+				aria-label="Year"
+				value={viewYear}
+				onchange={(e) => goTo(Number(e.currentTarget.value), viewMonth)}
+			>
+				{#each yearOptions as year (year)}
+					<option value={year}>{year}</option>
+				{/each}
+			</select>
+			<button
+				type="button"
+				class="btn btn-ghost btn-xs btn-square"
+				aria-label="Next year"
+				onclick={() => goTo(viewYear + 1, viewMonth)}>»</button
+			>
+			<button
+				type="button"
+				class="btn btn-ghost btn-xs"
+				onclick={() => goTo(Number(todayIso.slice(0, 4)), Number(todayIso.slice(5, 7)))}
+				>Today</button
+			>
+		</div>
 		<calendar-date
 			class="cally"
-			{@attach listenForCalendarChange}
+			{@attach attachCalendar}
 			value={datePart || undefined}
 			min={minDate}
 			max={maxDate}
-			{locale}
+			locale={nameLocale}
 			{firstDayOfWeek}
 		>
 			<svg
@@ -424,6 +615,35 @@
 		padding-inline: 0.65rem;
 	}
 
+	.date-input-trigger {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.date-input-calendar-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		opacity: 0.6;
+		cursor: pointer;
+	}
+
+	.date-input-calendar-btn:hover:not(:disabled) {
+		opacity: 1;
+	}
+
+	.date-input-text {
+		flex: 1 1 auto;
+		min-width: 0;
+		width: 100%;
+		background: transparent;
+		outline: none;
+		border: 0;
+		font: inherit;
+	}
+
 	.date-input-md {
 		height: 3rem;
 		min-height: 3rem;
@@ -448,6 +668,23 @@
 		min-width: 2rem;
 		max-width: 2rem;
 		flex-basis: 2rem;
+	}
+
+	.cal-nav {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.5rem 0.5rem 0;
+	}
+
+	.cal-select {
+		width: auto;
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.cal-year {
+		flex: 0 0 5.25rem;
 	}
 
 	.time-popover {

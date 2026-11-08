@@ -277,6 +277,11 @@
 		syncAndValidateDates(false);
 	}
 
+	// Entering a start date fills in a default end date (same logic as save).
+	function handleStartDateChange() {
+		syncAndValidateDates(true);
+	}
+
 	function syncAndValidateDates(autoFillEnd: boolean): boolean {
 		dateError = '';
 
@@ -857,7 +862,7 @@
 								<DateInput
 									id="departure-date"
 									bind:value={localStartDate}
-									onchange={handleLocalDateChange}
+									onchange={handleStartDateChange}
 									showTime={!allDay}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}

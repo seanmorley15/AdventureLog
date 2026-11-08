@@ -290,6 +290,22 @@
 	}
 
 	// Event handlers
+	// Entering a start date fills the end with the same day (all-day) or same moment (timed),
+	// so logging a single-day visit is one entry. Only fills when the end is empty or now earlier.
+	function handleStartDateChange() {
+		if (!localStartDate) {
+			// An end date without a start is invalid, so clearing the start clears both.
+			localEndDate = '';
+		} else {
+			const startDay = localStartDate.split('T')[0];
+			const endDay = localEndDate ? localEndDate.split('T')[0] : '';
+			if (!localEndDate || endDay < startDay) {
+				localEndDate = allDay ? startDay : toTimedLocalDefault(localStartDate, true);
+			}
+		}
+		handleLocalDateChange();
+	}
+
 	function handleLocalDateChange() {
 		utcStartDate = updateUTCDate({
 			localDate: localStartDate,
@@ -1073,7 +1089,7 @@
 							<DateInput
 								id="start-date-input"
 								bind:value={localStartDate}
-								onchange={handleLocalDateChange}
+								onchange={handleStartDateChange}
 								showTime={!allDay}
 								min={constrainDates ? constraintStartDate : undefined}
 								max={constrainDates ? constraintEndDate : undefined}

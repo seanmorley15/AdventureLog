@@ -166,3 +166,118 @@ export function dateFormatFromUser(
 ): DateFormatPreference {
 	return normalizeDateFormat(user?.date_format);
 }
+
+type DateOrder = 'mdy' | 'dmy' | 'ymd';
+
+/** Field order (month/day/year) used when typing a date under the given preference. */
+export function getDateOrder(preference: DateFormatPreference = DEFAULT_DATE_FORMAT): DateOrder {
+	if (preference !== 'locale') return preference;
+	try {
+		const parts = new Intl.DateTimeFormat(resolveDateFormatLocale(preference)).formatToParts(
+			new Date(2000, 10, 22)
+		);
+		const order = parts
+			.filter((p) => p.type === 'month' || p.type === 'day' || p.type === 'year')
+			.map((p) => p.type[0])
+			.join('');
+		if (order === 'mdy' || order === 'dmy' || order === 'ymd') return order;
+	} catch {
+		// fall through
+	}
+	return 'mdy';
+}
+
+/** Short placeholder such as "MM/DD/YYYY" matching what the field accepts. */
+export function getDateInputHint(preference: DateFormatPreference = DEFAULT_DATE_FORMAT): string {
+	const names = { m: 'MM', d: 'DD', y: 'YYYY' } as const;
+	const sep = getDateOrder(preference) === 'ymd' ? '-' : '/';
+	return [...getDateOrder(preference)].map((c) => names[c as 'm' | 'd' | 'y']).join(sep);
+}
+
+const MONTH_NAMES = [
+	'jan',
+	'feb',
+	'mar',
+	'apr',
+	'may',
+	'jun',
+	'jul',
+	'aug',
+	'sep',
+	'oct',
+	'nov',
+	'dec'
+];
+
+function toIsoDate(year: number, month: number, day: number): string | null {
+	if (year < 1000 || year > 9999) return null;
+	const d = new Date(Date.UTC(year, month - 1, day));
+	if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month - 1 || d.getUTCDate() !== day) {
+		return null;
+	}
+	return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function expandYear(raw: string): number {
+	const n = Number(raw);
+	return raw.length <= 2 ? 2000 + n : n;
+}
+
+/**
+ * Parse a hand-typed date into YYYY-MM-DD, or null if it isn't a valid date.
+ * Accepts the user's preferred order with / . - or space separators, ISO dates,
+ * compact digits (08032026), "Mar 8 2026" / "8 March 2026", and "today"/"yesterday".
+ */
+export function parseTypedDate(
+	input: string,
+	preference: DateFormatPreference = DEFAULT_DATE_FORMAT,
+	today: Date = new Date()
+): string | null {
+	const text = input.trim().toLowerCase();
+	if (!text) return null;
+
+	if (text === 'today' || text === 'yesterday') {
+		const d = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+		if (text === 'yesterday') d.setDate(d.getDate() - 1);
+		return toIsoDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+	}
+
+	const order = getDateOrder(preference);
+
+	// Month names: "8 mar 2026", "mar 8, 2026"
+	let m = /^(\d{1,2})[\s.-]+([a-z]{3,})\.?,?[\s.-]+(\d{2}|\d{4})$/.exec(text);
+	if (m) {
+		const month = MONTH_NAMES.indexOf(m[2].slice(0, 3)) + 1;
+		return month ? toIsoDate(expandYear(m[3]), month, Number(m[1])) : null;
+	}
+	m = /^([a-z]{3,})\.?[\s.-]+(\d{1,2}),?[\s.-]+(\d{2}|\d{4})$/.exec(text);
+	if (m) {
+		const month = MONTH_NAMES.indexOf(m[1].slice(0, 3)) + 1;
+		return month ? toIsoDate(expandYear(m[3]), month, Number(m[2])) : null;
+	}
+
+	let parts: string[] | null = null;
+	let partsOrder: DateOrder = order;
+
+	if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(text)) {
+		parts = text.split(/[-/.]/);
+		partsOrder = 'ymd';
+	} else if (/^\d{8}$/.test(text)) {
+		// 20260308 reads as ISO; otherwise follow the user's order
+		if (/^(19|20)\d{2}(0[1-9]|1[0-2])/.test(text) || order === 'ymd') {
+			parts = [text.slice(0, 4), text.slice(4, 6), text.slice(6, 8)];
+			partsOrder = 'ymd';
+		} else {
+			parts = [text.slice(0, 2), text.slice(2, 4), text.slice(4)];
+		}
+	} else if (/^\d{1,2}[-/.\s]\d{1,2}[-/.\s](\d{2}|\d{4})$/.test(text)) {
+		parts = text.split(/[-/.\s]/);
+		if (order === 'ymd') partsOrder = 'dmy';
+	}
+
+	if (!parts) return null;
+	const [a, b, c] = parts;
+	if (partsOrder === 'ymd') return toIsoDate(Number(a), Number(b), Number(c));
+	if (partsOrder === 'mdy') return toIsoDate(expandYear(c), Number(a), Number(b));
+	return toIsoDate(expandYear(c), Number(b), Number(a));
+}

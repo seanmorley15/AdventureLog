@@ -586,7 +586,12 @@
 	});
 
 	onMount(() => {
+		// Dialog is opened via the `open` attribute (no showModal), so focus the search box manually.
+		const focusTimer = setTimeout(() => {
+			document.getElementById('quickstart-search-location')?.focus();
+		}, 50);
 		return () => {
+			clearTimeout(focusTimer);
 			clearTimeout(searchTimeout);
 		};
 	});
