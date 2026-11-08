@@ -28,6 +28,23 @@ def _public_import_error_message(exc):
 
 
 def download_remote_image(image_url: str, max_redirects: int = 3, timeout: int = 10):
+    # A Google photo from a search result is an app address; it is fetched with the server's key.
+    from adventures.services.places.photos import (
+        PhotoError,
+        fetch_google_photo,
+        google_photo_source_url,
+        parse_proxy_photo_url,
+    )
+
+    photo = parse_proxy_photo_url(image_url)
+    if photo:
+        name, reference, size = photo
+        try:
+            image = fetch_google_photo(name=name, reference=reference, size=size)
+        except PhotoError as exc:
+            raise ValueError(str(exc)) from None
+        return {**image, "source_url": google_photo_source_url(name=name, reference=reference)}
+
     safe, result = check_public_http_url(image_url)
     if not safe:
         raise ValueError(result)
@@ -151,7 +168,8 @@ def import_remote_images_for_object(
             object_id=object_id,
             image_file=image_file,
             file_bytes=file_data["content"],
-            source_url=image_url,
+            # Not `image_url`: an app photo path is relative, and source_url must be absolute.
+            source_url=file_data.get("source_url") or image_url,
             explicit_source=explicit_source,
             is_primary=set_primary_next,
         )

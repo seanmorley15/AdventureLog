@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FilterChip from '#lib/components/shared/FilterChip.svelte';
 	import type { Snippet } from 'svelte';
 	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
@@ -88,15 +89,7 @@
 </script>
 
 {#snippet chip(active: boolean, onclick: () => void, label: string, tone = 'primary')}
-	<button
-		type="button"
-		class={['filter-chip', active && `filter-chip-on filter-chip-${tone}`]}
-		aria-pressed={active}
-		{onclick}
-	>
-		{#if active}<CheckIcon class="h-3 w-3" />{/if}
-		{label}
-	</button>
+	<FilterChip {active} {onclick} tone={tone as any}>{label}</FilterChip>
 {/snippet}
 
 {#snippet section(icon: Snippet, title: string, body: Snippet, action?: Snippet)}
@@ -350,50 +343,3 @@
 		)}
 	{/if}
 {/snippet}
-
-<style>
-	.filter-chip {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		height: 1.75rem;
-		padding-inline: 0.75rem;
-		border-radius: 9999px;
-		border: 1px solid var(--color-base-300);
-		font-size: 0.8125rem;
-		font-weight: 500;
-		color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
-		white-space: nowrap;
-		cursor: pointer;
-		transition:
-			background-color 0.15s,
-			color 0.15s,
-			border-color 0.15s;
-	}
-	.filter-chip:hover {
-		background: var(--color-base-200);
-	}
-	.filter-chip-on {
-		color: var(--chip-color);
-		border-color: color-mix(in oklab, var(--chip-color) 40%, transparent);
-		background: color-mix(in oklab, var(--chip-color) 12%, transparent);
-	}
-	.filter-chip-primary {
-		--chip-color: var(--color-primary);
-	}
-	.filter-chip-secondary {
-		--chip-color: var(--color-secondary);
-	}
-	.filter-chip-accent {
-		--chip-color: var(--color-accent);
-	}
-	.filter-chip-success {
-		--chip-color: var(--color-success);
-	}
-	.filter-chip-info {
-		--chip-color: var(--color-info);
-	}
-	.filter-chip-error {
-		--chip-color: var(--color-error);
-	}
-</style>

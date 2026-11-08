@@ -3,21 +3,14 @@ from typing import Dict, List
 import requests
 
 from core.results import ProviderResult
-from django.conf import settings
-from core.cache import cached_provider, coordinate_key
 
-GOOGLE_CACHE_TIMEOUT = getattr(settings, 'GOOGLE_API_CACHE_TIMEOUT', 60 * 60 * 24)
+# Google's Maps Platform terms allow caching only place IDs and coordinates, so Google
+# results are never cached here. See documentation/docs/configuration/caching.md.
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 
 
-# The key is left out of the cache key, so the cached result is shared.
-@cached_provider(
-    'google_reverse',
-    lambda lat, lon, *a, **k: (coordinate_key(lat, 5), coordinate_key(lon, 5)),
-    GOOGLE_CACHE_TIMEOUT,
-)
 def reverse_geocode(lat: float, lon: float, api_key: str) -> ProviderResult[Dict]:
     if not api_key:
         return ProviderResult(error="Google Maps API key not configured")

@@ -5,6 +5,7 @@ from rest_framework import serializers
 from .itinerary import CollectionItineraryItemSerializer
 from .location import LocationSerializer
 from .logistics import LodgingSerializer
+from .media import RemoteImageURLField
 
 
 class QuickAddSerializer(serializers.Serializer):
@@ -28,7 +29,9 @@ class QuickAddSerializer(serializers.Serializer):
         child=serializers.CharField(), required=False, help_text='Provider place types; become tags on a location.'
     )
     photos = serializers.ListField(
-        child=serializers.URLField(), required=False, help_text='Photo URLs to import (a few at most).'
+        child=RemoteImageURLField(),
+        required=False,
+        help_text='Photos to import (a few at most): http(s) URLs or `photos` addresses from a place search.',
     )
     category = serializers.JSONField(
         required=False,

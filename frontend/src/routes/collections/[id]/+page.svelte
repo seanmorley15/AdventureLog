@@ -783,8 +783,17 @@
 			currentView = defaultView;
 		}
 	});
+	// Apply the collection only when a load returns new data. Switching tabs navigates
+	// (`?view=`), which re-runs this effect with the same load result; re-applying it would
+	// throw away everything added or changed on the page since it loaded.
+	let appliedPageCollection: Collection | null | undefined = undefined;
+	let hasAppliedPageData = false;
 	$effect.pre(() => {
-		applyCollectionPageData(getCollectionFromPageData(data));
+		const next = getCollectionFromPageData(data);
+		if (hasAppliedPageData && next === appliedPageCollection) return;
+		hasAppliedPageData = true;
+		appliedPageCollection = next;
+		applyCollectionPageData(next);
 	});
 </script>
 

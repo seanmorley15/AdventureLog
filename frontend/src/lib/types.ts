@@ -795,16 +795,21 @@ export type Pin = {
 export type Recommendation = {
 	id: string;
 	external_id: string;
+	place_id: string | null;
 	source: 'google' | 'osm';
+	/** Every provider that reported this place. */
+	sources: ('google' | 'osm')[];
+	category: string;
 	name: string;
 	description: string | null;
 	latitude: number;
 	longitude: number;
 	address: string | null;
-	distance_km: number;
+	distance_km: number | null;
 	rating: number | null;
 	review_count: number | null;
-	price_level: string | null;
+	/** 0 (free) to 4 (very expensive). */
+	price_level: number | null;
 	types: string[];
 	primary_type: string | null;
 	business_status: string | null;
@@ -817,21 +822,23 @@ export type Recommendation = {
 	is_verified: boolean;
 	quality_score: number;
 	// OSM-specific fields
-	osm_type?: string;
-	wikipedia?: string;
-	stars?: string;
+	osm_type?: string | null;
+	wikipedia?: string | null;
+	wikidata?: string | null;
+	stars?: string | null;
+	cuisine?: string | null;
 };
 
 export type RecommendationResponse = {
 	count: number;
+	category: string;
 	results: Recommendation[];
 	sources_used: {
 		google: number;
 		osm: number;
-		total_before_dedup: number;
+		merged: number;
 	};
-	warnings?: string[];
-	error?: string;
+	warnings: string[];
 };
 
 export type PlaceSearchResult = {

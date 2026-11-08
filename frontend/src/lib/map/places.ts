@@ -1,11 +1,13 @@
 import { apiErrorMessage } from '#lib/api/index.js';
 import type {
 	Location,
+	Lodging,
 	PlaceSearchResult,
 	Recommendation,
 	RecommendationResponse
 } from '#lib/types.js';
 import { googleContentImage } from '#lib/images.js';
+import type { RecommendationCategory } from '#lib/recommendations/categories.js';
 
 export type PlacesSearchMeta = {
 	provider_used?: string;
@@ -180,10 +182,20 @@ export type QuickAddPayload = {
 	type?: string;
 };
 
-export async function quickAddLocation(
+export type QuickAddOptions = {
+	collectionId?: string | null;
+	/** Also place it on the trip day with this date (YYYY-MM-DD). */
+	itineraryDate?: string | null;
+};
+
+export type QuickAddResult<T> = T & { quick_add_itinerary_item?: Record<string, unknown> };
+
+async function postQuickAdd<T>(
+	endpoint: string,
 	payload: QuickAddPayload,
-	collectionId?: string | null
-): Promise<Location> {
+	options: QuickAddOptions,
+	failure: string
+): Promise<QuickAddResult<T>> {
 	const body: Record<string, unknown> = {
 		name: payload.name,
 		latitude: payload.latitude,
@@ -200,19 +212,47 @@ export async function quickAddLocation(
 		photos: payload.photos || [],
 		is_public: false
 	};
-	if (collectionId) body.collection = collectionId;
+	if (options.collectionId) body.collection = options.collectionId;
+	if (options.itineraryDate) body.itinerary_date = options.itineraryDate;
 	if (payload.type) body.type = payload.type;
 
-	const res = await fetch('/api/locations/quick-add/', {
+	const res = await fetch(endpoint, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body)
 	});
 	if (!res.ok) {
 		const errorData = await res.json().catch(() => null);
-		throw new Error(apiErrorMessage(errorData, 'Failed to create location'));
+		throw new Error(apiErrorMessage(errorData, failure));
 	}
 	return res.json();
+}
+
+/** `options` may also be a collection id, as older callers pass. */
+export function quickAddLocation(
+	payload: QuickAddPayload,
+	options: QuickAddOptions | string | null = {}
+): Promise<QuickAddResult<Location>> {
+	const resolved =
+		typeof options === 'string' || options === null ? { collectionId: options } : options;
+	return postQuickAdd<Location>(
+		'/api/locations/quick-add/',
+		payload,
+		resolved,
+		'Failed to create location'
+	);
+}
+
+export function quickAddLodging(
+	payload: QuickAddPayload,
+	options: QuickAddOptions = {}
+): Promise<QuickAddResult<Lodging>> {
+	return postQuickAdd<Lodging>(
+		'/api/lodgings/quick-add/',
+		payload,
+		options,
+		'Failed to create lodging'
+	);
 }
 
 export function placeToQuickAddPayload(place: PlaceSearchResult): QuickAddPayload {
@@ -240,6 +280,7 @@ export function recommendationToQuickAddPayload(rec: Recommendation): QuickAddPa
 		latitude: rec.latitude,
 		longitude: rec.longitude,
 		location: rec.address || rec.description || '',
+		place_id: rec.place_id,
 		description: rec.description,
 		website: rec.website,
 		phone_number: rec.phone_number,
@@ -249,6 +290,18 @@ export function recommendationToQuickAddPayload(rec: Recommendation): QuickAddPa
 		types: rec.types,
 		photos: rec.photos
 	};
+}
+
+/**
+ * A smaller copy of an app Google photo (`/api/places/photo/?...`) for thumbnails.
+ * Other addresses are returned unchanged.
+ */
+export function placePhotoThumbnail(url: string, size = 200): string {
+	if (!url.startsWith('/api/places/photo/')) return url;
+	const [path, query = ''] = url.split('?');
+	const params = new URLSearchParams(query);
+	params.set('size', String(size));
+	return `${path}?${params.toString()}`;
 }
 
 /** Photo URLs to import after save (matches LocationModal quick-start add-details flow). */
@@ -262,7 +315,10 @@ export function extractGooglePhotoUrls(
 	}
 	return (images ?? [])
 		.map((img) => img?.image)
-		.filter((url): url is string => typeof url === 'string' && /^https?:\/\//i.test(url.trim()))
+		.filter(
+			(url): url is string =>
+				typeof url === 'string' && /^(https?:\/\/|\/api\/places\/photo\/)/i.test(url.trim())
+		)
 		.slice(0, 5);
 }
 
@@ -300,6 +356,38 @@ export function recommendationToLocationPrefill(rec: Recommendation) {
 	};
 }
 
+/** A `LodgingModal` prefill for a recommendation. */
+export function recommendationToLodgingPrefill(
+	rec: Recommendation,
+	userId: string | null | undefined,
+	collectionId: string | null
+): Lodging {
+	return {
+		id: '',
+		user: userId ?? '',
+		name: rec.name,
+		type: '',
+		description: rec.description,
+		rating: rec.rating,
+		link: rec.website || rec.google_maps_url || null,
+		check_in: null,
+		check_out: null,
+		timezone: null,
+		reservation_number: null,
+		price: null,
+		price_currency: null,
+		latitude: rec.latitude,
+		longitude: rec.longitude,
+		location: rec.address || rec.description || null,
+		is_public: false,
+		collection: collectionId,
+		created_at: '',
+		updated_at: '',
+		images: (rec.photos || []).map((url, i) => googleContentImage(`rec-${i}`, url, i === 0)),
+		attachments: []
+	} as Lodging;
+}
+
 export function nearbyRadiusOptions(isMetric: boolean): { value: number; label: string }[] {
 	return isMetric
 		? [
@@ -324,7 +412,8 @@ export async function fetchRecommendations(params: {
 	lat: number;
 	lon: number;
 	radius: number;
-	category: 'tourism' | 'food' | 'lodging';
+	category: RecommendationCategory;
+	limit?: number;
 }): Promise<RecommendationResponse> {
 	const searchParams = new URLSearchParams({
 		lat: params.lat.toString(),
@@ -332,6 +421,7 @@ export async function fetchRecommendations(params: {
 		radius: params.radius.toString(),
 		category: params.category
 	});
+	if (params.limit) searchParams.set('limit', String(params.limit));
 	const response = await fetch(`/api/recommendations/?${searchParams.toString()}`);
 	const data = await response.json();
 	if (!response.ok) {

@@ -79,7 +79,7 @@ See [Caching](caching.md) for what is cached and how to use Redis.
 | `REDIS_URL` | With Redis | Redis connection URL when `CACHE_BACKEND=redis`. | `redis://127.0.0.1:6379/0` |
 | `CACHE_KEY_PREFIX` | No | Prefix for cache keys. Set it if several apps share one cache server. | empty |
 | `EXTERNAL_API_CACHE_TIMEOUT` | No | Seconds that geocoding, places and similar lookups are cached. | `86400` |
-| `GOOGLE_API_CACHE_TIMEOUT` | No | Seconds that Google Maps results are cached. Capped at 30 days. | `86400` |
+| `OSM_CACHE_TIMEOUT` | No | Seconds that OpenStreetMap lookups (Nominatim search and reverse geocoding, Overpass recommendations) are cached. Google Maps results are never cached, as Google's terms require. | `86400` |
 | `SESSION_CACHE_SECONDS` | No | How long a login session is kept in the cache before it is read from the database again. | `300` |
 
 ## Registration and authentication
@@ -104,6 +104,7 @@ Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_re
 | `ENABLE_RATE_LIMITS` | No | Enable API rate limiting. Recommended in production. | `False` |
 | `RATE_LIMIT_USER` | No | Default authenticated user throttle. | `10000/hour` |
 | `RATE_LIMIT_IMAGE_PROXY` | No | Image proxy endpoint limit. | `60/minute` |
+| `RATE_LIMIT_PLACE_PHOTO` | No | Google place photo endpoint limit. | `300/minute` |
 | `RATE_LIMIT_IMAGE_IMPORT` | No | Image import limit. | `12/minute` |
 | `RATE_LIMIT_EXTERNAL_GEOCODE` | No | External geocoding limit. | `120/minute` |
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | No | Recommendations API limit. | `30/minute` |

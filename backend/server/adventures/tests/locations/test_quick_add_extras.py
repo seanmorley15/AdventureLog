@@ -75,6 +75,18 @@ class QuickAddExtrasTests(APITestCase):
         self.assertEqual(body['quick_add_itinerary_item']['content_type'], 'lodging')
         self.assertEqual(import_photos.call_args.args[0], Lodging.objects.get(id=body['id']))
 
+    def test_proxied_google_photos_are_imported(self, import_photos):
+        """Search and recommendation results give `/api/places/photo/` paths, not full URLs."""
+        proxied = '/api/places/photo/?name=places%2Fabc%2Fphotos%2F1&size=800'
+        response = self.client.post(
+            '/api/locations/quick-add/',
+            self.payload(photos=[proxied, 'http://example.com/a.jpg', '/somewhere/else.jpg']),
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(import_photos.call_args.args[1], [proxied, 'http://example.com/a.jpg'])
+
     def test_no_photos_and_no_date_adds_no_extras(self, import_photos):
         for url in ('/api/locations/quick-add/', '/api/lodgings/quick-add/'):
             response = self.client.post(url, self.payload(), format='json')

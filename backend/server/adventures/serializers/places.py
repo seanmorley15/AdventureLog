@@ -7,6 +7,9 @@ services in ``adventures.services.places`` normalize it. They are not model seri
 
 from rest_framework import serializers
 
+from adventures.services.places.photos import DEFAULT_SIZE, MAX_SIZE, PHOTO_NAME_RE, PHOTO_REFERENCE_RE
+from adventures.services.recommendations.categories import CATEGORY_CHOICES
+
 
 class LanguageQuerySerializer(serializers.Serializer):
     """The `lang` parameter shared by every lookup that returns names or text."""
@@ -42,7 +45,10 @@ class PlaceSearchResultSerializer(serializers.Serializer):
     importance = serializers.FloatField(allow_null=True)
     rating = serializers.FloatField(allow_null=True)
     review_count = serializers.IntegerField(allow_null=True)
-    photos = serializers.ListField(child=serializers.CharField(), help_text='Photo URLs.')
+    photos = serializers.ListField(
+        child=serializers.CharField(),
+        help_text='Photo addresses on this server (`/api/places/photo/?...`); the Google key is never included.',
+    )
     addresstype = serializers.CharField(allow_null=True)
     provider = serializers.CharField(allow_null=True, help_text='`google` or `osm`.')
     powered_by = serializers.CharField(allow_null=True)
@@ -115,6 +121,26 @@ class ImageLookupQuerySerializer(serializers.Serializer):
     lang = serializers.CharField(required=False, help_text='Wikipedia language, e.g. `en`.')
 
 
+class PlacePhotoQuerySerializer(serializers.Serializer):
+    name = serializers.RegexField(
+        PHOTO_NAME_RE, required=False,
+        help_text='A Google photo name, `places/<id>/photos/<id>`. Give this or `reference`.',
+    )
+    reference = serializers.RegexField(
+        PHOTO_REFERENCE_RE, required=False,
+        help_text='A legacy Google photo reference. Give this or `name`.',
+    )
+    size = serializers.IntegerField(
+        required=False, default=DEFAULT_SIZE, min_value=1, max_value=MAX_SIZE,
+        help_text='Longest side in pixels.',
+    )
+
+    def validate(self, attrs):
+        if bool(attrs.get('name')) == bool(attrs.get('reference')):
+            raise serializers.ValidationError('Give exactly one of `name` or `reference`.')
+        return attrs
+
+
 class WikipediaImageSerializer(serializers.Serializer):
     source = serializers.URLField()
     width = serializers.IntegerField(allow_null=True)
@@ -127,15 +153,23 @@ class ImageLookupSerializer(serializers.Serializer):
     images = WikipediaImageSerializer(many=True)
 
 
-class RecommendationQuerySerializer(serializers.Serializer):
-    category = serializers.ChoiceField(choices=['lodging', 'food', 'tourism'])
+class RecommendationQuerySerializer(LanguageQuerySerializer):
+    category = serializers.ChoiceField(
+        choices=CATEGORY_CHOICES,
+        help_text='What to look for. `tourism` is the older name of `attractions`.',
+    )
     lat = serializers.FloatField(required=False, min_value=-90, max_value=90)
     lon = serializers.FloatField(required=False, min_value=-180, max_value=180)
     location = serializers.CharField(
         required=False, help_text='A place name to search around, instead of `lat` and `lon`.'
     )
     radius = serializers.FloatField(default=5000, min_value=1, help_text='Meters. At most 50000.')
-    sources = serializers.ChoiceField(choices=['google', 'osm', 'both'], default='both')
+    sources = serializers.ChoiceField(
+        choices=['google', 'osm', 'both'],
+        default='both',
+        help_text='`both` uses Google, and tops up with OpenStreetMap when Google finds few places.',
+    )
+    limit = serializers.IntegerField(default=30, min_value=1, max_value=50)
 
     def validate_radius(self, value):
         return min(value, 50000)
@@ -149,16 +183,19 @@ class RecommendationQuerySerializer(serializers.Serializer):
 class RecommendationSerializer(serializers.Serializer):
     id = serializers.CharField()
     external_id = serializers.CharField()
-    source = serializers.ChoiceField(choices=['google', 'osm'])
+    place_id = serializers.CharField(allow_null=True, help_text='A Google place id, when Google knows the place.')
+    source = serializers.CharField(help_text='The provider the result mainly comes from: `google` or `osm`.')
+    sources = serializers.ListField(child=serializers.CharField(), help_text='Every provider that reported it.')
+    category = serializers.CharField()
     name = serializers.CharField()
     description = serializers.CharField(allow_null=True)
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
     address = serializers.CharField(allow_null=True)
-    distance_km = serializers.FloatField()
+    distance_km = serializers.FloatField(allow_null=True)
     rating = serializers.FloatField(allow_null=True)
     review_count = serializers.IntegerField(allow_null=True)
-    price_level = serializers.CharField(allow_null=True)
+    price_level = serializers.IntegerField(allow_null=True, help_text='0 (free) to 4 (very expensive).')
     types = serializers.ListField(child=serializers.CharField())
     primary_type = serializers.CharField(allow_null=True)
     business_status = serializers.CharField(allow_null=True)
@@ -169,17 +206,23 @@ class RecommendationSerializer(serializers.Serializer):
     google_maps_url = serializers.CharField(allow_null=True)
     photos = serializers.ListField(child=serializers.CharField())
     is_verified = serializers.BooleanField()
-    quality_score = serializers.FloatField()
+    quality_score = serializers.FloatField(help_text='0 to 100; results are sorted by it.')
+    osm_type = serializers.CharField(required=False, allow_null=True)
+    wikipedia = serializers.CharField(required=False, allow_null=True)
+    wikidata = serializers.CharField(required=False, allow_null=True)
+    stars = serializers.CharField(required=False, allow_null=True)
+    cuisine = serializers.CharField(required=False, allow_null=True)
 
 
 class RecommendationSourcesSerializer(serializers.Serializer):
     google = serializers.IntegerField()
     osm = serializers.IntegerField()
-    total_before_dedup = serializers.IntegerField()
+    merged = serializers.IntegerField(help_text='Places both providers reported, combined into one result.')
 
 
 class RecommendationResponseSerializer(serializers.Serializer):
     count = serializers.IntegerField()
+    category = serializers.CharField()
     results = RecommendationSerializer(many=True)
     sources_used = RecommendationSourcesSerializer()
-    warnings = serializers.ListField(child=serializers.CharField(), required=False)
+    warnings = serializers.ListField(child=serializers.CharField(), help_text='Problems with one provider.')

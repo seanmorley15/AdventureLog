@@ -26,6 +26,7 @@ Per-endpoint overrides (all optional):
 | -------- | ------- | -------- |
 | `RATE_LIMIT_USER` | `10000/hour` | Authenticated API requests |
 | `RATE_LIMIT_IMAGE_PROXY` | `60/minute` | Image proxy |
+| `RATE_LIMIT_PLACE_PHOTO` | `300/minute` | Google place photos |
 | `RATE_LIMIT_IMAGE_IMPORT` | `12/minute` | Image import |
 | `RATE_LIMIT_EXTERNAL_GEOCODE` | `120/minute` | External geocoding |
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | `30/minute` | Recommendations |

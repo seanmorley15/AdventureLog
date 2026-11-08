@@ -5,6 +5,8 @@ import time
 
 import requests
 
+from django.conf import settings
+
 from core.results import ProviderResult
 from core.cache import cached_provider
 
@@ -19,19 +21,22 @@ OVERPASS_URLS: List[str] = [
 
 # After every mirror fails, skip new calls so a down public instance is not hit on every search.
 COOLDOWN_SECONDS = 120
+
+# OpenStreetMap's usage policies ask clients to cache. One setting covers every OSM lookup.
+OSM_CACHE_TIMEOUT = getattr(settings, 'OSM_CACHE_TIMEOUT', 60 * 60 * 24)
 _unavailable_until = 0.0
 
 
-# An identical query (same area, same filters) gives the same places for hours.
-@cached_provider('overpass', lambda query, *a, **k: (query,), 60 * 60 * 6)
-def execute_overpass_query(query: str, timeout: int = 12) -> ProviderResult[Dict]:
+# An identical query (same area, same filters) gives the same places, empty answers included.
+@cached_provider('overpass', lambda query, *a, **k: (query,), OSM_CACHE_TIMEOUT)
+def execute_overpass_query(query: str, timeout: int = 12, max_mirrors: int = len(OVERPASS_URLS)) -> ProviderResult[Dict]:
     global _unavailable_until
     now = time.monotonic()
     if now < _unavailable_until:
         return ProviderResult(error="OpenStreetMap query error")
 
     last_error = None
-    for url in OVERPASS_URLS:
+    for url in OVERPASS_URLS[:max_mirrors]:
         try:
             headers = {
                 "User-Agent": "AdventureLog/1.0 (Overpass request)",

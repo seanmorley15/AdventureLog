@@ -9,6 +9,10 @@ class ImageImportThrottle(ConditionalUserRateThrottle):
     scope = "image_import"
 
 
+class PlacePhotoThrottle(ConditionalUserRateThrottle):
+    scope = "place_photo"
+
+
 class ExternalGeocodeThrottle(ConditionalUserRateThrottle):
     scope = "external_geocode"
 

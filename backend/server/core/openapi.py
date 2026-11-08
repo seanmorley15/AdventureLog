@@ -188,6 +188,12 @@ class AutoSchema(SpectacularAutoSchema):
             parameters = [*parameters, IF_MATCH_PARAMETER]
         return parameters
 
+    def _is_list_view(self, serializer=None):
+        # A `list` action that returns one object (e.g. `{count, results, ...}`), not an array.
+        if getattr(self.view, 'list_returns_object', False):
+            return False
+        return super()._is_list_view(serializer)
+
     def _has_query_parameters(self):
         return any(
             param.get('in') == 'query' for param in self._get_parameters()

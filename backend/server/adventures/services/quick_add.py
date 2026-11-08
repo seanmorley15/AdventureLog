@@ -19,6 +19,7 @@ from adventures.services import day_plan
 from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
 from adventures.services.images.fetch import import_remote_images_for_object
 from adventures.services.places.details import get_place_details
+from adventures.services.places.photos import parse_proxy_photo_url
 from core.dates import aware_utc_from_date
 from core.errors import ServiceError
 from core.parsing import (
@@ -257,7 +258,10 @@ def create_quick_add_itinerary_item(collection, content_object, date_value):
 
 def import_quick_add_photos(content_object, payload):
     """Download the photos a quick add came with. Returns the import summary, or None when there are none."""
-    photo_urls = sanitize_photo_urls(payload.get('photos'))
+    # Google photos from search and recommendations arrive as `/api/places/photo/` paths.
+    photo_urls = sanitize_photo_urls(
+        payload.get('photos'), accept=lambda value: parse_proxy_photo_url(value) is not None
+    )
     if not photo_urls:
         return None
     return import_remote_images_for_object(

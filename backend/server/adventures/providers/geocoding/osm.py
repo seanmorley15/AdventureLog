@@ -2,11 +2,14 @@ from typing import Dict, Optional
 
 import requests
 
+from django.conf import settings
+
 from core.results import ProviderResult
 from core.cache import cached_provider, coordinate_key
 from core.net import is_resolvable
 
-GEOCODE_CACHE_TIMEOUT = 60 * 60 * 24 * 7  # Nominatim asks clients to cache results
+# OpenStreetMap's usage policies ask clients to cache. One setting covers every OSM lookup.
+OSM_CACHE_TIMEOUT = getattr(settings, 'OSM_CACHE_TIMEOUT', 60 * 60 * 24)
 
 REVERSE_URL = "https://nominatim.openstreetmap.org/reverse"
 
@@ -26,7 +29,7 @@ def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
         coordinate_key(lon, 5),
         language or '',
     ),
-    GEOCODE_CACHE_TIMEOUT,
+    OSM_CACHE_TIMEOUT,
 )
 def reverse_geocode(
     lat: float,

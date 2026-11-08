@@ -408,6 +408,8 @@ ENABLE_RATE_LIMITS = getenv('ENABLE_RATE_LIMITS', 'false').lower() == 'true'
 RATE_LIMIT_RATES = {
     'user': getenv('RATE_LIMIT_USER', '10000/hour'),
     'image_proxy': getenv('RATE_LIMIT_IMAGE_PROXY', '60/minute'),
+    # A results list loads many photos at once, so this is higher than the other proxies.
+    'place_photo': getenv('RATE_LIMIT_PLACE_PHOTO', '300/minute'),
     'image_import': getenv('RATE_LIMIT_IMAGE_IMPORT', '12/minute'),
     'external_geocode': getenv('RATE_LIMIT_EXTERNAL_GEOCODE', '120/minute'),
     'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
@@ -424,7 +426,9 @@ WIKIPEDIA_DESC_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_DESC_CACHE_TIMEOUT', str(60
 WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
 # Google Maps Platform results are cached for at most this long (their terms limit caching).
-GOOGLE_API_CACHE_TIMEOUT = min(int(getenv('GOOGLE_API_CACHE_TIMEOUT', str(60 * 60 * 24))), 60 * 60 * 24 * 30)
+# Seconds OpenStreetMap lookups (Nominatim, Overpass) are cached. Google results are never
+# cached: its terms allow caching only place IDs and coordinates.
+OSM_CACHE_TIMEOUT = int(getenv('OSM_CACHE_TIMEOUT', str(60 * 60 * 24)))
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 

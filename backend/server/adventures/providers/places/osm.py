@@ -2,10 +2,15 @@ from typing import Dict, List, Optional
 
 import requests
 
+from django.conf import settings
+
 from core.results import ProviderResult
 from core.cache import cached_provider
 
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
+
+# OpenStreetMap's usage policies ask clients to cache. One setting covers every OSM lookup.
+OSM_CACHE_TIMEOUT = getattr(settings, 'OSM_CACHE_TIMEOUT', 60 * 60 * 24)
 
 
 def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
@@ -19,7 +24,7 @@ def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
 @cached_provider(
     'osm_search',
     lambda query, limit=20, user_agent=None, language=None, **k: (query, limit, language or ''),
-    60 * 60 * 24,
+    OSM_CACHE_TIMEOUT,
 )
 def search_places(
     query: str,

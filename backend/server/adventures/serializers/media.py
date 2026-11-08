@@ -9,6 +9,7 @@ from integrations.facade import immich_integration_for
 from adventures.utils.geojson import cached_gpx_geojson
 from core.geo import point_to_lat_lon
 from adventures.serializers.geo_fields import CoordinateSerializerMixin
+from adventures.services.places.photos import parse_proxy_photo_url
 
 def _immich_integration_for(context, user_id):
     """A user's Immich integration, looked up once per request however many photos need it."""
@@ -188,14 +189,24 @@ class ImageUploadSerializer(serializers.Serializer):
     source_url = serializers.URLField(required=False, help_text='The page or file it was taken from.')
 
 
+class RemoteImageURLField(serializers.URLField):
+    """A public http(s) address, or the `/api/places/photo/` address a place search gave for a Google photo."""
+
+    def run_validation(self, data=serializers.empty):
+        # The URL validators would turn a relative address away, so ours skips them.
+        if isinstance(data, str) and parse_proxy_photo_url(data):
+            return data.strip()
+        return super().run_validation(data)
+
+
 class ImageFetchSerializer(serializers.Serializer):
-    url = serializers.URLField(help_text='A public http(s) address of an image.')
+    url = RemoteImageURLField(help_text='A public http(s) address of an image, or a `photos` address from a place search.')
 
 
 class ImageImportFromUrlsSerializer(serializers.Serializer):
     content_type = serializers.ChoiceField(choices=IMAGE_CONTENT_TYPES)
     object_id = serializers.UUIDField()
-    urls = serializers.ListField(child=serializers.URLField(), min_length=1, max_length=10)
+    urls = serializers.ListField(child=RemoteImageURLField(), min_length=1, max_length=10)
     source = serializers.CharField(required=False, help_text='e.g. `google` or `wikipedia`.')
 
 

@@ -8,14 +8,28 @@ or locations, so permissions and freshness are never affected by the cache.
 
 | Data | Where | For how long |
 | ---- | ----- | ------------ |
-| Geocoding (reverse and search), places search, recommendations | Cache | OpenStreetMap geocoding 7 days; places search 1 day; recommendations 6 hours |
-| Google Maps results | Cache | 1 day by default (`GOOGLE_API_CACHE_TIMEOUT`, capped at 30 days) |
+| OpenStreetMap lookups: place search, reverse geocoding, recommendations | Cache | 1 day (`OSM_CACHE_TIMEOUT`) |
+| Google Maps results and photos | Never cached | See below |
 | Wanderer trails and their GPX | Cache | 6 hours; a failed lookup is remembered for 10 minutes |
 | GPX files converted to map data | Cache | 7 days; a stored file never changes, so nothing needs clearing |
 | Login sessions | Cache, then database | 5 minutes in the cache (`SESSION_CACHE_SECONDS`); the database is the source of truth |
 
 Only successful results are cached. A timeout or provider error is retried on the
 next request. Immich and Strava data is never cached.
+
+### Google Maps
+
+Google's [Places API policies](https://developers.google.com/maps/documentation/places/web-service/policies)
+allow caching only place IDs and coordinates, so AdventureLog never caches Google
+search, details, recommendation or reverse-geocoding results, and Google photos are
+sent with `Cache-Control: no-store`. Every Google-backed lookup is a fresh request.
+Turn on `ENABLE_RATE_LIMITS` to keep usage in check.
+
+### OpenStreetMap
+
+The public Nominatim and Overpass servers ask clients to cache, so every OpenStreetMap
+lookup is kept for one day by default, empty answers included for Overpass. Change it
+with `OSM_CACHE_TIMEOUT` (seconds).
 
 ## Memcached (default)
 

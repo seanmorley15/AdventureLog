@@ -80,13 +80,19 @@ def sanitize_tags(raw_tags, max_tags=8):
     return tags
 
 
-def sanitize_photo_urls(raw_urls, max_urls=5):
+def sanitize_photo_urls(raw_urls, max_urls=5, accept=None):
+    """
+    The usable photo addresses: http(s) URLs, plus any value ``accept`` approves (for example
+    the app's own relative photo paths). Duplicates are dropped and at most ``max_urls`` kept.
+    """
     if not isinstance(raw_urls, list):
         return []
 
     cleaned = []
     for value in raw_urls:
         url = clean_url(value)
+        if not url and accept and isinstance(value, str) and accept(value.strip()):
+            url = value.strip()
         if not url or url in cleaned:
             continue
 

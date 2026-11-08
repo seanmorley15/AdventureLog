@@ -7,25 +7,40 @@
 	import FullMap from '#lib/components/map/FullMap.svelte';
 	import MapNearbyRadiusLayer from '#lib/components/map/MapNearbyRadiusLayer.svelte';
 	import MapRecommendationsLayer from '#lib/components/map/MapRecommendationsLayer.svelte';
-	import RecommendationDetailsModal from '#lib/components/collections/RecommendationDetailsModal.svelte';
+	import MapDetailPanel from '#lib/components/map/MapDetailPanel.svelte';
+	import RecommendationControls, {
+		type Anchor,
+		type AnchorOption,
+		type SortMode
+	} from '#lib/components/recommendations/RecommendationControls.svelte';
+	import RecommendationListItem from '#lib/components/recommendations/RecommendationListItem.svelte';
+	import type { DayOption } from '#lib/components/recommendations/RecommendationAddButton.svelte';
 	import LocationModal from '#lib/components/locations/LocationModal.svelte';
 	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
 	import { normalizeBasemapType } from '#lib';
-	import { googleContentImage } from '#lib/images.js';
 	import { addToast } from '#lib/toasts.js';
 	import { getMapViewportCenter } from '#lib/map/viewportCenter.js';
+	import { LocationDuplicateChecker } from '#lib/location-duplicate-checker.svelte.js';
+	import { indexedDays, showsDayPlanner } from '#lib/collections/plan.js';
 	import {
 		fetchRecommendations,
 		nearbyRadiusOptions,
 		quickAddLocation,
+		quickAddLodging,
 		recommendationToLocationPrefill,
+		recommendationToLodgingPrefill,
 		recommendationToQuickAddPayload,
 		resolveQuickAddPayload
 	} from '#lib/map/places.js';
+	import {
+		categoryMeta,
+		isLodgingRecommendation,
+		type RecommendationCategory
+	} from '#lib/recommendations/categories.js';
+	import { findCollectionMatch } from '#lib/recommendations/match.js';
 	import Compass from '~icons/mdi/compass';
 	import Lightbulb from '~icons/mdi/lightbulb-outline';
-	import MapMarker from '~icons/mdi/map-marker';
-	import Bed from '~icons/mdi/bed';
+	import ChevronLeft from '~icons/mdi/chevron-left';
 
 	interface Props {
 		collection: Collection;
@@ -34,17 +49,20 @@
 
 	let { collection = $bindable(), user }: Props = $props();
 
-	type Category = 'tourism' | 'food' | 'lodging';
-
-	let category = $state<Category>('tourism');
-	let radius = $state<number | null>(null);
+	let category = $state<RecommendationCategory>('attractions');
+	let radius = $state<number>(0);
+	let sort = $state<SortMode>('best');
+	let hideAdded = $state(false);
+	let anchor = $state<Anchor>({ kind: 'map' });
 	let recommendations = $state<Recommendation[]>([]);
+	let warnings = $state<string[]>([]);
+	let hasSearched = $state(false);
 	let selected = $state<Recommendation | null>(null);
-	let detailsOpen = $state(false);
+	let highlightedId = $state<string | null>(null);
 	let loading = $state(false);
-	let isQuickAdding = $state(false);
+	let busyIds = $state<Set<string>>(new Set());
 	let error = $state<string | null>(null);
-	let showSearch = $state(true);
+	let showSearch = $state(false);
 	let basemapType = $state('default');
 	let map = $state<any>(undefined);
 	let mapRoot = $state<HTMLElement | null>(null);
@@ -56,13 +74,17 @@
 	};
 	let locationToEdit = $state<Location | null>(null);
 	let lodgingToEdit = $state<Lodging | null>(null);
+	let listScroller = $state<HTMLElement | null>(null);
+	let savedScroll = 0;
+	let requestId = 0;
+	const duplicates = new LocationDuplicateChecker();
 
 	const isMetric = $derived(user?.measurement_system !== 'imperial');
 	const radiusOptions = $derived(nearbyRadiusOptions(isMetric));
 	const radiusMeters = $derived(
-		radius ??
-			radiusOptions.find((option) => option.label.startsWith('5'))?.value ??
-			radiusOptions[0].value
+		radius ||
+			(radiusOptions.find((option) => option.label.startsWith('5'))?.value ??
+				radiusOptions[0].value)
 	);
 
 	$effect(() => {
@@ -95,31 +117,102 @@
 
 	const startCenter = $derived.by(() => {
 		if (!collectionPoints.length) return { lng: 0, lat: 20 };
-		const lng =
-			collectionPoints.reduce((sum, point) => sum + point.lngLat[0], 0) / collectionPoints.length;
-		const lat =
-			collectionPoints.reduce((sum, point) => sum + point.lngLat[1], 0) / collectionPoints.length;
-		return { lng, lat };
+		const n = collectionPoints.length;
+		return {
+			lng: collectionPoints.reduce((sum, point) => sum + point.lngLat[0], 0) / n,
+			lat: collectionPoints.reduce((sum, point) => sum + point.lngLat[1], 0) / n
+		};
+	});
+
+	/** Places in the trip that a search can be centered on. */
+	const anchorOptions = $derived.by<AnchorOption[]>(() => {
+		const options: AnchorOption[] = [];
+		for (const stay of collection.lodging ?? []) {
+			const p = finitePoint(stay.latitude, stay.longitude);
+			if (p)
+				options.push({
+					id: `lodging-${stay.id}`,
+					label: stay.name,
+					group: $t('adventures.lodging'),
+					lng: p[0],
+					lat: p[1]
+				});
+		}
+		for (const loc of collection.locations ?? []) {
+			const p = finitePoint(loc.latitude, loc.longitude);
+			if (p)
+				options.push({
+					id: `location-${loc.id}`,
+					label: loc.name,
+					group: $t('locations.locations'),
+					lng: p[0],
+					lat: p[1]
+				});
+		}
+		return options;
+	});
+
+	const days = $derived.by<DayOption[]>(() => {
+		if (!showsDayPlanner(collection)) return [];
+		return indexedDays(collection)
+			.filter((day) => day.date)
+			.map((day) => ({
+				date: day.date as string,
+				label: `${day.index} · ${new Date(`${day.date}T00:00:00`).toLocaleDateString(undefined, {
+					month: 'short',
+					day: 'numeric'
+				})}`
+			}));
 	});
 
 	let viewportCenter = $state<{ lng: number; lat: number } | null>(null);
 	let focusCenter = $state<[number, number] | null>(null);
 	let focusZoom = $state<number | undefined>(undefined);
-	const circleCenter = $derived(viewportCenter ?? startCenter);
-	const mapCenter = $derived(focusCenter ?? [startCenter.lng, startCenter.lat]);
+	let lastSearchCenter = $state<{ lng: number; lat: number } | null>(null);
+	const circleCenter = $derived(
+		anchor.kind === 'point' ? { lng: anchor.lng, lat: anchor.lat } : (viewportCenter ?? startCenter)
+	);
+	const mapCenter = $derived<[number, number]>(focusCenter ?? [startCenter.lng, startCenter.lat]);
 	const mapZoom = $derived(focusZoom ?? (collectionPoints.length ? 11 : 2));
 
-	function currentSearchCenter() {
+	const matches = $derived.by(() => {
+		const out = new Map<string, { kind: 'location' | 'lodging'; id: string }>();
+		for (const rec of recommendations) {
+			const match = findCollectionMatch(rec, collection);
+			if (match) out.set(rec.id, match);
+		}
+		return out;
+	});
+	const addedIds = $derived(new Set(matches.keys()));
+
+	const visible = $derived.by(() => {
+		let list = hideAdded
+			? recommendations.filter((rec) => !matches.has(rec.id))
+			: [...recommendations];
+		if (sort === 'nearest')
+			list.sort((a, b) => (a.distance_km ?? Infinity) - (b.distance_km ?? Infinity));
+		else if (sort === 'rating')
+			list.sort(
+				(a, b) =>
+					(b.rating ?? -1) - (a.rating ?? -1) || (b.review_count ?? 0) - (a.review_count ?? 0)
+			);
+		return list;
+	});
+
+	function currentSearchCenter(): { lng: number; lat: number } {
+		if (anchor.kind === 'point') return { lng: anchor.lng, lat: anchor.lat };
 		if (map) return getMapViewportCenter(map, mapRoot);
 		return circleCenter;
 	}
 
-	async function searchThisArea() {
+	async function search() {
 		const center = currentSearchCenter();
 		if (!Number.isFinite(center.lat) || !Number.isFinite(center.lng)) return;
+		const id = ++requestId;
 		loading = true;
 		error = null;
 		showSearch = false;
+		lastSearchCenter = center;
 		try {
 			const data = await fetchRecommendations({
 				lat: center.lat,
@@ -127,47 +220,158 @@
 				radius: radiusMeters,
 				category
 			});
+			if (id !== requestId) return;
 			recommendations = data.results ?? [];
-			selected = null;
-			detailsOpen = false;
-			if (!recommendations.length) error = $t('map.recommendations_empty');
+			warnings = data.warnings ?? [];
+			if (selected && !recommendations.some((rec) => rec.id === selected?.id)) selected = null;
 		} catch (err) {
+			if (id !== requestId) return;
 			recommendations = [];
+			warnings = [];
 			selected = null;
-			detailsOpen = false;
 			error = err instanceof Error ? err.message : $t('map.recommendations_error');
 		} finally {
-			loading = false;
+			if (id === requestId) {
+				loading = false;
+				hasSearched = true;
+			}
 		}
 	}
 
-	function closeDetails() {
-		detailsOpen = false;
+	function setAnchor(next: Anchor) {
+		anchor = next;
+		if (next.kind === 'point') {
+			focusCenter = [next.lng, next.lat];
+			focusZoom = radiusMeters > 20000 ? 9 : radiusMeters > 5000 ? 11 : 12;
+		}
+		void search();
 	}
 
-	function selectRecommendation(item: Recommendation) {
-		selected = item;
-		detailsOpen = true;
-		focusCenter = [item.longitude, item.latitude];
-		focusZoom = 14;
-	}
+	// Changing the category or radius searches again around the current anchor.
+	let firstRun = true;
+	$effect(() => {
+		void category;
+		void radiusMeters;
+		if (firstRun) {
+			firstRun = false;
+			return;
+		}
+		untrack(() => {
+			if (hasSearched || anchor.kind === 'point') void search();
+		});
+	});
+
+	// On open, search around the trip's first stay, or around where the map starts.
+	$effect(() => {
+		untrack(() => {
+			if (hasSearched || loading || !collectionPoints.length) return;
+			const stay = (collection.lodging ?? [])
+				.map((s) => ({ s, p: finitePoint(s.latitude, s.longitude) }))
+				.find((entry) => entry.p);
+			if (stay?.p) {
+				setAnchor({
+					kind: 'point',
+					id: `lodging-${stay.s.id}`,
+					label: stay.s.name,
+					lng: stay.p[0],
+					lat: stay.p[1]
+				});
+			} else {
+				void search();
+			}
+		});
+	});
 
 	function rememberMove(event: CustomEvent<{ center: { lng: number; lat: number } }>) {
 		const center = map ? getMapViewportCenter(map, mapRoot) : event.detail.center;
 		viewportCenter = center;
-		const anchor = focusCenter;
-		if (!anchor) {
-			showSearch = true;
+		if (anchor.kind !== 'map') {
+			showSearch = false;
 			return;
 		}
+		const from = lastSearchCenter;
 		showSearch =
-			Math.abs(anchor[0] - center.lng) > 0.002 || Math.abs(anchor[1] - center.lat) > 0.002;
+			!from || Math.abs(from.lng - center.lng) > 0.002 || Math.abs(from.lat - center.lat) > 0.002;
 	}
 
-	function openDetails(item: Recommendation | null = selected) {
-		if (!item) return;
+	function selectRecommendation(item: Recommendation) {
+		if (!selected) savedScroll = listScroller?.scrollTop ?? 0;
 		selected = item;
-		detailsOpen = false;
+		focusCenter = [item.longitude, item.latitude];
+		focusZoom = 14;
+		if (anchor.kind === 'map') lastSearchCenter = { lng: item.longitude, lat: item.latitude };
+	}
+
+	function backToList() {
+		selected = null;
+		queueMicrotask(() => listScroller?.scrollTo({ top: savedScroll }));
+	}
+
+	$effect(() => {
+		if (!selected) {
+			duplicates.reset();
+			return;
+		}
+		duplicates.schedule(
+			{
+				name: selected.name,
+				latitude: selected.latitude,
+				longitude: selected.longitude,
+				location: selected.address || selected.description || null
+			},
+			80
+		);
+	});
+
+	function setBusy(id: string, value: boolean) {
+		const next = new Set(busyIds);
+		if (value) next.add(id);
+		else next.delete(id);
+		busyIds = next;
+	}
+
+	function upsertLocation(created: Location) {
+		if (!(collection.locations ?? []).some((item) => item.id === created.id)) {
+			collection.locations = [...(collection.locations ?? []), created];
+		}
+	}
+
+	function upsertLodging(created: Lodging) {
+		if (!(collection.lodging ?? []).some((item) => item.id === created.id)) {
+			collection.lodging = [...(collection.lodging ?? []), created];
+		}
+	}
+
+	async function add(item: Recommendation, opts: { date?: string; lodging?: boolean } = {}) {
+		if (busyIds.has(item.id)) return;
+		setBusy(item.id, true);
+		try {
+			const payload = await resolveQuickAddPayload(recommendationToQuickAddPayload(item));
+			const options = { collectionId: collection.id, itineraryDate: opts.date ?? null };
+			const created = opts.lodging
+				? await quickAddLodging(payload, options)
+				: await quickAddLocation(payload, options);
+			if (opts.lodging) upsertLodging(created as Lodging);
+			else upsertLocation(created as Location);
+			const placed = created.quick_add_itinerary_item as any;
+			if (placed && !(collection.itinerary ?? []).some((entry) => entry.id === placed.id)) {
+				collection.itinerary = [...(collection.itinerary ?? []), placed];
+			}
+			const day = opts.date ? days.find((d) => d.date === opts.date) : null;
+			addToast(
+				'success',
+				day
+					? $t('recomendations.added_to_day', { values: { name: item.name, day: day.label } })
+					: $t('recomendations.added_to_ideas', { values: { name: item.name } })
+			);
+		} catch (err) {
+			addToast('error', err instanceof Error ? err.message : $t('map.search_error'));
+		} finally {
+			setBusy(item.id, false);
+		}
+	}
+
+	function openDetails(item: Recommendation) {
 		locationToEdit = {
 			...recommendationToLocationPrefill(item),
 			visits: [],
@@ -181,78 +385,23 @@
 		} as Location;
 	}
 
-	function openLodging(item: Recommendation | null = selected) {
-		if (!item) return;
-		selected = item;
-		detailsOpen = false;
-		const rec = item;
-		lodgingToEdit = {
-			id: '',
-			user: user?.uuid ?? '',
-			name: rec.name,
-			type: '',
-			description: rec.description,
-			rating: rec.rating,
-			link: rec.website || rec.google_maps_url || null,
-			check_in: null,
-			check_out: null,
-			timezone: null,
-			reservation_number: null,
-			price: null,
-			price_currency: null,
-			latitude: rec.latitude,
-			longitude: rec.longitude,
-			location: rec.address || rec.description || null,
-			is_public: false,
-			collection: collection.id,
-			created_at: '',
-			updated_at: '',
-			images: (rec.photos || []).map((url, i) => googleContentImage(`rec-${i}`, url, i === 0)),
-			attachments: []
-		} as Lodging;
-	}
-
-	async function quickAdd(item: Recommendation | null = selected) {
-		if (!item || isQuickAdding) return;
-		selected = item;
-		isQuickAdding = true;
-		try {
-			const payload = await resolveQuickAddPayload(recommendationToQuickAddPayload(item));
-			const created = await quickAddLocation(payload, collection.id);
-			const exists = (collection.locations ?? []).some((item) => item.id === created.id);
-			if (!exists) {
-				collection.locations = [...(collection.locations ?? []), created];
-			}
-			addToast('success', $t('map.quick_add'));
-			detailsOpen = false;
-		} catch (err) {
-			addToast('error', err instanceof Error ? err.message : $t('map.search_error'));
-		} finally {
-			isQuickAdding = false;
-		}
+	function openLodging(item: Recommendation) {
+		lodgingToEdit = recommendationToLodgingPrefill(item, user?.uuid, collection.id);
 	}
 
 	function keepLocation(event: CustomEvent<Location>) {
-		const created = event.detail;
-		if (!created?.id) return;
-		const exists = (collection.locations ?? []).some((item) => item.id === created.id);
-		if (!exists) collection.locations = [...(collection.locations ?? []), created];
+		if (!event.detail?.id) return;
+		upsertLocation(event.detail);
 		locationToEdit = null;
 	}
 
-	function chip(active: boolean) {
-		return active
-			? 'btn btn-xs h-7 min-h-7 btn-primary gap-1 px-2.5 font-normal'
-			: 'btn btn-xs h-7 min-h-7 btn-ghost gap-1 border border-base-300/80 px-2.5 font-normal opacity-70';
-	}
-
 	function keepLodging(event: CustomEvent<Lodging>) {
-		const created = event.detail;
-		if (!created?.id) return;
-		const exists = (collection.lodging ?? []).some((item) => item.id === created.id);
-		if (!exists) collection.lodging = [...(collection.lodging ?? []), created];
+		if (!event.detail?.id) return;
+		upsertLodging(event.detail);
 		lodgingToEdit = null;
 	}
+
+	const lodgingFirst = $derived(categoryMeta(category).isLodging);
 </script>
 
 <div class="relative h-full min-h-0 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -272,8 +421,10 @@
 			{#snippet overlays()}
 				<MapNearbyRadiusLayer visible center={circleCenter} {radiusMeters} />
 				<MapRecommendationsLayer
-					{recommendations}
+					recommendations={visible}
 					selectedId={selected?.id ?? null}
+					{highlightedId}
+					{addedIds}
 					on:select={(event) => selectRecommendation(event.detail.item)}
 				/>
 				{#each collectionPoints as point (point.id)}
@@ -300,7 +451,7 @@
 				<button
 					type="button"
 					class="btn btn-primary btn-sm pointer-events-auto gap-2 shadow-lg"
-					onclick={searchThisArea}
+					onclick={search}
 				>
 					<Compass class="h-4 w-4" />
 					{$t('map.search_this_area')}
@@ -310,172 +461,117 @@
 	</div>
 
 	<div
+		bind:this={listScroller}
 		class="planner-pane absolute inset-x-0 bottom-0 top-[34%] z-10 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-3xl bg-base-100 px-2 pb-8 shadow-2xl lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-2 lg:shadow-none"
 	>
 		<div class="mx-auto mb-3 mt-2 h-1.5 w-12 rounded-full bg-base-300 lg:hidden"></div>
-		<div class="space-y-4">
+
+		{#if selected}
 			<section class="card bg-base-200 shadow-xl">
 				<div class="card-body gap-3 p-4 sm:p-5">
-					<div class="flex items-center gap-3">
-						<Compass class="h-5 w-5 shrink-0 text-primary" />
-						<div class="min-w-0 flex-1">
-							<h3 class="text-lg font-bold">{$t('recomendations.recommendations')}</h3>
-							<p class="text-sm opacity-70">{$t('map.search_this_area')}</p>
-						</div>
-					</div>
-
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('map.recommendation_category')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={chip(category === 'tourism')}
-								onclick={() => (category = 'tourism')}
-							>
-								🏛️ {$t('recomendations.tourism')}
-							</button>
-							<button
-								type="button"
-								class={chip(category === 'food')}
-								onclick={() => (category = 'food')}
-							>
-								🍴 {$t('recomendations.food')}
-							</button>
-							<button
-								type="button"
-								class={chip(category === 'lodging')}
-								onclick={() => (category = 'lodging')}
-							>
-								🏨 {$t('recomendations.lodging')}
-							</button>
-						</div>
-					</div>
-
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('map.recommendation_radius')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							{#each radiusOptions as option (option.value)}
-								<button
-									type="button"
-									class={chip(radiusMeters === option.value)}
-									onclick={() => (radius = option.value)}
-								>
-									{option.label}
-								</button>
-							{/each}
-						</div>
-					</div>
-
-					{#if error}
-						<div class="alert alert-warning py-2 text-sm">{error}</div>
-					{/if}
+					<button type="button" class="btn btn-ghost btn-sm w-fit gap-1 px-2" onclick={backToList}>
+						<ChevronLeft class="h-4 w-4" />
+						{$t('recomendations.back_to_results')}
+					</button>
+					<MapDetailPanel
+						embedded
+						selectionKind="recommendation"
+						recommendation={selected}
+						{isMetric}
+						isQuickAdding={busyIds.has(selected.id)}
+						showLodgingAdd={isLodgingRecommendation(selected)}
+						duplicateMatches={duplicates.matches}
+						isCheckingDuplicates={duplicates.checking}
+						showDuplicatePrompt={duplicates.visible}
+						on:quickAdd={() => selected && add(selected, { lodging: lodgingFirst })}
+						on:addDetails={() => selected && openDetails(selected)}
+						on:addLodging={() => selected && openLodging(selected)}
+					/>
 				</div>
 			</section>
+		{:else}
+			<div class="space-y-4">
+				<section class="card bg-base-200 shadow-xl">
+					<div class="card-body gap-3 p-4 sm:p-5">
+						<RecommendationControls
+							bind:category
+							bind:radius={() => radiusMeters, (value) => (radius = value)}
+							bind:sort
+							bind:hideAdded
+							{radiusOptions}
+							{anchor}
+							{anchorOptions}
+							onAnchor={setAnchor}
+						/>
+					</div>
+				</section>
 
-			{#if recommendations.length}
 				<section class="card bg-base-200 shadow-xl">
 					<div class="card-body gap-3 p-4 sm:p-5">
 						<div class="flex items-center gap-3">
 							<Lightbulb class="h-5 w-5 shrink-0 text-warning" />
-							<div class="min-w-0 flex-1">
-								<h3 class="text-lg font-bold">
-									{$t('map.recommendations_count', { values: { count: recommendations.length } })}
-								</h3>
-							</div>
+							<h3 class="min-w-0 flex-1 text-lg font-bold">
+								{$t('map.recommendations_count', { values: { count: visible.length } })}
+							</h3>
+							{#if hasSearched}
+								<span class="badge badge-ghost badge-sm font-medium">{recommendations.length}</span>
+							{/if}
 						</div>
 
-						<div class="space-y-2">
-							{#each recommendations as item (item.id)}
-								<div
-									id={`rec-${item.id}`}
-									class={[
-										'rounded-xl bg-base-100 p-3',
-										selected?.id === item.id && 'ring-2 ring-primary'
-									]}
-								>
-									<button
-										type="button"
-										class="flex w-full items-start gap-3 text-left"
-										onclick={() => selectRecommendation(item)}
-									>
-										{#if item.photos?.[0]}
-											<img
-												src={item.photos[0]}
-												alt=""
-												class="h-16 w-16 shrink-0 rounded-lg object-cover"
-											/>
-										{:else}
-											<div
-												class="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-base-200 text-base-content/40"
-											>
-												<MapMarker class="h-6 w-6" />
-											</div>
-										{/if}
-										<div class="min-w-0 flex-1">
-											<p class="truncate font-semibold">{item.name}</p>
-											{#if item.address || item.primary_type}
-												<p class="truncate text-sm opacity-70">
-													{item.address || item.primary_type}
-												</p>
-											{/if}
-											<p class="mt-1 text-xs font-medium text-primary">{$t('map.view_details')}</p>
-										</div>
-										{#if item.rating != null}
-											<span class="badge badge-warning badge-sm shrink-0"
-												>{item.rating.toFixed(1)}</span
-											>
-										{/if}
-									</button>
-									<div class="mt-2 flex flex-wrap gap-1.5">
-										<button
-											type="button"
-											class="btn btn-xs btn-primary gap-1"
-											disabled={isQuickAdding}
-											onclick={() => quickAdd(item)}
-										>
-											<MapMarker class="h-3.5 w-3.5" />
-											{$t('recomendations.add_location')}
-										</button>
-										<button
-											type="button"
-											class="btn btn-xs btn-ghost gap-1 border border-base-300/80"
-											onclick={() => openLodging(item)}
-										>
-											<Bed class="h-3.5 w-3.5" />
-											{$t('recomendations.add_lodging')}
-										</button>
-									</div>
-								</div>
+						{#if error}
+							<div class="alert alert-warning alert-soft py-2 text-sm">{error}</div>
+						{/if}
+						{#each warnings as warning (warning)}
+							<div class="alert alert-info alert-soft py-2 text-sm">{warning}</div>
+						{/each}
+
+						{#if loading && !recommendations.length}
+							{#each [0, 1, 2, 3] as n (n)}
+								<div class="skeleton h-[4.5rem] w-full rounded-xl"></div>
 							{/each}
-						</div>
+						{:else if visible.length}
+							<div class="space-y-2 {loading ? 'opacity-60' : ''}">
+								{#each visible as item (item.id)}
+									<RecommendationListItem
+										{item}
+										{isMetric}
+										{days}
+										selected={false}
+										inTrip={matches.has(item.id)}
+										busy={busyIds.has(item.id)}
+										canAddLodging={isLodgingRecommendation(item)}
+										lodgingDefault={lodgingFirst && isLodgingRecommendation(item)}
+										onSelect={() => selectRecommendation(item)}
+										onHover={(hovering) => (highlightedId = hovering ? item.id : null)}
+										onAdd={() =>
+											add(item, { lodging: lodgingFirst && isLodgingRecommendation(item) })}
+										onAddToDay={(date) =>
+											add(item, { date, lodging: lodgingFirst && isLodgingRecommendation(item) })}
+										onAddDetails={() => openDetails(item)}
+										onAddLodging={() => openLodging(item)}
+									/>
+								{/each}
+							</div>
+						{:else if !error}
+							<div
+								class="flex min-h-14 items-center justify-center rounded-xl border border-dashed border-base-300 bg-base-100/40 px-3 py-6 text-center text-sm text-base-content/60"
+							>
+								{hasSearched
+									? $t('map.recommendations_empty')
+									: $t('recomendations.pick_anchor_hint')}
+							</div>
+						{/if}
 					</div>
 				</section>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</div>
 </div>
-
-{#if detailsOpen && selected}
-	{#key selected.id}
-		<RecommendationDetailsModal
-			recommendation={selected}
-			{isMetric}
-			{isQuickAdding}
-			onClose={closeDetails}
-			onQuickAdd={() => quickAdd()}
-			onAddDetails={() => openDetails()}
-			onAddLodging={() => openLodging()}
-		/>
-	{/key}
-{/if}
 
 {#if locationToEdit}
 	<LocationModal
 		{user}
+		{collection}
 		{locationToEdit}
 		skipQuickStart
 		on:create={keepLocation}
@@ -487,6 +583,7 @@
 {#if lodgingToEdit}
 	<LodgingModal
 		{user}
+		{collection}
 		{lodgingToEdit}
 		on:create={keepLodging}
 		on:save={keepLodging}

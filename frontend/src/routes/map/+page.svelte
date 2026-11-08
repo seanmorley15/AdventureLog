@@ -7,7 +7,6 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/env';
 	import { t } from 'svelte-i18n';
-	import { googleContentImage } from '#lib/images.js';
 	import type {
 		Activity,
 		Location,
@@ -37,6 +36,7 @@
 		placeToLocationPrefill,
 		placeToQuickAddPayload,
 		quickAddLocation,
+		recommendationToLodgingPrefill,
 		recommendationToLocationPrefill,
 		recommendationToQuickAddPayload,
 		resolveQuickAddPayload
@@ -55,6 +55,11 @@
 	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
 	import FullMap from '#lib/components/map/FullMap.svelte';
 	import MapSearchBar from '#lib/components/map/MapSearchBar.svelte';
+	import {
+		RECOMMENDATION_CATEGORIES,
+		isLodgingRecommendation,
+		type RecommendationCategory
+	} from '#lib/recommendations/categories.js';
 	import MapDetailPanel from '#lib/components/map/MapDetailPanel.svelte';
 	import MapRecommendationsLayer from '#lib/components/map/MapRecommendationsLayer.svelte';
 	import ImageMapPinPopup from '#lib/components/map/ImageMapPinPopup.svelte';
@@ -170,7 +175,7 @@
 	let selected = $state<MapSelection | null>(null);
 	let selectedPlace: PlaceSearchResult | null = $state(null);
 	let recommendations: Recommendation[] = $state([]);
-	let recCategory = $state<'tourism' | 'food' | 'lodging'>('tourism');
+	let recCategory = $state<RecommendationCategory>('attractions');
 	let recRadius = $state(5000);
 	let recLoading = $state(false);
 	let recError: string | null = $state(null);
@@ -802,31 +807,7 @@
 
 	function openLodgingFromRecommendation() {
 		if (selected?.kind !== 'recommendation') return;
-		const rec = selected.item;
-		modalLodgingPrefill = {
-			id: '',
-			user: data.user?.uuid ?? '',
-			name: rec.name,
-			type: '',
-			description: rec.description,
-			rating: rec.rating,
-			link: rec.website || rec.google_maps_url || null,
-			check_in: null,
-			check_out: null,
-			timezone: null,
-			reservation_number: null,
-			price: null,
-			price_currency: null,
-			latitude: rec.latitude,
-			longitude: rec.longitude,
-			location: rec.address || rec.description || null,
-			is_public: false,
-			collection: null,
-			created_at: '',
-			updated_at: '',
-			images: (rec.photos || []).map((url, i) => googleContentImage(`rec-${i}`, url, i === 0)),
-			attachments: []
-		} as Lodging;
+		modalLodgingPrefill = recommendationToLodgingPrefill(selected.item, data.user?.uuid, null);
 		lodgingModalOpen = true;
 	}
 
@@ -1060,7 +1041,9 @@
 			return lat !== null && lng !== null;
 		})
 	);
-	let showLodgingAdd = $derived(selected?.kind === 'recommendation' && recCategory === 'lodging');
+	let showLodgingAdd = $derived(
+		selected?.kind === 'recommendation' && isLodgingRecommendation(selected.item)
+	);
 	$effect(() => {
 		void sidebarOpen;
 		void sidebarCollapsed;
@@ -1472,9 +1455,9 @@
 												class="select select-sm w-full"
 												bind:value={recCategory}
 											>
-												<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
-												<option value="food">🍴 {$t('recomendations.food')}</option>
-												<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
+												{#each RECOMMENDATION_CATEGORIES as option (option.key)}
+													<option value={option.key}>{option.emoji} {$t(option.labelKey)}</option>
+												{/each}
 											</select>
 										</div>
 										<div class="flex flex-col">

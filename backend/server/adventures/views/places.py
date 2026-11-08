@@ -4,6 +4,7 @@ import logging
 
 import requests
 from django.conf import settings
+from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -15,6 +16,7 @@ from adventures.serializers.places import (
     ImageLookupQuerySerializer,
     ImageLookupSerializer,
     PlaceDetailsQuerySerializer,
+    PlacePhotoQuerySerializer,
     PlaceDetailsSerializer,
     PlaceSearchQuerySerializer,
     PlaceSearchResponseSerializer,
@@ -25,8 +27,9 @@ from adventures.services.descriptions.google import fetch_google_description
 from adventures.services.descriptions.wikipedia import WikipediaDescriptionService
 from adventures.services.geocoding.reverse import reverse_geocode
 from adventures.services.places.details import get_place_details
+from adventures.services.places.photos import PhotoError, fetch_google_photo
 from adventures.services.places.search import search_places
-from adventures.throttling import ExternalGeocodeThrottle, ExternalWikipediaThrottle
+from adventures.throttling import ExternalGeocodeThrottle, ExternalWikipediaThrottle, PlacePhotoThrottle
 from adventures.utils.language import resolve_request_language
 from core.exceptions import APIError
 from core.serializers import validated
@@ -167,3 +170,34 @@ class PlacesViewSet(viewsets.ViewSet):
         if not images:
             raise APIError('No pictures found.', code='not_found', status=status.HTTP_404_NOT_FOUND)
         return Response({'images': images})
+
+    @extend_schema(
+        parameters=[PlacePhotoQuerySerializer],
+        responses={
+            (200, 'image/*'): OpenApiResponse(response=bytes, description='The photo.'),
+            404: _NOT_FOUND,
+            502: _UPSTREAM,
+            503: OpenApiResponse(description='Google Maps is not configured (`not_configured`).'),
+            504: OpenApiResponse(description='Google was too slow (`upstream_timeout`).'),
+        },
+    )
+    @action(detail=False, methods=['get'], throttle_classes=[PlacePhotoThrottle])
+    def photo(self, request):
+        """
+        Get a Google place photo
+
+        The picture behind a `photos` address from a place search or recommendation. The server
+        fetches it from Google with its own API key, so the key never reaches the browser. Only
+        signed-in users can use it, and the browser may keep the picture for a day.
+        """
+        params = validated(PlacePhotoQuerySerializer, request.query_params)
+        try:
+            image = fetch_google_photo(name=params.get('name'), reference=params.get('reference'), size=params['size'])
+        except PhotoError as exc:
+            if exc.status >= 500 and exc.code != 'not_configured':
+                logger.warning('Google photo fetch failed: %s', exc.code)
+            raise APIError(str(exc), code=exc.code, status=exc.status)
+        response = HttpResponse(image['content'], content_type=image['content_type'])
+        response['Cache-Control'] = 'private, no-store'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response

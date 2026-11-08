@@ -104,7 +104,8 @@ Codes clients rely on (keep them stable):
 | `date_required`, `destination_required`, `stop_required`, `already_planned`, `no_anchor`, `not_day_based`, `day_based`, `order_conflict` | The day plan. |
 | `invalid_backup` | A backup or collection archive that cannot be read. |
 | `immich.*`, `strava.*`, `endurain.*`, `wanderer.*` | Integrations. |
-| `upstream_error`, `upstream_timeout`, `not_configured` | Place lookups and image fetching. |
+| `upstream_error`, `upstream_timeout`, `not_configured` | Place lookups, recommendations and image fetching. |
+| `location_not_found` | `GET /api/recommendations/` could not find the `location` to search around. |
 
 ### Lists
 
@@ -412,6 +413,8 @@ Frontend: `TripDayPlanner`, `DayFileRows`, the five record cards, `collections/[
 | `POST /api/reverse-geocode/mark_visited_region/` | `POST /api/visited-regions/sync/` |
 | `/api/generate/desc/`, `/api/generate/img/` | `/api/places/description/`, `/api/places/images/` |
 | `/api/recommendations/query/` | `GET /api/recommendations/` |
+| `GET /api/recommendations/?category=tourism\|food\|lodging` | Categories are now `attractions`, `culture`, `nature`, `food`, `nightlife`, `lodging`, `activities` (`tourism` stays as an alias of `attractions`). Results are merged from Google and OpenStreetMap, `price_level` is an integer, `sources_used.total_before_dedup` became `merged`, and `warnings` is always present. |
+| Google `photos` entries were `https://places.googleapis.com/...?key=<API KEY>` addresses | `photos` are `/api/places/photo/?name=` (or `?reference=`) `&size=` addresses on this server. The photo endpoint needs a signed-in user, and the Google key stays on the server. `POST /api/images/fetch-from-url/` and `import-from-urls/` accept these addresses. |
 | `/api/tags/types/` | `GET /api/tags/` |
 | `/api/stats/dashboard/` | `GET /api/dashboard/` |
 | `/api/ics-calendar/generate/` | `GET /api/calendar/ics/` |

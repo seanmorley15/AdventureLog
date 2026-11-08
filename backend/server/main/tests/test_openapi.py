@@ -202,6 +202,26 @@ class ResponseContractTests(ContractTestCase):
         self.client.force_authenticate(user=None)
         self.assertMatchesSchema(self.client.get('/api/auth/config/'), '/api/auth/config/', 'get')
 
+    def test_recommendations(self):
+        result = {
+            'count': 1,
+            'category': 'food',
+            'results': [{
+                'id': 'google:x', 'external_id': 'x', 'place_id': 'x', 'source': 'google', 'sources': ['google'],
+                'category': 'food', 'name': 'Cafe', 'description': None, 'latitude': 1.0, 'longitude': 2.0,
+                'address': None, 'distance_km': 0.4, 'rating': 4.5, 'review_count': 10, 'price_level': 2,
+                'types': ['cafe'], 'primary_type': 'cafe', 'business_status': 'OPERATIONAL', 'is_open_now': None,
+                'opening_hours': None, 'phone_number': None, 'website': None, 'google_maps_url': None,
+                'photos': [], 'is_verified': True, 'quality_score': 71.5,
+            }],
+            'sources_used': {'google': 1, 'osm': 0, 'merged': 0},
+            'warnings': [],
+        }
+        with patch('adventures.views.recommendations.get_recommendations', return_value=result):
+            response = self.client.get('/api/recommendations/', {'lat': 1, 'lon': 2, 'category': 'food'})
+        self.assertMatchesSchema(response, '/api/recommendations/', 'get')
+        self.assertEqual(response.json()['results'][0]['price_level'], 2)
+
     def test_place_search(self):
         result = ProviderSearchResult(
             results=[{'name': 'Eiffel Tower', 'display_name': 'Paris', 'lat': 48.85, 'lon': 2.29, 'place_id': 'x',
