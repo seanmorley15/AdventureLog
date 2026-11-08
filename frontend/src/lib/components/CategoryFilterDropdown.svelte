@@ -3,7 +3,7 @@
 
 	import type { Category } from '#lib/types.js';
 	import { createEventDispatcher } from 'svelte';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	let types_arr: string[] = $state([]);
@@ -38,7 +38,7 @@
 
 	onMount(loadCategories);
 
-	let lastRefreshKey = refreshKey;
+	let lastRefreshKey = untrack(() => refreshKey);
 	$effect(() => {
 		if (refreshKey !== lastRefreshKey) {
 			lastRefreshKey = refreshKey;

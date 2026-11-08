@@ -1952,6 +1952,7 @@
 		"start_time": "Start time",
 		"end_time": "End time",
 		"mark_optional": "Mark optional",
+		"time_and_options": "Time & options",
 		"mark_required": "Mark required",
 		"edit_placement": "Edit placement",
 		"add_again": "Add to another day",
