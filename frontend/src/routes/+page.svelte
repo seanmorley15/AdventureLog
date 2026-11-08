@@ -1,238 +1,234 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, preloadData } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-
-	import MapWithPins from '#lib/assets/MapWithPins.webp';
 	import type { Background } from '#lib/types.js';
 
-	// Icons
-	import MapIcon from '~icons/mdi/map-outline';
-	import CameraIcon from '~icons/mdi/camera-outline';
-	import CalendarIcon from '~icons/mdi/calendar-outline';
-	import TrophyIcon from '~icons/mdi/trophy-outline';
-	import ChevronRight from '~icons/mdi/chevron-right';
-	import PlayIcon from '~icons/mdi/play';
-	import CheckIcon from '~icons/mdi/check-circle';
-	import StarIcon from '~icons/mdi/star';
-	import GlobeIcon from '~icons/mdi/earth';
-	import LightningIcon from '~icons/mdi/lightning-bolt';
+	import ArrowRight from '~icons/mdi/arrow-right';
+	import MapMarker from '~icons/mdi/map-marker';
+	import Star from '~icons/mdi/star';
+	import CalendarOutline from '~icons/mdi/calendar-outline';
+	import CheckCircle from '~icons/mdi/check-circle';
 
 	let { data } = $props();
 
 	let background: Background = $derived(data.props?.background ?? { url: '' });
-	let isVisible = $state(false);
+	let ready = $state(false);
+	// Narrow (portrait) screens get their own map layout so the route stays in view
+	let narrow = $state(false);
+
+	// Pointer-driven parallax for the floating cards (no-op under reduced motion)
+	let px = $state(0);
+	let py = $state(0);
+	let reduceMotion = false;
 
 	onMount(() => {
-		setTimeout(() => (isVisible = true), 100);
+		reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		narrow = window.matchMedia('(max-width: 1023px)').matches;
+		requestAnimationFrame(() => (ready = true));
+
+		// Warm up the login and signup loads so the transition starts instantly
+		const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 600));
+		idle(() => {
+			preloadData('/login').catch(() => {});
+			preloadData('/signup').catch(() => {});
+		});
 	});
 
-	const features = [
-		{
-			icon: MapIcon,
-			title: $t('home.feature_1'),
-			description: $t('home.feature_1_desc'),
-			color: 'text-blue-500',
-			bgColor: 'bg-blue-50 dark:bg-blue-900/20'
-		},
-		{
-			icon: CameraIcon,
-			title: $t('home.feature_2'),
-			description: $t('home.feature_2_desc'),
-			color: 'text-green-500',
-			bgColor: 'bg-green-50 dark:bg-green-900/20'
-		},
-		{
-			icon: TrophyIcon,
-			title: $t('home.feature_3'),
-			description: $t('home.feature_3_desc'),
-			color: 'text-yellow-500',
-			bgColor: 'bg-yellow-50 dark:bg-yellow-900/20'
-		}
-	];
+	function onPointerMove(e: PointerEvent) {
+		if (reduceMotion) return;
+		px = e.clientX / window.innerWidth - 0.5;
+		py = e.clientY / window.innerHeight - 0.5;
+	}
 
-	// const stats = [
-	// 	{ label: 'Countries Tracked', value: '195+', icon: GlobeIcon },
-	// 	{ label: 'Adventures Logged', value: '10K+', icon: CalendarIcon },
-	// 	{ label: 'Active Travelers', value: '5K+', icon: StarIcon }
-	// ];
+	// Topographic contour lines, generated once. Each ring is a wobbling closed path.
+	function contour(level: number, cx: number, cy: number): string {
+		const points: string[] = [];
+		const steps = 72;
+		for (let i = 0; i <= steps; i++) {
+			const a = (i / steps) * Math.PI * 2;
+			const wobble =
+				1 +
+				0.16 * Math.sin(a * 3 + level * 0.55) +
+				0.1 * Math.sin(a * 5 - level * 0.8) +
+				0.05 * Math.sin(a * 9 + level);
+			const rx = (60 + level * 58) * wobble;
+			const ry = (38 + level * 38) * wobble;
+			points.push(
+				`${i === 0 ? 'M' : 'L'}${(cx + Math.cos(a) * rx).toFixed(1)} ${(cy + Math.sin(a) * ry).toFixed(1)}`
+			);
+		}
+		return points.join(' ') + 'Z';
+	}
+	const contoursWide = Array.from({ length: 14 }, (_, i) => contour(i + 1, 640, 360));
+	const contoursTall = Array.from({ length: 14 }, (_, i) => contour(i + 1, 360, 640));
+
+	// Route and pins for the hero overlay: landscape (1280 x 720) and portrait (720 x 1280)
+	const wide = {
+		viewBox: '0 0 1280 720',
+		route: 'M640 660 C 720 600, 780 640, 860 540 S 1010 420, 1090 330 S 1180 190, 1230 110',
+		pins: [
+			{ x: 640, y: 660, d: 0 },
+			{ x: 860, y: 540, d: 1 },
+			{ x: 1090, y: 330, d: 2 },
+			{ x: 1230, y: 110, d: 3 }
+		]
+	};
+	// Portrait keeps the whole route in the band above the headline
+	const tall = {
+		viewBox: '0 0 720 1280',
+		route: 'M70 330 C 160 290, 230 330, 330 250 S 500 200, 560 150 S 620 125, 650 110',
+		pins: [
+			{ x: 70, y: 330, d: 0 },
+			{ x: 330, y: 250, d: 1 },
+			{ x: 560, y: 150, d: 2 },
+			{ x: 650, y: 110, d: 3 }
+		]
+	};
+	let map = $derived(narrow ? tall : wide);
+	let contours = $derived(narrow ? contoursTall : contoursWide);
+
+	const days = [
+		{ d: 'Mon', name: 'Arrive and settle in', done: true },
+		{ d: 'Tue', name: 'Sunrise on the ridge', done: true },
+		{ d: 'Wed', name: 'Old town and market', done: false },
+		{ d: 'Thu', name: 'Day trip by rail', done: false }
+	];
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
-	<!-- Hero Section -->
-	<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
-		<!-- Background Pattern -->
-		<div class="absolute inset-0 opacity-5">
-			<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
-			<svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-				<defs>
-					<pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-						<path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5" />
-					</pattern>
-				</defs>
-				<rect width="100" height="100" fill="url(#grid)" />
-			</svg>
-		</div>
+<svelte:window onpointermove={onPointerMove} />
 
-		<div class="container mx-auto px-6 py-20 relative z-10">
-			<div class="grid lg:grid-cols-2 gap-12 items-center">
-				<!-- Left Content -->
-				<div class="space-y-8 {isVisible ? 'animate-fade-in-up' : 'opacity-0'}">
-					<div class="space-y-4">
-						<div
-							class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
-						>
-							<LightningIcon class="w-4 h-4" />
-							<span class="text-sm font-medium">{$t('home.start_your_journey')}</span>
-						</div>
-						<h1 class="text-5xl lg:text-7xl font-black leading-tight">
+<!-- ============ HERO ============ -->
+<section
+	class="hero relative isolate overflow-hidden bg-neutral text-white"
+	class:ready
+	style="--px:{px};--py:{py}"
+>
+	{#if background.url}
+		<img
+			src={background.url}
+			alt={background.location ?? ''}
+			class="fixed inset-0 -z-30 h-full w-full object-cover"
+		/>
+	{/if}
+	<div class="absolute inset-0 -z-20 hero-shade"></div>
+
+	<!-- Map layer: contours, graticule, route, pins -->
+	<svg
+		class="absolute inset-0 -z-10 h-full w-full"
+		viewBox={map.viewBox}
+		preserveAspectRatio="xMidYMid slice"
+		fill="none"
+		aria-hidden="true"
+	>
+		<g class="contours" stroke="white" stroke-width="1">
+			{#each contours as d, i}
+				<path {d} style="--i:{i}" />
+			{/each}
+		</g>
+		<path d={map.route} class="route" stroke="var(--color-accent)" stroke-width="2.5" />
+		{#each map.pins as pin}
+			<g class="pin" style="--d:{pin.d}" transform="translate({pin.x} {pin.y})">
+				<circle r="16" class="pin-ring" fill="var(--color-accent)" />
+				<circle r="6" fill="var(--color-accent)" stroke="white" stroke-width="2" />
+			</g>
+		{/each}
+	</svg>
+
+	<!-- Graticule ticks along the left and bottom edges, like a map frame -->
+	<div class="ticks-y absolute inset-y-0 left-0 -z-10 hidden w-3 lg:block" aria-hidden="true"></div>
+	<div
+		class="ticks-x absolute inset-x-0 bottom-0 -z-10 hidden h-3 lg:block"
+		aria-hidden="true"
+	></div>
+
+	<div class="mx-auto flex h-full max-w-7xl flex-col justify-between px-6 pb-8 pt-14 lg:px-10">
+		<div class="grid flex-1 items-center gap-12 lg:grid-cols-[1.15fr_1fr]">
+			<!-- Headline -->
+			<div class="max-w-2xl">
+				<h1 class="headline">
+					<span class="line" style="--l:0">{$t('home.where_next_1')}</span>
+					<span class="line" style="--l:1">{$t('home.where_next_2')}</span>
+				</h1>
+				<p class="lede">{$t('home.welcome_line')}</p>
+				<div class="mt-9 flex flex-wrap gap-3 cta">
+					<button onclick={() => goto('/login')} class="btn btn-primary btn-lg rounded-full px-8">
+						{$t('auth.login')}
+						<ArrowRight class="h-5 w-5" />
+					</button>
+					<button
+						onclick={() => goto('/signup')}
+						class="btn btn-lg rounded-full border-white/30 bg-white/10 px-8 text-white backdrop-blur-md hover:bg-white/20"
+					>
+						{$t('auth.signup')}
+					</button>
+				</div>
+			</div>
+
+			<!-- Floating app cards -->
+			<div class="cards relative hidden h-[30rem] lg:block" aria-hidden="true">
+				<!-- Location card -->
+				<div class="glass float-a absolute right-0 top-0 w-80 overflow-hidden rounded-3xl p-2">
+					{#if background.url}
+						<img src={background.url} alt="" class="h-44 w-full rounded-2xl object-cover" />
+					{/if}
+					<div class="space-y-2 p-3">
+						<div class="flex items-center justify-between">
 							<span
-								class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
+								class="flex items-center gap-1.5 rounded-full bg-success/90 px-2.5 py-0.5 text-xs font-semibold text-success-content"
 							>
-								{$t('home.hero_1')}
+								<CheckCircle class="h-3.5 w-3.5" />
+								{$t('adventures.visited')}
 							</span>
-						</h1>
-					</div>
-
-					<p class="text-xl lg:text-2xl text-base-content/70 leading-relaxed font-light max-w-2xl">
-						{$t('home.hero_2')}
-					</p>
-
-					<!-- CTA Buttons -->
-					<div class="flex flex-col sm:flex-row gap-4 pt-4">
-						{#if data.user}
-							<button
-								onclick={() => goto('/locations')}
-								class="btn btn-primary btn-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 group"
-							>
-								<PlayIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
-								{$t('home.go_to')}
-								<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-							</button>
-						{:else}
-							<button
-								onclick={() => goto('/login')}
-								class="btn btn-primary btn-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 group"
-							>
-								{$t('auth.login')}
-								<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-							</button>
-							<button
-								onclick={() => goto('/signup')}
-								class="btn btn-outline btn-lg gap-3 hover:shadow-lg transition-all duration-300"
-							>
-								{$t('auth.signup')}
-							</button>
-						{/if}
-					</div>
-				</div>
-
-				<!-- Right Content - Hero Image -->
-				<div class="relative {isVisible ? 'animate-fade-in-right' : 'opacity-0'}">
-					<div class="relative">
-						<!-- Decorative Elements -->
-						<div class="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-2xl rotate-6"></div>
-						<div
-							class="absolute -bottom-4 -right-4 w-32 h-32 bg-secondary/10 rounded-2xl -rotate-6"
-						></div>
-
-						<!-- Main Image -->
-						<div class="relative bg-base-100 p-4 rounded-3xl shadow-2xl">
-							<img
-								src={background.url}
-								alt={background.location}
-								class="rounded-2xl object-cover w-full h-[500px] shadow-lg"
-							/>
-
-							<!-- Floating Badge -->
-							<div
-								class="absolute top-8 left-8 bg-base-100/90 backdrop-blur-xs px-4 py-2 rounded-full shadow-lg border"
-							>
-								<div class="flex items-center gap-2">
-									<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-									<span class="text-sm font-medium"
-										>{background.location || 'Adventure Awaits'}</span
-									>
-								</div>
-							</div>
+							<span class="flex items-center gap-0.5 text-accent">
+								{#each Array(5) as _}<Star class="h-4 w-4" />{/each}
+							</span>
 						</div>
+						<p class="text-lg font-semibold leading-snug">
+							{background.location ?? 'Your next favorite place'}
+						</p>
 					</div>
 				</div>
-			</div>
-		</div>
 
-		<!-- Scroll Indicator -->
-		<div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-			<div class="w-6 h-10 border-2 border-base-content/30 rounded-full flex justify-center">
-				<div class="w-1 h-3 bg-base-content/30 rounded-full mt-2 animate-pulse"></div>
-			</div>
-		</div>
-	</section>
-
-	<!-- Features Section -->
-	<section id="features" class="py-24 bg-base-100">
-		<div class="container mx-auto px-6">
-			<!-- Section Header -->
-			<div class="text-center mb-16 space-y-4">
-				<div
-					class="inline-flex items-center gap-2 px-4 py-2 bg-neutral text-neutral-300 rounded-full border border-neutral"
-				>
-					<StarIcon class="w-4 h-4" />
-					<span class="text-sm font-medium">{$t('home.key_features')}</span>
-				</div>
-				<h2 class="text-4xl lg:text-5xl font-bold">
-					<span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-						{$t('home.desc_1')}
-					</span>
-				</h2>
-				<p class="text-xl text-base-content/70 max-w-3xl mx-auto leading-relaxed">
-					{$t('home.desc_2')}
-				</p>
-			</div>
-
-			<div class="grid lg:grid-cols-2 gap-16 items-center">
-				<!-- Features List -->
-				<div class="space-y-8">
-					{#each features as feature, index}
-						<div
-							class="group hover:bg-base-200/50 p-6 rounded-2xl transition-all duration-300 hover:shadow-lg"
-						>
-							<div class="flex items-start gap-4">
-								<div class="shrink-0 p-3 {feature.bgColor} rounded-xl">
-									<feature.icon class="w-6 h-6 {feature.color}" />
-								</div>
-								<div class="space-y-2">
-									<h3
-										class="text-xl font-bold text-base-content group-hover:text-primary transition-colors"
-									>
-										{feature.title}
-									</h3>
-									<p class="text-base-content/70 leading-relaxed">
-										{feature.description}
-									</p>
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-
-				<!-- Feature Image -->
-				<div class="relative">
-					<div class="relative bg-gradient-to-br from-primary/5 to-secondary/5 p-8 rounded-3xl">
-						<img
-							src={MapWithPins}
-							alt="World map with pins"
-							class="rounded-2xl shadow-2xl object-cover w-full"
-						/>
+				<!-- Itinerary card -->
+				<div class="glass float-b absolute bottom-0 left-0 w-72 rounded-3xl p-4">
+					<div class="mb-3 flex items-center gap-2 text-sm font-semibold">
+						<CalendarOutline class="h-4 w-4 text-accent" />
+						{$t('home.itinerary_title')}
 					</div>
+					<ul class="space-y-2.5">
+						{#each days as day}
+							<li class="flex items-center gap-3 text-sm">
+								<span class="w-9 text-xs text-white/55">{day.d}</span>
+								<span class="h-2 w-2 shrink-0 rounded-full {day.done ? 'bg-accent' : 'bg-white/30'}"
+								></span>
+								<span class={day.done ? 'text-white' : 'text-white/70'}>{day.name}</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
+
+				<!-- Stat chip -->
+				<div class="glass float-c absolute bottom-24 right-6 rounded-2xl px-5 py-3">
+					<p class="text-3xl font-bold leading-none tabular-nums">34</p>
+					<p class="mt-1 text-xs text-white/65">{$t('home.countries_visited')}</p>
 				</div>
 			</div>
 		</div>
-	</section>
-</div>
+
+		<!-- Photo credit -->
+		{#if background.location}
+			<p class="credit flex items-center gap-2 text-sm text-white/75">
+				<MapMarker class="h-4 w-4 text-accent" />
+				<span>{background.location}</span>
+				{#if background.author}<span class="text-white/45">· {background.author}</span>{/if}
+			</p>
+		{/if}
+	</div>
+</section>
 
 <svelte:head>
-	<title>Home | AdventureLog</title>
+	<title>AdventureLog</title>
 	<meta
 		name="description"
 		content="AdventureLog is a platform to log your adventures and plan your travel."
@@ -240,61 +236,183 @@
 </svelte:head>
 
 <style>
-	@keyframes fade-in-up {
+	.hero {
+		min-height: calc(100svh - 4rem);
+	}
+	.hero-shade {
+		background:
+			linear-gradient(
+				100deg,
+				rgb(8 14 12 / 0.88) 0%,
+				rgb(8 14 12 / 0.55) 45%,
+				rgb(8 14 12 / 0.2) 100%
+			),
+			linear-gradient(0deg, rgb(8 14 12 / 0.7) 0%, transparent 35%);
+	}
+
+	/* Map overlay */
+	.contours path {
+		opacity: 0.1;
+	}
+	.contours path:nth-child(3n) {
+		opacity: 0.18;
+	}
+	.route {
+		stroke-linecap: round;
+		stroke-dasharray: 1400;
+		stroke-dashoffset: 1400;
+		filter: drop-shadow(0 0 6px var(--color-accent));
+	}
+	.ready .route {
+		animation: draw 2.6s cubic-bezier(0.5, 0, 0.2, 1) 0.5s forwards;
+	}
+	.pin {
+		opacity: 0;
+	}
+	.ready .pin {
+		animation: drop 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.6s + var(--d) * 0.55s) forwards;
+	}
+	.pin-ring {
+		opacity: 0.25;
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: pulse 2.8s ease-out infinite;
+	}
+	@keyframes draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+	@keyframes drop {
 		from {
 			opacity: 0;
-			transform: translateY(30px);
+			transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.2);
 		}
 		to {
 			opacity: 1;
-			transform: translateY(0);
+		}
+	}
+	@keyframes pulse {
+		0% {
+			transform: scale(0.6);
+			opacity: 0.45;
+		}
+		100% {
+			transform: scale(1.9);
+			opacity: 0;
 		}
 	}
 
-	@keyframes fade-in-right {
-		from {
-			opacity: 0;
-			transform: translateX(30px);
-		}
+	/* Map-frame ticks */
+	.ticks-y {
+		background: repeating-linear-gradient(
+			to bottom,
+			rgb(255 255 255 / 0.35) 0 1px,
+			transparent 1px 24px
+		);
+		mask-image: linear-gradient(to right, black 0 0);
+	}
+	.ticks-x {
+		background: repeating-linear-gradient(
+			to right,
+			rgb(255 255 255 / 0.35) 0 1px,
+			transparent 1px 24px
+		);
+	}
+
+	/* Type */
+	.headline {
+		font-size: clamp(3.4rem, 9.5vw, 8.5rem);
+		font-weight: 800;
+		line-height: 0.92;
+		letter-spacing: -0.045em;
+	}
+	.line {
+		display: block;
+		opacity: 0;
+		transform: translateY(0.4em);
+		filter: blur(8px);
+	}
+	.ready .line {
+		animation: rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) calc(0.15s + var(--l) * 0.16s) forwards;
+	}
+	@keyframes rise {
 		to {
 			opacity: 1;
-			transform: translateX(0);
+			transform: none;
+			filter: none;
+		}
+	}
+	.lede {
+		margin-top: 1.75rem;
+		max-width: 30rem;
+		font-size: 1.2rem;
+		line-height: 1.55;
+		color: rgb(255 255 255 / 0.78);
+	}
+	.lede,
+	.cta,
+	.credit,
+	.cards {
+		opacity: 0;
+	}
+	.ready .lede,
+	.ready .cta,
+	.ready .credit {
+		animation: fade 0.9s ease-out 0.55s forwards;
+	}
+	.ready .cards {
+		animation: fade 1.1s ease-out 1.1s forwards;
+	}
+	@keyframes fade {
+		to {
+			opacity: 1;
 		}
 	}
 
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0px);
+	/* Glass cards */
+	.glass {
+		background: rgb(14 22 20 / 0.5);
+		border: 1px solid rgb(255 255 255 / 0.16);
+		backdrop-filter: blur(18px) saturate(1.3);
+		box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.6);
+		color: white;
+	}
+	.float-a {
+		transform: translate(calc(var(--px) * -18px), calc(var(--py) * -14px));
+	}
+	.float-b {
+		transform: translate(calc(var(--px) * 26px), calc(var(--py) * 20px));
+	}
+	.float-c {
+		transform: translate(calc(var(--px) * -34px), calc(var(--py) * 28px));
+	}
+	.float-a,
+	.float-b,
+	.float-c {
+		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.line,
+		.lede,
+		.cta,
+		.credit,
+		.cards {
+			transition: none;
+			animation: none !important;
+			opacity: 1;
+			transform: none;
+			filter: none;
 		}
-		50% {
-			transform: translateY(-10px);
+		.route {
+			stroke-dashoffset: 0;
 		}
-	}
-
-	@keyframes float-delayed {
-		0%,
-		100% {
-			transform: translateY(0px);
+		.pin {
+			opacity: 1;
 		}
-		50% {
-			transform: translateY(-8px);
+		.pin-ring {
+			animation: none;
 		}
-	}
-
-	.animate-fade-in-up {
-		animation: fade-in-up 0.8s ease-out;
-	}
-
-	.animate-fade-in-right {
-		animation: fade-in-right 0.8s ease-out 0.2s both;
-	}
-
-	.animate-float {
-		animation: float 3s ease-in-out infinite;
-	}
-
-	.animate-float-delayed {
-		animation: float-delayed 3s ease-in-out infinite 1.5s;
 	}
 </style>

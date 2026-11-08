@@ -459,7 +459,13 @@ export let TRANSPORTATION_TYPES_ICONS = {
 	other: '❓'
 };
 
-export function getRandomBackground() {
+export const BACKGROUND_COOKIE = 'al_bg';
+
+/**
+ * Pick a background. When `preferredUrl` (from the BACKGROUND_COOKIE) matches a known
+ * background it is reused, so the welcome, login and signup pages show the same photo.
+ */
+export function getRandomBackground(preferredUrl?: string | null) {
 	const today = new Date();
 
 	// Special dates for specific backgrounds
@@ -490,6 +496,11 @@ export function getRandomBackground() {
 			location: 'Merry Christmas from the AdventureLog team!'
 		} as Background;
 	}
+
+	const preferred = preferredUrl
+		? randomBackgrounds.backgrounds.find((b) => b.url === preferredUrl)
+		: undefined;
+	if (preferred) return preferred as Background;
 
 	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
 	return randomBackgrounds.backgrounds[randomIndex] as Background;

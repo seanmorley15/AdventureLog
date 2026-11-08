@@ -1,5 +1,5 @@
 import { redirect, type Actions } from '@sveltejs/kit';
-import { getRandomBackground, themes } from '#lib';
+import { BACKGROUND_COOKIE, getRandomBackground, themes } from '#lib';
 import { clearSessionCookie, djangoBrowserFetch } from '#lib/index.server.js';
 import type { PageServerLoad } from './$types';
 
@@ -8,6 +8,13 @@ export const load = (async (event) => {
 		return redirect(302, '/dashboard');
 	} else {
 		const background = getRandomBackground();
+		event.cookies.set(BACKGROUND_COOKIE, background.url, {
+			path: '/',
+			maxAge: 60 * 10,
+			sameSite: 'lax',
+			httpOnly: true,
+			secure: event.url.protocol === 'https:'
+		});
 		return {
 			props: {
 				background

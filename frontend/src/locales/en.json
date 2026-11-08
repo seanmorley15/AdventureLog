@@ -75,7 +75,12 @@
 		"start_your_journey": "Start Your Journey",
 		"of_world": "of the world",
 		"explore_world": "Explore World",
-		"latest_travel_experiences": "Your latest travel experiences"
+		"latest_travel_experiences": "Your latest travel experiences",
+		"where_next_1": "Where to",
+		"where_next_2": "next?",
+		"welcome_line": "Your places, plans and memories, together on one map.",
+		"itinerary_title": "Day by day",
+		"countries_visited": "Countries visited"
 	},
 	"adventures": {
 		"collection_remove_location_success": "Location removed from collection successfully!",

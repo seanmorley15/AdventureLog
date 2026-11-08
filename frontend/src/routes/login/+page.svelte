@@ -49,7 +49,7 @@
 	<!-- Background image if provided -->
 	{#if background.url}
 		<div
-			class="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-90"
+			class="fixed inset-0 bg-cover bg-center bg-no-repeat"
 			style="background-image: url('{background.url}')"
 		></div>
 	{/if}

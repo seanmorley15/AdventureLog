@@ -1,6 +1,6 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RouteParams } from './$types';
-import { getRandomBackground, getRandomQuote } from '#lib';
+import { BACKGROUND_COOKIE, getRandomBackground, getRandomQuote } from '#lib';
 import {
 	csrfFail,
 	djangoBrowserFetch,
@@ -18,7 +18,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	const quote = getRandomQuote();
-	const background = getRandomBackground();
+	const background = getRandomBackground(event.cookies.get(BACKGROUND_COOKIE));
 	const serverEndpoint = getServerEndpoint();
 
 	let socialProviders: { name: string; url: string; provider: string; usage_required?: boolean }[] =
