@@ -664,7 +664,7 @@ MOBILE_AUTH_CODE_SECONDS = 60  # how long the app has to redeem the code
 ADVENTURELOG_RELEASE_VERSION = 'v0.14.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v3.2'
+COUNTRY_REGION_JSON_VERSION = 'v5.2.0'
 
 # External service keys (do not hardcode secrets)
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
