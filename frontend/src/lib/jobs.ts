@@ -118,12 +118,20 @@ export function downloadJobFile(job: Job): void {
 	link.remove();
 }
 
-/** Start an export, wait for it, and download the file. */
+/**
+ * Start an export, wait for it, and download the file. `body` is sent as JSON, for exports that
+ * take options (the PDF's paper size, for one).
+ */
 export async function runExport(
 	url: string,
-	options: { signal?: AbortSignal; onUpdate?: (job: Job) => void } = {}
+	options: { signal?: AbortSignal; onUpdate?: (job: Job) => void; body?: unknown } = {}
 ): Promise<Job> {
-	const started = await startJob(url);
+	const started = await startJob(
+		url,
+		options.body === undefined
+			? {}
+			: { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(options.body) }
+	);
 	const done = await waitForJob(started.id, options);
 	downloadJobFile(done);
 	return done;

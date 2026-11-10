@@ -54,6 +54,7 @@
 	import TextBoxOutline from '~icons/mdi/text-box-outline';
 	import CheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import SocialShareModal from '#lib/components/SocialShareModal.svelte';
+	import CollectionPdfDialog from '#lib/components/collections/CollectionPdfDialog.svelte';
 	import CollectionShareSheet, {
 		type ShareSheetTab
 	} from '#lib/components/collections/CollectionShareSheet.svelte';
@@ -68,7 +69,6 @@
 	import CollectionModal from '#lib/components/collections/CollectionModal.svelte';
 	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '#lib/toasts.js';
-	import { jobErrorMessage, runExport } from '#lib/jobs.js';
 	import { linkLocationToCollection } from '#lib/collection-membership.js';
 	import NoteModal from '#lib/components/NoteModal.svelte';
 	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
@@ -267,46 +267,8 @@
 	// Get default view based on available views
 	let defaultView: ViewType = $state('itinerary');
 
-	let isExportingPdf = $state(false);
+	let isPdfDialogOpen = $state(false);
 	let isSocialShareModalOpen = $state(false);
-
-	async function exportCollectionPdf() {
-		if (!collection || isExportingPdf) return;
-		isExportingPdf = true;
-		try {
-			if (data.user && !page.url.searchParams.get('s')) {
-				// Signed in: the PDF is made in the background and downloads when it is ready.
-				addToast('info', $t('jobs.preparing'));
-				await runExport(`/api/collections/${collection.id}/pdf/`);
-			} else {
-				// A guest link carries its secret in the address, so make the PDF now.
-				const secret = page.url.searchParams.get('s');
-				const res = await fetch(
-					`/api/collections/${collection.id}/pdf/${secret ? `?s=${encodeURIComponent(secret)}` : ''}`
-				);
-				if (!res.ok) {
-					addToast('error', $t('adventures.export_pdf_failed'));
-					return;
-				}
-				const blob = await res.blob();
-				const safeName =
-					String(collection.name)
-						.replace(/[^\w\s-]/g, '')
-						.replace(/\s+/g, '_') || 'collection';
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = `${safeName}_itinerary.pdf`;
-				a.click();
-				URL.revokeObjectURL(url);
-			}
-			addToast('success', $t('adventures.export_pdf_success'));
-		} catch (e) {
-			addToast('error', jobErrorMessage(e, $t('adventures.export_pdf_failed')));
-		} finally {
-			isExportingPdf = false;
-		}
-	}
 
 	const preferredCurrency = $derived(
 		(data.user as { default_currency?: string } | null)?.default_currency || DEFAULT_CURRENCY
@@ -975,6 +937,17 @@
 	/>
 {/if}
 
+{#if isPdfDialogOpen && collection && canExportCollection}
+	<CollectionPdfDialog
+		{collection}
+		signedIn={!!data.user}
+		secret={page.url.searchParams.get('s')}
+		measurementSystem={(data.user as { measurement_system?: 'metric' | 'imperial' } | null)
+			?.measurement_system}
+		onClose={() => (isPdfDialogOpen = false)}
+	/>
+{/if}
+
 {#if linkScope && collection}
 	<LinkItemsModal
 		{collection}
@@ -1251,14 +1224,10 @@
 						</button>
 						<button
 							class="btn btn-outline btn-primary btn-sm gap-2"
-							onclick={exportCollectionPdf}
-							disabled={isExportingPdf}
-							aria-busy={isExportingPdf}
+							onclick={() => (isPdfDialogOpen = true)}
 						>
 							<FilePdfBox class="h-4 w-4" />
-							<span class="hidden lg:inline"
-								>{isExportingPdf ? '...' : $t('adventures.export_pdf')}</span
-							>
+							<span class="hidden lg:inline">{$t('adventures.export_pdf')}</span>
 						</button>
 					</div>
 				{/if}

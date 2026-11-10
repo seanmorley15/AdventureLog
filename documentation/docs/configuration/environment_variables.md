@@ -80,6 +80,9 @@ See [Caching](caching.md) for what is cached and how to use Redis.
 | `CACHE_KEY_PREFIX` | No | Prefix for cache keys. Set it if several apps share one cache server. | empty |
 | `EXTERNAL_API_CACHE_TIMEOUT` | No | Seconds that geocoding, places and similar lookups are cached. | `86400` |
 | `OSM_CACHE_TIMEOUT` | No | Seconds that OpenStreetMap lookups (Nominatim search and reverse geocoding, Overpass recommendations) are cached. Google Maps results are never cached, as Google's terms require. | `86400` |
+| `PDF_MAP_TILES` | No | Draw map tiles into exported PDFs (the Trip Book and Field Guide). Set to `false` to never contact a tile server; the maps are then drawn without a basemap. | `true` |
+| `PDF_MAP_TILE_URL` | No | The tile server for PDF maps, with `{z}`, `{x}` and `{y}`. An `@2x` in the URL is read as retina tiles. The default is the OpenStreetMap tile server, whose [usage policy](https://operations.osmfoundation.org/policies/tiles/) is for light use: point this at your own or a paid tile server if you export many large trips. | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` |
+| `PDF_MAP_ATTRIBUTION` | No | The credit printed in the corner of each PDF map. Match it to your tile server. | `© OpenStreetMap contributors` |
 | `SESSION_CACHE_SECONDS` | No | How long a login session is kept in the cache before it is read from the database again. | `300` |
 
 ## Registration and authentication

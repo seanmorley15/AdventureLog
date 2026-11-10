@@ -7,3 +7,5 @@ flake8>=7,<8
 import-linter>=2,<3
 # Lets `manage.py test --parallel` show a failure's traceback instead of a pickling error.
 tblib>=3,<4
+# Reads text and page sizes back out of the PDFs the export tests make.
+pypdf>=5,<8

@@ -31,7 +31,7 @@ COLOR_LIGHT = (248, 250, 252)
 COLOR_WHITE = (255, 255, 255)
 COLOR_DARK = (15, 23, 42)
 
-_BUNDLED_DIR = Path(__file__).resolve().parent.parent / 'pdf_assets' / 'fonts'
+_BUNDLED_DIR = Path(__file__).resolve().parents[2] / 'pdf_assets' / 'fonts'
 _FONT_CANDIDATES = [
     _BUNDLED_DIR / 'NotoSans-Regular.ttf',
     Path('/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf'),

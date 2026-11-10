@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-from adventures.serializers.backup import CollectionImportSerializer
+from adventures.serializers.backup import CollectionImportSerializer, CollectionPdfOptionsSerializer
 from adventures.serializers.collection_detail import CollectionImportResultSerializer
 from adventures.services.backup import (
     BackupError,
@@ -25,6 +25,7 @@ from core.serializers import validated
 from adventures.access.audience import audience_for_request
 from django.contrib.auth import get_user_model
 from adventures.services.exports.pdf import (
+    PdfOptions,
     build_collection_pdf,
     get_collection_for_pdf,
     pdf_filename_for_collection,
@@ -56,12 +57,13 @@ class ExportActionsMixin:
     @extend_schema(
         methods=['GET'],
         operation_id='collections_pdf',
+        parameters=[CollectionPdfOptionsSerializer],
         responses={(200, 'application/pdf'): OpenApiResponse(response=bytes, description='The PDF.')},
     )
     @extend_schema(
         methods=['POST'],
         operation_id='collections_pdf_start',
-        request=None,
+        request=CollectionPdfOptionsSerializer,
         responses={202: OpenApiResponse(BackgroundJobSerializer, description='The PDF is being made; see `Location`.')},
     )
     @action(detail=True, methods=['get', 'post'], url_path='pdf')
@@ -69,8 +71,14 @@ class ExportActionsMixin:
         """
         Download as PDF
 
-        A printable day-by-day itinerary. Members get the whole plan; public readers get what
+        A trip becomes a **Trip Book** to travel with: a cover, an overview map, bookings and
+        costs, then a page for each day with its own map and timeline. A folder becomes a
+        **Field Guide** workbook: an overview map, a checklist, and an entry for each place with
+        boxes to tick and lines to write on. Members get the whole plan; public readers get what
         the story shows.
+
+        Choose the page size, photos and write-in space with the options below (query parameters
+        on `GET`, a JSON body on `POST`).
 
         `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
         `GET /api/jobs/{id}/` and download the file from its `download_url`.
@@ -80,14 +88,19 @@ class ExportActionsMixin:
         if request.method == 'POST':
             if not request.user.is_authenticated:
                 raise NotAuthenticated()
+            options = validated(CollectionPdfOptionsSerializer, request.data)
             job = start_job(
                 request.user, 'collection_pdf',
-                params={'collection_id': str(collection.id), 'story': audience.is_public_reader},
+                params={'collection_id': str(collection.id), 'story': audience.is_public_reader, 'options': dict(options)},
             )
             return accepted(job)
+        options = PdfOptions.from_params(
+            validated(CollectionPdfOptionsSerializer, request.query_params),
+            user=request.user, collection=collection,
+        )
         try:
             collection = get_collection_for_pdf(collection.id)
-            pdf_bytes = build_collection_pdf(collection, story=audience.is_public_reader)
+            pdf_bytes = build_collection_pdf(collection, story=audience.is_public_reader, options=options)
         except Exception:
             logger.exception('Failed to generate PDF for collection %s', collection.id)
             raise APIError('The PDF could not be made. Please try again later.', code='server_error', status=500)

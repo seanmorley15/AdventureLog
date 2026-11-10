@@ -4852,8 +4852,14 @@ paths:
     get:
       operationId: collections_pdf
       description: |-
-        A printable day-by-day itinerary. Members get the whole plan; public readers get what
+        A trip becomes a **Trip Book** to travel with: a cover, an overview map, bookings and
+                costs, then a page for each day with its own map and timeline. A folder becomes a
+                **Field Guide** workbook: an overview map, a checklist, and an entry for each place with
+                boxes to tick and lines to write on. Members get the whole plan; public readers get what
                 the story shows.
+
+                Choose the page size, photos and write-in space with the options below (query parameters
+                on `GET`, a JSON body on `POST`).
 
                 `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
                 `GET /api/jobs/{id}/` and download the file from its `download_url`.
@@ -4866,6 +4872,33 @@ paths:
           format: uuid
         description: A UUID string identifying this collection.
         required: true
+      - in: query
+        name: journal
+        schema:
+          type: boolean
+          nullable: true
+        description: 'Add space to write: notes lines on each day of a trip, and boxes,
+          lines and ratings to fill in for a folder. Defaults to on for a folder and
+          off for a trip.'
+      - in: query
+        name: paper
+        schema:
+          enum:
+          - a4
+          - letter
+          type: string
+          minLength: 1
+        description: |-
+          Page size. Defaults to Letter for people who use imperial units, otherwise A4.
+
+          * `a4` - a4
+          * `letter` - letter
+      - in: query
+        name: photos
+        schema:
+          type: boolean
+          default: true
+        description: Include photos. Turn off for a smaller file that uses less ink.
       tags:
       - Collections
       security:
@@ -4881,6 +4914,13 @@ paths:
                 type: string
                 format: binary
           description: The PDF.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
         '401':
           content:
             application/json:
@@ -4903,8 +4943,14 @@ paths:
     post:
       operationId: collections_pdf_start
       description: |-
-        A printable day-by-day itinerary. Members get the whole plan; public readers get what
+        A trip becomes a **Trip Book** to travel with: a cover, an overview map, bookings and
+                costs, then a page for each day with its own map and timeline. A folder becomes a
+                **Field Guide** workbook: an overview map, a checklist, and an entry for each place with
+                boxes to tick and lines to write on. Members get the whole plan; public readers get what
                 the story shows.
+
+                Choose the page size, photos and write-in space with the options below (query parameters
+                on `GET`, a JSON body on `POST`).
 
                 `POST` (signed in) makes the PDF in the background and answers `202` with a job. Poll
                 `GET /api/jobs/{id}/` and download the file from its `download_url`.
@@ -4919,6 +4965,17 @@ paths:
         required: true
       tags:
       - Collections
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollectionPdfOptionsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CollectionPdfOptionsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CollectionPdfOptionsRequest'
       security:
       - ApiKeyAuth: []
       - ApiKeyAuthorization: []
@@ -13540,6 +13597,30 @@ components:
       - placements
       - role
       - start_date
+    CollectionPdfOptionsRequest:
+      type: object
+      description: What to put in the PDF. Anything left out takes a default that
+        suits the collection and the person.
+      properties:
+        paper:
+          allOf:
+          - $ref: '#/components/schemas/PaperEnum'
+          description: |-
+            Page size. Defaults to Letter for people who use imperial units, otherwise A4.
+
+            * `a4` - a4
+            * `letter` - letter
+        photos:
+          type: boolean
+          default: true
+          description: Include photos. Turn off for a smaller file that uses less
+            ink.
+        journal:
+          type: boolean
+          nullable: true
+          description: 'Add space to write: notes lines on each day of a trip, and
+            boxes, lines and ratings to fill in for a folder. Defaults to on for a
+            folder and off for a trip.'
     CollectionRequest:
       type: object
       description: Who is on a collection and where it stands in time, shared by the
@@ -16404,6 +16485,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UltraSlimCollection'
+    PaperEnum:
+      enum:
+      - a4
+      - letter
+      type: string
+      description: |-
+        * `a4` - a4
+        * `letter` - letter
     PasswordLogin:
       type: object
       properties:
@@ -18344,6 +18433,7 @@ components:
         * `story` - story
     TimezoneEnum:
       enum:
+      - UTC
       - Africa/Abidjan
       - Africa/Accra
       - Africa/Addis_Ababa
@@ -18808,6 +18898,7 @@ components:
       - Pacific/Wallis
       type: string
       description: |-
+        * `UTC` - UTC
         * `Africa/Abidjan` - Africa/Abidjan
         * `Africa/Accra` - Africa/Accra
         * `Africa/Addis_Ababa` - Africa/Addis_Ababa

@@ -52,7 +52,7 @@ The larger features are packages:
 |---|---|
 | `services/day_plan/` | The day-by-day trip planner. Layered from `errors`, `constants`, `dates` up through `registry`, `ordering`, `spans`, then `conversion`, `days`, `placement`, `visits`. |
 | `services/backup/` | The whole-account backup and the single-collection archive. One exporter and one restorer serve both. |
-| `services/exports/` | The printable PDF and the share image. |
+| `services/exports/` | The printable PDFs (a Trip Book for a trip, a Field Guide for a folder; `pdf/maps.py` draws their maps) and the share image. |
 | `services/geocoding/` | Reverse geocoding: provider choice, naming a place, matching it to a region and city. |
 | `services/quick_add.py` | Creating a place or lodging from a map pin. |
 

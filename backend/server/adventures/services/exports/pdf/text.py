@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
+from decimal import Decimal
 from typing import List, Optional
 from reportlab.platypus import Paragraph
 from .fonts import pdf_markup
@@ -76,20 +77,36 @@ def format_date(d: Optional[date]) -> str:
     return d.strftime('%A, %B %d, %Y')
 
 
+def clock_text(dt: datetime) -> str:
+    return f'{dt.hour % 12 or 12}:{dt.minute:02d} {"AM" if dt.hour < 12 else "PM"}'
+
+
 def format_datetime(dt: Optional[datetime], tz_name: Optional[str] = None) -> str:
+    """"Jun 5, 2026" at midnight, else "Jun 5, 2026 3:00 PM (Europe/Paris)"."""
     if not dt:
         return ''
+    day = f'{dt:%b} {dt.day}, {dt.year}'
     if dt.hour == 0 and dt.minute == 0 and dt.second == 0:
-        return dt.strftime('%b %d, %Y')
+        return day
     suffix = f' ({tz_name})' if tz_name else ''
-    return dt.strftime('%b %d, %Y %I:%M %p').lstrip('0') + suffix
+    return f'{day} {clock_text(dt)}{suffix}'
 
 
-def format_money(amount, currency: Optional[str]) -> str:
-    if amount is None:
-        return ''
-    cur = currency or 'USD'
+def money_parts(value, currency=None):
+    """(amount as a Decimal, currency code) of a price that may be a Money value or a plain number."""
+    if value is None:
+        return None, str(currency or 'USD')
+    if hasattr(value, 'amount'):
+        return Decimal(value.amount), str(getattr(value, 'currency', None) or currency or 'USD')
+    return Decimal(str(value)), str(currency or 'USD')
+
+
+def format_money(amount, currency: Optional[str] = None) -> str:
+    """"1,234.50 EUR". Takes a Money value or a number with its currency."""
     try:
-        return f'{amount} {cur}'
+        number, code = money_parts(amount, currency)
     except Exception:
-        return str(amount)
+        return f'{amount} {currency or "USD"}'
+    if number is None:
+        return ''
+    return f'{number:,.2f} {code}'

@@ -82,6 +82,23 @@
 		"itinerary_title": "Day by day",
 		"countries_visited": "Countries visited"
 	},
+	"pdf_export": {
+		"title_trip": "Trip Book",
+		"title_folder": "Field Guide",
+		"description_trip": "A PDF to travel with, even offline: a cover, an overview map, your bookings and costs, then a page for every day with its own map and timeline.",
+		"description_folder": "A workbook for your places: an overview map, a checklist, and an entry for each place with boxes to tick and lines to write on.",
+		"paper": "Paper size",
+		"paper_a4": "A4",
+		"paper_letter": "Letter",
+		"photos": "Include photos",
+		"photos_hint": "Turn off for a smaller file that uses less ink.",
+		"journal_trip": "Space to write",
+		"journal_trip_hint": "Ruled lines for notes on every day, and blank note pages at the end.",
+		"journal_folder": "Write-in space",
+		"journal_folder_hint": "A date to fill in, a rating to colour and lines for notes under each place.",
+		"maps_note": "Maps are drawn from OpenStreetMap when the server can reach it, and without a basemap when it cannot.",
+		"download": "Download PDF"
+	},
 	"adventures": {
 		"collection_remove_location_success": "Location removed from collection successfully!",
 		"collection_remove_location_error": "Error removing location from collection",

@@ -430,6 +430,16 @@ EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 6
 # cached: its terms allow caching only place IDs and coordinates.
 OSM_CACHE_TIMEOUT = int(getenv('OSM_CACHE_TIMEOUT', str(60 * 60 * 24)))
 
+# Map tiles drawn into exported PDFs (trip books and field guides). The server fetches them while it
+# makes the file; if they cannot be fetched the maps are drawn without a basemap. Set
+# PDF_MAP_TILES=false to never contact the tile server. The URL takes {z}, {x} and {y}; an "@2x"
+# in it is read as retina tiles. The default is the OpenStreetMap tile server, whose usage policy
+# (https://operations.osmfoundation.org/policies/tiles/) is for light use; point this at your own
+# or a paid tile server if you export many large trips.
+PDF_MAP_TILES = getenv('PDF_MAP_TILES', 'true').lower() == 'true'
+PDF_MAP_TILE_URL = getenv('PDF_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+PDF_MAP_ATTRIBUTION = getenv('PDF_MAP_ATTRIBUTION', '© OpenStreetMap contributors')
+
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
 # Minimum password length enforced by allauth when AUTH_PASSWORD_VALIDATORS is empty.

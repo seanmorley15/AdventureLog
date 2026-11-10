@@ -208,7 +208,7 @@ An endpoint that supports it answers `202 Accepted` with a **job** and a `Locati
 |---|---|
 | `POST /api/backup/export/` | a zip of the account |
 | `POST /api/collections/{id}/archive/` | a zip of one collection (owner) |
-| `POST /api/collections/{id}/pdf/` | a PDF itinerary (signed in) |
+| `POST /api/collections/{id}/pdf/` | a Trip Book (trip) or Field Guide (folder) PDF (signed in); the body takes `paper`, `photos` and `journal` |
 | `POST /api/backup/import/` with `Prefer: respond-async` | `result.summary`: what was restored |
 | `POST /api/collections/import/` with `Prefer: respond-async` | `result.collection_id` and `result.summary` |
 | `POST /api/images/import-from-urls/` with `Prefer: respond-async` | `result.created_ids`, `results`, counts |

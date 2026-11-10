@@ -111,11 +111,17 @@ def collection_archive_export(job):
 
 @job_task('collection_pdf')
 def collection_pdf_export(job):
-    """A printable day-by-day itinerary."""
-    from adventures.services.exports.pdf import build_collection_pdf, get_collection_for_pdf, pdf_filename_for_collection
+    """A Trip Book for a trip, a Field Guide for a folder."""
+    from adventures.services.exports.pdf import (
+        PdfOptions,
+        build_collection_pdf,
+        get_collection_for_pdf,
+        pdf_filename_for_collection,
+    )
 
     collection = get_collection_for_pdf(job.params['collection_id'])
-    pdf = build_collection_pdf(collection, story=bool(job.params.get('story')))
+    options = PdfOptions.from_params(job.params.get('options'), user=job.user, collection=collection)
+    pdf = build_collection_pdf(collection, story=bool(job.params.get('story')), options=options)
     save_result_file(job, pdf, pdf_filename_for_collection(collection), 'application/pdf')
 
 

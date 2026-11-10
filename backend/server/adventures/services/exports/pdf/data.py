@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from datetime import date, timedelta
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from django.db.models import Prefetch
+from django.utils import timezone
 from adventures.models import Checklist, ChecklistItem, Collection, CollectionItineraryItem, Location, Lodging
 
-from .text import format_date, plain_text
+from .text import format_date, money_parts, plain_text
 
 
 def get_collection_for_pdf(collection_id) -> Collection:
@@ -20,14 +23,15 @@ def get_collection_for_pdf(collection_id) -> Collection:
                 'locations',
                 queryset=Location.objects.select_related(
                     'category', 'country', 'region', 'city'
-                ).prefetch_related('visits'),
+                ).prefetch_related('visits', 'images', 'trails'),
             ),
             'transportation_set',
             'note_set',
             Prefetch(
                 'lodging_set',
-                queryset=Lodging.objects.all(),
+                queryset=Lodging.objects.prefetch_related('images'),
             ),
+            'shared_with',
             Prefetch(
                 'checklist_set',
                 queryset=Checklist.objects.prefetch_related(
@@ -128,7 +132,7 @@ def _group_indexed_days(collection: Collection) -> Tuple[List[Dict[str, Any]], L
         for it in sorted(by_day.get(day.pk, []), key=lambda x: x.order):
             model, obj = resolve_item(it, lookups)
             if obj is not None:
-                resolved.append({'order': it.order, 'type': model, 'object': obj})
+                resolved.append({'order': it.order, 'type': model, 'object': obj, 'item': it})
 
         overnight = []
         for it in spans:
@@ -191,7 +195,7 @@ def group_itinerary_days(collection: Collection) -> Tuple[List[Dict[str, Any]], 
             start = dates[0]
             end = dates[-1]
         else:
-            return []
+            return [], [], lookups
 
     days: List[Dict[str, Any]] = []
     for day in _iter_trip_dates(start, end):
@@ -199,7 +203,7 @@ def group_itinerary_days(collection: Collection) -> Tuple[List[Dict[str, Any]], 
         for it in dated_items.get(day, []):
             model, obj = resolve_item(it, lookups)
             if obj is not None:
-                resolved.append({'order': it.order, 'type': model, 'object': obj})
+                resolved.append({'order': it.order, 'type': model, 'object': obj, 'item': it})
 
         overnight = _overnight_lodging_for_date(collection, day, scheduled_lodging_ids)
         meta = day_meta.get(day)
@@ -237,17 +241,22 @@ def apply_story_groups(collection: Collection) -> None:
         location._story_hide_visits = True
         location.category = None
         if not location.is_public and not on('place_details'):
+            location._story_hide_photos = True
             location.description = None
             location.link = None
             location.rating = None
         if not on('coordinates'):
             location.location = None
+            location.coordinates = None
             location.city = None
             location.region = None
             location.country = None
         if not on('costs'):
             location.price = None
     for transport in collection.transportation_set.all():
+        if not on('coordinates'):
+            transport.origin = None
+            transport.destination = None
         if not on('reservations'):
             transport.flight_number = None
             transport.link = None
@@ -256,6 +265,8 @@ def apply_story_groups(collection: Collection) -> None:
         if not on('note_text'):
             transport.description = None
     for lodging in collection.lodging_set.all():
+        if not on('place_details'):
+            lodging._story_hide_photos = True
         if not on('reservations'):
             lodging.reservation_number = None
             lodging.link = None
@@ -265,6 +276,7 @@ def apply_story_groups(collection: Collection) -> None:
             lodging.description = None
         if not on('lodging_address'):
             lodging.location = None
+            lodging.coordinates = None
     notes = [note for note in collection.note_set.all() if not note.is_private]
     for note in notes:
         if not on('note_text'):
@@ -276,3 +288,57 @@ def apply_story_groups(collection: Collection) -> None:
             item for item in checklist.checklistitem_set.all() if not item.is_private
         ]
         _replace_prefetched(checklist, 'checklistitem_set', items)
+
+
+def travelers(collection: Collection) -> List[str]:
+    """The owner first, then everyone the collection is shared with."""
+    names = []
+    for user in [collection.user, *collection.shared_with.all()]:
+        name = (user.get_full_name() or '').strip() or user.username
+        if name and name not in names:
+            names.append(name)
+    return names
+
+
+def visit_info(location: Location) -> Tuple[bool, Optional[date]]:
+    """Whether the place has been visited and the date of the latest visit, from the loaded visits."""
+    if getattr(location, '_story_hide_visits', False):
+        return False, None
+    visited = location.is_visited_status()
+    today = timezone.now().date()
+    dates = [v.start_date.date() for v in location.visits.all() if v.start_date and v.start_date.date() <= today]
+    return visited, max(dates) if dates else None
+
+
+COST_LABELS = OrderedDict([('lodging', 'Stays'), ('transportation', 'Transport'), ('location', 'Places')])
+
+
+def cost_summary(collection: Collection) -> List[Dict[str, Any]]:
+    """
+    What the trip costs: one entry per currency with its total and the share of each kind of
+    item. The same sums as the web app's cost tab. Empty when nothing has a price.
+    """
+    buckets: Dict[str, Dict[str, Any]] = {}
+
+    def add(kind: str, price, currency=None) -> None:
+        amount, currency = money_parts(price, currency)
+        if amount is None:
+            return
+        bucket = buckets.setdefault(currency, {'currency': currency, 'total': Decimal(0), 'lines': {}})
+        line = bucket['lines'].setdefault(kind, {'key': kind, 'label': COST_LABELS[kind], 'total': Decimal(0), 'count': 0})
+        bucket['total'] += amount
+        line['total'] += amount
+        line['count'] += 1
+
+    for lodging in collection.lodging_set.all():
+        add('lodging', lodging.price, lodging.price_currency)
+    for transport in collection.transportation_set.all():
+        add('transportation', transport.price, transport.price_currency)
+    for location in collection.locations.all():
+        add('location', location.price)
+
+    result = []
+    for bucket in sorted(buckets.values(), key=lambda b: b['currency']):
+        bucket['lines'] = [bucket['lines'][k] for k in COST_LABELS if k in bucket['lines']]
+        result.append(bucket)
+    return result

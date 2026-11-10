@@ -36,6 +36,7 @@
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import CollectionShareSheet from '../collections/CollectionShareSheet.svelte';
 	import SocialShareModal from '../SocialShareModal.svelte';
+	import CollectionPdfDialog from '../collections/CollectionPdfDialog.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
 	import UserAvatar from '../UserAvatar.svelte';
 	import CardActionsMenu from './parts/CardActionsMenu.svelte';
@@ -45,6 +46,7 @@
 
 	let isShareModalOpen: boolean = $state(false);
 	let isSocialShareModalOpen: boolean = $state(false);
+	let isPdfDialogOpen: boolean = $state(false);
 	let copied: boolean = $state(false);
 
 	async function copyLink() {
@@ -108,14 +110,6 @@
 			`/api/collections/${collection.id}/archive/`,
 			'adventures.export_success',
 			'adventures.export_failed'
-		);
-	}
-
-	async function exportCollectionPdf() {
-		await exportCollectionFile(
-			`/api/collections/${collection.id}/pdf/`,
-			'adventures.export_pdf_success',
-			'adventures.export_pdf_failed'
 		);
 	}
 
@@ -251,6 +245,15 @@
 
 {#if isShareModalOpen}
 	<CollectionShareSheet {collection} onClose={() => (isShareModalOpen = false)} />
+{/if}
+
+{#if isPdfDialogOpen}
+	<CollectionPdfDialog
+		{collection}
+		signedIn={!!user}
+		measurementSystem={user?.measurement_system}
+		onClose={() => (isPdfDialogOpen = false)}
+	/>
 {/if}
 
 {#if isSocialShareModalOpen}
@@ -437,7 +440,7 @@
 										<button
 											onclick={() => {
 												close();
-												exportCollectionPdf();
+												isPdfDialogOpen = true;
 											}}
 										>
 											<FilePdfBox class="h-4 w-4" />

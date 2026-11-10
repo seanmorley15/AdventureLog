@@ -37,3 +37,7 @@ JOBS_RUN_INLINE = False
 
 # Procrastinate logs a line for every job a test queues.
 LOGGING = {**LOGGING, 'loggers': {**LOGGING['loggers'], 'procrastinate': {'level': 'WARNING'}}}  # noqa: F405
+
+# The PDF export fetches map tiles from the network; tests draw plain maps instead. A test that wants
+# tiles patches `adventures.services.exports.pdf.maps.fetch_tile` and turns this on.
+PDF_MAP_TILES = False

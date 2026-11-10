@@ -44,3 +44,23 @@ class CollectionImportSerializer(serializers.Serializer):
         default='link',
         help_text='For places in the file you already have: `link` uses yours, `create` makes copies.',
     )
+
+
+class CollectionPdfOptionsSerializer(serializers.Serializer):
+    """What to put in the PDF. Anything left out takes a default that suits the collection and the person."""
+
+    paper = serializers.ChoiceField(
+        choices=['a4', 'letter'], required=False,
+        help_text='Page size. Defaults to Letter for people who use imperial units, otherwise A4.',
+    )
+    photos = serializers.BooleanField(
+        required=False, default=True,
+        help_text='Include photos. Turn off for a smaller file that uses less ink.',
+    )
+    # allow_null: DRF reads a boolean missing from query parameters as False, and "not chosen"
+    # must stay different from "off".
+    journal = serializers.BooleanField(
+        required=False, allow_null=True, default=None,
+        help_text='Add space to write: notes lines on each day of a trip, and boxes, lines and ratings to fill in for a folder. '
+                  'Defaults to on for a folder and off for a trip.',
+    )
