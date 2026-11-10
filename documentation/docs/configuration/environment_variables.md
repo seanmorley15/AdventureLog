@@ -36,7 +36,7 @@ These variables control how the browser, SvelteKit SSR, and Django talk to each 
 | `FRONTEND_PORT` | Yes | Compose | Host port for the frontend container. | `8015` |
 | `BACKEND_PORT` | Yes | Compose | Host port for the backend container. | `8016` |
 | `HOST_PORT` | No | Standard Deployment compose | Host port mapped to the single-container stack. | `8015` |
-| `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size in bytes. | `Infinity` |
+| `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size (such as a backup restore): bytes, or with a `K`, `M` or `G` suffix, or `Infinity`. Standard Deployment applies it to its built-in nginx too, and defaults to `100M`. | `Infinity` |
 
 See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual explanation of the URL model.
 
