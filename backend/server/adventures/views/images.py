@@ -32,9 +32,11 @@ from integrations.facade import ImmichIntegration, immich_integration_for
 from adventures.views.mixins import ContentObjectMixin
 from adventures.permissions import ContentImagePermission
 import logging
+import re
 import requests
 from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
 from core.exceptions import APIError
+from core.net import self_hosted_session
 from core.serializers import validated
 from jobs.registry import start_job
 from jobs.responses import accepted, wants_async
@@ -51,6 +53,9 @@ from adventures.services.images.metadata import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Immich asset ids are UUIDs; anything else must not reach a URL path or a file name.
+IMMICH_ASSET_ID = re.compile(r'[0-9A-Za-z-]{1,64}')
 
 @extend_schema_view(
     list=extend_schema(description='Every image you can see: on your records and on records in collections you belong to.'),
@@ -397,8 +402,10 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
     
     def _handle_immich_image_creation(self, request, content_object, content_type, object_id):
         """Handle creation of image from Immich for shared users"""
-        immich_id = request.data.get('immich_id')
-        
+        immich_id = str(request.data.get('immich_id') or '')
+        if not IMMICH_ASSET_ID.fullmatch(immich_id):
+            raise APIError('immich_id is not a valid Immich asset id.', code='invalid')
+
         # Get the shared user's Immich integration
         try:
             user_integration = ImmichIntegration.objects.get(user=request.user)
@@ -410,11 +417,14 @@ class ContentImageViewSet(ContentObjectMixin, viewsets.ModelViewSet):
         
         # Download the image from the shared user's Immich server
         try:
-            immich_response = requests.get(
-                f'{user_integration.server_url}/assets/{immich_id}/thumbnail?size=preview',
-                headers={'x-api-key': user_integration.api_key},
-                timeout=10
-            )
+            # The user's own server: LAN is fine, metadata/link-local addresses are refused
+            # on the address actually dialled, however the name resolves today.
+            with self_hosted_session() as session:
+                immich_response = session.get(
+                    f'{user_integration.server_url}/assets/{immich_id}/thumbnail?size=preview',
+                    headers={'x-api-key': user_integration.api_key},
+                    timeout=10
+                )
             immich_response.raise_for_status()
             
             # Create a temporary file with the downloaded content

@@ -15,6 +15,7 @@ import socket
 from urllib.parse import urlparse
 
 import requests
+from django.conf import settings
 from requests.adapters import HTTPAdapter
 from urllib3.connection import HTTPConnection, HTTPSConnection
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
@@ -127,9 +128,15 @@ def is_self_hosted_ip(ip):
     A home server is on a LAN or loopback, so private addresses are fine. Cloud-metadata and
     link-local addresses (where instance credentials live), multicast, and the unspecified
     address never are.
+
+    With ``INTEGRATIONS_ALLOW_PRIVATE_NETWORKS`` off (the default in cloud mode) only public
+    addresses are allowed: on a shared instance, one user's "home server" is everyone else's
+    internal network.
     """
     if ip.version == 6 and ip.ipv4_mapped is not None:
         ip = ip.ipv4_mapped
+    if not getattr(settings, 'INTEGRATIONS_ALLOW_PRIVATE_NETWORKS', True):
+        return is_public_ip(ip)
     if ip.is_multicast or ip.is_unspecified or ip.is_link_local:
         return False
     return not any(ip in network for network in METADATA_NETWORKS)

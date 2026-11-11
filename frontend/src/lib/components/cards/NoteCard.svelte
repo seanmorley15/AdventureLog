@@ -5,11 +5,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
-	import { marked } from 'marked'; // Import the markdown parser
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown);
-	};
+	import { renderMarkdown } from '#lib/markdown.js';
 
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';

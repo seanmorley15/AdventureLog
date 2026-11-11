@@ -25,6 +25,7 @@ write_files() {
 	# laptop and in CI whatever defaults change later.
 	printf '%s\n' 'POSTGRES_PASSWORD=e2e-test-pass' "SITE_URL=http://localhost:${PORT}" "HOST_PORT=${PORT}" \
 		'DJANGO_ADMIN_USERNAME=admin' 'DJANGO_ADMIN_PASSWORD=admin' 'DJANGO_ADMIN_EMAIL=admin@example.com' \
+		'DJANGO_ADMIN_ALLOW_WEAK_PASSWORD=true' \
 		'ACCOUNT_EMAIL_VERIFICATION=none' 'DISABLE_REGISTRATION=False' 'ENABLE_RATE_LIMITS=False' \
 		'ALLOW_PUBLIC_COLLECTION_LINKS=True' 'FORCE_SOCIALACCOUNT_LOGIN=False' \
 		>"$WORKDIR/.env"

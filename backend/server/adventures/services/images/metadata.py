@@ -5,9 +5,8 @@ from __future__ import annotations
 import io
 import logging
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
-import requests
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import Point
 from PIL import Image as PILImage
@@ -15,6 +14,7 @@ from PIL.ExifTags import GPSTAGS, IFD
 
 from adventures.models import ContentImage
 from core.geo import make_point
+from core.net import self_hosted_session
 
 logger = logging.getLogger(__name__)
 
@@ -123,11 +123,12 @@ def fetch_immich_coordinates(integration, immich_id: str) -> Point | None:
     if not integration or not immich_id:
         return None
     try:
-        response = requests.get(
-            f'{integration.server_url.rstrip("/")}/assets/{immich_id}',
-            headers={'x-api-key': integration.api_key},
-            timeout=5,
-        )
+        with self_hosted_session() as session:
+            response = session.get(
+                f'{integration.server_url.rstrip("/")}/assets/{quote(str(immich_id), safe="")}',
+                headers={'x-api-key': integration.api_key},
+                timeout=5,
+            )
         response.raise_for_status()
         payload = response.json()
         exif_info = payload.get('exifInfo') or {}

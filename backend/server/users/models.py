@@ -81,6 +81,11 @@ class CustomUser(AbstractUser):
     date_format = models.CharField(max_length=10, choices=DATE_FORMAT_CHOICES, default='locale')
     map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
     legal_consent = models.JSONField(null=True, blank=True, editable=False)
+    # The address this account had when social sign-in started requiring a verified email.
+    # Social sign-in may still match the account by this address, so nobody who signed in
+    # that way before is locked out. New accounts never get one, and it does not follow later
+    # email changes (users.adapters.CustomSocialAccountAdapter.can_authenticate_by_email).
+    legacy_email_login = models.EmailField(null=True, blank=True, editable=False)
 
     def save(self, *args, **kwargs):
         if isinstance(self.email, str) and not self.email.strip():

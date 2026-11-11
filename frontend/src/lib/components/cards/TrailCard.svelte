@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Trail } from '#lib/types.js';
+	import { htmlToText } from '#lib/markdown.js';
 	import { t } from 'svelte-i18n';
 	import { page } from '$app/state';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
@@ -125,8 +126,8 @@
 
 						<!-- Description -->
 						{#if trail.wanderer_data.description}
-							<div class="text-sm text-base-content/70 leading-relaxed">
-								{@html trail.wanderer_data.description}
+							<div class="whitespace-pre-line text-sm text-base-content/70 leading-relaxed">
+								{htmlToText(trail.wanderer_data.description)}
 							</div>
 						{/if}
 

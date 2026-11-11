@@ -12,7 +12,7 @@ import socket
 from unittest.mock import MagicMock, patch
 
 from django.core.cache import cache
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 
 from adventures.providers.geocoding import osm
 from adventures.services.images.fetch import download_remote_image
@@ -156,6 +156,56 @@ class EndurainServerUrlPolicyTests(SimpleTestCase):
     def test_garbage_resolved_address_is_rejected(self):
         with patch('socket.getaddrinfo', return_value=_addr_infos('not-an-ip')):
             self.assertEqual(self._rejected('http://weird.example'), 'Server URL resolved to an invalid IP address.')
+
+
+@override_settings(INTEGRATIONS_ALLOW_PRIVATE_NETWORKS=False)
+class SelfHostedPublicOnlyTests(SimpleTestCase):
+    """With private networks turned off, an integration server must be on the public internet."""
+
+    def test_private_and_loopback_server_urls_are_refused(self):
+        for url in ('http://127.0.0.1:8080', 'http://192.168.1.10', 'http://10.0.0.1', 'http://[::1]'):
+            with self.subTest(url=url):
+                with self.assertRaises(IntegrationError):
+                    normalize_server_url(url)
+
+    def test_hostname_resolving_to_private_address_is_refused(self):
+        with patch('socket.getaddrinfo', return_value=_addr_infos('192.168.1.50')):
+            with self.assertRaises(IntegrationError):
+                normalize_server_url('http://immich.lan')
+
+    def test_public_server_url_is_allowed(self):
+        with patch('socket.getaddrinfo', return_value=_addr_infos(PUBLIC_IP)):
+            self.assertEqual(normalize_server_url('https://immich.example'), 'https://immich.example')
+
+    def test_session_never_dials_a_private_address_even_after_a_redirect_or_rebind(self):
+        from core.net import self_hosted_session
+
+        with patch('socket.getaddrinfo', return_value=_addr_infos('10.1.2.3')), \
+                patch('core.net.create_connection') as connect:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                with self_hosted_session() as session:
+                    session.get('http://immich.example/api/albums', timeout=2)
+        connect.assert_not_called()
+
+
+class SelfHostedDefaultPolicyTests(SimpleTestCase):
+    """The default (self-hosted) policy: LAN is reachable, metadata never is."""
+
+    def _get(self, ip):
+        from core.net import self_hosted_session
+
+        with patch('socket.getaddrinfo', return_value=_addr_infos(ip)), \
+                patch('core.net.create_connection', side_effect=OSError('stop here')) as connect:
+            with self.assertRaises(requests.exceptions.ConnectionError):
+                with self_hosted_session() as session:
+                    session.get('http://immich.example/api/albums', timeout=2)
+        return connect
+
+    def test_lan_address_is_dialled(self):
+        self.assertEqual(self._get('192.168.1.50').call_args.args[0], ('192.168.1.50', 80))
+
+    def test_metadata_address_is_never_dialled(self):
+        self._get('169.254.169.254').assert_not_called()
 
 
 class OsmReachabilityProbeTests(SimpleTestCase):

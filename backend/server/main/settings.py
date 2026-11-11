@@ -37,6 +37,12 @@ DEBUG = getenv('DEBUG', 'false').lower() == 'true'
 # Cloud Mode & Billing
 # ---------------------------------------------------------------------------
 CLOUD_MODE = getenv('CLOUD_MODE', 'false').lower() == 'true'
+# Whether Immich, Wanderer and Endurain may live on a private/loopback address. Fine for a home
+# server; on an instance strangers can sign up to, it lets any user reach the server's own
+# network through an integration, so it is off in cloud mode unless set explicitly.
+INTEGRATIONS_ALLOW_PRIVATE_NETWORKS = getenv(
+    'INTEGRATIONS_ALLOW_PRIVATE_NETWORKS', 'false' if CLOUD_MODE else 'true'
+).lower() == 'true'
 CLOUD_TRIAL_DAYS = int(getenv('CLOUD_TRIAL_DAYS', '30'))
 STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = getenv('STRIPE_WEBHOOK_SECRET', '')

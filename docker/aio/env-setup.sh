@@ -69,7 +69,8 @@ else
 fi
 
 export DJANGO_ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"
-export DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-admin}"
+# Empty means the first start generates a random password and prints it in the logs.
+export DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-}"
 export DJANGO_ADMIN_EMAIL="${DJANGO_ADMIN_EMAIL:-admin@example.com}"
 
 echo "Standard Deployment configuration:"

@@ -78,7 +78,7 @@ The `.env` file contains all configuration for your instance. Below are the most
 | ----------------------- | -------- | ---------------------------------------------------------------------------------- | --------------------------------------------- |
 | `SECRET_KEY`            | Yes      | Django secret key. Change this in production!                                      | `changeme123`                                 |
 | `DJANGO_ADMIN_USERNAME` | Yes      | Default Django admin username.                                                     | `admin`                                       |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default Django admin password.                                                     | `admin`                                       |
+| `DJANGO_ADMIN_PASSWORD` | No       | First-boot admin password. Empty or weak: a random one is generated and printed once in the logs. | empty (generated)                             |
 | `DJANGO_ADMIN_EMAIL`    | Yes      | Default admin email.                                                               | `admin@example.com`                           |
 | `PUBLIC_URL`            | Yes      | Publicly accessible URL of the **backend**. Used for generating image URLs.        | `http://localhost:8016`                       |
 | `CSRF_TRUSTED_ORIGINS`  | Yes      | Comma-separated list of frontend/backend URLs that are allowed to submit requests. | `http://localhost:8016,http://localhost:8015` |

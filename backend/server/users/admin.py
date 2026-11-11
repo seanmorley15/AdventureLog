@@ -39,7 +39,9 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ('username', 'email', 'first_name', 'last_name', 'uuid')
     ordering = ('username',)
-    readonly_fields = ('uuid', 'profile_preview_large', 'last_login', 'date_joined', 'legal_consent_display')
+    readonly_fields = (
+        'uuid', 'profile_preview_large', 'last_login', 'date_joined', 'legal_consent_display', 'legacy_email_login',
+    )
     filter_horizontal = ('groups', 'user_permissions')
 
     def get_fieldsets(self, request, obj=None):
@@ -66,6 +68,7 @@ class CustomUserAdmin(UserAdmin):
                     'uuid',
                     'public_profile',
                     'disable_password',
+                    'legacy_email_login',
                     'measurement_system',
                     'default_currency',
                     'date_format',

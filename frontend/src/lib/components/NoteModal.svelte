@@ -10,7 +10,7 @@
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	let modal: HTMLDialogElement;
-	import { marked } from 'marked';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import DateInput from './shared/DateInput.svelte';
 	import InfoIcon from '~icons/mdi/information';
 	import CalendarIcon from '~icons/mdi/calendar';
@@ -19,10 +19,6 @@
 	import SaveIcon from '~icons/mdi/content-save';
 	import CloseIcon from '~icons/mdi/close';
 	import FileIcon from '~icons/mdi/file-document-outline';
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown);
-	};
 
 	interface Props {
 		note?: Note | null;

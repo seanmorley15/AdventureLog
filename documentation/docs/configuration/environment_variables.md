@@ -57,7 +57,7 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `SECRET_KEY` | Yes | Django secret key. Auto-generated in Standard Deployment if unset. | `changeme123` |
 | `DEBUG` | No | Enable debug mode. Use `False` in production. | `False` |
 | `DJANGO_ADMIN_USERNAME` | Yes | First-boot superuser username. | `admin` |
-| `DJANGO_ADMIN_PASSWORD` | Yes | First-boot superuser password. | `admin` |
+| `DJANGO_ADMIN_PASSWORD` | No | First-boot superuser password. Leave empty, or set a weak one such as `admin`, and a random password is generated on first start and printed once in the logs (`docker compose logs app \| grep -A3 "Admin username"`). | empty (generated) |
 | `DJANGO_ADMIN_EMAIL` | Yes | First-boot superuser email. | `admin@example.com` |
 | `GUNICORN_WORKERS` | No | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers. | `2` |
 | `GUNICORN_THREADS` | No | Threads per Gunicorn worker. Each thread holds its own database connection. | `4` |
@@ -94,6 +94,7 @@ See [Caching](caching.md) for what is cached and how to use Redis.
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
 | `MOBILE_AUTH_REDIRECT_URIS` | No | Comma-separated redirect URIs the mobile app may use when signing in with a social/OIDC provider. Only needed for a custom-built app. | `adventurelog://auth/callback` |
 | `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
+| `SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT` | No | When a social sign-in matches an existing account by email, also link the provider to it. Matching by email only happens for accounts whose address is verified; others link the provider from Settings → Security. | `False` |
 | `ACCOUNT_EMAIL_VERIFICATION` | No | `none` (skip), `optional` (send link, still allow login), or `mandatory` (block login until verified). Requires working email (SMTP or console). | `none` |
 | `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |
 | `AUTH_PASSWORD_VALIDATORS_ENABLED` | No | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name). | `False` |
@@ -153,6 +154,7 @@ See [S3 Media Storage](s3_storage.md).
 | -------- | -------- | ----------- |
 | `GOOGLE_MAPS_API_KEY` | If enabled | Google Maps tiles and place search. |
 | `PUBLIC_CARTO_BASEMAP_API_KEY` | If using CARTO basemaps | Free domain-restricted CARTO key sent by the browser with map tile requests. Enables Light, Dark, Positron, Positron + Labels, Voyager, and 3D Terrain, and makes the default basemap CARTO Positron in light mode and CARTO Dark Matter in dark mode. Without it, those styles stay hidden and the default is OpenFreeMap Bright in light mode and OpenFreeMap Dark in dark mode. |
+| `INTEGRATIONS_ALLOW_PRIVATE_NETWORKS` | No | Let Immich, Wanderer and Endurain live on a LAN or loopback address. Turn off on an instance strangers can sign up to, so no user can reach the server's own network through an integration. Cloud-metadata addresses are always refused. Default `True`, or `False` with `CLOUD_MODE`. |
 | `STRAVA_CLIENT_ID` | If enabled | Strava OAuth client ID. |
 | `STRAVA_CLIENT_SECRET` | If enabled | Strava OAuth client secret. |
 | `PUBLIC_UMAMI_SRC` | If enabled | Umami analytics script URL. |

@@ -2,6 +2,8 @@
 
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.adapter import DefaultAccountAdapter
+from allauth.account.models import EmailAddress
+from allauth.account.utils import filter_users_by_email
 from allauth.account.signals import user_signed_up
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -77,3 +79,27 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             return sociallogin.is_existing
 
         return True
+
+    def can_authenticate_by_email(self, login, email):
+        """
+        Sign a social login into an existing account by email only when that account owns the
+        address.
+
+        Without this, anyone could sign up locally with someone else's email (verification is
+        off by default) and wait: the owner's social sign-in would land in the attacker's
+        account, whose password the attacker still knows (GHSA-6jw2-gx96-fm2j).
+
+        The account that counts is the one allauth will pick. It owns the address when the
+        address is verified, or when it is the email the account already had when this rule
+        was introduced (``legacy_email_login``), so existing users are not locked out. Anyone
+        else links the provider from Settings -> Security, or an admin verifies the address.
+        """
+        if not super().can_authenticate_by_email(login, email):
+            return False
+        users = filter_users_by_email(email, prefer_verified=True)
+        if not users:
+            return False
+        user = users[0]
+        if (user.legacy_email_login or '').lower() == email.lower():
+            return True
+        return EmailAddress.objects.filter(user=user, email__iexact=email, verified=True).exists()
