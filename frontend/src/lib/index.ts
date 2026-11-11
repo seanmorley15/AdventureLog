@@ -94,7 +94,7 @@ export function groupLocationsByDate(
 	// Initialize all days in the range using DateTime
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		const dateString = currentDate.toISODate() ?? ''; // 'YYYY-MM-DD'
 		groupedLocations[dateString] = [];
 	}
 
@@ -125,13 +125,13 @@ export function groupLocationsByDate(
 						: startDT;
 				}
 
-				const startDateStr = startDT.toISODate();
-				const endDateStr = endDT.toISODate();
+				const startDateStr = startDT.toISODate() ?? '';
+				const endDateStr = endDT.toISODate() ?? '';
 
 				// Loop through all days in range
 				for (let i = 0; i < numberOfDays; i++) {
 					const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-					const currentDateStr = currentDate.toISODate();
+					const currentDateStr = currentDate.toISODate() ?? '';
 
 					// Include the current day if it falls within the location date range
 					if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
@@ -164,7 +164,7 @@ export function groupTransportationsByDate(
 	// Initialize days
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		const dateString = currentDate.toISODate() ?? ''; // 'YYYY-MM-DD'
 		groupedTransportations[dateString] = [];
 	}
 
@@ -201,13 +201,13 @@ export function groupTransportationsByDate(
 					: startDT;
 			}
 
-			const startDateStr = startDT.toISODate();
-			const endDateStr = endDT.toISODate();
+			const startDateStr = startDT.toISODate() ?? '';
+			const endDateStr = endDT.toISODate() ?? '';
 
 			// Loop through all days in range
 			for (let i = 0; i < numberOfDays; i++) {
 				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-				const currentDateStr = currentDate.toISODate();
+				const currentDateStr = currentDate.toISODate() ?? '';
 
 				if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
 					groupedTransportations[currentDateStr]?.push(transportation);
@@ -231,7 +231,7 @@ export function groupLodgingByDate(
 
 	for (let i = 0; i < lodgingDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		const dateString = currentDate.toISODate() ?? ''; // 'YYYY-MM-DD'
 		groupedLodging[dateString] = [];
 	}
 
@@ -264,13 +264,13 @@ export function groupLodgingByDate(
 					: startDT;
 			}
 
-			const startDateStr = startDT.toISODate();
-			const endDateStr = endDT.toISODate();
+			const startDateStr = startDT.toISODate() ?? '';
+			const endDateStr = endDT.toISODate() ?? '';
 
 			// Loop through lodging days only (excluding last day)
 			for (let i = 0; i < lodgingDays; i++) {
 				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-				const currentDateStr = currentDate.toISODate();
+				const currentDateStr = currentDate.toISODate() ?? '';
 
 				// Show lodging on days where check-in occurs through the day before check-out
 				// For lodging, we typically want to show it on the nights you're staying

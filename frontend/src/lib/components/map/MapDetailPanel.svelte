@@ -125,16 +125,10 @@
 		return stars;
 	}
 
-	function getPriceLevelDisplay(priceLevel: string | null | undefined) {
-		if (!priceLevel) return '';
-		const levels: Record<string, string> = {
-			FREE: 'Free',
-			INEXPENSIVE: '$',
-			MODERATE: '$$',
-			EXPENSIVE: '$$$',
-			VERY_EXPENSIVE: '$$$$'
-		};
-		return levels[priceLevel] || '';
+	// price_level is 0 (free) to 4 (very expensive).
+	function getPriceLevelDisplay(priceLevel: number | null | undefined) {
+		if (priceLevel == null || priceLevel < 1) return '';
+		return '$'.repeat(Math.min(priceLevel, 4));
 	}
 
 	function formatDistance(km: number | null | undefined, metric: boolean) {

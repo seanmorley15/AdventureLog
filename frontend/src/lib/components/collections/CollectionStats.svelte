@@ -129,7 +129,8 @@
 		let cursor = start.startOf('day');
 		const finalDay = end.startOf('day');
 		while (cursor <= finalDay) {
-			target.add(cursor.toISODate());
+			const iso = cursor.toISODate();
+			if (iso) target.add(iso);
 			cursor = cursor.plus({ days: 1 });
 		}
 	}

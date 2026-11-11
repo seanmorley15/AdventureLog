@@ -66,7 +66,7 @@
 	let basemapType = $state('default');
 	let map = $state<any>(undefined);
 	let mapRoot = $state<HTMLElement | null>(null);
-	const captureMapRoot: Attachment = (node) => {
+	const captureMapRoot: Attachment<HTMLElement> = (node) => {
 		mapRoot = node;
 		return () => {
 			if (mapRoot === node) mapRoot = null;

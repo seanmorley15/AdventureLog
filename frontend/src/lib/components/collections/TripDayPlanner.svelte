@@ -277,7 +277,7 @@
 		scrollPlannerTo(scroller, top);
 	}
 
-	const trackSections: Attachment = (node) => {
+	const trackSections: Attachment<HTMLElement> = (node) => {
 		sectionsRoot = node;
 		const scroller = nearestScroller(node);
 		let frame = 0;
@@ -315,7 +315,7 @@
 		};
 	};
 
-	const fitRail: Attachment = (node) => {
+	const fitRail: Attachment<HTMLElement> = (node) => {
 		jumpNav = node;
 		const scroller = nearestScroller(node);
 		const apply = () => {
@@ -871,7 +871,7 @@
 		saveDayField(day, field, value);
 	}
 
-	const focusField: Attachment = (node) => {
+	const focusField: Attachment<HTMLElement> = (node) => {
 		node.focus();
 	};
 

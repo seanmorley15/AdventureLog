@@ -142,13 +142,11 @@ test('plan a trip to Paris', async ({ page }) => {
 
 		// Move the Eiffel Tower to day 3 through its "Edit placement" dialog.
 		await itemAction(planRow(planSection(page, 1), 'Eiffel Tower'), 'Edit placement');
-		const dialog = page
-			.getByRole('dialog')
-			.filter({ has: page.getByRole('heading', { name: 'Edit placement' }) })
-			.last();
+		const dialog = page.getByRole('dialog', { name: 'Edit placement' }).last();
 		await dialog
-			.getByRole('combobox', { name: 'Where' })
-			.selectOption({ label: 'Day 3 · Jun 12, 2027' });
+			.getByRole('radiogroup', { name: 'Jump to a day' })
+			.getByRole('radio', { name: /^Day 3\b/ })
+			.click();
 		await dialog.getByRole('button', { name: 'Save' }).click();
 		await expect(dialog).toBeHidden();
 		await expect(planSection(page, 3)).toContainText('Eiffel Tower');

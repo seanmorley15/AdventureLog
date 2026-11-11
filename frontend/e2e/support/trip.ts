@@ -238,6 +238,9 @@ export async function dragRow(page: Page, row: Locator, to: Locator) {
 	await page.mouse.move(target.x + 60, target.y + target.height / 2, { steps: 30 });
 	await page.waitForTimeout(300); // let the drop zone settle before releasing
 	await page.mouse.up();
+	// The library animates the floating copy into place and ignores any new press until that
+	// finishes, so a second drag started right away would silently do nothing.
+	await expect(page.locator('#dnd-action-dragged-el')).toHaveCount(0);
 }
 
 /** Run an entry from a row's "Item actions" menu. */

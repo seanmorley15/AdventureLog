@@ -9,14 +9,21 @@
 	} from '#lib/location-drawer.svelte.js';
 	import Close from '~icons/mdi/close';
 	import OpenInNew from '~icons/mdi/open-in-new';
+	import type { PageData as LocationPageData } from '../../../routes/locations/[id]/$types';
 
 	let target = $derived(locationDrawer.target);
 
-	function loadLocation(id: string, hash: string) {
-		return Promise.all([
+	async function loadLocation(id: string, hash: string) {
+		const [result, pageModule] = await Promise.all([
 			preloadData(`/locations/${id}${hash}`),
 			import('../../../routes/locations/[id]/+page.svelte')
 		]);
+		// preloadData is untyped; this route's load fills the location page's data.
+		const page =
+			result.type === 'loaded'
+				? { type: 'loaded' as const, data: result.data as LocationPageData }
+				: { type: result.type };
+		return [page, pageModule] as const;
 	}
 
 	beforeNavigate(() => {

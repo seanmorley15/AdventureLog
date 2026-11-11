@@ -251,11 +251,12 @@ class BackupExporter:
             # Country PKs are not stable across installs; the ISO code is.
             'country_code': location.country.country_code if location.country_id else None,
             'category_name': location.category.name if location.category else None,
-            'collection_export_ids': [
+            # Sorted: the M2M comes back in UUID order, which differs run to run.
+            'collection_export_ids': sorted(
                 self.collection_export_ids[collection_id]
                 for collection_id in location.collections.values_list('id', flat=True)
                 if collection_id in self.collection_export_ids
-            ],
+            ),
             'visits': [],
             'trails': [],
             'images': [],

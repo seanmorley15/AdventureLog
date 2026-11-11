@@ -39,6 +39,7 @@
 	import FolderMultiple from '~icons/mdi/folder-multiple';
 	import FormatListBulleted from '~icons/mdi/format-list-bulleted';
 	import Timeline from '~icons/mdi/timeline';
+	import MapIcon from '~icons/mdi/map';
 	import BookOpenVariant from '~icons/mdi/book-open-variant';
 	import Lightbulb from '~icons/mdi/lightbulb';
 	import ChartBar from '~icons/mdi/chart-bar';
@@ -242,7 +243,7 @@
 		| 'recommendations'
 		| 'stats'
 		| 'budget';
-	let currentView: ViewType = $state('plan');
+	let currentView = $state<ViewType>('plan');
 	// How many view tabs fit in the row. The rest collapse into More.
 	let visibleTabCount = $state(Number.POSITIVE_INFINITY);
 
@@ -265,7 +266,7 @@
 	}
 
 	// Get default view based on available views
-	let defaultView: ViewType = $state('itinerary');
+	let defaultView = $state<ViewType>('plan');
 
 	let isPdfDialogOpen = $state(false);
 	let isSocialShareModalOpen = $state(false);
@@ -733,7 +734,7 @@
 			add('read', $t('collection.read'), BookOpenVariant);
 			add('all', $t('collections.all_items'), FormatListBulleted);
 		}
-		if (availableViews.map) add('map', $t('navbar.map'), Map);
+		if (availableViews.map) add('map', $t('navbar.map'), MapIcon);
 		if (isFolderView && !tabs.some((tab) => tab.id === 'all')) {
 			add('all', $t('collections.all_items'), FormatListBulleted);
 		}
