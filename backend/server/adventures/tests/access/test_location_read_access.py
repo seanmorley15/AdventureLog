@@ -74,8 +74,31 @@ class LocationAdditionalInfoAccessTests(APITestCase):
             self.client.force_authenticate(user=user)
             self.assertEqual(self.client.get(url).status_code, expected, user)
 
-    def test_a_viewer_cannot_duplicate_a_place(self):
+    def test_a_viewer_copies_a_place_into_their_own_account_and_leaves_the_original_alone(self):
+        # Copying needs read access only (#1005); the original and the collection are untouched.
         self.client.force_authenticate(user=self.viewer)
+
+        response = self.client.post(f'/api/locations/{self.place.id}/duplicate/', {}, format='json')
+
+        self.assertEqual(response.status_code, 201, response.content)
+        copy = Location.objects.get(id=response.json()['id'])
+        self.assertEqual((copy.user, copy.is_public), (self.viewer, False))
+        self.assertFalse(copy.collections.exists())
+        self.place.refresh_from_db()
+        self.assertEqual((self.place.user, self.place.name), (self.owner, 'Hut'))
+
+    def test_a_viewer_cannot_copy_a_place_into_the_collection_they_only_view(self):
+        self.client.force_authenticate(user=self.viewer)
+
+        response = self.client.post(
+            f'/api/locations/{self.place.id}/duplicate/', {'collection': str(self.trip.id)}, format='json'
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Location.objects.filter(name__startswith='Copy of').count(), 0)
+
+    def test_a_stranger_cannot_copy_a_private_place(self):
+        self.client.force_authenticate(user=self.stranger)
 
         response = self.client.post(f'/api/locations/{self.place.id}/duplicate/', {}, format='json')
 

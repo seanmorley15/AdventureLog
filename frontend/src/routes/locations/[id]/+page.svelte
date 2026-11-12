@@ -531,6 +531,16 @@
 						</li>
 					</ul>
 				</div>
+			{:else if data.user}
+				<!-- Someone else's place you can see: keep your own copy to edit (#1005). -->
+				<button
+					class="btn btn-outline btn-primary btn-sm gap-2"
+					onclick={duplicateAdventure}
+					disabled={isDuplicating}
+				>
+					<ContentCopy class="h-4 w-4" />
+					{isDuplicating ? '...' : $t('adventures.copy_to_my_locations')}
+				</button>
 			{/if}
 		{/snippet}
 	</DetailHeader>

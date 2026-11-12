@@ -155,6 +155,7 @@
 		"delete": "Delete",
 		"duplicate": "Duplicate",
 		"duplicate_location": "Duplicate Location",
+		"copy_to_my_locations": "Copy to my locations",
 		"possible_duplicate": "Possible duplicate",
 		"possible_duplicates": "Possible duplicates",
 		"did_you_mean": "Did you mean {name}?",

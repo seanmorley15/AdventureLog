@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
+import { newCredentials, signUp } from '../support/accounts';
 import { createLocationThroughWizard, openNewLocation, SAMPLE_IMAGE } from '../support/locations';
 
 /** The card's title link for a location, on the list page. */
@@ -87,5 +88,39 @@ test.describe('locations', () => {
 			/\b[1-9]\d*\s+Locations/
 		);
 		await expect(page.getByText('No categories found.')).toBeHidden();
+	});
+
+	// #1005: someone else's public place can be copied into your own account.
+	test("copy someone else's public location into my locations", async ({ page, browser }) => {
+		const name = `Shared Viewpoint ${Date.now().toString(36)}`;
+		await page.goto('/locations');
+		const created = await page.evaluate(async (placeName) => {
+			const res = await fetch('/api/locations/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name: placeName, is_public: true })
+			});
+			return { ok: res.ok, body: await res.json() };
+		}, name);
+		expect(created.ok, JSON.stringify(created.body)).toBe(true);
+
+		const other = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+		const otherPage = await other.newPage();
+		try {
+			await signUp(otherPage, newCredentials('copier'));
+			await otherPage.goto(`/locations/${created.body.id}`);
+			await expect(otherPage.getByRole('heading', { name }).first()).toBeVisible();
+			// Not the owner: no Edit, but a way to keep a copy.
+			await expect(otherPage.getByRole('button', { name: 'Edit', exact: true })).toHaveCount(0);
+			await otherPage.getByRole('button', { name: 'Copy to my locations' }).click();
+
+			await expect(otherPage).not.toHaveURL(new RegExp(created.body.id));
+			await expect(
+				otherPage.getByRole('heading', { name: `Copy of ${name}` }).first()
+			).toBeVisible();
+			await expect(otherPage.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
+		} finally {
+			await other.close();
+		}
 	});
 });

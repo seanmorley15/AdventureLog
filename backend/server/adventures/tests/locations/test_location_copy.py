@@ -92,6 +92,36 @@ class CopyLocationTests(APITestCase):
         self.assertEqual(new.user, self.stranger)
         self.assertEqual(Category.objects.get(user=self.stranger, name='food').icon, '🍜')
 
+    def test_a_collection_viewer_can_copy_a_shared_place(self):
+        # Copying reads the original and writes only to the copier's account.
+        self.objects['trip'].shared_with.add(self.stranger)
+        CollectionMember.objects.filter(collection=self.objects['trip'], user=self.stranger).update(role='viewer')
+
+        response = self.copy(user=self.stranger)
+
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(Location.objects.get(id=response.json()['id']).user, self.stranger)
+
+    def test_anyone_signed_in_can_copy_a_public_place_into_their_own_account(self):
+        # #1005: reuse a place someone else published without retyping it.
+        public = Location.objects.create(user=self.owner, name='Public spot', is_public=True)
+
+        self.client.force_authenticate(user=self.stranger)
+        response = self.client.post(f'/api/locations/{public.id}/duplicate/', {}, format='json')
+
+        self.assertEqual(response.status_code, 201, response.content)
+        new = Location.objects.get(id=response.json()['id'])
+        self.assertEqual((new.user, new.is_public, new.name), (self.stranger, False, 'Copy of Public spot'))
+
+    def test_a_signed_out_visitor_cannot_copy_a_public_place(self):
+        public = Location.objects.create(user=self.owner, name='Public spot', is_public=True)
+
+        self.client.force_authenticate(user=None)
+        response = self.client.post(f'/api/locations/{public.id}/duplicate/', {}, format='json')
+
+        self.assertIn(response.status_code, (401, 403))
+        self.assertFalse(Location.objects.filter(name='Copy of Public spot').exists())
+
     def test_naming_a_collection_links_the_copy_to_only_that_collection(self):
         target = self.objects['folder']
 

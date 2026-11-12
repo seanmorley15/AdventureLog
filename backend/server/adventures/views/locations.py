@@ -111,9 +111,12 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
     PUBLIC_ACTIONS = {'retrieve', 'share_image', 'sun_times'}
     # Actions about the requester's own places, which need an account.
     OWN_PLACES_ACTIONS = {'list', 'pins', 'suggest', 'check_duplicates'}
+    # Copying reads the original and writes only to the requester's account, so it needs an
+    # account and read access to the place (checked in the action), not write access to it.
+    COPY_ACTIONS = {'duplicate'}
 
     def get_permissions(self):
-        if self.action in self.OWN_PLACES_ACTIONS:
+        if self.action in self.OWN_PLACES_ACTIONS or self.action in self.COPY_ACTIONS:
             return [IsAuthenticated()]
         return super().get_permissions()
 
@@ -121,7 +124,9 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         if getattr(self, 'swagger_fake_view', False):
             return Location.objects.none()
         user = self.request.user
-        include_public = self.action in self.PUBLIC_ACTIONS
+        include_public = self.action in self.PUBLIC_ACTIONS or (
+            user.is_authenticated and self.action in self.COPY_ACTIONS
+        )
         if not user.is_authenticated:
             if include_public:
                 return self._load_detail(
