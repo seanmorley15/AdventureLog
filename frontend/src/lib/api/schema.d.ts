@@ -4576,11 +4576,144 @@ export interface components {
          *     * `MXN` - Mexican Peso
          *     * `BRL` - Brazilian Real
          *     * `ZAR` - South African Rand
-         *     * `AED` - UAE Dirham
+         *     * `AED` - United Arab Emirates Dirham
          *     * `TRY` - Turkish Lira
+         *     * `AFN` - Afghan Afghani
+         *     * `ALL` - Albanian Lek
+         *     * `AMD` - Armenian Dram
+         *     * `AOA` - Angolan Kwanza
+         *     * `ARS` - Argentine Peso
+         *     * `AWG` - Aruban Florin
+         *     * `AZN` - Azerbaijani Manat
+         *     * `BAM` - Bosnia-Herzegovina Convertible Mark
+         *     * `BBD` - Barbadian Dollar
+         *     * `BDT` - Bangladeshi Taka
+         *     * `BGN` - Bulgarian Lev
+         *     * `BHD` - Bahraini Dinar
+         *     * `BIF` - Burundian Franc
+         *     * `BMD` - Bermudan Dollar
+         *     * `BND` - Brunei Dollar
+         *     * `BOB` - Bolivian Boliviano
+         *     * `BSD` - Bahamian Dollar
+         *     * `BTN` - Bhutanese Ngultrum
+         *     * `BWP` - Botswanan Pula
+         *     * `BYN` - Belarusian Ruble
+         *     * `BZD` - Belize Dollar
+         *     * `CDF` - Congolese Franc
+         *     * `CLP` - Chilean Peso
+         *     * `COP` - Colombian Peso
+         *     * `CRC` - Costa Rican Colón
+         *     * `CUP` - Cuban Peso
+         *     * `CVE` - Cape Verdean Escudo
+         *     * `CZK` - Czech Koruna
+         *     * `DJF` - Djiboutian Franc
+         *     * `DOP` - Dominican Peso
+         *     * `DZD` - Algerian Dinar
+         *     * `EGP` - Egyptian Pound
+         *     * `ERN` - Eritrean Nakfa
+         *     * `ETB` - Ethiopian Birr
+         *     * `FJD` - Fijian Dollar
+         *     * `FKP` - Falkland Islands Pound
+         *     * `GEL` - Georgian Lari
+         *     * `GHS` - Ghanaian Cedi
+         *     * `GIP` - Gibraltar Pound
+         *     * `GMD` - Gambian Dalasi
+         *     * `GNF` - Guinean Franc
+         *     * `GTQ` - Guatemalan Quetzal
+         *     * `GYD` - Guyanaese Dollar
+         *     * `HNL` - Honduran Lempira
+         *     * `HTG` - Haitian Gourde
+         *     * `HUF` - Hungarian Forint
+         *     * `IDR` - Indonesian Rupiah
+         *     * `ILS` - Israeli New Shekel
+         *     * `IQD` - Iraqi Dinar
+         *     * `IRR` - Iranian Rial
+         *     * `ISK` - Icelandic Króna
+         *     * `JMD` - Jamaican Dollar
+         *     * `JOD` - Jordanian Dinar
+         *     * `KES` - Kenyan Shilling
+         *     * `KGS` - Kyrgyz Som
+         *     * `KHR` - Cambodian Riel
+         *     * `KMF` - Comorian Franc
+         *     * `KPW` - North Korean Won
+         *     * `KRW` - South Korean Won
+         *     * `KWD` - Kuwaiti Dinar
+         *     * `KYD` - Cayman Islands Dollar
+         *     * `KZT` - Kazakhstani Tenge
+         *     * `LAK` - Laotian Kip
+         *     * `LBP` - Lebanese Pound
+         *     * `LKR` - Sri Lankan Rupee
+         *     * `LRD` - Liberian Dollar
+         *     * `LSL` - Lesotho Loti
+         *     * `LYD` - Libyan Dinar
+         *     * `MAD` - Moroccan Dirham
+         *     * `MDL` - Moldovan Leu
+         *     * `MGA` - Malagasy Ariary
+         *     * `MKD` - Macedonian Denar
+         *     * `MMK` - Myanmar Kyat
+         *     * `MNT` - Mongolian Tugrik
+         *     * `MOP` - Macanese Pataca
+         *     * `MRU` - Mauritanian Ouguiya
+         *     * `MUR` - Mauritian Rupee
+         *     * `MVR` - Maldivian Rufiyaa
+         *     * `MWK` - Malawian Kwacha
+         *     * `MYR` - Malaysian Ringgit
+         *     * `MZN` - Mozambican Metical
+         *     * `NAD` - Namibian Dollar
+         *     * `NGN` - Nigerian Naira
+         *     * `NIO` - Nicaraguan Córdoba
+         *     * `NPR` - Nepalese Rupee
+         *     * `OMR` - Omani Rial
+         *     * `PAB` - Panamanian Balboa
+         *     * `PEN` - Peruvian Sol
+         *     * `PGK` - Papua New Guinean Kina
+         *     * `PHP` - Philippine Peso
+         *     * `PKR` - Pakistani Rupee
+         *     * `PLN` - Polish Zloty
+         *     * `PYG` - Paraguayan Guarani
+         *     * `QAR` - Qatari Riyal
+         *     * `RON` - Romanian Leu
+         *     * `RSD` - Serbian Dinar
+         *     * `RUB` - Russian Ruble
+         *     * `RWF` - Rwandan Franc
+         *     * `SAR` - Saudi Riyal
+         *     * `SBD` - Solomon Islands Dollar
+         *     * `SCR` - Seychellois Rupee
+         *     * `SDG` - Sudanese Pound
+         *     * `SHP` - St. Helena Pound
+         *     * `SLE` - Sierra Leonean Leone
+         *     * `SOS` - Somali Shilling
+         *     * `SRD` - Surinamese Dollar
+         *     * `SSP` - South Sudanese Pound
+         *     * `STN` - São Tomé & Príncipe Dobra
+         *     * `SVC` - Salvadoran Colón
+         *     * `SYP` - Syrian Pound
+         *     * `SZL` - Swazi Lilangeni
+         *     * `THB` - Thai Baht
+         *     * `TJS` - Tajikistani Somoni
+         *     * `TMT` - Turkmenistani Manat
+         *     * `TND` - Tunisian Dinar
+         *     * `TOP` - Tongan Paʻanga
+         *     * `TTD` - Trinidad & Tobago Dollar
+         *     * `TWD` - New Taiwan Dollar
+         *     * `TZS` - Tanzanian Shilling
+         *     * `UAH` - Ukrainian Hryvnia
+         *     * `UGX` - Ugandan Shilling
+         *     * `UYU` - Uruguayan Peso
+         *     * `UZS` - Uzbekistani Som
+         *     * `VES` - Venezuelan Bolívar
+         *     * `VND` - Vietnamese Dong
+         *     * `VUV` - Vanuatu Vatu
+         *     * `WST` - Samoan Tala
+         *     * `XAF` - Central African CFA Franc
+         *     * `XCD` - East Caribbean Dollar
+         *     * `XOF` - West African CFA Franc
+         *     * `XPF` - CFP Franc
+         *     * `YER` - Yemeni Rial
+         *     * `ZMW` - Zambian Kwacha
          * @enum {string}
          */
-        DefaultCurrencyEnum: "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "CNY" | "HKD" | "SGD" | "SEK" | "NOK" | "DKK" | "NZD" | "INR" | "MXN" | "BRL" | "ZAR" | "AED" | "TRY";
+        DefaultCurrencyEnum: "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "CNY" | "HKD" | "SGD" | "SEK" | "NOK" | "DKK" | "NZD" | "INR" | "MXN" | "BRL" | "ZAR" | "AED" | "TRY" | "AFN" | "ALL" | "AMD" | "AOA" | "ARS" | "AWG" | "AZN" | "BAM" | "BBD" | "BDT" | "BGN" | "BHD" | "BIF" | "BMD" | "BND" | "BOB" | "BSD" | "BTN" | "BWP" | "BYN" | "BZD" | "CDF" | "CLP" | "COP" | "CRC" | "CUP" | "CVE" | "CZK" | "DJF" | "DOP" | "DZD" | "EGP" | "ERN" | "ETB" | "FJD" | "FKP" | "GEL" | "GHS" | "GIP" | "GMD" | "GNF" | "GTQ" | "GYD" | "HNL" | "HTG" | "HUF" | "IDR" | "ILS" | "IQD" | "IRR" | "ISK" | "JMD" | "JOD" | "KES" | "KGS" | "KHR" | "KMF" | "KPW" | "KRW" | "KWD" | "KYD" | "KZT" | "LAK" | "LBP" | "LKR" | "LRD" | "LSL" | "LYD" | "MAD" | "MDL" | "MGA" | "MKD" | "MMK" | "MNT" | "MOP" | "MRU" | "MUR" | "MVR" | "MWK" | "MYR" | "MZN" | "NAD" | "NGN" | "NIO" | "NPR" | "OMR" | "PAB" | "PEN" | "PGK" | "PHP" | "PKR" | "PLN" | "PYG" | "QAR" | "RON" | "RSD" | "RUB" | "RWF" | "SAR" | "SBD" | "SCR" | "SDG" | "SHP" | "SLE" | "SOS" | "SRD" | "SSP" | "STN" | "SVC" | "SYP" | "SZL" | "THB" | "TJS" | "TMT" | "TND" | "TOP" | "TTD" | "TWD" | "TZS" | "UAH" | "UGX" | "UYU" | "UZS" | "VES" | "VND" | "VUV" | "WST" | "XAF" | "XCD" | "XOF" | "XPF" | "YER" | "ZMW";
         Description: {
             title: string | null;
             /** @description Plain-text description. */

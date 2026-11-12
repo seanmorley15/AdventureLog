@@ -2,8 +2,8 @@
 	import { run } from 'svelte/legacy';
 
 	import { createEventDispatcher } from 'svelte';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '#lib/money.js';
-	import { t } from 'svelte-i18n';
+	import { CURRENCY_OPTIONS, currencyName } from '#lib/money.js';
+	import { t, locale } from 'svelte-i18n';
 	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	type CurrencyOption = { code: string; label?: string };
@@ -37,7 +37,7 @@
 	run(() => {
 		normalizedOptions = options.map((code) => ({
 			code,
-			label: $t(`currencies.${code}`) || CURRENCY_LABELS[code]
+			label: currencyName(code, $locale)
 		}));
 	});
 
@@ -122,9 +122,9 @@
 		aria-expanded={open}
 		aria-controls={id ? `${id}-listbox` : undefined}
 		aria-label={value
-			? `${value} ${$t(`currencies.${value}`) || CURRENCY_LABELS[value] || ''}`
+			? `${value} ${currencyName(value, $locale)}`
 			: $t('currencies.select_currency') || placeholder}
-		title={value ? $t(`currencies.${value}`) || CURRENCY_LABELS[value] : undefined}
+		title={value ? currencyName(value, $locale) : undefined}
 		onclick={toggleDropdown}
 		onkeydown={handleButtonKeydown}
 		{disabled}

@@ -1,5 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { formatMoney, normalizeMoneyPayload, toMoneyValue } from './money';
+import {
+	CURRENCY_OPTIONS,
+	currencyName,
+	formatMoney,
+	normalizeMoneyPayload,
+	toMoneyValue
+} from './money';
 
 describe('toMoneyValue', () => {
 	it('parses numeric strings and numbers', () => {
@@ -76,5 +84,38 @@ describe('formatMoney', () => {
 
 	it('falls back to a plain string for an invalid currency code', () => {
 		expect(formatMoney({ amount: 5, currency: 'not-a-code' })).toBe('not-a-code 5');
+	});
+});
+
+describe('CURRENCY_OPTIONS', () => {
+	it('offers exactly the currencies the backend accepts as a default currency', () => {
+		const schema = readFileSync(
+			join(import.meta.dirname, '../../../backend/server/openapi/schema.yaml'),
+			'utf8'
+		);
+		const block = schema.split('    DefaultCurrencyEnum:\n')[1].split('      type: string')[0];
+		const backend = [...block.matchAll(/^ {6}- ([A-Z]{3})$/gm)].map((match) => match[1]);
+		expect(CURRENCY_OPTIONS).toEqual(backend);
+	});
+
+	it('has no duplicates', () => {
+		expect(new Set(CURRENCY_OPTIONS).size).toBe(CURRENCY_OPTIONS.length);
+	});
+});
+
+describe('currencyName', () => {
+	it("names a currency in the reader's language", () => {
+		expect(currencyName('COP', 'en')).toBe('Colombian Peso');
+		expect(currencyName('COP', 'de')).toBe('Kolumbianischer Peso');
+	});
+
+	it('accepts app locales written with an underscore', () => {
+		expect(currencyName('USD', 'zh_Hant')).not.toBe('USD');
+	});
+
+	it('falls back to the code for an unknown code or locale', () => {
+		expect(currencyName('QQQ', 'en')).toBe('QQQ');
+		expect(currencyName('not-a-code', 'en')).toBe('not-a-code');
+		expect(currencyName('EUR', '!!')).toBe('Euro');
 	});
 });

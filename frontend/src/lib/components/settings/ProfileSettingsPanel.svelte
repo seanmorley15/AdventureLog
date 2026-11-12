@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { t } from 'svelte-i18n';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '#lib/money.js';
+	import { t, locale } from 'svelte-i18n';
+	import { CURRENCY_OPTIONS, currencyName } from '#lib/money.js';
 	import {
 		DATE_FORMAT_OPTIONS,
 		DEFAULT_DATE_FORMAT,
@@ -230,8 +230,7 @@
 				>
 					{#each CURRENCY_OPTIONS as code (code)}
 						<option value={code}>
-							{code}{#if CURRENCY_LABELS[code]}
-								- {CURRENCY_LABELS[code]}{/if}
+							{code} - {currencyName(code, $locale)}
 						</option>
 					{/each}
 				</select>

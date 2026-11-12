@@ -2,33 +2,191 @@ import type { MoneyValue } from './types';
 
 export const DEFAULT_CURRENCY = 'USD';
 
-export const CURRENCY_METADATA: { code: string; label: string }[] = [
-	{ code: 'USD', label: 'US Dollar' },
-	{ code: 'EUR', label: 'Euro' },
-	{ code: 'GBP', label: 'British Pound' },
-	{ code: 'JPY', label: 'Japanese Yen' },
-	{ code: 'AUD', label: 'Australian Dollar' },
-	{ code: 'CAD', label: 'Canadian Dollar' },
-	{ code: 'CHF', label: 'Swiss Franc' },
-	{ code: 'CNY', label: 'Chinese Yuan' },
-	{ code: 'HKD', label: 'Hong Kong Dollar' },
-	{ code: 'SGD', label: 'Singapore Dollar' },
-	{ code: 'SEK', label: 'Swedish Krona' },
-	{ code: 'NOK', label: 'Norwegian Krone' },
-	{ code: 'DKK', label: 'Danish Krone' },
-	{ code: 'NZD', label: 'New Zealand Dollar' },
-	{ code: 'INR', label: 'Indian Rupee' },
-	{ code: 'MXN', label: 'Mexican Peso' },
-	{ code: 'BRL', label: 'Brazilian Real' },
-	{ code: 'ZAR', label: 'South African Rand' },
-	{ code: 'AED', label: 'UAE Dirham' },
-	{ code: 'TRY', label: 'Turkish Lira' }
+/**
+ * The currencies people choose from: those in circulation (ISO 4217), the most used first.
+ * The backend's users.models.CURRENCY_CHOICES has the same codes; money.test.ts checks that they
+ * match. Names come from the browser, in the reader's language (see currencyName).
+ */
+export const CURRENCY_OPTIONS: string[] = [
+	'USD',
+	'EUR',
+	'GBP',
+	'JPY',
+	'AUD',
+	'CAD',
+	'CHF',
+	'CNY',
+	'HKD',
+	'SGD',
+	'SEK',
+	'NOK',
+	'DKK',
+	'NZD',
+	'INR',
+	'MXN',
+	'BRL',
+	'ZAR',
+	'AED',
+	'TRY',
+	'AFN',
+	'ALL',
+	'AMD',
+	'AOA',
+	'ARS',
+	'AWG',
+	'AZN',
+	'BAM',
+	'BBD',
+	'BDT',
+	'BGN',
+	'BHD',
+	'BIF',
+	'BMD',
+	'BND',
+	'BOB',
+	'BSD',
+	'BTN',
+	'BWP',
+	'BYN',
+	'BZD',
+	'CDF',
+	'CLP',
+	'COP',
+	'CRC',
+	'CUP',
+	'CVE',
+	'CZK',
+	'DJF',
+	'DOP',
+	'DZD',
+	'EGP',
+	'ERN',
+	'ETB',
+	'FJD',
+	'FKP',
+	'GEL',
+	'GHS',
+	'GIP',
+	'GMD',
+	'GNF',
+	'GTQ',
+	'GYD',
+	'HNL',
+	'HTG',
+	'HUF',
+	'IDR',
+	'ILS',
+	'IQD',
+	'IRR',
+	'ISK',
+	'JMD',
+	'JOD',
+	'KES',
+	'KGS',
+	'KHR',
+	'KMF',
+	'KPW',
+	'KRW',
+	'KWD',
+	'KYD',
+	'KZT',
+	'LAK',
+	'LBP',
+	'LKR',
+	'LRD',
+	'LSL',
+	'LYD',
+	'MAD',
+	'MDL',
+	'MGA',
+	'MKD',
+	'MMK',
+	'MNT',
+	'MOP',
+	'MRU',
+	'MUR',
+	'MVR',
+	'MWK',
+	'MYR',
+	'MZN',
+	'NAD',
+	'NGN',
+	'NIO',
+	'NPR',
+	'OMR',
+	'PAB',
+	'PEN',
+	'PGK',
+	'PHP',
+	'PKR',
+	'PLN',
+	'PYG',
+	'QAR',
+	'RON',
+	'RSD',
+	'RUB',
+	'RWF',
+	'SAR',
+	'SBD',
+	'SCR',
+	'SDG',
+	'SHP',
+	'SLE',
+	'SOS',
+	'SRD',
+	'SSP',
+	'STN',
+	'SVC',
+	'SYP',
+	'SZL',
+	'THB',
+	'TJS',
+	'TMT',
+	'TND',
+	'TOP',
+	'TTD',
+	'TWD',
+	'TZS',
+	'UAH',
+	'UGX',
+	'UYU',
+	'UZS',
+	'VES',
+	'VND',
+	'VUV',
+	'WST',
+	'XAF',
+	'XCD',
+	'XOF',
+	'XPF',
+	'YER',
+	'ZMW'
 ];
 
-export const CURRENCY_OPTIONS = CURRENCY_METADATA.map(({ code }) => code);
-export const CURRENCY_LABELS = Object.fromEntries(
-	CURRENCY_METADATA.map(({ code, label }) => [code, label])
-);
+const displayNames = new Map<string, Intl.DisplayNames | null>();
+
+/** The currency's name in an app locale such as `de` or `zh_Hant`, or its code when unknown. */
+export function currencyName(code: string, locale?: string | null): string {
+	const tag = (locale || 'en').replace('_', '-');
+	if (!displayNames.has(tag)) {
+		let names: Intl.DisplayNames | null = null;
+		// A locale the browser cannot parse falls back to English names.
+		for (const tags of [[tag, 'en'], ['en']]) {
+			try {
+				names = new Intl.DisplayNames(tags, { type: 'currency' });
+				break;
+			} catch {
+				// try the next
+			}
+		}
+		displayNames.set(tag, names);
+	}
+	try {
+		return displayNames.get(tag)?.of(code) ?? code;
+	} catch {
+		return code;
+	}
+}
 
 export function toMoneyValue(
 	price: unknown,
