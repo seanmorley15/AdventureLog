@@ -36,6 +36,7 @@ from worldtravel.models import Region
 from worldtravel.services import mark_cities_visited, mark_regions_visited, resolve_city
 
 from . import serialization as ser
+from core.visibility import shareable_profiles_q
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -215,7 +216,7 @@ class BackupRestorer:
         invitees = [str(uuid) for uuid in shared_user_uuids]
         invitees += [uuid for uuid in roles if uuid not in invitees]
         for uuid in invitees:
-            invited = User.objects.filter(uuid=uuid, public_profile=True).exclude(pk=collection.user_id).first()
+            invited = User.objects.filter(shareable_profiles_q(), uuid=uuid).exclude(pk=collection.user_id).first()
             if invited is None:
                 continue
             CollectionInvite.objects.get_or_create(

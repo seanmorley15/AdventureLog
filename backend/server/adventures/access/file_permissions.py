@@ -1,5 +1,6 @@
 from adventures.models import Activity, Collection, ContentAttachment, ContentImage, Visit
 from adventures.access.audience import is_member
+from core.visibility import can_read_published
 from adventures.services.day_plan.files import activity_collection, image_day_collection
 import posixpath
 
@@ -42,7 +43,14 @@ def _collection_allows(collection, user, request=None, story_group=None):
         return True
     if request is not None and is_member(request, collection):
         return True
-    if collection.visibility in (Collection.Visibility.PUBLIC, Collection.Visibility.UNLISTED):
+    published = (
+        (collection.visibility == Collection.Visibility.SIGNED_IN and _authenticated(user))
+        or (
+            collection.visibility in (Collection.Visibility.PUBLIC, Collection.Visibility.UNLISTED)
+            and can_read_published(user)
+        )
+    )
+    if published:
         return story_group is None or collection.story_group(story_group)
     return False
 
@@ -58,9 +66,11 @@ def _check_content_object_permission(content_object, user, request=None, story_g
     if _authenticated(user) and getattr(content_object, 'user', None) == user:
         return True
 
+    published = getattr(content_object, 'is_public', False) and can_read_published(user)
+
     # A location's own public flag publishes its files, as before.
     if hasattr(content_object, 'collections'):
-        if getattr(content_object, 'is_public', False):
+        if published:
             return True
         return any(
             _collection_allows(collection, user, request, story_group)
@@ -71,7 +81,7 @@ def _check_content_object_permission(content_object, user, request=None, story_g
     collection = getattr(content_object, 'collection', None)
     if collection is not None:
         return _collection_allows(collection, user, request, story_group)
-    return bool(getattr(content_object, 'is_public', False))
+    return bool(published)
 
 
 def can_read_content_image(content_image, user, request=None):

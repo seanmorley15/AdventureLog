@@ -127,7 +127,7 @@ class PlanCommentTests(CommentTestBase):
         self.assertEqual(self.client.get(f'{COMMENTS}inbox/').json()['comments'], [])
 
 
-@override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+@override_settings(ALLOW_PUBLIC_ACCESS=True)
 class StoryCommentTests(CommentTestBase):
     def test_comment_access_needs_a_published_story(self):
         self.as_user(self.owner)
@@ -250,7 +250,7 @@ class CommentBackupTests(CommentTestBase):
             format='multipart',
         )
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_full_round_trip_keeps_plan_roles_story_and_comments(self):
         self.publish('public', costs=True)
         self.trip.comment_access = 'signed_in'

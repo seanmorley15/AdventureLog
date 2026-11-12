@@ -12,7 +12,8 @@
 		User,
 		APIKey,
 		MediaUsage,
-		AuthUserSession
+		AuthUserSession,
+		ProfileVisibility
 	} from '#lib/types.js';
 	import { onMount, untrack } from 'svelte';
 	import { browser } from '$app/env';
@@ -198,10 +199,12 @@
 		}
 	}
 
-	function handlePublicProfileToggle(nextValue: boolean) {
+	/** Returns false when the user backs out of leaving their shared collections. */
+	function handleProfileVisibilityChange(next: ProfileVisibility): boolean {
+		const current = user.profile_visibility ?? (user.public_profile ? 'public' : 'private');
 		if (
-			user.public_profile &&
-			!nextValue &&
+			current !== 'private' &&
+			next === 'private' &&
 			profileSharingImpact > 0 &&
 			!confirm(
 				$t('settings.public_profile_private_confirm', {
@@ -212,9 +215,11 @@
 				})
 			)
 		) {
-			return;
+			return false;
 		}
-		user.public_profile = nextValue;
+		user.profile_visibility = next;
+		user.public_profile = next === 'public';
+		return true;
 	}
 
 	function profileUpdateToastMessage(form: {
@@ -575,7 +580,11 @@
 
 			<main class="flex-1 min-w-0">
 				{#if activeSection === 'profile'}
-					<ProfileSettingsPanel {user} onPublicProfileToggle={handlePublicProfileToggle} />
+					<ProfileSettingsPanel
+						{user}
+						onProfileVisibilityChange={handleProfileVisibilityChange}
+						allowPublicAccess={data.props.allowPublicAccess}
+					/>
 				{:else if activeSection === 'emails'}
 					<EmailsSettingsPanel
 						{emails}

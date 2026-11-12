@@ -6,6 +6,9 @@ export type MoneyValue = {
 	currency: string | null;
 };
 
+/** Who can see a profile and find its owner to share with (#1226). */
+export type ProfileVisibility = 'private' | 'signed_in' | 'public';
+
 export type User = {
 	pk: number;
 	username: string;
@@ -15,6 +18,8 @@ export type User = {
 	is_staff: boolean;
 	profile_pic: string | null;
 	uuid: string;
+	profile_visibility: ProfileVisibility;
+	/** Mirrors `profile_visibility === 'public'`, for older clients. */
 	public_profile: boolean;
 	has_password: boolean;
 	disable_password: boolean;
@@ -57,12 +62,14 @@ export type Collaborator = {
 	last_name: string | null;
 	profile_pic: string | null;
 	public_profile?: boolean;
+	profile_visibility?: ProfileVisibility;
 	is_owner: boolean;
 	is_current_user?: boolean;
 	role?: CollectionRole;
 };
 
-export type CollectionVisibility = 'private' | 'unlisted' | 'public';
+/** `signed_in`: everyone signed in to this server reads the story (#621). */
+export type CollectionVisibility = 'private' | 'signed_in' | 'unlisted' | 'public';
 /** Who may comment on the published story. Members comment on the plan by role. */
 export type CommentAccess = 'off' | 'signed_in' | 'link_holders';
 export type CommentThread = 'plan' | 'story';

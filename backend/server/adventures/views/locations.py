@@ -50,6 +50,7 @@ from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunset
 from adventures.utils.language import resolve_request_language
 from adventures.utils.query_optimization import optimize_locations
 from adventures.views.mixins import PaginatedResponseMixin
+from core.visibility import can_read_published
 from core import pagination
 from core.exceptions import APIError
 from core.geo import point_to_lat_lon
@@ -128,7 +129,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             user.is_authenticated and self.action in self.COPY_ACTIONS
         )
         if not user.is_authenticated:
-            if include_public:
+            if include_public and can_read_published(user):
                 return self._load_detail(
                     Location.objects.retrieve_locations(user, include_public=True).order_by('-updated_at')
                 )

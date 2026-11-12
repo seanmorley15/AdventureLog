@@ -2,6 +2,7 @@ from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 
 from adventures.access.audience import audience_for_request, can_edit, has_guest_token, is_member
+from core.visibility import can_read_published
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -119,7 +120,8 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
             return True
 
         # A record's own public flag opens it for reading, unless a collection owns it.
-        if is_safe_method and getattr(obj, 'is_public', False):
+        # With public access off, only signed-in users read it.
+        if is_safe_method and getattr(obj, 'is_public', False) and can_read_published(user):
             return getattr(obj, 'collection_id', None) is None
 
         return False

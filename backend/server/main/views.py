@@ -28,8 +28,9 @@ class ServerInfoView(APIView):
     @extend_schema(
         responses=inline_serializer('ServerInfo', fields={
             'public_url': serializers.URLField(help_text='The address of this server, used in links and media URLs.'),
-            'allow_public_collection_links': serializers.BooleanField(
-                help_text='Whether collections may be made public or unlisted on this server.'
+            'allow_public_access': serializers.BooleanField(
+                help_text='Whether people who are not signed in can see public collections, places, '
+                'profiles and guest links on this server (`ALLOW_PUBLIC_ACCESS`).'
             ),
             'version': serializers.CharField(help_text='The AdventureLog release this server runs.'),
             'capabilities': serializers.ListField(
@@ -44,7 +45,7 @@ class ServerInfoView(APIView):
         """Get server information"""
         return Response({
             'public_url': settings.PUBLIC_URL,
-            'allow_public_collection_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+            'allow_public_access': settings.ALLOW_PUBLIC_ACCESS,
             'version': settings.ADVENTURELOG_RELEASE_VERSION,
             'capabilities': CAPABILITIES,
         })

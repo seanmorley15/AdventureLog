@@ -12,6 +12,7 @@ from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_cha
 from adventures.access.audience import audience_for_request, can_edit, member_collections_q
 from core.exceptions import APIError
 from core.serializers import validated
+from core.visibility import can_read_published
 
 
 class CollectionFilterSerializer(serializers.Serializer):
@@ -81,7 +82,7 @@ class CollectionOwnedViewSetMixin:
         scope = member_collections_q(self.request, 'collection__')
         if user.is_authenticated:
             scope |= Q(user=user.id)
-        if self.action == 'retrieve':
+        if self.action == 'retrieve' and can_read_published(user):
             scope |= Q(is_public=True, collection__isnull=True)
         return self.model.objects.filter(scope).distinct().order_by('-updated_at')
 

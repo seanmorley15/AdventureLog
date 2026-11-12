@@ -28,6 +28,7 @@ def _serialize_collaborator(user, owner_id=None, request_user=None, role=None):
         'last_name': user.last_name,
         'profile_pic': _build_profile_pic_url(user),
         'public_profile': bool(getattr(user, 'public_profile', False)),
+        'profile_visibility': getattr(user, 'profile_visibility', 'private'),
         'is_owner': owner_id == user.id,
         'is_current_user': bool(request_user and request_user.id == user.id),
     }

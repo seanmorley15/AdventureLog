@@ -98,18 +98,25 @@
 	let visibility = $derived<CollectionVisibility>(sharing?.visibility ?? 'private');
 	const VISIBILITY_CHOICES = [
 		{ value: 'private', icon: LockOutline },
+		{ value: 'signed_in', icon: AccountMultiple },
 		{ value: 'unlisted', icon: LinkVariant },
 		{ value: 'public', icon: Earth }
 	] as const;
 
-	// Private is always available. With public links turned off on the server, the
-	// current choice stays selectable so an existing story can still be made private.
+	// Private and signed-in are always available. With public access turned off on the
+	// server, the current choice stays selectable so an existing story can still be closed.
 	function isAvailable(option: CollectionVisibility) {
-		return option === 'private' || option === visibility || !!sharing?.allow_public_links;
+		return (
+			option === 'private' ||
+			option === 'signed_in' ||
+			option === visibility ||
+			!!sharing?.allow_public_links
+		);
 	}
 	let storyUrl = $derived.by(() => {
 		if (typeof window === 'undefined' || !sharing || visibility === 'private') return '';
 		const base = `${window.location.origin}/collections/${collection.id}`;
+		// Unlisted stories need the secret; signed-in and public ones open at the plain address.
 		return visibility === 'unlisted'
 			? `${base}?s=${encodeURIComponent(sharing.share_secret)}`
 			: base;
@@ -622,7 +629,7 @@
 								$t('share.guest_links'),
 								$t('share.guest_links_hint')
 							)}
-							{#if !showNewLink && activeLinks.length > 0}
+							{#if !showNewLink && activeLinks.length > 0 && sharing.allow_public_links}
 								<button
 									type="button"
 									class="btn btn-primary btn-sm shrink-0 gap-1"
@@ -634,7 +641,12 @@
 							{/if}
 						</div>
 
-						{#if showNewLink || activeLinks.length === 0}
+						{#if !sharing.allow_public_links}
+							<div role="note" class="alert alert-warning alert-soft rounded-xl text-sm">
+								<InformationOutline class="h-5 w-5 shrink-0" />
+								<p>{$t('share.guest_links_off')}</p>
+							</div>
+						{:else if showNewLink || activeLinks.length === 0}
 							<form class="space-y-3 rounded-xl bg-base-200 p-4" onsubmit={createGuestLink}>
 								<div class="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
 									<div>
@@ -800,7 +812,7 @@
 							{@render sectionHeading(Earth, $t('share.who_can_read'), $t('share.story_hint'))}
 						</div>
 						<div
-							class="grid gap-2 sm:grid-cols-3"
+							class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4"
 							role="radiogroup"
 							aria-labelledby="share-who-can-read"
 						>
@@ -840,9 +852,7 @@
 									{#if sharing.is_admin}
 										<p>
 											{$t('share.public_links_admin_hint_before')}
-											<code class="rounded bg-base-100 px-1"
-												>ALLOW_PUBLIC_COLLECTION_LINKS=true</code
-											>
+											<code class="rounded bg-base-100 px-1">ALLOW_PUBLIC_ACCESS=true</code>
 											{$t('share.public_links_admin_hint_after')}
 										</p>
 									{:else}
@@ -915,7 +925,10 @@
 						>
 							{#each COMMENT_CHOICES as choice (choice)}
 								{@const current = sharing.comment_access === choice}
-								{@const available = choice === 'off' || visibility !== 'private'}
+								{@const available =
+									choice === 'off' ||
+									(visibility !== 'private' &&
+										(choice !== 'link_holders' || !!sharing.allow_public_links))}
 								<button
 									type="button"
 									role="radio"

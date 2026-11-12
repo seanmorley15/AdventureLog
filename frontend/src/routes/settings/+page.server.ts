@@ -111,6 +111,7 @@ export const load: PageServerLoad = async (event) => {
 			authenticators,
 			immichIntegration,
 			publicUrl: publicUrlJson.public_url,
+			allowPublicAccess: publicUrlJson.allow_public_access ?? true,
 			socialProviders,
 			googleMapsEnabled: integrations.google_maps,
 			stravaGlobalEnabled: integrations.strava.global,
@@ -144,7 +145,7 @@ export const actions: Actions = {
 			let first_name = formData.get('first_name') as string | null | undefined;
 			let last_name = formData.get('last_name') as string | null | undefined;
 			let profile_pic = formData.get('profile_pic') as File | null | undefined;
-			let public_profile = formData.get('public_profile') as string | null | undefined | boolean;
+			const profile_visibility = formData.get('profile_visibility') as string | null;
 			let measurement_system = formData.get('measurement_system') as string | null | undefined;
 			let default_currency = formData.get('default_currency') as string | null | undefined;
 			let date_format = formData.get('date_format') as string | null | undefined;
@@ -154,12 +155,6 @@ export const actions: Actions = {
 
 			if (!resCurrent.ok) {
 				return fail(resCurrent.status, await resCurrent.json());
-			}
-
-			if (public_profile === 'on') {
-				public_profile = true;
-			} else {
-				public_profile = false;
 			}
 
 			if (measurement_system === 'on') {
@@ -216,7 +211,13 @@ export const actions: Actions = {
 			if (profile_pic) {
 				formDataToSend.append('profile_pic', profile_pic);
 			}
-			formDataToSend.append('public_profile', public_profile.toString());
+			if (
+				profile_visibility &&
+				['private', 'signed_in', 'public'].includes(profile_visibility) &&
+				profile_visibility !== currentUser.profile_visibility
+			) {
+				formDataToSend.append('profile_visibility', profile_visibility);
+			}
 			formDataToSend.append('measurement_system', measurement_system.toString());
 			if (default_currency) {
 				formDataToSend.append('default_currency', default_currency);

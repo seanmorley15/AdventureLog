@@ -333,7 +333,7 @@ The API was reorganised for consistency. Every change is below; the frontend was
 | `/auth/mobile-qr/` (a second key: 400) | removed: the mobile app signs in with the account, see [Mobile app sign-in](#mobile-app-sign-in) |
 | `/auth/users/`, `/auth/user/{username}/` (`adventures` key) | `/api/users/`, `/api/users/{username}/` (`locations` key) |
 | `GET /api/stats/counts/{username}/` | `GET /api/users/{username}/stats/` |
-| `GET /public-url/` (`PUBLIC_URL`) | `GET /api/server-info/` (`public_url`, `allow_public_collection_links`) |
+| `GET /public-url/` (`PUBLIC_URL`) | `GET /api/server-info/` (`public_url`, `allow_public_access`) |
 | `GET /api/billing/subscription/` | removed: `GET /api/account/` includes it |
 | `POST /api/billing/create-checkout-session/`, `create-portal-session/` | `POST /api/billing/checkout-session/`, `portal-session/` |
 

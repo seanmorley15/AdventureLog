@@ -85,7 +85,7 @@ def imported_visibility(backup_schema, col_data):
     """Schema 5 stores visibility. An older file is public only if it was is_public."""
     schema = parse_backup_schema(backup_schema)
     if schema is not None and schema >= VISIBILITY_SCHEMA and col_data.get('visibility') in (
-        'private', 'unlisted', 'public'
+        'private', 'signed_in', 'unlisted', 'public'
     ):
         return col_data['visibility']
     return 'public' if col_data.get('is_public') else 'private'

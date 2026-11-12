@@ -39,7 +39,7 @@ class ItineraryCreateCollectionOwnershipTests(AudienceTestBase):
         self.assertEqual(response.status_code, 404)
         self.assertFalse(CollectionItineraryItem.objects.filter(object_id=str(self.attacker_note.id)).exists())
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_stranger_cannot_place_into_public_collection(self):
         self.publish('public')
         response = self.place(self.stranger, self.trip)
@@ -65,7 +65,7 @@ class ItineraryCreateCollectionOwnershipTests(AudienceTestBase):
 class NoteCollectionReassignmentTests(AudienceTestBase):
     """GHSA-7vr6-67cp-v4m8 (note part): a full PUT moving your note into someone else's collection."""
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_put_and_patch_cannot_move_a_note_into_a_foreign_collection(self):
         self.publish('public')
         note = Note.objects.create(user=self.stranger, name='canary', content='canary', is_public=True)
@@ -87,7 +87,7 @@ class NoteCollectionReassignmentTests(AudienceTestBase):
 class CollectionVisibilityTests(AudienceTestBase):
     """GHSA-x7c9-c8gj-563q: a collaborator publishing the owner's private collection."""
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_editor_cannot_publish_and_nothing_cascades(self):
         self.as_user(self.editor)
         for body in ({'visibility': 'public'}, {'is_public': True}):

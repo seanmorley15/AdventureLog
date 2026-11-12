@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { canOpenProfile } from '#lib/profiles.js';
 	import { run } from 'svelte/legacy';
 	import { untrack } from 'svelte';
 	import type { Component } from 'svelte';
@@ -1180,7 +1181,7 @@
 						{#if collection.collaborators && collection.collaborators.length > 0}
 							<div class="avatar-group -space-x-2">
 								{#each collection.collaborators as person (person.uuid)}
-									{#if person.public_profile}
+									{#if canOpenProfile(person, data.user)}
 										<a
 											href={`/profile/${person.username}`}
 											class="avatar tooltip"
@@ -1625,7 +1626,7 @@
 											<div class="text-sm opacity-70 mb-1">{$t('collection.collaborators')}</div>
 											<div class="avatar-group -space-x-3">
 												{#each collection.collaborators as person (person.uuid)}
-													{#if person.public_profile}
+													{#if canOpenProfile(person, data.user)}
 														<a
 															href={`/profile/${person.username}`}
 															class="avatar tooltip"

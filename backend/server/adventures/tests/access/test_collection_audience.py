@@ -55,7 +55,7 @@ class RoleTests(AudienceTestBase):
         self.as_anonymous()
         self.assertIn(self.move_stop(HTTP_X_GUEST_TOKEN=link.token).status_code, (401, 403, 404))
 
-        with override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True):
+        with override_settings(ALLOW_PUBLIC_ACCESS=True):
             self.publish('public')
             self.assertIn(self.move_stop().status_code, (401, 403, 404))
         self.stop.refresh_from_db()
@@ -197,7 +197,7 @@ class StoryTests(AudienceTestBase):
     def test_private_collection_is_not_found_for_anonymous(self):
         self.assertEqual(self.story().status_code, 404)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_story_hides_every_group_until_the_owner_turns_it_on(self):
         self.publish('public')
         body = self.story().json()
@@ -237,7 +237,7 @@ class StoryTests(AudienceTestBase):
         self.assertEqual([n['name'] for n in body['notes']], ['Ferry'])
         self.assertEqual([i['name'] for i in body['checklists'][0]['items']], ['Headlamp'])
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_members_still_see_the_private_plan_and_can_preview_the_story(self):
         self.publish('public')
         self.as_user(self.viewer)
@@ -248,14 +248,14 @@ class StoryTests(AudienceTestBase):
         self.assertTrue(preview['story_preview'])
         self.assertNotIn('reservation_number', preview['lodging'][0])
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_unlisted_needs_the_secret(self):
         self.publish('unlisted')
         self.assertEqual(self.story().status_code, 404)
         self.assertEqual(self.story(s='wrong').status_code, 404)
         self.assertEqual(self.story(s=self.trip.share_secret).status_code, 200)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_place_details_group_copies_text_into_the_story_only(self):
         self.hut.description = 'Red cabin by the water'
         self.hut.link = 'https://example.com/hut'
@@ -274,20 +274,23 @@ class StoryTests(AudienceTestBase):
         self.assertFalse(self.hut.is_public)
         self.assertEqual(self.client.get(f'/api/locations/{self.hut.id}/').status_code, 404)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_private_location_on_a_story_still_404s_at_its_own_page(self):
         self.publish('public', coordinates=True)
         self.assertEqual(self.story().status_code, 200)
         self.assertEqual(self.client.get(f'/api/locations/{self.hut.id}/').status_code, 404)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=False)
-    def test_existing_public_collection_stays_readable_when_the_setting_is_off(self):
-        # A legacy public collection, as the migration leaves it.
+    @override_settings(ALLOW_PUBLIC_ACCESS=False)
+    def test_existing_public_collection_is_for_signed_in_readers_when_the_setting_is_off(self):
+        # A legacy public collection, as the migration leaves it. With public access off it
+        # stays public, but only signed-in users read it (#1124).
         self.trip.is_public = True
         self.trip.save()
         self.trip.refresh_from_db()
         self.assertEqual(self.trip.visibility, 'public')
-        self.assertEqual(self.story().status_code, 200)
+        self.assertEqual(self.story().status_code, 404)
+        self.as_user(self.stranger)
+        self.assertEqual(self.client.get(f'/api/collections/{self.trip.id}/').status_code, 200)
 
         self.as_user(self.owner)
         refused = self.client.patch(f'/api/collections/{self.trip.id}/', {'visibility': 'unlisted'}, format='json')
@@ -298,7 +301,7 @@ class StoryTests(AudienceTestBase):
         self.assertEqual(private.status_code, 200)
         self.assertEqual(self.story().status_code, 404)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=False)
+    @override_settings(ALLOW_PUBLIC_ACCESS=False)
     def test_new_public_link_is_refused_when_the_setting_is_off(self):
         self.as_user(self.owner)
         self.assertEqual(
@@ -310,7 +313,7 @@ class StoryTests(AudienceTestBase):
             400,
         )
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_publishing_does_not_change_child_flags(self):
         self.as_user(self.owner)
         response = self.client.patch(f'/api/collections/{self.trip.id}/', {'visibility': 'public'}, format='json')
@@ -334,7 +337,7 @@ class StoryTests(AudienceTestBase):
         cabin.refresh_from_db()
         self.assertFalse(cabin.is_public)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_collection_owned_records_do_not_open_through_is_public(self):
         self.hotel.is_public = True
         self.hotel.save()
@@ -343,7 +346,7 @@ class StoryTests(AudienceTestBase):
         self.as_user(self.viewer)
         self.assertEqual(self.client.get(f'/api/lodgings/{self.hotel.id}/').status_code, 200)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_day_gpx_needs_the_gpx_group(self):
         day = self.trip.itinerary_days.get(index=1)
         gpx = SimpleUploadedFile('ridge.gpx', b'<gpx></gpx>', content_type='application/gpx+xml')
@@ -357,7 +360,7 @@ class StoryTests(AudienceTestBase):
         self.assertEqual(self.client.get(path).status_code, 200)
         self.assertIn('gpx_file', self.story().json()['day_activities'][0])
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_public_pdf_follows_the_groups_and_member_pdf_does_not(self):
         self.publish('public')
         story_pdf = build_collection_pdf(get_collection_for_pdf(self.trip.id), story=True)
@@ -367,7 +370,7 @@ class StoryTests(AudienceTestBase):
         self.as_anonymous()
         self.assertEqual(self.client.get(f'/api/collections/{self.trip.id}/pdf/').status_code, 200)
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_profile_lists_public_collections_only(self):
         self.publish('unlisted')
         self.as_anonymous()
@@ -398,7 +401,7 @@ class BackupTests(AudienceTestBase):
             format='multipart',
         )
 
-    @override_settings(ALLOW_PUBLIC_COLLECTION_LINKS=True)
+    @override_settings(ALLOW_PUBLIC_ACCESS=True)
     def test_round_trip_keeps_visibility_roles_links_and_groups(self):
         self.publish('unlisted', costs=True)
         CollectionGuestLink.objects.create(collection=self.trip, role='editor', label='Family')

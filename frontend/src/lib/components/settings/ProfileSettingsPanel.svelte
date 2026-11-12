@@ -10,17 +10,42 @@
 		type DateFormatPreference
 	} from '#lib/dateFormat.js';
 	import { getBasemapOptions } from '#lib';
-	import type { User } from '#lib/types.js';
+	import type { ProfileVisibility, User } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
 
 	interface Props {
 		user: User;
-		onPublicProfileToggle: (nextValue: boolean) => void;
+		/** Returns false to keep the current choice (the user backed out). */
+		onProfileVisibilityChange: (next: ProfileVisibility) => boolean;
+		/** False when the server is for signed-in users only (`ALLOW_PUBLIC_ACCESS`). */
+		allowPublicAccess?: boolean;
 	}
 
-	let { user = $bindable(), onPublicProfileToggle }: Props = $props();
+	let { user = $bindable(), onProfileVisibilityChange, allowPublicAccess = true }: Props = $props();
+
+	// Who can see the profile, narrowest first (#1226).
+	const PROFILE_VISIBILITY: { value: ProfileVisibility; label: string; hint: string }[] = [
+		{
+			value: 'private',
+			label: 'settings.profile_visibility_private',
+			hint: 'settings.profile_visibility_private_hint'
+		},
+		{
+			value: 'signed_in',
+			label: 'settings.profile_visibility_signed_in',
+			hint: 'settings.profile_visibility_signed_in_hint'
+		},
+		{
+			value: 'public',
+			label: 'settings.profile_visibility_public',
+			hint: 'settings.profile_visibility_public_hint'
+		}
+	];
+	const profileVisibility = $derived<ProfileVisibility>(
+		user.profile_visibility ?? (user.public_profile ? 'public' : 'private')
+	);
 
 	const dateFormatLabelKeys: Record<DateFormatPreference, string> = {
 		locale: 'settings.date_format_locale',
@@ -112,35 +137,62 @@
 			</div>
 		</div>
 
-		<div class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4">
-			<label class="flex items-start justify-between gap-4 cursor-pointer w-full">
-				<span class="min-w-0">
-					<span class="font-semibold text-base-content">{$t('auth.public_profile')}</span>
-					<p class="field-hint">{$t('settings.public_profile_desc')}</p>
-					{#if user.public_profile && (user.shared_collection_count ?? 0) > 0}
-						<p class="text-sm text-warning mt-2">
-							{$t('settings.public_profile_sharing_warning', {
-								values: { count: user.shared_collection_count ?? 0 }
-							})}
-						</p>
-					{/if}
-					{#if user.public_profile && (user.pending_collection_invite_count ?? 0) > 0}
-						<p class="text-sm text-warning mt-2">
-							{$t('settings.public_profile_invite_warning', {
-								values: { count: user.pending_collection_invite_count ?? 0 }
-							})}
-						</p>
-					{/if}
-				</span>
-				<input
-					type="checkbox"
-					checked={user.public_profile}
-					onchange={(e) => onPublicProfileToggle(e.currentTarget.checked)}
-					name="public_profile"
-					class="toggle toggle-primary shrink-0 mt-0.5"
-				/>
-			</label>
-		</div>
+		<fieldset class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4">
+			<legend class="px-1 font-semibold text-base-content">
+				{$t('settings.profile_visibility')}
+			</legend>
+			<p class="field-hint">{$t('settings.profile_visibility_desc')}</p>
+			<div class="mt-3 grid gap-2 sm:grid-cols-3">
+				{#each PROFILE_VISIBILITY as option (option.value)}
+					{@const unavailable = option.value === 'public' && !allowPublicAccess}
+					<label
+						class={[
+							'flex cursor-pointer gap-3 rounded-lg border p-3',
+							profileVisibility === option.value
+								? 'border-primary bg-primary/10'
+								: 'border-base-300 bg-base-100',
+							unavailable && 'cursor-not-allowed opacity-60'
+						]}
+					>
+						<input
+							type="radio"
+							name="profile_visibility"
+							class="radio radio-primary radio-sm mt-0.5"
+							value={option.value}
+							checked={profileVisibility === option.value}
+							disabled={unavailable}
+							onchange={(e) => {
+								if (onProfileVisibilityChange(option.value)) return;
+								const kept = e.currentTarget.form?.querySelector<HTMLInputElement>(
+									`input[name="profile_visibility"][value="${profileVisibility}"]`
+								);
+								if (kept) kept.checked = true;
+							}}
+						/>
+						<span class="min-w-0">
+							<span class="block text-sm font-semibold">{$t(option.label)}</span>
+							<span class="block text-xs text-base-content/70">
+								{unavailable ? $t('settings.profile_visibility_public_off') : $t(option.hint)}
+							</span>
+						</span>
+					</label>
+				{/each}
+			</div>
+			{#if profileVisibility !== 'private' && (user.shared_collection_count ?? 0) > 0}
+				<p class="text-sm text-warning mt-3">
+					{$t('settings.public_profile_sharing_warning', {
+						values: { count: user.shared_collection_count ?? 0 }
+					})}
+				</p>
+			{/if}
+			{#if profileVisibility !== 'private' && (user.pending_collection_invite_count ?? 0) > 0}
+				<p class="text-sm text-warning mt-2">
+					{$t('settings.public_profile_invite_warning', {
+						values: { count: user.pending_collection_invite_count ?? 0 }
+					})}
+				</p>
+			{/if}
+		</fieldset>
 
 		<SettingsSubsection
 			title={$t('settings.preferences')}

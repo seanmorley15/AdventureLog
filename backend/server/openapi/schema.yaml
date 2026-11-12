@@ -132,7 +132,7 @@ paths:
       description: |-
         Change your profile and preferences. Send JSON, or `multipart/form-data` to upload a new `profile_pic`.
 
-        Turning `public_profile` off also removes you from collections other people shared with you and cancels invites you have not answered. The response then includes `left_shared_collections` and `revoked_collection_invites` with how many were affected.
+        `profile_visibility` is `private`, `signed_in` (shown to signed-in users, who can also invite you) or `public`; the older `public_profile` switch is kept in step with it. Making your profile private also removes you from collections other people shared with you and cancels invites you have not answered. The response then includes `left_shared_collections` and `revoked_collection_invites` with how many were affected.
       summary: Update your profile
       tags:
       - Account
@@ -4293,7 +4293,8 @@ paths:
       description: |-
         Owner only. Anyone with the link can open the collection without an account, as an
         `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
-        settings with the new link's `token`.
+        settings with the new link's `token`. Refused while the server has public access off
+        (`ALLOW_PUBLIC_ACCESS`).
       summary: Create a guest link
       parameters:
       - in: path
@@ -4524,8 +4525,8 @@ paths:
     post:
       operationId: collections_create_invite
       description: |-
-        Owner only. Invites a user with a public profile as an `editor` or `viewer`. They join
-        when they accept. Returns the updated sharing settings.
+        Owner only. Invites a user whose profile is public or shown to signed-in users, as an
+        `editor` or `viewer`. They join when they accept. Returns the updated sharing settings.
       summary: Invite someone
       parameters:
       - in: path
@@ -5089,7 +5090,8 @@ paths:
     get:
       operationId: collections_shareable_users
       description: |-
-        Users with a public profile who are not the owner, a member, or already invited.
+        Users whose profile is public or shown to signed-in users, who are not the owner, a
+        member, or already invited.
         Search with `q`; a `q` of one character returns nothing.
       summary: Find people to invite
       parameters:
@@ -10658,8 +10660,10 @@ paths:
   /api/users/:
     get:
       operationId: users_list
-      description: Everyone who made their profile public, except you.
-      summary: List public profiles
+      description: |-
+        Everyone whose profile you may see, except you: public profiles, and to signed-in users
+        also the profiles shown to signed-in users.
+      summary: List profiles
       tags:
       - Users
       security:
@@ -13804,11 +13808,13 @@ components:
     CollectionVisibilityEnum:
       enum:
       - private
+      - signed_in
       - unlisted
       - public
       type: string
       description: |-
         * `private` - Private
+        * `signed_in` - Everyone signed in
         * `unlisted` - Unlisted
         * `public` - Public
     Comment:
@@ -14155,6 +14161,8 @@ components:
           type: string
           format: uuid
           readOnly: true
+        profile_visibility:
+          $ref: '#/components/schemas/ProfileVisibilityEnum'
         public_profile:
           type: boolean
         username:
@@ -16768,6 +16776,8 @@ components:
           type: string
           format: binary
           nullable: true
+        profile_visibility:
+          $ref: '#/components/schemas/ProfileVisibilityEnum'
         public_profile:
           type: boolean
         username:
@@ -18111,6 +18121,16 @@ components:
         * `ZWD` - Zimbabwean Dollar (1980–2008)
         * `ZWR` - Zimbabwean Dollar (2008)
         * `ZWL` - Zimbabwean Dollar (2009–2024)
+    ProfileVisibilityEnum:
+      enum:
+      - private
+      - signed_in
+      - public
+      type: string
+      description: |-
+        * `private` - Private
+        * `signed_in` - Signed-in users
+        * `public` - Public
     PublicProfile:
       type: object
       description: 'A user as anyone else sees them: the account-only fields are left
@@ -18124,6 +18144,8 @@ components:
           type: string
           format: uuid
           readOnly: true
+        profile_visibility:
+          $ref: '#/components/schemas/ProfileVisibilityEnum'
         public_profile:
           type: boolean
         username:
@@ -18709,10 +18731,10 @@ components:
           type: string
           format: uri
           description: The address of this server, used in links and media URLs.
-        allow_public_collection_links:
+        allow_public_access:
           type: boolean
-          description: Whether collections may be made public or unlisted on this
-            server.
+          description: Whether people who are not signed in can see public collections,
+            places, profiles and guest links on this server (`ALLOW_PUBLIC_ACCESS`).
         version:
           type: string
           description: The AdventureLog release this server runs.
@@ -18724,7 +18746,7 @@ components:
             with a session token), `conditional_writes_v1` (`ETag` and `If-Match`)
             and `client_ids_v1` (a client may choose the id of what it creates).'
       required:
-      - allow_public_collection_links
+      - allow_public_access
       - capabilities
       - public_url
       - version

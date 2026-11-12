@@ -281,7 +281,7 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
         data.update(serialize_day_files(collection, context))
 
         if story_mode:
-            story = build_story_payload(data, collection)
+            story = build_story_payload(data, collection, viewer=request.user)
             story['audience'] = audience.as_dict()
             story['story_preview'] = not audience.is_public_reader
             return Response(story)

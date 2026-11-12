@@ -10,10 +10,12 @@ call it instead of reading ``is_public`` or ``shared_with`` directly.
 - ``viewer``: reads the private plan. Changes nothing.
 - A guest link carries the ``editor`` or ``viewer`` role for someone with no
   account. A guest has no personal calendar.
-- ``public``: visibility is public, or unlisted with the link secret. Receives
-  the story payload only.
+- ``public``: visibility is public, unlisted with the link secret, or signed-in
+  and the reader is signed in. Receives the story payload only.
 
-Member and guest access never reads ``is_public``.
+Member and guest access never reads ``is_public``. With ``ALLOW_PUBLIC_ACCESS``
+off, guest links stop working and public or unlisted stories are read only by
+signed-in users (#1124).
 """
 from __future__ import annotations
 
@@ -21,6 +23,8 @@ from dataclasses import dataclass
 
 from django.db.models import Q
 from django.utils import timezone
+
+from core.visibility import can_read_published, is_signed_in, public_access_allowed
 
 OWNER = 'owner'
 EDITOR = 'editor'
@@ -104,7 +108,8 @@ def active_guest_links():
 
 
 def guest_link_for(token, collection=None):
-    if not token:
+    # Guest links let people without an account in; a server without public access has none.
+    if not token or not public_access_allowed():
         return None
     links = active_guest_links().filter(token=token)
     if collection is not None:
@@ -143,6 +148,10 @@ def resolve_audience(collection, user=None, *, guest_token=None, story_secret=No
     link = guest_link_for(guest_token, collection)
     if link is not None:
         return Audience(link.role, guest_link=link)
+    if collection.visibility == Collection.Visibility.SIGNED_IN and is_signed_in(user):
+        return Audience(PUBLIC)
+    if not can_read_published(user):
+        return None
     if collection.visibility == Collection.Visibility.PUBLIC:
         return Audience(PUBLIC)
     if (
@@ -229,7 +238,13 @@ def readable_collections_q(request):
     """Collections this request may open: membership, a guest link, or the story."""
     from adventures.models import Collection
 
-    q = member_collections_q(request) | Q(visibility=Collection.Visibility.PUBLIC)
+    user = getattr(request, 'user', None)
+    q = member_collections_q(request)
+    if is_signed_in(user):
+        q |= Q(visibility=Collection.Visibility.SIGNED_IN)
+    if not can_read_published(user):
+        return q
+    q |= Q(visibility=Collection.Visibility.PUBLIC)
     secret = story_secret_from_request(request)
     if secret:
         q |= Q(visibility=Collection.Visibility.UNLISTED, share_secret=secret)

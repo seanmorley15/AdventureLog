@@ -101,6 +101,7 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
             'last_name': obj.user.last_name,
             'profile_pic': _build_profile_pic_url(obj.user),
             'public_profile': bool(getattr(obj.user, 'public_profile', False)),
+            'profile_visibility': getattr(obj.user, 'profile_visibility', 'private'),
         }
 
 

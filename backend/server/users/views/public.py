@@ -1,6 +1,7 @@
 """Public profiles: who can be found, and what is shown about them."""
 
 from django.contrib.auth import get_user_model
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework.permissions import AllowAny
@@ -10,6 +11,7 @@ from rest_framework.views import APIView
 from adventures.models import Collection, Location
 from adventures.serializers import LocationSerializer, UltraSlimCollectionSerializer
 from adventures.services.user_stats import UserStatsService
+from core.visibility import can_see_profile, visible_profiles_q
 from users.serializers import PublicProfileSerializer, UserStatsSerializer
 
 User = get_user_model()
@@ -17,10 +19,15 @@ _stats_service = UserStatsService()
 
 
 def _visible_user(request, username):
-    """A user with a public profile, or the requester themselves. Anyone else is a 404."""
-    if request.user.is_authenticated and request.user.username == username:
-        return get_object_or_404(User, username=username)
-    return get_object_or_404(User, username=username, public_profile=True)
+    """
+    A user whose profile the requester may see: their own, one shown to signed-in users when
+    they are signed in, or a public one (to signed-in users only while ``ALLOW_PUBLIC_ACCESS``
+    is off). Anyone else is a 404.
+    """
+    user = get_object_or_404(User, username=username)
+    if not can_see_profile(request.user, user):
+        raise Http404
+    return user
 
 
 class PublicUserListView(APIView):
@@ -30,11 +37,12 @@ class PublicUserListView(APIView):
     @extend_schema(responses=PublicProfileSerializer(many=True))
     def get(self, request):
         """
-        List public profiles
+        List profiles
 
-        Everyone who made their profile public, except you.
+        Everyone whose profile you may see, except you: public profiles, and to signed-in users
+        also the profiles shown to signed-in users.
         """
-        users = User.objects.filter(public_profile=True)
+        users = User.objects.filter(visible_profiles_q(request.user))
         if request.user.is_authenticated:
             users = users.exclude(id=request.user.id)
         return Response(PublicProfileSerializer(users, many=True).data)
@@ -65,9 +73,13 @@ class PublicUserDetailView(APIView):
         """
         user = _visible_user(request, username)
         # A location is listed by its own flag. A collection is listed only when its
-        # visibility is public, and as a card: the private plan is not part of a profile.
+        # visibility is public (or signed-in, for signed-in viewers), and as a card: the
+        # private plan is not part of a profile.
         locations = Location.objects.filter(user=user, is_public=True)
-        collections = Collection.objects.filter(user=user, visibility=Collection.Visibility.PUBLIC)
+        shown = [Collection.Visibility.PUBLIC]
+        if request.user.is_authenticated:
+            shown.append(Collection.Visibility.SIGNED_IN)
+        collections = Collection.objects.filter(user=user, visibility__in=shown)
         return Response({
             'user': PublicProfileSerializer(user).data,
             'locations': LocationSerializer(locations, many=True, context={'request': request}).data,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { canOpenProfile } from '#lib/profiles.js';
 	import { tick, untrack } from 'svelte';
 
 	import { createEmptyLocation } from '#lib/location-draft.js';
@@ -932,7 +933,7 @@
 											textClass="text-[10px]"
 										/>
 									</span>
-									{#if adventure.user.public_profile}
+									{#if canOpenProfile(adventure.user, data.user)}
 										<a href={`/profile/${adventure.user.username}`} class="link link-hover">
 											{adventure.user.first_name || adventure.user.username}
 											{adventure.user.last_name || ''}

@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from adventures.models import Collection, CollectionInvite
 from core.public_url import build_media_url
+from core.visibility import ProfileVisibility
 from .models import CustomUser, APIKey
 
 User = get_user_model()
@@ -26,7 +27,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        extra_fields = ['profile_pic', 'uuid', 'public_profile']
+        extra_fields = ['profile_pic', 'uuid', 'profile_visibility', 'public_profile']
 
         if hasattr(UserModel, 'USERNAME_FIELD'):
             extra_fields.append(UserModel.USERNAME_FIELD)
@@ -54,13 +55,32 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         fields = ['pk', *extra_fields]
         read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk', 'disable_password')
 
+    @staticmethod
+    def resulting_profile_visibility(instance, validated_data):
+        """
+        The profile visibility this update leaves, or None when it does not touch it. Mirrors
+        ``CustomUser._sync_public_profile``: a chosen visibility wins; the old ``public_profile``
+        switch turns a profile public, or a public one private.
+        """
+        requested = validated_data.get('profile_visibility')
+        if requested is not None and requested != instance.profile_visibility:
+            return requested
+        if 'public_profile' in validated_data:
+            if validated_data['public_profile']:
+                return ProfileVisibility.PUBLIC
+            if instance.profile_visibility == ProfileVisibility.PUBLIC:
+                return ProfileVisibility.PRIVATE
+            return instance.profile_visibility
+        return requested
+
     def handle_public_profile_change(self, instance, validated_data):
         """
         Leaving shared collections when a profile becomes private is intentional:
         private profiles are not discoverable for new shares, and collaborators
-        should not retain access through a relationship that started via public discovery.
+        should not retain access through a relationship that started via discovery.
+        A profile shown to signed-in users can still be shared with, so it keeps them.
         """
-        if 'public_profile' in validated_data and not validated_data['public_profile']:
+        if self.resulting_profile_visibility(instance, validated_data) == ProfileVisibility.PRIVATE:
             shared_collections = list(Collection.objects.filter(shared_with=instance))
             left_count = len(shared_collections)
             for collection in shared_collections:

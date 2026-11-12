@@ -26,6 +26,7 @@ from core.exceptions import APIError
 from core.parsing import as_uuid
 from core.serializers import validated
 from django.contrib.auth import get_user_model
+from core.visibility import public_access_allowed, shareable_profiles_q
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ def _sharing_state(collection, request):
         'story_groups': {name: collection.story_group(name) for name in Collection.STORY_GROUPS},
         'comment_access': collection.comment_access,
         'share_secret': collection.share_secret,
-        'allow_public_links': settings.ALLOW_PUBLIC_COLLECTION_LINKS,
+        'allow_public_links': settings.ALLOW_PUBLIC_ACCESS,
         # Admins see how to turn public links on; everyone else is told to ask one.
         'is_admin': bool(getattr(request.user, 'is_staff', False)),
     }
@@ -134,12 +135,12 @@ class SharingActionsMixin:
         """
         Invite someone
 
-        Owner only. Invites a user with a public profile as an `editor` or `viewer`. They join
-        when they accept. Returns the updated sharing settings.
+        Owner only. Invites a user whose profile is public or shown to signed-in users, as an
+        `editor` or `viewer`. They join when they accept. Returns the updated sharing settings.
         """
         collection = self._owned_collection(request, pk)
         params = validated(InviteCreateSerializer, request.data)
-        user = User.objects.filter(uuid=params['user'], public_profile=True).first()
+        user = User.objects.filter(shareable_profiles_q(), uuid=params['user']).first()
         if user is None:
             raise NotFound('User not found.')
         if user == request.user:
@@ -214,14 +215,15 @@ class SharingActionsMixin:
         """
         Find people to invite
 
-        Users with a public profile who are not the owner, a member, or already invited.
+        Users whose profile is public or shown to signed-in users, who are not the owner, a
+        member, or already invited.
         Search with `q`; a `q` of one character returns nothing.
         """
         collection = self.get_object()
         params = validated(ShareableUsersQuerySerializer, request.query_params)
         query = params['q'].strip()
         candidates = (
-            User.objects.filter(public_profile=True)
+            User.objects.filter(shareable_profiles_q())
             .exclude(id=collection.user_id)
             .exclude(id__in=collection.shared_with.values('id'))
             .exclude(id__in=CollectionInvite.objects.filter(collection=collection).values('invited_user_id'))
@@ -315,9 +317,12 @@ class SharingActionsMixin:
 
         Owner only. Anyone with the link can open the collection without an account, as an
         `editor` or `viewer`, until it expires or is revoked. Returns the updated sharing
-        settings with the new link's `token`.
+        settings with the new link's `token`. Refused while the server has public access off
+        (`ALLOW_PUBLIC_ACCESS`).
         """
         collection = self._owned_collection(request, pk)
+        if not public_access_allowed():
+            raise APIError('Guest links are turned off on this server.', code='invalid')
         params = validated(GuestLinkCreateSerializer, request.data)
         expires_at = params.get('expires_at')
         if expires_at is not None:

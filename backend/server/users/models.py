@@ -9,6 +9,8 @@ from django.db import models
 from django.utils import timezone
 from django_resized import ResizedImageField
 
+from core.visibility import ProfileVisibility
+
 
 CURRENCY_CHOICES = (
     ('USD', 'US Dollar'),
@@ -74,6 +76,11 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=True)
     profile_pic = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='profile-pics/')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    # Who can see the profile and find this user to share with (#1226). ``public_profile``
+    # mirrors ``profile_visibility == public`` for clients that only know the old switch.
+    profile_visibility = models.CharField(
+        max_length=10, choices=ProfileVisibility.choices, default=ProfileVisibility.PRIVATE
+    )
     public_profile = models.BooleanField(default=False)
     disable_password = models.BooleanField(default=False)
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
@@ -87,10 +94,41 @@ class CustomUser(AbstractUser):
     # email changes (users.adapters.CustomSocialAccountAdapter.can_authenticate_by_email).
     legacy_email_login = models.EmailField(null=True, blank=True, editable=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._loaded_profile_visibility = self.__dict__.get('profile_visibility')
+
+    def _sync_public_profile(self):
+        """
+        Keep ``public_profile`` a mirror of ``profile_visibility``. A changed visibility wins;
+        otherwise an old client that only flipped ``public_profile`` moves the visibility: on
+        makes the profile public, off makes a public profile private and leaves a signed-in
+        one alone.
+        """
+        public = ProfileVisibility.PUBLIC
+        if 'profile_visibility' not in self.__dict__ or 'public_profile' not in self.__dict__:
+            return
+        if self._state.adding:
+            if self.profile_visibility == ProfileVisibility.PRIVATE and self.public_profile:
+                self.profile_visibility = public
+            self.public_profile = self.profile_visibility == public
+        elif self.profile_visibility != self._loaded_profile_visibility:
+            self.public_profile = self.profile_visibility == public
+        elif self.public_profile != (self.profile_visibility == public):
+            if self.public_profile:
+                self.profile_visibility = public
+            elif self.profile_visibility == public:
+                self.profile_visibility = ProfileVisibility.PRIVATE
+
     def save(self, *args, **kwargs):
         if isinstance(self.email, str) and not self.email.strip():
             self.email = None
+        self._sync_public_profile()
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and ({'profile_visibility', 'public_profile'} & set(update_fields)):
+            kwargs['update_fields'] = list(set(update_fields) | {'profile_visibility', 'public_profile'})
         super().save(*args, **kwargs)
+        self._loaded_profile_visibility = self.profile_visibility
 
     def __str__(self):
         return self.username

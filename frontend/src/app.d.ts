@@ -16,6 +16,7 @@ declare global {
 				is_staff: boolean;
 				profile_pic: string | null;
 				uuid: string;
+				profile_visibility: 'private' | 'signed_in' | 'public';
 				public_profile: boolean;
 				has_password: boolean;
 				disable_password: boolean;

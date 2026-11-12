@@ -12,6 +12,9 @@
 	}
 
 	let { user }: Props = $props();
+	const profileVisibility = $derived(
+		user.profile_visibility ?? (user.public_profile ? 'public' : 'private')
+	);
 </script>
 
 <SettingsCard>
@@ -48,8 +51,8 @@
 		<div class="p-4 bg-base-200 rounded-xl">
 			<span class="text-base-content/80">{$t('settings.profile_visibility')}</span>
 			<p class="mt-1">
-				<span class="badge {user.public_profile ? 'badge-info' : 'badge-ghost'}">
-					{user.public_profile ? $t('adventures.public') : $t('adventures.private')}
+				<span class="badge {profileVisibility === 'private' ? 'badge-ghost' : 'badge-info'}">
+					{$t(`settings.profile_visibility_${profileVisibility}`)}
 				</span>
 			</p>
 		</div>

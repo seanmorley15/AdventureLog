@@ -300,6 +300,10 @@ export default defineConfig({
                 text: "Disable Registration",
                 link: "/docs/configuration/disable_registration",
               },
+              {
+                text: "Public Access",
+                link: "/docs/configuration/public_access",
+              },
               { text: "API Keys", link: "/docs/configuration/api_keys" },
             ],
           },

@@ -338,8 +338,10 @@ ALLAUTH_UI_THEME = "dim"
 # Authentication & Accounts
 # ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
-# New unlisted and public collection links. Collections that are already public stay readable either way.
-ALLOW_PUBLIC_COLLECTION_LINKS = getenv('ALLOW_PUBLIC_COLLECTION_LINKS', 'false').lower() == 'true'
+# Whether people who are not signed in can see anything: public and unlisted collections, public
+# places and profiles, and guest links. False makes the server signed-in only: public things are
+# shown to signed-in users alone and nothing new can be made public (#1124).
+ALLOW_PUBLIC_ACCESS = getenv('ALLOW_PUBLIC_ACCESS', 'true').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 TERMS_OF_SERVICE_URL = getenv('TERMS_OF_SERVICE_URL', '').strip()
 PRIVACY_POLICY_URL = getenv('PRIVACY_POLICY_URL', '').strip()

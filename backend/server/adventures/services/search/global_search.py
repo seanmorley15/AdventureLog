@@ -20,6 +20,7 @@ from django.contrib.auth import get_user_model
 from worldtravel.models import City, Country, Region, VisitedCity
 from worldtravel.visited import visited_region_ids as visited_region_ids_for
 from core.errors import ServiceError
+from core.visibility import visible_profiles_q
 
 
 User = get_user_model()
@@ -405,10 +406,11 @@ def _search_cities(user: User, term: str, fetch_limit: int) -> tuple[list[Search
     return hits, total
 
 
-def _search_users(term: str, fetch_limit: int) -> tuple[list[SearchHit], int]:
+def _search_users(term: str, fetch_limit: int, viewer=None) -> tuple[list[SearchHit], int]:
+    # Profiles the searcher may see: public ones and those shown to signed-in users.
     base_qs = User.objects.filter(
         _icontains_filter(term, ('username', 'first_name', 'last_name'))
-        & Q(public_profile=True)
+        & visible_profiles_q(viewer)
     )
     qs = base_qs.order_by('username')[: min(fetch_limit, REFERENCE_TYPE_LIMIT)]
     total = base_qs.count()
@@ -486,7 +488,7 @@ def global_search(
         'country': lambda: _search_countries(term, fetch_limit),
         'region': lambda: _search_regions(user, term, fetch_limit),
         'city': lambda: _search_cities(user, term, fetch_limit),
-        'user': lambda: _search_users(term, fetch_limit),
+        'user': lambda: _search_users(term, fetch_limit, user),
     }
 
     all_hits: list[SearchHit] = []

@@ -52,8 +52,14 @@
 	let story = $derived(buildStory(collection));
 	let cover = $derived(collection.primary_image ?? story.photos[0] ?? null);
 	let owner = $derived(
-		(collection.collaborators ?? []).find((person) => person.is_owner && person.public_profile) ??
-			null
+		// The server sends the owner only when the reader may see their profile.
+		(collection.collaborators ?? []).find(
+			(person) =>
+				person.is_owner &&
+				(person.profile_visibility
+					? person.profile_visibility !== 'private'
+					: person.public_profile)
+		) ?? null
 	);
 	let navChapters = $derived(story.chapters.filter((chapter) => chapter.index !== null));
 	let hasMap = $derived(story.pins.length > 0 || story.tracks.length > 0);

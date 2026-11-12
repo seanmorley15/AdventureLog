@@ -33,7 +33,9 @@ from users.services.account_deletion import AccountDeletionError, delete_user_ac
         description=(
             'Change your profile and preferences. Send JSON, or `multipart/form-data` to upload a new '
             '`profile_pic`.\n\n'
-            'Turning `public_profile` off also removes you from collections other people shared with you '
+            '`profile_visibility` is `private`, `signed_in` (shown to signed-in users, who can also invite '
+            'you) or `public`; the older `public_profile` switch is kept in step with it. Making your '
+            'profile private also removes you from collections other people shared with you '
             'and cancels invites you have not answered. The response then includes '
             '`left_shared_collections` and `revoked_collection_invites` with how many were affected.'
         ),

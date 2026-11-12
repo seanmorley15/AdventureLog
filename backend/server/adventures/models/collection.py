@@ -46,6 +46,8 @@ class Collection(models.Model):
 
     class Visibility(models.TextChoices):
         PRIVATE = 'private', 'Private'
+        # Everyone signed in to this server reads the story; nobody signed out does (#621).
+        SIGNED_IN = 'signed_in', 'Everyone signed in'
         UNLISTED = 'unlisted', 'Unlisted'
         PUBLIC = 'public', 'Public'
 

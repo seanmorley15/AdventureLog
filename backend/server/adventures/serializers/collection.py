@@ -137,8 +137,8 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
     def _apply_visibility(self, data):
         """
         ``visibility`` is the switch; ``is_public`` from an old client maps onto it.
-        Unlisted and Public need ALLOW_PUBLIC_COLLECTION_LINKS, except that a
-        collection that is already public may stay public or turn private.
+        Unlisted and Public need ALLOW_PUBLIC_ACCESS, except that a collection that
+        is already public may stay public or turn private. Signed-in is always allowed.
         """
         from django.conf import settings
 
@@ -153,7 +153,8 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
         if requested is None or requested == current:
             data.pop('visibility', None)
             return data
-        if requested != Collection.Visibility.PRIVATE and not settings.ALLOW_PUBLIC_COLLECTION_LINKS:
+        signed_in_only = (Collection.Visibility.PRIVATE, Collection.Visibility.SIGNED_IN)
+        if requested not in signed_in_only and not settings.ALLOW_PUBLIC_ACCESS:
             raise serializers.ValidationError({
                 'visibility': 'Unlisted and public links are turned off on this server.'
             })
@@ -382,7 +383,7 @@ class CollectionSerializer(CollectionSummaryMixin, CustomModelSerializer):
 
         representation = super().to_representation(instance)
         representation['day_count'] = day_plan.day_count(instance) or None
-        representation['allow_public_links'] = settings.ALLOW_PUBLIC_COLLECTION_LINKS
+        representation['allow_public_links'] = settings.ALLOW_PUBLIC_ACCESS
         request = self.context.get('request')
         audience = audience_for_request(request, instance) if request is not None else None
         representation['audience'] = audience.as_dict() if audience else None

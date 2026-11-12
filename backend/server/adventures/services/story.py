@@ -20,6 +20,7 @@ A note or checklist item marked ``is_private`` stays hidden even when its group
 is on. Categories, tags, visits, and members are not part of the story.
 """
 from __future__ import annotations
+from core.visibility import can_see_profile_level
 
 COLLECTION_FIELDS = (
     'id', 'name', 'description', 'type', 'start_date', 'end_date', 'timezone', 'day_count',
@@ -145,8 +146,11 @@ def _trail(data, groups):
     return _pick(data, ('id', 'name', 'day', 'collection', 'span_end_index', 'day_index', 'link', 'provider', 'wanderer_link'))
 
 
-def build_story_payload(data, collection):
-    """The story a public reader receives, from the member payload of ``collection``."""
+def build_story_payload(data, collection, viewer=None):
+    """
+    The story a public reader receives, from the member payload of ``collection``. The owner is
+    named when ``viewer`` may see their profile.
+    """
     groups = {name: collection.story_group(name) for name in collection.STORY_GROUPS}
 
     story = _pick(data, COLLECTION_FIELDS)
@@ -156,7 +160,7 @@ def build_story_payload(data, collection):
     owner = next((c for c in data.get('collaborators') or [] if c.get('is_owner')), None)
     story['collaborators'] = [
         _pick(owner, ('uuid', 'username', 'first_name', 'last_name', 'profile_pic', 'public_profile', 'is_owner'))
-    ] if owner and owner.get('public_profile') else []
+    ] if owner and can_see_profile_level(viewer, owner.get('profile_visibility')) else []
 
     public_location_ids = set(
         str(pk) for pk in collection.locations.filter(is_public=True).values_list('id', flat=True)

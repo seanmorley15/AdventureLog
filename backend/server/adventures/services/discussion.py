@@ -21,6 +21,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 
 from adventures.access.audience import audience_for_request
+from core.visibility import can_see_profile
 
 logger = logging.getLogger(__name__)
 
@@ -155,23 +156,23 @@ def person_summary(user, viewer=None, *, only_public=False):
     """
     How a signed-in person is shown next to a comment or activity entry.
 
-    ``can_view_profile`` is true when their profile page opens for the viewer: it is
-    public, or it is the viewer's own. ``only_public`` hides the username and picture of
-    people whose profile is private (used on the public story).
+    ``can_view_profile`` is true when their profile page opens for the viewer: it is public,
+    shown to signed-in users and the viewer is signed in, or it is the viewer's own.
+    ``only_public`` hides the username and picture of people whose profile the viewer may
+    not see (used on the public story).
     """
     from adventures.serializers import _build_profile_pic_url
 
     if user is None:
         return {'username': None, 'uuid': None, 'profile_pic': None, 'can_view_profile': False}
-    is_public = bool(getattr(user, 'public_profile', False))
-    is_me = bool(viewer is not None and getattr(viewer, 'is_authenticated', False) and viewer.pk == user.pk)
-    if only_public and not is_public:
+    visible = can_see_profile(viewer, user)
+    if only_public and not visible:
         return {'username': None, 'uuid': None, 'profile_pic': None, 'can_view_profile': False}
     return {
         'username': user.username,
         'uuid': str(user.uuid),
         'profile_pic': _build_profile_pic_url(user),
-        'can_view_profile': is_public or is_me,
+        'can_view_profile': visible,
     }
 
 

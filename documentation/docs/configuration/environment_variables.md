@@ -91,6 +91,7 @@ See [Caching](caching.md) for what is cached and how to use Redis.
 | -------- | -------- | ----------- | ------- |
 | `DISABLE_REGISTRATION` | No | Block new account signups. | `False` |
 | `DISABLE_REGISTRATION_MESSAGE` | No | Message shown when registration is disabled. | Custom message |
+| `ALLOW_PUBLIC_ACCESS` | No | Let people who are not signed in see public and unlisted collections, public locations and profiles, and guest links. `False` makes the server signed-in only. | `True` |
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
 | `MOBILE_AUTH_REDIRECT_URIS` | No | Comma-separated redirect URIs the mobile app may use when signing in with a social/OIDC provider. Only needed for a custom-built app. | `adventurelog://auth/callback` |
 | `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
@@ -99,7 +100,7 @@ See [Caching](caching.md) for what is cached and how to use Redis.
 | `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |
 | `AUTH_PASSWORD_VALIDATORS_ENABLED` | No | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name). | `False` |
 
-Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_registration.md), [API Keys](api_keys.md).
+Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_registration.md), [Public Access](public_access.md), [API Keys](api_keys.md).
 
 ## Rate limiting
 
