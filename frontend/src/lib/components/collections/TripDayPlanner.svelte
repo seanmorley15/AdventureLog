@@ -1868,6 +1868,7 @@
 		bind:location={locationDraft}
 		{collection}
 		initialVisitDate={null}
+		initialPhotoDate={locationToEdit ? null : createDate}
 	/>
 {/if}
 
