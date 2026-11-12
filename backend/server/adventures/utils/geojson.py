@@ -3,20 +3,51 @@ import io
 import geojson
 import gpxpy
 
+# Most points a GPX file sends to a map, across all its segments.
+MAX_TRACK_POINTS = 5000
+
+
+def _simplify_lines(lines):
+    """
+    Reduce ``lines`` (lists of (lon, lat)) to at most MAX_TRACK_POINTS points in total.
+
+    A watch records a point every second or so, which is far more than a map can show: a
+    long hike is tens of thousands of points and megabytes of JSON in every page that
+    draws it (#1164). Douglas-Peucker drops the points that lie on a nearly straight
+    line, starting at about 10 cm and doubling the tolerance until the file fits, so a
+    short track keeps every point and a long one keeps its corners, start and end.
+    """
+    if sum(len(line) for line in lines) <= MAX_TRACK_POINTS:
+        return lines
+
+    from django.contrib.gis.geos import LineString
+
+    geometries = [LineString(line) if len(line) > 1 else None for line in lines]
+    tolerance = 1e-6  # degrees, about 10 cm
+    while True:
+        reduced = [
+            list(geometry.simplify(tolerance).coords) if geometry is not None else line
+            for geometry, line in zip(geometries, lines)
+        ]
+        if sum(len(line) for line in reduced) <= MAX_TRACK_POINTS or tolerance >= 1:
+            return reduced
+        tolerance *= 2
+
 
 def _gpx_to_feature_collection(gpx):
-    features = []
+    named_lines = []
     for track in gpx.tracks:
         track_name = track.name or 'GPX Track'
         for segment in track.segments:
             coords = [(point.longitude, point.latitude) for point in segment.points]
             if coords:
-                feature = geojson.Feature(
-                    geometry=geojson.LineString(coords),
-                    properties={'name': track_name},
-                )
-                features.append(feature)
+                named_lines.append((track_name, coords))
 
+    lines = _simplify_lines([coords for _, coords in named_lines])
+    features = [
+        geojson.Feature(geometry=geojson.LineString(coords), properties={'name': name})
+        for (name, _), coords in zip(named_lines, lines)
+    ]
     return geojson.FeatureCollection(features)
 
 
@@ -64,7 +95,8 @@ def gpx_to_geojson(gpx_file):
         }
 
 
-GPX_GEOJSON_CACHE_PREFIX = 'gpx_geojson_v1'
+# v2: tracks are simplified to MAX_TRACK_POINTS; v1 entries hold full recordings.
+GPX_GEOJSON_CACHE_PREFIX = 'gpx_geojson_v2'
 GPX_GEOJSON_CACHE_TIMEOUT = 60 * 60 * 24 * 7
 
 
