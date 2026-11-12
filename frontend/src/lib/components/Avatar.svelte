@@ -131,13 +131,16 @@
 		<div class="space-y-1 mb-3">
 			{#if adminMenuItem}
 				<li>
-					<button
+					<!-- Django serves /admin, so leave SvelteKit's router: a client-side
+					     navigation finds no page and shows a 404 (#1376). -->
+					<a
+						href={adminMenuItem.path}
+						data-sveltekit-reload
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						onclick={() => goto(adminMenuItem.path)}
 					>
 						<adminMenuItem.icon class="w-5 h-5 text-warning" />
 						<span class="text-warning font-medium">{$t(adminMenuItem.label)}</span>
-					</button>
+					</a>
 				</li>
 			{/if}
 
