@@ -40,6 +40,7 @@ LODGING_TYPES = [
 
 TRANSPORTATION_TYPES = [
     ('car', 'Car'),
+    ('motorcycle', 'Motorcycle'),
     ('plane', 'Plane'),
     ('train', 'Train'),
     ('bus', 'Bus'),

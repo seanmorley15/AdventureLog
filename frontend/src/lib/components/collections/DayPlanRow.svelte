@@ -14,6 +14,7 @@
 	import MapMarker from '~icons/mdi/map-marker';
 	import Bed from '~icons/mdi/bed';
 	import Car from '~icons/mdi/car';
+	import Motorbike from '~icons/mdi/motorbike';
 	import Airplane from '~icons/mdi/airplane';
 	import Train from '~icons/mdi/train';
 	import Bus from '~icons/mdi/bus';
@@ -207,6 +208,8 @@
 					<Train class="h-4 w-4" />
 				{:else if transportType === 'bus'}
 					<Bus class="h-4 w-4" />
+				{:else if transportType === 'motorcycle'}
+					<Motorbike class="h-4 w-4" />
 				{:else if transportType === 'boat'}
 					<Ferry class="h-4 w-4" />
 				{:else}

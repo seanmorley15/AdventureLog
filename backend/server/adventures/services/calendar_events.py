@@ -40,6 +40,7 @@ TRANSPORT_ICONS = {
     'train': '🚆',
     'bus': '🚌',
     'car': '🚗',
+    'motorcycle': '🏍️',
     'boat': '🚢',
 }
 

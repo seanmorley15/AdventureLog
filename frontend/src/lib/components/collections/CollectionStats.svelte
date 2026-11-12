@@ -371,6 +371,10 @@
 		if (normalized.includes('walk')) {
 			return { key: 'walk', icon: '🚶', label: 'Walking' };
 		}
+		// Before bike: 'motorcycle' contains 'cycle'.
+		if (normalized.includes('motorcycle')) {
+			return { key: 'motorcycle', icon: '🏍️', label: 'Motorcycle' };
+		}
 		if (normalized.includes('bike') || normalized.includes('cycle')) {
 			return { key: 'bike', icon: '🚴', label: 'Cycling' };
 		}

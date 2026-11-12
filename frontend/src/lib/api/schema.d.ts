@@ -7271,6 +7271,7 @@ export interface components {
         };
         /**
          * @description * `car` - Car
+         *     * `motorcycle` - Motorcycle
          *     * `plane` - Plane
          *     * `train` - Train
          *     * `bus` - Bus
@@ -7280,7 +7281,7 @@ export interface components {
          *     * `other` - Other
          * @enum {string}
          */
-        TransportationTypeEnum: "car" | "plane" | "train" | "bus" | "boat" | "bike" | "walking" | "other";
+        TransportationTypeEnum: "car" | "motorcycle" | "plane" | "train" | "bus" | "boat" | "bike" | "walking" | "other";
         /**
          * @description * `upcoming` - upcoming
          *     * `in_progress` - in_progress

@@ -20398,6 +20398,7 @@ components:
     TransportationTypeEnum:
       enum:
       - car
+      - motorcycle
       - plane
       - train
       - bus
@@ -20408,6 +20409,7 @@ components:
       type: string
       description: |-
         * `car` - Car
+        * `motorcycle` - Motorcycle
         * `plane` - Plane
         * `train` - Train
         * `bus` - Bus

@@ -1042,6 +1042,7 @@
 			"boat": "Bateau",
 			"bus": "Bus",
 			"car": "Voiture",
+			"motorcycle": "Moto",
 			"other": "Autre",
 			"plane": "Avion",
 			"train": "Train",

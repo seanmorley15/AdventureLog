@@ -13,6 +13,7 @@ import Bed from '~icons/mdi/bed';
 import BedOutline from '~icons/mdi/bed-outline';
 
 import Car from '~icons/mdi/car';
+import Motorbike from '~icons/mdi/motorbike';
 import Airplane from '~icons/mdi/airplane';
 import Train from '~icons/mdi/train';
 import Bus from '~icons/mdi/bus';
@@ -39,6 +40,7 @@ const lodgingIcons: Record<string, IconComponent> = {
 
 const transportationIcons: Record<string, IconComponent> = {
 	car: Car,
+	motorcycle: Motorbike,
 	plane: Airplane,
 	train: Train,
 	bus: Bus,

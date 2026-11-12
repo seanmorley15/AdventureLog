@@ -1750,6 +1750,7 @@
 			"boat": "Barco",
 			"bus": "Autocarro",
 			"car": "Carro",
+			"motorcycle": "Motociclo",
 			"other": "Outro",
 			"plane": "Avião",
 			"train": "Trem",
