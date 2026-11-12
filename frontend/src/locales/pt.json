@@ -68,7 +68,12 @@
     "start_your_journey": "Começar a Sua Viagem",
     "of_world": "do mundo",
     "explore_world": "Explorar o Mundo",
-    "latest_travel_experiences": "A suas últimas experiências de viagem"
+    "latest_travel_experiences": "A suas últimas experiências de viagem",
+    "where_next_1": "Para onde",
+    "where_next_2": "próximo?",
+    "welcome_line": "Os seus lugares, planos e memórias, tudo junto num mapa.",
+    "itinerary_title": "Dia a dia",
+    "countries_visited": "Países visitados"
   },
   "adventures": {
     "collection_remove_location_success": "Localização removida da coleção com sucesso!",
@@ -562,7 +567,16 @@
     "your_time": "A sua zona horária",
     "transportation_not_found": "Transporte Não Encontrado",
     "import_link_existing": "Usar locais que Eu já tenho",
-    "import_link_existing_help": "Um local no ficheiro que corresponde a um na sua conta é adicionado à nova coleção em vez de ser copiado. Desligue isto para criar uma nova cópia de cada local."
+    "import_link_existing_help": "Um local no ficheiro que corresponde a um na sua conta é adicionado à nova coleção em vez de ser copiado. Desligue isto para criar uma nova cópia de cada local.",
+    "minimum_rating": "Classificação mínima",
+    "copy_to_my_locations": "Copiar para as minhas localizações",
+    "error_occurred": "Alguma coisa correu mal. Por favor tente de novo.",
+    "failed_to_fetch_activities": "Não pude carregar as atividades.",
+    "found_activities": "{count, plural, one {# atividade encontrada} other {# atividades encontradas}}",
+    "no_strava_activities_found": "Nenhumas atividades Strava encontradas nestas datas.",
+    "strava_not_connected": "O Strava não está ligado.",
+    "transport_start": "Partida",
+    "transport_end": "Chegada"
   },
   "api_keys": {
     "copied": "Copiado!",
@@ -701,7 +715,8 @@
     "manage_categories": "Gerir categorias",
     "name_required": "O nome da categoria é obrigatório",
     "no_categories_found": "Nenhuma categoria encontrada.",
-    "select_category": "Selecione a categoria"
+    "select_category": "Selecione a categoria",
+    "no_categories_yet": "Ainda nenhumas categorias."
   },
   "checklist": {
     "add_new_item": "Adicionar novo item",
@@ -777,7 +792,10 @@
     "plan": "Plano",
     "read": "Ler",
     "convert_to_folder_warning": "Esta viagem vai ser mostrada como uma pasta. Os seus dias permanecem salvos, e revertendo-a de volta a uma viagem volta a mostra-los.",
-    "folder_to_trip_hint": "Lugares vinculados vão para Ideias. Os dias não são criados a menos que defina uma conta."
+    "folder_to_trip_hint": "Lugares vinculados vão para Ideias. Os dias não são criados a menos que defina uma conta.",
+    "trip_timezone": "Zona horária da viagem",
+    "save_and_share": "Salvar e partilhar",
+    "trip_timezone_hint": "Novas visitas, permanências e jornadas nesta viagem começam nesta zona horária."
   },
   "collections": {
     "all_items": "Todos os itens",
@@ -799,7 +817,8 @@
   },
   "common": {
     "show_less": "Ocultar detalhes",
-    "show_more": "Mostrar mais"
+    "show_more": "Mostrar mais",
+    "refresh": "Refrescar"
   },
   "currencies": {
     "AED": "Dirham dos Emirados Árabes Unidos",
@@ -828,7 +847,7 @@
     "default": "Predefinição"
   },
   "dashboard": {
-    "countries_visited": "Países visitados",
+    "countries_visited": "Países Visitados",
     "document_some_adventures": "Comece a documentar suas viagens e construa seu mapa de aventura pessoal!",
     "no_recent_adventures": "Nenhuma aventura recente?",
     "recent_adventures": "Aventuras recentes",
@@ -918,7 +937,8 @@
     "update_integration": "Atualizar integração",
     "validation_error": "Ocorreu um erro ao validar a integração do Immich. Por favor verifique o URL e a chave API do seu servidor.",
     "enable_integration": "Habilitar integração",
-    "immich_updated": "Integração do Immich atualizada com sucesso"
+    "immich_updated": "Integração do Immich atualizada com sucesso",
+    "api_key_keep": "Deixe vazio para manter a chave atual"
   },
   "invites": {
     "accept": "Aceitar",
@@ -932,7 +952,8 @@
     "no_invites": "Nenhum convite",
     "no_invites_desc": "Certifique-se de que seu perfil seja público para que os utilizadores possam convidá-lo.",
     "pending_invites": "Convites pendentes",
-    "title": "Convites"
+    "title": "Convites",
+    "fetch_failed": "Não pude carregar os seus convites."
   },
   "itinerary": {
     "add_description": "Adicionar descrição",
@@ -1071,7 +1092,10 @@
     "plan_updated_elsewhere": "Este plano foi atualizado mesmo agora por outra pessoa. A mostrar a versão mais recente.",
     "order_conflict": "O plano mudou enquanto você estava a edita-lo. A mostrar a versão mais recente.",
     "show_day_route": "Mostrar um alinhamento das paragens deste dia, por ordem",
-    "hide_day_route": "Esconder a linha das paragens deste dia"
+    "hide_day_route": "Esconder a linha das paragens deste dia",
+    "copy_day_link": "Copiar ligação para este dia",
+    "copy_day_link_failed": "Não pude copiar a ligação",
+    "time_and_options": "Hora e opções"
   },
   "locations": {
     "best_happened_at": "O melhor aconteceu em",
@@ -1174,7 +1198,9 @@
     "hide_photos": "Esconder fotos",
     "photos": "Fotos",
     "hide_controls": "Esconder controles de mapa",
-    "show_controls": "Mostrar controles de mapa"
+    "show_controls": "Mostrar controles de mapa",
+    "hide_image_pins": "Esconder pinos da imagem",
+    "show_image_pins": "Mostrar pinos da imagem"
   },
   "notes": {
     "content": "Contente",
@@ -1233,7 +1259,29 @@
     "tourism": "Turismo",
     "use_search_instead": "Use a pesquisa",
     "your_location": "Sua localização",
-    "search_radius_label": "Raio de pesquisa:"
+    "search_radius_label": "Raio de pesquisa:",
+    "attractions": "Atrações",
+    "culture": "Artes e Cultura",
+    "nature": "Natureza e Parques",
+    "nightlife": "Cafés e Vida Noturna",
+    "activities": "Atividades e Compras",
+    "search_near": "Procurar próximo",
+    "this_map_area": "Esta área de mapa",
+    "search_place_placeholder": "Procurar por uma cidade ou lugar…",
+    "sort": "Ordenar",
+    "sort_best": "Melhor correspondência",
+    "sort_nearest": "Mais próximo",
+    "sort_rating": "Melhor classificado",
+    "hide_added": "Esconder lugares já na viagem",
+    "in_trip": "Na viagem",
+    "add": "Adicionar",
+    "more_options": "Mais maneiras de adicionar",
+    "add_to_day": "Adicionar para dia {day}",
+    "added_to_ideas": "{name} adicionado a Ideias",
+    "added_to_day": "{name} adicionado a dia {day}",
+    "back_to_results": "Voltar aos resultados",
+    "subtitle": "Encontra lugares perto da sua viagem e adiciona-os com um toque",
+    "pick_anchor_hint": "Escolha onde procurar, ou mova o mapa e toque em *Procurar nesta área*."
   },
   "search": {
     "actions": {
@@ -1971,7 +2019,8 @@
     "checkout_success": "Subscrição atualizada com sucesso!",
     "checkout_canceled": "A finalização foi cancelada. Nenhumas alterações foram feitas.",
     "checkout_error_title": "A finalização falhou",
-    "portal_error_title": "Incapaz de abrir o portal de faturação"
+    "portal_error_title": "Incapaz de abrir o portal de faturação",
+    "alert_trial_active_description": "O seu tempo de experiência está ativo."
   },
   "detail": {
     "open_photo": "Abrir fotos de {name}",
@@ -2106,5 +2155,49 @@
     "story_read_only": "Os comentários são abertos a leitores com sessão iniciada.",
     "story_subtitle": "O que os leitores estão a dizer sobre esta viagem.",
     "inbox_empty": "Nada de novo. Os comentários às suas viagens aparecem aqui."
+  },
+  "jobs": {
+    "preparing": "A preparar o seu ficheiro. Isto pode demorar um bocado para uma conta grande.",
+    "restoring": "A restaurar nos bastidores. Você pode continuar a usar a aplicação.",
+    "importing": "A importar nos bastidores.",
+    "failed": "O trabalho falhou.",
+    "timeout": "Isto está a demorar um bocado. Continua a correr no servidor, assim verifique mais tarde.",
+    "download_ready": "O seu ficheiro está pronto."
+  },
+  "pdf_export": {
+    "title_trip": "Livro de Viagem",
+    "title_folder": "Guia de Campo",
+    "description_trip": "Um PDF para viajar com ele, mesmo em offline: uma capa, uma mapa de vista geral, as suas reservas e custos, e uma página para cada dia com o seu próprio mapa e linha temporal.",
+    "paper": "Tamanho do papel",
+    "paper_letter": "Carta",
+    "photos": "Incluir fotos",
+    "journal_trip": "Espaço para escrever",
+    "photos_hint": "Desligue para um ficheiro menor que usa menos tinta.",
+    "download": "Descarregar PDF",
+    "description_folder": "Um livro de trabalho para os seus lugares: um apa de vista geral, uma lista de verificações, e uma entrada para cada lugar com caixas para picar e linhas onde escrever.",
+    "paper_a4": "A4",
+    "journal_trip_hint": "Linhas traçadas para notas de cada dia, e páginas em branco para anotações no final.",
+    "journal_folder": "Espaço para escrita",
+    "journal_folder_hint": "Uma data para preencher, uma classificação para colorir e linhas para notas sob cada lugar.",
+    "maps_note": "Os mapas são desenhados a partir do OpenStreetMap quando o servidor o consegue alcançar, e sem um mapa base quando não consegue."
+  },
+  "cards": {
+    "departs": "Partidas",
+    "arrives": "Chegadas",
+    "visit_count": "{count, plural, one {# visita} other {# visitas}}",
+    "last_visit": "Ultima visita {date}",
+    "in_days": "{count, plural, one {In # dia} other {In # dias}}",
+    "items_done": "{done} de {total} pronto",
+    "item_actions": "Mais ações",
+    "collection_actions": "Ações de coleção",
+    "link_location": "Ligar localização",
+    "starts_today": "Começa hoje",
+    "day_of": "Dia {day} de {total}",
+    "day_count": "{count, plural, one {# dia} other {# dias}}",
+    "location_count": "{count, plural, one {# localização} other {# localizações}}",
+    "open_card": "Abrir {name}",
+    "confirmation": "Conf. {code}",
+    "more_links": "+{count} mais",
+    "added_by": "Adicionado por {name}"
   }
 }
