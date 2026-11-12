@@ -7,14 +7,26 @@ export async function typeDate(field: Locator, value: string) {
 	await field.press('Tab');
 }
 
+/**
+ * Open the New Collection form from My Collections. Uses the floating "Create New" button,
+ * which is there whether or not the account has collections yet (the big "Create" button
+ * only shows on an empty list).
+ */
+export async function openNewCollection(page: Page): Promise<Locator> {
+	await page.goto('/collections');
+	await page.getByRole('button', { name: 'Create New' }).click();
+	await page.getByRole('button', { name: 'Collection', exact: true }).click();
+	const dialog = page.getByRole('dialog', { name: 'New Collection' });
+	await expect(dialog).toBeVisible();
+	return dialog;
+}
+
 /** Create a trip (a collection with dates, which unlocks the day planner) and open it. */
 export async function createTrip(
 	page: Page,
 	trip: { name: string; description?: string; start: string; end: string }
 ) {
-	await page.goto('/collections');
-	await page.getByRole('button', { name: 'Create', exact: true }).first().click();
-	const dialog = page.getByRole('dialog', { name: 'New Collection' });
+	const dialog = await openNewCollection(page);
 	await dialog.getByRole('textbox', { name: 'Name*' }).fill(trip.name);
 	if (trip.description) {
 		await dialog
@@ -24,7 +36,7 @@ export async function createTrip(
 	await dialog.getByRole('button', { name: 'Trip' }).click();
 	await typeDate(dialog.getByRole('textbox', { name: 'Start Date' }), trip.start);
 	await typeDate(dialog.getByRole('textbox', { name: 'End Date' }), trip.end);
-	await dialog.getByRole('button', { name: 'Save' }).click();
+	await dialog.getByRole('button', { name: 'Save', exact: true }).click();
 	await expect(dialog).toBeHidden();
 
 	await page.getByRole('link', { name: trip.name }).first().click();

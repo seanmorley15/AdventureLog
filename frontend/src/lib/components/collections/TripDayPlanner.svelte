@@ -22,11 +22,11 @@
 	import { addToast } from '#lib/toasts.js';
 	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
+	import { defaultTimezone } from '#lib/dateUtils.js';
 	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 	import { createEmptyLocation } from '#lib/location-draft.js';
 	import {
 		addDays,
-		browserTimezone,
 		daysBetween,
 		errorMessage,
 		findObject,
@@ -809,7 +809,8 @@
 		const nextStart = durationStart || null;
 		if (nextStart !== (collection.start_date ?? null)) {
 			body.start_date = nextStart;
-			if (nextStart) body.timezone = browserTimezone();
+			// Keep a trip time zone the owner chose; a trip without one takes this browser's.
+			if (nextStart) body.timezone = defaultTimezone(collection);
 		}
 		const res = await dayAction('duration', body, true);
 		if (res.ok) {

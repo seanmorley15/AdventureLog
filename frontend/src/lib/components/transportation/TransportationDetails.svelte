@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import {
 		updateLocalDate,
@@ -23,6 +23,7 @@
 	import { TRANSPORTATION_TYPES_ICONS } from '#lib';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
+	import { defaultTimezone } from '#lib/dateUtils.js';
 	import MoneyInput from '../shared/MoneyInput.svelte';
 	import DateInput from '../shared/DateInput.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '#lib/money.js';
@@ -91,9 +92,10 @@
 
 	let collectionId = $derived(collection?.id);
 
-	const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	let selectedStartTimezone: string = $state(browserTimezone);
-	let selectedEndTimezone: string = $state(browserTimezone);
+	// New journeys start in the trip's time zone (#653, #801); editing keeps the journey's own.
+	const defaultZone = defaultTimezone(untrack(() => collection));
+	let selectedStartTimezone: string = $state(defaultZone);
+	let selectedEndTimezone: string = $state(defaultZone);
 	let localStartDate: string = $state('');
 	let localEndDate: string = $state('');
 	let allDay: boolean = $state(true);
@@ -125,7 +127,7 @@
 	});
 	// Only assign timezones when this is a timed transportation. Keep timezones null for all-day entries.
 	run(() => {
-		const departureZone = selectedStartTimezone || browserTimezone;
+		const departureZone = selectedStartTimezone || defaultZone;
 		const arrivalZone = selectedEndTimezone || departureZone;
 		transportation.start_timezone = allDay ? null : departureZone;
 		transportation.end_timezone = allDay ? null : arrivalZone;
@@ -285,7 +287,7 @@
 	function syncAndValidateDates(autoFillEnd: boolean): boolean {
 		dateError = '';
 
-		const departureZone = selectedStartTimezone || browserTimezone;
+		const departureZone = selectedStartTimezone || defaultZone;
 		const arrivalZone = selectedEndTimezone || departureZone;
 
 		if (localEndDate && !localStartDate) {
@@ -360,7 +362,7 @@
 			return;
 		}
 
-		const departureZone = selectedStartTimezone || browserTimezone;
+		const departureZone = selectedStartTimezone || defaultZone;
 		const arrivalZone = selectedEndTimezone || departureZone;
 
 		// Ensure timezones are only persisted for timed transportation
@@ -489,7 +491,7 @@
 			allDay = isAllDay(initialTransportation.date);
 		}
 
-		const departureZone = selectedStartTimezone || browserTimezone;
+		const departureZone = selectedStartTimezone || defaultZone;
 		const arrivalZone = selectedEndTimezone || departureZone;
 
 		// Keep transportation timezones null for all-day entries, otherwise use selected values

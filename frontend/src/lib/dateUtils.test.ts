@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	defaultTimezone,
 	getEntitiesInDateRange,
 	getEntitiesOutsideDateRange,
 	inclusiveDayCount,
@@ -223,5 +224,22 @@ describe('getEntitiesInDateRange / getEntitiesOutsideDateRange', () => {
 		const all = [inside, outside];
 		expect(getEntitiesInDateRange(all, trip)).toEqual([inside]);
 		expect(getEntitiesOutsideDateRange(all, trip)).toEqual([outside]);
+	});
+});
+
+// #653, #801: new times entered inside a trip start in the trip's zone.
+describe('defaultTimezone', () => {
+	const browser = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+	it("uses the trip's time zone", () => {
+		expect(defaultTimezone({ timezone: 'Asia/Tokyo' })).toBe('Asia/Tokyo');
+	});
+
+	it("uses this browser's zone outside a collection or when the trip has none", () => {
+		expect(defaultTimezone(null)).toBe(browser);
+		expect(defaultTimezone(undefined)).toBe(browser);
+		expect(defaultTimezone({ timezone: null })).toBe(browser);
+		// Collections store 'UTC' until a zone is chosen.
+		expect(defaultTimezone({ timezone: 'UTC' })).toBe(browser);
 	});
 });

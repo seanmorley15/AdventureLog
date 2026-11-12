@@ -10,6 +10,7 @@
 		TransportationVisit
 	} from '#lib/types.js';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
+	import { defaultTimezone } from '#lib/dateUtils.js';
 	import { t } from 'svelte-i18n';
 	import {
 		updateLocalDate,
@@ -67,7 +68,7 @@
 
 	let {
 		collection = null,
-		selectedStartTimezone = $bindable(Intl.DateTimeFormat().resolvedOptions().timeZone),
+		selectedStartTimezone = $bindable(defaultTimezone(collection)),
 		utcStartDate = $bindable(null),
 		utcEndDate = $bindable(null),
 		note = $bindable(null),
@@ -974,10 +975,10 @@
 		}).localDate;
 
 		if (!selectedStartTimezone) {
-			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			selectedStartTimezone = defaultTimezone(collection);
 		}
 		if (!selectedStartTimezone) {
-			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+			selectedStartTimezone = defaultTimezone(collection);
 		}
 
 		// Only talk to Strava / Endurain when the user has connected them.

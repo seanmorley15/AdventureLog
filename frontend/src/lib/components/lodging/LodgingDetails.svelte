@@ -2,7 +2,7 @@
 	import { apiErrorMessage } from '#lib/api/index.js';
 	import { run } from 'svelte/legacy';
 
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import {
 		updateLocalDate,
@@ -23,6 +23,7 @@
 	import type { Category, User } from '#lib/types.js';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
+	import { defaultTimezone } from '#lib/dateUtils.js';
 	import MoneyInput from '../shared/MoneyInput.svelte';
 	import DateInput from '../shared/DateInput.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '#lib/money.js';
@@ -103,7 +104,8 @@
 
 	let collectionId = $derived(collection?.id);
 
-	let selectedTimezone: string = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	// New stays start in the trip's time zone (#653, #801); editing keeps the stay's own.
+	let selectedTimezone: string = $state(defaultTimezone(untrack(() => collection)));
 	let localStartDate: string = $state('');
 	let localEndDate: string = $state('');
 	let allDay: boolean = $state(true);

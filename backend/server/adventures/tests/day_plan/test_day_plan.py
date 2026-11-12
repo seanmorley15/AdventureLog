@@ -236,6 +236,26 @@ class CollectionDayCountTests(DayPlanTestBase):
         self.assertEqual(row.day.index, 5)
         self.assertEqual(row.date, date(2026, 8, 5))
 
+    def test_the_trip_time_zone_can_change_without_moving_the_plan(self):
+        # #653, #801: the collection form saves the trip's zone with every edit, start date unchanged.
+        trip = self.make_trip()
+        museum = self.location('Museum', trip)
+        self.row(trip, museum, on=date(2026, 6, 3))
+        convert_collection(trip)
+        trip.refresh_from_db()
+        payload = {
+            'name': trip.name, 'type': 'trip', 'start_date': trip.start_date.isoformat(),
+            'day_count': trip.itinerary_days.count(), 'timezone': 'Asia/Tokyo',
+        }
+
+        response = self.client.patch(f'/api/collections/{trip.id}/', payload, format='json')
+
+        self.assertEqual(response.status_code, 200, response.content)
+        trip.refresh_from_db()
+        self.assertEqual(trip.timezone, 'Asia/Tokyo')
+        row = self.placements(trip, museum)[0]
+        self.assertEqual((row.day.index, row.date), (3, date(2026, 6, 3)))
+
 
 class PlacementTests(DayPlanTestBase):
     def setUp(self):

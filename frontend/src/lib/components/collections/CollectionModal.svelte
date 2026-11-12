@@ -6,8 +6,10 @@
 	import { addToast } from '#lib/toasts.js';
 	import type { Collection, ContentImage, SlimCollection } from '#lib/types.js';
 	import DateInput from '../shared/DateInput.svelte';
-	import { addDays, browserTimezone } from '#lib/collections/plan.js';
+	import { addDays } from '#lib/collections/plan.js';
 	import { formatDisplayDate } from '#lib/dateFormat.js';
+	import { defaultTimezone } from '#lib/dateUtils.js';
+	import TimezoneSelector from '../TimezoneSelector.svelte';
 
 	// Icons
 	import CollectionIcon from '~icons/mdi/folder-multiple';
@@ -61,6 +63,8 @@
 	}
 	let planMode = $state<'dates' | 'days'>('dates');
 	let dayCount = $state<number | null>(null);
+	// Where the trip happens. New visits, stays and journeys in it start in this zone (#653, #801).
+	let tripTimezone = $state(defaultTimezone(null));
 	let isSaving = $state(false);
 
 	// A day-based trip is edited by day count; a date-keyed trip keeps its dates until "Plan by days".
@@ -145,6 +149,7 @@
 		coverImageId = collection.primary_image?.id || collection.primary_image_id || null;
 		dayCount = collectionToEdit?.day_count ?? null;
 		planMode = collectionToEdit?.day_count ? 'days' : 'dates';
+		tripTimezone = defaultTimezone(collectionToEdit);
 	});
 
 	function selectCover(imageId: string | null) {
@@ -247,9 +252,8 @@
 		} else if (!usesDayCount) {
 			payload.end_date = collection.end_date;
 		}
-		const anchorChanged = collection.start_date !== (collectionToEdit?.start_date ?? null);
-		if (collection.type === 'trip' && collection.start_date && anchorChanged) {
-			payload.timezone = browserTimezone();
+		if (collection.type === 'trip') {
+			payload.timezone = tripTimezone;
 		}
 
 		// Clean up link: empty/whitespace → null, invalid URL → null
@@ -552,6 +556,16 @@
 											bind:value={collection.end_date}
 											clearable={true}
 										/>
+									</div>
+								{/if}
+
+								{#if collection.type === 'trip'}
+									<div class="flex flex-col">
+										<TimezoneSelector
+											bind:selectedTimezone={tripTimezone}
+											label={$t('collection.trip_timezone')}
+										/>
+										<p class="field-hint">{$t('collection.trip_timezone_hint')}</p>
 									</div>
 								{/if}
 							</div>

@@ -124,6 +124,16 @@ export function localTimeZone(): string {
 }
 
 /**
+ * The zone a new visit, stay or journey starts in (#653, #801): the trip's time zone when it is
+ * entered inside a collection that has one, otherwise this browser's. Collections store 'UTC'
+ * until a zone is chosen, so 'UTC' counts as none.
+ */
+export function defaultTimezone(collection?: { timezone?: string | null } | null): string {
+	const tripZone = collection?.timezone;
+	return tripZone && tripZone !== 'UTC' ? tripZone : localTimeZone();
+}
+
+/**
  * Describe the zone a time was entered in. `differs` is true only when it isn't the viewer's
  * zone, so callers can show a zone chip just when it matters.
  */

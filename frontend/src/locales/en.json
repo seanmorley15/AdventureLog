@@ -1011,6 +1011,8 @@
 		"map_style_desc": "Used as the default basemap across maps."
 	},
 	"collection": {
+		"trip_timezone": "Trip time zone",
+		"trip_timezone_hint": "New visits, stays and journeys in this trip start in this time zone.",
 		"collection_created": "Collection created successfully!",
 		"error_creating_collection": "Error creating collection",
 		"new_collection": "New Collection",
