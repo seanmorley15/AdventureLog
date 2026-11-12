@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
+	import { page } from '$app/state';
 	import { flip } from 'svelte/animate';
 	import type { Attachment } from 'svelte/attachments';
 	import {
@@ -27,12 +28,15 @@
 	import { createEmptyLocation } from '#lib/location-draft.js';
 	import {
 		addDays,
+		dayLink,
 		daysBetween,
 		errorMessage,
 		findObject,
 		dayPinColor,
 		indexedDays,
+		initialPlanDay,
 		recordedVisitId,
+		tripToday,
 		objectsOfType,
 		placementType,
 		planFingerprint,
@@ -117,6 +121,8 @@
 	const dayCount = $derived(days.length);
 	const anchored = $derived(Boolean(collection.start_date));
 	const today = new Date().toISOString().slice(0, 10);
+	// Today where the trip happens, for the Today badge and opening on today (#1346).
+	const tripDate = $derived(tripToday(collection.timezone));
 
 	function toRow(item: CollectionItineraryItem): PlanRow {
 		const type = placementType(item);
@@ -276,6 +282,25 @@
 			8;
 		scrollPlannerTo(scroller, top);
 	}
+
+	async function copyDayLink(day: CollectionItineraryDay) {
+		try {
+			await navigator.clipboard.writeText(dayLink(page.url, day.index ?? 1));
+			addToast('success', $t('adventures.link_copied'));
+		} catch {
+			addToast('error', $t('itinerary.copy_day_link_failed'));
+		}
+	}
+
+	// Open on the day a link names (?day= or ?date=), or on today during the trip (#1346).
+	// Only once: after that the planner scrolls where the user takes it.
+	let openedInitialDay = false;
+	$effect(() => {
+		if (openedInitialDay || !sectionsRoot) return;
+		openedInitialDay = true;
+		const index = initialPlanDay(days, page.url.searchParams, tripDate);
+		if (index != null) requestAnimationFrame(() => jumpTo(String(index)));
+	});
 
 	const trackSections: Attachment<HTMLElement> = (node) => {
 		sectionsRoot = node;
@@ -1480,6 +1505,11 @@
 							{#if day.date}
 								<span class="text-base-content/25" aria-hidden="true">·</span>
 								<span class="shrink-0 text-sm text-base-content/60">{shortDayDate(day.date)}</span>
+								{#if day.date === tripDate}
+									<span class="badge badge-primary badge-sm shrink-0 self-center">
+										{$t('calendar.today')}
+									</span>
+								{/if}
 							{/if}
 							{#if planning && dayFieldEditing(day, 'description')}
 								<input
@@ -1593,6 +1623,11 @@
 											<li>
 												<button type="button" role="menuitem" onclick={() => duplicateDay(day)}>
 													{$t('itinerary.duplicate_day')}
+												</button>
+											</li>
+											<li>
+												<button type="button" role="menuitem" onclick={() => copyDayLink(day)}>
+													{$t('itinerary.copy_day_link')}
 												</button>
 											</li>
 											<li>

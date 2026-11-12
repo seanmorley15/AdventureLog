@@ -1,4 +1,6 @@
+import { DateTime } from 'luxon';
 import { apiErrorMessage } from '#lib/api/index.js';
+import { defaultTimezone } from '#lib/dateUtils.js';
 import type {
 	Checklist,
 	Collection,
@@ -82,6 +84,53 @@ export function indexedDays(collection: Collection): CollectionItineraryDay[] {
 	return (collection.itinerary_days ?? [])
 		.filter((day) => day.index != null)
 		.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+}
+
+/**
+ * Today's date (YYYY-MM-DD) where the trip happens: in the trip's time zone when it has one,
+ * otherwise on this device. Collections store 'UTC' until a zone is chosen, so 'UTC' counts
+ * as none.
+ */
+export function tripToday(timezone: string | null | undefined, now: Date = new Date()): string {
+	const zoned = DateTime.fromJSDate(now, { zone: defaultTimezone({ timezone }) });
+	return (zoned.isValid ? zoned : DateTime.fromJSDate(now)).toISODate()!;
+}
+
+/**
+ * The day the planner opens on (#1346): `?day=N` (the day's number), else `?date=YYYY-MM-DD`,
+ * else today while the trip is on. A link to a day that does not exist falls back to today.
+ * Null leaves the planner at the top.
+ */
+export function initialPlanDay(
+	days: CollectionItineraryDay[],
+	params: Pick<URLSearchParams, 'get'>,
+	today: string
+): number | null {
+	const requested = Number(params.get('day'));
+	const byNumber = Number.isInteger(requested)
+		? days.find((day) => day.index === requested)
+		: undefined;
+	const requestedDate = params.get('date');
+	const byDate = requestedDate ? days.find((day) => day.date === requestedDate) : undefined;
+	const current = days.find((day) => day.date === today);
+	return (byNumber ?? byDate ?? current)?.index ?? null;
+}
+
+/**
+ * A shareable link to one day of the trip: the itinerary (or the read view, when that is where
+ * the link was copied) scrolled to `?day=N`. Keeps an unlisted story's `?s=` secret and drops
+ * everything else, such as a guest token.
+ */
+export function dayLink(
+	current: Pick<URL, 'origin' | 'pathname'> & { searchParams: Pick<URLSearchParams, 'get'> },
+	dayIndex: number
+): string {
+	const link = new URL(current.pathname, current.origin);
+	link.searchParams.set('view', current.searchParams.get('view') === 'read' ? 'read' : 'itinerary');
+	const secret = current.searchParams.get('s');
+	if (secret) link.searchParams.set('s', secret);
+	link.searchParams.set('day', String(dayIndex));
+	return link.toString();
 }
 
 /** Every trip is planned by days. Folders are not. */

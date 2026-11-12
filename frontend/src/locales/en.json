@@ -1931,6 +1931,8 @@
 		"insert_day_before": "Insert day before",
 		"insert_day_after": "Insert day after",
 		"duplicate_day": "Duplicate day",
+		"copy_day_link": "Copy link to this day",
+		"copy_day_link_failed": "Could not copy the link",
 		"move_day_earlier": "Move earlier",
 		"move_day_later": "Move later",
 		"delete_day": "Delete day",
