@@ -25,6 +25,7 @@
 	import Bed from '~icons/mdi/bed';
 	import Airplane from '~icons/mdi/airplane';
 	import Routes from '~icons/mdi/map-marker-path';
+	import Star from '~icons/mdi/star-outline';
 
 	interface Props {
 		filters: CatalogFilters;
@@ -63,6 +64,8 @@
 	const categories = $derived(uniqueCategoryNames(collection));
 	const lodgingTypes = $derived(uniqueLodgingTypes(collection));
 	const transportTypes = $derived(uniqueTransportTypes(collection));
+	const RATINGS = [1, 2, 3, 4, 5];
+	const hasRatings = $derived((collection.locations ?? []).some((loc) => loc.rating != null));
 	const pristine = $derived(filters.isPristine());
 	const collectionStart = $derived(collection.start_date?.slice(0, 10) || undefined);
 	const collectionEnd = $derived(collection.end_date?.slice(0, 10) || undefined);
@@ -73,6 +76,7 @@
 		(filters.categories.size ? 1 : 0) +
 			(filters.lodgingTypes.size ? 1 : 0) +
 			(filters.transportTypes.size ? 1 : 0) +
+			(filters.minRating !== null ? 1 : 0) +
 			(filters.startDate ? 1 : 0) +
 			(filters.endDate ? 1 : 0) +
 			(!filters.showLines || !filters.showTrails || !filters.showImagePins ? 1 : 0) +
@@ -216,6 +220,9 @@
 			{#if categories.length}
 				{@render section(categoryIcon, $t('adventures.categories'), categoryBody, categoryClear)}
 			{/if}
+			{#if hasRatings && counts.locations}
+				{@render section(ratingIcon, $t('adventures.minimum_rating'), ratingBody, ratingClear)}
+			{/if}
 			{#if lodgingTypes.length > 1}
 				{@render section(lodgingIconHeading, $t('adventures.lodging'), lodgingBody)}
 			{/if}
@@ -250,6 +257,26 @@
 			facetChecked(filters.categories, category),
 			() => (filters.categories = toggleFacet(filters.categories, category, categories)),
 			category
+		)}
+	{/each}
+{/snippet}
+
+{#snippet ratingIcon()}
+	<Star class="h-3.5 w-3.5" />
+{/snippet}
+{#snippet ratingClear()}
+	{#if filters.minRating !== null}
+		<button type="button" class="btn btn-ghost btn-xs" onclick={() => (filters.minRating = null)}>
+			{$t('adventures.clear')}
+		</button>
+	{/if}
+{/snippet}
+{#snippet ratingBody()}
+	{#each RATINGS as rating (rating)}
+		{@render chip(
+			filters.minRating === rating,
+			() => (filters.minRating = filters.minRating === rating ? null : rating),
+			rating === 5 ? '5★' : `${rating}★+`
 		)}
 	{/each}
 {/snippet}

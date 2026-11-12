@@ -16,6 +16,8 @@ export class CatalogFilters {
 	categories = $state(new Set<string>());
 	lodgingTypes = $state(new Set<string>());
 	transportTypes = $state(new Set<string>());
+	/** Places rated below this (or not rated) are hidden. Null shows every place (#1234). */
+	minRating = $state<number | null>(null);
 	showLines = $state(true);
 	showTrails = $state(true);
 	showImagePins = $state(true);
@@ -41,6 +43,7 @@ export class CatalogFilters {
 			this.categories.size === 0 &&
 			this.lodgingTypes.size === 0 &&
 			this.transportTypes.size === 0 &&
+			this.minRating === null &&
 			this.sort === 'name-asc'
 		);
 	}
@@ -59,6 +62,7 @@ export class CatalogFilters {
 		this.categories = new Set();
 		this.lodgingTypes = new Set();
 		this.transportTypes = new Set();
+		this.minRating = null;
 		this.showLines = true;
 		this.showTrails = true;
 		this.showImagePins = true;
@@ -134,6 +138,9 @@ export function locationMatches(loc: Location, filters: CatalogFilters): boolean
 	if (filters.categories.size) {
 		const name = loc.category?.display_name;
 		if (!name || !filters.categories.has(name)) return false;
+	}
+	if (filters.minRating !== null && (loc.rating == null || loc.rating < filters.minRating)) {
+		return false;
 	}
 	const query = filters.search.trim().toLowerCase();
 	if (
