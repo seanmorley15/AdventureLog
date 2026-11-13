@@ -319,9 +319,10 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
             # Day-based trips are keyed by index; their dates are only projections.
             return
         
-        # Delete itinerary items outside the date range
+        # Delete dated itinerary items outside the date range. Trip Context items have no
+        # date, and exclude() would match them too (#1328).
         deleted_items = CollectionItineraryItem.objects.filter(
-            collection=collection
+            collection=collection, date__isnull=False
         ).exclude(
             date__range=[collection.start_date, collection.end_date]
         ).delete()
