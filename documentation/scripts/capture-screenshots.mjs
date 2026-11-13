@@ -31,7 +31,7 @@ const out = path.resolve(process.argv[2] ?? "screenshots-out");
 const APP = (process.env.APP_URL ?? "http://localhost:8015").replace(/\/$/, "");
 const USER = process.env.APP_USER ?? "demo";
 const PASSWORD = process.env.APP_PASSWORD;
-const TRIP = process.env.SHOT_TRIP ?? "Morocco: Marrakech, Sahara & Fès";
+const TRIP = process.env.SHOT_TRIP ?? "Japan in Autumn";
 const PLACE = process.env.SHOT_PLACE ?? "Reinebringen";
 if (!PASSWORD) {
   console.error("Set APP_PASSWORD.");
@@ -120,7 +120,8 @@ const shots = [
   ["locations", "/locations", 5000],
   ["place", `/locations/${placeId}`, 6000],
   ["collections", "/collections", 5000],
-  ["trip", `/collections/${tripId}`, 8000],
+  // Open the plan on a day with stops, not the trip-wide notes at the top.
+  ["trip", `/collections/${tripId}?day=${process.env.SHOT_DAY ?? 3}`, 8000],
   ["map", "/map?lat=28&lng=35&zoom=2.4", 8000],
   [
     "world",

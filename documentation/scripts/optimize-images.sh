@@ -18,6 +18,9 @@ else
   exit 1
 fi
 
+# ImageMagick 6 sometimes aborts a slow AVIF encode with "time limit exceeded".
+export MAGICK_TIME_LIMIT="${MAGICK_TIME_LIMIT:-3600}"
+
 here="$(cd "$(dirname "$0")/.." && pwd)"
 repo="$here/.."
 public="$here/public"

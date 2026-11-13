@@ -19,7 +19,7 @@ export const shots = {
     "A location in AdventureLog: Reinebringen, Norway, with photos, rating, visit, trail, tags, and description",
   collections:
     "AdventureLog collections: trips and folders such as Island Escapes, US National Parks, and Australia East Coast",
-  trip: "A trip in AdventureLog planned day by day: transport, stops, and lodging in Morocco beside a route map",
+  trip: "Day 3 of the Japan in Autumn trip in AdventureLog: the hotel stay and timed stops around Tokyo beside a route map",
   map: "AdventureLog map of visited and planned locations across Europe, Africa, and Asia",
   world:
     "AdventureLog world travel page: 51 of 250 countries visited, shown on a world map",
