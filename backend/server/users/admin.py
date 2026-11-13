@@ -7,6 +7,7 @@ from allauth.account.decorators import secure_admin_login
 from core.admin import admin_image_preview
 from users.legal import legal_links_required
 from users.models import APIKey, CustomUser
+from users.services.emails import ensure_email_address
 
 admin.site.login = secure_admin_login(admin.site.login)
 
@@ -43,6 +44,11 @@ class CustomUserAdmin(UserAdmin):
         'uuid', 'profile_preview_large', 'last_login', 'date_joined', 'legal_consent_display', 'legacy_email_login',
     )
     filter_horizontal = ('groups', 'user_permissions')
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # The admin form only sets user.email; Settings -> Emails reads allauth's records.
+        ensure_email_address(obj)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
