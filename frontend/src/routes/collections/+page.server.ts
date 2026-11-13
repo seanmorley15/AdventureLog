@@ -47,9 +47,9 @@ export const load = (async (event) => {
 	if (type === 'folder' || type === 'trip') {
 		params.set('type', type);
 	}
-	// The shared and archived tabs show everything, as before: one large page.
+	// The shared and archived tabs show everything, as before: one large page, in the chosen order.
 	const allOf = (extra: Record<string, string>) =>
-		new URLSearchParams({ ordering: '-updated_at', page_size: '1000', ...extra });
+		new URLSearchParams({ ordering, page_size: '1000', ...extra });
 
 	try {
 		// Execute all API calls in parallel

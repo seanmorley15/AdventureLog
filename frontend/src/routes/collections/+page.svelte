@@ -122,6 +122,9 @@
 		if (data.props.adventures) {
 			collections = data.props.adventures;
 		}
+		if (data.props.sharedCollections) {
+			sharedCollections = data.props.sharedCollections;
+		}
 		if (data.props.archivedCollections) {
 			archivedCollections = data.props.archivedCollections;
 		}
