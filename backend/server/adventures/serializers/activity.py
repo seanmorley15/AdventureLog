@@ -294,8 +294,8 @@ class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
             'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
             'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
             'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',
-            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'geojson',
-            'day_index', 'promoted_activity', 'promoted_visit', 'promoted_location',
+            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'source_attribution',
+            'geojson', 'day_index', 'promoted_activity', 'promoted_visit', 'promoted_location',
         ]
         read_only_fields = ['id', 'user', 'promoted_activity', 'day_index', 'promoted_visit', 'promoted_location']
 

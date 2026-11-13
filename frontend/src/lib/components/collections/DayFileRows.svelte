@@ -226,6 +226,9 @@
 					<div class="min-w-0 flex-1">
 						<p class="truncate font-medium">{activity.name}</p>
 						<p class="text-xs text-base-content/60">{activity.sport_type}</p>
+						{#if activity.source_attribution}
+							<p class="text-xs text-base-content/60">{activity.source_attribution}</p>
+						{/if}
 					</div>
 					{#if activity.promoted_visit && activity.promoted_location}
 						<a

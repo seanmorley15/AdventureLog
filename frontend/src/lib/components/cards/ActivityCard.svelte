@@ -72,6 +72,9 @@
 					{/if}
 				</div>
 			</div>
+			{#if activity.source_attribution}
+				<p class="-mt-1 mb-2 text-xs text-base-content/70">{activity.source_attribution}</p>
+			{/if}
 		</div>
 
 		{#if !readOnly}

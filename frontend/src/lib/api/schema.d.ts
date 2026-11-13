@@ -3664,6 +3664,7 @@ export interface components {
             /** Format: double */
             end_lng?: number | null;
             external_service_id?: string | null;
+            source_attribution?: string | null;
             /** @description The GPX track as GeoJSON. */
             readonly geojson: unknown;
             readonly day_index: number | null;
@@ -3758,6 +3759,7 @@ export interface components {
             /** Format: double */
             end_lng?: number | null;
             external_service_id?: string | null;
+            source_attribution?: string | null;
         };
         /** @description A model serializer that shows the owning ``user`` by uuid. */
         Attachment: {
@@ -5788,6 +5790,7 @@ export interface components {
             /** Format: double */
             end_lng?: number | null;
             external_service_id?: string | null;
+            source_attribution?: string | null;
         };
         /** @description A model serializer that shows the owning ``user`` by uuid. */
         PatchedAttachmentRequest: {

@@ -117,6 +117,9 @@
 				<div class="text-2xl" aria-label="Sport icon">{typeConfig.icon}</div>
 				<div>
 					<h3 class="font-semibold text-lg">{activity.name}</h3>
+					{#if activity.garmin_attribution}
+						<p class="text-xs text-base-content/70">{activity.garmin_attribution}</p>
+					{/if}
 					<div class="flex items-center gap-2 text-sm text-base-content/70">
 						<span class="badge badge-{typeConfig.color} badge-sm">{typeConfig.name}</span>
 						<span>•</span>

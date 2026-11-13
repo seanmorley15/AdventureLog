@@ -12264,6 +12264,10 @@ components:
           type: string
           nullable: true
           maxLength: 100
+        source_attribution:
+          type: string
+          nullable: true
+          maxLength: 100
         geojson:
           nullable: true
           description: The GPX track as GeoJSON.
@@ -12461,6 +12465,10 @@ components:
           format: double
           nullable: true
         external_service_id:
+          type: string
+          nullable: true
+          maxLength: 100
+        source_attribution:
           type: string
           nullable: true
           maxLength: 100
@@ -17022,6 +17030,10 @@ components:
           format: double
           nullable: true
         external_service_id:
+          type: string
+          nullable: true
+          maxLength: 100
+        source_attribution:
           type: string
           nullable: true
           maxLength: 100

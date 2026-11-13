@@ -764,6 +764,8 @@
 					'external_service_id',
 					pendingActivityImport[visitId].activity.id.toString()
 				);
+				const credit = pendingActivityImport[visitId].activity.garmin_attribution;
+				if (credit) formData.append('source_attribution', credit);
 			}
 
 			const response = await fetch('/locations?/activity', {

@@ -57,6 +57,7 @@
 	let showExtras = $state(false);
 	let pendingProvider = $state<'strava' | 'endurain' | null>(null);
 	let externalId = $state<string | null>(null);
+	let sourceAttribution = $state<string | null>(null);
 
 	let name = $state('');
 	let sportType = $state('Hike');
@@ -151,6 +152,7 @@
 		endLng = activity.end_latlng ? activity.end_latlng[1] : null;
 		zoneChoice = activity.timezone || timezone || zone;
 		externalId = String(activity.id);
+		sourceAttribution = activity.garmin_attribution ?? null;
 		showExtras = true;
 	}
 
@@ -273,6 +275,7 @@
 			if (zone) formData.append('timezone', zone);
 			if (gpxFile) formData.append('gpx_file', gpxFile);
 			if (externalId) formData.append('external_service_id', externalId);
+			if (sourceAttribution) formData.append('source_attribution', sourceAttribution);
 
 			const response = await fetch('/locations?/activity', { method: 'POST', body: formData });
 			if (!response.ok) {

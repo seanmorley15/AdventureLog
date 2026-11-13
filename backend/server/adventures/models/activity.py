@@ -167,6 +167,8 @@ class Activity(models.Model):
 
     # Optional links
     external_service_id = models.CharField(max_length=100, blank=True, null=True)  # E.g., Strava ID
+    # Credit a provider requires next to the activity, e.g. "Garmin Forerunner 965" (#895).
+    source_attribution = models.CharField(max_length=100, blank=True, null=True)
 
     images = GenericRelation('ContentImage', related_query_name='activity')
 

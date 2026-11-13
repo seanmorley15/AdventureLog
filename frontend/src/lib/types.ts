@@ -676,6 +676,8 @@ export type StravaActivity = {
 	pr_count: number;
 	gear_id: string | null;
 	device_name: string | null;
+	external_id?: string | null;
+	garmin_attribution?: string | null; // "Garmin [device]" when the data came from Garmin (#895)
 	trainer: boolean;
 	manual: boolean;
 	start_latlng: [number, number] | null; // [latitude, longitude]
@@ -725,6 +727,7 @@ export type Activity = {
 	end_lat: number | null;
 	end_lng: number | null;
 	external_service_id: string | null;
+	source_attribution?: string | null; // Credit a provider requires, e.g. "Garmin Forerunner 965"
 };
 
 export type Visit = {

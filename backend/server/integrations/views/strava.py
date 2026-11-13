@@ -12,6 +12,7 @@ from django.core import signing
 from django.shortcuts import redirect
 from django.conf import settings
 from integrations.models import StravaToken
+from integrations.services.garmin import garmin_attribution
 from core.exceptions import APIError
 from core.serializers import validated
 from core.timezones import TIMEZONES
@@ -330,6 +331,9 @@ class StravaViewSet(viewsets.GenericViewSet):
             # Equipment and technical
             "gear_id": activity.get("gear_id"),
             "device_name": activity.get("device_name"),
+            "external_id": activity.get("external_id"),
+            # Credit Garmin next to the title when the data came from a Garmin device (#895).
+            "garmin_attribution": garmin_attribution(activity.get("device_name"), activity.get("external_id")),
             "trainer": activity.get("trainer"),  # indoor trainer activity
             "manual": activity.get("manual"),  # manually entered
             
