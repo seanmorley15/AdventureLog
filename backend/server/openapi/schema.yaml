@@ -4710,6 +4710,61 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/collections/{id}/make-locations-private/:
+    post:
+      operationId: collections_make_locations_private
+      description: |-
+        Owner only. Turns off `is_public` on every location in the collection that the owner
+        owns. Locations that members added stay as they are. Returns how many changed.
+      summary: Make the collection's locations private
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      tags:
+      - Sharing
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MadeLocationsPrivate'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
   /api/collections/{id}/members/{user_uuid}/:
     patch:
       operationId: collections_member_patch
@@ -16496,6 +16551,19 @@ components:
           format: date
           nullable: true
           description: Needed when the trip has no dates.
+    MadeLocationsPrivate:
+      type: object
+      properties:
+        updated:
+          type: integer
+        location_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - location_ids
+      - updated
     MapPin:
       type: object
       description: |-

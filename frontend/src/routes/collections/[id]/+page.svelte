@@ -673,6 +673,31 @@
 			(place) => place.is_public && (!place.user || place.user.uuid === collection?.user)
 		)
 	);
+	let makingPlacesPrivate = $state(false);
+	async function makeLinkedPlacesPrivate() {
+		if (!collection || makingPlacesPrivate) return;
+		makingPlacesPrivate = true;
+		try {
+			const response = await fetch(`/api/collections/${collection.id}/make-locations-private/`, {
+				method: 'POST'
+			});
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+			const result = (await response.json()) as { updated: number; location_ids: string[] };
+			const changed = new Set(result.location_ids);
+			collection = {
+				...collection,
+				locations: (collection.locations ?? []).map((place) =>
+					changed.has(String(place.id)) ? { ...place, is_public: false } : place
+				)
+			};
+			addToast('success', $t('share.made_private', { values: { count: result.updated } }));
+		} catch (error) {
+			console.error('Error making locations private:', error);
+			addToast('error', $t('share.make_private_failed'));
+		} finally {
+			makingPlacesPrivate = false;
+		}
+	}
 	// Define available views based on collection type
 	let dayPlanner = $derived(collection ? showsDayPlanner(collection) : false);
 	// Folders keep the catalog sidebar. Trip all-items uses the planner workspace chrome.
@@ -1320,20 +1345,6 @@
 				</div>
 			</nav>
 		</header>
-		{#if isOwner && publicLinkedPlaces.length > 0}
-			<div role="note" class="alert alert-info mx-3 mb-2 py-2 text-sm sm:mx-4">
-				<InformationOutline class="h-5 w-5 shrink-0" />
-				<span>
-					{$t('share.public_places_notice', {
-						values: {
-							count: publicLinkedPlaces.length,
-							names: publicLinkedPlaces.map((place) => place.name).join(', ')
-						}
-					})}
-				</span>
-			</div>
-		{/if}
-
 		<!-- Main Content -->
 		<div
 			class={catalogView
@@ -1376,6 +1387,33 @@
 								folder={isFolderView}
 							>
 								{#snippet children(filters)}
+									{#if isOwner && publicLinkedPlaces.length > 0}
+										<div
+											role="note"
+											class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-base-300/70 bg-base-100 px-3 py-2 text-sm"
+										>
+											<EyeOutline class="h-4 w-4 shrink-0 text-base-content/60" />
+											<span
+												class="min-w-0 flex-1 text-base-content/70"
+												title={publicLinkedPlaces.map((place) => place.name).join(', ')}
+											>
+												{$t('share.public_places_summary', {
+													values: { count: publicLinkedPlaces.length }
+												})}
+											</span>
+											<button
+												type="button"
+												class="btn btn-ghost btn-xs border-base-300"
+												disabled={makingPlacesPrivate}
+												onclick={makeLinkedPlacesPrivate}
+											>
+												{#if makingPlacesPrivate}
+													<span class="loading loading-spinner loading-xs"></span>
+												{/if}
+												{$t('share.make_all_private')}
+											</button>
+										</div>
+									{/if}
 									{#if isFolderView && showComposer}
 										<div
 											class="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-base-300/70 bg-base-100 p-2.5 shadow-sm"

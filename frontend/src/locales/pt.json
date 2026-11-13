@@ -1677,8 +1677,7 @@
 		"update_failed": "Não pude atualizar a partilha.",
 		"story_preview_bar": "Isto é o que as pessoas com a ligação vêm.",
 		"story_hidden_groups": "Ainda escondido: {groups}",
-		"private_from_story": "Esconder da história publicada",
-		"public_places_notice": "{count, plural, one {# lugar ligado é} other {# lugares ligados são}} público no seu perfil: {names}. Eles permanecem públicos até que você desligue cada um deles."
+		"private_from_story": "Esconder da história publicada"
 	},
 	"social_share": {
 		"aspect_landscape": "Paisagem",

@@ -1677,7 +1677,6 @@
 		"group_checklist_text": "Položky kontrolních seznamů",
 		"story_preview_bar": "Toto vidí lidé s odkazem.",
 		"story_hidden_groups": "Stále skryté: {groups}",
-		"public_places_notice": "{count, plural, one {Na vašem profilu je veřejné # propojené místo} few {Na vašem profilu jsou veřejná # propojená místa} many {Veřejná propojená místa na vašem profilu (počet: #)} other {Na vašem profilu je veřejných # propojených míst}}: {names}. Veřejné zobrazení zůstane zapnuté, dokud ho u každého místa zvlášť nevypnete.",
 		"private_from_story": "Skrýt v publikovaném příběhu"
 	},
 	"social_share": {

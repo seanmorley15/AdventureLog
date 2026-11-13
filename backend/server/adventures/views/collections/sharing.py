@@ -1,7 +1,8 @@
 from datetime import timezone as dt_timezone
 from django.db.models import Q
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -11,7 +12,7 @@ from django.conf import settings
 import logging
 from adventures.models import CollectionActivity, CollectionGuestLink, CollectionMember
 from adventures.services.activity_log import record_activity
-from adventures.models import Collection, CollectionInvite
+from adventures.models import Collection, CollectionInvite, Location
 from adventures.serializers import _build_profile_pic_url
 from adventures.serializers import CollectionInviteSerializer, UltraSlimCollectionSerializer
 from adventures.serializers.sharing import (
@@ -126,6 +127,32 @@ class SharingActionsMixin:
         the public story settings.
         """
         return self._sharing_response(self._owned_collection(request, pk), request)
+
+    @extend_schema(
+        tags=['Sharing'],
+        request=None,
+        responses=inline_serializer(
+            'MadeLocationsPrivate',
+            {
+                'updated': serializers.IntegerField(),
+                'location_ids': serializers.ListField(child=serializers.UUIDField()),
+            },
+        ),
+    )
+    @action(detail=True, methods=['post'], url_path='make-locations-private')
+    def make_locations_private(self, request, pk=None):
+        """
+        Make the collection's locations private
+
+        Owner only. Turns off `is_public` on every location in the collection that the owner
+        owns. Locations that members added stay as they are. Returns how many changed.
+        """
+        collection = self._owned_collection(request, pk)
+        public = Location.objects.filter(collections=collection, user=request.user, is_public=True)
+        ids = list(public.values_list('id', flat=True))
+        if ids:
+            Location.objects.filter(id__in=ids).update(is_public=False, updated_at=timezone.now())
+        return Response({'updated': len(ids), 'location_ids': [str(i) for i in ids]})
 
     # -- Invites -------------------------------------------------------------------------
 

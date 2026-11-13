@@ -1273,6 +1273,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/collections/{id}/make-locations-private/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make the collection's locations private
+         * @description Owner only. Turns off `is_public` on every location in the collection that the owner
+         *     owns. Locations that members added stay as they are. Returns how many changed.
+         */
+        post: operations["collections_make_locations_private"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/collections/{id}/members/{user_uuid}/": {
         parameters: {
             query?: never;
@@ -5538,6 +5559,10 @@ export interface components {
              * @description Needed when the trip has no dates.
              */
             date?: string | null;
+        };
+        MadeLocationsPrivate: {
+            updated: number;
+            location_ids: string[];
         };
         /**
          * @description Mixin for serializers with a single `coordinates` PointField on the model.
@@ -12353,6 +12378,64 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    collections_make_locations_private: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MadeLocationsPrivate"];
+                };
             };
             /** @description The request was not valid. `fields` lists the problems for each input. */
             400: {

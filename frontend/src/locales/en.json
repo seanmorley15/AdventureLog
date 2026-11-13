@@ -1588,7 +1588,10 @@
 		"story_preview_bar": "This is what people with the link see.",
 		"story_hidden_groups": "Still hidden: {groups}",
 		"back_to_plan": "Back to the plan",
-		"public_places_notice": "{count, plural, one {# linked location is} other {# linked locations are}} public on your profile: {names}. They stay public until you turn each one off.",
+		"public_places_summary": "{count, plural, one {# location here is} other {# locations here are}} public on your profile.",
+		"make_all_private": "Make all private",
+		"made_private": "{count, plural, one {# location is} other {# locations are}} now private.",
+		"make_private_failed": "Could not make the locations private.",
 		"private_from_story": "Hide from the published story"
 	},
 	"social_share": {
