@@ -35,13 +35,16 @@ CALENDAR_EVENT_COLORS = {
 
 ALL_EVENT_TYPES = tuple(CALENDAR_EVENT_COLORS.keys())
 
+# Keyed by Transportation.type; 'other' uses the road fallback.
 TRANSPORT_ICONS = {
-    'flight': '✈️',
-    'train': '🚆',
-    'bus': '🚌',
     'car': '🚗',
     'motorcycle': '🏍️',
+    'plane': '✈️',
+    'train': '🚆',
+    'bus': '🚌',
     'boat': '🚢',
+    'bike': '🚲',
+    'walking': '🚶',
 }
 
 
