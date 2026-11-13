@@ -5216,7 +5216,7 @@ export interface components {
             latitude?: number | null;
             visits?: components["schemas"]["LocationVisit"][];
             readonly is_visited: boolean;
-            category?: components["schemas"]["Category"];
+            category?: components["schemas"]["LocationCategory"];
             readonly attachments: components["schemas"]["Attachment"][];
             /** @description The owner. The owner themselves also sees their account fields. */
             readonly user: components["schemas"]["PublicProfile"] | null;
@@ -5227,6 +5227,27 @@ export interface components {
             /** Format: decimal */
             price?: string | null;
             readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
+        };
+        /**
+         * @description A category as sent inside a place. ``name`` is enough to pick one of the user's
+         *     categories, by name or display name; a new one gets the name as its display name.
+         */
+        LocationCategory: {
+            /** Format: uuid */
+            readonly id: string;
+            name: string;
+            display_name?: string;
+            icon?: string;
+            readonly num_locations: number;
+        };
+        /**
+         * @description A category as sent inside a place. ``name`` is enough to pick one of the user's
+         *     categories, by name or display name; a new one gets the name as its display name.
+         */
+        LocationCategoryRequest: {
+            name: string;
+            display_name?: string;
+            icon?: string;
         };
         LocationDuplicateRequestRequest: {
             /**
@@ -5294,7 +5315,7 @@ export interface components {
             latitude?: number | null;
             visits?: components["schemas"]["LocationVisit"][];
             readonly is_visited: boolean;
-            category?: components["schemas"]["Category"];
+            category?: components["schemas"]["LocationCategory"];
             readonly attachments: components["schemas"]["Attachment"][];
             /** @description The owner. The owner themselves also sees their account fields. */
             readonly user: components["schemas"]["PublicProfile"] | null;
@@ -5326,7 +5347,7 @@ export interface components {
             /** Format: double */
             latitude?: number | null;
             visits?: components["schemas"]["LocationVisitRequest"][];
-            category?: components["schemas"]["CategoryRequest"];
+            category?: components["schemas"]["LocationCategoryRequest"];
             /** Format: decimal */
             price?: string | null;
         };
@@ -5870,7 +5891,7 @@ export interface components {
             /** Format: double */
             latitude?: number | null;
             visits?: components["schemas"]["LocationVisitRequest"][];
-            category?: components["schemas"]["CategoryRequest"];
+            category?: components["schemas"]["LocationCategoryRequest"];
             /** Format: decimal */
             price?: string | null;
         };

@@ -105,11 +105,21 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
         }
 
 
+class LocationCategorySerializer(CategorySerializer):
+    """
+    A category as sent inside a place. ``name`` is enough to pick one of the user's
+    categories, by name or display name; a new one gets the name as its display name.
+    """
+
+    class Meta(CategorySerializer.Meta):
+        extra_kwargs = {'display_name': {'required': False}, 'icon': {'required': False}}
+
+
 class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomModelSerializer):
     images = serializers.SerializerMethodField()
     visits = LocationVisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=False, required=False)
+    category = LocationCategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
     country = CountrySerializer(read_only=True, allow_null=True)
     region = RegionSerializer(read_only=True, allow_null=True)
@@ -247,11 +257,17 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             return category_data
         if category_data:
             user = self.context['request'].user
-            name = category_data.get('name', '').lower()
-            existing_category = Category.objects.filter(user=user, name=name).first()
+            name = category_data.get('name', '').strip()
+            # The UI only shows display names, so a client may send "Tours & Activities" for
+            # the category named "tour". Match either, ignoring case, before creating one (#1307).
+            categories = Category.objects.filter(user=user)
+            existing_category = (
+                categories.filter(name=name.lower()).first()
+                or categories.filter(display_name__iexact=name).first()
+            )
             if existing_category:
                 return existing_category
-            category_data['name'] = name
+            category_data['name'] = name.lower()
         return category_data
     
     def get_or_create_category(self, category_data):

@@ -15611,7 +15611,7 @@ components:
           type: boolean
           readOnly: true
         category:
-          $ref: '#/components/schemas/Category'
+          $ref: '#/components/schemas/LocationCategory'
         attachments:
           type: array
           items:
@@ -15668,6 +15668,52 @@ components:
       - trails
       - updated_at
       - user
+    LocationCategory:
+      type: object
+      description: |-
+        A category as sent inside a place. ``name`` is enough to pick one of the user's
+        categories, by name or display name; a new one gets the name as its display name.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        display_name:
+          type: string
+          maxLength: 200
+        icon:
+          type: string
+          maxLength: 200
+        num_locations:
+          type: integer
+          readOnly: true
+      required:
+      - id
+      - name
+      - num_locations
+    LocationCategoryRequest:
+      type: object
+      description: |-
+        A category as sent inside a place. ``name`` is enough to pick one of the user's
+        categories, by name or display name; a new one gets the name as its display name.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        icon:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - name
     LocationDuplicateRequestRequest:
       type: object
       properties:
@@ -15854,7 +15900,7 @@ components:
           type: boolean
           readOnly: true
         category:
-          $ref: '#/components/schemas/Category'
+          $ref: '#/components/schemas/LocationCategory'
         attachments:
           type: array
           items:
@@ -15974,7 +16020,7 @@ components:
           items:
             $ref: '#/components/schemas/LocationVisitRequest'
         category:
-          $ref: '#/components/schemas/CategoryRequest'
+          $ref: '#/components/schemas/LocationCategoryRequest'
         price:
           type: string
           format: decimal
@@ -17198,7 +17244,7 @@ components:
           items:
             $ref: '#/components/schemas/LocationVisitRequest'
         category:
-          $ref: '#/components/schemas/CategoryRequest'
+          $ref: '#/components/schemas/LocationCategoryRequest'
         price:
           type: string
           format: decimal
