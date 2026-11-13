@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { isAllDay } from '#lib';
+	import { isAllDayEntry } from '#lib';
 	import { formatAllDayDate, formatDateInTimezone, timezoneInfo } from '#lib/dateUtils.js';
 	import type { DateFormatPreference } from '#lib/dateFormat.js';
 	import DetailFact from './DetailFact.svelte';
@@ -9,7 +9,7 @@
 
 	interface Props {
 		label: string;
-		/** ISO date or datetime. A UTC-midnight value is treated as a date without a time. */
+		/** ISO date or datetime. UTC midnight with no time zone is a date without a time. */
 		value: string;
 		/** The zone the time was entered in. */
 		timezone?: string | null;
@@ -19,7 +19,7 @@
 
 	let { label, value, timezone = null, dateFormat, icon = CalendarRange }: Props = $props();
 
-	let allDay = $derived(isAllDay(value));
+	let allDay = $derived(isAllDayEntry(value, timezone));
 	let zone = $derived(
 		timezoneInfo(timezone, {
 			tripZone: $t('adventures.trip_timezone') ?? 'Trip TZ',

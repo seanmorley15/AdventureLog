@@ -25,7 +25,7 @@
 	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
 	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
-	import { normalizeBasemapType, isAllDay, LODGING_TYPES_ICONS } from '#lib';
+	import { normalizeBasemapType, LODGING_TYPES_ICONS, isAllDayEntry } from '#lib';
 	import MapMarker from '~icons/mdi/map-marker';
 	import CalendarRange from '~icons/mdi/calendar-range';
 	import BedOutline from '~icons/mdi/bed-outline';
@@ -98,7 +98,7 @@
 		if (!checkIn && !checkOut) return null;
 
 		const formatLocal = (dateStr: string | null) => {
-			if (!dateStr || isAllDay(dateStr)) return null;
+			if (!dateStr || isAllDayEntry(dateStr, timezone)) return null;
 			const dt = DateTime.fromISO(dateStr, { zone: timezone ?? 'UTC' });
 			if (!dt.isValid) return null;
 			return dt.setZone(localTimeZone).toLocaleString(DateTime.DATETIME_MED);

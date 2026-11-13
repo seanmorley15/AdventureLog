@@ -346,6 +346,15 @@ export function isAllDay(dateStr: string): boolean {
 	return /^T00:00:00(\.0+)?(Z|[+-]00:00)?$/.test(dateStr.slice(10));
 }
 
+// Lodging and transportation save an all-day entry as midnight UTC with no time zone. A timed
+// one that falls at 00:00 UTC (8 PM in New York) keeps its zone, so it is not all-day (#1327).
+export function isAllDayEntry(
+	dateStr: string | null | undefined,
+	timezone: string | null | undefined
+): boolean {
+	return !!dateStr && !timezone && isAllDay(dateStr);
+}
+
 // Legacy itinerary visits stored end-of-day timestamps for all-day events.
 export function isAllDayEnd(dateStr: string): boolean {
 	if (!dateStr || !dateStr.includes('T')) return false;

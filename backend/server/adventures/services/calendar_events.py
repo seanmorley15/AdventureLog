@@ -256,7 +256,8 @@ def _transportation_events(user, range_start: date | None, range_end: date | Non
                 title=item.name or item.type or 'Transportation',
                 start=item.date,
                 end=item.end_date or item.date,
-                all_day=is_midnight_utc(item.date),
+                # All-day journeys are saved without a time zone; a timed one at 00:00 UTC keeps its zone.
+                all_day=is_midnight_utc(item.date) and not item.start_timezone,
                 timezone_name=item.start_timezone or item.end_timezone,
                 icon=icon,
                 category=item.type or 'Transportation',
@@ -512,7 +513,7 @@ def _plan_events(user, range_start: date | None, range_end: date | None) -> list
             end = obj.end_date or (obj.date if obj.date else last_day)
             if not _event_overlaps_range(start, end, range_start, range_end):
                 continue
-            all_day = not isinstance(start, datetime) or is_midnight_utc(start)
+            all_day = not isinstance(start, datetime) or (is_midnight_utc(start) and not obj.start_timezone)
             route = ' → '.join(filter(None, [obj.from_location, obj.to_location]))
             events.append(_build_event(
                 event_id=f'transportation-{obj.id}', event_type='transportation',

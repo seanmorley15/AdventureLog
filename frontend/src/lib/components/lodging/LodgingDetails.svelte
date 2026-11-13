@@ -30,7 +30,7 @@
 	import { normalizeBasemapType } from '#lib';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { isAllDay } from '#lib';
+	import { isAllDayEntry } from '#lib';
 	import { addToast } from '#lib/toasts.js';
 
 	const dispatch = createEventDispatcher();
@@ -425,7 +425,7 @@
 
 		// Determine if existing dates are all-day using shared helper
 		if (initialLodging?.check_in) {
-			allDay = isAllDay(initialLodging.check_in);
+			allDay = isAllDayEntry(initialLodging.check_in, initialLodging.timezone);
 		}
 
 		// Keep lodging.timezone null for all-day entries, otherwise use selectedTimezone

@@ -7,7 +7,7 @@ import type {
 	CalendarTimezoneMode
 } from './types';
 import { formatAllDayDate } from '#lib/dateUtils.js';
-import { isAllDay, isVisitAllDay } from '#lib';
+import { isVisitAllDay, isAllDayEntry } from '#lib';
 import type { DateFormatPreference } from '#lib/dateFormat.js';
 // @ts-ignore luxon types are not bundled in this project
 import { DateTime } from 'luxon';
@@ -140,7 +140,8 @@ export function apiEventToDisplayEvent(
 	dateFormat?: DateFormatPreference
 ): CalendarDisplayEvent | null {
 	const normalizedType = event.type === 'location' ? 'visit' : event.type;
-	const allDay = event.all_day || isAllDay(event.start);
+	// The server decides; a timed journey at 00:00 UTC is not all-day.
+	const allDay = event.all_day;
 	const times = buildEventTimes({
 		start: event.start,
 		end: event.end,
@@ -338,7 +339,7 @@ export function buildCollectionCalendarEvents(
 			end: transportation.end_date || transportation.date,
 			timezone: transportation.start_timezone || transportation.end_timezone,
 			mode,
-			allDay: isAllDay(transportation.date),
+			allDay: isAllDayEntry(transportation.date, transportation.start_timezone),
 			userTimezone,
 			timezoneLabelEvent: labels.eventTimezone,
 			timezoneLabelLocal: labels.localTimezone,

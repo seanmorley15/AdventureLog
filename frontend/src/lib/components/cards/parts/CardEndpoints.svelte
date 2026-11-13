@@ -15,7 +15,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { isAllDay } from '#lib';
+	import { isAllDayEntry } from '#lib';
 	import { formatAllDayDate, formatDateTimeParts, timezoneInfo } from '#lib/dateUtils.js';
 	import type { DateFormatPreference } from '#lib/dateFormat.js';
 
@@ -36,7 +36,7 @@
 
 	function parts(endpoint: Endpoint) {
 		if (!endpoint.value) return null;
-		if (isAllDay(endpoint.value)) {
+		if (isAllDayEntry(endpoint.value, endpoint.timezone)) {
 			return {
 				date: formatAllDayDate(endpoint.value, dateFormat),
 				time: '',

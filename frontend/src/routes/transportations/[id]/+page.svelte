@@ -29,7 +29,7 @@
 	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
 	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '#lib/components/cards/AttachmentCard.svelte';
-	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '#lib';
+	import { normalizeBasemapType, TRANSPORTATION_TYPES_ICONS, isAllDayEntry } from '#lib';
 	import MapMarker from '~icons/mdi/map-marker';
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
@@ -214,7 +214,7 @@
 		if (!start && !end) return null;
 
 		const formatLocal = (dateStr: string | null, zone: string | null) => {
-			if (!dateStr || isAllDay(dateStr)) return null;
+			if (!dateStr || isAllDayEntry(dateStr, zone)) return null;
 			const dt = DateTime.fromISO(dateStr, { zone: zone ?? 'UTC' });
 			if (!dt.isValid) return null;
 			return dt.setZone(localTimeZone).toLocaleString(DateTime.DATETIME_MED);
