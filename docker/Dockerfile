@@ -29,7 +29,7 @@ RUN rm -f .env && pnpm run build
 ENV CI=true
 RUN pnpm prune --prod
 
-FROM python:3.13-slim AS backend-builder
+FROM python:3.15-slim AS backend-builder
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
@@ -45,7 +45,7 @@ RUN pip install --upgrade pip \
     && rm -f /usr/local/lib/python3.13/site-packages/pip/_vendor/bom.cdx.json
 
 # Shared Django runtime used by backend and Standard Deployment images.
-FROM python:3.13-slim AS backend-runtime
+FROM python:3.15-slim AS backend-runtime
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
