@@ -32,6 +32,6 @@ geojson==3.3.0
 gpxpy==1.6.2
 pymemcache==4.0.0
 legacy-cgi==2.6.4
-requests>=2.32.4
+requests>=2.34.2
 stripe==11.3.0
 reportlab>=4.2.0,<5
