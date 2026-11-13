@@ -21,6 +21,8 @@ bash scripts/validate-env.sh .env
 Standard Deployment only requires `POSTGRES_PASSWORD` in `.env`. URLs, `SECRET_KEY`, and admin defaults are derived at container startup. See [Standard Deployment](../install/standard.md).
 :::
 
+<TableFilter label="Filter variables, for example: S3, email, RATE_LIMIT" />
+
 ## URL and networking
 
 These variables control how the browser, SvelteKit SSR, and Django talk to each other.
@@ -38,7 +40,7 @@ These variables control how the browser, SvelteKit SSR, and Django talk to each 
 | `HOST_PORT` | No | Standard Deployment compose | Host port mapped to the single-container stack. | `8015` |
 | `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size (such as a backup restore): bytes, or with a `K`, `M` or `G` suffix, or `Infinity`. Standard Deployment applies it to its built-in nginx too, and defaults to `100M`. | `Infinity` |
 
-See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual explanation of the URL model.
+See [Advanced Deployment](../install/docker.md#urls) for what each URL setting does.
 
 ## Database (PostgreSQL / PostGIS)
 

@@ -1,415 +1,378 @@
-import { defineConfig } from "vitepress";
-import { buildPageHead, pageSeo } from "./seo";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { defineConfig, type HeadConfig } from "vitepress";
+import { faq } from "./faq";
+import { announceUntil, getRepoMeta, REPO_URL } from "./github";
+import { SHOT_SIZE, shotFallback, shots, type ShotName } from "./screenshots";
+import {
+  APP_ID,
+  buildDocsJsonLd,
+  buildPageHead,
+  ORG_ID,
+  pagePathToUrl,
+  pageSeo,
+  SITE_NAME,
+  SITE_ORIGIN,
+  WEBSITE_ID,
+} from "./seo";
+import { sidebar } from "./sidebar";
+
+const FALLBACK_DESCRIPTION =
+  "AdventureLog documentation for self-hosted travel tracking, trip planning, and Docker deployment.";
+
+const SAME_AS = [
+  REPO_URL,
+  "https://discord.gg/wRbQ9Egr8C",
+  "https://x.com/AdventureLogApp",
+  "https://mastodon.social/@adventurelog",
+  "https://www.instagram.com/adventurelogapp",
+];
+
+function jsonLd(graph: object): HeadConfig {
+  return ["script", { type: "application/ld+json" }, JSON.stringify(graph)];
+}
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
-  head: [
-    ["link", { rel: "icon", href: "/adventurelog.png" }],
-    [
-      "script",
-      {
-        defer: "",
-        src: "https://cloud.umami.is/script.js",
-        "data-website-id": "a7552764-5a1d-4fe7-80c2-5331e1a53cb6",
-      },
-    ],
-    [
-      "link",
-      {
-        rel: "me",
-        href: "https://mastodon.social/@adventurelog",
-      },
-    ],
-  ],
-  ignoreDeadLinks: "localhostLinks",
-  title: "AdventureLog",
-  description:
-    "Self-hosted, open-source travel companion for tracking locations, planning trips, and sharing adventures.",
-  lang: "en-US",
+export default async () => {
+  const repo = await getRepoMeta();
+  // The release bar shows for a week after the release. The browser checks the
+  // date too, so it disappears on time even without a rebuild.
+  const announceEnd = announceUntil(repo);
+  const announce = announceEnd !== null && Date.now() < announceEnd;
 
-  sitemap: {
-    hostname: "https://adventurelog.app",
-  },
-
-  rewrites: {
-    "docs/Guides/nginx_migration.md": "docs/guides/v0-7-1_migration.md",
-    "docs/install/aio.md": "docs/install/standard.md",
-  },
-
-  transformPageData(pageData) {
-    const seo =
-      pageSeo[pageData.relativePath] ??
-      ({
-        description:
-          "AdventureLog documentation for self-hosted travel tracking, trip planning, and Docker deployment.",
-      } as const);
-
-    const pageTitle = seo.title ?? pageData.title;
-    const head = buildPageHead(pageData.relativePath, pageTitle, seo);
-
-    if (pageData.relativePath === "index.md") {
-      const siteUrl = "https://adventurelog.app";
-      const screenshot =
-        "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png";
-
-      const structuredData = [
+  return defineConfig({
+    head: [
+      [
+        "link",
         {
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "AdventureLog",
-          url: siteUrl,
-          description: seo.description,
-          inLanguage: "en-US",
-          publisher: {
-            "@type": "Organization",
-            name: "AdventureLog",
-            url: siteUrl,
-            logo: `${siteUrl}/adventurelog.png`,
-            sameAs: [
-              "https://github.com/seanmorley15/AdventureLog",
-              "https://discord.gg/wRbQ9Egr8C",
-              "https://x.com/AdventureLogApp",
-              "https://mastodon.social/@adventurelog",
-            ],
-          },
+          rel: "icon",
+          type: "image/png",
+          sizes: "512x512",
+          href: "/adventurelog.png",
         },
+      ],
+      [
+        "link",
+        { rel: "icon", type: "image/svg+xml", href: "/adventurelog.svg" },
+      ],
+      ["link", { rel: "apple-touch-icon", href: "/apple-touch-icon.png" }],
+      ["link", { rel: "manifest", href: "/site.webmanifest" }],
+      [
+        "meta",
         {
-          "@context": "https://schema.org",
+          name: "theme-color",
+          media: "(prefers-color-scheme: light)",
+          content: "#ffffff",
+        },
+      ],
+      [
+        "meta",
+        {
+          name: "theme-color",
+          media: "(prefers-color-scheme: dark)",
+          content: "#1b1b1f",
+        },
+      ],
+      [
+        "script",
+        {
+          defer: "",
+          src: "https://cloud.umami.is/script.js",
+          "data-website-id": "a7552764-5a1d-4fe7-80c2-5331e1a53cb6",
+        },
+      ],
+      ["link", { rel: "me", href: "https://mastodon.social/@adventurelog" }],
+      // Show the release announcement before first paint, for a week after the
+      // release, unless this version was dismissed.
+      ...(announce
+        ? ([
+            [
+              "script",
+              {},
+              `if(Date.now()<${announceEnd}){try{if(localStorage.getItem("al-announce-dismissed")!==${JSON.stringify(repo.version)})document.documentElement.classList.add("al-announce")}catch(e){document.documentElement.classList.add("al-announce")}}`,
+            ],
+          ] as HeadConfig[])
+        : []),
+    ],
+    ignoreDeadLinks: "localhostLinks",
+    title: SITE_NAME,
+    description:
+      "Self-hosted, open-source travel companion for tracking locations, planning trips, and sharing adventures.",
+    lang: "en-US",
+    lastUpdated: true,
+    markdown: {
+      // Highlight ```env blocks instead of falling back to plain text.
+      languageAlias: { env: "dotenv" },
+    },
+
+    sitemap: {
+      hostname: SITE_ORIGIN,
+      transformItems: (items) =>
+        items.filter((item) => !/(^|\/)404(\.html)?$/.test(item.url)),
+    },
+
+    rewrites: {
+      "docs/Guides/nginx_migration.md": "docs/guides/v0-7-1_migration.md",
+      "docs/install/aio.md": "docs/install/standard.md",
+    },
+
+    transformPageData(pageData) {
+      const isHome = pageData.relativePath === "index.md";
+      const seo = pageSeo[pageData.relativePath] ?? {
+        description: FALLBACK_DESCRIPTION,
+      };
+      const pageTitle = seo.title ?? pageData.title;
+      // A page's own frontmatter description wins, as before; seo.ts fills the rest.
+      const description =
+        pageData.frontmatter.description ??
+        seo.description ??
+        pageData.description;
+      const head = buildPageHead(pageData.relativePath, pageTitle, {
+        ...seo,
+        description,
+      });
+
+      if (isHome) {
+        const app: Record<string, unknown> = {
           "@type": "SoftwareApplication",
-          name: "AdventureLog",
-          url: siteUrl,
+          "@id": APP_ID,
+          name: SITE_NAME,
+          url: `${SITE_ORIGIN}/`,
+          description,
           applicationCategory: "TravelApplication",
-          operatingSystem: "Web, Docker, Linux, macOS",
-          description: seo.description,
+          applicationSubCategory: "Travel log and trip planner",
+          operatingSystem: "Web, Docker, Linux, macOS, Windows",
           featureList: [
-            "Location and visit tracking",
-            "Interactive world map",
-            "Trip itineraries and collections",
-            "World travel country and region tracker",
-            "Strava, Immich, and Wanderer integrations",
+            "Location and visit logging with photos, notes, and ratings",
+            "Interactive world map of visited and planned places",
+            "Day-by-day trip itineraries with lodging, transport, and checklists",
+            "Country, region, and city travel tracking",
+            "Immich, Strava, Wanderer, Endurain, and Google Maps integrations",
+            "OpenID Connect and social sign-in",
             "Self-hosted Docker deployment",
           ],
-          creator: {
-            "@type": "Person",
-            name: "Sean Morley",
-            url: "https://seanmorley.com",
-          },
+          screenshot: (Object.keys(shots) as ShotName[]).map((name) => ({
+            "@type": "ImageObject",
+            url: `${SITE_ORIGIN}${shotFallback(name, "light")}`,
+            width: 1440,
+            height: Math.round((1440 * SHOT_SIZE.height) / SHOT_SIZE.width),
+            caption: shots[name],
+          })),
           offers: {
             "@type": "Offer",
             price: "0",
             priceCurrency: "USD",
-            description: "Free open-source self-hosted travel companion.",
+            description: "Free and open source to self-host.",
           },
-          softwareVersion: "v0.14.0",
-          license:
-            "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
-          screenshot,
-          downloadUrl: "https://github.com/seanmorley15/adventurelog",
-          installUrl: `${siteUrl}/docs/install/standard.html`,
-          sameAs: ["https://github.com/seanmorley15/adventurelog"],
+          isAccessibleForFree: true,
+          license: `${REPO_URL}/blob/main/LICENSE`,
+          downloadUrl: REPO_URL,
+          installUrl: `${SITE_ORIGIN}/docs/install/standard.html`,
+          softwareHelp: `${SITE_ORIGIN}/docs/usage/usage.html`,
+          codeRepository: REPO_URL,
+          author: {
+            "@type": "Person",
+            name: "Sean Morley",
+            url: "https://seanmorley.com",
+          },
+          publisher: { "@id": ORG_ID },
           keywords: (seo.keywords ?? []).join(", "),
-        },
-        {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: [
-            {
-              "@type": "Question",
-              name: "What is AdventureLog?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "AdventureLog is an open-source, self-hosted travel companion for tracking locations, planning trips with itineraries, and visualizing travels on an interactive world map.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "How do I install AdventureLog?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Most installs use Standard Deployment — one container on port 8015 with minimal configuration. Deploy with docker-compose.yml and .env, or use the optional Quick Start installer for a guided setup.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "Is AdventureLog free?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Yes. AdventureLog is GPL-3.0 open source and free to self-host. There are no subscriptions required for the self-hosted version.",
-              },
-            },
-            {
-              "@type": "Question",
-              name: "Can I self-host AdventureLog on a homelab or NAS?",
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: "Yes. AdventureLog runs in Docker on homelabs, VPS, Proxmox, Synology NAS, Unraid, Kubernetes, and other Docker-capable platforms.",
-              },
-            },
-          ],
-        },
-      ];
+        };
+        if (repo.version) app.softwareVersion = repo.version.replace(/^v/, "");
+        if (repo.releasedAt) app.dateModified = repo.releasedAt;
+        if (repo.releaseUrl) app.releaseNotes = repo.releaseUrl;
 
-      for (const graph of structuredData) {
-        head.push([
-          "script",
-          { type: "application/ld+json" },
-          JSON.stringify(graph),
-        ]);
+        head.push(
+          jsonLd({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": ORG_ID,
+                name: SITE_NAME,
+                url: `${SITE_ORIGIN}/`,
+                logo: {
+                  "@type": "ImageObject",
+                  url: `${SITE_ORIGIN}/adventurelog.png`,
+                  width: 512,
+                  height: 512,
+                },
+                sameAs: SAME_AS,
+              },
+              {
+                "@type": "WebSite",
+                "@id": WEBSITE_ID,
+                name: SITE_NAME,
+                url: `${SITE_ORIGIN}/`,
+                description,
+                inLanguage: "en-US",
+                publisher: { "@id": ORG_ID },
+              },
+              app,
+              {
+                "@type": "FAQPage",
+                "@id": `${SITE_ORIGIN}/#faq`,
+                mainEntity: faq.map((item) => ({
+                  "@type": "Question",
+                  name: item.question,
+                  acceptedAnswer: { "@type": "Answer", text: item.answer },
+                })),
+              },
+            ],
+          }),
+        );
+      } else if (pageData.relativePath.startsWith("docs/")) {
+        for (const graph of buildDocsJsonLd(
+          pageData.relativePath,
+          pageData.title,
+          description,
+          sidebar,
+          pageData.lastUpdated,
+        )) {
+          head.push(jsonLd(graph));
+        }
       }
-    }
 
-    const description =
-      pageData.frontmatter.description ??
-      seo.description ??
-      pageData.description;
-
-    return {
-      title: seo.title ?? pageData.title,
-      description,
-      frontmatter: {
-        ...pageData.frontmatter,
+      return {
+        title: pageTitle,
         description,
-        head: [...(pageData.frontmatter.head ?? []), ...head],
-      },
-    };
-  },
-
-  themeConfig: {
-    nav: [
-      { text: "Home", link: "/" },
-      { text: "Install", link: "/docs/install/getting_started" },
-      { text: "Configure", link: "/docs/configuration/environment_variables" },
-      { text: "Usage", link: "/docs/usage/usage" },
-      {
-        text: "GitHub",
-        link: "https://github.com/seanmorley15/AdventureLog",
-      },
-    ],
-    search: {
-      provider: "local",
-    },
-    editLink: {
-      pattern:
-        "https://github.com/seanmorley15/AdventureLog/edit/main/documentation/:path",
+        // The home title already names the product; skip the " | AdventureLog" suffix.
+        ...(isHome ? { titleTemplate: false } : {}),
+        frontmatter: {
+          ...pageData.frontmatter,
+          description,
+          head: [...(pageData.frontmatter.head ?? []), ...head],
+        },
+      };
     },
 
-    footer: false,
+    buildEnd(siteConfig) {
+      const missing: string[] = [];
+      const entries: string[] = [];
 
-    logo: "/adventurelog.png",
+      // Pages in sidebar order, then anything the sidebar doesn't list.
+      const order: string[] = [];
+      const walk = (items: typeof sidebar) => {
+        for (const item of items) {
+          if (item.link?.startsWith("/"))
+            order.push(`${item.link.slice(1)}.md`);
+          if (item.items) walk(item.items);
+        }
+      };
+      walk(sidebar);
+      const rank = (page: string) => {
+        const i = order.indexOf(page);
+        return i === -1 ? order.length : i;
+      };
+      const pages = [...siteConfig.pages].sort(
+        (a, b) => rank(a) - rank(b) || a.localeCompare(b),
+      );
 
-    sidebar: [
-      {
-        text: "Introduction",
-        items: [
-          {
-            text: "About AdventureLog",
-            link: "/docs/intro/adventurelog_overview",
-          },
-        ],
-      },
-      {
-        text: "Installation",
-        collapsed: false,
-        items: [
-          { text: "Getting Started", link: "/docs/install/getting_started" },
-          { text: "Standard Deployment", link: "/docs/install/standard" },
-          { text: "Quick Start Installer", link: "/docs/install/quick_start" },
-          { text: "Advanced Deployment", link: "/docs/install/docker" },
-          {
-            text: "Development Setup",
-            link: "/docs/install/dev_container_wsl",
-          },
-          {
-            text: "Platform Guides",
-            collapsed: true,
-            items: [
-              { text: "Proxmox LXC", link: "/docs/install/proxmox_lxc" },
-              { text: "Synology NAS", link: "/docs/install/synology_nas" },
-              { text: "Unraid", link: "/docs/install/unraid" },
-              {
-                text: "Kubernetes (Kustomize)",
-                link: "/docs/install/kustomize",
-              },
-            ],
-          },
-          {
-            text: "Reverse Proxy",
-            collapsed: true,
-            items: [
-              {
-                text: "Nginx Proxy Manager",
-                link: "/docs/install/nginx_proxy_manager",
-              },
-              { text: "Traefik", link: "/docs/install/traefik" },
-              { text: "Caddy", link: "/docs/install/caddy" },
-            ],
-          },
-        ],
-      },
-      {
-        text: "Usage",
-        collapsed: false,
-        items: [{ text: "How to Use AdventureLog", link: "/docs/usage/usage" }],
-      },
-      {
-        text: "Configuration",
-        collapsed: false,
-        items: [
-          {
-            text: "Environment Variables",
-            link: "/docs/configuration/environment_variables",
-          },
-          {
-            text: "Caching",
-            link: "/docs/configuration/caching",
-          },
-          {
-            text: "Operations & Maintenance",
-            link: "/docs/configuration/operations",
-          },
-          { text: "Updating", link: "/docs/configuration/updating" },
-          {
-            text: "Authentication",
-            collapsed: true,
-            items: [
-              {
-                text: "Social Auth & OIDC",
-                link: "/docs/configuration/social_auth",
-              },
-              {
-                text: "Authentik",
-                link: "/docs/configuration/social_auth/authentik",
-              },
-              {
-                text: "GitHub",
-                link: "/docs/configuration/social_auth/github",
-              },
-              {
-                text: "Pocket ID",
-                link: "/docs/configuration/social_auth/pocket_id",
-              },
-              {
-                text: "OpenID Connect",
-                link: "/docs/configuration/social_auth/oidc",
-              },
-              {
-                text: "Authelia",
-                link: "https://www.authelia.com/integration/openid-connect/adventure-log/",
-              },
-              {
-                text: "Disable Registration",
-                link: "/docs/configuration/disable_registration",
-              },
-              {
-                text: "Public Access",
-                link: "/docs/configuration/public_access",
-              },
-              { text: "API Keys", link: "/docs/configuration/api_keys" },
-            ],
-          },
-          {
-            text: "Integrations",
-            collapsed: true,
-            items: [
-              {
-                text: "Immich",
-                link: "/docs/configuration/immich_integration",
-              },
-              {
-                text: "Google Maps",
-                link: "/docs/configuration/google_maps_integration",
-              },
-              {
-                text: "Strava",
-                link: "/docs/configuration/strava_integration",
-              },
-              {
-                text: "Wanderer",
-                link: "/docs/configuration/wanderer_integration",
-              },
-              {
-                text: "Endurain",
-                link: "/docs/configuration/endurain_integration",
-              },
-            ],
-          },
-          {
-            text: "Storage & Email",
-            collapsed: true,
-            items: [
-              {
-                text: "S3 Media Storage",
-                link: "/docs/configuration/s3_storage",
-              },
-              { text: "SMTP Email", link: "/docs/configuration/email" },
-            ],
-          },
-          {
-            text: "Advanced Settings",
-            link: "/docs/configuration/advanced_configuration",
-          },
-          { text: "Umami Analytics", link: "/docs/configuration/analytics" },
-        ],
-      },
-      {
-        text: "Troubleshooting",
-        collapsed: true,
-        items: [
-          {
-            text: "Images Not Displaying",
-            link: "/docs/troubleshooting/no_images",
-          },
-          {
-            text: "Login Unresponsive",
-            link: "/docs/troubleshooting/login_unresponsive",
-          },
-          {
-            text: "Nginx Failed to Start",
-            link: "/docs/troubleshooting/nginx_failed",
-          },
-        ],
-      },
-      {
-        text: "Guides",
-        collapsed: true,
-        items: [
-          { text: "Admin Panel", link: "/docs/guides/admin_panel" },
-          { text: "Invite a User", link: "/docs/guides/invite_user" },
-          {
-            text: "v0.7.1 Migration",
-            link: "/docs/guides/v0-7-1_migration",
-          },
-        ],
-      },
-      {
-        text: "Changelogs",
-        collapsed: true,
-        items: [
-          {
-            text: "Development Timeline",
-            link: "/docs/changelogs/development_timeline",
-          },
-          { text: "v0.13.1", link: "/docs/changelogs/v0-13-1" },
-          { text: "v0.13.0", link: "/docs/changelogs/v0-13-0" },
-          { text: "v0.12.1", link: "/docs/changelogs/v0-12-1" },
-          { text: "v0.12.0", link: "/docs/changelogs/v0-12-0" },
-          { text: "v0.11.0", link: "/docs/changelogs/v0-11-0" },
-          { text: "v0.10.0", link: "/docs/changelogs/v0-10-0" },
-          { text: "v0.9.0", link: "/docs/changelogs/v0-9-0" },
-          { text: "v0.8.0", link: "/docs/changelogs/v0-8-0" },
-          { text: "v0.7.1", link: "/docs/changelogs/v0-7-1" },
-          { text: "v0.7.0", link: "/docs/changelogs/v0-7-0" },
-        ],
-      },
-    ],
+      for (const page of pages) {
+        if (page === "404.md") continue;
+        const seo = pageSeo[page];
+        if (!seo) missing.push(page);
 
-    socialLinks: [
-      { icon: "github", link: "https://github.com/seanmorley15/AdventureLog" },
-      { icon: "discord", link: "https://discord.gg/wRbQ9Egr8C" },
-      { icon: "buymeacoffee", link: "https://buymeacoffee.com/seanmorley15" },
-      { icon: "x", link: "https://x.com/AdventureLogApp" },
-      { icon: "mastodon", link: "https://mastodon.social/@adventurelog" },
-      { icon: "instagram", link: "https://www.instagram.com/adventurelogapp" },
-    ],
-  },
-});
+        let title = seo?.title;
+        if (!title) {
+          try {
+            const source = readFileSync(join(siteConfig.srcDir, page), "utf8");
+            title =
+              source.match(/^title:\s*(.+)$/m)?.[1]?.trim() ??
+              source.match(/^#\s+(.+)$/m)?.[1]?.trim();
+          } catch {
+            // Rewritten pages have no file at their output path; fall back below.
+          }
+        }
+        title ??= page.replace(/\.md$/, "");
+        const description = seo?.description ?? FALLBACK_DESCRIPTION;
+        entries.push(
+          `- [${title.replace(/[[\]]/g, "")}](${pagePathToUrl(page)}): ${description}`,
+        );
+      }
+
+      if (missing.length) {
+        console.warn(
+          `\n[seo] ${missing.length} page(s) have no entry in .vitepress/seo.ts:\n  ${missing.join("\n  ")}\n`,
+        );
+      }
+
+      const home = pageSeo["index.md"];
+      const llms = [
+        `# ${SITE_NAME}`,
+        "",
+        `> ${home.description}`,
+        "",
+        `AdventureLog is free and open source (GPL-3.0). Source code: ${REPO_URL}`,
+        repo.version ? `Latest release: ${repo.version}` : "",
+        "",
+        "## Documentation",
+        "",
+        ...entries,
+        "",
+      ]
+        .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
+        .join("\n");
+
+      writeFileSync(join(siteConfig.outDir, "llms.txt"), llms);
+    },
+
+    themeConfig: {
+      nav: [
+        { text: "Home", link: "/" },
+        { text: "Install", link: "/docs/install/getting_started" },
+        {
+          text: "Configure",
+          link: "/docs/configuration/environment_variables",
+        },
+        { text: "Usage", link: "/docs/usage/usage" },
+        {
+          text: "GitHub",
+          link: REPO_URL,
+        },
+      ],
+      search: {
+        provider: "local",
+        options: {
+          miniSearch: {
+            searchOptions: {
+              // Guides first: release notes mention everything, so rank them well below.
+              // (Serialized to the client, so this must not use outside variables.)
+              boostDocument: (id: string) =>
+                id.includes("/changelogs/") ? 0.15 : 1,
+            },
+          },
+        },
+      },
+      outline: { level: [2, 3], label: "On this page" },
+      returnToTopLabel: "Back to top",
+      sidebarMenuLabel: "Menu",
+      darkModeSwitchLabel: "Theme",
+      editLink: {
+        pattern: `${REPO_URL}/edit/main/documentation/:path`,
+      },
+      lastUpdated: {
+        text: "Last updated",
+        formatOptions: { dateStyle: "medium" },
+      },
+
+      // No footer config: the theme renders its own SiteFooter instead.
+
+      logo: "/adventurelog.png",
+
+      sidebar,
+
+      socialLinks: [
+        { icon: "github", link: REPO_URL },
+        { icon: "discord", link: "https://discord.gg/wRbQ9Egr8C" },
+        { icon: "buymeacoffee", link: "https://buymeacoffee.com/seanmorley15" },
+        { icon: "x", link: "https://x.com/AdventureLogApp" },
+        { icon: "mastodon", link: "https://mastodon.social/@adventurelog" },
+        {
+          icon: "instagram",
+          link: "https://www.instagram.com/adventurelogapp",
+        },
+      ],
+    },
+  });
+};

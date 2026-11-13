@@ -1,82 +1,51 @@
 # Quick Start Installer
 
-The guided installer is an optional way to deploy **Standard Deployment** — the setup most people use. It walks you through configuration interactively, writes your env files, and includes a management menu for updates and backups.
+The guided installer sets up [Standard Deployment](standard.md) for you. It asks a few questions, writes your env file, starts AdventureLog, and installs a management menu for updates and backups.
 
-For manual Standard Deployment setup with Docker Compose, see [Standard Deployment](standard.md).
+## Install
 
-## One-line install
+Check the [requirements](getting_started.md#requirements), then run:
 
 ```bash
 curl -sSL https://get.adventurelog.app | bash
 ```
+
+When it finishes, follow [First Steps](first_steps.md).
 
 ## What the installer does
 
-1. Checks dependencies (Docker, Compose v2, RAM, CPU architecture)
-2. Detects ARM hosts and configures a compatible PostGIS image automatically
-3. Creates the `./adventurelog` project directory (configurable via `INSTALL_DIR`)
-4. Downloads compose files, env files, and management scripts
-5. Walks you through site URL, admin credentials, and optional features (S3, email, integrations)
-6. Starts containers and waits for the `/health` endpoint
-7. Saves credentials to `credentials.txt` when generated
+1. Checks for Docker, Compose v2, enough RAM, and your CPU architecture. On a low-memory host it offers to skip the world data import.
+2. On ARM hosts, picks a compatible PostGIS image.
+3. Creates the `./adventurelog` folder. Set `INSTALL_DIR` to use another one.
+4. Downloads the compose file, env file, and the management scripts (`scripts/deploy.sh`, `backup.sh`, `restore.sh`, `validate-env.sh`).
+5. Asks for your site URL, admin account, and optional features such as S3, email, and integrations.
+6. Starts the containers and waits until AdventureLog answers on `/health`.
+7. Shows the admin password if it generated one, and offers to save it to `credentials.txt`.
 
-## Requirements
+During setup you can choose **Advanced Deployment** instead. It uses `docker/docker-compose.advanced.yml` and `.env.advanced`. See [Advanced Deployment](docker.md).
 
-| Requirement | Details |
-| ----------- | ------- |
-| Docker + Compose v2 | Required |
-| RAM | 2 GB recommended on first boot; ~1 GB afterward |
-| OS | Linux server, VPS, or macOS with Docker Desktop |
-| Domain | Optional — set `SITE_URL` for HTTPS behind a reverse proxy |
+## Manage an existing install
 
-::: tip ARM / Apple Silicon
-The installer automatically uses `imresamu/postgis:16-3.5-alpine` on ARM hosts. AdventureLog images are multi-arch.
-:::
-
-## Setup modes
-
-During installation you can choose:
-
-| Mode | Compose file | Env file | When to use |
-| ---- | ------------ | -------- | ----------- |
-| **Standard Deployment** (default) | `docker-compose.yml` | `.env` | Simplest — one port, auto-derived URLs |
-| **Advanced Deployment** | `docker/docker-compose.advanced.yml` | `.env.advanced` | Full env control, separate frontend/backend ports |
-
-## Management menu
-
-Re-run the installer when an install already exists:
+Run the installer again in the same place, or run the script from your install folder:
 
 ```bash
-curl -sSL https://get.adventurelog.app | bash
-# or from the install directory:
 bash install_adventurelog.sh --manage
 ```
 
-Options include status, update, reconfigure, backup, restore, logs, restart, and uninstall. See [Operations & Maintenance](../configuration/operations.md).
+The menu can show status, update, reconfigure, back up, restore, follow logs, restart, and uninstall. See [Operations](../configuration/operations.md#management-menu).
 
-## Dry run
-
-Preview what the installer would do without making changes:
+## Preview without installing
 
 ```bash
 curl -sSL https://get.adventurelog.app | bash -s -- --dry-run --force-install
-# or from a repo checkout:
-ADVENTURELOG_SKIP_GUM=1 bash install_adventurelog.sh --dry-run --force-install
 ```
 
 ## Uninstall
 
-From the management menu, choose **Uninstall**, or manually:
+Choose **Uninstall** in the management menu, or remove everything by hand. This deletes your data, so [back up](../configuration/backups.md) first.
 
 ```bash
 cd adventurelog
 docker compose --env-file .env down -v
-rm -rf adventurelog
+cd .. && rm -rf adventurelog
 ```
-
-## Next steps
-
-- [Standard Deployment](standard.md) — how the single-container setup works
-- [Advanced Deployment](docker.md) — multi-container configuration
-- [Environment Variables](../configuration/environment_variables.md) — full reference
-- [Other install options](getting_started.md)

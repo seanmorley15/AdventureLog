@@ -1,1 +1,1 @@
-"""The product: places, collections and trips, their media, sharing and backups."""
+"""The product: locations, collections and trips, their media, sharing and backups."""

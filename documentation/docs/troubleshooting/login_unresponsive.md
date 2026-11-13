@@ -1,18 +1,27 @@
-# Troubleshooting: Login and Registration Unresponsive
+# Login and Registration Unresponsive
 
-When you encounter issues with the login and registration pages being unresponsive in AdventureLog, it can be due to various reasons. This guide will help you troubleshoot and resolve the unresponsive login and registration pages in AdventureLog.
+**Symptom:** the login or sign-up button does nothing, or the request fails with an error such as `403` or `ERR_CONNECTION_REFUSED`.
 
-1. Check to make sure the backend container is running and accessible.
+**Cause:** almost always a URL setting that doesn't match the address you open in the browser, so the backend rejects the request as cross-site (CSRF), or the frontend can't reach the backend.
 
-   - Check the backend container logs to see if there are any errors or issues blocking the container from running.
-2. Check the connection between the frontend and backend containers.
+## Fix on Standard Deployment
 
-   - Attempt login with the browser console network tab open to see if there are any errors or issues with the connection between the frontend and backend containers. If there is a connection issue, the code will show an error like `Failed to load resource: net::ERR_CONNECTION_REFUSED`. If this is the case, check the `PUBLIC_SERVER_URL` in the frontend container and refer to the installation docs to ensure the correct URL is set.
-   - If the error is `403`, continue to the next step.
+1. Set `SITE_URL` in `.env` to the exact address in your browser's address bar, including `http://` or `https://` and any port. For example `https://adventurelog.example.com` or `http://192.168.1.20:8015`.
+2. Open AdventureLog only at that address. Forms are accepted from the `SITE_URL` origin, so signing in at `http://localhost:8015` fails when `SITE_URL` is your domain.
+3. Restart: `docker compose --env-file .env up -d`.
 
-3. The error most likely is due to a CSRF security config issue in either the backend or frontend.
+## Fix on Advanced Deployment
 
-   - Check that the `ORIGIN` variable in the frontend is set to the URL where the frontend is access and you are accessing the app from currently.
-   - Check that the `CSRF_TRUSTED_ORIGINS` variable in the backend is set to a comma separated list of the origins where you use your backend server and frontend. One of these values should match the `ORIGIN` variable in the frontend.
+1. Open your browser's developer tools, go to the **Network** tab, and try to sign in.
+2. If a request fails with `ERR_CONNECTION_REFUSED`, the frontend can't reach the backend. Check that `PUBLIC_SERVER_URL` is `http://server:8000` (the internal Docker address), and that the backend container is running.
+3. If it fails with `403`, check the URL settings in `.env.advanced`:
+   - `ORIGIN` is the address you use to open the frontend.
+   - `CSRF_TRUSTED_ORIGINS` lists both the frontend and backend addresses, and one of them matches `ORIGIN`.
+   - Behind a reverse proxy on one domain, set `SITE_URL` instead and delete the four URL settings above, which otherwise take precedence.
+4. Restart the containers.
 
-4. If you are still experiencing issues, please refer to the [AdventureLog Discord Server](https://discord.gg/wRbQ9Egr8C) for further assistance, providing as much detail as possible about the issue you are experiencing!
+See [URLs](../install/docker.md#urls) for what each setting does. `bash scripts/validate-env.sh .env.advanced` catches common mistakes.
+
+## Still not working
+
+Check the backend log for errors. See [Common Issues](common_issues.md#first-read-the-log).

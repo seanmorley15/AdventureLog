@@ -1,41 +1,31 @@
-# Google Maps Integration
+# Google Maps
 
-To enable Google Maps integration in AdventureLog, you'll need to create a Google Maps API key. This key allows AdventureLog to use Google Maps services such as geocoding and location search throughout the application.
+By default AdventureLog uses OpenStreetMap to search for places and look up addresses. With a Google Maps API key, it uses Google instead for place search, place details, recommendations, and addresses.
 
-Follow the steps below to generate your own API key:
+**Who sets it up:** the server admin, once, for everyone on the server. Users see it as on or off under **Settings → Integrations**.
 
-## Google Cloud Console Setup
+## Create an API key
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
-2. Create an account if you don't have one in order to access the console.
-3. Click on the project dropdown in the top bar.
-4. Click **New Project**.
-5. Name your project (e.g., `AdventureLog Maps`) and click **Create**.
-6. Once the project is created, ensure it is selected in the project dropdown.
-7. Click on the **Navigation menu** (three horizontal lines in the top left corner).
-8. Navigate to **Google Maps Platform**. Google may ask you to link a billing account (payment details) to the project, even if your usage stays within the free monthly usage. See [Costs](#costs).
-9. Click on **Keys & Credentials** in the left sidebar.
-10. Click on **Create credentials** and select **API key**.
-11. A dialog will appear with your new API key. Copy this key for later use.
-12. Restrict the key to the **Geocoding API** and the **Places API (New)**.
-13. Click on **APIs & Services** in the left sidebar.
-14. Filter product by Places and tiers by Essentials and enable both the Geocoding API and the Places API (New).
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and sign in, or create an account.
+2. Open the project dropdown in the top bar, choose **New Project**, name it (for example `AdventureLog Maps`), and choose **Create**. Make sure the new project is selected.
+3. Open the navigation menu and go to **Google Maps Platform**. Google may ask you to link a billing account, even if your usage stays within the free monthly usage. See [Costs](#costs).
+4. Go to **APIs & Services**, filter products by **Places** and tiers by **Essentials**, and enable the **Geocoding API** and the **Places API (New)**.
+5. Go to **Keys & Credentials**, choose **Create credentials → API key**, and copy the key.
+6. Restrict the key to the **Geocoding API** and the **Places API (New)**. See [Securing the API key](#securing-the-api-key).
 
 ::: tip
 AdventureLog versions _v0.10.0 and lower_ use the legacy **Places API** instead of **Places API (New)**.
 :::
 
-## Configuration in AdventureLog
+## Server setup
 
-Set the API key in your environment file or configuration under the backend service of AdventureLog. This is typically done in the `docker-compose.advanced.yml` file or directly in your environment variables `.env.advanced` file.
+Add the key to your env file (`.env` for Standard Deployment, `.env.advanced` for Advanced, where it belongs to the backend `server` service), then restart:
 
 ```env
-GOOGLE_MAPS_API_KEY=your_api_key_here
+GOOGLE_MAPS_API_KEY=your_api_key
 ```
 
 ## What AdventureLog uses Google for
-
-Once this is set, AdventureLog will be able to utilize Google Maps services for geocoding and location searches instead of relying on the default OpenStreetMap services.
 
 | Feature | Google API method |
 | ------- | ----------------- |
@@ -47,7 +37,7 @@ Once this is set, AdventureLog will be able to utilize Google Maps services for 
 
 ## Securing the API key
 
-Photos in search results and recommendations are loaded directly by the browser from a Google URL that contains the API key. Anyone who can use your AdventureLog instance can therefore see the key. It's therefore a good idea to set some restrictions.
+Photos in search results and recommendations are loaded by the browser from a Google URL that contains the API key, so anyone who can use your AdventureLog server can see the key. Restrict it.
 
 Edit the key under **Keys & Credentials** and set:
 
@@ -55,7 +45,7 @@ Edit the key under **Keys & Credentials** and set:
 - **Application**: optionally, restrict the key to the public **IP address(es)** of your server.
 
 ::: info
-Photos in search results and recommendations are loaded directly by the browser. With an IP address restriction, therefore, photos only load for users whose public IP address is on the list (for example, users on the same network as the server); search and recommendations still work for everyone.
+Photos in search results and recommendations are loaded directly by the browser. With an IP address restriction, photos only load for users whose public IP address is on the list (for example, users on the same network as the server); search and recommendations still work for everyone.
 :::
 
 ## Costs

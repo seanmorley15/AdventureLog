@@ -5,16 +5,16 @@ dependencies point, and how to find your way from a URL to the code and its test
 
 ## The apps
 
-| App | What it owns |
-|---|---|
-| `core` | Helpers with no knowledge of any app: geo and date maths, parsing, caching, pagination, the outbound HTTP rules (`net.py`), base serializers, the API's error handling (`errors.py`, `exceptions.py`), its schema generation (`openapi.py`) and routers (`routers.py`), shared test helpers (`testing.py`). |
-| `worldtravel` | Countries, regions, cities and which of them a user has visited. |
-| `jobs` | Background work: the `BackgroundJob` a user can follow, the `job_task`/`start_job` helpers, the scheduled maintenance, and the admin and API for both. It does not know any other app; they queue jobs through it. See [Background jobs](API.md#background-jobs). |
-| `adventures` | The product: places, collections, trips and their day plan, transport, lodging, notes, media, comments, sharing, backups. |
-| `users` | Accounts, sign-in and API keys, public profiles, invitations. |
-| `integrations` | Immich, Strava, Wanderer and Endurain. |
-| `billing`, `cloud` | Stripe and hosted-mode access. Only active in cloud deployments. |
-| `main` | The project: settings, root URLs, sessions. |
+| App                | What it owns                                                                                                                                                                                                                                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core`             | Helpers with no knowledge of any app: geo and date maths, parsing, caching, pagination, the outbound HTTP rules (`net.py`), base serializers, the API's error handling (`errors.py`, `exceptions.py`), its schema generation (`openapi.py`) and routers (`routers.py`), shared test helpers (`testing.py`). |
+| `worldtravel`      | Countries, regions, cities and which of them a user has visited.                                                                                                                                                                                                                                            |
+| `jobs`             | Background work: the `BackgroundJob` a user can follow, the `job_task`/`start_job` helpers, the scheduled maintenance, and the admin and API for both. It does not know any other app; they queue jobs through it. See [Background jobs](API.md#background-jobs).                                           |
+| `adventures`       | The product: locations, collections, trips and their day plan, transport, lodging, notes, media, comments, sharing, backups.                                                                                                                                                                                |
+| `users`            | Accounts, sign-in and API keys, public profiles, invitations.                                                                                                                                                                                                                                               |
+| `integrations`     | Immich, Strava, Wanderer and Endurain.                                                                                                                                                                                                                                                                      |
+| `billing`, `cloud` | Stripe and hosted-mode access. Only active in cloud deployments.                                                                                                                                                                                                                                            |
+| `main`             | The project: settings, root URLs, sessions.                                                                                                                                                                                                                                                                 |
 
 Dependencies point **down** this list: `main` -> `cloud`/`billing` -> `users`/`integrations` -> `adventures` ->
 `worldtravel`/`jobs` -> `core`. `.importlinter` enforces it in CI (`lint-imports`). There are two deliberate
@@ -39,22 +39,22 @@ management/        management commands (snake_case names)
 
 **Where does new code go?**
 
-- A *view* should only translate between HTTP and a function call. If it has a loop over records, it belongs in a service.
-- A *service* raises a domain error (`DayPlanError`, `QuickAddError`, `BackupError`, `IntegrationError`, all
+- A _view_ should only translate between HTTP and a function call. If it has a loop over records, it belongs in a service.
+- A _service_ raises a domain error (`DayPlanError`, `QuickAddError`, `BackupError`, `IntegrationError`, all
   `core.errors.ServiceError`). `core.exceptions.api_exception_handler` turns it into the API's error body and
   status. Services do not import DRF.
-- A *provider* only talks to one outside service and returns data (`core.results.ProviderResult`). No database.
-- A *util* has no side effects.
+- A _provider_ only talks to one outside service and returns data (`core.results.ProviderResult`). No database.
+- A _util_ has no side effects.
 
 The larger features are packages:
 
-| Package | Purpose |
-|---|---|
-| `services/day_plan/` | The day-by-day trip planner. Layered from `errors`, `constants`, `dates` up through `registry`, `ordering`, `spans`, then `conversion`, `days`, `placement`, `visits`. |
-| `services/backup/` | The whole-account backup and the single-collection archive. One exporter and one restorer serve both. |
-| `services/exports/` | The printable PDFs (a Trip Book for a trip, a Field Guide for a folder; `pdf/maps.py` draws their maps) and the share image. |
-| `services/geocoding/` | Reverse geocoding: provider choice, naming a place, matching it to a region and city. |
-| `services/quick_add.py` | Creating a place or lodging from a map pin. |
+| Package                 | Purpose                                                                                                                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `services/day_plan/`    | The day-by-day trip planner. Layered from `errors`, `constants`, `dates` up through `registry`, `ordering`, `spans`, then `conversion`, `days`, `placement`, `visits`. |
+| `services/backup/`      | The whole-account backup and the single-collection archive. One exporter and one restorer serve both.                                                                  |
+| `services/exports/`     | The printable PDFs (a Trip Book for a trip, a Field Guide for a folder; `pdf/maps.py` draws their maps) and the share image.                                           |
+| `services/geocoding/`   | Reverse geocoding: provider choice, naming a place, matching it to a region and city.                                                                                  |
+| `services/quick_add.py` | Creating a place or lodging from a map pin.                                                                                                                            |
 
 ## Tracing an endpoint
 

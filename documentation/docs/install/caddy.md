@@ -1,8 +1,10 @@
-# Installation with Caddy
+# Caddy
 
-Caddy is a modern HTTP reverse proxy. It automatically integrates with Let's Encrypt (or other certificate providers) to generate TLS certificates for your site.
+[Caddy](https://caddyserver.com/) is a web server that gets HTTPS certificates automatically. Use it to serve AdventureLog on your own domain.
 
-As an example, if you want to add Caddy to your Docker compose configuration, add the following service to your `docker-compose.advanced.yml`:
+## 1. Add Caddy to your compose file
+
+Add a `caddy` service next to AdventureLog's services, and its volumes:
 
 ```yaml
 services:
@@ -10,8 +12,6 @@ services:
     image: docker.io/library/caddy:2
     container_name: adventurelog-caddy
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
@@ -21,46 +21,45 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 
-  web: ...
-  server: ...
-  db: ...
+  # ...AdventureLog's services stay as they are
 
 volumes:
   caddy_data:
   caddy_config:
 ```
 
-Since all ingress traffic to the AdventureLog containsers now travels through Caddy, we can also remove the external ports configuration from those containsers in the `docker-compose.advanced.yml`. Just delete this configuration:
+All traffic now goes through Caddy, so you can remove the `ports:` from AdventureLog's own services.
 
-```yaml
-  web:
-    ports:
-      - "8015:3000"
-  server:
-    ports:
-      - "8016:80"
-```
+## 2. Write the Caddyfile
 
-That's it for the Docker compose changes. Of course, there are other methods to run Caddy which are equally valid.
+Create `caddy/Caddyfile`, in the same folder as the compose file, with your domain:
 
-However, we also need to configure Caddy. For this, create a file `./caddy/Caddyfile` in which you configure the requests which are proxied to the frontend and backend respectively and what domain Caddy should request a certificate for:
+::: code-group
 
-```
+```txt [Standard Deployment]
 adventurelog.example.com {
-
-  @frontend {
-    not path /media* /admin* /static* /accounts*
-  }
-  reverse_proxy @frontend web:3000
-
-  reverse_proxy server:80
+  reverse_proxy app:80
 }
 ```
 
-Once configured, you can start up the containsers:
-
-```bash
-docker compose up
+```txt [Advanced Deployment]
+adventurelog.example.com {
+  @backend path /media* /admin* /static* /accounts*
+  reverse_proxy @backend server:80
+  reverse_proxy web:3000
+}
 ```
 
-Your AdventureLog should now be up and running.
+:::
+
+## 3. Set AdventureLog's address
+
+Set `SITE_URL=https://adventurelog.example.com` in your env file. On Advanced Deployment, also delete or comment out `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS`; they are derived from `SITE_URL` only when they aren't set.
+
+## 4. Start
+
+```bash
+docker compose --env-file .env up -d
+```
+
+For Advanced Deployment, use `--env-file .env.advanced -f docker/docker-compose.advanced.yml`. Open your domain and follow [First Steps](first_steps.md).

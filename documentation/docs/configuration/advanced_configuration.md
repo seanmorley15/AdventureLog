@@ -45,15 +45,7 @@ The installer offers `SKIP_WORLD_DATA=1` automatically when it detects limited R
 
 ## Multi-factor authentication
 
-MFA (TOTP) is configured per-user in the app, not via environment variables:
-
-1. Log in and open **Settings → Security**
-2. Enable **Multi-Factor Authentication**
-3. Scan the QR code with an authenticator app
-
-## Mobile QR login
-
-AdventureLog supports QR-based mobile login from **Settings → Security**. No server-side configuration is required.
+Multi-factor authentication (TOTP) needs no server settings. Each user turns it on under **Settings → Security**. See [Account and Settings](../usage/settings.md#security).
 
 ## Cloud billing (hosted only)
 

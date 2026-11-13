@@ -114,16 +114,16 @@ Built for travelers who want to track, plan, and remember their travel experienc
 
 ## Features
 
-|     | Feature                 | What you get                                                                               |
-| --- | ----------------------- | ------------------------------------------------------------------------------------------ |
-| 📍  | **Locations & visits**  | Pin places on the map with dates, notes, photos, categories, tags, and multi-visit history |
-| 🗺️  | **Interactive map**     | Filter by visited / planned, add locations by click, 2D & 3D views                         |
-| ✈️  | **Trip itineraries**    | Multi-day collections with flights, lodging, checklists, links & calendar views            |
-| 🤝  | **Collaboration**       | Share locations and itineraries via public links or invite other users to edit together    |
-| 🌍  | **World travel book**   | Track countries, regions, and cities — with stats and progress milestones                  |
-| 🥾  | **Trails & activities** | Attach hiking routes, GPX tracks, distance, elevation & outdoor activity logs              |
-| 🔍  | **Search & organize**   | Full-text search, custom categories, public/private visibility                             |
-| 🔐  | **Security**            | MFA, API keys, social auth (Google, GitHub, Authelia & more)                               |
+|     | Feature                 | What you get                                                                                  |
+| --- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| 📍  | **Locations & visits**  | Pin locations on the map with dates, notes, photos, categories, tags, and multi-visit history |
+| 🗺️  | **Interactive map**     | Filter by visited / planned, add locations by click, 2D & 3D views                            |
+| ✈️  | **Trip itineraries**    | Multi-day collections with flights, lodging, checklists, links & calendar views               |
+| 🤝  | **Collaboration**       | Share locations and itineraries via public links or invite other users to edit together       |
+| 🌍  | **World travel book**   | Track countries, regions, and cities — with stats and progress milestones                     |
+| 🥾  | **Trails & activities** | Attach hiking routes, GPX tracks, distance, elevation & outdoor activity logs                 |
+| 🔍  | **Search & organize**   | Full-text search, custom categories, public/private visibility                                |
+| 🔐  | **Security**            | MFA, API keys, social auth (Google, GitHub, Authelia & more)                                  |
 
 ### Integrations
 

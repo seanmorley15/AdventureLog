@@ -1,29 +1,32 @@
-# Immich Integration
+# Immich
 
-### What is Immich?
+[Immich](https://immich.app/) is a self-hosted photo and video library. Connect it to pick photos from your Immich library for any location, instead of uploading them again.
 
-<!-- immich banner -->
+**Who sets it up:** each user connects their own Immich account. The server admin doesn't need to do anything.
 
-![Immich Banner](https://repository-images.githubusercontent.com/455229168/ebba3238-9ef5-4891-ad58-a3b0223b12bd)
+## Connect your account
 
-Immich is a self-hosted, open-source platform that allows users to backup and manage their photos and videos similar to Google Photos, but with the advantage of storing data on their own private server, ensuring greater privacy and control over their media.
+1. **Create an API key in Immich.** Open your avatar menu, go to **Account Settings → API Keys**, and choose **New API Key**. Name it `AdventureLog` and give it these permissions: `asset.read`, `asset.view`, `album.read`, `library.read`, `user.read`. Copy the key.
+2. **Add it to AdventureLog.** Go to **Settings → Integrations → Immich** and enter:
+   - **Immich Server URL**: the address of the Immich API, which usually ends in `/api`, for example `https://immich.example.com/api`. AdventureLog's server connects to it, so use an address that server can reach. `localhost` usually doesn't work in Docker; use your server's IP address or domain.
+   - **Immich API Key**: the key from step 1.
+   - **Copy Images Locally** (optional): stores a copy of each photo you pick on the AdventureLog server, so it still shows when Immich is offline. Uses more disk space.
+3. Choose **Enable Integration**.
 
-- [Immich Website and Documentation](https://immich.app/)
-- [GitHub Repository](https://github.com/immich-app/immich)
+## Use it
 
-### How to integrate Immich with AdventureLog?
+When you add photos to a location, choose Immich and find photos in one of three ways:
 
-To integrate Immich with AdventureLog, you need to have an Immich server running and accessible from where AdventureLog is running.
+- **By Date**: photos from one day. If the location has a visit, it opens on the latest visit date.
+- **By Album**: photos from an Immich album.
+- **Search using Immich**: Immich's own search.
 
-1. Obtain the Immich API Key from the Immich server.
-   - In the Immich web interface, click on your user profile picture, go to `Account Settings` > `API Keys`.
-   - Click `New API Key` and name it something like `AdventureLog`.
-   - Make sure the key has the following permissions: `asset.read, asset.view, album.read, library.read, user.read`
-   - Copy the generated API Key, you will need it in the next step.
-2. Go to the AdventureLog web interface, click on your user profile picture, go to `Settings` and scroll down to the `Immich Integration` section.
-   - Enter the URL of your Immich server, e.g. `https://immich.example.com/api`. Note that `localhost` or `127.0.0.1` will probably not work because Immich and AdventureLog are running on different docker networks. It is recommended to use the IP address of the server where Immich is running ex `http://my-server-ip:port` or a domain name.
-   - Paste the API Key you obtained in the previous step.
-   - Click `Connect` to save the settings.
-3. Now, when you are adding images to an adventure, you will see an option to search for images in Immich or upload from an album. If that adventure has a visit, the date filter opens on the latest visit date. You can still choose another day.
+A location with Immich photos can also open its spot on your Immich map.
 
-Enjoy the privacy and control of managing your travel media with Immich and AdventureLog! 🎉
+## Troubleshooting
+
+| Problem | Fix |
+| ------- | --- |
+| "Error connecting to Immich server" | Check that the URL ends in `/api` and that the AdventureLog server can reach it. See [An integration can't connect](../troubleshooting/common_issues.md#an-integration-can-t-connect). |
+| Validation fails | Check the API key and its permissions. |
+| Immich photos don't appear on maps | Run `backfill_image_coordinates` for photos added before their location was stored. See [Management Commands](management_commands.md#photos-and-files). |

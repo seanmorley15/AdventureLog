@@ -6,7 +6,7 @@ Slow work does not run while you wait. AdventureLog queues it in the database an
 
 | Work | What you see |
 | ---- | ------------ |
-| Looking up the country, region and city of a place you saved | The place appears at once; its region fills in a moment later. If OpenStreetMap does not answer, it is tried again for several minutes. |
+| Looking up the country, region and city of a location you saved | The location appears at once; its region fills in a moment later. If OpenStreetMap does not answer, it is tried again for several minutes. |
 | E-mails about `@mentions` in a comment | Sent when the worker gets to them; a mail server that is down is retried. |
 | Deleting the files of a deleted photo or attachment | Removed shortly after, and retried if storage fails. |
 | Account backups, collection archives and PDFs | The button shows "Preparing…" and the download starts when the file is ready. Files are kept for 24 hours. |
@@ -18,7 +18,7 @@ These replace the cron jobs older versions ran inside the container. Times are U
 
 | When | Task |
 | ---- | ---- |
-| Every day at 00:00 | Mark the regions and cities of your visited places as visited |
+| Every day at 00:00 | Mark the regions and cities of your visited locations as visited |
 | Every hour | Delete expired exports and old job records |
 | Every 10 minutes | Start again any job whose worker was killed part-way |
 | Every day at 04:30 | Trim the queue's own history (7 days) |

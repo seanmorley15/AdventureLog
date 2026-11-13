@@ -1,51 +1,45 @@
-# Traefik Reverse Proxy
+# Traefik
 
-Deploy AdventureLog behind [Traefik](https://traefik.io/) with automatic HTTPS and path-based routing using the official compose file.
+Run AdventureLog behind [Traefik](https://traefik.io/) with automatic HTTPS from Let's Encrypt. The repository has a ready-made compose file for this. It runs Advanced Deployment (separate frontend and backend) on one domain.
 
-## Official compose file
+## Requirements
 
-Download [`docker/docker-compose.traefik.yaml`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/docker-compose.traefik.yaml) from the repository. It includes:
+- A domain whose DNS points at your server.
+- Ports `80` and `443` open to the internet, for Let's Encrypt.
+- The general [requirements](getting_started.md#requirements).
 
-- Traefik v2.11 with Let's Encrypt
-- Prebuilt `adventurelog-frontend` and `adventurelog-backend` images (no local build required)
-- Path-based routing: frontend pages on `/`, backend on `/media`, `/admin`, `/accounts`, `/static`
+## Steps
 
-## Required environment variables
+1. Download the compose file and the example env file. The compose file reads `../.env.advanced`, so it goes in a `docker/` folder:
 
-Add these to your `.env` alongside the standard AdventureLog variables:
+   ```bash
+   mkdir -p adventurelog/docker && cd adventurelog
+   wget -P docker https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.traefik.yaml
+   wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.advanced.example
+   cp .env.advanced.example .env.advanced
+   ```
 
-| Variable | Description | Example |
-| -------- | ----------- | ------- |
-| `ACME_EMAIL` | Let's Encrypt registration email | `you@example.com` |
-| `TRAEFIK_DOMAIN` | Public domain for the router | `adventurelog.example.com` |
-| `SITE_URL` | Public HTTPS URL (derives CSRF and frontend origins) | `https://adventurelog.example.com` |
+2. Edit `.env.advanced`. Change `POSTGRES_PASSWORD` and `SECRET_KEY`. Delete or comment out `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS`, which are derived from `SITE_URL` only when they aren't set. Then add:
 
-See [Environment Variables](../configuration/environment_variables.md) for the full list.
+   | Variable | Description | Example |
+   | -------- | ----------- | ------- |
+   | `SITE_URL` | Your public HTTPS address. AdventureLog derives its other URLs from it. | `https://adventurelog.example.com` |
+   | `TRAEFIK_DOMAIN` | The domain Traefik answers on | `adventurelog.example.com` |
+   | `ACME_EMAIL` | Your email for Let's Encrypt | `you@example.com` |
 
-## Getting started
+3. Start everything:
 
-```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.traefik.yaml
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.advanced.example
-cp .env.advanced.example .env.advanced
-# Edit .env: set SITE_URL, ACME_EMAIL, TRAEFIK_DOMAIN, POSTGRES_PASSWORD, SECRET_KEY
-bash scripts/validate-env.sh
-docker compose -f docker/docker-compose.traefik.yaml up -d
-```
+   ```bash
+   docker compose --env-file .env.advanced -f docker/docker-compose.traefik.yaml up -d
+   ```
 
-## Routing overview
+4. Open `https://adventurelog.example.com` and follow [First Steps](first_steps.md).
 
-Traefik routes traffic to two containers on a single domain:
+## How traffic is routed
 
-| Path prefix | Service |
-| ----------- | ------- |
-| `/`, `/api`, app pages | Frontend (SvelteKit) |
-| `/media`, `/admin`, `/accounts`, `/static` | Backend (Django/Gunicorn) |
+| Path | Goes to |
+| ---- | ------- |
+| `/media`, `/admin`, `/accounts`, `/static` | The backend (Django) |
+| Everything else | The frontend (SvelteKit) |
 
-This matches the internal routing model used by [Standard Deployment](standard.md), but with separate frontend and backend services.
-
-## Related guides
-
-- [Advanced Deployment](docker.md) — base configuration without Traefik
-- [Environment Variables](../configuration/environment_variables.md) — URL and CSRF settings
-- [Nginx Proxy Manager](nginx_proxy_manager.md) — alternative reverse proxy
+To use your own Traefik instead of the bundled one, copy the `traefik.*` labels from the `web` and `server` services into your compose file, and put the containers on Traefik's network.

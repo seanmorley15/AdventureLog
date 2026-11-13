@@ -4,10 +4,18 @@ By default, anyone can see what your users choose to make public, even without a
 
 To make the server private to its own users, so that nothing can be seen without signing in, set `ALLOW_PUBLIC_ACCESS` to `False` under the server service in your `docker-compose.yml` (or in your `.env` file):
 
-```yaml
+::: code-group
+
+```env [.env]
+ALLOW_PUBLIC_ACCESS=False
+```
+
+```yaml [docker-compose.yml]
 environment:
   - ALLOW_PUBLIC_ACCESS=False
 ```
+
+:::
 
 Restart the server for the change to take effect. Turning it back to `True` (the default) restores public access without changing anything users have set.
 

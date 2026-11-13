@@ -1,13 +1,26 @@
+import type { DefaultTheme, HeadConfig } from "vitepress";
+
 export type PageSeo = {
   title?: string;
   description: string;
   keywords?: string[];
 };
 
-const DEFAULT_OG_IMAGE =
-  "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png";
+export const SITE_ORIGIN = "https://adventurelog.app";
+export const SITE_NAME = "AdventureLog";
 
-const SITE_ORIGIN = "https://adventurelog.app";
+/** 1200×630 social card cropped from brand/banner.png (scripts/optimize-images.sh). */
+export const OG_IMAGE = {
+  url: `${SITE_ORIGIN}/og/adventurelog.jpg`,
+  width: "1200",
+  height: "630",
+  type: "image/jpeg",
+  alt: "AdventureLog logo, a folded paper map, over a mountain valley with the words The ultimate travel companion",
+};
+
+export const ORG_ID = `${SITE_ORIGIN}/#organization`;
+export const WEBSITE_ID = `${SITE_ORIGIN}/#website`;
+export const APP_ID = `${SITE_ORIGIN}/#software`;
 
 /** Per-page SEO metadata keyed by VitePress relativePath. URLs are preserved for search rankings. */
 export const pageSeo: Record<string, PageSeo> = {
@@ -29,22 +42,38 @@ export const pageSeo: Record<string, PageSeo> = {
   "docs/intro/adventurelog_overview.md": {
     description:
       "Learn what AdventureLog is, its core features for location tracking and trip planning, and why it is a modern open-source alternative to closed travel apps.",
-    keywords: ["AdventureLog features", "open source travel app", "trip planning"],
+    keywords: [
+      "AdventureLog features",
+      "open source travel app",
+      "trip planning",
+    ],
   },
   "docs/install/getting_started.md": {
     description:
       "Install AdventureLog with Standard Deployment — the default for most setups — plus optional guided installer, Advanced Deployment, Kubernetes, and platform guides.",
-    keywords: ["AdventureLog install", "standard deployment docker", "self-hosted travel app setup"],
+    keywords: [
+      "AdventureLog install",
+      "standard deployment docker",
+      "self-hosted travel app setup",
+    ],
   },
   "docs/install/quick_start.md": {
     description:
       "Optional guided installer for Standard Deployment. Interactive configuration, env file setup, and a built-in management menu for updates and backups.",
-    keywords: ["AdventureLog quick start", "guided docker install", "standard deployment installer"],
+    keywords: [
+      "AdventureLog quick start",
+      "guided docker install",
+      "standard deployment installer",
+    ],
   },
   "docs/install/standard.md": {
     description:
       "The default AdventureLog install: one Docker container on a single port. Minimal .env configuration with automatic URL and secret derivation for homelabs and VPS.",
-    keywords: ["AdventureLog standard deployment", "single container docker", "default docker install"],
+    keywords: [
+      "AdventureLog standard deployment",
+      "single container docker",
+      "default docker install",
+    ],
   },
   "docs/install/docker.md": {
     description:
@@ -96,10 +125,71 @@ export const pageSeo: Record<string, PageSeo> = {
       "User guide for AdventureLog: locations, visits, collections, itineraries, world travel, integrations, and collaborative trip planning.",
     keywords: ["how to use AdventureLog", "travel log tutorial"],
   },
+  "docs/usage/locations.md": {
+    title: "Locations and Visits: Logging Where You've Been",
+    description:
+      "How to save locations in AdventureLog with photos, notes, ratings, categories, visits, trails, and activities, and how visited and planned locations work.",
+    keywords: [
+      "AdventureLog locations",
+      "log travel places",
+      "travel journal visits",
+    ],
+  },
+  "docs/usage/trips.md": {
+    title: "Trips and Collections: Plan an Itinerary Day by Day",
+    description:
+      "Plan a trip day by day in AdventureLog with locations, transport, lodging, notes, and checklists, then print a Trip Book or move the collection to another server.",
+    keywords: [
+      "AdventureLog trip planner",
+      "day by day itinerary",
+      "travel collections",
+    ],
+  },
+  "docs/usage/map.md": {
+    title: "The Map: Every Location You've Been or Plan to Go",
+    description:
+      "Use the AdventureLog map to see visited and planned locations, filter by category, show regions, photos, and GPX tracks, and search for new places nearby.",
+    keywords: ["AdventureLog map", "travel map", "visited places map"],
+  },
+  "docs/usage/world_travel.md": {
+    title: "World Travel: Track Countries, Regions, and Cities",
+    description:
+      "Track the countries, regions, and cities you've visited in AdventureLog, see complete and partial countries, and view them on a world map or globe.",
+    keywords: [
+      "AdventureLog world travel",
+      "countries visited tracker",
+      "regions visited",
+    ],
+  },
+  "docs/usage/sharing.md": {
+    title: "Sharing and Privacy: Plan Together and Publish Travel Stories",
+    description:
+      "Share an AdventureLog trip with editors and viewers, create guest links, publish a travel story, and control who can see your locations and profile.",
+    keywords: [
+      "AdventureLog sharing",
+      "collaborative trip planning",
+      "travel story",
+    ],
+  },
+  "docs/configuration/integrations.md": {
+    title:
+      "Integrations: Immich, Strava, Wanderer, Endurain, Google Maps, and SSO",
+    description:
+      "Every service AdventureLog connects to: Immich photos, Strava and Endurain activities, Wanderer trails, Google Maps, OIDC single sign-on, S3 storage, and the API.",
+    keywords: [
+      "AdventureLog integrations",
+      "Immich travel",
+      "Strava import",
+      "self-hosted SSO",
+    ],
+  },
   "docs/configuration/environment_variables.md": {
     description:
       "Complete AdventureLog environment variable reference for Standard Deployment, Advanced Deployment, and optional integrations including URLs, security, and storage.",
-    keywords: ["AdventureLog environment variables", "docker env configuration"],
+    keywords: [
+      "AdventureLog environment variables",
+      "docker env configuration",
+    ],
   },
   "docs/configuration/operations.md": {
     description:
@@ -203,7 +293,7 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/troubleshooting/nginx_failed.md": {
     description:
-      "Diagnose 'Starting nginx: nginx failed' errors in the AdventureLog backend container during Docker startup.",
+      "Fix 'Starting nginx: nginx failed' in older AdventureLog backend containers, caused by renaming the backend service.",
     keywords: ["AdventureLog nginx failed", "backend container error"],
   },
   "docs/guides/admin_panel.md": {
@@ -221,10 +311,98 @@ export const pageSeo: Record<string, PageSeo> = {
       "Migrate AdventureLog to v0.7.1 with the updated in-container nginx and gunicorn Docker Compose layout.",
     keywords: ["AdventureLog v0.7.1 migration", "nginx migration"],
   },
+  "docs/install/first_steps.md": {
+    title: "First Steps After Installing AdventureLog",
+    description:
+      "Find the generated AdventureLog admin password, secure the admin account, decide who can sign up, and set up email and backups after installing.",
+    keywords: [
+      "AdventureLog admin password",
+      "AdventureLog default login",
+      "after install",
+    ],
+  },
+  "docs/install/production_checklist.md": {
+    title: "Production Checklist for a Self-Hosted AdventureLog Server",
+    description:
+      "Everything to check before others rely on your AdventureLog server: HTTPS, admin account, registration, secrets, rate limits, email, storage, and backups.",
+    keywords: ["AdventureLog production", "self-hosted security checklist"],
+  },
+  "docs/usage/settings.md": {
+    title: "Account and Settings: Profile, Security, and Your Data",
+    description:
+      "Manage your AdventureLog profile and visibility, emails, password, multi-factor authentication, API keys, connected apps, and account backups.",
+    keywords: [
+      "AdventureLog settings",
+      "AdventureLog MFA",
+      "export AdventureLog data",
+    ],
+  },
+  "docs/configuration/backups.md": {
+    title: "Backups and Restore",
+    description:
+      "Back up and restore a self-hosted AdventureLog server: the PostgreSQL database, the media volume, and the env file, by script or by hand, and on a schedule.",
+    keywords: ["AdventureLog backup", "restore AdventureLog", "PostGIS backup"],
+  },
+  "docs/configuration/management_commands.md": {
+    title: "Management Commands",
+    description:
+      "AdventureLog command-line tools for admins: reset a password, import world data, fix territory locations, backfill photo coordinates, and clean up files.",
+    keywords: [
+      "AdventureLog manage.py",
+      "download_countries",
+      "admin commands",
+    ],
+  },
+  "docs/guides/switch_to_standard.md": {
+    title: "Switch from Advanced to Standard Deployment",
+    description:
+      "Move an existing AdventureLog Advanced Deployment to Standard Deployment with one container, keeping every user, location, collection, and photo.",
+    keywords: ["AdventureLog migrate", "Standard Deployment migration"],
+  },
+  "docs/troubleshooting/common_issues.md": {
+    title: "Common Issues and Fixes",
+    description:
+      "Fix common AdventureLog problems: the admin password, login and CSRF errors, missing photos, 502 errors, empty world data, stuck jobs, and integrations that can't connect.",
+    keywords: ["AdventureLog troubleshooting", "AdventureLog not working"],
+  },
   "docs/changelogs/development_timeline.md": {
     description:
       "The origin story and development timeline of AdventureLog from first commit to a full-featured self-hosted travel platform.",
     keywords: ["AdventureLog history", "development timeline"],
+  },
+  "docs/install/easypanel.md": {
+    description:
+      "Deploy AdventureLog on Easypanel with the official one-click template, including the PostGIS database and a public domain.",
+    keywords: ["AdventureLog Easypanel", "one-click deploy"],
+  },
+  "docs/configuration/caching.md": {
+    description:
+      "What AdventureLog caches, for how long, and how to tune or clear it: OpenStreetMap lookups, Wanderer trails, GPX map data, and login sessions.",
+    keywords: ["AdventureLog caching", "OSM cache", "performance"],
+  },
+  "docs/configuration/background_jobs.md": {
+    description:
+      "How AdventureLog runs slow work in a built-in background worker: geocoding, emails, exports and imports, scheduled tasks, and how to check the queue.",
+    keywords: ["AdventureLog background jobs", "worker", "scheduled tasks"],
+  },
+  "docs/configuration/public_access.md": {
+    description:
+      "Make a self-hosted AdventureLog server private with ALLOW_PUBLIC_ACCESS, and see what visitors without an account can and can't view.",
+    keywords: [
+      "AdventureLog public access",
+      "private instance",
+      "ALLOW_PUBLIC_ACCESS",
+    ],
+  },
+  "docs/changelogs/v0-14-0.md": {
+    description:
+      "AdventureLog v0.14.0 Abisko release: day-by-day trip planning, rebuilt sharing with roles and guest links, comments, the printable Trip Book, and a documented API.",
+    keywords: ["AdventureLog v0.14.0 changelog", "Abisko release"],
+  },
+  "docs/changelogs/v0-13-1.md": {
+    description:
+      "AdventureLog v0.13.1 Cadillac release: duplicate-place detection, a preferred date format, faster visit logging, richer collection exports, and security updates.",
+    keywords: ["AdventureLog v0.13.1 changelog", "Cadillac release"],
   },
   "docs/changelogs/v0-13-0.md": {
     description:
@@ -232,7 +410,8 @@ export const pageSeo: Record<string, PageSeo> = {
     keywords: ["AdventureLog v0.13.0 changelog", "Acadia release"],
   },
   "docs/changelogs/v0-12-1.md": {
-    description: "AdventureLog v0.12.1 release notes, bug fixes, and improvements.",
+    description:
+      "AdventureLog v0.12.1 release notes, bug fixes, and improvements.",
     keywords: ["AdventureLog v0.12.1 changelog"],
   },
   "docs/changelogs/v0-12-0.md": {
@@ -284,25 +463,31 @@ export function buildPageHead(
   relativePath: string,
   pageTitle: string,
   seo: PageSeo,
-): Array<[string, Record<string, string>] | [string, Record<string, string>, string]> {
+): HeadConfig[] {
+  const isHome = relativePath === "index.md";
   const description = seo.description;
   const canonicalUrl = pagePathToUrl(relativePath);
   const ogTitle = seo.title ?? pageTitle;
 
-  const head: Array<
-    [string, Record<string, string>] | [string, Record<string, string>, string]
-  > = [
+  const head: HeadConfig[] = [
     ["meta", { name: "description", content: description }],
     ["meta", { property: "og:title", content: ogTitle }],
     ["meta", { property: "og:description", content: description }],
     ["meta", { property: "og:url", content: canonicalUrl }],
-    ["meta", { property: "og:type", content: "article" }],
-    ["meta", { property: "og:image", content: DEFAULT_OG_IMAGE }],
-    ["meta", { property: "og:site_name", content: "AdventureLog" }],
+    ["meta", { property: "og:type", content: isHome ? "website" : "article" }],
+    ["meta", { property: "og:site_name", content: SITE_NAME }],
+    ["meta", { property: "og:locale", content: "en_US" }],
+    ["meta", { property: "og:image", content: OG_IMAGE.url }],
+    ["meta", { property: "og:image:type", content: OG_IMAGE.type }],
+    ["meta", { property: "og:image:width", content: OG_IMAGE.width }],
+    ["meta", { property: "og:image:height", content: OG_IMAGE.height }],
+    ["meta", { property: "og:image:alt", content: OG_IMAGE.alt }],
     ["meta", { name: "twitter:card", content: "summary_large_image" }],
+    ["meta", { name: "twitter:site", content: "@AdventureLogApp" }],
     ["meta", { name: "twitter:title", content: ogTitle }],
     ["meta", { name: "twitter:description", content: description }],
-    ["meta", { name: "twitter:image", content: DEFAULT_OG_IMAGE }],
+    ["meta", { name: "twitter:image", content: OG_IMAGE.url }],
+    ["meta", { name: "twitter:image:alt", content: OG_IMAGE.alt }],
     ["link", { rel: "canonical", href: canonicalUrl }],
   ];
 
@@ -313,4 +498,91 @@ export function buildPageHead(
   return head;
 }
 
-export { DEFAULT_OG_IMAGE, SITE_ORIGIN };
+type Crumb = { name: string; url?: string };
+
+/**
+ * Walks the sidebar to find the trail of group titles leading to a page.
+ * Groups without a link of their own are emitted without a URL.
+ */
+function findTrail(
+  items: DefaultTheme.SidebarItem[],
+  link: string,
+  trail: Crumb[] = [],
+): Crumb[] | null {
+  for (const item of items) {
+    const here: Crumb = {
+      name: item.text ?? "",
+      url: item.link ? linkToUrl(item.link) : undefined,
+    };
+    if (item.link && normalizeLink(item.link) === link) {
+      return [...trail, here];
+    }
+    if (item.items) {
+      const found = findTrail(item.items, link, [...trail, here]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function normalizeLink(link: string): string {
+  return link.replace(/\.(md|html)$/, "").replace(/\/$/, "");
+}
+
+function linkToUrl(link: string): string | undefined {
+  if (/^https?:/.test(link)) return undefined;
+  return `${SITE_ORIGIN}${normalizeLink(link)}.html`;
+}
+
+/** BreadcrumbList + TechArticle for a docs page. */
+export function buildDocsJsonLd(
+  relativePath: string,
+  title: string,
+  description: string,
+  sidebar: DefaultTheme.SidebarItem[],
+  lastUpdated?: number,
+): object[] {
+  const url = pagePathToUrl(relativePath);
+  const link = "/" + relativePath.replace(/\.md$/, "");
+  const trail = findTrail(sidebar, link) ?? [{ name: title, url }];
+
+  // Search engines need a URL on every crumb but the last, so sidebar groups
+  // that are only headings (no page of their own) are left out.
+  const crumbs: Crumb[] = [
+    { name: "Home", url: `${SITE_ORIGIN}/` },
+    ...trail.slice(0, -1).filter((c) => c.url && c.url !== url),
+    { name: title, url },
+  ];
+
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.name,
+      ...(c.url ? { item: c.url } : {}),
+    })),
+  };
+
+  const article = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "@id": `${url}#article`,
+    headline: title,
+    description,
+    url,
+    mainEntityOfPage: url,
+    inLanguage: "en-US",
+    image: OG_IMAGE.url,
+    ...(lastUpdated
+      ? { dateModified: new Date(lastUpdated).toISOString() }
+      : {}),
+    isPartOf: { "@id": WEBSITE_ID },
+    about: { "@id": APP_ID },
+    publisher: { "@id": ORG_ID },
+    author: { "@id": ORG_ID },
+  };
+
+  return [breadcrumb, article];
+}

@@ -41,7 +41,7 @@ from adventures.views import (
 IN_COLLECTION = r'collections/(?P<collection_id>[^/.]+)'
 
 router = DefaultRouter()
-# Places and what happens at them
+# Locations and what happens at them
 router.register(r'locations', LocationViewSet, basename='locations')
 router.register(r'visits', VisitViewSet, basename='visits')
 router.register(r'activities', ActivityViewSet, basename='activities')

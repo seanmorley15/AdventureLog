@@ -1,77 +1,79 @@
-# Installation with Unraid
+# Unraid
 
-AdventureLog is available in the Unraid Community Applications store. You can install it by searching for `AdventureLog` in the Community Applications store, where you will find the frontend and the backend. The database can be found by searching `PostGIS`.
+AdventureLog is in the Unraid Community Applications store as two apps, a frontend and a backend, plus a PostGIS database app. This is an Advanced Deployment, with separate containers.
 
-Community Applications Page for AdventureLog: [AdventureLog on CA Store](https://ca.unraid.net/apps?q=adventurelog)\
-Community Applications Page for PostGIS: [PostGIS on CA Store](https://ca.unraid.net/apps/postgis-0xoswv81175v5s?q=PostGIS)
+- [AdventureLog in Community Applications](https://ca.unraid.net/apps?q=adventurelog)
+- [PostGIS in Community Applications](https://ca.unraid.net/apps/postgis-0xoswv81175v5s?q=PostGIS)
 
-## Installation Configuration
+## Before you start
 
-- **Note:** It is recommended to install the applications in the order of these instructions, as failing to do so could cause issues.
-- Container names can be set to whatever you desire.
-- Also ensure they are all on the same custom network so they can communicate with one another. You can create one by running the following command in your command line, with `example` being set to your desired name. This network will then show up for selection when making the apps/containers.
+Install the three apps **in this order**: database, backend, frontend. Put them all on one custom Docker network, so they can reach each other by container name. Create it from the Unraid terminal, replacing `adventurelog` with any name:
 
 ```bash
-docker network create example
+docker network create adventurelog
 ```
 
-## Database
+The network then appears when you set up each app. Container names can be anything; the steps below refer to them as the database and backend containers.
 
-- Network type should be set to your **custom network**.
-- There is **no** AdventureLog---Database app, to find the database application search for `PostGIS` on the Unraid App Store then add and fill out the fields as shown below
-- Change the repository version to `postgis/postgis:16-3.5`
-- Ensure that the variables `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` are set in the `PostGIS` container. If not, then add them as custom variables. The template should have `POSTGRES_PASSWORD` already and you will simply have to add `POSTGRES_DB` and `POSTGRES_USER`.
-- The forwarded port of `5012` is not needed unless you plan to access the database outside of the container's network.
+## 1. Database
 
-| Name                | Required | Description                                                                      | Default Value |
-| ------------------- | -------- | -------------------------------------------------------------------------------- | ------------- |
-| `POSTGRES_DB`       | Yes      | The name of the database in PostGIS.                                             | `N/A`         |
-| `POSTGRES_USER`     | Yes      | Name of the user generated on first start that will have access to the database. | `N/A`         |
-| `POSTGRES_PASSWORD` | Yes      | Password of the user that will be generated on first start.                      | `N/A`         |
+Search Community Applications for **PostGIS**. There is no separate AdventureLog database app.
 
-- Here's some visual instructions of how to configure the database template, click the image to open larger version in new tab.\
-  [![/static/img/unraid-config-2.png](/unraid-config-2.png)](/unraid-config-2.png)
+- **Network type**: your custom network.
+- **Repository**: change it to `postgis/postgis:16-3.5`.
+- Set these variables. The template has `POSTGRES_PASSWORD`; add the other two.
 
-## Backend
+| Variable | Description |
+| -------- | ----------- |
+| `POSTGRES_DB` | Database name, for example `adventurelog` |
+| `POSTGRES_USER` | Database user, created on first start |
+| `POSTGRES_PASSWORD` | That user's password |
 
-- Network type should be set to your **custom network**.
-- **Note:** If you're running the server in a docker network that is other than "host" (for example "bridge"), then you need to add the IP of the host machine in the CSRF Trusted Origins variable instead of using localhost. This is only necessary when accessing locally, otherwise you will use the domain name.
+The forwarded port `5012` is only needed to reach the database from outside its network.
 
-| Name                    | Required | Description                                                                                                                                                                        | Default Value                                   |
-| ----------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `API Port`              | Yes      | This is the port of the backend. This is a port, not a variable.                                                                                                                   | `8016`                                          |
-| `PGHOST`                | Yes      | This is how the backend will access the database. Use the database container's name.                                                                                               | `N/A`                                           |
-| `PGDATABASE`            | Yes      | Name of the database in PostGIS to access.                                                                                                                                         | `N/A`                                           |
-| `PGUSER`                | Yes      | Name of the user to access with. This is the same as the variable in the database.                                                                                                 | `N/A`                                           |
-| `PGPASSWORD`            | Yes      | Password of the user it's accessing with. This is the same as the variable in the database.                                                                                        | `N/A`                                           |
-| `SECRET_KEY`            | Yes      | Secret Backend Key. Change to anything.                                                                                                                                            | `N/A`                                           |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username for admin access.                                                                                                                                                 | `admin`                                         |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default admin user's email. **Note:** You cannot make more than one user with each email.                                                                                          | `N/A`                                           |
-| `DJANGO_ADMIN_PASSWORD` | No       | First-boot admin password. Empty or weak: a random one is generated and printed once in the container log.                                                                                                                   | `N/A`                                           |
-| `PUBLIC_URL`            | Yes      | This needs to match how you will connect to the backend, so either local ip with matching port or domain. It is used for the creation of image URLs.                               | `http://IP_ADDRESS:8016`                        |
-| `FRONTEND_URL`          | Yes      | This needs to match how you will connect to the frontend, so either local ip with matching port or domain. This link should be available for all users. Used for email generation. | `http://IP_ADDRESS:8015`                        |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | This needs to be changed to the URLs of how you connect to your backend server and frontend. These values are comma-separated and usually the same as the 2 above values.          | `http://IP_ADDRESS:8016,http://IP_ADDRESS:8015` |
+[![Unraid PostGIS template settings](/unraid-config-2.png)](/unraid-config-2.png)
 
-- Here's some visual instructions of how to configure the backend template, click the image to open larger version in new tab.\
-  [![static/img/unraid-config-1.png](/unraid-config-1.png)](/unraid-config-1.png)
+## 2. Backend
 
-## Frontend
+- **Network type**: your custom network.
 
-- Network type should be set to your **custom network**.
-- **Note:** The default value for `PUBLIC_SERVER_URL` is `http://IP_ADDRESS:8000`, however `IP_ADDRESS` **should be changed** to the name of the backend container for simplicity.
+| Setting | Value |
+| ------- | ----- |
+| API port | `8016`. This is a port mapping, not a variable. |
+| `PGHOST` | The database container's name |
+| `PGDATABASE`, `PGUSER`, `PGPASSWORD` | The same as `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` above |
+| `SECRET_KEY` | A long random string. Keep it: changing it signs everyone out. |
+| `DJANGO_ADMIN_USERNAME` | The first admin's username, for example `admin` |
+| `DJANGO_ADMIN_EMAIL` | The first admin's email. Each email can belong to one user only. |
+| `DJANGO_ADMIN_PASSWORD` | Optional. Empty or weak: a password is generated and printed once in the container log. See [First Steps](first_steps.md#_2-find-the-admin-password). |
+| `PUBLIC_URL` | How your browser reaches the backend, such as `http://192.168.1.20:8016` or your domain. Photo URLs use it. |
+| `FRONTEND_URL` | How your browser reaches the frontend, such as `http://192.168.1.20:8015`. Email links use it. |
+| `CSRF_TRUSTED_ORIGINS` | Both addresses above, comma-separated |
 
-| Name                | Required  | Description                                                                                                                                              | Default Value            |
-| ------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `WEB UI Port`       | Yes       | The port of the frontend. This is not a variable.                                                                                                        | `8015`                   |
-| `PUBLIC_SERVER_URL` | Yes       | What the frontend SSR server uses to connect to the backend. Change `IP_ADDRESS` to the name of the backend container.                                   | `http://IP_ADDRESS:8000` |
-| `ORIGIN`            | Sometimes | Set to the URL you will access the frontend from, such as localhost with correct port, or set it to the domain of what you will access the app from.     | `http://IP_ADDRESS:8015` |
-| `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **bytes**. | `Infinity`               |
+On a network other than `host`, use the server's IP address in these URLs, not `localhost`.
 
-- Here's some visual instructions of how to configure the frontend template, click the image to open larger version in new tab.\
-  [![/static/img/unraid-config-3.png](/unraid-config-3.png)](/unraid-config-3.png)
+[![Unraid backend template settings](/unraid-config-1.png)](/unraid-config-1.png)
 
-## Additional Resources
+## 3. Frontend
 
-Youtuber AlienTech42 has created a helpful video walking through the installation of AdventureLog on Unraid:
+- **Network type**: your custom network.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/hJnoePdAhXg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+| Setting | Value |
+| ------- | ----- |
+| Web UI port | `8015`. This is a port mapping, not a variable. |
+| `PUBLIC_SERVER_URL` | `http://<backend container name>:8000`. The template's default uses `IP_ADDRESS`; replace it with the backend container's name. |
+| `ORIGIN` | How your browser reaches the frontend, such as `http://192.168.1.20:8015` or your domain |
+| `BODY_SIZE_LIMIT` | Maximum upload size in bytes. The default, `Infinity`, has no limit. |
+
+[![Unraid frontend template settings](/unraid-config-3.png)](/unraid-config-3.png)
+
+## Video walkthrough
+
+AlienTech42 made a video of the whole installation:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/hJnoePdAhXg" title="Installing AdventureLog on Unraid" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+## Next steps
+
+- [First Steps](first_steps.md): sign in, secure the admin account, and decide who can join.
+- [Updating](../configuration/updating.md): update the three apps from the Docker tab.

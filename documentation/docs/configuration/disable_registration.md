@@ -1,10 +1,20 @@
 # Disable Registration
 
-To disable registration, you can set the following variable in your docker-compose.advanced.yml under the server service:
+To disable registration, set the following variables in your `.env` file, or under the server service in your compose file:
 
-```yaml
+::: code-group
+
+```env [.env]
+DISABLE_REGISTRATION=True
+# OPTIONAL: the message shown when registration is disabled
+DISABLE_REGISTRATION_MESSAGE='Registration is disabled for this instance of AdventureLog.'
+```
+
+```yaml [docker-compose.yml]
 environment:
   - DISABLE_REGISTRATION=True
-  # OPTIONAL: Set the message to display when registration is disabled
+  # OPTIONAL: the message shown when registration is disabled
   - DISABLE_REGISTRATION_MESSAGE='Registration is disabled for this instance of AdventureLog.'
 ```
+
+:::
