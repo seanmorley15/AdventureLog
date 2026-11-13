@@ -11,7 +11,21 @@ import { isVisitAllDay, isAllDayEntry } from '#lib';
 import type { DateFormatPreference } from '#lib/dateFormat.js';
 // @ts-ignore luxon types are not bundled in this project
 import { DateTime } from 'luxon';
-import type { Collection, Lodging, Transportation } from '#lib/types.js';
+import type {
+	Checklist,
+	Collection,
+	CollectionItineraryItem,
+	Location,
+	Lodging,
+	Note,
+	Transportation
+} from '#lib/types.js';
+import {
+	findObject,
+	placementRange,
+	placementType,
+	recordedVisitId
+} from '#lib/collections/plan.js';
 
 export const CALENDAR_EVENT_COLORS: Record<CalendarEventType, string> = {
 	visit: '#3b82f6',
@@ -430,7 +444,147 @@ export function buildCollectionCalendarEvents(
 		});
 	});
 
+	const ids = new Set(events.map((event) => event.id));
+	for (const item of collection.itinerary || []) {
+		const event = itineraryEvent(collection, item, mode, userTimezone, labels, dateFormat);
+		if (event && !ids.has(event.id)) {
+			ids.add(event.id);
+			events.push(event);
+		}
+	}
+
 	return events.sort((a, b) => a.start.localeCompare(b.start));
+}
+
+/**
+ * What the trip plan adds to the calendar (#1260), by the same rules as the main calendar:
+ * a place planned on a day shows as a stop unless a visit already covers it, dated notes and
+ * checklists show on their day, and a stay or journey without dates of its own shows on the
+ * days it is planned. Trip-wide, optional and undated placements stay off the calendar.
+ */
+function itineraryEvent(
+	collection: Collection,
+	item: CollectionItineraryItem,
+	mode: CalendarTimezoneMode,
+	userTimezone: string,
+	labels: { eventTimezone: string; localTimezone: string },
+	dateFormat?: DateFormatPreference
+): CalendarDisplayEvent | null {
+	if (item.is_global || item.is_optional) return null;
+	const range = placementRange(item);
+	if (!range) return null;
+	const type = placementType(item);
+	const obj = findObject(collection, type, item.object_id);
+	if (!obj) return null;
+
+	if (type === 'location' && recordedVisitId(collection, item)) return null;
+	if (type === 'lodging' && ((obj as Lodging).check_in || (obj as Lodging).check_out)) return null;
+	if (type === 'transportation' && (obj as Transportation).date) return null;
+
+	// Stays and journeys are day-long; a planned time belongs to stops, notes and checklists.
+	const timed =
+		Boolean(item.start_time && item.start_datetime) &&
+		type !== 'lodging' &&
+		type !== 'transportation';
+	const timezone = item.timezone || collection.timezone;
+	const times = buildEventTimes({
+		start: timed ? item.start_datetime : range.start,
+		end: timed ? item.end_datetime || item.start_datetime : range.end,
+		timezone: timed ? timezone : null,
+		mode,
+		allDay: !timed,
+		userTimezone,
+		timezoneLabelEvent: labels.eventTimezone,
+		timezoneLabelLocal: labels.localTimezone,
+		dateFormat
+	});
+	if (!times) return null;
+
+	const shared = {
+		timezone: (timed && timezone) || userTimezone,
+		timezoneUsed: times.timezoneUsed,
+		timezoneLabel: times.timezoneLabel,
+		timezoneMode: mode,
+		isAllDay: times.isAllDay,
+		formattedStart: times.formattedStart,
+		formattedEnd: times.formattedEnd,
+		resourceId: String(obj.id),
+		collectionId: collection.id,
+		collectionName: collection.name
+	};
+	const event = (
+		id: string,
+		eventType: CalendarEventType,
+		icon: string,
+		name: string,
+		props: Partial<CalendarDisplayEvent['extendedProps']>
+	): CalendarDisplayEvent => ({
+		id,
+		title: `${icon} ${name}`,
+		start: times.start,
+		end: times.end,
+		backgroundColor: CALENDAR_EVENT_COLORS[eventType],
+		borderColor: CALENDAR_EVENT_COLORS[eventType],
+		extendedProps: {
+			...shared,
+			type: eventType,
+			adventureName: name,
+			category: '',
+			icon,
+			...props
+		}
+	});
+
+	switch (type) {
+		case 'location': {
+			const place = obj as Location;
+			const icon = place.category?.icon || '📍';
+			return event(`stop-${item.id}`, 'stop', icon, place.name, {
+				adventureId: place.id,
+				category: place.category?.display_name || place.category?.name || 'Stop',
+				location: place.location || '',
+				description: place.description || '',
+				url: `/locations/${place.id}`
+			});
+		}
+		case 'note': {
+			const note = obj as Note;
+			return event(`note-${item.id}`, 'note', '📝', note.name, {
+				category: 'Note',
+				description: note.content || '',
+				url: `/collections/${collection.id}`
+			});
+		}
+		case 'checklist': {
+			const checklist = obj as Checklist;
+			return event(`checklist-${item.id}`, 'checklist', '✅', checklist.name, {
+				category: 'Checklist',
+				url: `/collections/${collection.id}`
+			});
+		}
+		case 'lodging': {
+			const stay = obj as Lodging;
+			return event(`lodging-${stay.id}`, 'lodging', '🏨', stay.name, {
+				category: stay.type || 'Lodging',
+				location: stay.location || '',
+				description: stay.description || '',
+				url: `/lodging/${stay.id}`
+			});
+		}
+		case 'transportation': {
+			const journey = obj as Transportation;
+			const name = journey.name || journey.type || 'Transportation';
+			const icon = getTransportIcon(journey.type);
+			return event(`transport-${journey.id}`, 'transportation', icon, name, {
+				category: journey.type || 'Transportation',
+				location: [journey.from_location, journey.to_location].filter(Boolean).join(' → '),
+				description: journey.description || '',
+				url: `/transportations/${journey.id}`
+			});
+		}
+		default:
+			return null;
+	}
 }
 
 export function formatCalendarRange(start: Date, end: Date): { start: string; end: string } {
