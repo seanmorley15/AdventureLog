@@ -1888,5 +1888,8 @@
     "member_added": "{who} sloot zich aan als {role}",
     "member_left": "{who} verliet de reis",
     "member_removed": "{who} verwijderde {name}"
+  },
+  "jobs": {
+    "preparing": "Uw bestand wordt voorbereid. Dit kan een moment duren voor een groot account."
   }
 }
