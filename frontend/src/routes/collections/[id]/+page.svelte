@@ -18,8 +18,7 @@
 	import { page } from '$app/state';
 	import Lost from '#lib/assets/undraw_lost.svg';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import Calendar from '~icons/mdi/calendar';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 	import ImageDisplayModal from '#lib/components/ImageDisplayModal.svelte';
@@ -78,10 +77,6 @@
 	import TransportationModal from '#lib/components/transportation/TransportationModal.svelte';
 	import LocationModal from '#lib/components/locations/LocationModal.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
 
 	interface Props {
 		data: PageData;
@@ -1372,7 +1367,7 @@
 								Description
 							</h2>
 							<article class="prose max-w-none">
-								{@html DOMPurify.sanitize(renderMarkdown(collection.description))}
+								{@html renderMarkdown(collection.description)}
 							</article>
 						</section>
 					{/if}

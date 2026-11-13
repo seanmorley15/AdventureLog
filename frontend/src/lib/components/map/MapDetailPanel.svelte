@@ -3,8 +3,7 @@
 
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import type {
 		Location,
 		PlaceSearchResult,
@@ -98,14 +97,6 @@
 	let descriptionExpanded = $state(false);
 
 	const DESCRIPTION_COLLAPSE_CHARS = 320;
-
-	function renderMarkdown(markdown: string): string {
-		return marked(markdown) as string;
-	}
-
-	function sanitizeMarkdown(html: string): string {
-		return DOMPurify.sanitize(html);
-	}
 
 	function formatDate(value: string | null | undefined): string {
 		if (!value) return '';
@@ -515,7 +506,7 @@
 					<h3 class="text-sm font-semibold mb-2">{$t('adventures.description')}</h3>
 					{#if descriptionExpanded}
 						<article class="prose prose-sm max-w-none text-base-content">
-							{@html sanitizeMarkdown(renderMarkdown(descriptionText))}
+							{@html renderMarkdown(descriptionText)}
 						</article>
 					{:else if descriptionIsLong}
 						<p class="text-sm text-base-content/80 leading-relaxed whitespace-pre-wrap">
@@ -523,7 +514,7 @@
 						</p>
 					{:else}
 						<article class="prose prose-sm max-w-none text-base-content">
-							{@html sanitizeMarkdown(renderMarkdown(descriptionText))}
+							{@html renderMarkdown(descriptionText)}
 						</article>
 					{/if}
 					{#if descriptionIsLong}

@@ -3,8 +3,7 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 
@@ -37,10 +36,6 @@
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '#lib/money.js';
 	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
 	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
 
 	interface Props {
 		data: PageData;
@@ -230,7 +225,7 @@
 				{#if lodging.description}
 					<DetailCard title={$t('adventures.description')} icon={TextBoxOutline}>
 						<article class="prose max-w-none">
-							{@html DOMPurify.sanitize(renderMarkdown(lodging.description))}
+							{@html renderMarkdown(lodging.description)}
 						</article>
 					</DetailCard>
 				{/if}

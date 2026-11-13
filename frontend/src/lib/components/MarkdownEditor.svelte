@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { marked } from 'marked';
 	import { t } from 'svelte-i18n';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import FetchIcon from '~icons/mdi/download';
 	import type { IntegrationsResponse } from '#lib/integrations.js';
 
@@ -34,10 +33,6 @@
 	let canFetch = $derived(
 		enableFetch && !fetchDisabled && Boolean(fetchName?.trim()) && !isFetching
 	);
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
 
 	onMount(async () => {
 		if (!enableFetch) return;
@@ -168,7 +163,7 @@
 	{:else}
 		<article class="prose overflow-auto {editor_height} max-w-full w-full p-3">
 			{#if (text || '').trim()}
-				{@html DOMPurify.sanitize(renderMarkdown(text || ''))}
+				{@html renderMarkdown(text || '')}
 			{:else}
 				<p class="m-0 italic text-base-content/50">{$t('adventures.md_instructions')}</p>
 			{/if}

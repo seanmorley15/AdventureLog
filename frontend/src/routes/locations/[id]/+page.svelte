@@ -11,8 +11,7 @@
 	import { openLocationDrawer } from '#lib/location-drawer.svelte.js';
 	import { GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { formatAllDayDate, formatDateInTimezone } from '#lib/dateUtils.js';
@@ -71,10 +70,6 @@
 	import DetailNotFound from '#lib/components/detail/DetailNotFound.svelte';
 	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
 	import LocationPageHead from '#lib/components/locations/LocationPageHead.svelte';
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
 
 	interface Props {
 		data: PageData;
@@ -558,7 +553,7 @@
 					{#if adventure.description}
 						<DetailCard title={$t('adventures.description')} icon={TextBoxOutline}>
 							<article class="prose max-w-none">
-								{@html DOMPurify.sanitize(renderMarkdown(adventure.description))}
+								{@html renderMarkdown(adventure.description)}
 							</article>
 						</DetailCard>
 					{/if}

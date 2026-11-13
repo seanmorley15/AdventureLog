@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import type { Collection, ContentImage } from '#lib/types.js';
 	import {
 		buildStory,
@@ -86,7 +85,7 @@
 	);
 
 	function markdown(text: string | null | undefined) {
-		return text ? DOMPurify.sanitize(marked(text) as string) : '';
+		return renderMarkdown(text);
 	}
 
 	function chapterTitle(chapter: StoryChapter) {

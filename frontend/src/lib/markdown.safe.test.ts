@@ -70,7 +70,9 @@ const ALLOWED_ATTRS = new Set([
 	'start',
 	'type',
 	'checked',
-	'disabled'
+	'disabled',
+	'target',
+	'rel'
 ]);
 
 // Every real tag in the output (escaped text is `&lt;`, never `<`) must be a plain markdown
@@ -101,8 +103,24 @@ describe('renderMarkdown', () => {
 		const html = renderMarkdown('# Day 1\n\n**Bold** [map](https://example.com/a?b=1&c=2) `x`');
 		expect(html).toContain('<h1>Day 1</h1>');
 		expect(html).toContain('<strong>Bold</strong>');
-		expect(html).toContain('<a href="https://example.com/a?b=1&c=2">map</a>');
+		expect(html).toContain(
+			'<a target="_blank" rel="noopener noreferrer" href="https://example.com/a?b=1&c=2">map</a>'
+		);
 		expect(html).toContain('<code>x</code>');
+	});
+
+	it('opens web links in a new tab, written any way', () => {
+		const html = renderMarkdown(
+			'[a](https://a.example) [b](HTTP://b.example "B") <https://c.example> https://d.example'
+		);
+		expect(html.match(/<a /g)).toHaveLength(4);
+		expect(html.match(/<a target="_blank" rel="noopener noreferrer" href=/g)).toHaveLength(4);
+		expect(html).toContain('title="B"');
+	});
+
+	it('keeps in-app, mailto and tel links in the same tab', () => {
+		const html = renderMarkdown('[a](/locations/1) [b](mailto:a@b.c) [c](tel:123) [d](#x)');
+		expect(html).not.toContain('target=');
 	});
 
 	it('shows raw HTML as text instead of dropping it', () => {

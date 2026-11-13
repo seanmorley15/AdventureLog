@@ -4,8 +4,7 @@
 	import type { PageData } from './$types';
 	import { GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 
@@ -41,10 +40,6 @@
 	import ExternalMapLinks from '#lib/components/shared/ExternalMapLinks.svelte';
 	import { routeLine, type LngLat } from '#lib/map/routeArc.js';
 	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '#lib/map/imagePins.js';
-
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
 
 	interface Props {
 		data: PageData;
@@ -391,7 +386,7 @@
 				{#if transportation.description}
 					<DetailCard title={$t('adventures.description')} icon={TextBoxOutline}>
 						<article class="prose max-w-none">
-							{@html DOMPurify.sanitize(renderMarkdown(transportation.description))}
+							{@html renderMarkdown(transportation.description)}
 						</article>
 					</DetailCard>
 				{/if}

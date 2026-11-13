@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import type { ContentImage } from '#lib/types.js';
 	import type { StoryEntry } from '#lib/collections/story.js';
 	import {
@@ -44,7 +43,7 @@
 	let expanded = $state(false);
 
 	function markdown(text: string | null | undefined): string {
-		return text ? DOMPurify.sanitize(marked(text) as string) : '';
+		return renderMarkdown(text);
 	}
 
 	function clock(value: string | null | undefined) {

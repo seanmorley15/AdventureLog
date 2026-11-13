@@ -1,4 +1,4 @@
-import { Marked, type Tokens } from 'marked';
+import { Marked, Renderer, type Tokens } from 'marked';
 
 const HTML_ESCAPES: Record<string, string> = {
 	'&': '&amp;',
@@ -40,8 +40,11 @@ export function isSafeUrl(href: string | null | undefined): boolean {
  * It needs no DOM, so the server render and the browser render are identical: Svelte does
  * not repair an {@html} block that differs after hydration, and DOMPurify cannot run on
  * the server. Raw HTML in the source is shown as text, and links or images with an unsafe
- * scheme lose their address.
+ * scheme lose their address. Links to other websites open in a new tab, so a reader keeps
+ * their place; in-app, mailto and tel links stay in the same tab.
  */
+const WEB_LINK = /^(https?:)?\/\//i;
+
 const safeMarked = new Marked({
 	gfm: true,
 	async: false,
@@ -54,6 +57,11 @@ const safeMarked = new Marked({
 	renderer: {
 		html(token: Tokens.HTML | Tokens.Tag) {
 			return escapeHtml(token.text);
+		},
+		link(this: Renderer, token: Tokens.Link) {
+			const html = Renderer.prototype.link.call(this, token);
+			if (!WEB_LINK.test(token.href) || !html.startsWith('<a ')) return html;
+			return `<a target="_blank" rel="noopener noreferrer" ${html.slice(3)}`;
 		}
 	}
 });
