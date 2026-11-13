@@ -15,7 +15,9 @@ class ChecklistViewSet(
     """
     Checklists with items to tick off, on their own or in a collection.
 
-    Send the full `items` list when creating or updating; items not in it are removed.
+    To change the items, send the full `items` list: an item with the `id` of an existing
+    item updates it, one without an `id` is added, and items left out are removed. A PATCH
+    without `items` leaves them as they are.
     Changing a checklist's date removes it from the itinerary day it was placed on.
     """
 

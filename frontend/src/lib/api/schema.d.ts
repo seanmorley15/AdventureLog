@@ -603,7 +603,9 @@ export interface paths {
          * Create a checklist
          * @description Checklists with items to tick off, on their own or in a collection.
          *
-         *     Send the full `items` list when creating or updating; items not in it are removed.
+         *     To change the items, send the full `items` list: an item with the `id` of an existing
+         *     item updates it, one without an `id` is added, and items left out are removed. A PATCH
+         *     without `items` leaves them as they are.
          *     Changing a checklist's date removes it from the itinerary day it was placed on.
          */
         post: operations["checklists_create"];
@@ -624,7 +626,9 @@ export interface paths {
          * Get a checklist
          * @description Checklists with items to tick off, on their own or in a collection.
          *
-         *     Send the full `items` list when creating or updating; items not in it are removed.
+         *     To change the items, send the full `items` list: an item with the `id` of an existing
+         *     item updates it, one without an `id` is added, and items left out are removed. A PATCH
+         *     without `items` leaves them as they are.
          *     Changing a checklist's date removes it from the itinerary day it was placed on.
          */
         get: operations["checklists_retrieve"];
@@ -632,7 +636,9 @@ export interface paths {
          * Replace a checklist
          * @description Checklists with items to tick off, on their own or in a collection.
          *
-         *     Send the full `items` list when creating or updating; items not in it are removed.
+         *     To change the items, send the full `items` list: an item with the `id` of an existing
+         *     item updates it, one without an `id` is added, and items left out are removed. A PATCH
+         *     without `items` leaves them as they are.
          *     Changing a checklist's date removes it from the itinerary day it was placed on.
          */
         put: operations["checklists_update"];
@@ -641,7 +647,9 @@ export interface paths {
          * Delete a checklist
          * @description Checklists with items to tick off, on their own or in a collection.
          *
-         *     Send the full `items` list when creating or updating; items not in it are removed.
+         *     To change the items, send the full `items` list: an item with the `id` of an existing
+         *     item updates it, one without an `id` is added, and items left out are removed. A PATCH
+         *     without `items` leaves them as they are.
          *     Changing a checklist's date removes it from the itinerary day it was placed on.
          */
         delete: operations["checklists_destroy"];
@@ -651,7 +659,9 @@ export interface paths {
          * Update a checklist
          * @description Checklists with items to tick off, on their own or in a collection.
          *
-         *     Send the full `items` list when creating or updating; items not in it are removed.
+         *     To change the items, send the full `items` list: an item with the `id` of an existing
+         *     item updates it, one without an `id` is added, and items left out are removed. A PATCH
+         *     without `items` leaves them as they are.
          *     Changing a checklist's date removes it from the itinerary day it was placed on.
          */
         patch: operations["checklists_partial_update"];
@@ -3929,10 +3939,13 @@ export interface components {
             readonly updated_at: string;
             items: components["schemas"]["ChecklistItem"][];
         };
-        /** @description A model serializer that shows the owning ``user`` by uuid. */
+        /**
+         * @description An item as sent inside a checklist. The optional ``id`` says which of the checklist's
+         *     existing items this is, so saving a checklist keeps its items instead of recreating them.
+         */
         ChecklistItem: {
             /** Format: uuid */
-            readonly id: string;
+            id?: string;
             /**
              * Format: uuid
              * @description The owner.
@@ -3948,8 +3961,13 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
-        /** @description A model serializer that shows the owning ``user`` by uuid. */
+        /**
+         * @description An item as sent inside a checklist. The optional ``id`` says which of the checklist's
+         *     existing items this is, so saving a checklist keeps its items instead of recreating them.
+         */
         ChecklistItemRequest: {
+            /** Format: uuid */
+            id?: string;
             name: string;
             is_checked?: boolean;
             is_private?: boolean;

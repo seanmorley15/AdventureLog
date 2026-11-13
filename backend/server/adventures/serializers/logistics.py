@@ -142,12 +142,19 @@ class NoteSerializer(CustomModelSerializer):
 
 
 class ChecklistItemSerializer(CustomModelSerializer):
-        class Meta:
-            model = ChecklistItem
-            fields = [
-                'id', 'user', 'name', 'is_checked', 'is_private', 'checklist', 'created_at', 'updated_at'
-            ]
-            read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'checklist']
+    """
+    An item as sent inside a checklist. The optional ``id`` says which of the checklist's
+    existing items this is, so saving a checklist keeps its items instead of recreating them.
+    """
+
+    id = serializers.UUIDField(required=False)
+
+    class Meta:
+        model = ChecklistItem
+        fields = [
+            'id', 'user', 'name', 'is_checked', 'is_private', 'checklist', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at', 'user', 'checklist']
 
 
 class ChecklistSerializer(CustomModelSerializer):
@@ -161,63 +168,42 @@ class ChecklistSerializer(CustomModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
     
     def create(self, validated_data):
-        items_data = validated_data.pop('checklistitem_set')
-        checklist = Checklist.objects.create(**validated_data)
-        
-        for item_data in items_data:
-            # Remove user from item_data to avoid constraint issues
-            item_data.pop('user', None)
-            # Set user from the parent checklist
-            ChecklistItem.objects.create(
-                checklist=checklist, 
-                user=checklist.user,
-                **item_data
-            )
-        return checklist
-    
-    def update(self, instance, validated_data):
         items_data = validated_data.pop('checklistitem_set', [])
-        
-        # Update Checklist fields
+        checklist = Checklist.objects.create(**validated_data)
+        self._sync_items(checklist, items_data)
+        return checklist
+
+    def update(self, instance, validated_data):
+        # A PATCH without items changes only the checklist's own fields.
+        items_data = validated_data.pop('checklistitem_set', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
-        # Get current items
-        current_items = instance.checklistitem_set.all()
-        current_item_ids = set(current_items.values_list('id', flat=True))
-        
-        # Update or create items
-        updated_item_ids = set()
-        for item_data in items_data:
-            # Remove user from item_data to avoid constraint issues
-            item_data.pop('user', None)
-            
-            item_id = item_data.get('id')
-            if item_id:
-                if item_id in current_item_ids:
-                    item = current_items.get(id=item_id)
-                    for attr, value in item_data.items():
-                        setattr(item, attr, value)
-                    item.save()
-                    updated_item_ids.add(item_id)
-                else:
-                    # If ID is provided but doesn't exist, create new item
-                    ChecklistItem.objects.create(
-                        checklist=instance, 
-                        user=instance.user,
-                        **item_data
-                    )
-            else:
-                # If no ID is provided, create new item
-                ChecklistItem.objects.create(
-                    checklist=instance, 
-                    user=instance.user,
-                    **item_data
-                )
-        
-        # Delete items that are not in the updated data
-        items_to_delete = current_item_ids - updated_item_ids
-        instance.checklistitem_set.filter(id__in=items_to_delete).delete()
-        
+        if items_data is not None:
+            self._sync_items(instance, items_data)
         return instance
+
+    @staticmethod
+    def _sync_items(checklist, items_data):
+        """
+        Make the checklist's items match ``items_data``. An item sent with the id of one of
+        this checklist's items is updated; the rest are created; items left out are deleted.
+        An id that does not belong to this checklist is ignored, never adopted. Items always
+        belong to the checklist's owner.
+        """
+        existing = {item.id: item for item in checklist.checklistitem_set.all()}
+        kept = set()
+        for item_data in items_data:
+            item_data = dict(item_data)
+            item_id = item_data.pop('id', None)
+            item_data.pop('user', None)
+            item_data.pop('checklist', None)
+            item = existing.get(item_id)
+            if item is None or item_id in kept:
+                ChecklistItem.objects.create(checklist=checklist, user=checklist.user, **item_data)
+                continue
+            for attr, value in item_data.items():
+                setattr(item, attr, value)
+            item.save()
+            kept.add(item_id)
+        ChecklistItem.objects.filter(id__in=set(existing) - kept).delete()

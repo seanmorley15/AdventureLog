@@ -1962,7 +1962,9 @@ paths:
       description: |-
         Checklists with items to tick off, on their own or in a collection.
 
-        Send the full `items` list when creating or updating; items not in it are removed.
+        To change the items, send the full `items` list: an item with the `id` of an existing
+        item updates it, one without an `id` is added, and items left out are removed. A PATCH
+        without `items` leaves them as they are.
         Changing a checklist's date removes it from the itinerary day it was placed on.
       summary: Create a checklist
       tags:
@@ -2017,7 +2019,9 @@ paths:
       description: |-
         Checklists with items to tick off, on their own or in a collection.
 
-        Send the full `items` list when creating or updating; items not in it are removed.
+        To change the items, send the full `items` list: an item with the `id` of an existing
+        item updates it, one without an `id` is added, and items left out are removed. A PATCH
+        without `items` leaves them as they are.
         Changing a checklist's date removes it from the itinerary day it was placed on.
       summary: Get a checklist
       parameters:
@@ -2066,7 +2070,9 @@ paths:
       description: |-
         Checklists with items to tick off, on their own or in a collection.
 
-        Send the full `items` list when creating or updating; items not in it are removed.
+        To change the items, send the full `items` list: an item with the `id` of an existing
+        item updates it, one without an `id` is added, and items left out are removed. A PATCH
+        without `items` leaves them as they are.
         Changing a checklist's date removes it from the itinerary day it was placed on.
       summary: Replace a checklist
       parameters:
@@ -2148,7 +2154,9 @@ paths:
       description: |-
         Checklists with items to tick off, on their own or in a collection.
 
-        Send the full `items` list when creating or updating; items not in it are removed.
+        To change the items, send the full `items` list: an item with the `id` of an existing
+        item updates it, one without an `id` is added, and items left out are removed. A PATCH
+        without `items` leaves them as they are.
         Changing a checklist's date removes it from the itinerary day it was placed on.
       summary: Update a checklist
       parameters:
@@ -2229,7 +2237,9 @@ paths:
       description: |-
         Checklists with items to tick off, on their own or in a collection.
 
-        Send the full `items` list when creating or updating; items not in it are removed.
+        To change the items, send the full `items` list: an item with the `id` of an existing
+        item updates it, one without an `id` is added, and items left out are removed. A PATCH
+        without `items` leaves them as they are.
         Changing a checklist's date removes it from the itinerary day it was placed on.
       summary: Delete a checklist
       parameters:
@@ -12826,12 +12836,13 @@ components:
       - user
     ChecklistItem:
       type: object
-      description: A model serializer that shows the owning ``user`` by uuid.
+      description: |-
+        An item as sent inside a checklist. The optional ``id`` says which of the checklist's
+        existing items this is, so saving a checklist keeps its items instead of recreating them.
       properties:
         id:
           type: string
           format: uuid
-          readOnly: true
         user:
           type: string
           format: uuid
@@ -12859,14 +12870,18 @@ components:
       required:
       - checklist
       - created_at
-      - id
       - name
       - updated_at
       - user
     ChecklistItemRequest:
       type: object
-      description: A model serializer that shows the owning ``user`` by uuid.
+      description: |-
+        An item as sent inside a checklist. The optional ``id`` says which of the checklist's
+        existing items this is, so saving a checklist keeps its items instead of recreating them.
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
           minLength: 1
