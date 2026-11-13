@@ -34,4 +34,4 @@ pymemcache==4.0.0
 legacy-cgi==2.6.4
 requests>=2.32.4
 stripe==11.3.0
-reportlab>=4.2.0,<5
+reportlab>=5.1.0,<6
