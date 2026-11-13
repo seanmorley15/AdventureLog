@@ -876,6 +876,7 @@
 										placeName={adventure.name}
 										latitude={adventure.latitude}
 										longitude={adventure.longitude}
+										immichUrl={data.immichUrl}
 									/>
 								{/if}
 							</div>

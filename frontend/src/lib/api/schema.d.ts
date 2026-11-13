@@ -5065,7 +5065,7 @@ export interface components {
             unread: boolean;
         };
         IntegrationStatus: {
-            /** @description `{exists, copy_locally}` */
+            /** @description `{exists, copy_locally, web_url}`: `web_url` is the Immich web app, or null. */
             immich: {
                 [key: string]: unknown;
             };

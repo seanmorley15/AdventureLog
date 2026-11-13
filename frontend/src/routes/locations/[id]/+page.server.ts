@@ -2,23 +2,33 @@ import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Location } from '#lib/types.js';
 import { buildLocationShareMeta } from '#lib/shareMeta.server.js';
+import { djangoSessionJson } from '#lib/server/django-auth.js';
+import { parseImmichIntegration, type IntegrationsResponse } from '#lib/integrations.js';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
-	let request = await fetch(`${endpoint}/api/locations/${id.id}/`, {
-		headers: {
-			Cookie: `sessionid=${event.cookies.get('sessionid')}`
-		},
-		credentials: 'include'
-	});
+	const [request, integrations] = await Promise.all([
+		fetch(`${endpoint}/api/locations/${id.id}/`, {
+			headers: {
+				Cookie: `sessionid=${event.cookies.get('sessionid')}`
+			},
+			credentials: 'include'
+		}),
+		// The viewer's own Immich, for a link to this spot on its map (#1117).
+		event.locals.user
+			? djangoSessionJson<IntegrationsResponse>(event, '/api/integrations/')
+			: Promise.resolve(null)
+	]);
+	const immichUrl = parseImmichIntegration(integrations?.immich).webUrl;
 	if (!request.ok) {
 		console.error('Failed to fetch adventure ' + id.id);
 		return {
 			props: {
 				adventure: null
 			},
-			shareMeta: null
+			shareMeta: null,
+			immichUrl
 		};
 	} else {
 		let adventure = (await request.json()) as Location;
@@ -27,7 +37,8 @@ export const load = (async (event) => {
 			props: {
 				adventure
 			},
-			shareMeta: buildLocationShareMeta(adventure, event.url.origin)
+			shareMeta: buildLocationShareMeta(adventure, event.url.origin),
+			immichUrl
 		};
 	}
 }) satisfies PageServerLoad;

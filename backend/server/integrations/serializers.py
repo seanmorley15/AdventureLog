@@ -66,7 +66,9 @@ class ImmichAssetSerializer(serializers.Serializer):
 
 
 class IntegrationStatusSerializer(serializers.Serializer):
-    immich = serializers.DictField(help_text='`{exists, copy_locally}`')
+    immich = serializers.DictField(
+        help_text='`{exists, copy_locally, web_url}`: `web_url` is the Immich web app, or null.'
+    )
     google_maps = serializers.BooleanField(help_text='Whether the server has a Google Maps key.')
     strava = serializers.DictField(help_text='`{global, user}`: the server can use Strava; you connected it.')
     wanderer = serializers.DictField(help_text='`{exists}`')

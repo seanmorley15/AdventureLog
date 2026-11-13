@@ -15294,7 +15294,8 @@ components:
         immich:
           type: object
           additionalProperties: {}
-          description: '`{exists, copy_locally}`'
+          description: '`{exists, copy_locally, web_url}`: `web_url` is the Immich
+            web app, or null.'
         google_maps:
           type: boolean
           description: Whether the server has a Google Maps key.

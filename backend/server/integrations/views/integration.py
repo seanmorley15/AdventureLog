@@ -7,6 +7,12 @@ from integrations.models import EndurainIntegration, ImmichIntegration, StravaTo
 from integrations.serializers import IntegrationStatusSerializer
 
 
+def immich_web_url(server_url):
+    """The Immich web app's address: the saved API address without its ``/api`` suffix."""
+    url = (server_url or '').rstrip('/')
+    return url[: -len('/api')] if url.endswith('/api') else url
+
+
 class IntegrationStatusView(APIView):
     openapi_tags = ['Integrations']
 
@@ -19,7 +25,12 @@ class IntegrationStatusView(APIView):
         """
         immich = ImmichIntegration.objects.filter(user=request.user).first()
         return Response({
-            'immich': {'exists': immich is not None, 'copy_locally': immich.copy_locally if immich else False},
+            'immich': {
+                'exists': immich is not None,
+                'copy_locally': immich.copy_locally if immich else False,
+                # Links such as a place's spot on the Immich map (#1117).
+                'web_url': immich_web_url(immich.server_url) if immich else None,
+            },
             'google_maps': settings.GOOGLE_MAPS_API_KEY != '',
             'strava': {
                 'global': settings.STRAVA_CLIENT_ID != '' and settings.STRAVA_CLIENT_SECRET != '',

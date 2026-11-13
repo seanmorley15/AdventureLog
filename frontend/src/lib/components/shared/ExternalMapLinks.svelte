@@ -3,6 +3,7 @@
 	import Apple from '~icons/mdi/apple';
 	import GoogleMaps from '~icons/mdi/google-maps';
 	import MapOutline from '~icons/mdi/map-outline';
+	import ImageMultiple from '~icons/mdi/image-multiple';
 
 	interface Props {
 		placeName?: string | null;
@@ -11,6 +12,8 @@
 		className?: string;
 		/** Hide the "Open in" label, e.g. where the context is already clear. */
 		showLabel?: boolean;
+		/** The viewer's Immich web app. Adds a link to this spot on its map (#1117). */
+		immichUrl?: string | null;
 	}
 
 	let {
@@ -18,7 +21,8 @@
 		latitude = null,
 		longitude = null,
 		className = '',
-		showLabel = true
+		showLabel = true,
+		immichUrl = null
 	}: Props = $props();
 
 	const normalize = (value: string | null | undefined) => value?.trim() || null;
@@ -50,10 +54,20 @@
 			: `https://www.openstreetmap.org/search?query=${encodeURIComponent(baseQuery)}`
 	);
 
+	// Immich's map opens at #zoom/lat/lng; it needs coordinates, not a name.
+	let immichMapUrl = $derived(
+		immichUrl && hasCoords
+			? `${immichUrl.replace(/\/+$/, '')}/map#15/${latitude}/${longitude}`
+			: null
+	);
+
 	const LINKS = $derived([
 		{ name: 'Apple Maps', short: 'Apple', href: appleMapsUrl, icon: Apple },
 		{ name: 'Google Maps', short: 'Google', href: googleMapsUrl, icon: GoogleMaps },
-		{ name: 'OpenStreetMap', short: 'OSM', href: osmMapsUrl, icon: MapOutline }
+		{ name: 'OpenStreetMap', short: 'OSM', href: osmMapsUrl, icon: MapOutline },
+		...(immichMapUrl
+			? [{ name: 'Immich', short: 'Immich', href: immichMapUrl, icon: ImageMultiple }]
+			: [])
 	]);
 </script>
 
