@@ -65,6 +65,16 @@ def allowed_redirect_uris():
     return list(settings.MOBILE_AUTH_REDIRECT_URIS)
 
 
+def registered_redirect_uri(value):
+    """
+    The registered redirect URI equal to ``value``, or ``None``.
+
+    Callers redirect to the returned entry from settings, never to the caller's own string, so
+    a redirect can only go somewhere the server was configured to send it.
+    """
+    return next((uri for uri in allowed_redirect_uris() if uri == value), None)
+
+
 def provider_path(app):
     """The path segment of a provider's login URL, which is also how the app names it."""
     return f'oidc/{app.provider_id}' if app.provider == 'openid_connect' else app.provider
@@ -72,7 +82,8 @@ def provider_path(app):
 
 def begin(*, provider, code_challenge, code_challenge_method, state, redirect_uri, signed_in):
     """Check a start request and return the relative URL to send the browser to."""
-    if redirect_uri not in allowed_redirect_uris():
+    redirect_uri = registered_redirect_uri(redirect_uri)
+    if redirect_uri is None:
         raise InvalidStart('This redirect_uri is not registered for the mobile app.')
     if code_challenge_method != 'S256':
         raise InvalidStart('Only code_challenge_method=S256 is supported.')
@@ -96,9 +107,10 @@ def load_handoff(value):
         data = signing.loads(value, salt=HANDOFF_SALT, max_age=settings.MOBILE_AUTH_HANDOFF_SECONDS)
     except signing.BadSignature:
         raise InvalidHandoff('The sign-in link is invalid or has expired. Start again from the app.')
-    if data['r'] not in allowed_redirect_uris():
+    redirect_uri = registered_redirect_uri(data['r'])
+    if redirect_uri is None:
         raise InvalidHandoff('This redirect_uri is no longer registered for the mobile app.')
-    return {'challenge': data['c'], 'state': data['s'], 'redirect_uri': data['r'], 'was_signed_in': data['p']}
+    return {'challenge': data['c'], 'state': data['s'], 'redirect_uri': redirect_uri, 'was_signed_in': data['p']}
 
 
 def _hash(code):

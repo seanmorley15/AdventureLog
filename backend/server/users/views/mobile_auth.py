@@ -4,6 +4,7 @@ from urllib.parse import urlencode, urlparse
 
 from django.contrib.auth import logout
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET
 from drf_spectacular.utils import extend_schema
@@ -46,12 +47,17 @@ def start(request):
             signed_in=request.user.is_authenticated,
         )
     except mobile_auth.InvalidStart as error:
-        redirect_uri = params.get('redirect_uri', '')
-        if redirect_uri not in mobile_auth.allowed_redirect_uris():
+        redirect_uri = mobile_auth.registered_redirect_uri(params.get('redirect_uri', ''))
+        if redirect_uri is None:
             return HttpResponseBadRequest(error.message)
         return AppRedirect(
             redirect_uri, error='invalid_request', error_description=error.message, state=params.get('state', '')
         )
+    # The provider login is always one of this server's own pages; refuse anything else.
+    if not url_has_allowed_host_and_scheme(
+        login_path, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return HttpResponseBadRequest('The sign-in provider address is not on this server.')
     return HttpResponseRedirect(login_path)
 
 

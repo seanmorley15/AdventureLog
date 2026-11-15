@@ -23,6 +23,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient, APITestCase
 
 from users.models import CustomUser, MobileAuthCode
+from users.services import mobile_auth
 
 REDIRECT = 'adventurelog://auth/callback'
 START = '/accounts/mobile/start/'
@@ -110,6 +111,21 @@ class StartTests(MobileAuthTestCase):
                 response = self.start(redirect_uri=bad)
                 self.assertEqual(response.status_code, 400)
                 self.assertNotIn('Location', response)
+
+    def test_a_login_path_that_is_not_relative_is_refused(self):
+        for bad in ('//evil.example/x', 'https://evil.example/x'):
+            with self.subTest(login_path=bad), mock.patch(
+                'users.views.mobile_auth.mobile_auth.begin', return_value=bad
+            ):
+                response = self.start()
+                self.assertEqual(response.status_code, 400)
+                self.assertNotIn('Location', response)
+
+    def test_registered_redirect_uri_returns_the_configured_value(self):
+        self.assertEqual(mobile_auth.registered_redirect_uri(REDIRECT), REDIRECT)
+        self.assertIsNone(mobile_auth.registered_redirect_uri(REDIRECT.upper()))
+        self.assertIsNone(mobile_auth.registered_redirect_uri(REDIRECT + ' '))
+        self.assertIsNone(mobile_auth.registered_redirect_uri(''))
 
     def test_an_unknown_provider_returns_an_error_to_the_app(self):
         response = self.start(provider='oidc/not-configured')
