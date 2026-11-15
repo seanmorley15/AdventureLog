@@ -71,7 +71,12 @@ export function renderMarkdown(value: string | null | undefined): string {
 	return safeMarked.parse(String(value)) as string;
 }
 
-/** Plain text from an HTML fragment, for showing a third-party description as text. */
+/**
+ * Plain text from an HTML fragment, for showing a third-party description as text.
+ *
+ * The result has its entities decoded, so `<` and `>` can appear in it: it is text, not
+ * sanitized HTML. Render it with `{…}`, never `{@html}`.
+ */
 export function htmlToText(value: string | null | undefined): string {
 	if (!value) return '';
 	return String(value)
