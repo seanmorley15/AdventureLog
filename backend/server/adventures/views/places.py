@@ -27,7 +27,7 @@ from adventures.services.descriptions.google import fetch_google_description
 from adventures.services.descriptions.wikipedia import WikipediaDescriptionService
 from adventures.services.geocoding.reverse import reverse_geocode
 from adventures.services.places.details import get_place_details
-from adventures.services.places.photos import PhotoError, fetch_google_photo
+from adventures.services.places.photos import PHOTO_ERROR_MESSAGES, PhotoError, fetch_google_photo
 from adventures.services.places.search import search_places
 from adventures.throttling import ExternalGeocodeThrottle, ExternalWikipediaThrottle, PlacePhotoThrottle
 from adventures.utils.language import resolve_request_language
@@ -196,7 +196,7 @@ class PlacesViewSet(viewsets.ViewSet):
         except PhotoError as exc:
             if exc.status >= 500 and exc.code != 'not_configured':
                 logger.warning('Google photo fetch failed: %s', exc.code)
-            raise APIError(str(exc), code=exc.code, status=exc.status)
+            raise APIError(PHOTO_ERROR_MESSAGES[exc.code], code=exc.code, status=exc.status)
         response = HttpResponse(image['content'], content_type=image['content_type'])
         response['Cache-Control'] = 'private, no-store'
         response['X-Content-Type-Options'] = 'nosniff'

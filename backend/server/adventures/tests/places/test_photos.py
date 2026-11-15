@@ -5,6 +5,7 @@ from django.test import override_settings
 from rest_framework.test import APITestCase
 
 from adventures.services.places.photos import (
+    PHOTO_ERROR_MESSAGES,
     PhotoError,
     fetch_google_photo,
     parse_proxy_photo_url,
@@ -122,12 +123,24 @@ class PhotoViewTests(APITestCase):
         self.assertEqual(r['X-Content-Type-Options'], 'nosniff')
         self.assertEqual(fetch.call_args.kwargs, {'name': NAME, 'reference': None, 'size': 300})
 
-    @patch(FETCH, side_effect=PhotoError('The photo could not be loaded.', 'upstream_error', 502))
+    @patch(FETCH, side_effect=PhotoError('upstream_error', 502))
     def test_upstream_failure(self, fetch):
         self.client.force_authenticate(make_user('photo-user3', password='pw-12345678'))
         r = self.client.get(self.URL, {'name': NAME})
         self.assertEqual(r.status_code, 502)
         self.assertNotIn(KEY, r.content.decode())
+        self.assertEqual(r.json()['detail'], 'The photo could not be loaded.')
+
+    @patch(FETCH, side_effect=PhotoError('not_configured', 503))
+    def test_not_configured_says_so(self, fetch):
+        self.client.force_authenticate(make_user('photo-user4', password='pw-12345678'))
+        r = self.client.get(self.URL, {'name': NAME})
+        self.assertEqual(r.status_code, 503)
+        self.assertEqual(r.json(), {'detail': 'Google Maps is not configured.', 'code': 'not_configured'})
+
+    def test_every_code_has_a_message(self):
+        for code in ('not_configured', 'upstream_timeout', 'upstream_error', 'not_found'):
+            self.assertTrue(PHOTO_ERROR_MESSAGES[code])
 
 
 @override_settings(GOOGLE_MAPS_API_KEY=KEY)

@@ -32,11 +32,21 @@ _V1_MEDIA_URL = 'https://places.googleapis.com/v1/{name}/media'
 _LEGACY_PHOTO_URL = 'https://maps.googleapis.com/maps/api/place/photo'
 
 
-class PhotoError(Exception):
-    """A photo could not be served. The message is safe to show; ``code`` and ``status`` map to the API error."""
+# What a reader is told when a photo cannot be served, by error code. These fixed strings are the
+# only messages a PhotoError can carry, so nothing from the Google request can reach a response.
+PHOTO_ERROR_MESSAGES = {
+    'not_configured': 'Google Maps is not configured.',
+    'upstream_timeout': 'Google took too long to send the photo.',
+    'upstream_error': 'The photo could not be loaded.',
+    'not_found': 'That photo was not found.',
+}
 
-    def __init__(self, message: str, code: str, status: int):
-        super().__init__(message)
+
+class PhotoError(Exception):
+    """A photo could not be served. ``code`` picks the message from ``PHOTO_ERROR_MESSAGES``; ``status`` is the HTTP status."""
+
+    def __init__(self, code: str, status: int):
+        super().__init__(PHOTO_ERROR_MESSAGES[code])
         self.code = code
         self.status = status
 
@@ -100,7 +110,7 @@ def fetch_google_photo(*, name: Optional[str] = None, reference: Optional[str] =
     """
     api_key = (getattr(settings, 'GOOGLE_MAPS_API_KEY', '') or '').strip()
     if not api_key:
-        raise PhotoError('Google Maps is not configured.', 'not_configured', 503)
+        raise PhotoError('not_configured', 503)
 
     try:
         image_url = _resolve_image_url(api_key, name, reference, size)
@@ -108,12 +118,12 @@ def fetch_google_photo(*, name: Optional[str] = None, reference: Optional[str] =
     except PhotoError:
         raise
     except requests.exceptions.Timeout:
-        raise PhotoError('Google took too long to send the photo.', 'upstream_timeout', 504) from None
+        raise PhotoError('upstream_timeout', 504) from None
     except (requests.exceptions.RequestException, ValueError):
-        raise PhotoError('The photo could not be loaded.', 'upstream_error', 502) from None
+        raise PhotoError('upstream_error', 502) from None
 
     if image['content_type'] not in SAFE_CONTENT_TYPES:
-        raise PhotoError('The photo could not be loaded.', 'upstream_error', 502)
+        raise PhotoError('upstream_error', 502)
     return image
 
 
@@ -127,7 +137,7 @@ def _resolve_image_url(api_key: str, name: Optional[str], reference: Optional[st
             timeout=PHOTO_TIMEOUT,
         )
         if response.status_code == 404:
-            raise PhotoError('That photo was not found.', 'not_found', 404)
+            raise PhotoError('not_found', 404)
         response.raise_for_status()
         photo_uri = (response.json() or {}).get('photoUri')
     else:
@@ -140,11 +150,11 @@ def _resolve_image_url(api_key: str, name: Optional[str], reference: Optional[st
             allow_redirects=False,
         )
         if response.status_code == 404:
-            raise PhotoError('That photo was not found.', 'not_found', 404)
+            raise PhotoError('not_found', 404)
         if not response.is_redirect:
             response.raise_for_status()
         photo_uri = response.headers.get('Location')
 
     if not photo_uri:
-        raise PhotoError('The photo could not be loaded.', 'upstream_error', 502)
+        raise PhotoError('upstream_error', 502)
     return photo_uri
