@@ -146,15 +146,19 @@
 		if (newChecklist.date == '') {
 			newChecklist.date = null;
 		}
+		// Items added in this dialog have no id yet; the server gives them one.
+		const body = JSON.stringify({
+			...newChecklist,
+			items: newChecklist.items.map(({ id, ...item }) => (id ? { id, ...item } : item))
+		});
 
 		if (checklist && checklist.id) {
-			console.log('newChecklist', newChecklist);
 			const res = await fetch(`/api/checklists/${checklist.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(newChecklist)
+				body
 			});
 			if (res.ok) {
 				let data = await res.json();
@@ -165,13 +169,12 @@
 				console.error('Failed to save checklist');
 			}
 		} else {
-			console.log('newChecklist', newChecklist);
 			const res = await fetch(`/api/checklists/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(newChecklist)
+				body
 			});
 			if (res.ok) {
 				let data = await res.json();

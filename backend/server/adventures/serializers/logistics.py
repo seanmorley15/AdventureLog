@@ -149,6 +149,12 @@ class ChecklistItemSerializer(CustomModelSerializer):
 
     id = serializers.UUIDField(required=False)
 
+    def to_internal_value(self, data):
+        # A blank or null id is a new item: the web app sends `id: ''` for items it just added.
+        if isinstance(data, dict) and data.get('id') in ('', None):
+            data = {key: value for key, value in data.items() if key != 'id'}
+        return super().to_internal_value(data)
+
     class Meta:
         model = ChecklistItem
         fields = [

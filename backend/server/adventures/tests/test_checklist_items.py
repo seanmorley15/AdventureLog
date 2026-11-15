@@ -72,3 +72,28 @@ class ChecklistItemSyncTests(APITestCase):
         stored = self.stored()
         self.assertEqual(set(stored), {'Milk'})
         self.assertNotEqual(stored['Milk'].id, milk.id)
+
+    def test_a_blank_or_null_item_id_means_a_new_item(self):
+        # The checklist dialog sends `id: ''` for items it has just added.
+        response = self.client.post('/api/checklists/', {
+            'name': 'Day pack',
+            'items': [{'id': '', 'name': 'Water'}, {'id': None, 'name': 'Snacks'}],
+        }, format='json')
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual({item['name'] for item in response.json()['items']}, {'Water', 'Snacks'})
+
+        response = self.client.patch(self.url(), {
+            'items': [self.items['Passport'], {'id': '', 'name': 'Adapter', 'is_checked': True}],
+        }, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        stored = self.stored()
+        self.assertEqual(set(stored), {'Passport', 'Adapter'})
+        self.assertEqual(str(stored['Passport'].id), self.items['Passport']['id'])
+        self.assertTrue(stored['Adapter'].is_checked)
+
+    def test_a_malformed_item_id_is_still_refused(self):
+        response = self.client.patch(self.url(), {
+            'items': [{'id': 'not-a-uuid', 'name': 'Adapter'}],
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(set(self.stored()), {'Passport', 'Charger'})
