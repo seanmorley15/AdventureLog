@@ -15,7 +15,7 @@ ARG PNPM_VERSION=10.32.1
 
 FROM node:22-bookworm-slim AS node-runtime
 
-FROM cgr.dev/chainguard/node:latest-dev@sha256:52dab1c59311e390b3ee79627fc9cb2bd8d35c47a33c43024a5510fad16fee99 AS frontend-build
+FROM cgr.dev/chainguard/node:latest-dev@sha256:54684aac47cea4f3b819370ef6a88d22603c9735208934c235461599af4eab57 AS frontend-build
 ARG PNPM_VERSION
 USER root
 WORKDIR /app
@@ -74,7 +74,7 @@ RUN python3 manage.py collectstatic --noinput --verbosity 2
 # Production targets
 # ---------------------------------------------------------------------------
 
-FROM cgr.dev/chainguard/node:latest@sha256:44c5ac2029f7a9b61e1bd12fef9e33f6025d64ea17fa3ecf21a2056f11ac99ca AS frontend
+FROM cgr.dev/chainguard/node:latest@sha256:efeb9fd6c61fd20b7c634531e0a746d26204bdc2df13e7ea57ab69aad349a900 AS frontend
 LABEL org.opencontainers.image.title="AdventureLog Frontend" \
       org.opencontainers.image.description="AdventureLog SvelteKit frontend (SSR)." \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \
