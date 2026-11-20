@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.gis.db.models.functions import Distance
 from django.db import transaction
-from django.db.models import Exists, F, Max, OuterRef, Prefetch, Q
+from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.utils import timezone
@@ -174,8 +174,18 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             queryset = queryset.filter(annotated_is_visited=params['is_visited'])
         if params['in_collection'] is not None:
             queryset = queryset.filter(collections__isnull=not params['in_collection'])
+        # Visited/planned totals for the whole filtered set (not just this page): one aggregate
+        # over the same filters as `count`, run before ordering and prefetching are applied.
+        totals = queryset.order_by().aggregate(
+            visited=Count('pk', distinct=True, filter=Q(annotated_is_visited=True)),
+            total=Count('pk', distinct=True),
+        )
         queryset = self._order(queryset.distinct(), params['ordering'])
-        return self.paginate_and_respond(queryset, request, serializer_class=LocationListSerializer)
+        response = self.paginate_and_respond(queryset, request, serializer_class=LocationListSerializer)
+        if isinstance(response.data, dict):
+            response.data['visited_count'] = totals['visited']
+            response.data['planned_count'] = totals['total'] - totals['visited']
+        return response
 
     @staticmethod
     def _order(queryset, ordering):

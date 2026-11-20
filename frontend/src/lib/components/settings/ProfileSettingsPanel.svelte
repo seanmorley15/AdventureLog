@@ -24,6 +24,7 @@
 	}
 
 	let { user = $bindable(), onProfileVisibilityChange, allowPublicAccess = true }: Props = $props();
+	let usaFlash = $state(false);
 
 	// Who can see the profile, narrowest first (#1226).
 	const PROFILE_VISIBILITY: { value: ProfileVisibility; label: string; hint: string }[] = [
@@ -262,7 +263,11 @@
 			</div>
 		</div>
 
-		<div class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4">
+		<div
+			class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4"
+			class:usa-flash={usaFlash}
+			onanimationend={() => (usaFlash = false)}
+		>
 			<label class="flex items-start justify-between gap-4 cursor-pointer w-full">
 				<span class="min-w-0">
 					<span class="font-semibold text-base-content">{$t('settings.use_imperial')}</span>
@@ -273,9 +278,13 @@
 					checked={user.measurement_system === 'imperial'}
 					name="measurement_system"
 					class="toggle toggle-primary shrink-0 mt-0.5"
-					onchange={() =>
-						(user.measurement_system =
-							user.measurement_system === 'metric' ? 'imperial' : 'metric')}
+					onchange={() => {
+						user.measurement_system = user.measurement_system === 'metric' ? 'imperial' : 'metric';
+						// Replay the animation each time imperial is switched on.
+						usaFlash = false;
+						if (user.measurement_system === 'imperial')
+							requestAnimationFrame(() => (usaFlash = true));
+					}}
 				/>
 			</label>
 		</div>
@@ -285,3 +294,63 @@
 		</div>
 	</form>
 </SettingsCard>
+
+<style>
+	@property --usa-angle {
+		syntax: '<angle>';
+		inherits: false;
+		initial-value: 0deg;
+	}
+
+	/* A red, white and blue light that circles the box's border once when imperial is switched on. */
+	.usa-flash {
+		position: relative;
+	}
+
+	.usa-flash::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		border-radius: inherit;
+		padding: 3px;
+		pointer-events: none;
+		background: conic-gradient(
+			from var(--usa-angle),
+			transparent 0deg,
+			#e5484d 40deg,
+			#ffffff 80deg,
+			#3e63dd 120deg,
+			transparent 160deg
+		);
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		animation: usa-spin 1.3s ease-in-out;
+	}
+
+	@keyframes usa-spin {
+		from {
+			--usa-angle: 0deg;
+			opacity: 1;
+		}
+		85% {
+			opacity: 1;
+		}
+		to {
+			--usa-angle: 360deg;
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.usa-flash::before {
+			animation: none;
+			display: none;
+		}
+	}
+</style>

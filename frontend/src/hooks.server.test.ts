@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { authHook, isBackendProxyPath, themeHook, i18nHook } from './hooks.server';
+import {
+	authHook,
+	embedHook,
+	isBackendProxyPath,
+	isEmbedPath,
+	themeHook,
+	i18nHook
+} from './hooks.server';
 import { jsonResponse, mockRequestEvent, mockResolve } from '#lib/test-utils/request-event.js';
 
 // The hooks are typed against SvelteKit's real Handle; the mocks only carry what they read.
@@ -194,5 +201,44 @@ describe('i18nHook', () => {
 		const { event } = mockRequestEvent();
 		await run(i18nHook, event, mockResolve());
 		expect(event.locals.locale).toBeUndefined();
+	});
+});
+
+describe('embed pages', () => {
+	it('matches only /embed/ paths', () => {
+		expect(isEmbedPath('/embed/profile/demo')).toBe(true);
+		expect(isEmbedPath('/embedded')).toBe(false);
+		expect(isEmbedPath('/profile/demo')).toBe(false);
+	});
+
+	it('never looks up the session, even when a cookie is sent', async () => {
+		const fetchSpy = vi.fn();
+		const { event } = mockRequestEvent({
+			fetch: fetchSpy,
+			url: 'http://localhost/embed/profile/demo',
+			cookies: { sessionid: 'abc' }
+		});
+
+		await run(authHook, event, mockResolve());
+
+		expect(event.locals.user).toBeNull();
+		expect(fetchSpy).not.toHaveBeenCalled();
+	});
+
+	it('lets any site frame an embed page, and only those', async () => {
+		const frame = async (url: string) => {
+			const { event } = mockRequestEvent({ url });
+			const response = new Response('ok', { headers: { 'X-Frame-Options': 'DENY' } });
+			await run(embedHook, event, vi.fn().mockResolvedValue(response));
+			return response.headers;
+		};
+
+		const embed = await frame('http://localhost/embed/profile/demo');
+		expect(embed.get('Content-Security-Policy')).toBe('frame-ancestors *');
+		expect(embed.get('X-Frame-Options')).toBeNull();
+
+		const other = await frame('http://localhost/profile/demo');
+		expect(other.get('Content-Security-Policy')).toBeNull();
+		expect(other.get('X-Frame-Options')).toBe('DENY');
 	});
 });

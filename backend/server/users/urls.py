@@ -11,6 +11,8 @@ from .views import (
     CsrfTokenView,
     PublicUserDetailView,
     PublicUserListView,
+    PublicUserLocationsView,
+    PublicUserPinsView,
     PublicUserStatsView,
 )
 
@@ -30,5 +32,7 @@ urlpatterns = [
     # Public profiles
     path('users/', PublicUserListView.as_view(), name='public-user-list'),
     path('users/<str:username>/', PublicUserDetailView.as_view(), name='public-user-detail'),
+    path('users/<str:username>/locations/', PublicUserLocationsView.as_view(), name='public-user-locations'),
+    path('users/<str:username>/pins/', PublicUserPinsView.as_view(), name='public-user-pins'),
     path('users/<str:username>/stats/', PublicUserStatsView.as_view(), name='public-user-stats'),
 ]

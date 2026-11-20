@@ -350,14 +350,11 @@
 		}
 	}
 
-	let isOwner = $derived(
-		Boolean(
-			!embedded &&
-			data.user?.uuid &&
-			adventure?.user?.uuid &&
-			data.user.uuid === adventure.user.uuid
-		)
+	// Owns this place, in the drawer too (isOwner below also gates the page's edit controls).
+	let isOwnPlace = $derived(
+		Boolean(data.user?.uuid && adventure?.user?.uuid && data.user.uuid === adventure.user.uuid)
 	);
+	let isOwner = $derived(!embedded && isOwnPlace);
 	let hasMapContent = $derived(
 		adventure
 			? Boolean(
@@ -527,7 +524,7 @@
 						</li>
 					</ul>
 				</div>
-			{:else if data.user}
+			{:else if data.user && !isOwnPlace}
 				<!-- Someone else's place you can see: keep your own copy to edit (#1005). -->
 				<button
 					class="btn btn-outline btn-primary btn-sm gap-2"

@@ -188,11 +188,11 @@
 	}
 
 	function getVisitedCount() {
-		return adventures.filter((a) => a.is_visited).length;
+		return data?.props?.visitedCount ?? 0;
 	}
 
 	function getPlannedCount() {
-		return adventures.filter((a) => !a.is_visited).length;
+		return data?.props?.plannedCount ?? 0;
 	}
 </script>
 
@@ -315,7 +315,7 @@
 								isEditLoading={editingLocationId === adventure.id}
 								on:delete={deleteAdventure}
 								on:edit={editAdventure}
-								on:editVisits
+								on:editVisits={editVisits}
 								on:duplicate={(e) => {
 									// Add the new location to the beginning of the list
 									adventures = [e.detail, ...adventures];

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/env';
+	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { register, init, locale, waitLocale } from 'svelte-i18n';
 	import { UmamiAnalyticsEnv } from '@lukulent/svelte-umami';
@@ -98,13 +99,18 @@
 {#await localeLoaded}
 	<!-- You can add a loading indicator here if needed -->
 {:then}
-	<Navbar {data} />
-	{#if data.user}
-		<CommandPalette />
+	{#if page.url.pathname.startsWith('/embed/')}
+		<!-- Shown inside other websites: just the page, none of the app around it. -->
+		{@render children?.()}
+	{:else}
+		<Navbar {data} />
+		{#if data.user}
+			<CommandPalette />
+		{/if}
+		<Toast />
+		<LocationDrawer />
+		{@render children?.()}
 	{/if}
-	<Toast />
-	<LocationDrawer />
-	{@render children?.()}
 {/await}
 
 <UmamiAnalyticsEnv />

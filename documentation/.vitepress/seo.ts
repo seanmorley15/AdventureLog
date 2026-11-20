@@ -171,6 +171,16 @@ export const pageSeo: Record<string, PageSeo> = {
       "travel story",
     ],
   },
+  "docs/usage/embed_map.md": {
+    title: "Embed Your Travel Map on Any Website",
+    description:
+      "Show a map of your public AdventureLog locations on your own website with a copy-and-paste iframe, with an optional profile panel and light or dark theme.",
+    keywords: [
+      "embed travel map",
+      "AdventureLog embed",
+      "iframe travel map",
+    ],
+  },
   "docs/configuration/integrations.md": {
     title:
       "Integrations: Immich, Strava, Wanderer, Endurain, Google Maps, and SSO",

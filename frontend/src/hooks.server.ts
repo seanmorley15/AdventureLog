@@ -13,6 +13,11 @@ export function isBackendProxyPath(pathname: string): boolean {
 	return pathname.startsWith('/api/');
 }
 
+/** Pages built to be shown inside other websites (`routes/embed/`). */
+export function isEmbedPath(pathname: string): boolean {
+	return pathname.startsWith('/embed/');
+}
+
 export const authHook: Handle = async ({ event, resolve }) => {
 	event.cookies.delete('csrftoken', { path: '/' });
 	event.locals.subscription = null;
@@ -29,6 +34,12 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		// The /api routes only proxy to Django, which authenticates the session
 		// itself. Looking the user up here would add a backend round-trip to every call.
 		if (isBackendProxyPath(event.url.pathname)) {
+			event.locals.user = null;
+			return await resolve(event);
+		}
+
+		// An embed is shown to anyone, whoever is signed in here: it never reads the session.
+		if (isEmbedPath(event.url.pathname)) {
 			event.locals.user = null;
 			return await resolve(event);
 		}
@@ -78,6 +89,16 @@ export const authHook: Handle = async ({ event, resolve }) => {
 	return await resolve(event);
 };
 
+/** Let other websites frame the embed pages, and nothing else. */
+export const embedHook: Handle = async ({ event, resolve }) => {
+	const response = await resolve(event);
+	if (isEmbedPath(event.url.pathname)) {
+		response.headers.set('Content-Security-Policy', 'frame-ancestors *');
+		response.headers.delete('X-Frame-Options');
+	}
+	return response;
+};
+
 export const themeHook: Handle = async ({ event, resolve }) => {
 	const candidate = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
 	const theme = candidate && ALLOWED_THEME_NAMES.has(candidate) ? candidate : null;
@@ -100,4 +121,4 @@ export const i18nHook: Handle = async ({ event, resolve }) => {
 	return await resolve(event);
 };
 
-export const handle = sequence(authHook, themeHook, i18nHook);
+export const handle = sequence(authHook, embedHook, themeHook, i18nHook);

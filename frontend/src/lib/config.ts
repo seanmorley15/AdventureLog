@@ -1,4 +1,4 @@
-export let appVersion = 'v0.14.0-beta-111526';
+export let appVersion = 'v0.14.0-beta-111926';
 export let appCodename = 'Abisko';
 export let versionChangelog = 'https://github.com/seanmorley15/AdventureLog/releases/tag/v0.14.0';
 export let appTitle = 'AdventureLog';

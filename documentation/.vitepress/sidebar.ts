@@ -26,6 +26,7 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
       { text: "The Map", link: "/docs/usage/map" },
       { text: "World Travel", link: "/docs/usage/world_travel" },
       { text: "Sharing and Privacy", link: "/docs/usage/sharing" },
+      { text: "Embed Your Map", link: "/docs/usage/embed_map" },
       { text: "Account and Settings", link: "/docs/usage/settings" },
     ],
   },

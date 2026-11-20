@@ -1,46 +1,69 @@
-import { redirect, error } from '@sveltejs/kit';
-import type { PageServerLoad, RequestEvent } from '../../$types';
-import { t } from 'svelte-i18n';
+import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import type { LocationsPage, ProfilePin, ProfileStatsData } from '#lib/components/profile/types.js';
+
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
-export const load: PageServerLoad = async (event: RequestEvent) => {
+/** The first page of locations on the profile. Small, so the page paints quickly. */
+const FIRST_PAGE_SIZE = 12;
+
+export const load: PageServerLoad = async (event) => {
 	const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-
-	// @ts-ignore
-	let username = event.params.uuid as string;
-
+	const username = event.params.uuid;
 	if (!username) {
-		return error(404, 'Not found');
+		error(404, 'Not found');
 	}
 
-	// let sessionId = event.cookies.get('sessionid');
-	let stats = null;
+	const base = `${endpoint}/api/users/${encodeURIComponent(username)}`;
+	const sessionId = event.cookies.get('sessionid');
+	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+	if (sessionId) headers['Cookie'] = `sessionid=${sessionId}`;
 
-	const headers = {
-		'Content-Type': 'application/json',
-		Cookie: `sessionid=${event.cookies.get('sessionid')}`
+	/**
+	 * A secondary part of the page. It is started now, in parallel with the profile, and
+	 * streamed to the page when it is ready; a failure is `null`, never a rejected promise,
+	 * so one slow or broken part cannot take the whole profile down.
+	 */
+	const part = async <T>(path: string): Promise<T | null> => {
+		try {
+			const res = await event.fetch(`${base}${path}`, { headers });
+			if (!res.ok) {
+				console.error(`Profile ${path || '/'} failed for ${username}: ${res.status}`);
+				return null;
+			}
+			return (await res.json()) as T;
+		} catch (err) {
+			console.error(`Profile ${path || '/'} failed for ${username}`, err);
+			return null;
+		}
 	};
-	// Stats and profile do not depend on each other: ask for both at once.
-	const [res, userData] = await Promise.all([
-		event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/stats/`, { headers }),
-		event.fetch(`${endpoint}/api/users/${encodeURIComponent(username)}/`, { headers })
-	]);
-	if (!res.ok) {
-		console.error('Failed to fetch user stats');
-	} else {
-		stats = await res.json();
-	}
 
-	if (!userData.ok) {
-		return error(404, 'Not found');
-	}
+	const stats = part<ProfileStatsData>('/stats/');
+	const locations = part<LocationsPage>(`/locations/?page_size=${FIRST_PAGE_SIZE}`);
+	const pins = part<ProfilePin[]>('/pins/');
 
-	let data = await userData.json();
+	// Only the header and collections are awaited: they decide whether there is a profile.
+	let profile;
+	try {
+		profile = await event.fetch(`${base}/?locations=false`, { headers });
+	} catch (err) {
+		console.error('Profile fetch failed', err);
+		error(503, 'The profile could not be loaded.');
+	}
+	if (profile.status === 404) {
+		error(404, 'Not found');
+	}
+	if (!profile.ok) {
+		error(profile.status >= 500 ? 503 : profile.status, 'The profile could not be loaded.');
+	}
+	const body = await profile.json();
 
 	return {
-		user: data.user,
-		adventures: data.locations,
-		collections: data.collections,
-		stats: stats
+		profile: body.user,
+		collections: body.collections ?? [],
+		// Streamed: each resolves on its own.
+		stats,
+		locations,
+		pins
 	};
 };

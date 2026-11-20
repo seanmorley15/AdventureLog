@@ -16,6 +16,8 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	} else {
 		let count = 0;
+		let visitedCount = 0;
+		let plannedCount = 0;
 		let adventures: Location[] = [];
 
 		let typeString = event.url.searchParams.get('types');
@@ -60,6 +62,8 @@ export const load = (async (event) => {
 			let visited = res.results as Location[];
 
 			count = res.count;
+			visitedCount = res.visited_count ?? 0;
+			plannedCount = res.planned_count ?? 0;
 			adventures = [...adventures, ...visited];
 		}
 
@@ -67,6 +71,8 @@ export const load = (async (event) => {
 			props: {
 				adventures,
 				count,
+				visitedCount,
+				plannedCount,
 				order_by,
 				order_direction,
 				is_visited,

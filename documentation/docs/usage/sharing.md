@@ -44,6 +44,8 @@ A single location can be made public from its own page. Anyone who can read a lo
 
 Your profile can be **Private**, visible to **Signed-in users**, or **Public**. A profile visible to signed-in users can be found and invited to collections without being public.
 
+A public profile can also show its map on other websites. See [Embed Your Map](./embed_map.md).
+
 ## For server administrators
 
 - Set `ALLOW_PUBLIC_ACCESS=False` to keep everything behind sign-in, including public and unlisted stories, public locations, profiles, and guest links. See [Public Access](../configuration/public_access.md).

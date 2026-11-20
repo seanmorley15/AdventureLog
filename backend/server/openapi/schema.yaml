@@ -10751,7 +10751,8 @@ paths:
       operationId: users_retrieve
       description: |-
         The user, their public locations, and their public collections. Private profiles are
-        404 to everyone but their owner.
+        404 to everyone but their owner. Pass `locations=false` to leave the locations out
+        (they are listed a page at a time by `/users/{username}/locations/`).
       summary: Get a public profile
       parameters:
       - in: path
@@ -10773,6 +10774,110 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicProfileDetail'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/users/{username}/locations/:
+    get:
+      operationId: users_locations_list
+      description: Their public locations a page at a time, in the light form the
+        location lists use.
+      summary: List a user's public locations
+      parameters:
+      - in: query
+        name: category
+        schema:
+          type: string
+        description: A category name.
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - name
+          - oldest
+          - rating
+          - recent
+        description: '`recent` by default.'
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - Users
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationList'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/users/{username}/pins/:
+    get:
+      operationId: users_pins_list
+      description: Every public location that has coordinates, with just what a map
+        needs.
+      summary: List a user's map pins
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - Users
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicProfilePin'
           description: ''
         '403':
           content:
@@ -18609,6 +18714,38 @@ components:
       - collections
       - locations
       - user
+    PublicProfilePin:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        category:
+          type: string
+          nullable: true
+          description: The category icon.
+        category_name:
+          type: string
+          nullable: true
+          description: The category name.
+        is_visited:
+          type: boolean
+      required:
+      - category
+      - category_name
+      - id
+      - is_visited
+      - latitude
+      - longitude
+      - name
     QuickAddImageImport:
       type: object
       properties:
