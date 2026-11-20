@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import type { ContentImage, ImageSource } from '#lib/types.js';
 	import { normalizeContentImage } from '#lib/images.js';
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -15,6 +16,7 @@
 	import GoogleIcon from '~icons/mdi/google';
 
 	import { addToast } from '#lib/toasts.js';
+	import { startJob, waitForJob } from '#lib/jobs.js';
 	import ImmichSelect from './ImmichSelect.svelte';
 	import ImageFrame from './ImageFrame.svelte';
 
@@ -184,7 +186,7 @@
 	async function fetchImageFromUrl(imageUrl: string): Promise<Blob | null> {
 		try {
 			// Use backend proxy to avoid CORS issues with external URLs (Wikipedia, etc.)
-			const res = await fetch('/api/images/fetch_from_url/', {
+			const res = await fetch('/api/images/fetch-from-url/', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -195,7 +197,7 @@
 				let errorMsg = 'Failed to fetch image';
 				try {
 					const errorData = await res.json();
-					errorMsg = errorData.error || errorMsg;
+					errorMsg = apiErrorMessage(errorData, errorMsg);
 				} catch {
 					// Response wasn't JSON (e.g. timeout), use default message
 				}
@@ -272,7 +274,7 @@
 
 		try {
 			const res = await fetch(
-				`/api/generate/img/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
+				`/api/places/images/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
 			);
 			const data = await res.json();
 
@@ -333,7 +335,7 @@
 
 	async function makePrimaryImage(imageId: string) {
 		try {
-			const res = await fetch(`/api/images/${imageId}/toggle_primary`, {
+			const res = await fetch(`/api/images/${imageId}/toggle-primary/`, {
 				method: 'POST'
 			});
 
@@ -355,8 +357,8 @@
 
 	async function removeImage(imageId: string) {
 		try {
-			const res = await fetch(`/api/images/${imageId}/image_delete`, {
-				method: 'POST'
+			const res = await fetch(`/api/images/${imageId}/`, {
+				method: 'DELETE'
 			});
 
 			if (res.status === 204) {
@@ -424,11 +426,9 @@
 		googlePhotoError = '';
 
 		try {
-			const res = await fetch('/api/images/import_from_urls/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+			// The images are downloaded by a background job. Follow it, then load what it created.
+			const started = await startJob('/api/images/import-from-urls/', {
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					content_type: contentType,
 					object_id: objectId,
@@ -436,19 +436,22 @@
 					source: 'google'
 				})
 			});
+			const finished = await waitForJob(started.id);
+			const createdIds: string[] = finished.result?.created_ids ?? [];
+			const created = (
+				await Promise.all(
+					createdIds.map(async (id) => {
+						const res = await fetch(`/api/images/${id}/`);
+						return res.ok ? ((await res.json()) as ContentImage) : null;
+					})
+				)
+			).filter((img): img is ContentImage => img !== null);
 
-			if (!res.ok) {
-				googlePhotoError = $t('adventures.google_photos_import_error');
-				addToast('warning', $t('adventures.google_photos_import_error'));
-				return;
-			}
-
-			const data = await res.json();
-			if (Array.isArray(data.created) && data.created.length > 0) {
+			if (created.length > 0) {
 				const existingIds = new Set(images.map((img) => img.id));
-				const imported = data.created
-					.filter((img: ContentImage) => !existingIds.has(img.id))
-					.map((img: ContentImage) => createImageFromData(img));
+				const imported = created
+					.filter((img) => !existingIds.has(img.id))
+					.map((img) => createImageFromData(img));
 				images = [...images, ...imported];
 				dispatch('imagesUpdated', images);
 				addToast('success', $t('adventures.google_photos_import_success'));

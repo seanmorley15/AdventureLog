@@ -15,7 +15,7 @@ ARG PNPM_VERSION=10.32.1
 
 FROM node:22-bookworm-slim AS node-runtime
 
-FROM cgr.dev/chainguard/node:latest-dev@sha256:52dab1c59311e390b3ee79627fc9cb2bd8d35c47a33c43024a5510fad16fee99 AS frontend-build
+FROM cgr.dev/chainguard/node:latest-dev@sha256:54684aac47cea4f3b819370ef6a88d22603c9735208934c235461599af4eab57 AS frontend-build
 ARG PNPM_VERSION
 USER root
 WORKDIR /app
@@ -49,6 +49,9 @@ FROM python:3.13-slim AS backend-runtime
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
+# glibc opens up to 8 malloc arenas per core for threaded programs and rarely gives the memory
+# back, so RSS only grows after heavy requests. Two arenas keeps threads fast and memory flat.
+ENV MALLOC_ARENA_MAX=2
 WORKDIR /code
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates \
@@ -57,32 +60,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       nginx \
       memcached \
       supervisor \
-      cron \
       fonts-noto-core \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=backend-builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=backend-builder /usr/local/bin /usr/local/bin
 COPY backend/server /code/
 COPY docker/shared/entrypoint-common.sh /code/scripts/entrypoint-common.sh
-COPY backend/cron/adventurelog /etc/cron.d/adventurelog
-COPY backend/scripts/run-cron-job.sh /code/scripts/run-cron-job.sh
-COPY backend/scripts/write-cron-env.sh /code/scripts/write-cron-env.sh
-RUN chmod +x /code/scripts/entrypoint-common.sh /code/scripts/run-cron-job.sh /code/scripts/write-cron-env.sh \
-    && chmod 0644 /etc/cron.d/adventurelog \
-    && mkdir -p /code/static /code/media /var/log/adventurelog /var/lock
+RUN chmod +x /code/scripts/entrypoint-common.sh \
+    && mkdir -p /code/static /code/media
 RUN python3 manage.py collectstatic --noinput --verbosity 2
 
 # ---------------------------------------------------------------------------
 # Production targets
 # ---------------------------------------------------------------------------
 
-FROM cgr.dev/chainguard/node:latest@sha256:44c5ac2029f7a9b61e1bd12fef9e33f6025d64ea17fa3ecf21a2056f11ac99ca AS frontend
+FROM cgr.dev/chainguard/node:latest@sha256:efeb9fd6c61fd20b7c634531e0a746d26204bdc2df13e7ea57ab69aad349a900 AS frontend
 LABEL org.opencontainers.image.title="AdventureLog Frontend" \
       org.opencontainers.image.description="AdventureLog SvelteKit frontend (SSR)." \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \
       org.opencontainers.image.licenses="GPL-3.0"
 WORKDIR /app
 ENV NODE_ENV=production
+# V8 sizes its heap from the host's memory and collects lazily, so an idle SSR server keeps
+# far more than it needs. Override NODE_OPTIONS to raise the cap for very large collections.
+ENV NODE_OPTIONS=--max-old-space-size=256
+ENV MALLOC_ARENA_MAX=2
 COPY --from=frontend-build /app/build ./build
 COPY --from=frontend-build /app/node_modules ./node_modules
 COPY --from=frontend-build /app/package.json ./package.json

@@ -1,55 +1,29 @@
-# Dev Container + WSL 🧰
+# Development Setup
 
-Running AdventureLog in a **Dev Container** allows you to contribute to the project or work on features locally in a fully reproducible development environment with hot reloading, debugging, and tooling isolated inside Docker.
+Run AdventureLog from source in a **Dev Container**, to work on the code with hot reload, debugging, and all tools inside Docker. This guide uses **Windows with WSL 2**; on macOS or Linux, skip the WSL parts.
 
-This guide focuses on **Windows using WSL 2**, but the workflow is similar on other platforms.
+To run AdventureLog rather than develop it, use [Standard Deployment](standard.md).
 
-## Prerequisites
+## Requirements
 
-Before starting, ensure you have the following installed:
-
-* **Docker Desktop**
-  Download from: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
-
-  > Docker Desktop must be configured to use **WSL 2**
-  > Make sure Docker Desktop is running before you start the steps below.
-
-* **WSL 2 with a Linux distribution installed**
-  Ubuntu is recommended.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/), set to use the WSL 2 engine, and running.
+- WSL 2 with a Linux distribution. Ubuntu is recommended. Install it from Windows PowerShell:
 
   ```bash
   wsl --install -d Ubuntu
   ```
-  Run this in **Windows PowerShell** (or **Windows Terminal**).
 
-* **Visual Studio Code**
-  [https://code.visualstudio.com/](https://code.visualstudio.com/)
+- [Visual Studio Code](https://code.visualstudio.com/) with the **Dev Containers** and **WSL** extensions.
 
-* **VS Code Extensions**
+::: warning Before you start
+- Use a real distribution such as Ubuntu, not the `docker-desktop` WSL distribution.
+- Work in your Linux home folder (`/home/<user>`), not under `/mnt/c/`. File watching and container mounts misbehave on Windows drives.
+- Turn on Docker for your distribution: **Docker Desktop → Settings → Resources → WSL Integration → Ubuntu**.
+:::
 
-  * Dev Containers
-  * WSL
+## 1. Clone the repository
 
-## ⚠️ Important Notes (Read First)
-
-> **TIP**
-> Do not use the `docker-desktop` WSL distribution for development.
-> Always use a real Linux distro such as **Ubuntu**.
-
-> **TIP**
-> Avoid working in `/mnt/c/...`.
-> Clone and work inside your Linux home directory (`/home/<user>`), otherwise file watching and container mounts may behave incorrectly.
-
-> **TIP**
-> Docker must be available *inside* WSL. Make sure WSL integration is enabled in Docker Desktop:
->
-> **Docker Desktop → Settings → Resources → WSL Integration → Enable Ubuntu**
-
-## Getting Started
-
-### 1. Clone the Repository (inside WSL)
-
-Open a WSL terminal (search for "WSL" in the Windows Start menu and open the WSL terminal), then run:
+In a WSL terminal:
 
 ```bash
 cd ~
@@ -57,124 +31,57 @@ git clone https://github.com/seanmorley15/AdventureLog.git
 cd AdventureLog
 ```
 
-> **TIP**
-> If you plan to contribute changes, fork the repository on GitHub and clone your fork instead:
->
-> ```bash
-> git clone https://github.com/<your-username>/AdventureLog.git
-> ```
+To contribute, [fork the repository](https://github.com/seanmorley15/AdventureLog/fork) and clone your fork instead.
 
-### 2. Create the Development `.env` File (via WSL)
+## 2. Create the env file
 
 ```bash
 cp .env.advanced.example .env && sed -i 's/^DEBUG=.*/DEBUG=True/' .env
 ```
 
-This creates the `.env` file required for the containers to start and enables DEBUG for local development.
+The other defaults work for development. The dev setup uses the same settings as [Advanced Deployment](docker.md); see [Environment Variables](../configuration/environment_variables.md) for the rest.
 
-> **NOTE**
-> The rest of the defaults in `.env.advanced.example` are sufficient for running the project.
+## 3. Open it in the Dev Container
 
-#### Environment Variables
+1. Run `code .` in the project folder. VS Code shows that the folder is open **in WSL**.
+2. Press **Ctrl + Shift + P** and choose **Dev Containers: Reopen in Container**.
 
-The Dev Container setup uses the same `.env` configuration as Advanced Deployment.
+VS Code builds the container, installs dependencies, and attaches to it. The first build takes about 30 seconds.
 
-For a full list of available environment variables and optional configuration options, see the
-[**Docker 🐋 installation guide**](docker.md#configuration).
+## 4. Start the app
 
-### 3. Open the Project in VS Code (via WSL)
-
-From the project directory:
-
-```bash
-code .
-```
-
-VS Code should indicate that the folder is opened **in WSL**.
-
-### 4. Reopen the Project in a Dev Container
-
-In VS Code:
-
-1. Press **Ctrl + Shift + P**
-2. Select **Dev Containers: Reopen in Container**
-
-VS Code will:
-
-* Build the development containers
-* Install dependencies
-* Attach the editor to the running container
-
-The first build usually takes around 30 seconds.
-
-## Running the Application
-
-Once the Dev Container is running, the services are started using Docker Compose.
-Use the VS Code terminal (inside the Dev Container) for the commands below.
-
-To start the app, enter the following command:
+In the VS Code terminal, inside the Dev Container:
 
 ```bash
 docker compose -f docker/docker-compose.dev.yml up --build
 ```
 
-Bringing the app up usually takes around 1-2 minutes.
+It takes a minute or two. Then open:
 
-To fully reset the database and media volumes, run:
+| Service | Address |
+| ------- | ------- |
+| Frontend | [http://localhost:8015](http://localhost:8015) |
+| Backend API | [http://localhost:8016](http://localhost:8016) |
+
+The dev setup creates an admin account when `DJANGO_ADMIN_USERNAME`, `DJANGO_ADMIN_PASSWORD`, and `DJANGO_ADMIN_EMAIL` all have values. If you can't sign in, create one:
+
+```bash
+docker compose -f docker/docker-compose.dev.yml exec server python manage.py createsuperuser
+```
+
+The world data is imported only once, so later starts are faster.
+
+To reset the database and media volumes:
 
 ```bash
 docker compose -f docker/docker-compose.dev.yml down -v
 ```
 
-## Accessing the App
+## Troubleshooting
 
-* **Frontend (Web UI)**
-  [http://localhost:8015](http://localhost:8015)
+| Problem | Fix |
+| ------- | --- |
+| `The command 'docker' could not be found in this WSL 2 distro` | Start Docker Desktop, turn on WSL integration for Ubuntu, and restart Docker Desktop. |
+| Slow builds or file changes not picked up | Move the project from `/mnt/c/...` to `/home/<user>/AdventureLog`. |
 
-* **Backend (API)**
-  [http://localhost:8016](http://localhost:8016)
-
-Admin credentials are taken from your `.env` file. The `docker/docker-compose.dev.yml` setup auto-creates a superuser on startup using those values so you can log in right away.
-It also checks whether the countries/flags data already exists before re-importing it, so the first build can take longer and subsequent `down`/`up` runs are faster.
-This dev setup can feel a bit slower because hot reload, dependency installs, and initial database bootstrapping all happen inside containers.
-
-## Common Issues
-
-### Docker Not Found Inside WSL
-
-If you see:
-
-```
-The command 'docker' could not be found in this WSL 2 distro
-```
-
-Ensure:
-
-* Docker Desktop is running
-* WSL integration is enabled for **Ubuntu**
-* Docker Desktop has been restarted after enabling integration
-
-### Accidentally Using `/mnt/c`
-
-If the project lives under `/mnt/c/...`, move it to:
-
-```bash
-/home/<user>/AdventureLog
-```
-
-This avoids performance issues and file watcher bugs.
-
-## Dev vs Production
-
-| Feature      | Docker Install  | Dev Container      |
-| ------------ | --------------- | ------------------ |
-| Intended use | Running the app | Developing the app |
-| Hot reload   | ❌               | ✅                  |
-| Debugging    | ❌               | ✅                  |
-| Code editing | ❌               | ✅                  |
-
-For production or personal hosting, follow the
-[**Advanced Deployment guide**](docker.md).
-
-Enjoy contributing to AdventureLog! 🎉
-If you run into issues not covered here, please open a discussion or issue so the docs can be improved.
+If you hit something not covered here, open a [GitHub issue](https://github.com/seanmorley15/AdventureLog/issues) so the docs can be improved. See also the [contributing guide](https://github.com/seanmorley15/AdventureLog/blob/main/CONTRIBUTING.md).

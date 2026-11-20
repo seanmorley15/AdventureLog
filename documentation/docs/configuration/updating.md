@@ -1,70 +1,60 @@
-# Updating AdventureLog
+# Updating
 
-Keep your self-hosted instance current with the latest images and database migrations. **Always back up before updating.**
+Updating pulls new images and restarts AdventureLog. Database changes are applied automatically when the app starts. **Back up before every update.** See [Backups and Restore](backups.md).
 
-## Option 1: scripts/deploy.sh (recommended)
+Before a major version, read its [changelog](../changelogs/development_timeline.md) for steps that need you.
 
-From your install directory (where `scripts/deploy.sh` and your compose file live):
+## Update commands
 
-```bash
+Pick the tab that matches how you installed. `scripts/deploy.sh` is the easiest: it validates your env file, backs up, pulls images, and waits until the app is healthy.
+
+::: code-group
+
+```bash [deploy.sh]
+# From your install folder. Detects Standard or Advanced Deployment.
 bash scripts/deploy.sh --backup
-bash scripts/deploy.sh --logs   # optional: follow logs after deploy
+bash scripts/deploy.sh --logs   # optional: follow the logs afterward
 ```
 
-`scripts/deploy.sh` validates your env file, creates a backup, pulls images, and runs `docker compose up -d --wait`.
-
-For Standard Deployment installs:
-
-```bash
-COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
-```
-
-See [Operations & Maintenance](operations.md) for compose auto-detection details.
-
-## Option 2: Manual compose
-
-```bash
+```bash [Compose, Standard]
 bash scripts/backup.sh
-
-# Standard Deployment
 docker compose --env-file .env pull
 docker compose --env-file .env up -d --wait
+```
 
-# Advanced Deployment
+```bash [Compose, Advanced]
+bash scripts/backup.sh
 docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml pull
 docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml up -d --wait
 ```
 
-## Option 3: Guided installer menu
-
-If you used the [Quick Start Installer](../install/quick_start.md), re-run it to open the management menu:
-
-```bash
-curl -sSL https://get.adventurelog.app | bash
+```bash [Quick Start Installer]
+# Opens the management menu. Choose "Update".
+bash install_adventurelog.sh --manage
 ```
 
-Choose **Update to latest images** (with optional backup).
+:::
 
-## Restore from backup
+The deploy and backup scripts come with the [Quick Start Installer](../install/quick_start.md). For a manual install, [download them](backups.md#back-up) or use the Compose commands.
 
-```bash
-bash scripts/restore.sh backups/YYYYMMDD-HHMMSS
-```
-
-## Updating region data
-
-Country and region reference data comes from [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database). To refresh it manually:
-
-```bash
-docker exec -it <backend-container> bash
-python manage.py download-countries --force
-```
-
-Region data version is pinned per AdventureLog release in `settings.py` and is not auto-updated on every deploy.
+If your platform manages containers for you (Unraid, Synology, TrueNAS, Umbrel, Easypanel), update the AdventureLog images there.
 
 ## What happens during an update
 
-1. New container images are pulled
-2. Containers restart with your existing env and volumes
-3. Database migrations run automatically on backend startup
-4. The `/health` endpoint confirms the stack is ready
+1. New images are pulled.
+2. The containers restart with your existing env file and volumes.
+3. Database migrations run when the backend starts.
+4. If a release adds new world data, it is imported once. This takes a few minutes and needs the same RAM as a first boot.
+5. The `/health` check confirms the app is ready.
+
+If something goes wrong, [restore the backup](backups.md#restore) you made first.
+
+## World data
+
+Country, region, and city data comes from [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database). Each AdventureLog release pins a version of it, so it changes only when you update AdventureLog. To import it again by hand, for example after starting with `SKIP_WORLD_DATA=1`, run `download_countries`. See [Management Commands](management_commands.md#world-data).
+
+Some releases change how the data is linked, such as v0.14, which ties territories like Puerto Rico to the country they are also listed under. The changelog says when a management command is needed afterward.
+
+## Moving between setups
+
+To switch an existing server from Advanced to Standard Deployment, see [Switch to Standard Deployment](../guides/switch_to_standard.md).

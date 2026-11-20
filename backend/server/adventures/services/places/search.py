@@ -7,6 +7,7 @@ from django.conf import settings
 
 from adventures.providers.places.google import search_places as google_search
 from adventures.providers.places.osm import search_places as osm_search
+from adventures.services.places.photos import proxy_photo_url
 
 
 @dataclass
@@ -108,7 +109,7 @@ def _infer_addresstype(type_name: Optional[str]) -> Optional[str]:
     return mapping.get(type_name, None)
 
 
-def _normalize_google_search_results(places: List[Dict[str, Any]], api_key: str) -> List[Dict[str, Any]]:
+def _normalize_google_search_results(places: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     normalized: List[Dict[str, Any]] = []
 
     for place in places or []:
@@ -128,9 +129,7 @@ def _normalize_google_search_results(places: List[Dict[str, Any]], api_key: str)
         for photo in place.get("photos", [])[:5]:
             photo_name = photo.get("name")
             if photo_name:
-                photos.append(
-                    f"https://places.googleapis.com/v1/{photo_name}/media?key={api_key}&maxHeightPx=800&maxWidthPx=800"
-                )
+                photos.append(proxy_photo_url(name=photo_name))
 
         display_name_obj = place.get("displayName", {}) or {}
         name = display_name_obj.get("text") if isinstance(display_name_obj, dict) else display_name_obj
@@ -314,7 +313,7 @@ def search_places(
         if google_payload.error:
             google_error = google_payload.error
         else:
-            google_results = _normalize_google_search_results(google_payload.data, api_key)
+            google_results = _normalize_google_search_results(google_payload.data)
 
     if google_results is None or _should_compare_osm(normalized_query, google_results):
         providers_attempted.append("osm")

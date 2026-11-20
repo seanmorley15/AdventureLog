@@ -20,7 +20,7 @@ export const load = (async (event) => {
 	const [citiesRes, regionRes, visitsRes] = await Promise.all([
 		fetch(`${endpoint}/api/regions/${id}/cities/`, { method: 'GET', headers }),
 		fetch(`${endpoint}/api/regions/${id}/`, { method: 'GET', headers }),
-		fetch(`${endpoint}/api/regions/${id}/cities/visits/`, { method: 'GET', headers })
+		fetch(`${endpoint}/api/visited-cities/?region=${id}`, { method: 'GET', headers })
 	]);
 
 	if (!citiesRes.ok) {

@@ -1,48 +1,58 @@
-# Installation with Nginx Proxy Manager
+# Nginx Proxy Manager
 
-Nginx Proxy Manager is a simple and powerful tool that allows you to manage Nginx proxy hosts and SSL certificates. It is designed to be easy to use and configure, and it integrates well with Docker.
+[Nginx Proxy Manager](https://nginxproxymanager.com/) is a web interface for nginx proxy hosts and SSL certificates. Use it to serve AdventureLog over HTTPS on your own domain.
 
-It is fairly simple to set up Nginx Proxy Manager with AdventureLog.
+## 1. Put both on one Docker network
 
-## Deploy AdventureLog using Docker
-
-View the [Docker installation guide](docker.md) for instructions on how to deploy AdventureLog using Docker.
-
-## Ensure Correct Environment Variables
-
-- `ORIGIN` - The domain where you will be hosting AdventureLog. This is where the **frontend** will be served from.
-- `PUBLIC_URL` - This needs to match the **outward port of the server** and be accessible from where the app is used. It is used for the creation of image URLs.
-
-## Setup Docker Network
-
-Ensure that the Nginx Proxy Manager and AdventureLog containers are on the same Docker network. You can create a new network using the following command:
+Nginx Proxy Manager reaches AdventureLog by container name, so they must share a network. Create one:
 
 ```bash
-docker network create nginx-proxy-manager
+docker network create proxy
 ```
 
-Add the following to the bottom of the `docker-compose.advanced.yml` file for the Nginx Proxy Manager service and the AdventureLog service.
+Add it to the bottom of AdventureLog's compose file, and to Nginx Proxy Manager's:
 
 ```yaml
 networks:
   default:
-    name: nginx-proxy-manager
+    name: proxy
     external: true
 ```
 
-## Setting Up Nginx Proxy Manager
+Restart both.
 
-1. Install Nginx Proxy Manager on your server. You can find the installation instructions [here](https://nginxproxymanager.com/setup/).
-2. Open the Nginx Proxy Manager web interface and log in with your credentials.
-3. Add a new proxy host for the AdventureLog **frontend**:
-   - **Domain Names**: Enter the domain name where you will be hosting AdventureLog.
-   - **Scheme**: `http`
-   - **Forward Hostname/IP**: `adventurelog-frontend` The name of the AdventureLog **frontend** container in the `docker-compose.advanced.yml` file.
-   - **Forward Port**: `3000` This is the internal port of the AdventureLog **frontend** container so you will not need to change it even if you change the external port.
-4. Add a new proxy host for the AdventureLog **backend**:
-   - **Domain Names**: Enter the domain name where you will be hosting AdventureLog.
-   - **Scheme**: `http`
-   - **Forward Hostname/IP**: `adventurelog-backend` The name of the AdventureLog **backend** container in the `docker-compose.advanced.yml` file.
-   - **Forward Port**: `80` This is the internal port of the AdventureLog **backend** container so you will not need to change it even if you change the external port.
+## 2. Set AdventureLog's address
 
-This will allow you to access AdventureLog using the domain name you specified in the Nginx Proxy Manager configuration.
+Set `SITE_URL` to your public HTTPS address, for example `https://adventurelog.example.com`, and restart AdventureLog. On Advanced Deployment, also delete or comment out `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS` in `.env.advanced`; they are derived from `SITE_URL` only when they aren't set.
+
+## 3. Add the proxy host
+
+In Nginx Proxy Manager, go to **Hosts → Proxy Hosts → Add Proxy Host**, enter your domain, and request an SSL certificate on the **SSL** tab.
+
+::: code-group
+
+```txt [Standard Deployment]
+Details tab
+  Scheme:                http
+  Forward Hostname / IP: adventurelog
+  Forward Port:          80
+```
+
+```txt [Advanced Deployment]
+Details tab
+  Scheme:                http
+  Forward Hostname / IP: adventurelog-frontend
+  Forward Port:          3000
+
+Custom locations tab: add one for each of
+  /media  /admin  /accounts  /static
+  Scheme:                http
+  Forward Hostname / IP: adventurelog-backend
+  Forward Port:          80
+```
+
+:::
+
+The ports are the containers' internal ports, so they stay the same whatever host ports you mapped.
+
+Open your domain and follow [First Steps](first_steps.md).

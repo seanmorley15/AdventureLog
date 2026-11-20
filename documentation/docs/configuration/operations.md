@@ -1,128 +1,85 @@
-# Operations & Maintenance
+# Operations
 
-Day-to-day tasks for a self-hosted AdventureLog instance: updates, backups, validation, and the installer management menu.
+Day-to-day tools for a self-hosted AdventureLog server: the installer's management menu, the helper scripts, and env file validation.
+
+| Task | Page |
+| ---- | ---- |
+| Back up and restore | [Backups and Restore](backups.md) |
+| Update to a new version | [Updating](updating.md) |
+| Run maintenance commands | [Management Commands](management_commands.md) |
+| Manage users and data in the browser | [Admin Panel](../guides/admin_panel.md) |
 
 ## Management menu
 
-If you installed via the [Quick Start Installer](../install/quick_start.md), re-run it to open the interactive management menu:
-
-```bash
-curl -sSL https://get.adventurelog.app | bash
-```
-
-Or from your install directory:
+If you installed with the [Quick Start Installer](../install/quick_start.md), run it again, or run the script from your install folder:
 
 ```bash
 bash install_adventurelog.sh --manage
 ```
 
-Available actions:
-
 | Action | What it does |
 | ------ | ------------ |
-| **Status** | Shows container health and `/health` endpoint |
-| **Update** | Pulls latest images and redeploys (optional backup first) |
-| **Reconfigure** | Re-runs the configuration wizard |
+| **Status** | Shows container health and the `/health` check |
+| **Update** | Pulls the latest images and restarts, with an optional backup first |
+| **Reconfigure** | Runs the setup questions again |
 | **Backup** | Runs `scripts/backup.sh` |
-| **Restore** | Runs `scripts/restore.sh` from a backup folder |
-| **Logs** | Follows container logs |
-| **Restart** | Restarts the compose stack |
-| **Uninstall** | Stops containers, removes volumes |
+| **Restore** | Runs `scripts/restore.sh` with a backup folder you pick |
+| **Logs** | Follows the container logs |
+| **Restart** | Restarts the containers |
+| **Uninstall** | Stops the containers and deletes their volumes |
 
-## Compose file detection
+## Helper scripts
 
-`scripts/deploy.sh`, `scripts/backup.sh`, and `scripts/restore.sh` auto-detect your setup:
+The installer puts these in `scripts/`. [Backups and Restore](backups.md#back-up) shows how to download them for a manual install.
 
-| Condition | Compose file | Env file |
-| --------- | ------------ | -------- |
-| Only `.env` exists | `docker-compose.yml` | `.env` |
-| Only `.env.advanced` exists | `docker/docker-compose.advanced.yml` | `.env.advanced` |
-| `ADVENTURELOG_COMPOSE=advanced` with both env files | `docker/docker-compose.advanced.yml` | `.env.advanced` |
-| Otherwise | `docker-compose.yml` | `.env` |
+| Script | What it does |
+| ------ | ------------ |
+| `deploy.sh` | Validates the env file, optionally backs up, pulls images, and restarts. See [Updating](updating.md). |
+| `backup.sh`, `restore.sh` | See [Backups and Restore](backups.md). |
+| `validate-env.sh` | Checks an env file for common mistakes. See [below](#validate-your-env-file). |
 
-Override manually:
+### Which setup the scripts use
+
+The scripts work out whether you run Standard or Advanced Deployment from the env files in the folder:
+
+| Files present | Compose file | Env file |
+| ------------- | ------------ | -------- |
+| Only `.env` | `docker-compose.yml` | `.env` |
+| Only `.env.advanced` | `docker/docker-compose.advanced.yml` | `.env.advanced` |
+| Both, with `ADVENTURELOG_COMPOSE=advanced` set | `docker/docker-compose.advanced.yml` | `.env.advanced` |
+| Anything else | `docker-compose.yml` | `.env` |
+
+To choose explicitly, set `COMPOSE_FILE`:
 
 ```bash
 COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
 ```
 
-Always pass `--env-file` when running `docker compose` directly:
+When you run `docker compose` yourself, always pass the env file, for example `docker compose --env-file .env ps`.
+
+## Validate your env file
+
+Run this after editing an env file, and before deploying:
 
 ```bash
-docker compose --env-file .env ps
+bash scripts/validate-env.sh               # detects the file
+bash scripts/validate-env.sh .env.advanced # or name it
 ```
 
-## Updating
+It catches common mistakes, such as `PUBLIC_SERVER_URL` pointing at the host's backend port instead of the internal Docker service name.
 
-See [Updating](updating.md) for full details. Quick reference:
+## Logs
 
-```bash
-# Recommended — validates env, backs up, pulls, and waits for health
-bash scripts/deploy.sh --backup
+::: code-group
 
-# Advanced Deployment with explicit compose file
-COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
+```bash [Standard]
+docker compose logs -f app
 ```
 
-## Backup
-
-`scripts/backup.sh` creates a timestamped folder under `backups/` containing:
-
-- Your env file (`.env` or `.env.advanced`)
-- PostgreSQL dump (`database.sql`)
-- Media volume archive (`media.tar.gz`)
-
-```bash
-bash scripts/backup.sh
-# Custom output directory:
-BACKUP_DIR=/mnt/backups bash scripts/backup.sh
+```bash [Advanced]
+docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml logs -f server web
 ```
 
-## Restore
+:::
 
-```bash
-bash scripts/restore.sh backups/20260101-120000
-```
-
-This stops the stack, restores env + database + media, and brings containers back up.
-
-## Environment validation
-
-Run before every deploy or after editing env files:
-
-```bash
-bash scripts/validate-env.sh
-bash scripts/validate-env.sh .env
-bash scripts/validate-env.sh .env.advanced
-```
-
-The validator catches common mistakes such as `PUBLIC_SERVER_URL` pointing at the host backend port instead of the internal Docker service name.
-
-## Image GPS backfill
-
-New uploads and imports store GPS coordinates on `ContentImage` records when EXIF or Immich metadata is available. Images imported before this feature, or stored as WEBP without retained EXIF, may not have coordinates until you backfill them.
-
-Run inside the backend container:
-
-```bash
-docker compose exec server python3 manage.py backfill_image_coordinates
-```
-
-Useful options:
-
-| Flag | Purpose |
-| ---- | ------- |
-| `--dry-run` | Show what would be updated without saving |
-| `--user-id ID` | Limit to one user's images |
-| `--batch-size N` | Progress logging interval (default 100) |
-| `--force` | Re-extract even when coordinates already exist |
-| `--verbose` | Log each processed image |
-
-The command tries, in order:
-
-1. **Local file** — reads the stored image and extracts EXIF GPS (may fail for WEBP conversions that stripped metadata)
-2. **Immich reference** — fetches GPS from the linked Immich asset when `immich_id` is set and the user has an Immich integration
-
-After backfill, geotagged images appear on maps when **Photo locations** is enabled in the map display options.
-
-## First boot behavior
+The backend log shows startup, migrations, the background job worker, and errors. For problems, start with [Troubleshooting](../troubleshooting/common_issues.md).

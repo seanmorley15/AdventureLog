@@ -2,7 +2,20 @@ from django.conf import settings
 from django.http import JsonResponse
 
 from cloud.utils import get_or_create_subscription, has_access
+from users.authentication import user_from_session_token
 from users.models import APIKey
+
+
+# Paths under /api/ an account without a subscription can still use: signing in, the account
+# itself (which says whether it has access), paying, and reading the docs.
+EXEMPT_PREFIXES = (
+    '/api/auth/',
+    '/api/account/',
+    '/api/billing/',
+    '/api/server-info/',
+    '/api/docs/',
+    '/api/schema/',
+)
 
 
 class CloudAccessMiddleware:
@@ -16,7 +29,7 @@ class CloudAccessMiddleware:
         if not request.path.startswith("/api/"):
             return self.get_response(request)
 
-        if request.path.startswith("/api/billing/"):
+        if request.path.startswith(EXEMPT_PREFIXES):
             return self.get_response(request)
 
         user = request.user if request.user.is_authenticated else None
@@ -32,6 +45,11 @@ class CloudAccessMiddleware:
                 api_key_instance = APIKey.authenticate(api_key)
                 if api_key_instance:
                     user = api_key_instance.user
+
+        if user is None:
+            session_token = request.headers.get("X-Session-Token")
+            if session_token:
+                user = user_from_session_token(session_token)
 
         if user is None:
             return self.get_response(request)

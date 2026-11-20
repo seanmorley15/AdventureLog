@@ -1,37 +1,30 @@
-# Endurain Integration
+# Endurain
 
-[Endurain](https://docs.endurain.com/) is a self-hosted fitness tracking platform. Integrating Endurain with AdventureLog lets you browse activities from your instance and import GPX tracks into visits, similar to the Strava integration.
+[Endurain](https://docs.endurain.com/) is a self-hosted fitness tracker. Connect it to import your Endurain activities into the visits of your locations, GPS track included.
 
-## Setup
+**Who sets it up:** each user connects their own Endurain account. The server admin doesn't need to do anything.
 
-1. Ensure your Endurain instance is reachable from the AdventureLog **backend** (not just your browser). Avoid `localhost` or `127.0.0.1` if AdventureLog runs in Docker on another host.
-2. Open **Settings → Integrations** in AdventureLog.
-3. Enter your Endurain server URL (e.g. `https://endurain.example.com`).
-4. Enter your Endurain username and password, then click **Connect with password**.
-5. If MFA is enabled on your Endurain account, enter your TOTP or backup code when prompted.
+## Connect your account
 
-AdventureLog stores JWT access and refresh tokens on the server. Tokens are never returned to the browser after connection.
+1. Go to **Settings → Integrations → Endurain**.
+2. Enter your Endurain **Server URL**, for example `https://endurain.example.com`, and your Endurain username and password.
+3. Choose **Connect with password**. If your Endurain account uses multi-factor authentication, enter the code when asked.
 
-AdventureLog uses Endurain's mobile client authentication flow server-side so refresh tokens are available for long-lived API access.
+AdventureLog's server connects to Endurain, so use an address that server can reach, preferably over HTTPS. `localhost` and `127.0.0.1` usually don't work in Docker.
 
-## Importing activities into visits
+AdventureLog doesn't keep your password. It stores sign-in tokens on the server, refreshes them on its own, and never sends them to your browser. Endurain API keys can't read activities, which is why a password sign-in is used.
+
+## Use it
 
 1. Open a location and add or edit a visit with dates.
-2. Click the **Endurain activities** button on the visit.
-3. Click the import button on an activity. AdventureLog fetches the GPX from Endurain automatically and attaches it to the visit.
+2. Choose **Endurain activities** on the visit.
+3. Import an activity. AdventureLog fetches its GPS track from Endurain and attaches it to the visit as a GPX file.
 
-Unlike Strava, you do not need to manually download and re-upload GPX files. AdventureLog generates GPX from Endurain GPS streams server-side when you import an activity.
+## Troubleshooting
 
-## Token refresh and reconnection
+| Problem | Fix |
+| ------- | --- |
+| Can't connect | Check the URL and that the AdventureLog server can reach it. See [An integration can't connect](../troubleshooting/common_issues.md#an-integration-can-t-connect). |
+| Activities stop loading | The Endurain session was revoked. Disconnect and connect again in **Settings → Integrations**. |
 
-Access tokens expire after about 15 minutes. AdventureLog refreshes them automatically using the stored refresh token.
-
-If refresh fails (revoked session, token reuse detection, etc.), disconnect and reconnect Endurain in Settings.
-
-## Security notes
-
-- Use HTTPS for your Endurain server in production.
-- JWT tokens are stored on the AdventureLog server per user.
-- API keys cannot be used for reading activities in Endurain; JWT is required for `activities:read`.
-
-For authentication details, see the [Endurain developer authentication guide](https://docs.endurain.com/developer-guide/authentication/).
+For how the sign-in works, see Endurain's [authentication guide](https://docs.endurain.com/developer-guide/authentication/).

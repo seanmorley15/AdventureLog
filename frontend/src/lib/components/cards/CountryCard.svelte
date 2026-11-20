@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Country } from '#lib/types.js';
+	import { localName } from '#lib/worldtravel.js';
 	import { t } from 'svelte-i18n';
 
 	import MapMarkerStar from '~icons/mdi/map-marker-star';
@@ -13,6 +14,7 @@
 
 	let { country }: Props = $props();
 
+	let local = $derived(localName(country.name, country.native_name));
 	let visitStatus = $derived(
 		country.num_visits === 0
 			? 'none'
@@ -40,6 +42,9 @@
 		<span class="font-semibold truncate block group-hover:text-primary transition-colors">
 			{country.name}
 		</span>
+		{#if local}
+			<span class="text-sm text-base-content/50 truncate block">{local}</span>
+		{/if}
 		<span class="text-sm text-base-content/50 font-mono sm:hidden">{country.country_code}</span>
 	</div>
 

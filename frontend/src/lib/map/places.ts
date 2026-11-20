@@ -1,10 +1,13 @@
+import { apiErrorMessage } from '#lib/api/index.js';
 import type {
 	Location,
+	Lodging,
 	PlaceSearchResult,
 	Recommendation,
 	RecommendationResponse
 } from '#lib/types.js';
 import { googleContentImage } from '#lib/images.js';
+import type { RecommendationCategory } from '#lib/recommendations/categories.js';
 
 export type PlacesSearchMeta = {
 	provider_used?: string;
@@ -42,19 +45,15 @@ export function toPlaceResult(result: Record<string, unknown>): PlaceSearchResul
 }
 
 export async function searchPlaces(query: string): Promise<PlacesSearchMeta> {
-	const response = await fetch(
-		`/api/places/search/?query=${encodeURIComponent(query)}&include_meta=1`
-	);
+	const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
 	const payload = await response.json();
 	if (!response.ok) {
-		throw new Error(payload?.error || 'Place search failed');
+		throw new Error(apiErrorMessage(payload, 'Place search failed'));
 	}
-	const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
-	const provider_used = Array.isArray(payload) ? undefined : payload?.provider_used;
 	return {
-		provider_used,
-		providers_attempted: payload?.providers_attempted,
-		results: Array.isArray(rawResults) ? rawResults.map((r) => toPlaceResult(r)) : []
+		provider_used: payload.provider_used ?? undefined,
+		providers_attempted: payload.providers_attempted,
+		results: (payload.results ?? []).map((r: Record<string, unknown>) => toPlaceResult(r))
 	};
 }
 
@@ -63,11 +62,11 @@ export async function fetchPlaceDetails(
 	name = ''
 ): Promise<Record<string, unknown>> {
 	const response = await fetch(
-		`/api/places/place_details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name)}`
+		`/api/places/details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name)}`
 	);
 	const details = await response.json();
 	if (!response.ok) {
-		throw new Error(details?.error || 'Unable to fetch place details');
+		throw new Error(apiErrorMessage(details, 'Unable to fetch place details'));
 	}
 	return details;
 }
@@ -113,7 +112,7 @@ export async function fetchFormattedLocation(
 	lng: number
 ): Promise<FormattedLocationData | null> {
 	try {
-		const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}&format=json`);
+		const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}`);
 		if (!response.ok) {
 			return null;
 		}
@@ -183,7 +182,20 @@ export type QuickAddPayload = {
 	type?: string;
 };
 
-export async function quickAddLocation(payload: QuickAddPayload): Promise<Location> {
+export type QuickAddOptions = {
+	collectionId?: string | null;
+	/** Also place it on the trip day with this date (YYYY-MM-DD). */
+	itineraryDate?: string | null;
+};
+
+export type QuickAddResult<T> = T & { quick_add_itinerary_item?: Record<string, unknown> };
+
+async function postQuickAdd<T>(
+	endpoint: string,
+	payload: QuickAddPayload,
+	options: QuickAddOptions,
+	failure: string
+): Promise<QuickAddResult<T>> {
 	const body: Record<string, unknown> = {
 		name: payload.name,
 		latitude: payload.latitude,
@@ -200,22 +212,47 @@ export async function quickAddLocation(payload: QuickAddPayload): Promise<Locati
 		photos: payload.photos || [],
 		is_public: false
 	};
+	if (options.collectionId) body.collection = options.collectionId;
+	if (options.itineraryDate) body.itinerary_date = options.itineraryDate;
 	if (payload.type) body.type = payload.type;
 
-	const res = await fetch('/api/locations/quick-add/', {
+	const res = await fetch(endpoint, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body)
 	});
 	if (!res.ok) {
-		const errorData = await res.json().catch(() => ({}));
-		throw new Error(
-			(errorData as { error?: string; detail?: string })?.error ||
-				(errorData as { detail?: string })?.detail ||
-				'Failed to create location'
-		);
+		const errorData = await res.json().catch(() => null);
+		throw new Error(apiErrorMessage(errorData, failure));
 	}
 	return res.json();
+}
+
+/** `options` may also be a collection id, as older callers pass. */
+export function quickAddLocation(
+	payload: QuickAddPayload,
+	options: QuickAddOptions | string | null = {}
+): Promise<QuickAddResult<Location>> {
+	const resolved =
+		typeof options === 'string' || options === null ? { collectionId: options } : options;
+	return postQuickAdd<Location>(
+		'/api/locations/quick-add/',
+		payload,
+		resolved,
+		'Failed to create location'
+	);
+}
+
+export function quickAddLodging(
+	payload: QuickAddPayload,
+	options: QuickAddOptions = {}
+): Promise<QuickAddResult<Lodging>> {
+	return postQuickAdd<Lodging>(
+		'/api/lodgings/quick-add/',
+		payload,
+		options,
+		'Failed to create lodging'
+	);
 }
 
 export function placeToQuickAddPayload(place: PlaceSearchResult): QuickAddPayload {
@@ -243,6 +280,7 @@ export function recommendationToQuickAddPayload(rec: Recommendation): QuickAddPa
 		latitude: rec.latitude,
 		longitude: rec.longitude,
 		location: rec.address || rec.description || '',
+		place_id: rec.place_id,
 		description: rec.description,
 		website: rec.website,
 		phone_number: rec.phone_number,
@@ -252,6 +290,18 @@ export function recommendationToQuickAddPayload(rec: Recommendation): QuickAddPa
 		types: rec.types,
 		photos: rec.photos
 	};
+}
+
+/**
+ * A smaller copy of an app Google photo (`/api/places/photo/?...`) for thumbnails.
+ * Other addresses are returned unchanged.
+ */
+export function placePhotoThumbnail(url: string, size = 200): string {
+	if (!url.startsWith('/api/places/photo/')) return url;
+	const [path, query = ''] = url.split('?');
+	const params = new URLSearchParams(query);
+	params.set('size', String(size));
+	return `${path}?${params.toString()}`;
 }
 
 /** Photo URLs to import after save (matches LocationModal quick-start add-details flow). */
@@ -265,7 +315,10 @@ export function extractGooglePhotoUrls(
 	}
 	return (images ?? [])
 		.map((img) => img?.image)
-		.filter((url): url is string => typeof url === 'string' && /^https?:\/\//i.test(url.trim()))
+		.filter(
+			(url): url is string =>
+				typeof url === 'string' && /^(https?:\/\/|\/api\/places\/photo\/)/i.test(url.trim())
+		)
 		.slice(0, 5);
 }
 
@@ -303,11 +356,64 @@ export function recommendationToLocationPrefill(rec: Recommendation) {
 	};
 }
 
+/** A `LodgingModal` prefill for a recommendation. */
+export function recommendationToLodgingPrefill(
+	rec: Recommendation,
+	userId: string | null | undefined,
+	collectionId: string | null
+): Lodging {
+	return {
+		id: '',
+		user: userId ?? '',
+		name: rec.name,
+		type: '',
+		description: rec.description,
+		rating: rec.rating,
+		link: rec.website || rec.google_maps_url || null,
+		check_in: null,
+		check_out: null,
+		timezone: null,
+		reservation_number: null,
+		price: null,
+		price_currency: null,
+		latitude: rec.latitude,
+		longitude: rec.longitude,
+		location: rec.address || rec.description || null,
+		is_public: false,
+		collection: collectionId,
+		created_at: '',
+		updated_at: '',
+		images: (rec.photos || []).map((url, i) => googleContentImage(`rec-${i}`, url, i === 0)),
+		attachments: []
+	} as Lodging;
+}
+
+export function nearbyRadiusOptions(isMetric: boolean): { value: number; label: string }[] {
+	return isMetric
+		? [
+				{ value: 1000, label: '1 km' },
+				{ value: 2000, label: '2 km' },
+				{ value: 5000, label: '5 km' },
+				{ value: 10000, label: '10 km' },
+				{ value: 20000, label: '20 km' },
+				{ value: 50000, label: '50 km' }
+			]
+		: [
+				{ value: 1609, label: '1 mi' },
+				{ value: 3219, label: '2 mi' },
+				{ value: 8047, label: '5 mi' },
+				{ value: 16093, label: '10 mi' },
+				{ value: 32187, label: '20 mi' },
+				{ value: 80467, label: '50 mi' }
+			];
+}
+
 export async function fetchRecommendations(params: {
 	lat: number;
 	lon: number;
 	radius: number;
-	category: 'tourism' | 'food' | 'lodging';
+	category: RecommendationCategory;
+	limit?: number;
 }): Promise<RecommendationResponse> {
 	const searchParams = new URLSearchParams({
 		lat: params.lat.toString(),
@@ -315,15 +421,13 @@ export async function fetchRecommendations(params: {
 		radius: params.radius.toString(),
 		category: params.category
 	});
-	const response = await fetch(`/api/recommendations/query/?${searchParams.toString()}`);
-	const data: RecommendationResponse = await response.json();
+	if (params.limit) searchParams.set('limit', String(params.limit));
+	const response = await fetch(`/api/recommendations/?${searchParams.toString()}`);
+	const data = await response.json();
 	if (!response.ok) {
-		throw new Error(data.error || 'Failed to fetch recommendations');
+		throw new Error(apiErrorMessage(data, 'Failed to fetch recommendations'));
 	}
-	if (data.error) {
-		throw new Error(data.error);
-	}
-	return data;
+	return data as RecommendationResponse;
 }
 
 export async function refetchPins(): Promise<import('#lib/types.js').Pin[]> {

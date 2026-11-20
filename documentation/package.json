@@ -1,14 +1,9 @@
 {
   "name": "adventurelog-documentation",
   "devDependencies": {
-    "@braintree/sanitize-url": "^7.1.2",
-    "cytoscape": "^3.34.0",
-    "cytoscape-cose-bilkent": "^4.1.0",
-    "dayjs": "^1.11.21",
-    "debug": "^4.4.3",
-    "mermaid": "^11.17.2",
-    "vitepress": "^1.6.4",
-    "vitepress-plugin-mermaid": "^2.0.17"
+    "@fontsource/noto-color-emoji": "^5.3.2",
+    "@types/node": "^22.20.5",
+    "vitepress": "^1.6.4"
   },
   "scripts": {
     "docs:dev": "vitepress dev",

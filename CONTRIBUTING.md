@@ -151,6 +151,8 @@ AdventureLog currently includes:
 
 When contributing, please try to match the **style and patterns already used in the project**.
 
+For the backend, read [`backend/server/ARCHITECTURE.md`](backend/server/ARCHITECTURE.md) first: it explains where code belongs, which way dependencies point, and how to run the checks. If you add or change an API endpoint, follow [`backend/server/API.md`](backend/server/API.md): it describes the API's conventions and how to document an endpoint and regenerate the OpenAPI schema.
+
 ---
 
 # Documentation Changes
@@ -193,3 +195,7 @@ These are great starting points for new contributors.
 Everyone participating in AdventureLog is expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Reports can be sent confidentially to `contact@adventurelog.app`.
+
+## Frontend tests
+
+See [frontend/TESTING.md](frontend/TESTING.md) for running and writing unit, component and end-to-end tests.

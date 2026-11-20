@@ -7,10 +7,12 @@ on:
   pull_request:
     paths:
       - "frontend/**"
+      - "backend/server/openapi/schema.yaml"
       - ".github/workflows/frontend-test.yml"
   push:
     paths:
       - "frontend/**"
+      - "backend/server/openapi/schema.yaml"
       - ".github/workflows/frontend-test.yml"
 
 jobs:
@@ -39,9 +41,36 @@ jobs:
         working-directory: frontend
         run: pnpm run lint
 
+      # The API types are generated from the backend schema; they must be up to date.
+      - name: check generated API types
+        working-directory: frontend
+        run: |
+          pnpm run api:types
+          git diff --exit-code src/lib/api/schema.d.ts
+
       - name: run svelte check
         working-directory: frontend
         run: pnpm run check
+
+      - name: unit tests with coverage
+        working-directory: frontend
+        run: pnpm run test:coverage
+
+      - name: install Chromium for component tests
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: component tests
+        working-directory: frontend
+        run: pnpm run test:component
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: build frontend
         working-directory: frontend

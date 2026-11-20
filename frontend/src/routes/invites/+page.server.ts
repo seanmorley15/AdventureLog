@@ -9,7 +9,7 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		redirect(302, '/login');
 	}
-	let res = await event.fetch(`${serverEndpoint}/api/collections/invites/`, {
+	let res = await event.fetch(`${serverEndpoint}/api/collections/invitations/`, {
 		headers: {
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
 		},

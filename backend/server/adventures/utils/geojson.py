@@ -3,20 +3,51 @@ import io
 import geojson
 import gpxpy
 
+# Most points a GPX file sends to a map, across all its segments.
+MAX_TRACK_POINTS = 5000
+
+
+def _simplify_lines(lines):
+    """
+    Reduce ``lines`` (lists of (lon, lat)) to at most MAX_TRACK_POINTS points in total.
+
+    A watch records a point every second or so, which is far more than a map can show: a
+    long hike is tens of thousands of points and megabytes of JSON in every page that
+    draws it (#1164). Douglas-Peucker drops the points that lie on a nearly straight
+    line, starting at about 10 cm and doubling the tolerance until the file fits, so a
+    short track keeps every point and a long one keeps its corners, start and end.
+    """
+    if sum(len(line) for line in lines) <= MAX_TRACK_POINTS:
+        return lines
+
+    from django.contrib.gis.geos import LineString
+
+    geometries = [LineString(line) if len(line) > 1 else None for line in lines]
+    tolerance = 1e-6  # degrees, about 10 cm
+    while True:
+        reduced = [
+            list(geometry.simplify(tolerance).coords) if geometry is not None else line
+            for geometry, line in zip(geometries, lines)
+        ]
+        if sum(len(line) for line in reduced) <= MAX_TRACK_POINTS or tolerance >= 1:
+            return reduced
+        tolerance *= 2
+
 
 def _gpx_to_feature_collection(gpx):
-    features = []
+    named_lines = []
     for track in gpx.tracks:
         track_name = track.name or 'GPX Track'
         for segment in track.segments:
             coords = [(point.longitude, point.latitude) for point in segment.points]
             if coords:
-                feature = geojson.Feature(
-                    geometry=geojson.LineString(coords),
-                    properties={'name': track_name},
-                )
-                features.append(feature)
+                named_lines.append((track_name, coords))
 
+    lines = _simplify_lines([coords for _, coords in named_lines])
+    features = [
+        geojson.Feature(geometry=geojson.LineString(coords), properties={'name': name})
+        for (name, _), coords in zip(named_lines, lines)
+    ]
     return geojson.FeatureCollection(features)
 
 
@@ -62,3 +93,78 @@ def gpx_to_geojson(gpx_file):
             'error': str(exc),
             'message': 'Failed to convert GPX to GeoJSON',
         }
+
+
+# v2: tracks are simplified to MAX_TRACK_POINTS; v1 entries hold full recordings.
+GPX_GEOJSON_CACHE_PREFIX = 'gpx_geojson_v2'
+GPX_GEOJSON_CACHE_TIMEOUT = 60 * 60 * 24 * 7
+
+
+def cached_gpx_geojson(gpx_file):
+    """
+    ``gpx_to_geojson`` with a cache keyed by the stored file name.
+
+    Upload names are random (see ``PathAndRename``), so a name never points at
+    different content and nothing needs invalidating. Only the derived GeoJSON is
+    cached; access to the file itself is still decided by the caller. Errors are
+    not cached, and a cache failure (including an item too large for memcached)
+    just means the file is parsed again next time.
+    """
+    if not gpx_file:
+        return None
+    name = getattr(gpx_file, 'name', None)
+    if not name:
+        return gpx_to_geojson(gpx_file)
+
+    from core.cache import build_cache_key
+    from django.core.cache import cache
+
+    key = build_cache_key(GPX_GEOJSON_CACHE_PREFIX, name)
+    try:
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+    except Exception:
+        cached = None
+
+    result = gpx_to_geojson(gpx_file)
+    if result is not None and not (isinstance(result, dict) and result.get('error')):
+        try:
+            cache.set(key, result, GPX_GEOJSON_CACHE_TIMEOUT)
+        except Exception:
+            pass
+    return result
+
+
+GPX_DISTANCE_CACHE_PREFIX = 'gpx_distance_v1'
+
+
+def cached_gpx_distance_km(gpx_file, compute):
+    """
+    ``compute(gpx_file)`` (a distance in km, or None) cached by the stored file name.
+
+    Same reasoning as ``cached_gpx_geojson``: upload names are random, so a name never
+    points at different content. A failed parse (None) is not cached.
+    """
+    name = getattr(gpx_file, 'name', None)
+    if not name:
+        return compute(gpx_file)
+
+    from core.cache import build_cache_key
+    from django.core.cache import cache
+
+    key = build_cache_key(GPX_DISTANCE_CACHE_PREFIX, name)
+    try:
+        cached = cache.get(key)
+        if cached is not None:
+            return cached
+    except Exception:
+        pass
+
+    result = compute(gpx_file)
+    if result is not None:
+        try:
+            cache.set(key, result, GPX_GEOJSON_CACHE_TIMEOUT)
+        except Exception:
+            pass
+    return result

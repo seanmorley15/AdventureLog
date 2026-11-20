@@ -21,6 +21,8 @@ bash scripts/validate-env.sh .env
 Standard Deployment only requires `POSTGRES_PASSWORD` in `.env`. URLs, `SECRET_KEY`, and admin defaults are derived at container startup. See [Standard Deployment](../install/standard.md).
 :::
 
+<TableFilter label="Filter variables, for example: S3, email, RATE_LIMIT" />
+
 ## URL and networking
 
 These variables control how the browser, SvelteKit SSR, and Django talk to each other.
@@ -36,9 +38,9 @@ These variables control how the browser, SvelteKit SSR, and Django talk to each 
 | `FRONTEND_PORT` | Yes | Compose | Host port for the frontend container. | `8015` |
 | `BACKEND_PORT` | Yes | Compose | Host port for the backend container. | `8016` |
 | `HOST_PORT` | No | Standard Deployment compose | Host port mapped to the single-container stack. | `8015` |
-| `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size in bytes. | `Infinity` |
+| `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size (such as a backup restore): bytes, or with a `K`, `M` or `G` suffix, or `Infinity`. Standard Deployment applies it to its built-in nginx too, and defaults to `100M`. | `Infinity` |
 
-See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual explanation of the URL model.
+See [Advanced Deployment](../install/docker.md#urls) for what each URL setting does.
 
 ## Database (PostgreSQL / PostGIS)
 
@@ -57,10 +59,33 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `SECRET_KEY` | Yes | Django secret key. Auto-generated in Standard Deployment if unset. | `changeme123` |
 | `DEBUG` | No | Enable debug mode. Use `False` in production. | `False` |
 | `DJANGO_ADMIN_USERNAME` | Yes | First-boot superuser username. | `admin` |
-| `DJANGO_ADMIN_PASSWORD` | Yes | First-boot superuser password. | `admin` |
+| `DJANGO_ADMIN_PASSWORD` | No | First-boot superuser password. Leave empty, or set a weak one such as `admin`, and a random password is generated on first start and printed once in the logs (`docker compose logs app \| grep -A3 "Admin username"`). | empty (generated) |
 | `DJANGO_ADMIN_EMAIL` | Yes | First-boot superuser email. | `admin@example.com` |
 | `GUNICORN_WORKERS` | No | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers. | `2` |
-| `SKIP_WORLD_DATA` | No | Set to `1` to skip the first-boot `download-countries` import (saves RAM; world travel data loads later). | unset |
+| `GUNICORN_THREADS` | No | Threads per Gunicorn worker. Each thread holds its own database connection. | `4` |
+| `GUNICORN_TIMEOUT` | No | Seconds a Gunicorn worker may spend on one request before it is restarted. | `120` |
+| `GUNICORN_MAX_REQUESTS` | No | Requests after which a Gunicorn worker is restarted, so memory grown by a heavy request is returned. `0` never restarts. Each restart can fail one in-flight request, so keep it high. | `10000` |
+| `WORKER_ENABLED` | No | Set to `false` to idle the [background worker](background_jobs.md) in this container. | `true` |
+| `WORKER_CONCURRENCY` | No | Background jobs the worker runs at the same time. | `3` |
+| `JOB_RESULT_TTL_HOURS` | No | Hours a finished export stays downloadable. | `24` |
+| `SKIP_WORLD_DATA` | No | Set to `1` to skip the first-boot `download_countries` import (saves RAM; world travel data loads later). | unset |
+
+## Caching
+
+See [Caching](caching.md) for what is cached and how to use Redis.
+
+| Variable | Required | Description | Default |
+| -------- | -------- | ----------- | ------- |
+| `CACHE_BACKEND` | No | `memcached` (bundled in the image), `redis`, `locmem`, or `dummy`. | `memcached` |
+| `MEMCACHED_LOCATION` | No | Memcached address when `CACHE_BACKEND=memcached`. | `127.0.0.1:11211` |
+| `REDIS_URL` | With Redis | Redis connection URL when `CACHE_BACKEND=redis`. | `redis://127.0.0.1:6379/0` |
+| `CACHE_KEY_PREFIX` | No | Prefix for cache keys. Set it if several apps share one cache server. | empty |
+| `EXTERNAL_API_CACHE_TIMEOUT` | No | Seconds that geocoding, places and similar lookups are cached. | `86400` |
+| `OSM_CACHE_TIMEOUT` | No | Seconds that OpenStreetMap lookups (Nominatim search and reverse geocoding, Overpass recommendations) are cached. Google Maps results are never cached, as Google's terms require. | `86400` |
+| `PDF_MAP_TILES` | No | Draw map tiles into exported PDFs (the Trip Book and Field Guide). Set to `false` to never contact a tile server; the maps are then drawn without a basemap. | `true` |
+| `PDF_MAP_TILE_URL` | No | The tile server for PDF maps, with `{z}`, `{x}` and `{y}`. An `@2x` in the URL is read as retina tiles. The default is the OpenStreetMap tile server, whose [usage policy](https://operations.osmfoundation.org/policies/tiles/) is for light use: point this at your own or a paid tile server if you export many large trips. | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` |
+| `PDF_MAP_ATTRIBUTION` | No | The credit printed in the corner of each PDF map. Match it to your tile server. | `© OpenStreetMap contributors` |
+| `SESSION_CACHE_SECONDS` | No | How long a login session is kept in the cache before it is read from the database again. | `300` |
 
 ## Registration and authentication
 
@@ -68,13 +93,16 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | -------- | -------- | ----------- | ------- |
 | `DISABLE_REGISTRATION` | No | Block new account signups. | `False` |
 | `DISABLE_REGISTRATION_MESSAGE` | No | Message shown when registration is disabled. | Custom message |
+| `ALLOW_PUBLIC_ACCESS` | No | Let people who are not signed in see public and unlisted collections, public locations and profiles, and guest links. `False` makes the server signed-in only. | `True` |
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
+| `MOBILE_AUTH_REDIRECT_URIS` | No | Comma-separated redirect URIs the mobile app may use when signing in with a social/OIDC provider. Only needed for a custom-built app. | `adventurelog://auth/callback` |
 | `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
+| `SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT` | No | When a social sign-in matches an existing account by email, also link the provider to it. Matching by email only happens for accounts whose address is verified; others link the provider from Settings → Security. | `False` |
 | `ACCOUNT_EMAIL_VERIFICATION` | No | `none` (skip), `optional` (send link, still allow login), or `mandatory` (block login until verified). Requires working email (SMTP or console). | `none` |
 | `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |
 | `AUTH_PASSWORD_VALIDATORS_ENABLED` | No | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name). | `False` |
 
-Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_registration.md), [API Keys](api_keys.md).
+Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_registration.md), [Public Access](public_access.md), [API Keys](api_keys.md).
 
 ## Rate limiting
 
@@ -83,6 +111,7 @@ Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_re
 | `ENABLE_RATE_LIMITS` | No | Enable API rate limiting. Recommended in production. | `False` |
 | `RATE_LIMIT_USER` | No | Default authenticated user throttle. | `10000/hour` |
 | `RATE_LIMIT_IMAGE_PROXY` | No | Image proxy endpoint limit. | `60/minute` |
+| `RATE_LIMIT_PLACE_PHOTO` | No | Google place photo endpoint limit. | `300/minute` |
 | `RATE_LIMIT_IMAGE_IMPORT` | No | Image import limit. | `12/minute` |
 | `RATE_LIMIT_EXTERNAL_GEOCODE` | No | External geocoding limit. | `120/minute` |
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | No | Recommendations API limit. | `30/minute` |
@@ -128,6 +157,7 @@ See [S3 Media Storage](s3_storage.md).
 | -------- | -------- | ----------- |
 | `GOOGLE_MAPS_API_KEY` | If enabled | Google Maps tiles and place search. |
 | `PUBLIC_CARTO_BASEMAP_API_KEY` | If using CARTO basemaps | Free domain-restricted CARTO key sent by the browser with map tile requests. Enables Light, Dark, Positron, Positron + Labels, Voyager, and 3D Terrain, and makes the default basemap CARTO Positron in light mode and CARTO Dark Matter in dark mode. Without it, those styles stay hidden and the default is OpenFreeMap Bright in light mode and OpenFreeMap Dark in dark mode. |
+| `INTEGRATIONS_ALLOW_PRIVATE_NETWORKS` | No | Let Immich, Wanderer and Endurain live on a LAN or loopback address. Turn off on an instance strangers can sign up to, so no user can reach the server's own network through an integration. Cloud-metadata addresses are always refused. Default `True`, or `False` with `CLOUD_MODE`. |
 | `STRAVA_CLIENT_ID` | If enabled | Strava OAuth client ID. |
 | `STRAVA_CLIENT_SECRET` | If enabled | Strava OAuth client secret. |
 | `PUBLIC_UMAMI_SRC` | If enabled | Umami analytics script URL. |

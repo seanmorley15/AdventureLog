@@ -10,9 +10,18 @@
 	interface Props {
 		recommendations?: Recommendation[];
 		selectedId?: string | null;
+		/** Raised as if hovered, e.g. while its list row is hovered. */
+		highlightedId?: string | null;
+		/** Results that are already saved; shown dimmed. */
+		addedIds?: Set<string>;
 	}
 
-	let { recommendations = [], selectedId = null }: Props = $props();
+	let {
+		recommendations = [],
+		selectedId = null,
+		highlightedId = null,
+		addedIds = new Set<string>()
+	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{
 		select: { item: Recommendation };
@@ -30,7 +39,15 @@
 		return osmTagToEmoji(normalizeTag(raw));
 	}
 
-	function recMarkerClass(rec: Recommendation, isSelected: boolean, isHovered: boolean): string {
+	function recMarkerClass(
+		rec: Recommendation,
+		isSelected: boolean,
+		isHovered: boolean,
+		isAdded: boolean
+	): string {
+		if (isAdded && !isSelected) {
+			return 'map-rec-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-md text-base cursor-pointer bg-success/60 opacity-70';
+		}
 		const base =
 			'map-rec-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-md text-base cursor-pointer transition-transform';
 		if (isSelected) return `${base} scale-110 ring-2 ring-warning ring-offset-1 bg-warning/90`;
@@ -47,7 +64,8 @@
 {#each recommendations as rec (rec.id)}
 	{#if rec.latitude != null && rec.longitude != null}
 		{@const isSelected = selectedId === rec.id}
-		{@const isHovered = hoveredId === rec.id}
+		{@const isHovered = hoveredId === rec.id || highlightedId === rec.id}
+		{@const isAdded = addedIds.has(rec.id)}
 		{@const isRaised = isHovered || isSelected}
 		<Marker
 			lngLat={[rec.longitude, rec.latitude]}
@@ -56,7 +74,7 @@
 			<div class="relative group">
 				<button
 					type="button"
-					class={recMarkerClass(rec, isSelected, isHovered)}
+					class={recMarkerClass(rec, isSelected, isHovered, isAdded)}
 					aria-label={rec.name}
 					onmouseenter={() => (hoveredId = rec.id)}
 					onmouseleave={() => {
@@ -68,7 +86,7 @@
 					}}
 					onclick={stopPropagation(() => dispatch('select', { item: rec }))}
 				>
-					{recommendationEmoji(rec)}
+					{isAdded ? '✓' : recommendationEmoji(rec)}
 				</button>
 
 				<div

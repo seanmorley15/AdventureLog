@@ -24,25 +24,13 @@ def _sync_user_email(user: AbstractUser):
         user.email = any_email.email
         user.save(update_fields=['email'])
 
-@receiver(post_save)
+@receiver(post_save, sender=EmailAddress)
 def emailaddress_post_save(sender, instance, **kwargs):
-    # Only react to allauth EmailAddress saves
-    try:
-        from allauth.account.models import EmailAddress
-    except Exception:
-        return
-    if sender is EmailAddress:
-        _sync_user_email(instance.user)
+    _sync_user_email(instance.user)
 
-@receiver(post_delete)
+@receiver(post_delete, sender=EmailAddress)
 def emailaddress_post_delete(sender, instance, **kwargs):
-    # Only react to allauth EmailAddress deletes
-    try:
-        from allauth.account.models import EmailAddress
-    except Exception:
-        return
-    if sender is EmailAddress:
-        _sync_user_email(instance.user)
+    _sync_user_email(instance.user)
 
 # Prevent deleting the last email address for a user
 @receiver(pre_delete, sender=EmailAddress)

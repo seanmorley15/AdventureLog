@@ -1,46 +1,40 @@
 <script lang="ts">
-	import { run, stopPropagation } from 'svelte/legacy';
-
+	import type { Component } from 'svelte';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import ImageFrame from './ImageFrame.svelte';
-	import { t } from 'svelte-i18n';
+	import ChevronLeft from '~icons/mdi/chevron-left';
+	import ChevronRight from '~icons/mdi/chevron-right';
+	import ImageMultipleOutline from '~icons/mdi/image-multiple-outline';
+	import ImageOutline from '~icons/mdi/image-outline';
 	import type { ContentImage } from '#lib/types.js';
+
 	interface Props {
 		images?: ContentImage[];
 		name?: string;
-		icon?: string;
+		/** Shown when there is no photo: an mdi icon component, or an emoji string (e.g. a category). */
+		icon?: string | Component<any> | null;
+		/** Show the "2/5" counter when there are several photos. */
+		showCount?: boolean;
 	}
 
-	let { images = [], name = '', icon = '' }: Props = $props();
+	let { images = [], name = '', icon = null, showCount = true }: Props = $props();
 
 	let currentSlide = $state(0);
 	let showImageModal = $state(false);
 	let modalInitialIndex = $state(0);
 
 	let sortedImages = $derived(
-		[...images].sort((a, b) => {
-			if (a.is_primary && !b.is_primary) {
-				return -1;
-			} else if (!a.is_primary && b.is_primary) {
-				return 1;
-			} else {
-				return 0;
-			}
-		})
+		[...images].sort((a, b) => Number(!!b.is_primary) - Number(!!a.is_primary))
 	);
 
-	run(() => {
-		if (sortedImages.length > 0) {
-			currentSlide = 0;
-		}
+	// A new set of photos starts again at the first one.
+	$effect(() => {
+		if (sortedImages.length > 0) currentSlide = 0;
 	});
 
-	function changeSlide(direction: string) {
-		if (direction === 'next' && currentSlide < sortedImages.length - 1) {
-			currentSlide = currentSlide + 1;
-		} else if (direction === 'prev' && currentSlide > 0) {
-			currentSlide = currentSlide - 1;
-		}
+	function changeSlide(direction: 'next' | 'prev') {
+		if (direction === 'next' && currentSlide < sortedImages.length - 1) currentSlide += 1;
+		else if (direction === 'prev' && currentSlide > 0) currentSlide -= 1;
 	}
 
 	function openImageModal(initialIndex: number = currentSlide) {
@@ -48,148 +42,88 @@
 		showImageModal = true;
 	}
 
-	function closeImageModal() {
-		showImageModal = false;
-	}
+	const Icon = $derived(typeof icon === 'string' || !icon ? null : icon);
+	const emoji = $derived(typeof icon === 'string' && icon ? icon : null);
 </script>
 
 {#if showImageModal && sortedImages.length > 0}
 	<ImageDisplayModal
 		images={sortedImages}
 		initialIndex={modalInitialIndex}
-		on:close={closeImageModal}
+		on:close={() => (showImageModal = false)}
 		{name}
 	/>
 {/if}
 
-<figure>
-	{#if sortedImages && sortedImages.length > 0}
-		<div class="carousel w-full relative">
-			<!-- svelte-ignore a11y_click_events_have_key_events -->
-			<div class="carousel-item w-full block">
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<!-- svelte-ignore a11y_missing_attribute -->
-				<a
-					onclick={stopPropagation(() => openImageModal(currentSlide))}
-					class="cursor-pointer relative group block w-full h-full"
+<figure class="relative aspect-[16/10] w-full overflow-hidden bg-base-200">
+	{#if sortedImages.length > 0}
+		<button
+			type="button"
+			onclick={(e) => {
+				e.stopPropagation();
+				openImageModal(currentSlide);
+			}}
+			class="group block h-full w-full cursor-zoom-in"
+			aria-label={name || 'Image'}
+		>
+			<ImageFrame source={sortedImages[currentSlide].source} className="h-full w-full">
+				<img
+					src={sortedImages[currentSlide].image}
+					class="h-full w-full object-cover transition-[filter] group-hover:brightness-105"
+					alt={name || 'Image'}
+					loading="lazy"
+				/>
+			</ImageFrame>
+		</button>
+
+		{#if sortedImages.length > 1}
+			{#if currentSlide > 0}
+				<button
+					type="button"
+					onclick={(e) => {
+						e.stopPropagation();
+						changeSlide('prev');
+					}}
+					class="btn btn-circle btn-xs absolute left-2 top-1/2 -translate-y-1/2 border-none bg-base-100/85 text-base-content shadow-sm backdrop-blur-sm"
+					aria-label="Previous image"
 				>
-					<ImageFrame source={sortedImages[currentSlide].source} className="w-full h-full">
-						<img
-							src={sortedImages[currentSlide].image}
-							class="w-full h-48 object-cover transition-all group-hover:brightness-110"
-							alt={name || 'Image'}
-						/>
-					</ImageFrame>
-				</a>
-
-				<!-- Overlay indicator for multiple images -->
-				<!-- {#if sortedImages.length > 1}
-						<div
-							class="absolute top-3 right-3 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-medium"
-						>
-							{currentSlide + 1} / {sortedImages.length}
-						</div>
-					{/if} -->
-
-				<!-- Click to expand hint -->
-				<!-- <div
-						class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center"
-					>
-						<div
-							class="opacity-0 group-hover:opacity-100 transition-all bg-white/90 rounded-full p-2"
-						>
-							<svg
-								class="w-6 h-6 text-gray-800"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-								/>
-							</svg>
-						</div>
-					</div> -->
-
-				{#if sortedImages.length > 1}
-					<div class="absolute inset-0 flex items-center justify-between pointer-events-none">
-						{#if currentSlide > 0}
-							<button
-								onclick={stopPropagation(() => changeSlide('prev'))}
-								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-neutral border-none text-neutral-content shadow-lg"
-								aria-label="Previous image"
-							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M15 19l-7-7 7-7"
-									/>
-								</svg>
-							</button>
-						{:else}
-							<div class="w-12"></div>
-						{/if}
-
-						{#if currentSlide < sortedImages.length - 1}
-							<button
-								onclick={stopPropagation(() => changeSlide('next'))}
-								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-neutral border-none text-neutral-content shadow-lg"
-								aria-label="Next image"
-							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M9 5l7 7-7 7"
-									/>
-								</svg>
-							</button>
-						{:else}
-							<div class="w-12"></div>
-						{/if}
-					</div>
-
-					<!-- Dot indicators at bottom -->
-					<!-- {#if sortedImages.length > 1}
-						<div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-							{#each sortedImages as _, index}
-								<button
-									on:click|stopPropagation={() => (currentSlide = index)}
-									class="w-2 h-2 rounded-full transition-all pointer-events-auto {index ===
- currentSlide
- ? 'bg-white shadow-lg'
- : 'bg-white/50 hover:bg-white/80'}"
-									aria-label="Go to image {index + 1}"
-								/>
-							{/each}
-						</div>
-					{/if} -->
+					<ChevronLeft class="h-4 w-4" />
+				</button>
+			{/if}
+			{#if currentSlide < sortedImages.length - 1}
+				<button
+					type="button"
+					onclick={(e) => {
+						e.stopPropagation();
+						changeSlide('next');
+					}}
+					class="btn btn-circle btn-xs absolute right-2 top-1/2 -translate-y-1/2 border-none bg-base-100/85 text-base-content shadow-sm backdrop-blur-sm"
+					aria-label="Next image"
+				>
+					<ChevronRight class="h-4 w-4" />
+				</button>
+			{/if}
+			{#if showCount}
+				<span
+					class="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-base-100/85 px-2 py-0.5 text-xs font-medium text-base-content shadow-xs backdrop-blur-sm"
+				>
+					<ImageMultipleOutline class="h-3.5 w-3.5" />
+					{currentSlide + 1}/{sortedImages.length}
+				</span>
+			{/if}
+		{/if}
+	{:else}
+		<!-- No photo: a quiet field with the type in a tinted tile, like the detail page header. -->
+		<div class="flex h-full w-full items-center justify-center" aria-hidden="true">
+			<div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+				{#if Icon}
+					<Icon class="h-8 w-8 text-primary" />
+				{:else if emoji}
+					<span class="select-none text-4xl leading-none">{emoji}</span>
+				{:else}
+					<ImageOutline class="h-8 w-8 text-primary/60" />
 				{/if}
 			</div>
-		</div>
-	{:else}
-		<!-- Fallback with emoji icon as main image -->
-		<div class="w-full h-48 relative flex items-center justify-center">
-			{#if icon}
-				<!-- Clean background with emoji as the focal point -->
-				<div
-					class="w-full h-full bg-gradient-to-r from-success via-base to-primary flex items-center justify-center"
-				>
-					<div class="text-8xl select-none">
-						{icon}
-					</div>
-				</div>
-			{:else}
-				<!-- Original gradient fallback when no icon -->
-				<div class="w-full h-full bg-gradient-to-r from-success via-base to-primary"></div>
-			{/if}
 		</div>
 	{/if}
 </figure>

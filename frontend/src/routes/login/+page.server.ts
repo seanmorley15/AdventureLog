@@ -1,10 +1,11 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Actions, PageServerLoad, RouteParams } from './$types';
-import { getRandomBackground, getRandomQuote } from '#lib';
+import { BACKGROUND_COOKIE, getRandomBackground, getRandomQuote } from '#lib';
 import {
 	csrfFail,
 	djangoBrowserFetch,
 	extractSessionIdFromResponse,
+	fetchAuthConfig,
 	requireCsrf,
 	setSessionFromResponse
 } from '#lib/index.server.js';
@@ -17,17 +18,14 @@ export const load: PageServerLoad = async (event) => {
 	}
 
 	const quote = getRandomQuote();
-	const background = getRandomBackground();
+	const background = getRandomBackground(event.cookies.get(BACKGROUND_COOKIE));
 	const serverEndpoint = getServerEndpoint();
 
 	let socialProviders: { name: string; url: string; provider: string; usage_required?: boolean }[] =
 		[];
 
 	try {
-		const socialProviderFetch = await event.fetch(`${serverEndpoint}/auth/social-providers/`);
-		if (socialProviderFetch.ok) {
-			socialProviders = await socialProviderFetch.json();
-		}
+		socialProviders = (await fetchAuthConfig(event.fetch, serverEndpoint)).social_providers;
 	} catch {
 		// Degrade gracefully — login still works without social providers.
 	}
@@ -74,7 +72,7 @@ export const actions: Actions = {
 			return csrfFail();
 		}
 
-		const loginFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/login', {
+		const loginFetch = await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/login', {
 			method: 'POST',
 			csrfToken,
 			headers: { 'Content-Type': 'application/json' },
@@ -114,7 +112,7 @@ export const actions: Actions = {
 
 				const mfaLoginFetch = await djangoBrowserFetch(
 					event,
-					'/auth/browser/v1/auth/2fa/authenticate',
+					'/api/auth/browser/v1/auth/2fa/authenticate',
 					{
 						method: 'POST',
 						csrfToken,

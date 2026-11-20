@@ -5,4 +5,4 @@ class AdventuresConfig(AppConfig):
     name = 'adventures'
     
     def ready(self):
-        import adventures.signals  # Import signals when the app is ready
+        import adventures.signals  # noqa: F401  (registers the signal handlers)

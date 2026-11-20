@@ -31,12 +31,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = getenv('DEBUG', 'true').lower() == 'true'
+DEBUG = getenv('DEBUG', 'false').lower() == 'true'
 
 # ---------------------------------------------------------------------------
 # Cloud Mode & Billing
 # ---------------------------------------------------------------------------
 CLOUD_MODE = getenv('CLOUD_MODE', 'false').lower() == 'true'
+# Whether Immich, Wanderer and Endurain may live on a private/loopback address. Fine for a home
+# server; on an instance strangers can sign up to, it lets any user reach the server's own
+# network through an integration, so it is off in cloud mode unless set explicitly.
+INTEGRATIONS_ALLOW_PRIVATE_NETWORKS = getenv(
+    'INTEGRATIONS_ALLOW_PRIVATE_NETWORKS', 'false' if CLOUD_MODE else 'true'
+).lower() == 'true'
 CLOUD_TRIAL_DAYS = int(getenv('CLOUD_TRIAL_DAYS', '30'))
 STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = getenv('STRIPE_WEBHOOK_SECRET', '')
@@ -63,6 +69,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'storages',
     'django.contrib.sites',
+    # Background jobs. Listed early so its app is ready before the apps that define tasks.
+    'procrastinate.contrib.django',
     'rest_framework',
     'allauth',
     'allauth.account',
@@ -73,17 +81,18 @@ INSTALLED_APPS = (
     'allauth.socialaccount.providers.openid_connect',
     'allauth.usersessions',
     'invitations',
-    'drf_yasg',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     'djmoney',
     'corsheaders',
     'adventures',
     'worldtravel',
+    'jobs',
     'users',
     'billing.apps.BillingConfig',
     'cloud.apps.CloudConfig',
     'integrations',
     'django.contrib.gis',
-    # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
     'slippers',
     'django.contrib.humanize',
@@ -95,11 +104,11 @@ INSTALLED_APPS = (
 # ---------------------------------------------------------------------------
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'adventures.middleware.DisableCSRFForAPIKeyMiddleware',
+    'users.middleware.DisableCSRFForHeaderCredentialsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'adventures.middleware.OverrideHostMiddleware',
+    'core.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'users.middleware.EfficientSessionMiddleware',
@@ -112,13 +121,55 @@ MIDDLEWARE = (
 # ---------------------------------------------------------------------------
 # Caching
 # ---------------------------------------------------------------------------
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': '127.0.0.1:11211',
-        'TIMEOUT': 60 * 60 * 24,  # Optional: 1 day cache
+def _build_caches():
+    """
+    The cache backend, chosen by CACHE_BACKEND.
+
+    - memcached (default): the memcached bundled in the Docker image.
+    - redis: an external Redis (REDIS_URL), for advanced deployments.
+    - locmem / dummy: per-process memory, or no caching, for debugging.
+    Unknown values fall back to memcached.
+    """
+    backend = getenv('CACHE_BACKEND', 'memcached').strip().lower()
+    timeout = 60 * 60 * 24
+    prefix = getenv('CACHE_KEY_PREFIX', '').strip()
+    base = {'TIMEOUT': timeout, 'KEY_PREFIX': prefix}
+
+    if backend == 'redis':
+        return {
+            'default': {
+                **base,
+                'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+                'LOCATION': getenv('REDIS_URL', 'redis://127.0.0.1:6379/0'),
+            }
+        }
+    if backend == 'locmem':
+        return {'default': {**base, 'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'}}
+    if backend == 'dummy':
+        return {'default': {**base, 'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}}
+    if backend != 'memcached':
+        print(f"Unknown CACHE_BACKEND '{backend}', using memcached.")
+    return {
+        'default': {
+            **base,
+            'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+            'LOCATION': getenv('MEMCACHED_LOCATION', '127.0.0.1:11211'),
+            'OPTIONS': {
+                # A memcached outage is a cache miss, not a 500.
+                'ignore_exc': True,
+                'no_delay': True,
+                'use_pooling': True,
+            },
+        }
     }
-}
+
+
+CACHES = _build_caches()
+
+# Sessions read from the cache first and fall back to the database, which stays the
+# source of truth. The cached copy is short-lived (see main/sessions.py).
+SESSION_ENGINE = 'main.sessions'
+SESSION_CACHE_SECONDS = int(getenv('SESSION_CACHE_SECONDS', '300'))
 
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
@@ -287,6 +338,10 @@ ALLAUTH_UI_THEME = "dim"
 # Authentication & Accounts
 # ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
+# Whether people who are not signed in can see anything: public and unlisted collections, public
+# places and profiles, and guest links. False makes the server signed-in only: public things are
+# shown to signed-in users alone and nothing new can be made public (#1124).
+ALLOW_PUBLIC_ACCESS = getenv('ALLOW_PUBLIC_ACCESS', 'true').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 TERMS_OF_SERVICE_URL = getenv('TERMS_OF_SERVICE_URL', '').strip()
 PRIVACY_POLICY_URL = getenv('PRIVACY_POLICY_URL', '').strip()
@@ -299,7 +354,7 @@ INVITATIONS_ADAPTER = ACCOUNT_ADAPTER
 INVITATIONS_ACCEPT_INVITE_AFTER_SIGNUP = True
 INVITATIONS_EMAIL_SUBJECT_PREFIX = 'AdventureLog: '
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
-ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
+ACCOUNT_SIGNUP_FORM_CLASS = 'users.invitations.forms.CustomSignupForm'
 
 # Avoid a django_session write on every request. EfficientSessionMiddleware
 # extends expiry at most once per SESSION_TOUCH_INTERVAL_SECONDS instead.
@@ -314,7 +369,7 @@ USERSESSIONS_TRACK_ACTIVITY = False
 LOGIN_REDIRECT_URL = FRONTEND_URL  # Redirect to frontend after login
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
-INVITATIONS_INVITE_FORM = 'users.form_overrides.UseAdminInviteForm'
+INVITATIONS_INVITE_FORM = 'users.invitations.forms.UseAdminInviteForm'
 INVITATIONS_SIGNUP_REDIRECT_URL = f"{FRONTEND_URL}/signup"
 INVITATIONS_SIGNUP_REDIRECT = f"{FRONTEND_URL}/signup"
 INVITATIONS_CONFIRMATION_URL_NAME = 'accept-invite'
@@ -361,6 +416,8 @@ ENABLE_RATE_LIMITS = getenv('ENABLE_RATE_LIMITS', 'false').lower() == 'true'
 RATE_LIMIT_RATES = {
     'user': getenv('RATE_LIMIT_USER', '10000/hour'),
     'image_proxy': getenv('RATE_LIMIT_IMAGE_PROXY', '60/minute'),
+    # A results list loads many photos at once, so this is higher than the other proxies.
+    'place_photo': getenv('RATE_LIMIT_PLACE_PHOTO', '300/minute'),
     'image_import': getenv('RATE_LIMIT_IMAGE_IMPORT', '12/minute'),
     'external_geocode': getenv('RATE_LIMIT_EXTERNAL_GEOCODE', '120/minute'),
     'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
@@ -368,12 +425,28 @@ RATE_LIMIT_RATES = {
     'external_sunrise_sunset': getenv('RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET', '30/minute'),
     # Always applied on Endurain connect/MFA (see EndurainAuthThrottle).
     'endurain_auth': getenv('RATE_LIMIT_ENDURAIN_AUTH', '10/minute'),
+    # Always applied on the mobile app's sign-in code exchange (see MobileAuthThrottle).
+    'mobile_auth': getenv('RATE_LIMIT_MOBILE_AUTH', '20/minute'),
 }
 
 SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60 * 60 * 24 * 30)))
 WIKIPEDIA_DESC_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_DESC_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
 EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
+# Google Maps Platform results are cached for at most this long (their terms limit caching).
+# Seconds OpenStreetMap lookups (Nominatim, Overpass) are cached. Google results are never
+# cached: its terms allow caching only place IDs and coordinates.
+OSM_CACHE_TIMEOUT = int(getenv('OSM_CACHE_TIMEOUT', str(60 * 60 * 24)))
+
+# Map tiles drawn into exported PDFs (trip books and field guides). The server fetches them while it
+# makes the file; if they cannot be fetched the maps are drawn without a basemap. Set
+# PDF_MAP_TILES=false to never contact the tile server. The URL takes {z}, {x} and {y}; an "@2x"
+# in it is read as retina tiles. The default is the OpenStreetMap tile server, whose usage policy
+# (https://operations.osmfoundation.org/policies/tiles/) is for light use; point this at your own
+# or a paid tile server if you export many large trips.
+PDF_MAP_TILES = getenv('PDF_MAP_TILES', 'true').lower() == 'true'
+PDF_MAP_TILE_URL = getenv('PDF_MAP_TILE_URL', 'https://tile.openstreetmap.org/{z}/{x}/{y}.png')
+PDF_MAP_ATTRIBUTION = getenv('PDF_MAP_ATTRIBUTION', '© OpenStreetMap contributors')
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
@@ -417,6 +490,10 @@ else:
     EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
 
+# True only when real SMTP is set up. Optional mail (comment mentions) checks this flag
+# rather than EMAIL_HOST, which Django defaults to 'localhost'.
+SMTP_CONFIGURED = EMAIL_BACKEND.endswith('smtp.EmailBackend') and bool(getenv('EMAIL_HOST'))
+
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.resend.com'
 # EMAIL_USE_TLS = False
@@ -451,9 +528,13 @@ ACCOUNT_RATE_LIMITS = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'users.authentication.APIKeyAuthentication',
+        'users.authentication.SessionTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    # Endpoints are closed unless a view opens them with an explicit permission class.
+    'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
+    'EXCEPTION_HANDLER': 'core.exceptions.api_exception_handler',
+    'DEFAULT_SCHEMA_CLASS': 'core.openapi.AutoSchema',
     # DRF 3.18 reports many=True validation errors as a dict keyed by index; keep the list format.
     'LIST_SERIALIZER_ERRORS_AS_DICT': False,
     'DEFAULT_THROTTLE_CLASSES': [
@@ -462,8 +543,58 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': RATE_LIMIT_RATES if ENABLE_RATE_LIMITS else {
         # Endurain auth throttle is always-on and needs its rate registered.
         'endurain_auth': RATE_LIMIT_RATES['endurain_auth'],
+        'mobile_auth': RATE_LIMIT_RATES['mobile_auth'],
     },
 }
+
+# ---------------------------------------------------------------------------
+# API documentation (drf-spectacular). See API.md.
+# ---------------------------------------------------------------------------
+from main import openapi as _openapi  # noqa: E402
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': _openapi.TITLE,
+    'DESCRIPTION': _openapi.DESCRIPTION,
+    'VERSION': _openapi.VERSION,
+    'TAGS': _openapi.TAGS,
+    'SCHEMA_PATH_PREFIX': r'/api/',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SERVE_PUBLIC': True,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    # Separate request and response components, so read-only and write-only fields are exact.
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'filter': True,
+        'displayOperationId': False,
+    },
+    'POSTPROCESSING_HOOKS': [
+        'drf_spectacular.hooks.postprocess_schema_enums',
+        'core.openapi.merge_fragments',
+    ],
+    # Choice sets used by several fields get one shared name instead of a generated one.
+    'ENUM_NAME_OVERRIDES': {
+        'TimezoneEnum': 'core.timezones.TIMEZONES',
+        'LodgingTypeEnum': 'adventures.models.choices.LODGING_TYPES',
+        'CollectionRoleEnum': 'adventures.models.collection.CollectionMember.Role',
+        'CollectionVisibilityEnum': 'adventures.models.collection.Collection.Visibility',
+        'CollectionTypeEnum': 'adventures.models.collection.Collection.Type',
+        'TripStatusEnum': ['upcoming', 'in_progress', 'completed'],
+        'ImageSourceEnum': 'adventures.models.media.ContentImage.Source',
+        'ItineraryContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist'],
+        'PlaceableContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist', 'visit'],
+        'ImageContentTypeEnum': [
+            'location', 'transportation', 'note', 'lodging', 'visit', 'collectionitineraryday', 'activity', 'trail',
+        ],
+    },
+}
+
+# Hand-written OpenAPI paths for routes that are not DRF views (django-allauth headless).
+OPENAPI_FRAGMENTS = [str(BASE_DIR / 'openapi' / 'allauth.yaml')]
 
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
@@ -493,6 +624,24 @@ CORS_ALLOW_CREDENTIALS = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # ---------------------------------------------------------------------------
+# Background jobs (Procrastinate: a queue stored in Postgres, run by a worker process)
+# ---------------------------------------------------------------------------
+# The worker is `manage.py procrastinate worker`. The container starts it under supervisord
+# (WORKER_ENABLED=false turns that off when a separate worker container is used).
+# The worker imports the `tasks.py` of every installed app. See "Background jobs" in API.md.
+WORKER_CONCURRENCY = int(getenv('WORKER_CONCURRENCY', '3'))
+# Run user-facing jobs (exports, imports) inside the request instead of queueing them.
+# For a development server without a worker; the API answers the same way.
+JOBS_RUN_INLINE = getenv('JOBS_RUN_INLINE', 'false').lower() == 'true'
+# How long a finished export stays downloadable before it is deleted.
+JOB_RESULT_TTL_HOURS = int(getenv('JOB_RESULT_TTL_HOURS', '24'))
+# Worker settings: a worker that stops sending heartbeats for this long lost its jobs.
+PROCRASTINATE_WORKER_DEFAULTS = {
+    'update_heartbeat_interval': 10,
+    'stalled_worker_timeout': 60,
+}
+
+# ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 LOGGING = {
@@ -502,18 +651,14 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'scheduler.log',
-        },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -526,10 +671,18 @@ LOGGING = {
 PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhost:8000')
 
 # Major release version of AdventureLog, not including the patch version date.
-ADVENTURELOG_RELEASE_VERSION = 'v0.13.1'
+# Mobile app sign-in through the server's browser providers (see users/services/mobile_auth.py).
+# The app's redirect URIs are matched exactly. The default is the official app's.
+MOBILE_AUTH_REDIRECT_URIS = [
+    uri.strip() for uri in getenv('MOBILE_AUTH_REDIRECT_URIS', 'adventurelog://auth/callback').split(',') if uri.strip()
+]
+MOBILE_AUTH_HANDOFF_SECONDS = 10 * 60  # how long the browser has to finish signing in
+MOBILE_AUTH_CODE_SECONDS = 60  # how long the app has to redeem the code
+
+ADVENTURELOG_RELEASE_VERSION = 'v0.14.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v3.2'
+COUNTRY_REGION_JSON_VERSION = 'v5.2.0'
 
 # External service keys (do not hardcode secrets)
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')

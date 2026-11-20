@@ -1,20 +1,24 @@
-# Troubleshooting: Images Not Displayed in AdventureLog
+# Images Not Displaying
 
-The AdventureLog backend container uses a built-in Nginx container to serve media to the frontend. The `PUBLIC_URL` environment variable is set to the external URL of the **backend** container. This URL is used to generate the URLs for the images in the frontend. If this URL is not set correctly or not accessible from the frontend, the images will not be displayed.
+**Symptom:** locations and collections load, but their photos show as broken images.
 
-If you're experiencing issues with images not displaying in AdventureLog, follow these troubleshooting steps to resolve the issue.
+**Cause:** the browser loads each photo from a URL that AdventureLog builds from its public address. If that address is wrong, or your browser can't reach it, the photos fail.
 
-1. **Check the `PUBLIC_URL` Environment Variable**:
+## Fix on Standard Deployment
 
-   - Verify that the `PUBLIC_URL` environment variable is set correctly in the `docker-compose.advanced.yml` file for the `server` service.
-   - The `PUBLIC_URL` should be set to the external URL of the backend container. For example:
-     ```
-     PUBLIC_URL=http://backend.example.com
-     ```
+1. Set `SITE_URL` in `.env` to the address you open in the browser, including `http://` or `https://` and any port.
+2. Restart: `docker compose --env-file .env up -d`.
 
-2. **Check `CSRF_TRUSTED_ORIGINS` Environment Variable**:
-   - If you have set the `CSRF_TRUSTED_ORIGINS` environment variable in the `docker-compose.advanced.yml` file, ensure that it includes the frontend URL and the backend URL.
-   - For example:
-     ```
-     CSRF_TRUSTED_ORIGINS=http://frontend.example.com,http://backend.example.com
-     ```
+Photo URLs are built from `SITE_URL`, so photos break when you open the app at a different address, such as a LAN IP while `SITE_URL` is your domain.
+
+## Fix on Advanced Deployment
+
+1. Right-click a broken image and open it in a new tab. Note the address it tries to load.
+2. Set `PUBLIC_URL` in `.env.advanced` to the backend's public address, the one your browser can reach. For example `https://adventurelog.example.com` behind a reverse proxy, or `http://192.168.1.20:8016` without one.
+3. Make sure `CSRF_TRUSTED_ORIGINS` lists both the frontend and backend addresses.
+4. Behind a reverse proxy, check that `/media` is sent to the backend.
+5. Restart the containers.
+
+## Using S3 storage
+
+Photos load from your bucket or `AWS_S3_CUSTOM_DOMAIN`. Open a broken image in a new tab to see the error from the storage provider. See [S3 Media Storage](../configuration/s3_storage.md#troubleshooting).

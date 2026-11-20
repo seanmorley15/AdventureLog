@@ -94,7 +94,7 @@ export function groupLocationsByDate(
 	// Initialize all days in the range using DateTime
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		const dateString = currentDate.toISODate() ?? ''; // 'YYYY-MM-DD'
 		groupedLocations[dateString] = [];
 	}
 
@@ -125,13 +125,13 @@ export function groupLocationsByDate(
 						: startDT;
 				}
 
-				const startDateStr = startDT.toISODate();
-				const endDateStr = endDT.toISODate();
+				const startDateStr = startDT.toISODate() ?? '';
+				const endDateStr = endDT.toISODate() ?? '';
 
 				// Loop through all days in range
 				for (let i = 0; i < numberOfDays; i++) {
 					const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-					const currentDateStr = currentDate.toISODate();
+					const currentDateStr = currentDate.toISODate() ?? '';
 
 					// Include the current day if it falls within the location date range
 					if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
@@ -164,7 +164,7 @@ export function groupTransportationsByDate(
 	// Initialize days
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		const dateString = currentDate.toISODate() ?? ''; // 'YYYY-MM-DD'
 		groupedTransportations[dateString] = [];
 	}
 
@@ -201,13 +201,13 @@ export function groupTransportationsByDate(
 					: startDT;
 			}
 
-			const startDateStr = startDT.toISODate();
-			const endDateStr = endDT.toISODate();
+			const startDateStr = startDT.toISODate() ?? '';
+			const endDateStr = endDT.toISODate() ?? '';
 
 			// Loop through all days in range
 			for (let i = 0; i < numberOfDays; i++) {
 				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-				const currentDateStr = currentDate.toISODate();
+				const currentDateStr = currentDate.toISODate() ?? '';
 
 				if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
 					groupedTransportations[currentDateStr]?.push(transportation);
@@ -231,7 +231,7 @@ export function groupLodgingByDate(
 
 	for (let i = 0; i < lodgingDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		const dateString = currentDate.toISODate() ?? ''; // 'YYYY-MM-DD'
 		groupedLodging[dateString] = [];
 	}
 
@@ -264,13 +264,13 @@ export function groupLodgingByDate(
 					: startDT;
 			}
 
-			const startDateStr = startDT.toISODate();
-			const endDateStr = endDT.toISODate();
+			const startDateStr = startDT.toISODate() ?? '';
+			const endDateStr = endDT.toISODate() ?? '';
 
 			// Loop through lodging days only (excluding last day)
 			for (let i = 0; i < lodgingDays; i++) {
 				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-				const currentDateStr = currentDate.toISODate();
+				const currentDateStr = currentDate.toISODate() ?? '';
 
 				// Show lodging on days where check-in occurs through the day before check-out
 				// For lodging, we typically want to show it on the nights you're staying
@@ -344,6 +344,15 @@ export function groupChecklistsByDate(
 export function isAllDay(dateStr: string): boolean {
 	if (!dateStr || !dateStr.includes('T')) return false;
 	return /^T00:00:00(\.0+)?(Z|[+-]00:00)?$/.test(dateStr.slice(10));
+}
+
+// Lodging and transportation save an all-day entry as midnight UTC with no time zone. A timed
+// one that falls at 00:00 UTC (8 PM in New York) keeps its zone, so it is not all-day (#1327).
+export function isAllDayEntry(
+	dateStr: string | null | undefined,
+	timezone: string | null | undefined
+): boolean {
+	return !!dateStr && !timezone && isAllDay(dateStr);
 }
 
 // Legacy itinerary visits stored end-of-day timestamps for all-day events.
@@ -450,6 +459,7 @@ export let LODGING_TYPES_ICONS = {
 
 export let TRANSPORTATION_TYPES_ICONS = {
 	car: '🚗',
+	motorcycle: '🏍️',
 	plane: '✈️',
 	train: '🚆',
 	bus: '🚌',
@@ -459,7 +469,13 @@ export let TRANSPORTATION_TYPES_ICONS = {
 	other: '❓'
 };
 
-export function getRandomBackground() {
+export const BACKGROUND_COOKIE = 'al_bg';
+
+/**
+ * Pick a background. When `preferredUrl` (from the BACKGROUND_COOKIE) matches a known
+ * background it is reused, so the welcome, login and signup pages show the same photo.
+ */
+export function getRandomBackground(preferredUrl?: string | null) {
 	const today = new Date();
 
 	// Special dates for specific backgrounds
@@ -490,6 +506,11 @@ export function getRandomBackground() {
 			location: 'Merry Christmas from the AdventureLog team!'
 		} as Background;
 	}
+
+	const preferred = preferredUrl
+		? randomBackgrounds.backgrounds.find((b) => b.url === preferredUrl)
+		: undefined;
+	if (preferred) return preferred as Background;
 
 	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
 	return randomBackgrounds.backgrounds[randomIndex] as Background;

@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { marked } from 'marked';
 	import { t } from 'svelte-i18n';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import FetchIcon from '~icons/mdi/download';
 	import type { IntegrationsResponse } from '#lib/integrations.js';
 
@@ -35,10 +34,6 @@
 		enableFetch && !fetchDisabled && Boolean(fetchName?.trim()) && !isFetching
 	);
 
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
-
 	onMount(async () => {
 		if (!enableFetch) return;
 		try {
@@ -64,7 +59,7 @@
 				lang: fetchLang || 'en',
 				source
 			});
-			const response = await fetch(`/api/generate/desc/?${params.toString()}`);
+			const response = await fetch(`/api/places/description/?${params.toString()}`);
 			const data = await response.json().catch(() => ({}));
 			if (response.ok && data.extract) {
 				text = data.extract;
@@ -168,7 +163,7 @@
 	{:else}
 		<article class="prose overflow-auto {editor_height} max-w-full w-full p-3">
 			{#if (text || '').trim()}
-				{@html DOMPurify.sanitize(renderMarkdown(text || ''))}
+				{@html renderMarkdown(text || '')}
 			{:else}
 				<p class="m-0 italic text-base-content/50">{$t('adventures.md_instructions')}</p>
 			{/if}

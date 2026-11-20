@@ -1,8 +1,8 @@
-# AdventureLog v0.7.1 Migration
+# v0.7.1 Migration
 
-In order to make installation easier, the AdventureLog v0.7.1 release has **removed the need for a separate nginx container** and config to serve the media files. Instead, the media files are now served by an instance of nginx running in the same container as the Django application.
+This only applies if you are upgrading from a version before v0.7.1. The v0.7.1 release **removed the need for a separate nginx container** and config to serve the media files. Instead, the media files are now served by an instance of nginx running in the same container as the Django application.
 
-## Docker Compose Changes
+## Compose file changes
 
 ::: tip
 
@@ -28,10 +28,4 @@ You can also just use the new `docker-compose.advanced.yml` file in the reposito
 
    This is because the nginx instance in the container is now serving the Django application on port 80. The port on the left side of the colon is the port on your host machine and this can be changed to whatever you want. The port on the right side of the colon is the port the Django application is running on in the container and should not be changed.
 
-That's it! You should now be able to run the application with the new configuration! This update also includes some performance enhancements so there should be a slight speed increase as well, especially with multiple users.
-
-Enjoy the new version of AdventureLog! 🎉
-
-View the full changelog [here](https://github.com/seanmorley15/AdventureLog/releases/tag/v0.7.1)
-
-Report any bugs [GitHub repository](https://github.com/seanmorley15/adventurelog) or ask for help in the [Discord server](https://discord.gg/wRbQ9Egr8C).
+Start the containers again. See the [v0.7.1 changelog](../changelogs/v0-7-1.md) for everything else in the release.

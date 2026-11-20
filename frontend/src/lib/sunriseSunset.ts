@@ -13,12 +13,8 @@ export async function fetchSunriseSunset(
 	locationId: string,
 	date: string
 ): Promise<SunriseSunset | null> {
-	const params = new URLSearchParams({
-		location_id: locationId,
-		date
-	});
-
-	const response = await fetch(`/api/sunrise-sunset/lookup/?${params.toString()}`);
+	const params = new URLSearchParams({ date });
+	const response = await fetch(`/api/locations/${locationId}/sun-times/?${params.toString()}`);
 	if (!response.ok) {
 		return null;
 	}

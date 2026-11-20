@@ -27,6 +27,8 @@
 		collection?: Collection | null;
 		initialLatLng?: { lat: number; lng: number } | null;
 		initialVisitDate?: string | null;
+		/** The trip day the place is planned on. The Immich picker opens on it until the place has a visit. */
+		initialPhotoDate?: string | null;
 		itineraryDayLabel?: string | null;
 		/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
 		skipQuickStart?: boolean;
@@ -54,6 +56,7 @@
 		collection = null,
 		initialLatLng = null,
 		initialVisitDate = null,
+		initialPhotoDate = null,
 		itineraryDayLabel = null,
 		skipQuickStart = false,
 		initialStep = null,
@@ -70,7 +73,9 @@
 			.filter((date) => !Number.isNaN(date.getTime()))
 			.sort((a, b) => +b - +a)[0];
 		if (latest) return latest.toISOString().split('T')[0];
-		return storedInitialVisitDate?.split('T')[0] ?? '';
+		// A place with no visits yet: its planned day, else the trip's start, not today (#1255).
+		const fallback = storedInitialVisitDate || initialPhotoDate || collection?.start_date;
+		return fallback?.split('T')[0] ?? '';
 	});
 
 	function resolveInitialStepIndex(): number {

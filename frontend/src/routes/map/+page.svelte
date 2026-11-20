@@ -7,7 +7,6 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/env';
 	import { t } from 'svelte-i18n';
-	import { googleContentImage } from '#lib/images.js';
 	import type {
 		Activity,
 		Location,
@@ -24,7 +23,8 @@
 	import { createEmptyLocation } from '#lib/location-draft.js';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { getActivityColor, normalizeBasemapType } from '#lib';
+	import { openLocationDrawer, openLocationHref } from '#lib/location-drawer.svelte.js';
+	import { getActivityColor, normalizeBasemapType, osmTagToEmoji } from '#lib';
 	import { page } from '$app/state';
 	import { addToast } from '#lib/toasts.js';
 	import { bindMapViewportCenterSync, getMapViewportCenter } from '#lib/map/viewportCenter.js';
@@ -32,9 +32,11 @@
 	import {
 		enrichPlace,
 		fetchRecommendations,
+		nearbyRadiusOptions,
 		placeToLocationPrefill,
 		placeToQuickAddPayload,
 		quickAddLocation,
+		recommendationToLodgingPrefill,
 		recommendationToLocationPrefill,
 		recommendationToQuickAddPayload,
 		resolveQuickAddPayload
@@ -53,6 +55,11 @@
 	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
 	import FullMap from '#lib/components/map/FullMap.svelte';
 	import MapSearchBar from '#lib/components/map/MapSearchBar.svelte';
+	import {
+		RECOMMENDATION_CATEGORIES,
+		isLodgingRecommendation,
+		type RecommendationCategory
+	} from '#lib/recommendations/categories.js';
 	import MapDetailPanel from '#lib/components/map/MapDetailPanel.svelte';
 	import MapRecommendationsLayer from '#lib/components/map/MapRecommendationsLayer.svelte';
 	import ImageMapPinPopup from '#lib/components/map/ImageMapPinPopup.svelte';
@@ -168,11 +175,23 @@
 	let selected = $state<MapSelection | null>(null);
 	let selectedPlace: PlaceSearchResult | null = $state(null);
 	let recommendations: Recommendation[] = $state([]);
-	let recCategory = $state<'tourism' | 'food' | 'lodging'>('tourism');
+	let recCategory = $state<RecommendationCategory>('attractions');
 	let recRadius = $state(5000);
 	let recLoading = $state(false);
 	let recError: string | null = $state(null);
 	let showSearchThisArea = $state(false);
+	let hoveredRecId = $state<string | null>(null);
+
+	function recEmoji(rec: Recommendation): string {
+		const raw = rec.primary_type || rec.types?.[0] || '';
+		if (!raw) return '📍';
+		return osmTagToEmoji(raw.trim().toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_'));
+	}
+
+	function formatRecDistance(km: number): string {
+		if (km < 1) return `${Math.round(km * 1000)} m`;
+		return `${km.toFixed(km < 10 ? 1 : 0)} km`;
+	}
 	let lastRecSearchCenter: [number, number] | null = null;
 	let viewportCenter: { lng: number; lat: number } = $state({ lng: 0, lat: 0 });
 	let unbindViewportCenter: (() => void) | null = null;
@@ -458,7 +477,7 @@
 	}
 
 	async function fetchVisitedCities() {
-		const response = await fetch('/api/visitedcity');
+		const response = await fetch('/api/visited-cities/');
 		visitedCities = await response.json();
 	}
 
@@ -569,7 +588,7 @@
 	}
 
 	function handleViewImageParent(event: CustomEvent<{ href: string }>) {
-		goto(event.detail.href);
+		if (!openLocationHref(event.detail.href)) goto(event.detail.href);
 	}
 
 	function attachViewportCenterSync() {
@@ -660,7 +679,7 @@
 	}
 
 	function handleViewFull(event: CustomEvent<{ pinId: string }>) {
-		goto(`/locations/${event.detail.pinId}`);
+		openLocationDrawer(event.detail.pinId);
 	}
 
 	function backToControls() {
@@ -800,31 +819,7 @@
 
 	function openLodgingFromRecommendation() {
 		if (selected?.kind !== 'recommendation') return;
-		const rec = selected.item;
-		modalLodgingPrefill = {
-			id: '',
-			user: data.user?.uuid ?? '',
-			name: rec.name,
-			type: '',
-			description: rec.description,
-			rating: rec.rating,
-			link: rec.website || rec.google_maps_url || null,
-			check_in: null,
-			check_out: null,
-			timezone: null,
-			reservation_number: null,
-			price: null,
-			price_currency: null,
-			latitude: rec.latitude,
-			longitude: rec.longitude,
-			location: rec.address || rec.description || null,
-			is_public: false,
-			collection: null,
-			created_at: '',
-			updated_at: '',
-			images: (rec.photos || []).map((url, i) => googleContentImage(`rec-${i}`, url, i === 0)),
-			attachments: []
-		} as Lodging;
+		modalLodgingPrefill = recommendationToLodgingPrefill(selected.item, data.user?.uuid, null);
 		lodgingModalOpen = true;
 	}
 
@@ -1009,25 +1004,13 @@
 		typeString ? typeString.split(',').filter((item) => item !== '') : []
 	);
 	let isMetric = $derived(data.user?.measurement_system !== 'imperial');
-	let recRadiusOptions = $derived(
-		isMetric
-			? [
-					{ value: 1000, label: '1 km' },
-					{ value: 2000, label: '2 km' },
-					{ value: 5000, label: '5 km' },
-					{ value: 10000, label: '10 km' },
-					{ value: 20000, label: '20 km' },
-					{ value: 50000, label: '50 km' }
-				]
-			: [
-					{ value: 1609, label: '1 mi' },
-					{ value: 3219, label: '2 mi' },
-					{ value: 8047, label: '5 mi' },
-					{ value: 16093, label: '10 mi' },
-					{ value: 32187, label: '20 mi' },
-					{ value: 80467, label: '50 mi' }
-				]
-	);
+	let recRadiusOptions = $derived(nearbyRadiusOptions(isMetric));
+	$effect(() => {
+		if (recRadiusOptions.some((o) => o.value === recRadius)) return;
+		recRadius = recRadiusOptions.reduce((best, o) =>
+			Math.abs(o.value - recRadius) < Math.abs(best.value - recRadius) ? o : best
+		).value;
+	});
 	run(() => {
 		const query = searchMode === 'my' ? searchQuery.toLowerCase().trim() : '';
 		filteredPins = pins.filter((pin) => {
@@ -1076,7 +1059,9 @@
 			return lat !== null && lng !== null;
 		})
 	);
-	let showLodgingAdd = $derived(selected?.kind === 'recommendation' && recCategory === 'lodging');
+	let showLodgingAdd = $derived(
+		selected?.kind === 'recommendation' && isLodgingRecommendation(selected.item)
+	);
 	$effect(() => {
 		void sidebarOpen;
 		void sidebarCollapsed;
@@ -1255,6 +1240,7 @@
 						<MapRecommendationsLayer
 							{recommendations}
 							selectedId={selectedRecId}
+							highlightedId={hoveredRecId}
 							on:select={handleSelectRecommendation}
 						/>
 
@@ -1277,28 +1263,41 @@
 				</FullMap>
 			</div>
 
-			{#if searchMode === 'nearby'}
+			{#if newMarker}
 				<div
-					class="map-ui-center absolute top-[8.75rem] sm:top-[7.5rem] lg:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
+					class="map-ui-center absolute bottom-6 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-1.5rem)] max-w-sm pointer-events-auto"
 				>
-					{#if recLoading}
-						<div
-							class="bg-base-100/95 backdrop-blur-md rounded-full px-5 py-2.5 shadow-lg border border-base-300/80 flex items-center gap-3"
-						>
-							<span class="loading loading-spinner loading-sm text-primary"></span>
-							<span class="text-sm font-medium text-base-content">{$t('map.searching_nearby')}</span
-							>
+					<div
+						class="bg-base-100/95 backdrop-blur-lg rounded-2xl shadow-xl border border-base-300 p-3 flex items-center gap-3"
+						role="dialog"
+						aria-label={$t('map.new_location_here')}
+					>
+						<div class="p-2 bg-primary/10 rounded-lg shrink-0">
+							<PinIcon class="w-5 h-5 text-primary" />
 						</div>
-					{:else if showSearchThisArea}
+						<div class="min-w-0 flex-1">
+							<p class="text-sm font-semibold leading-tight">{$t('map.new_location_here')}</p>
+							<p class="text-xs text-base-content/60 font-mono truncate">
+								{newMarker.lngLat.lat.toFixed(5)}, {newMarker.lngLat.lng.toFixed(5)}
+							</p>
+						</div>
 						<button
 							type="button"
-							class="btn btn-primary btn-sm shadow-lg pointer-events-auto gap-2"
-							onclick={searchThisArea}
+							class="btn btn-primary btn-sm gap-1 shrink-0"
+							onclick={newAdventure}
 						>
-							<Compass class="w-4 h-4" />
-							{$t('map.search_this_area')}
+							<Plus class="w-4 h-4" />
+							{$t('map.add_location')}
 						</button>
-					{/if}
+						<button
+							type="button"
+							class="btn btn-ghost btn-sm btn-square shrink-0"
+							onclick={clearMarker}
+							aria-label={$t('map.clear_marker')}
+						>
+							<Clear class="w-4 h-4" />
+						</button>
+					</div>
 				</div>
 			{/if}
 
@@ -1307,7 +1306,7 @@
 				class="map-ui-left absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-start pointer-events-none min-w-0"
 			>
 				<div
-					class="flex items-start gap-1.5 lg:gap-2 min-w-0 w-full lg:flex-1 lg:max-w-xl pointer-events-none"
+					class="relative flex items-start gap-1.5 lg:gap-2 min-w-0 w-full lg:flex-1 lg:max-w-xl pointer-events-none"
 				>
 					<button
 						type="button"
@@ -1336,23 +1335,36 @@
 							on:random={selectRandomLocation}
 						/>
 					</div>
+					{#if searchMode === 'nearby'}
+						<div
+							class="absolute top-full left-1/2 -translate-x-1/2 mt-2 pointer-events-none flex justify-center"
+						>
+							{#if recLoading}
+								<div
+									class="bg-base-100/95 backdrop-blur-md rounded-full px-4 py-2 shadow-lg border border-base-300/80 flex items-center gap-2.5 whitespace-nowrap"
+								>
+									<span class="loading loading-spinner loading-sm text-primary"></span>
+									<span class="text-sm font-medium text-base-content"
+										>{$t('map.searching_nearby')}</span
+									>
+								</div>
+							{:else if showSearchThisArea}
+								<button
+									type="button"
+									class="btn btn-primary btn-sm shadow-lg pointer-events-auto gap-2 whitespace-nowrap"
+									onclick={searchThisArea}
+								>
+									<Compass class="w-4 h-4" />
+									{$t('map.search_this_area')}
+								</button>
+							{/if}
+						</div>
+					{/if}
 				</div>
 
 				<div
 					class="flex items-center gap-2 justify-end w-full lg:w-auto lg:ml-auto pointer-events-none shrink-0"
 				>
-					{#if newMarker}
-						<div class="flex items-center gap-2 pointer-events-auto shrink-0">
-							<button type="button" class="btn btn-primary btn-sm gap-1" onclick={newAdventure}>
-								<Plus class="w-4 h-4" />
-								<span class="hidden sm:inline">{$t('map.add_location_at_marker')}</span>
-							</button>
-							<button type="button" class="btn btn-ghost btn-sm btn-square" onclick={clearMarker}>
-								<Clear class="w-4 h-4" />
-							</button>
-						</div>
-					{/if}
-
 					<div class="pointer-events-auto shrink-0">
 						<MapFloatingControls
 							embedded
@@ -1488,9 +1500,9 @@
 												class="select select-sm w-full"
 												bind:value={recCategory}
 											>
-												<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
-												<option value="food">🍴 {$t('recomendations.food')}</option>
-												<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
+												{#each RECOMMENDATION_CATEGORIES as option (option.key)}
+													<option value={option.key}>{option.emoji} {$t(option.labelKey)}</option>
+												{/each}
 											</select>
 										</div>
 										<div class="flex flex-col">
@@ -1523,15 +1535,45 @@
 													values: { count: recommendations.length }
 												})}
 											</p>
-											<ul class="menu menu-sm bg-base-100 rounded-box max-h-40 overflow-y-auto">
-												{#each recommendations.slice(0, 12) as rec (rec.id)}
+											<ul class="flex flex-col gap-1 max-h-[22rem] overflow-y-auto -mx-1 px-1">
+												{#each recommendations as rec (rec.id)}
 													<li>
 														<button
 															type="button"
-															class={selectedRecId === rec.id ? 'active' : ''}
+															class="w-full flex items-center gap-2.5 rounded-lg p-2 text-left transition-colors hover:bg-base-300/60 {selectedRecId ===
+															rec.id
+																? 'bg-warning/20 ring-1 ring-warning/50'
+																: 'bg-base-100'}"
+															onmouseenter={() => (hoveredRecId = rec.id)}
+															onmouseleave={() => (hoveredRecId = null)}
+															onfocus={() => (hoveredRecId = rec.id)}
+															onblur={() => (hoveredRecId = null)}
 															onclick={() => selectRecommendation(rec)}
 														>
-															<span class="truncate">{rec.name}</span>
+															<span
+																class="grid place-items-center w-8 h-8 rounded-full bg-accent/20 text-base shrink-0"
+																>{recEmoji(rec)}</span
+															>
+															<span class="min-w-0 flex-1">
+																<span class="block text-sm font-medium leading-tight truncate"
+																	>{rec.name}</span
+																>
+																<span
+																	class="flex items-center gap-1.5 text-xs text-base-content/60 truncate"
+																>
+																	{#if rec.rating != null}
+																		<span class="text-warning font-medium"
+																			>{rec.rating.toFixed(1)} ★</span
+																		>
+																	{/if}
+																	{#if rec.distance_km != null}
+																		<span>{formatRecDistance(rec.distance_km)}</span>
+																	{/if}
+																	{#if rec.address}
+																		<span class="truncate">{rec.address}</span>
+																	{/if}
+																</span>
+															</span>
 														</button>
 													</li>
 												{/each}

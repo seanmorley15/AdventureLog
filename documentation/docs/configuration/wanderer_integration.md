@@ -1,42 +1,33 @@
-# Wanderer Integration
+# Wanderer
 
-[Wanderer](https://wanderer.to) is a self-hosted trail database. Integrating Wanderer with AdventureLog allows you to import trails directly into your locations, making it easier to plan and track your outdoor adventures.
+[Wanderer](https://wanderer.to) is a self-hosted trail database. Connect it to link Wanderer trails to your locations, with their distance, elevation gain, and a link back to the trail.
 
-## Wanderer Integration Setup
+**Who sets it up:** each user connects their own Wanderer account. The server admin doesn't need to do anything.
 
-1. In your Wanderer instance, create an API key (format: `wanderer_key_...`).
-2. Navigate to the AdventureLog settings page.
-3. Click on the **Integrations** tab.
-4. Find the **Wanderer** section and enter your Wanderer server URL and API key.
-5. Click **Connect to Wanderer** to save and verify the connection.
+## Connect your account
 
-AdventureLog stores your API key securely on the server and uses it only to call the Wanderer API on your behalf. The key is never returned to the browser after it is saved.
+1. In Wanderer, create an API key. It starts with `wanderer_key_`.
+2. In AdventureLog, go to **Settings → Integrations → Wanderer**.
+3. Enter your Wanderer **Server URL** and **API Key**, then connect.
 
-### Important Notes
+AdventureLog's server connects to Wanderer, so use an address that server can reach. `localhost` and `127.0.0.1` usually don't work in Docker. The key stays on the server and is never sent back to your browser.
 
-1. The URL to the Wanderer server must be accessible from the AdventureLog server. Values like `localhost` or `127.0.0.1` often fail when AdventureLog runs in Docker or on another host.
-2. If you upgrade from the older username/password integration, you must disconnect and reconnect with an API key. Existing Wanderer links on locations will not carry over automatically.
-3. If your API key is revoked or invalid, update it in Settings → Integrations → Wanderer (Edit).
+## Use it
 
-## Importing Wanderer Trails
+1. Open a location to edit it, and go to the **Media** tab.
+2. Under **Trail Management**, choose **Add Wanderer Trail**.
+3. Search for the trail by name, and choose the link icon on the result.
 
-1. Open the create/edit location popup in AdventureLog.
-2. Navigate to the **Media** tab and scroll down to the **Trail Management** section.
-3. Click the **Add Wanderer Trail** button.
-4. A search input will appear. Type the name of the trail you want to import.
-5. Select the desired trail from the search results and click the link icon to import it into your location.
-6. The imported trail will be added to your location's trails list, and you can view its details, including distance, elevation gain, and more.
+The trail joins the location's trails, with its distance and elevation gain, and an **Open in Wanderer** link.
 
-### Open in Wanderer links
+## Troubleshooting
 
-Wanderer trail pages use this URL pattern:
+| Problem | Fix |
+| ------- | --- |
+| Can't connect | Check the URL and that the AdventureLog server can reach it. See [An integration can't connect](../troubleshooting/common_issues.md#an-integration-can-t-connect). |
+| Trails stopped loading | The API key was revoked or expired. Edit the integration under **Settings → Integrations → Wanderer** and enter a new key. |
+| Upgraded from the old username and password connection | Disconnect and connect again with an API key. Trails linked the old way aren't carried over. |
 
-`{your-server}/trail/view/@{author-username}@{author-domain}/{trail-id}`
+## For developers
 
-Example: `https://wanderer.seanmorley.com/trail/view/@seanmorley15@wanderer.seanmorley.com/25145802f15fe7a`
-
-AdventureLog stores `wanderer_author_username` and `wanderer_author_domain` on each linked trail (from `expand.author` on the Wanderer API). The API response includes `wanderer_link` built from those fields plus your connected server URL.
-
-Older linked trails without author metadata are backfilled automatically the next time they are loaded (AdventureLog calls `GET /api/v1/trail/{id}?expand=author`).
-
-Enjoy exploring new trails with Wanderer and AdventureLog! If you encounter any issues or have questions about the integration, feel free to reach out to the AdventureLog community!
+Wanderer trail pages use the address `{server}/trail/view/@{author-username}@{author-domain}/{trail-id}`. AdventureLog stores the author's username and domain on each linked trail, and returns the full address as `wanderer_link` in the API. Trails linked before this was stored are filled in the next time they load.

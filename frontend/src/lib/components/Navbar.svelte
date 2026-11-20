@@ -15,6 +15,7 @@
 	import Map from '~icons/mdi/map';
 	import Menu from '~icons/mdi/menu';
 	import Avatar from './Avatar.svelte';
+	import CommentInbox from './CommentInbox.svelte';
 	import { page } from '$app/state';
 	import { t, locale, locales } from 'svelte-i18n';
 	import { themes } from '#lib';
@@ -308,7 +309,7 @@
 		{#if showFullNav}
 			<button
 				type="button"
-				class="hidden lg:flex input input-sm items-center gap-2 w-64 text-left"
+				class="hidden lg:flex input input-sm items-center gap-2 w-64 xl:w-48 2xl:w-64 text-left"
 				onclick={() => openSearch()}
 			>
 				<Magnify class="w-4 h-4 opacity-60 shrink-0" />
@@ -339,6 +340,11 @@
 					{$t('auth.signup')}
 				</button>
 			</div>
+		{/if}
+
+		<!-- New comments on the collections you belong to -->
+		{#if data.user}
+			<CommentInbox initialUnread={data?.unreadCommentCount ?? 0} />
 		{/if}
 
 		<!-- User Avatar -->

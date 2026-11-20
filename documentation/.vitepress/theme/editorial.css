@@ -1,0 +1,529 @@
+/* ─── Homepage: travel journal ────────────────────────────────────────
+ *
+ * Photography and real app screenshots carry the page; the chrome stays
+ * quiet. Colors come from the app's own themes (see style.css), headings
+ * use an editorial serif, and nothing moves unless the reader moves it.
+ * ------------------------------------------------------------------------ */
+
+:root {
+  /* Same stack the app uses (frontend/src/app.css). */
+  --al-font-display:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --al-sky: linear-gradient(to bottom, #8fc2ea 0%, #dbe3e0 50%, #fcd6a8 100%);
+  --al-ochre: #9a6f22;
+  --al-frame: #d5ccbc;
+  --al-frame-shadow:
+    0 1px 2px rgba(29, 35, 32, 0.06), 0 18px 40px -18px rgba(29, 35, 32, 0.28);
+}
+
+.dark {
+  --al-sky: linear-gradient(to bottom, #040810 0%, #0a1519 60%, #0d1c1c 100%);
+  --al-ochre: #d1a24a;
+  --al-frame: #2c3830;
+  --al-frame-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px -18px rgba(0, 0, 0, 0.7);
+}
+
+.VPHome h1,
+.VPHome h2 {
+  font-family: var(--al-font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+/* ─── Buttons ─── */
+
+.al-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 22px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none !important;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.al-button:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
+}
+
+.al-final .al-button:focus-visible {
+  outline-color: #fff;
+}
+
+.al-button--brand {
+  color: #fff !important;
+  background: var(--vp-c-brand-3);
+}
+
+.al-button--brand:hover {
+  background: var(--vp-c-brand-2);
+}
+
+.al-button--outline {
+  color: var(--vp-c-text-1) !important;
+  border-color: var(--vp-c-border);
+  background: var(--vp-c-bg);
+}
+
+.al-button--outline:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* On photographs */
+.al-button--light {
+  color: #1d2320 !important;
+  background: #f8f5ee;
+}
+
+.al-button--light:hover {
+  background: #fff;
+}
+
+.al-button--outline-light {
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(17, 23, 19, 0.28);
+}
+
+.al-button--outline-light:hover {
+  border-color: #fff;
+  background: rgba(17, 23, 19, 0.45);
+}
+
+/* ─── App screenshots (light / dark) ─── */
+
+.al-shot {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--al-frame);
+  border-radius: 10px;
+  background: var(--vp-c-bg-soft);
+  box-shadow: var(--al-frame-shadow);
+  aspect-ratio: 2200 / 1375;
+}
+
+.al-shot__img,
+.al-shot__img img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.al-shot__img--dark,
+.dark .al-shot__img--light {
+  display: none;
+}
+
+.dark .al-shot__img--dark {
+  display: block;
+}
+
+/* ─── Hero ─── */
+
+.al-hero {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.al-hero__scene {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  min-height: clamp(560px, 78vh, 800px);
+  padding: clamp(56px, 9vh, 104px) 32px 220px;
+  overflow: hidden;
+  background: var(--al-sky);
+}
+
+.al-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.al-scene.is-ready {
+  opacity: 1;
+}
+
+/* A soft wash behind the copy keeps it readable over the range, and the
+ * ground dissolves into the page so the screenshot sits on paper. */
+.al-hero__scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, var(--vp-c-bg) 0%, transparent 22%),
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--vp-c-bg) 62%, transparent) 0%,
+      color-mix(in srgb, var(--vp-c-bg) 40%, transparent) 30%,
+      transparent 58%
+    );
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .al-scene {
+    transition: none;
+  }
+}
+
+.al-hero__copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.VPHome .al-hero__title {
+  max-width: 13ch;
+  margin: 0 0 22px;
+  font-size: clamp(2.6rem, 5.6vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--vp-c-text-1);
+  text-wrap: balance;
+}
+
+.al-hero__lead {
+  max-width: 35rem;
+  margin: 0 0 30px;
+  font-size: clamp(1.06rem, 1.5vw, 1.25rem);
+  line-height: 1.55;
+  color: var(--vp-c-text-1);
+}
+
+.al-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.al-final__credit {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  z-index: 1;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.al-hero__app {
+  position: relative;
+  z-index: 2;
+  width: min(1120px, calc(100% - 48px));
+  margin: -130px auto 0;
+}
+
+.al-hero__app figcaption,
+.al-figure--wide > figcaption {
+  margin-top: 14px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--vp-c-text-3);
+}
+
+/* ─── Chapters ─── */
+
+.al-story {
+  padding: 0 24px;
+}
+
+.al-chapter,
+.al-pillars {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(64px, 10vw, 120px) 0 0;
+}
+
+.al-chapter__head {
+  max-width: 44rem;
+  margin: 0 0 40px;
+}
+
+.al-chapter__kicker {
+  margin: 0 0 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--al-ochre);
+}
+
+.VPHome .vp-doc .al-chapter__head h2 {
+  margin: 0 0 18px;
+  font-size: clamp(1.9rem, 3.8vw, 2.9rem);
+  line-height: 1.08;
+  color: var(--vp-c-text-1);
+  text-wrap: balance;
+}
+
+.al-chapter__head p:last-child {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--vp-c-text-2);
+}
+
+.al-figure {
+  margin: 0;
+}
+
+.al-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+  margin-top: 56px;
+}
+
+.al-pair figcaption {
+  margin-top: 20px;
+}
+
+.VPHome .vp-doc .al-pair h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--vp-c-text-1);
+}
+
+.al-pair p,
+.al-chapter__note {
+  margin: 0;
+  max-width: 34rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.VPHome .vp-doc .al-chapter__note {
+  margin-top: 56px;
+  padding-left: 18px;
+  border-left: 2px solid var(--al-ochre);
+  font-size: 1.05rem;
+}
+
+/* ─── Self-hosted ─── */
+
+.al-pillars {
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: content-box;
+}
+
+.al-pillars__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 32px;
+  max-width: none;
+  margin: 0;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.al-pillar {
+  padding: 24px 0 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.al-pillar:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.VPHome .vp-doc .al-pillar h3 {
+  margin: 0 0 8px;
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.al-pillar p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.al-pillar a {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+/* ─── Sections kept from before, retuned to the palette ─── */
+
+.al-eyebrow {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--al-ochre);
+}
+
+.VPHome .vp-doc .al-section-head h2 {
+  font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+  line-height: 1.12;
+}
+
+.al-install,
+.al-proof,
+.al-faq {
+  padding-top: clamp(64px, 10vw, 120px);
+}
+
+/* ─── Closing ─── */
+
+.al-final {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 520px;
+  margin-top: clamp(64px, 10vw, 120px);
+  padding: 88px 24px;
+  overflow: hidden;
+  text-align: center;
+  background: #2a1f2e;
+}
+
+.al-final__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.al-final::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 16, 30, 0.42);
+  pointer-events: none;
+}
+
+.al-final__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.VPHome .vp-doc .al-final h2 {
+  margin: 0 0 16px;
+  font-size: clamp(1.9rem, 3.8vw, 2.9rem);
+  line-height: 1.1;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.al-final > .al-final__inner > p {
+  margin: 0 0 28px;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.al-final__actions {
+  margin-bottom: 24px;
+}
+
+.al-final__support {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.al-final .al-final__support a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 960px) {
+  .al-pillars__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  /* The copy sits above the range here, so wash the top, not the side. */
+  .al-hero__scene::after {
+    background:
+      linear-gradient(to top, var(--vp-c-bg) 0%, transparent 16%),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--vp-c-bg) 55%, transparent) 0%,
+        transparent 62%
+      );
+  }
+
+  .al-hero__scene {
+    min-height: 0;
+    padding: 44px 20px 330px;
+  }
+
+  .al-hero__app {
+    width: calc(100% - 24px);
+    margin-top: -70px;
+  }
+
+  .al-hero__actions,
+  .al-final__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .al-story {
+    padding: 0 16px;
+  }
+
+  .al-pair {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 44px;
+    margin-top: 44px;
+  }
+
+  .al-pillars {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .al-pillars__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .al-final {
+    min-height: 0;
+    padding: 72px 16px 64px;
+  }
+
+  .al-final__support {
+    flex-wrap: wrap;
+  }
+}

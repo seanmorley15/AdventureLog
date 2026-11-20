@@ -7,7 +7,7 @@
 export async function reauthenticateWithPassword(
 	password: string
 ): Promise<{ ok: boolean; status: number }> {
-	const res = await fetch('/auth/browser/v1/auth/reauthenticate', {
+	const res = await fetch('/api/auth/browser/v1/auth/reauthenticate', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		credentials: 'include',

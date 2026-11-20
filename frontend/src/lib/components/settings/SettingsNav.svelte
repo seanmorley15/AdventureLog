@@ -18,8 +18,8 @@
 		{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
 		{ id: 'data', icon: '📦', label: () => $t('settings.data_and_storage') },
 		{ id: 'danger', icon: '⚠️', label: () => $t('settings.danger_zone') },
-		{ id: 'about', icon: 'ℹ️', label: () => $t('settings.about') },
-		...(isStaff ? [{ id: 'admin', icon: '⚙️', label: () => $t('settings.administration') }] : [])
+		...(isStaff ? [{ id: 'admin', icon: '⚙️', label: () => $t('settings.administration') }] : []),
+		{ id: 'about', icon: 'ℹ️', label: () => $t('settings.about') }
 	] satisfies NavItem[]);
 </script>
 

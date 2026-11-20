@@ -1,10 +1,14 @@
-from typing import Dict
+from typing import Dict, List
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
+
+# Google's Maps Platform terms allow caching only place IDs and coordinates, so Google
+# results are never cached here. See documentation/docs/configuration/caching.md.
 
 GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
+NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 
 
 def reverse_geocode(lat: float, lon: float, api_key: str) -> ProviderResult[Dict]:
@@ -27,3 +31,31 @@ def reverse_geocode(lat: float, lon: float, api_key: str) -> ProviderResult[Dict
         return ProviderResult(error=f"Google Maps geocoding error: {status}")
 
     return ProviderResult(data=data)
+
+
+def search_nearby_place_names(lat: float, lon: float, api_key: str) -> ProviderResult[List[str]]:
+    """Display names of the places within a few metres of a point, nearest first."""
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": api_key,
+        "X-Goog-FieldMask": "places.displayName.text,places.formattedAddress,places.types",
+    }
+    payload = {
+        "maxResultCount": 6,
+        "rankPreference": "DISTANCE",
+        "locationRestriction": {
+            "circle": {
+                "center": {"latitude": float(lat), "longitude": float(lon)},
+                "radius": 45.0,
+            }
+        },
+    }
+
+    try:
+        response = requests.post(NEARBY_URL, headers=headers, json=payload, timeout=(2, 5))
+        response.raise_for_status()
+        places = (response.json() or {}).get("places", [])
+    except requests.exceptions.RequestException:
+        return ProviderResult(error="Google Maps nearby search error")
+
+    return ProviderResult(data=[((place.get("displayName") or {}).get("text")) for place in places])

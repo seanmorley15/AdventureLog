@@ -26,6 +26,7 @@ Per-endpoint overrides (all optional):
 | -------- | ------- | -------- |
 | `RATE_LIMIT_USER` | `10000/hour` | Authenticated API requests |
 | `RATE_LIMIT_IMAGE_PROXY` | `60/minute` | Image proxy |
+| `RATE_LIMIT_PLACE_PHOTO` | `300/minute` | Google place photos |
 | `RATE_LIMIT_IMAGE_IMPORT` | `12/minute` | Image import |
 | `RATE_LIMIT_EXTERNAL_GEOCODE` | `120/minute` | External geocoding |
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | `30/minute` | Recommendations |
@@ -37,21 +38,14 @@ Per-endpoint overrides (all optional):
 | Variable | Default | Description |
 | -------- | ------- | ----------- |
 | `GUNICORN_WORKERS` | `2` | Gunicorn worker count. Use `1` on small VPS instances; `(2 × CPU cores) + 1` on larger servers. |
-| `SKIP_WORLD_DATA` | unset | Set to `1` to skip the first-boot `download-countries` import. Saves RAM on low-memory hosts; world travel data can be imported later. |
+| `GUNICORN_MAX_REQUESTS` | `10000` | Restart a worker after this many requests (`0` = never). |
+| `SKIP_WORLD_DATA` | unset | Set to `1` to skip the first-boot `download_countries` import. Saves RAM on low-memory hosts; world travel data can be imported later. |
 
 The installer offers `SKIP_WORLD_DATA=1` automatically when it detects limited RAM.
 
 ## Multi-factor authentication
 
-MFA (TOTP) is configured per-user in the app, not via environment variables:
-
-1. Log in and open **Settings → Security**
-2. Enable **Multi-Factor Authentication**
-3. Scan the QR code with an authenticator app
-
-## Mobile QR login
-
-AdventureLog supports QR-based mobile login from **Settings → Security**. No server-side configuration is required.
+Multi-factor authentication (TOTP) needs no server settings. Each user turns it on under **Settings → Security**. See [Account and Settings](../usage/settings.md#security).
 
 ## Cloud billing (hosted only)
 

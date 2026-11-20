@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { run } from 'svelte/legacy';
 
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher, onMount, untrack } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import {
 		updateLocalDate,
@@ -22,13 +23,14 @@
 	import type { Category, User } from '#lib/types.js';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
+	import { defaultTimezone } from '#lib/dateUtils.js';
 	import MoneyInput from '../shared/MoneyInput.svelte';
 	import DateInput from '../shared/DateInput.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '#lib/money.js';
 	import { normalizeBasemapType } from '#lib';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { isAllDay } from '#lib';
+	import { isAllDayEntry } from '#lib';
 	import { addToast } from '#lib/toasts.js';
 
 	const dispatch = createEventDispatcher();
@@ -102,7 +104,8 @@
 
 	let collectionId = $derived(collection?.id);
 
-	let selectedTimezone: string = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	// New stays start in the trip's time zone (#653, #801); editing keeps the stay's own.
+	let selectedTimezone: string = $state(defaultTimezone(untrack(() => collection)));
 	let localStartDate: string = $state('');
 	let localEndDate: string = $state('');
 	let allDay: boolean = $state(true);
@@ -214,6 +217,11 @@
 
 	function handleLocalDateChange() {
 		syncAndValidateDates(false);
+	}
+
+	// Entering a start date fills in a default end date (same logic as save).
+	function handleStartDateChange() {
+		syncAndValidateDates(true);
 	}
 
 	function syncAndValidateDates(autoFillEnd: boolean): boolean {
@@ -348,7 +356,7 @@
 					delete payload.collection;
 				}
 
-				let res = await fetch(`/api/lodging/${persistedId}`, {
+				let res = await fetch(`/api/lodgings/${persistedId}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json'
@@ -358,9 +366,7 @@
 
 				if (!res.ok) {
 					const errorData = await res.json().catch(() => null);
-					const errorMsg = errorData
-						? Object.values(errorData).flat().join(', ')
-						: `Server error (${res.status})`;
+					const errorMsg = apiErrorMessage(errorData, `Server error (${res.status})`);
 					addToast('error', errorMsg);
 					return;
 				}
@@ -368,7 +374,7 @@
 				let updatedLocation = await res.json();
 				lodging = updatedLocation;
 			} else {
-				let res = await fetch(`/api/lodging`, {
+				let res = await fetch(`/api/lodgings/`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -378,9 +384,7 @@
 
 				if (!res.ok) {
 					const errorData = await res.json().catch(() => null);
-					const errorMsg = errorData
-						? Object.values(errorData).flat().join(', ')
-						: `Server error (${res.status})`;
+					const errorMsg = apiErrorMessage(errorData, `Server error (${res.status})`);
 					addToast('error', errorMsg);
 					return;
 				}
@@ -421,7 +425,7 @@
 
 		// Determine if existing dates are all-day using shared helper
 		if (initialLodging?.check_in) {
-			allDay = isAllDay(initialLodging.check_in);
+			allDay = isAllDayEntry(initialLodging.check_in, initialLodging.timezone);
 		}
 
 		// Keep lodging.timezone null for all-day entries, otherwise use selectedTimezone
@@ -734,7 +738,7 @@
 								<DateInput
 									id="check-in"
 									bind:value={localStartDate}
-									onchange={handleLocalDateChange}
+									onchange={handleStartDateChange}
 									showTime={!allDay}
 									min={constrainDates ? constraintStartDate : undefined}
 									max={constrainDates ? constraintEndDate : undefined}

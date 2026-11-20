@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { t } from 'svelte-i18n';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '#lib/money.js';
+	import { t, locale } from 'svelte-i18n';
+	import { CURRENCY_OPTIONS, currencyName } from '#lib/money.js';
 	import {
 		DATE_FORMAT_OPTIONS,
 		DEFAULT_DATE_FORMAT,
@@ -10,17 +10,43 @@
 		type DateFormatPreference
 	} from '#lib/dateFormat.js';
 	import { getBasemapOptions } from '#lib';
-	import type { User } from '#lib/types.js';
+	import type { ProfileVisibility, User } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
 
 	interface Props {
 		user: User;
-		onPublicProfileToggle: (nextValue: boolean) => void;
+		/** Returns false to keep the current choice (the user backed out). */
+		onProfileVisibilityChange: (next: ProfileVisibility) => boolean;
+		/** False when the server is for signed-in users only (`ALLOW_PUBLIC_ACCESS`). */
+		allowPublicAccess?: boolean;
 	}
 
-	let { user = $bindable(), onPublicProfileToggle }: Props = $props();
+	let { user = $bindable(), onProfileVisibilityChange, allowPublicAccess = true }: Props = $props();
+	let usaFlash = $state(false);
+
+	// Who can see the profile, narrowest first (#1226).
+	const PROFILE_VISIBILITY: { value: ProfileVisibility; label: string; hint: string }[] = [
+		{
+			value: 'private',
+			label: 'settings.profile_visibility_private',
+			hint: 'settings.profile_visibility_private_hint'
+		},
+		{
+			value: 'signed_in',
+			label: 'settings.profile_visibility_signed_in',
+			hint: 'settings.profile_visibility_signed_in_hint'
+		},
+		{
+			value: 'public',
+			label: 'settings.profile_visibility_public',
+			hint: 'settings.profile_visibility_public_hint'
+		}
+	];
+	const profileVisibility = $derived<ProfileVisibility>(
+		user.profile_visibility ?? (user.public_profile ? 'public' : 'private')
+	);
 
 	const dateFormatLabelKeys: Record<DateFormatPreference, string> = {
 		locale: 'settings.date_format_locale',
@@ -112,35 +138,62 @@
 			</div>
 		</div>
 
-		<div class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4">
-			<label class="flex items-start justify-between gap-4 cursor-pointer w-full">
-				<span class="min-w-0">
-					<span class="font-semibold text-base-content">{$t('auth.public_profile')}</span>
-					<p class="field-hint">{$t('settings.public_profile_desc')}</p>
-					{#if user.public_profile && (user.shared_collection_count ?? 0) > 0}
-						<p class="text-sm text-warning mt-2">
-							{$t('settings.public_profile_sharing_warning', {
-								values: { count: user.shared_collection_count ?? 0 }
-							})}
-						</p>
-					{/if}
-					{#if user.public_profile && (user.pending_collection_invite_count ?? 0) > 0}
-						<p class="text-sm text-warning mt-2">
-							{$t('settings.public_profile_invite_warning', {
-								values: { count: user.pending_collection_invite_count ?? 0 }
-							})}
-						</p>
-					{/if}
-				</span>
-				<input
-					type="checkbox"
-					checked={user.public_profile}
-					onchange={(e) => onPublicProfileToggle(e.currentTarget.checked)}
-					name="public_profile"
-					class="toggle toggle-primary shrink-0 mt-0.5"
-				/>
-			</label>
-		</div>
+		<fieldset class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4">
+			<legend class="px-1 font-semibold text-base-content">
+				{$t('settings.profile_visibility')}
+			</legend>
+			<p class="field-hint">{$t('settings.profile_visibility_desc')}</p>
+			<div class="mt-3 grid gap-2 sm:grid-cols-3">
+				{#each PROFILE_VISIBILITY as option (option.value)}
+					{@const unavailable = option.value === 'public' && !allowPublicAccess}
+					<label
+						class={[
+							'flex cursor-pointer gap-3 rounded-lg border p-3',
+							profileVisibility === option.value
+								? 'border-primary bg-primary/10'
+								: 'border-base-300 bg-base-100',
+							unavailable && 'cursor-not-allowed opacity-60'
+						]}
+					>
+						<input
+							type="radio"
+							name="profile_visibility"
+							class="radio radio-primary radio-sm mt-0.5"
+							value={option.value}
+							checked={profileVisibility === option.value}
+							disabled={unavailable}
+							onchange={(e) => {
+								if (onProfileVisibilityChange(option.value)) return;
+								const kept = e.currentTarget.form?.querySelector<HTMLInputElement>(
+									`input[name="profile_visibility"][value="${profileVisibility}"]`
+								);
+								if (kept) kept.checked = true;
+							}}
+						/>
+						<span class="min-w-0">
+							<span class="block text-sm font-semibold">{$t(option.label)}</span>
+							<span class="block text-xs text-base-content/70">
+								{unavailable ? $t('settings.profile_visibility_public_off') : $t(option.hint)}
+							</span>
+						</span>
+					</label>
+				{/each}
+			</div>
+			{#if profileVisibility !== 'private' && (user.shared_collection_count ?? 0) > 0}
+				<p class="text-sm text-warning mt-3">
+					{$t('settings.public_profile_sharing_warning', {
+						values: { count: user.shared_collection_count ?? 0 }
+					})}
+				</p>
+			{/if}
+			{#if profileVisibility !== 'private' && (user.pending_collection_invite_count ?? 0) > 0}
+				<p class="text-sm text-warning mt-2">
+					{$t('settings.public_profile_invite_warning', {
+						values: { count: user.pending_collection_invite_count ?? 0 }
+					})}
+				</p>
+			{/if}
+		</fieldset>
 
 		<SettingsSubsection
 			title={$t('settings.preferences')}
@@ -178,8 +231,7 @@
 				>
 					{#each CURRENCY_OPTIONS as code (code)}
 						<option value={code}>
-							{code}{#if CURRENCY_LABELS[code]}
-								- {CURRENCY_LABELS[code]}{/if}
+							{code} - {currencyName(code, $locale)}
 						</option>
 					{/each}
 				</select>
@@ -211,7 +263,11 @@
 			</div>
 		</div>
 
-		<div class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4">
+		<div
+			class="mt-6 rounded-xl border border-base-300 bg-base-200/70 p-4"
+			class:usa-flash={usaFlash}
+			onanimationend={() => (usaFlash = false)}
+		>
 			<label class="flex items-start justify-between gap-4 cursor-pointer w-full">
 				<span class="min-w-0">
 					<span class="font-semibold text-base-content">{$t('settings.use_imperial')}</span>
@@ -222,9 +278,13 @@
 					checked={user.measurement_system === 'imperial'}
 					name="measurement_system"
 					class="toggle toggle-primary shrink-0 mt-0.5"
-					onchange={() =>
-						(user.measurement_system =
-							user.measurement_system === 'metric' ? 'imperial' : 'metric')}
+					onchange={() => {
+						user.measurement_system = user.measurement_system === 'metric' ? 'imperial' : 'metric';
+						// Replay the animation each time imperial is switched on.
+						usaFlash = false;
+						if (user.measurement_system === 'imperial')
+							requestAnimationFrame(() => (usaFlash = true));
+					}}
 				/>
 			</label>
 		</div>
@@ -234,3 +294,63 @@
 		</div>
 	</form>
 </SettingsCard>
+
+<style>
+	@property --usa-angle {
+		syntax: '<angle>';
+		inherits: false;
+		initial-value: 0deg;
+	}
+
+	/* A red, white and blue light that circles the box's border once when imperial is switched on. */
+	.usa-flash {
+		position: relative;
+	}
+
+	.usa-flash::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		border-radius: inherit;
+		padding: 3px;
+		pointer-events: none;
+		background: conic-gradient(
+			from var(--usa-angle),
+			transparent 0deg,
+			#e5484d 40deg,
+			#ffffff 80deg,
+			#3e63dd 120deg,
+			transparent 160deg
+		);
+		-webkit-mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		-webkit-mask-composite: xor;
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		animation: usa-spin 1.3s ease-in-out;
+	}
+
+	@keyframes usa-spin {
+		from {
+			--usa-angle: 0deg;
+			opacity: 1;
+		}
+		85% {
+			opacity: 1;
+		}
+		to {
+			--usa-angle: 360deg;
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.usa-flash::before {
+			animation: none;
+			display: none;
+		}
+	}
+</style>
