@@ -1,8 +1,9 @@
-from datetime import date, datetime, time, timedelta, timezone as dt_timezone
+from datetime import date, time, timedelta, timezone as dt_timezone
+from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from adventures.models import (
     Collection,
@@ -12,7 +13,8 @@ from adventures.models import (
     Note,
 )
 from adventures.services.exports.pdf import build_collection_pdf, pdf_filename_for_collection
-from adventures.services.exports.pdf.text import _iter_text_chunks, format_datetime, to_local
+from adventures.services.exports.pdf.components import entry_time, lodging_nights
+from adventures.services.exports.pdf.text import _iter_text_chunks, format_datetime, to_local, visit_dates
 
 User = get_user_model()
 
@@ -535,21 +537,63 @@ class PdfApiTests(BookFixtureMixin, TestCase):
         self.assertEqual(response.status_code, 202)
         self.assertEqual(BackgroundJob.objects.get(pk=response.json()['id']).params['options'], {'photos': True, 'journal': None})
 
-    def test_format_datetime_converts_to_entry_timezone(self):
-        # Stored values are UTC; the PDF should show the destination's local time.
-        self.assertEqual(
-            format_datetime(datetime(2026, 3, 10, 23, 30, tzinfo=dt_timezone.utc), 'Asia/Tokyo'),
-            'Mar 11, 2026 8:30 AM (Asia/Tokyo)',
-        )
-        self.assertEqual(
-            format_datetime(datetime(2026, 3, 10, 14, 5, tzinfo=dt_timezone.utc), 'America/New_York'),
-            'Mar 10, 2026 10:05 AM (America/New_York)',
-        )
 
-    def test_format_datetime_leaves_all_day_and_unknown_timezones_alone(self):
-        midnight = datetime(2026, 3, 10, 0, 0, tzinfo=dt_timezone.utc)
-        self.assertEqual(format_datetime(midnight, 'America/New_York'), 'Mar 10, 2026')
-        self.assertEqual(to_local(midnight, 'America/New_York'), midnight)
-        timed = datetime(2026, 3, 10, 14, 5, tzinfo=dt_timezone.utc)
+def _utc(*args) -> datetime:
+    return datetime(*args, tzinfo=dt_timezone.utc)
+
+
+class PdfTimezoneTests(SimpleTestCase):
+    """Stored datetimes are UTC; the PDF shows them in each entry's own timezone, like the web UI."""
+
+    def test_format_datetime_converts_to_entry_timezone(self):
+        self.assertEqual(format_datetime(_utc(2026, 3, 10, 23, 30), 'Asia/Tokyo'), 'Mar 11, 2026 8:30 AM (Asia/Tokyo)')
+        self.assertEqual(format_datetime(_utc(2026, 3, 10, 14, 5), 'America/New_York'), 'Mar 10, 2026 10:05 AM (America/New_York)')
+
+    def test_timed_entry_at_midnight_utc_keeps_its_time(self):
+        # 9 AM in Tokyo and 8 PM in New York are both 00:00 UTC; with a timezone they are timed (#1327).
+        self.assertEqual(format_datetime(_utc(2026, 3, 11), 'Asia/Tokyo'), 'Mar 11, 2026 9:00 AM (Asia/Tokyo)')
+        self.assertEqual(format_datetime(_utc(2026, 3, 11), 'America/New_York'), 'Mar 10, 2026 8:00 PM (America/New_York)')
+        flight = SimpleNamespace(
+            date=_utc(2026, 3, 11), start_timezone='Asia/Tokyo',
+            end_date=_utc(2026, 3, 11, 1, 30), end_timezone='Asia/Tokyo',
+        )
+        self.assertEqual(entry_time('transportation', flight), ('9:00 AM', 'arrives 10:30 AM'))
+        stay = SimpleNamespace(check_in=_utc(2026, 3, 11), timezone='America/New_York')
+        self.assertEqual(entry_time('lodging', stay), ('8:00 PM', 'check-in'))
+
+    def test_all_day_and_unknown_timezones_are_left_alone(self):
+        # All-day lodging/transportation: midnight UTC with no timezone.
+        self.assertEqual(format_datetime(_utc(2026, 3, 10)), 'Mar 10, 2026')
+        all_day = SimpleNamespace(date=_utc(2026, 3, 10), start_timezone=None, end_date=None, end_timezone=None)
+        self.assertEqual(entry_time('transportation', all_day), ('', ''))
+        timed = _utc(2026, 3, 10, 14, 5)
+        self.assertEqual(to_local(timed, None), timed)
         self.assertEqual(format_datetime(timed, 'Not/AZone'), 'Mar 10, 2026 2:05 PM (Not/AZone)')
         self.assertEqual(format_datetime(timed), 'Mar 10, 2026 2:05 PM')
+
+    def test_lodging_nights_use_local_dates(self):
+        # Check in 8 PM Jun 12 and out 11 AM Jun 14, New York time: two nights, though check-in is 00:00 UTC.
+        stay = SimpleNamespace(check_in=_utc(2026, 6, 13), check_out=_utc(2026, 6, 14, 15), timezone='America/New_York')
+        self.assertEqual(lodging_nights(stay), 2)
+        all_day = SimpleNamespace(check_in=_utc(2026, 6, 12), check_out=_utc(2026, 6, 15), timezone=None)
+        self.assertEqual(lodging_nights(all_day), 3)
+        self.assertEqual(lodging_nights(SimpleNamespace(check_in=None, check_out=_utc(2026, 6, 15), timezone=None)), 0)
+
+    def test_visit_range_converts_both_ends_or_neither(self):
+        # Timed visit, 8 PM to 10 PM Mar 10 in New York; the start is 00:00 UTC Mar 11.
+        self.assertEqual(
+            visit_dates(_utc(2026, 3, 11), _utc(2026, 3, 11, 2), 'America/New_York'),
+            (date(2026, 3, 10), date(2026, 3, 10)),
+        )
+        # All-day visits (both ends at midnight UTC, or the legacy 23:59:59 end) are not shifted.
+        self.assertEqual(
+            visit_dates(_utc(2026, 3, 10), _utc(2026, 3, 12), 'America/New_York'),
+            (date(2026, 3, 10), date(2026, 3, 12)),
+        )
+        self.assertEqual(
+            visit_dates(_utc(2026, 3, 10), _utc(2026, 3, 12, 23, 59, 59), 'America/New_York'),
+            (date(2026, 3, 10), date(2026, 3, 12)),
+        )
+        self.assertEqual(visit_dates(_utc(2026, 3, 10), None, 'Asia/Tokyo'), (date(2026, 3, 10), None))
+        # A timed visit converts its start even when it has no end.
+        self.assertEqual(visit_dates(_utc(2026, 3, 10, 18), None, 'Asia/Tokyo'), (date(2026, 3, 11), None))

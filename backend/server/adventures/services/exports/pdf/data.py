@@ -10,7 +10,7 @@ from django.db.models import Prefetch
 from django.utils import timezone
 from adventures.models import Checklist, ChecklistItem, Collection, CollectionItineraryItem, Location, Lodging
 
-from .text import format_date, money_parts, plain_text, to_local
+from .text import format_date, money_parts, plain_text, entry_local
 
 
 def get_collection_for_pdf(collection_id) -> Collection:
@@ -82,8 +82,8 @@ def _overnight_lodging_for_date(collection: Collection, day: date, scheduled_lod
             continue
         if not lodging.check_in or not lodging.check_out:
             continue
-        check_in = to_local(lodging.check_in, lodging.timezone).date()
-        check_out = to_local(lodging.check_out, lodging.timezone).date()
+        check_in = entry_local(lodging.check_in, lodging.timezone).date()
+        check_out = entry_local(lodging.check_out, lodging.timezone).date()
         if check_in <= target < check_out:
             result.append(lodging)
     return result

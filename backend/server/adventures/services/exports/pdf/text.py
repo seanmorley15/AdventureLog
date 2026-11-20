@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from datetime import date, datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from reportlab.platypus import Paragraph
 from .fonts import pdf_markup
@@ -82,29 +82,70 @@ def clock_text(dt: datetime) -> str:
     return f'{dt.hour % 12 or 12}:{dt.minute:02d} {"AM" if dt.hour < 12 else "PM"}'
 
 
-def is_all_day(dt: datetime) -> bool:
-    """All-day entries are stored as midnight UTC (the frontend uses the same rule)."""
-    return dt.hour == 0 and dt.minute == 0 and dt.second == 0
+_UTC = ZoneInfo('UTC')
+
+
+def _as_utc(dt: datetime) -> datetime:
+    return dt.replace(tzinfo=_UTC) if dt.tzinfo is None else dt.astimezone(_UTC)
+
+
+def _is_midnight_utc(dt: datetime) -> bool:
+    """Mirrors the frontend's isAllDay(): exactly 00:00:00 UTC."""
+    u = _as_utc(dt)
+    return (u.hour, u.minute, u.second, u.microsecond) == (0, 0, 0, 0)
+
+
+def _is_end_of_day_utc(dt: datetime) -> bool:
+    """Mirrors isAllDayEnd(): legacy all-day visits ended at 23:59:59 UTC."""
+    u = _as_utc(dt)
+    return (u.hour, u.minute, u.second) == (23, 59, 59)
+
+
+def is_all_day_entry(dt: Optional[datetime], tz_name: Optional[str]) -> bool:
+    """Mirrors isAllDayEntry(): lodging/transportation all-day values are midnight UTC with
+    no timezone. A timed one that falls at 00:00 UTC (9 AM in Tokyo) keeps its zone (#1327)."""
+    return bool(dt) and not tz_name and _is_midnight_utc(dt)
+
+
+def is_visit_all_day(start: Optional[datetime], end: Optional[datetime]) -> bool:
+    """Mirrors isVisitAllDay(): start at midnight UTC, end missing, at midnight or 23:59:59."""
+    if not start or not _is_midnight_utc(start):
+        return False
+    return not end or _is_midnight_utc(end) or _is_end_of_day_utc(end)
 
 
 def to_local(dt: datetime, tz_name: Optional[str]) -> datetime:
-    """Stored datetimes are UTC; convert a timed one into the entry's own timezone."""
-    if not tz_name or is_all_day(dt):
+    """Stored datetimes are UTC; convert one into the entry's own timezone.
+    Callers decide whether the value is all-day before calling this."""
+    if not tz_name:
         return dt
     try:
         zone = ZoneInfo(tz_name)
     except (ZoneInfoNotFoundError, ValueError):
         return dt
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=ZoneInfo('UTC'))
-    return dt.astimezone(zone)
+    return _as_utc(dt).astimezone(zone)
+
+
+def entry_local(dt: datetime, tz_name: Optional[str]) -> datetime:
+    """A lodging/transportation value as shown: all-day stays as stored, timed is converted."""
+    return dt if is_all_day_entry(dt, tz_name) else to_local(dt, tz_name)
+
+
+def visit_dates(start: Optional[datetime], end: Optional[datetime], tz_name: Optional[str]) -> Tuple[Optional[date], Optional[date]]:
+    """Calendar dates of a visit. Both ends are converted, or (all-day) neither is."""
+    if is_visit_all_day(start, end):
+        return (_as_utc(start).date() if start else None, _as_utc(end).date() if end else None)
+    return (
+        to_local(start, tz_name).date() if start else None,
+        to_local(end, tz_name).date() if end else None,
+    )
 
 
 def format_datetime(dt: Optional[datetime], tz_name: Optional[str] = None) -> str:
-    """"Jun 5, 2026" at midnight UTC, else "Jun 5, 2026 3:00 PM (Europe/Paris)" in that zone."""
+    """"Jun 5, 2026" for an all-day entry, else "Jun 5, 2026 3:00 PM (Europe/Paris)" in that zone."""
     if not dt:
         return ''
-    if is_all_day(dt):
+    if is_all_day_entry(dt, tz_name):
         return f'{dt:%b} {dt.day}, {dt.year}'
     local = to_local(dt, tz_name)
     day = f'{local:%b} {local.day}, {local.year}'
