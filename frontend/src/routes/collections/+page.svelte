@@ -8,7 +8,6 @@
 	import { page } from '$app/state';
 	import CollectionCard from '#lib/components/cards/CollectionCard.svelte';
 	import CollectionModal from '#lib/components/collections/CollectionModal.svelte';
-	import NotFound from '#lib/components/NotFound.svelte';
 	import type { Collection, CollectionInvite, SlimCollection } from '#lib/types.js';
 	import { t } from 'svelte-i18n';
 

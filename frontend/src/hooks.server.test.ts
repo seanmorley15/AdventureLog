@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	authHook,
 	embedHook,
+	handleError,
 	isBackendProxyPath,
 	isEmbedPath,
 	themeHook,
@@ -240,5 +241,34 @@ describe('embed pages', () => {
 		const other = await frame('http://localhost/profile/demo');
 		expect(other.get('Content-Security-Policy')).toBeNull();
 		expect(other.get('X-Frame-Options')).toBe('DENY');
+	});
+});
+
+describe('handleError', () => {
+	it('gives a crash a short reference and logs the details under it', () => {
+		const { event } = mockRequestEvent({ url: 'http://localhost/locations/1' });
+		const crash = new Error('boom');
+
+		const result = handleError({ kind: 'unknown', error: crash, event } as never);
+
+		expect(result).toEqual({ errorId: expect.stringMatching(/^[0-9a-f]{8}$/) });
+		expect(console.error).toHaveBeenCalledWith(
+			expect.stringContaining(`[${(result as { errorId: string }).errorId}] GET /locations/1`),
+			crash
+		);
+	});
+
+	it('leaves expected errors alone', () => {
+		const { event } = mockRequestEvent();
+
+		expect(
+			handleError({
+				kind: 'framework',
+				error: { status: 404, message: 'Not Found' },
+				event
+			} as never)
+		).toBeUndefined();
+		expect(handleError({ kind: 'app', error: { message: 'No' }, event } as never)).toBeUndefined();
+		expect(console.error).not.toHaveBeenCalled();
 	});
 });

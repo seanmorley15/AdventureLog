@@ -16,7 +16,7 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Lost from '#lib/assets/undraw_lost.svg';
+	import DetailNotFound from '#lib/components/detail/DetailNotFound.svelte';
 	import { t } from 'svelte-i18n';
 	import { renderMarkdown } from '#lib/markdown.js';
 	import Calendar from '~icons/mdi/calendar';
@@ -912,17 +912,7 @@
 {/snippet}
 
 {#if notFound}
-	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
-		<div class="hero-content text-center">
-			<div class="max-w-md">
-				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">{$t('collections.not_found')}</h1>
-				<button class="btn btn-primary btn-lg" onclick={() => goto('/')}>
-					{$t('adventures.homepage')}
-				</button>
-			</div>
-		</div>
-	</div>
+	<DetailNotFound title={$t('collections.not_found')} />
 {/if}
 
 {#if isImageModalOpen && collection}

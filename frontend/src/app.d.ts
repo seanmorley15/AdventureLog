@@ -4,7 +4,11 @@
 // for information about these interfaces
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			message: string;
+			/** A short reference the person can quote; the same id is in the server log. */
+			errorId?: string;
+		}
 		interface Locals {
 			user: {
 				pk: number;

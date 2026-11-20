@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import Lost from '#lib/assets/undraw_lost.svg';
+	import ErrorState from '#lib/components/ErrorState.svelte';
+	import CompassOff from '~icons/mdi/compass-off-outline';
+	import HomeOutline from '~icons/mdi/home-outline';
+	import ArrowLeft from '~icons/mdi/arrow-left';
 
 	interface Props {
 		title: string;
@@ -9,17 +11,25 @@
 	}
 
 	let { title, description = '' }: Props = $props();
+	const canGoBack = $derived(typeof history !== 'undefined' && history.length > 1);
 </script>
 
-<div class="hero min-h-[70vh] overflow-x-hidden bg-gradient-to-br from-base-200 to-base-300">
-	<div class="hero-content text-center">
-		<div class="max-w-md">
-			<img src={Lost} alt="" class="mx-auto mb-8 w-56 opacity-80" />
-			<h1 class="mb-3 text-4xl font-bold text-primary">{title}</h1>
-			{#if description}
-				<p class="mb-6 text-base-content/70">{description}</p>
-			{/if}
-			<button class="btn btn-primary" onclick={() => goto('/')}>{$t('adventures.homepage')}</button>
-		</div>
-	</div>
-</div>
+<ErrorState
+	status={404}
+	icon={CompassOff}
+	{title}
+	description={description || $t('errors.not_found_description')}
+>
+	{#snippet actions()}
+		{#if canGoBack}
+			<button class="btn btn-ghost gap-2" onclick={() => history.back()}>
+				<ArrowLeft class="h-5 w-5" />
+				{$t('errors.go_back')}
+			</button>
+		{/if}
+		<a href="/" class="btn btn-primary gap-2">
+			<HomeOutline class="h-5 w-5" />
+			{$t('adventures.homepage')}
+		</a>
+	{/snippet}
+</ErrorState>

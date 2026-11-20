@@ -1,4 +1,4 @@
-import { sequence, type Handle } from '@sveltejs/kit/hooks';
+import { sequence, type Handle, type HandleServerError } from '@sveltejs/kit/hooks';
 import { themes } from '#lib';
 import {
 	clearSessionCookie,
@@ -122,3 +122,19 @@ export const i18nHook: Handle = async ({ event, resolve }) => {
 };
 
 export const handle = sequence(authHook, embedHook, themeHook, i18nHook);
+
+/**
+ * An error nobody planned for (a crash, not an `error()` the code raised on purpose): the page
+ * gets SvelteKit's safe message plus a short reference, and the details, which can contain
+ * anything, go only to the server log under that same reference. Expected errors, such as a
+ * missing page, pass through untouched.
+ */
+export const handleError: HandleServerError = (input) => {
+	if (input.kind !== 'unknown') return;
+	const errorId = crypto.randomUUID().slice(0, 8);
+	console.error(
+		`[${errorId}] ${input.event.request.method} ${input.event.url.pathname}`,
+		input.error
+	);
+	return { errorId };
+};
