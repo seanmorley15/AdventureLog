@@ -6,6 +6,7 @@ import re
 from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from reportlab.platypus import Paragraph
 from .fonts import pdf_markup
 
@@ -81,15 +82,34 @@ def clock_text(dt: datetime) -> str:
     return f'{dt.hour % 12 or 12}:{dt.minute:02d} {"AM" if dt.hour < 12 else "PM"}'
 
 
+def is_all_day(dt: datetime) -> bool:
+    """All-day entries are stored as midnight UTC (the frontend uses the same rule)."""
+    return dt.hour == 0 and dt.minute == 0 and dt.second == 0
+
+
+def to_local(dt: datetime, tz_name: Optional[str]) -> datetime:
+    """Stored datetimes are UTC; convert a timed one into the entry's own timezone."""
+    if not tz_name or is_all_day(dt):
+        return dt
+    try:
+        zone = ZoneInfo(tz_name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return dt
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=ZoneInfo('UTC'))
+    return dt.astimezone(zone)
+
+
 def format_datetime(dt: Optional[datetime], tz_name: Optional[str] = None) -> str:
-    """"Jun 5, 2026" at midnight, else "Jun 5, 2026 3:00 PM (Europe/Paris)"."""
+    """"Jun 5, 2026" at midnight UTC, else "Jun 5, 2026 3:00 PM (Europe/Paris)" in that zone."""
     if not dt:
         return ''
-    day = f'{dt:%b} {dt.day}, {dt.year}'
-    if dt.hour == 0 and dt.minute == 0 and dt.second == 0:
-        return day
+    if is_all_day(dt):
+        return f'{dt:%b} {dt.day}, {dt.year}'
+    local = to_local(dt, tz_name)
+    day = f'{local:%b} {local.day}, {local.year}'
     suffix = f' ({tz_name})' if tz_name else ''
-    return f'{day} {clock_text(dt)}{suffix}'
+    return f'{day} {clock_text(local)}{suffix}'
 
 
 def money_parts(value, currency=None):

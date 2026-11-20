@@ -1,4 +1,4 @@
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone as dt_timezone
 
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -12,7 +12,7 @@ from adventures.models import (
     Note,
 )
 from adventures.services.exports.pdf import build_collection_pdf, pdf_filename_for_collection
-from adventures.services.exports.pdf.text import _iter_text_chunks
+from adventures.services.exports.pdf.text import _iter_text_chunks, format_datetime, to_local
 
 User = get_user_model()
 
@@ -534,3 +534,22 @@ class PdfApiTests(BookFixtureMixin, TestCase):
         response = self.client.post(f'/api/collections/{self.folder.id}/pdf/')
         self.assertEqual(response.status_code, 202)
         self.assertEqual(BackgroundJob.objects.get(pk=response.json()['id']).params['options'], {'photos': True, 'journal': None})
+
+    def test_format_datetime_converts_to_entry_timezone(self):
+        # Stored values are UTC; the PDF should show the destination's local time.
+        self.assertEqual(
+            format_datetime(datetime(2026, 3, 10, 23, 30, tzinfo=dt_timezone.utc), 'Asia/Tokyo'),
+            'Mar 11, 2026 8:30 AM (Asia/Tokyo)',
+        )
+        self.assertEqual(
+            format_datetime(datetime(2026, 3, 10, 14, 5, tzinfo=dt_timezone.utc), 'America/New_York'),
+            'Mar 10, 2026 10:05 AM (America/New_York)',
+        )
+
+    def test_format_datetime_leaves_all_day_and_unknown_timezones_alone(self):
+        midnight = datetime(2026, 3, 10, 0, 0, tzinfo=dt_timezone.utc)
+        self.assertEqual(format_datetime(midnight, 'America/New_York'), 'Mar 10, 2026')
+        self.assertEqual(to_local(midnight, 'America/New_York'), midnight)
+        timed = datetime(2026, 3, 10, 14, 5, tzinfo=dt_timezone.utc)
+        self.assertEqual(format_datetime(timed, 'Not/AZone'), 'Mar 10, 2026 2:05 PM (Not/AZone)')
+        self.assertEqual(format_datetime(timed), 'Mar 10, 2026 2:05 PM')
