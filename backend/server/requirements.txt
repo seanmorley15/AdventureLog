@@ -32,6 +32,8 @@ geopy==2.5.0
 psutil==6.1.1
 geojson==3.3.0
 gpxpy==1.6.2
+fitdecode==0.11.0  # Reads Garmin FIT activity files
+defusedxml==0.7.1  # Safe XML parsing for uploaded TCX and KML files
 pymemcache==4.0.0
 redis==5.2.1  # Optional: only used when CACHE_BACKEND=redis
 legacy-cgi==2.6.4

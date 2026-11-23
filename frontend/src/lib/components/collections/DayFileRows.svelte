@@ -14,6 +14,7 @@
 	import MapMarkerPath from '~icons/mdi/map-marker-path';
 	import CheckCircle from '~icons/mdi/check-circle';
 	import Close from '~icons/mdi/close';
+	import PencilIcon from '~icons/mdi/pencil';
 
 	interface Props {
 		collection: Collection;
@@ -23,6 +24,7 @@
 		readMode?: boolean;
 		anchored?: boolean;
 		onLogged?: (result: { item?: CollectionItineraryItem; visit?: Visit }) => void;
+		onEditActivity?: (activity: Activity) => void;
 	}
 
 	let {
@@ -31,7 +33,8 @@
 		canModify = false,
 		readMode = false,
 		anchored = false,
-		onLogged
+		onLogged,
+		onEditActivity
 	}: Props = $props();
 
 	const planning = $derived(canModify && !readMode);
@@ -252,6 +255,17 @@
 						</button>
 					{/if}
 					{#if planning}
+						{#if onEditActivity}
+							<button
+								type="button"
+								class="btn btn-sm btn-square btn-ghost"
+								aria-label={$t('activities.edit_activity')}
+								title={$t('activities.edit_activity')}
+								onclick={() => onEditActivity(activity)}
+							>
+								<PencilIcon class="h-4 w-4" />
+							</button>
+						{/if}
 						<button
 							type="button"
 							class="btn btn-sm btn-square btn-ghost text-error"

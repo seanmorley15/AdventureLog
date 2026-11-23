@@ -17,6 +17,8 @@ from .media import (
 from .activity import (
     TrailSerializer,
     ActivitySerializer,
+    ActivityAnalysisSerializer,
+    ActivityAnalyzeRequestSerializer,
     VisitSerializer,
     LocationVisitSerializer,
 )

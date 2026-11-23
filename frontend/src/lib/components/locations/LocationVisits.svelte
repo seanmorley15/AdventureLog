@@ -1,14 +1,7 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type {
-		Collection,
-		StravaActivity,
-		Trail,
-		Activity,
-		Visit,
-		TransportationVisit
-	} from '#lib/types.js';
+	import type { Collection, Trail, Activity, Visit, TransportationVisit } from '#lib/types.js';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import { defaultTimezone } from '#lib/dateUtils.js';
 	import { t } from 'svelte-i18n';
@@ -16,7 +9,6 @@
 		updateLocalDate,
 		updateUTCDate,
 		validateDateRange,
-		formatUTCDate,
 		toDateOnlyLocal,
 		toTimedLocalDefault,
 		formatDateInTimezone,
@@ -25,9 +17,8 @@
 	import { dateFormatFromUser } from '#lib/dateFormat.js';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
-	import { isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '#lib';
+	import { isVisitAllDay, allDayDatePart } from '#lib';
 	import { createEventDispatcher } from 'svelte';
-	import { deserialize } from '$app/forms';
 
 	// Icons
 	import CalendarIcon from '~icons/mdi/calendar';
@@ -40,13 +31,10 @@
 	import CheckIcon from '~icons/mdi/check';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import RunFastIcon from '~icons/mdi/run-fast';
-	import LoadingIcon from '~icons/mdi/loading';
 	import InfoIcon from '~icons/mdi/information';
 	import UploadIcon from '~icons/mdi/upload';
-	import FileIcon from '~icons/mdi/file';
 	import CloseIcon from '~icons/mdi/close';
 	import ActivityComposer from '../activities/ActivityComposer.svelte';
-	import StravaActivityCard from '../StravaActivityCard.svelte';
 	import ActivityCard from '../cards/ActivityCard.svelte';
 	import DateInput from '../shared/DateInput.svelte';
 	import { addToast } from '#lib/toasts.js';
@@ -95,110 +83,8 @@
 	let isEditing = $state(false);
 	let visitIdEditing: string | null = $state(null);
 
-	// Activity management state
-	let stravaEnabled: boolean = $state(false);
-	let endurainEnabled: boolean = $state(false);
-	let visitActivities: { [visitId: string]: StravaActivity[] } = $state({});
-	let endurainVisitActivities: { [visitId: string]: StravaActivity[] } = $state({});
-	let loadingActivities: { [visitId: string]: boolean } = $state({});
-	let loadingEndurainActivities: { [visitId: string]: boolean } = $state({});
-	let expandedVisits: { [visitId: string]: boolean } = $state({});
-	let expandedEndurainVisits: { [visitId: string]: boolean } = $state({});
-	let uploadingActivity: { [visitId: string]: boolean } = $state({});
-	let showActivityUpload: { [visitId: string]: boolean } = $state({});
-	let activityPanel: Record<string, 'form' | 'strava' | 'endurain'> = $state({});
-
-	function openActivityComposer(visitId: string, panel: 'form' | 'strava' | 'endurain') {
-		activityPanel = { ...activityPanel, [visitId]: panel };
-	}
-	let pendingActivityImport: {
-		[visitId: string]: { activity: StravaActivity; provider: 'strava' | 'endurain' } | null;
-	} = $state({});
-	let importingEndurainActivity: { [visitId: string]: boolean } = $state({});
-	let showActivityExtras = $state(false);
-
-	const isImperial = $derived(measurementSystem === 'imperial');
-	const distanceUnit = $derived(isImperial ? 'mi' : 'km');
-	const elevationUnit = $derived(isImperial ? 'ft' : 'm');
-	const speedUnit = $derived(isImperial ? 'mph' : 'km/h');
-	const distancePlaceholder = $derived(isImperial ? '3.1' : '5.0');
-	const elevationPlaceholder = $derived(isImperial ? '500' : '150');
-	const speedPlaceholder = $derived(isImperial ? '6.2' : '10.0');
-
-	function roundTo(value: number, digits: number): number {
-		const factor = 10 ** digits;
-		return Math.round(value * factor) / factor;
-	}
-
-	function optionalNumber(value: number | string | null | undefined): number | null {
-		if (value === null || value === undefined || value === '') return null;
-		const parsed = typeof value === 'number' ? value : Number(value);
-		return Number.isFinite(parsed) ? parsed : null;
-	}
-
-	function distanceToMeters(value: number | string | null | undefined): number | null {
-		const amount = optionalNumber(value);
-		if (amount == null) return null;
-		return measurementSystem === 'imperial' ? amount * 1609.34 : amount * 1000;
-	}
-
-	function metersToDistance(meters: number | null | undefined): number | null {
-		if (meters == null) return null;
-		const amount = measurementSystem === 'imperial' ? meters / 1609.34 : meters / 1000;
-		return roundTo(amount, 2);
-	}
-
-	function elevationToMeters(value: number | string | null | undefined): number | null {
-		const amount = optionalNumber(value);
-		if (amount == null) return null;
-		return measurementSystem === 'imperial' ? amount / 3.28084 : amount;
-	}
-
-	function metersToElevation(meters: number | null | undefined): number | null {
-		if (meters == null) return null;
-		const amount = measurementSystem === 'imperial' ? meters * 3.28084 : meters;
-		return roundTo(amount, 0);
-	}
-
-	function speedToMetersPerSecond(value: number | string | null | undefined): number | null {
-		const amount = optionalNumber(value);
-		if (amount == null) return null;
-		return measurementSystem === 'imperial' ? amount / 2.236936 : amount / 3.6;
-	}
-
-	function metersPerSecondToSpeed(metersPerSecond: number | null | undefined): number | null {
-		if (metersPerSecond == null) return null;
-		const amount =
-			measurementSystem === 'imperial' ? metersPerSecond * 2.236936 : metersPerSecond * 3.6;
-		return roundTo(amount, 1);
-	}
-
-	// Activity form state
-	let activityForm = $state({
-		name: '',
-		sport_type: 'Run',
-		distance: null as number | null,
-		moving_time: '',
-		elapsed_time: '',
-		elevation_gain: null as number | null,
-		elevation_loss: null as number | null,
-		start_date: '',
-		start_date_local: '',
-		calories: null as number | null,
-		gpx_file: null as File | null,
-		trail: null as string | null,
-		elev_high: null as number | null,
-		elev_low: null as number | null,
-		rest_time: null as number | null,
-		average_speed: null as number | null,
-		max_speed: null as number | null,
-		average_cadence: null as number | null,
-		start_lat: null as number | null,
-		start_lng: null as number | null,
-		end_lat: null as number | null,
-		end_lng: null as number | null,
-		timezone: selectedStartTimezone
-	});
+	// The visit whose activity composer is open, and the saved activity it edits (none when adding).
+	let activityComposer: { visitId: string; activity: Activity | null } | null = $state(null);
 
 	function visitCoversDate(visit: Visit, targetDate: string): boolean {
 		if (!visit?.start_date) return false;
@@ -464,344 +350,20 @@
 		await addVisit(false);
 	}
 
-	// Activity management functions
-	async function loadActivitiesForVisit(visit: Visit | TransportationVisit) {
-		if (!stravaEnabled) return;
-
-		loadingActivities[visit.id] = true;
-		loadingActivities = { ...loadingActivities };
-
-		try {
-			let startDate = new Date(visit.start_date);
-			let endDate = new Date(visit.end_date);
-
-			if (isVisitAllDay(visit.start_date, visit.end_date)) {
-				const endDatePart = allDayDatePart(visit.end_date);
-				endDate = new Date(`${endDatePart}T23:59:59Z`);
-			}
-
-			startDate.setHours(startDate.getHours() - 12);
-			endDate.setHours(endDate.getHours() + 12);
-
-			const bufferedStart = startDate.toISOString();
-			const bufferedEnd = endDate.toISOString();
-
-			const response = await fetch(
-				`/api/integrations/strava/activities/?start_date=${bufferedStart}&end_date=${bufferedEnd}`,
-				{
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				}
-			);
-
-			if (response.ok) {
-				const apiRes = await response.json();
-				const filtered = apiRes.activities;
-				visitActivities[visit.id] = filtered;
-				visitActivities = { ...visitActivities };
-			} else {
-				console.error('Failed to load activities for visit:', await response.text());
-				visitActivities[visit.id] = [];
-				visitActivities = { ...visitActivities };
-			}
-		} catch (error) {
-			console.error('Error loading activities for visit:', error);
-			visitActivities[visit.id] = [];
-			visitActivities = { ...visitActivities };
-		} finally {
-			loadingActivities[visit.id] = false;
-			loadingActivities = { ...loadingActivities };
-		}
-	}
-
-	function toggleVisitActivities(visit: Visit | TransportationVisit) {
-		const isExpanded = expandedVisits[visit.id];
-
-		if (!isExpanded) {
-			expandedVisits[visit.id] = true;
-			expandedVisits = { ...expandedVisits };
-
-			if (!visitActivities[visit.id]) {
-				loadActivitiesForVisit(visit);
-			}
-		} else {
-			expandedVisits[visit.id] = false;
-			expandedVisits = { ...expandedVisits };
-		}
-	}
-
-	async function loadEndurainActivitiesForVisit(visit: Visit | TransportationVisit) {
-		if (!endurainEnabled) return;
-
-		loadingEndurainActivities[visit.id] = true;
-		loadingEndurainActivities = { ...loadingEndurainActivities };
-
-		try {
-			let startDate = new Date(visit.start_date);
-			let endDate = new Date(visit.end_date);
-
-			if (isVisitAllDay(visit.start_date, visit.end_date)) {
-				const endDatePart = allDayDatePart(visit.end_date);
-				endDate = new Date(`${endDatePart}T23:59:59Z`);
-			}
-
-			startDate.setHours(startDate.getHours() - 12);
-			endDate.setHours(endDate.getHours() + 12);
-
-			const bufferedStart = startDate.toISOString().split('T')[0];
-			const bufferedEnd = endDate.toISOString().split('T')[0];
-
-			const response = await fetch(
-				`/api/integrations/endurain/activities/?start_date=${bufferedStart}&end_date=${bufferedEnd}`,
-				{
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				}
-			);
-
-			if (response.ok) {
-				const apiRes = await response.json();
-				endurainVisitActivities[visit.id] = apiRes.activities || [];
-				endurainVisitActivities = { ...endurainVisitActivities };
-			} else {
-				endurainVisitActivities[visit.id] = [];
-				endurainVisitActivities = { ...endurainVisitActivities };
-			}
-		} catch (error) {
-			console.error('Error loading Endurain activities for visit:', error);
-			endurainVisitActivities[visit.id] = [];
-			endurainVisitActivities = { ...endurainVisitActivities };
-		} finally {
-			loadingEndurainActivities[visit.id] = false;
-			loadingEndurainActivities = { ...loadingEndurainActivities };
-		}
-	}
-
-	function toggleEndurainVisitActivities(visit: Visit | TransportationVisit) {
-		const isExpanded = expandedEndurainVisits[visit.id];
-
-		if (!isExpanded) {
-			expandedEndurainVisits[visit.id] = true;
-			expandedEndurainVisits = { ...expandedEndurainVisits };
-
-			if (!endurainVisitActivities[visit.id]) {
-				loadEndurainActivitiesForVisit(visit);
-			}
-		} else {
-			expandedEndurainVisits[visit.id] = false;
-			expandedEndurainVisits = { ...expandedEndurainVisits };
-		}
-	}
-
-	function showActivityUploadForm(visitId: string) {
-		showActivityUpload[visitId] = true;
-		showActivityUpload = { ...showActivityUpload };
-		showActivityExtras = false;
-
-		// Reset form
-		activityForm = {
-			name: '',
-			sport_type: 'Run',
-			distance: null,
-			moving_time: '',
-			elapsed_time: '',
-			elevation_gain: null,
-			elevation_loss: null,
-			start_date: '',
-			start_date_local: '',
-			calories: null,
-			gpx_file: null,
-			trail: null,
-			elev_high: null,
-			elev_low: null,
-			rest_time: null,
-			average_speed: null,
-			max_speed: null,
-			average_cadence: null,
-			start_lat: null,
-			start_lng: null,
-			end_lat: null,
-			end_lng: null,
-			timezone: selectedStartTimezone
-		};
-	}
-
-	function hideActivityUploadForm(visitId: string) {
-		showActivityUpload[visitId] = false;
-		showActivityUpload = { ...showActivityUpload };
-
-		// Clear pending import
-		delete pendingActivityImport[visitId];
-		pendingActivityImport = { ...pendingActivityImport };
-	}
-
-	function isStravaImportPending(visitId: string): boolean {
-		return pendingActivityImport[visitId]?.provider === 'strava';
-	}
-
-	function buildActivityFormFromExternal(activity: StravaActivity) {
-		return {
-			name: activity.name,
-			sport_type: activity.sport_type || activity.type,
-			distance: metersToDistance(activity.distance ?? null),
-			moving_time: activity.moving_time ? formatDuration(activity.moving_time) : '',
-			elapsed_time: activity.elapsed_time ? formatDuration(activity.elapsed_time) : '',
-			elevation_gain: metersToElevation(activity.total_elevation_gain ?? null),
-			elevation_loss: metersToElevation(activity.estimated_elevation_loss ?? null),
-			start_date: activity.start_date ? activity.start_date.substring(0, 16) : '',
-			start_date_local: activity.start_date_local ? activity.start_date_local.substring(0, 16) : '',
-			calories: activity.calories ?? null,
-			gpx_file: null as File | null,
-			trail: null,
-			elev_high: metersToElevation(activity.elev_high ?? null),
-			elev_low: metersToElevation(activity.elev_low ?? null),
-			rest_time: activity.rest_time ?? null,
-			average_speed: metersPerSecondToSpeed(activity.average_speed ?? null),
-			max_speed: metersPerSecondToSpeed(activity.max_speed ?? null),
-			average_cadence: activity.average_cadence ?? null,
-			start_lat: activity.start_latlng ? activity.start_latlng[0] : null,
-			start_lng: activity.start_latlng ? activity.start_latlng[1] : null,
-			end_lat: activity.end_latlng ? activity.end_latlng[0] : null,
-			end_lng: activity.end_latlng ? activity.end_latlng[1] : null,
-			timezone: activity.timezone || selectedStartTimezone
-		};
-	}
-
-	function handleGpxFileChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		if (target.files && target.files[0]) {
-			activityForm.gpx_file = target.files[0];
-		}
-	}
-
-	async function uploadActivity(visitId: string) {
-		if (!activityForm.name.trim()) {
-			alert($t('adventures.activity_name_required'));
-			return;
-		}
-
-		// If this is a Strava import, require GPX file
-		if (isStravaImportPending(visitId) && !activityForm.gpx_file) {
-			alert($t('strava.gpx_required'));
-			return;
-		}
-
-		uploadingActivity[visitId] = true;
-		uploadingActivity = { ...uploadingActivity };
-
-		try {
-			const formData = new FormData();
-
-			// Add basic activity data
-			formData.append('visit', visitId);
-			formData.append('name', activityForm.name);
-			if (activityForm.sport_type) formData.append('sport_type', activityForm.sport_type);
-			const distanceMeters = distanceToMeters(activityForm.distance);
-			if (distanceMeters != null) formData.append('distance', distanceMeters.toString());
-			if (activityForm.moving_time) {
-				const seconds = parseDuration(activityForm.moving_time);
-				formData.append('moving_time', `PT${seconds}S`);
-			}
-			if (activityForm.elapsed_time) {
-				const seconds = parseDuration(activityForm.elapsed_time);
-				formData.append('elapsed_time', `PT${seconds}S`);
-			}
-			const elevationGainMeters = elevationToMeters(activityForm.elevation_gain);
-			if (elevationGainMeters != null)
-				formData.append('elevation_gain', elevationGainMeters.toString());
-			const elevationLossMeters = elevationToMeters(activityForm.elevation_loss);
-			if (elevationLossMeters != null)
-				formData.append('elevation_loss', elevationLossMeters.toString());
-			if (activityForm.start_date)
-				formData.append('start_date', formatUTCDate(activityForm.start_date));
-			if (activityForm.start_date_local)
-				formData.append(
-					'start_date_local',
-					activityForm.start_date_local.includes('T')
-						? activityForm.start_date_local.replace('T', ' ').slice(0, 16)
-						: activityForm.start_date_local.slice(0, 16)
-				);
-
-			if (activityForm.calories != null)
-				formData.append('calories', activityForm.calories.toString());
-			if (activityForm.trail) formData.append('trail', activityForm.trail);
-			const elevHighMeters = elevationToMeters(activityForm.elev_high);
-			if (elevHighMeters != null) formData.append('elev_high', elevHighMeters.toString());
-			const elevLowMeters = elevationToMeters(activityForm.elev_low);
-			if (elevLowMeters != null) formData.append('elev_low', elevLowMeters.toString());
-			if (activityForm.rest_time != null)
-				formData.append('rest_time', `PT${activityForm.rest_time}S`);
-			const averageSpeedMs = speedToMetersPerSecond(activityForm.average_speed);
-			if (averageSpeedMs != null) formData.append('average_speed', averageSpeedMs.toString());
-			const maxSpeedMs = speedToMetersPerSecond(activityForm.max_speed);
-			if (maxSpeedMs != null) formData.append('max_speed', maxSpeedMs.toString());
-			if (activityForm.average_cadence != null)
-				formData.append('average_cadence', activityForm.average_cadence.toString());
-			if (activityForm.start_lat !== null)
-				formData.append('start_lat', activityForm.start_lat.toString());
-			if (activityForm.start_lng !== null)
-				formData.append('start_lng', activityForm.start_lng.toString());
-			if (activityForm.end_lat !== null)
-				formData.append('end_lat', activityForm.end_lat.toString());
-			if (activityForm.end_lng !== null)
-				formData.append('end_lng', activityForm.end_lng.toString());
-			if (activityForm.timezone) {
-				formData.append('timezone', activityForm.timezone);
-			}
-
-			// Add GPX file if provided
-			if (activityForm.gpx_file) {
-				formData.append('gpx_file', activityForm.gpx_file);
-			}
-
-			// Add external service ID if this is a Strava import
-			if (pendingActivityImport[visitId]) {
-				formData.append(
-					'external_service_id',
-					pendingActivityImport[visitId].activity.id.toString()
-				);
-				const credit = pendingActivityImport[visitId].activity.garmin_attribution;
-				if (credit) formData.append('source_attribution', credit);
-			}
-
-			const response = await fetch('/locations?/activity', {
-				method: 'POST',
-				body: formData
-			});
-
-			if (response.ok) {
-				const newActivityResponse = deserialize(await response.text()) as { data: Activity };
-				const newActivity = newActivityResponse.data as Activity;
-
-				// Update the visit's activities array
-				if (visits) {
-					visits = visits.map((visit) => {
-						if (visit.id === visitId) {
-							return {
-								...visit,
-								activities: [...(visit.activities || []), newActivity]
-							};
-						}
-						return visit;
-					});
-				}
-
-				// Hide the upload form
-				hideActivityUploadForm(visitId);
-			} else {
-				const errorText = await response.text();
-				console.error('Failed to upload activity:', errorText);
-			}
-		} catch (error) {
-			console.error('Error uploading activity:', error);
-		} finally {
-			uploadingActivity[visitId] = false;
-			uploadingActivity = { ...uploadingActivity };
-		}
+	/** A saved activity replaces its older version on the visit, or is added to it. */
+	function saveActivity(saved: Activity) {
+		const visitId = activityComposer?.visitId;
+		visits = (visits ?? []).map((visit) => {
+			if (visit.id !== visitId) return visit;
+			const activities = visit.activities ?? [];
+			return {
+				...visit,
+				activities: activities.some((item) => item.id === saved.id)
+					? activities.map((item) => (item.id === saved.id ? saved : item))
+					: [...activities, saved]
+			};
+		});
+		activityComposer = null;
 	}
 
 	async function deleteActivity(visitId: string, activityId: string) {
@@ -827,50 +389,6 @@
 			}
 		} catch (error) {
 			console.error('Error deleting activity:', error);
-		}
-	}
-
-	async function handleStravaActivityImport(event: CustomEvent<StravaActivity>, visitId: string) {
-		const stravaActivity = event.detail;
-
-		try {
-			pendingActivityImport[visitId] = { activity: stravaActivity, provider: 'strava' };
-			pendingActivityImport = { ...pendingActivityImport };
-			activityForm = buildActivityFormFromExternal(stravaActivity);
-			showActivityUpload[visitId] = true;
-			showActivityUpload = { ...showActivityUpload };
-		} catch (error) {
-			console.error('Error initiating Strava import:', error);
-		}
-	}
-
-	async function handleEndurainActivityImport(event: CustomEvent<StravaActivity>, visitId: string) {
-		const endurainActivity = event.detail;
-
-		importingEndurainActivity[visitId] = true;
-		importingEndurainActivity = { ...importingEndurainActivity };
-
-		try {
-			const gpxResponse = await fetch(endurainActivity.export_gpx);
-			if (!gpxResponse.ok) {
-				console.error('Failed to fetch Endurain GPX:', await gpxResponse.text());
-				return;
-			}
-
-			const blob = await gpxResponse.blob();
-			const filename = `${endurainActivity.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.gpx`;
-			activityForm = buildActivityFormFromExternal(endurainActivity);
-			activityForm.gpx_file = new File([blob], filename, { type: 'application/gpx+xml' });
-
-			pendingActivityImport[visitId] = { activity: endurainActivity, provider: 'endurain' };
-			pendingActivityImport = { ...pendingActivityImport };
-
-			await uploadActivity(visitId);
-		} catch (error) {
-			console.error('Error importing Endurain activity:', error);
-		} finally {
-			importingEndurainActivity[visitId] = false;
-			importingEndurainActivity = { ...importingEndurainActivity };
 		}
 	}
 
@@ -932,11 +450,7 @@
 			visits = visits.filter((v) => v.id !== visitId);
 		}
 
-		// Clean up activities for this visit
-		delete visitActivities[visitId];
-		delete expandedVisits[visitId];
-		delete loadingActivities[visitId];
-		delete showActivityUpload[visitId];
+		if (activityComposer?.visitId === visitId) activityComposer = null;
 
 		if (visitIdEditing === visitId) {
 			cancelEditVisit();
@@ -981,19 +495,6 @@
 		}
 		if (!selectedStartTimezone) {
 			selectedStartTimezone = defaultTimezone(collection);
-		}
-
-		// Only talk to Strava / Endurain when the user has connected them.
-		try {
-			const integrationsRes = await fetch('/api/integrations/');
-			if (integrationsRes.ok) {
-				const integrations = await integrationsRes.json();
-				stravaEnabled = Boolean(integrations.strava?.user);
-				endurainEnabled = Boolean(integrations.endurain?.exists);
-			}
-		} catch {
-			stravaEnabled = false;
-			endurainEnabled = false;
 		}
 
 		// If initialVisitDate is provided and a visit on that date doesn't exist, create and upload a new all day visit on that date
@@ -1150,38 +651,10 @@
 			{/snippet}
 
 			{#snippet visitActivityActions(visit: Visit)}
-				{#if stravaEnabled}
-					<button
-						class="btn btn-outline btn-info btn-xs gap-1"
-						title={$t('adventures.view_strava_activities')}
-						onclick={() => openActivityComposer(visit.id, 'strava')}
-					>
-						<RunFastIcon class="w-3 h-3" />
-						Strava
-						{#if visitActivities[visit.id]}
-							({visitActivities[visit.id].length})
-						{/if}
-					</button>
-				{/if}
-
-				{#if endurainEnabled}
-					<button
-						class="btn btn-outline btn-secondary btn-xs gap-1"
-						title={$t('adventures.view_endurain_activities')}
-						onclick={() => openActivityComposer(visit.id, 'endurain')}
-					>
-						<RunFastIcon class="w-3 h-3" />
-						Endurain
-						{#if endurainVisitActivities[visit.id]}
-							({endurainVisitActivities[visit.id].length})
-						{/if}
-					</button>
-				{/if}
-
 				<button
 					class="btn btn-outline btn-success btn-xs gap-1"
 					title={$t('adventures.add_activity')}
-					onclick={() => openActivityComposer(visit.id, 'form')}
+					onclick={() => (activityComposer = { visitId: visit.id, activity: null })}
 				>
 					<UploadIcon class="w-3 h-3" />
 					{$t('adventures.add_activity')}
@@ -1342,33 +815,22 @@
 										</div>
 									{/if}
 
-									{#if activityPanel[visit.id]}
+									{#if activityComposer?.visitId === visit.id}
 										<div class="mt-4 border-t border-base-300 pt-4">
-											{#key activityPanel[visit.id]}
+											{#key activityComposer.activity?.id}
 												<ActivityComposer
 													visitId={visit.id}
+													activity={activityComposer.activity}
 													dateStart={visit.start_date}
 													dateEnd={visit.end_date}
 													timezone={visit.timezone}
 													{trails}
 													{measurementSystem}
-													initialPanel={activityPanel[visit.id]}
-													onSaved={(activity) => {
-														visits = (visits ?? []).map((item) =>
-															item.id === visit.id
-																? {
-																		...item,
-																		activities: [...(item.activities || []), activity]
-																	}
-																: item
-														);
-														delete activityPanel[visit.id];
-														activityPanel = { ...activityPanel };
-													}}
-													onCancel={() => {
-														delete activityPanel[visit.id];
-														activityPanel = { ...activityPanel };
-													}}
+													importedIds={(visit.activities ?? []).flatMap((item) =>
+														item.external_service_id ? [item.external_service_id] : []
+													)}
+													onSaved={saveActivity}
+													onCancel={() => (activityComposer = null)}
 												/>
 											{/key}
 										</div>
@@ -1389,10 +851,9 @@
 													<ActivityCard
 														{activity}
 														{trails}
-														{visit}
 														{measurementSystem}
-														on:delete={(event) =>
-															deleteActivity(event.detail.visitId, event.detail.activityId)}
+														onEdit={() => (activityComposer = { visitId: visit.id, activity })}
+														onDelete={() => deleteActivity(visit.id, activity.id)}
 													/>
 												{/each}
 											</div>

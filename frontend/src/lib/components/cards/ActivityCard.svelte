@@ -1,76 +1,79 @@
 <script lang="ts">
-	import type { Activity, Trail, TransportationVisit, Visit } from '#lib/types.js';
-	import { t } from 'svelte-i18n';
-	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-	import RunFastIcon from '~icons/mdi/run-fast';
-	import FileIcon from '~icons/mdi/file';
-	import TrashIcon from '~icons/mdi/trash-can';
-	import SpeedometerIcon from '~icons/mdi/speedometer';
-	import TrendingUpIcon from '~icons/mdi/trending-up';
-	import ClockIcon from '~icons/mdi/clock';
-	import CaloriesIcon from '~icons/mdi/fire';
-	import LocationIcon from '~icons/mdi/map-marker';
-	import { formatDateInTimezone } from '#lib/dateUtils.js';
-	import { dateFormatFromUser } from '#lib/dateFormat.js';
-	import { getDistance, getElevation } from '#lib';
 	import { page } from '$app/state';
+	import { t } from 'svelte-i18n';
+	import {
+		getActivityColor,
+		getActivityIcon,
+		getDistance,
+		getElevation,
+		SPORT_TYPE_CHOICES
+	} from '#lib';
+	import { dateFormatFromUser } from '#lib/dateFormat.js';
+	import { formatDateInTimezone } from '#lib/dateUtils.js';
+	import type { Activity, Trail } from '#lib/types.js';
+	import ElevationProfile from '#lib/components/activities/ElevationProfile.svelte';
+	import {
+		elevationProfile,
+		formatDuration,
+		parseDuration
+	} from '#lib/components/activities/activityForm.js';
+	import CaloriesIcon from '~icons/mdi/fire';
+	import ClockIcon from '~icons/mdi/clock';
+	import EditIcon from '~icons/mdi/pencil';
+	import FileIcon from '~icons/mdi/file';
+	import HeartIcon from '~icons/mdi/heart-pulse';
+	import LocationIcon from '~icons/mdi/map-marker';
+	import SpeedometerIcon from '~icons/mdi/speedometer';
+	import TrashIcon from '~icons/mdi/trash-can';
+	import TrendingUpIcon from '~icons/mdi/trending-up';
 
 	interface Props {
 		activity: Activity;
 		trails: Trail[];
-		visit: Visit | TransportationVisit;
 		measurementSystem?: 'metric' | 'imperial';
 		readOnly?: boolean;
+		onEdit?: () => void;
+		onDelete?: () => void;
 	}
 
-	let { activity, trails, visit, measurementSystem = 'metric', readOnly = false }: Props = $props();
+	let {
+		activity,
+		trails,
+		measurementSystem = 'metric',
+		readOnly = false,
+		onEdit,
+		onDelete
+	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
+	const imperial = $derived(measurementSystem === 'imperial');
+	const elevationUnit = $derived(imperial ? 'ft' : 'm');
+	const trail = $derived(activity.trail ? trails.find((item) => item.id === activity.trail) : null);
+	const sportLabel = $derived(
+		SPORT_TYPE_CHOICES.find((choice) => choice.key === activity.sport_type)?.label ??
+			activity.sport_type
+	);
+	const profile = $derived(elevationProfile(activity.geojson));
 
-	let trail = $derived(activity.trail ? trails.find((t) => t.id === activity.trail) : null);
-
-	function deleteActivity(visitId: string, activityId: string) {
-		dispatch('delete', { visitId, activityId });
-	}
-
-	function formatDuration(isoString: string | null): string {
-		if (!isoString) return '';
-		// Simple ISO 8601 duration parsing for display
-		const match = isoString.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-		if (!match) return isoString;
-
-		const hours = parseInt(match[1] || '0');
-		const minutes = parseInt(match[2] || '0');
-		const seconds = parseInt(match[3] || '0');
-
-		if (hours > 0) {
-			return `${hours}h ${minutes}m`;
-		} else if (minutes > 0) {
-			return `${minutes}m ${seconds}s`;
-		} else {
-			return `${seconds}s`;
-		}
-	}
-
-	function formatSpeed(speed: number | null): string {
-		if (!speed) return '';
-		const convertedSpeed = measurementSystem === 'imperial' ? speed * 2.237 : speed * 3.6;
-		return `${convertedSpeed.toFixed(1)} ${measurementSystem === 'imperial' ? 'mph' : 'km/h'}`;
-	}
+	const duration = (value: string | null) => formatDuration(parseDuration(value));
+	const speed = (value: number) =>
+		`${(value * (imperial ? 2.237 : 3.6)).toFixed(1)} ${imperial ? 'mph' : 'km/h'}`;
+	const elevation = (meters: number) =>
+		`${getElevation(measurementSystem, meters)}${elevationUnit}`;
 </script>
 
-<div class="bg-base-200/50 p-4 rounded-lg border border-base-300/50">
-	<div class="flex items-start justify-between mb-3">
-		<div class="flex-1 min-w-0">
-			<div class="flex items-center gap-2 mb-2">
-				<RunFastIcon class="w-4 h-4 text-success shrink-0" />
-				<h5 class="font-semibold text-base truncate">{activity.name}</h5>
-				<div class="flex gap-1">
-					{#if activity.sport_type}
-						<span class="badge badge-outline badge-sm">{activity.sport_type}</span>
-					{/if}
-				</div>
+<div class="rounded-lg border border-base-300/50 bg-base-200/50 p-4">
+	<div class="mb-3 flex items-start justify-between">
+		<div class="min-w-0 flex-1">
+			<div class="mb-2 flex items-center gap-2">
+				<span class="shrink-0 text-lg" aria-hidden="true"
+					>{getActivityIcon(activity.sport_type)}</span
+				>
+				<h5 class="truncate text-base font-semibold">{activity.name}</h5>
+				<span
+					class="badge badge-sm shrink-0 border-0 text-white"
+					style="background-color: {getActivityColor(activity.sport_type)}">{sportLabel}</span
+				>
 			</div>
 			{#if activity.source_attribution}
 				<p class="-mt-1 mb-2 text-xs text-base-content/70">{activity.source_attribution}</p>
@@ -78,118 +81,122 @@
 		</div>
 
 		{#if !readOnly}
-			<button
-				class="btn btn-error btn-xs tooltip tooltip-top ml-2"
-				data-tip="Delete Activity"
-				onclick={() => deleteActivity(visit.id, activity.id)}
-			>
-				<TrashIcon class="w-3 h-3" />
-			</button>
+			<div class="ml-2 flex gap-1">
+				{#if onEdit}
+					<button
+						type="button"
+						class="btn btn-ghost btn-xs tooltip tooltip-top"
+						data-tip={$t('activities.edit_activity')}
+						aria-label={$t('activities.edit_activity')}
+						onclick={onEdit}
+					>
+						<EditIcon class="h-3 w-3" />
+					</button>
+				{/if}
+				{#if onDelete}
+					<button
+						type="button"
+						class="btn btn-error btn-xs tooltip tooltip-top"
+						data-tip={$t('activities.delete_activity')}
+						aria-label={$t('activities.delete_activity')}
+						onclick={onDelete}
+					>
+						<TrashIcon class="h-3 w-3" />
+					</button>
+				{/if}
+			</div>
 		{/if}
 	</div>
 
-	<!-- Main Stats Grid -->
-	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+	<div class="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
 		{#if activity.distance}
-			<div class="bg-base-100/50 p-2 rounded-sm text-center">
+			<div class="rounded-sm bg-base-100/50 p-2 text-center">
 				<div class="text-lg font-bold text-primary">
 					{getDistance(measurementSystem, activity.distance)}
 				</div>
-				<div class="text-xs text-base-content/70">
-					{measurementSystem === 'imperial' ? 'miles' : 'km'}
-				</div>
+				<div class="text-xs text-base-content/70">{imperial ? 'miles' : 'km'}</div>
 			</div>
 		{/if}
-
 		{#if activity.moving_time}
-			<div class="bg-base-100/50 p-2 rounded-sm text-center">
-				<div class="text-lg font-bold text-secondary">
-					{formatDuration(activity.moving_time)}
-				</div>
+			<div class="rounded-sm bg-base-100/50 p-2 text-center">
+				<div class="text-lg font-bold text-secondary">{duration(activity.moving_time)}</div>
 				<div class="text-xs text-base-content/70">{$t('adventures.moving_time')}</div>
 			</div>
 		{/if}
-
 		{#if activity.elevation_gain}
-			<div class="bg-base-100/50 p-2 rounded-sm text-center">
+			<div class="rounded-sm bg-base-100/50 p-2 text-center">
 				<div class="text-lg font-bold text-success">
 					{getElevation(measurementSystem, activity.elevation_gain)}
 				</div>
-				<div class="text-xs text-base-content/70">
-					{measurementSystem === 'imperial' ? 'ft' : 'm'} ↗
-				</div>
+				<div class="text-xs text-base-content/70">{elevationUnit} ↗</div>
 			</div>
 		{/if}
-
 		{#if activity.average_speed}
-			<div class="bg-base-100/50 p-2 rounded-sm text-center">
-				<div class="text-lg font-bold text-accent">
-					{formatSpeed(activity.average_speed)}
-				</div>
+			<div class="rounded-sm bg-base-100/50 p-2 text-center">
+				<div class="text-lg font-bold text-accent">{speed(activity.average_speed)}</div>
 				<div class="text-xs text-base-content/70">{$t('adventures.average_speed')}</div>
 			</div>
 		{/if}
 	</div>
 
-	<!-- Additional Details -->
+	<ElevationProfile {profile} {measurementSystem} class="mb-3" />
+
 	<div class="space-y-2 text-xs text-base-content/80">
-		<!-- Time Details -->
 		{#if activity.elapsed_time || activity.rest_time}
 			<div class="flex items-center gap-1">
-				<ClockIcon class="w-3 h-3" />
+				<ClockIcon class="h-3 w-3" />
 				<span class="flex gap-4">
 					{#if activity.elapsed_time}
-						<span>{$t('adventures.total')}: {formatDuration(activity.elapsed_time)}</span>
+						<span>{$t('adventures.total')}: {duration(activity.elapsed_time)}</span>
 					{/if}
 					{#if activity.rest_time}
-						<span>{$t('adventures.rest')}: {formatDuration(activity.rest_time)}</span>
+						<span>{$t('adventures.rest')}: {duration(activity.rest_time)}</span>
 					{/if}
 				</span>
 			</div>
 		{/if}
 
-		<!-- Elevation Details -->
 		{#if activity.elev_high || activity.elev_low || activity.elevation_loss}
 			<div class="flex items-center gap-1">
-				<TrendingUpIcon class="w-3 h-3" />
+				<TrendingUpIcon class="h-3 w-3" />
 				<span class="flex gap-4">
 					{#if activity.elev_high}
-						<span
-							>{$t('adventures.high')}: {getElevation(
-								measurementSystem,
-								activity.elev_high
-							)}{measurementSystem === 'imperial' ? 'ft' : 'm'}</span
-						>
+						<span>{$t('adventures.high')}: {elevation(activity.elev_high)}</span>
 					{/if}
 					{#if activity.elev_low}
-						<span
-							>{$t('adventures.low')}: {getElevation(
-								measurementSystem,
-								activity.elev_low
-							)}{measurementSystem === 'imperial' ? 'ft' : 'm'}</span
-						>
+						<span>{$t('adventures.low')}: {elevation(activity.elev_low)}</span>
 					{/if}
 					{#if activity.elevation_loss}
+						<span>↘ {elevation(activity.elevation_loss)}</span>
+					{/if}
+				</span>
+			</div>
+		{/if}
+
+		{#if activity.max_speed}
+			<div class="flex items-center gap-1">
+				<SpeedometerIcon class="h-3 w-3" />
+				<span>{$t('adventures.max_speed')}: {speed(activity.max_speed)}</span>
+			</div>
+		{/if}
+
+		{#if activity.average_heart_rate || activity.max_heart_rate}
+			<div class="flex items-center gap-1">
+				<HeartIcon class="h-3 w-3" />
+				<span class="flex gap-4">
+					{#if activity.average_heart_rate}
 						<span
-							>↘ {getElevation(measurementSystem, activity.elevation_loss)}{measurementSystem ===
-							'imperial'
-								? 'ft'
-								: 'm'}</span
+							>{$t('activities.average_heart_rate')}: {Math.round(activity.average_heart_rate)} bpm</span
+						>
+					{/if}
+					{#if activity.max_heart_rate}
+						<span>{$t('activities.max_heart_rate')}: {Math.round(activity.max_heart_rate)} bpm</span
 						>
 					{/if}
 				</span>
 			</div>
 		{/if}
 
-		<!-- Speed Details -->
-		{#if activity.max_speed}
-			<div class="flex items-center gap-1">
-				<SpeedometerIcon class="w-3 h-3" />
-				<span>{$t('adventures.max_speed')}: {formatSpeed(activity.max_speed)}</span>
-			</div>
-		{/if}
-
-		<!-- Performance Metrics -->
 		{#if activity.average_cadence || activity.calories}
 			<div class="flex items-center gap-4">
 				{#if activity.average_cadence}
@@ -197,7 +204,7 @@
 				{/if}
 				{#if activity.calories}
 					<span class="flex items-center gap-1">
-						<CaloriesIcon class="w-3 h-3" />
+						<CaloriesIcon class="h-3 w-3" />
 						{activity.calories}
 						{$t('adventures.calories')}
 					</span>
@@ -205,19 +212,17 @@
 			</div>
 		{/if}
 
-		<!-- Trail Information -->
 		{#if trail}
 			<div class="flex items-center gap-1">
-				<LocationIcon class="w-3 h-3" />
+				<LocationIcon class="h-3 w-3" />
 				<span>{$t('adventures.trail')}: <span class="font-medium">{trail.name}</span></span>
 			</div>
 		{/if}
 
-		<!-- Date Information -->
 		{#if activity.start_date}
 			<div class="border-t border-base-300/50 pt-2">
 				<div>
-					Started: {formatDateInTimezone(
+					{$t('activities.started')}: {formatDateInTimezone(
 						activity.start_date,
 						activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
 						dateFormat
@@ -231,29 +236,9 @@
 			</div>
 		{/if}
 
-		<!-- Location Information -->
-		{#if activity.start_lat && activity.start_lng}
-			<div class="flex items-center gap-1">
-				<LocationIcon class="w-3 h-3" />
-				<span
-					>{$t('adventures.start')}: {activity.start_lat.toFixed(4)}, {activity.start_lng.toFixed(
-						4
-					)}</span
-				>
-				{#if activity.end_lat && activity.end_lng && (activity.end_lat !== activity.start_lat || activity.end_lng !== activity.start_lng)}
-					<span class="ml-2"
-						>{$t('adventures.end')}: {activity.end_lat.toFixed(4)}, {activity.end_lng.toFixed(
-							4
-						)}</span
-					>
-				{/if}
-			</div>
-		{/if}
-
-		<!-- GPX File -->
 		{#if activity.gpx_file}
-			<div class="flex items-center gap-1 pt-2 border-t border-base-300/50">
-				<FileIcon class="w-3 h-3" />
+			<div class="flex items-center gap-1 border-t border-base-300/50 pt-2">
+				<FileIcon class="h-3 w-3" />
 				<a href={activity.gpx_file} target="_blank" class="link link-primary text-xs">
 					{$t('adventures.view_gpx')}
 				</a>

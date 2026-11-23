@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema_field
 from core.serializers import CustomModelSerializer
 from core.public_url import build_media_url
 from adventures.utils.geojson import cached_gpx_geojson
+from adventures.utils.sports_types import SPORT_TYPE_CHOICES
 from core.dates import ensure_aware_utc, normalize_all_day_visit_dates
 from adventures.serializers.geo_fields import ActivityCoordinateMixin
 from integrations.facade import (
@@ -293,7 +294,8 @@ class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
             'id', 'user', 'visit', 'day', 'collection', 'trail', 'gpx_file', 'name', 'sport_type',
             'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
             'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
-            'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',
+            'timezone', 'average_speed', 'max_speed', 'average_cadence', 'average_heart_rate',
+            'max_heart_rate', 'calories',
             'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'source_attribution',
             'geojson', 'day_index', 'promoted_activity', 'promoted_visit', 'promoted_location',
         ]
@@ -340,6 +342,59 @@ class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
         if self.context.get('story') and not self.context.get('story_gpx'):
             return None
         return cached_gpx_geojson(obj.gpx_file)
+
+
+class ActivityAnalyzeRequestSerializer(serializers.Serializer):
+    file = serializers.FileField(help_text='A GPX, FIT, TCX, KML or KMZ file.')
+
+
+class ActivityAnalysisValuesSerializer(serializers.Serializer):
+    """The activity fields a track file can fill, in meters, seconds and m/s. Missing ones are left out."""
+
+    name = serializers.CharField(required=False)
+    sport_type = serializers.ChoiceField(choices=SPORT_TYPE_CHOICES, required=False)
+    distance = serializers.FloatField(required=False, help_text='Meters.')
+    moving_time = serializers.DurationField(required=False)
+    elapsed_time = serializers.DurationField(required=False)
+    rest_time = serializers.DurationField(required=False)
+    elevation_gain = serializers.FloatField(required=False, help_text='Meters.')
+    elevation_loss = serializers.FloatField(required=False, help_text='Meters.')
+    elev_high = serializers.FloatField(required=False, help_text='Meters.')
+    elev_low = serializers.FloatField(required=False, help_text='Meters.')
+    start_date = serializers.DateTimeField(required=False, help_text='UTC.')
+    average_speed = serializers.FloatField(required=False, help_text='Meters per second.')
+    max_speed = serializers.FloatField(required=False, help_text='Meters per second.')
+    average_cadence = serializers.FloatField(required=False)
+    average_heart_rate = serializers.FloatField(required=False, help_text='Beats per minute.')
+    max_heart_rate = serializers.FloatField(required=False, help_text='Beats per minute.')
+    calories = serializers.FloatField(required=False)
+    start_lat = serializers.FloatField(required=False)
+    start_lng = serializers.FloatField(required=False)
+    end_lat = serializers.FloatField(required=False)
+    end_lng = serializers.FloatField(required=False)
+
+
+class ActivityAnalysisSerializer(serializers.Serializer):
+    """What an activity file contains, without saving anything."""
+
+    values = ActivityAnalysisValuesSerializer(help_text='The fields the file can fill.')
+    sources = serializers.DictField(
+        child=serializers.ChoiceField(choices=['device', 'computed']),
+        help_text="Where each value came from: a total the device or provider reported (`device`), "
+        "or worked out from the track points (`computed`).",
+    )
+    format = serializers.ChoiceField(choices=['gpx', 'fit', 'tcx', 'kml'], help_text='The detected file format.')
+    point_count = serializers.IntegerField(help_text='Recorded positions in the file.')
+    has_timestamps = serializers.BooleanField(help_text='Without timestamps there are no times or speeds.')
+    has_elevation = serializers.BooleanField()
+    utc_offset_minutes = serializers.IntegerField(
+        allow_null=True, help_text="The recording device's offset from UTC, when the file says (FIT)."
+    )
+    warnings = serializers.ListField(
+        child=serializers.ChoiceField(choices=['no_timestamps', 'no_elevation']),
+        help_text='Things the file lacks that the review form should mention.',
+    )
+    geojson = serializers.JSONField(allow_null=True, help_text='The track as GeoJSON, with elevation as the third coordinate.')
 
 
 class VisitSerializer(serializers.ModelSerializer):

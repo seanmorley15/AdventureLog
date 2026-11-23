@@ -19,7 +19,18 @@ Open a location to see its own page, with tabs for an overview, its visits, a ma
 | **Photos** | Uploaded from your device, or picked from [Immich](../configuration/immich_integration.md) when that integration is on. |
 | **Attachments** | Files that belong with the location, such as a ticket, a brochure, or a map. |
 | **Trails** | A route linked to the location, either as a link to another site or from [Wanderer](../configuration/wanderer_integration.md), which adds distance and elevation. |
-| **Activities** | What you did on a visit, such as a hike or a ride, with time, distance, and a GPX track. Enter them by hand or import them from [Strava](../configuration/strava_integration.md) or [Endurain](../configuration/endurain_integration.md). |
+| **Activities** | What you did on a visit, such as a hike or a ride, with time, distance, and a track. Drop in a GPX, FIT, TCX, KML, or KMZ file and AdventureLog fills in the rest, or import from [Strava](../configuration/strava_integration.md) or [Endurain](../configuration/endurain_integration.md). You can still enter one by hand. The same works for a day of a trip. |
+
+## Activities from a file
+
+Choose **Add activity** on a visit, or on a day of a trip, and drop in a recording. AdventureLog reads **GPX**, **FIT**, **TCX**, **KML**, and **KMZ** files and fills in the name, sport, start time, distance, moving and total time, elevation gain and loss, speeds, heart rate, and the route on a map with an elevation profile. You review everything, change what you like, and save. **Enter manually** skips the file.
+
+- **Device totals win.** A FIT or TCX file, or a Strava or Endurain import, carries the totals the watch itself recorded, such as a barometric altimeter's climb. Those are used as they are. Anything the device didn't report is measured from the track.
+- **Measured from the track** means distance along the ground, elevation with GPS noise filtered out (a climb counts once it passes about 3 m), and moving time without stops. Each value is marked **from device** or **from file** on the form.
+- **Every file is stored as GPX**, whatever you uploaded, so the route works the same on maps, exports, and backups. The original FIT or KML file isn't kept.
+- A file without timestamps has no times or speeds, and one without altitude has no climb. The form tells you which, and you can type them in.
+
+You can edit a saved activity later, including replacing its file.
 
 ## Visited or planned
 

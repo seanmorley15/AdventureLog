@@ -30,8 +30,8 @@ If the Strava section says it isn't enabled on this instance, the server setup a
 ## Use it
 
 1. Open a location and add or edit a visit.
-2. On the visit, choose the Strava button to search your activities from that time.
-3. Import an activity. It brings in the distance, duration, elevation gain, and other details.
-4. To add the route, choose **Download GPX**, then drop the downloaded file into the visit's GPX field. Strava's API doesn't let AdventureLog fetch the track itself.
+2. Choose **Add activity** on the visit, then **Strava** to search your activities from that time.
+3. Import an activity. AdventureLog brings in the distance, duration, elevation gain, and other details, and builds the route from Strava's data, so there is nothing to download. Activities you already imported are marked.
+4. Review the details and save.
 
-[Endurain](endurain_integration.md) imports tracks without the manual download, if you use it.
+Activities recorded without GPS, such as a treadmill run, import with their summary only.

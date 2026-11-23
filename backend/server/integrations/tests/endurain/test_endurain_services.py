@@ -100,7 +100,7 @@ class EndurainServicesTest(TestCase):
         self.assertEqual(activity['sport_type'], 'Run')
         self.assertEqual(activity['distance_km'], 5.0)
         self.assertEqual(activity['total_elevation_gain'], 120.0)
-        self.assertEqual(activity['estimated_elevation_loss'], 80.0)
+        self.assertEqual(activity['elevation_loss'], 80.0)
         self.assertEqual(activity['rest_time'], 100)
         self.assertEqual(activity['start_date_local'], '2024-06-01T10:00:00')
         self.assertEqual(activity['average_cadence'], 170)
@@ -400,6 +400,45 @@ class EndurainServicesTest(TestCase):
 
         self.assertEqual(ctx.exception.code, 'endurain.reconnect_required')
         self.assertEqual(ctx.exception.status_code, 401)
+
+    def test_elevations_pair_by_position_only_when_the_streams_match(self):
+        from integrations.services.endurain.gpx import _pair_elevations
+
+        points = [(1.0, 2.0, None), (1.1, 2.1, None)]
+        self.assertEqual(
+            _pair_elevations(points, {'stream_waypoints': [{'ele': 10}, {'ele': 20}]}), [10.0, 20.0]
+        )
+        # Different lengths and no timestamps: no guess.
+        self.assertEqual(_pair_elevations(points, {'stream_waypoints': [{'ele': 10}]}), [None, None])
+
+    def test_elevations_pair_by_time_when_the_lengths_differ(self):
+        from datetime import datetime, timezone
+
+        from integrations.services.endurain.gpx import _pair_elevations
+
+        first = datetime(2024, 6, 1, 8, 0, 0, tzinfo=timezone.utc)
+        second = datetime(2024, 6, 1, 8, 0, 5, tzinfo=timezone.utc)
+        points = [(1.0, 2.0, first), (1.1, 2.1, second)]
+        stream = {'stream_waypoints': [{'time': '2024-06-01T08:00:05Z', 'ele': 55}]}
+        self.assertEqual(_pair_elevations(points, stream), [None, 55.0])
+
+    @patch('integrations.services.endurain.gpx._fetch_activity_stream')
+    @patch('integrations.services.endurain.gpx.fetch_activity_by_id')
+    def test_exported_gpx_has_no_invented_timestamps_and_a_valid_sport(self, fetch_activity, fetch_stream):
+        import io
+
+        from adventures.services.activities import read_track
+        from integrations.services.endurain.gpx import export_activity_gpx
+
+        fetch_activity.return_value = {'name': 'Kite day', 'activity_type': 30, 'start_time': '2024-06-01T08:00:00Z'}
+        fetch_stream.side_effect = [
+            {'stream_waypoints': [{'lat': 1.0, 'lon': 2.0}, {'lat': 1.001, 'lon': 2.0}]},
+            {'stream_waypoints': [{'ele': 5}, {'ele': 6}]},
+        ]
+        track = read_track(io.BytesIO(export_activity_gpx(self._integration(), 5)))
+        self.assertEqual(track.sport, 'Windsurfing')
+        self.assertEqual([point.ele for point in track.points], [5.0, 6.0])
+        self.assertTrue(all(point.time is None for point in track.points))
 
     @patch('integrations.services.endurain.gpx.api_request')
     def test_fetch_activity_stream_uses_nested_route(self, mock_request):

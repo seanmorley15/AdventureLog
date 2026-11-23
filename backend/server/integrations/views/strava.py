@@ -1,6 +1,7 @@
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from django.http import HttpResponse
 from rest_framework.response import Response
 import requests
 import logging
@@ -13,6 +14,8 @@ from django.shortcuts import redirect
 from django.conf import settings
 from integrations.models import StravaToken
 from integrations.services.garmin import garmin_attribution
+from integrations.services.strava import STREAM_KEYS, build_track
+from adventures.services.activities import normalize_sport_type, track_to_gpx
 from core.exceptions import APIError
 from core.serializers import validated
 from core.timezones import TIMEZONES
@@ -236,18 +239,7 @@ class StravaViewSet(viewsets.GenericViewSet):
         """
         Extract essential fields from a single activity dict with enhanced metrics
         """
-        # Calculate additional elevation metrics
-        elev_high = activity.get("elev_high")
-        elev_low = activity.get("elev_low")
-        total_elevation_gain = activity.get("total_elevation_gain", 0)
-        
-        # Calculate total elevation loss (approximate)
-        total_elevation_range = None
-        estimated_elevation_loss = None
-        if elev_high is not None and elev_low is not None:
-            total_elevation_range = elev_high - elev_low
-            estimated_elevation_loss = max(0, total_elevation_range - total_elevation_gain)
-        
+        # Strava reports no elevation loss, so none is made up; the imported track gives a real figure.
         # Calculate pace metrics
         moving_time = activity.get("moving_time")
         distance = activity.get("distance")
@@ -278,10 +270,12 @@ class StravaViewSet(viewsets.GenericViewSet):
         
         return {
             # Basic activity info
-            "id": activity.get("id"),
+            # Strava is moving to 64-bit ids (by June 2027), which a JSON number cannot hold exactly in
+            # JavaScript, so the id travels as a string. `id_str` is Strava's own copy of it.
+            "id": str(activity.get("id_str") or activity.get("id")),
             "name": activity.get("name"),
             "type": activity.get("type"),
-            "sport_type": activity.get("sport_type"),
+            "sport_type": normalize_sport_type(activity.get("sport_type"), activity.get("type")),
             
             # Distance and time
             "distance": activity.get("distance"),  # meters
@@ -293,10 +287,8 @@ class StravaViewSet(viewsets.GenericViewSet):
             
             # Enhanced elevation metrics
             "total_elevation_gain": activity.get("total_elevation_gain"),  # meters
-            "estimated_elevation_loss": estimated_elevation_loss,  # meters (estimated)
             "elev_high": activity.get("elev_high"),  # highest point in meters
             "elev_low": activity.get("elev_low"),  # lowest point in meters
-            "total_elevation_range": total_elevation_range,  # difference between high and low
             
             # Date and location
             "start_date": activity.get("start_date"),
@@ -341,9 +333,9 @@ class StravaViewSet(viewsets.GenericViewSet):
             "start_latlng": activity.get("start_latlng"),
             "end_latlng": activity.get("end_latlng"),
             
-            # Export links
+            # The track, rebuilt from Strava's streams by AdventureLog, and the original on Strava.
             'export_original': f'https://www.strava.com/activities/{activity.get("id")}/export_original',
-            'export_gpx': f'https://www.strava.com/activities/{activity.get("id")}/export_gpx',
+            'export_gpx': f'/api/integrations/strava/activities/{activity.get("id")}/gpx/',
             
             # Additional useful fields
             "visibility": activity.get("visibility"),
@@ -464,3 +456,46 @@ class StravaViewSet(viewsets.GenericViewSet):
         except requests.RequestException as e:
             logger.error(f"Error fetching Strava activity: {str(e)}")
             raise APIError('Failed to connect to Strava.', code='strava.connection_failed', status=status.HTTP_502_BAD_GATEWAY)
+
+    @extend_schema(
+        parameters=[OpenApiParameter('activity_id', str, OpenApiParameter.PATH, description='The Strava activity id.')],
+        responses={
+            (200, 'application/gpx+xml'): OpenApiResponse(response=bytes, description='The recorded track as GPX.'),
+            404: OpenApiResponse(
+                description='Not connected (`strava.not_authorized`), or the activity has no GPS data (`strava.gpx_unavailable`).'
+            ),
+            502: _UPSTREAM,
+        },
+    )
+    @action(detail=False, methods=['get'], url_path=r'activities/(?P<activity_id>\d+)/gpx')
+    def activity_gpx(self, request, activity_id=None):
+        """
+        Get a Strava activity as GPX
+
+        Builds the track from Strava's streams (position, altitude, time, heart rate, cadence), so
+        it can be imported without downloading the file from Strava first.
+        """
+        strava_token = self.refresh_strava_token_if_needed(request.user)
+        headers = {'Authorization': f'Bearer {strava_token.access_token}'}
+        base = f'https://www.strava.com/api/v3/activities/{activity_id}'
+        try:
+            activity_response = requests.get(base, headers=headers, timeout=STRAVA_REQUEST_TIMEOUT)
+            streams_response = requests.get(
+                f'{base}/streams',
+                headers=headers,
+                params={'keys': ','.join(STREAM_KEYS), 'key_by_type': 'true'},
+                timeout=STRAVA_REQUEST_TIMEOUT,
+            )
+        except requests.RequestException as e:
+            logger.error(f"Error fetching Strava streams: {str(e)}")
+            raise APIError('Failed to connect to Strava.', code='strava.connection_failed', status=status.HTTP_502_BAD_GATEWAY)
+
+        if streams_response.status_code == 404 or activity_response.status_code == 404:
+            raise APIError('This Strava activity has no GPS data to import.', code='strava.gpx_unavailable', status=status.HTTP_404_NOT_FOUND)
+        if activity_response.status_code != 200 or streams_response.status_code != 200:
+            raise APIError('Failed to fetch the activity from Strava.', code='strava.fetch_failed', status=status.HTTP_502_BAD_GATEWAY)
+
+        track = build_track(activity_response.json(), streams_response.json())
+        response = HttpResponse(track_to_gpx(track, track.sport), content_type='application/gpx+xml')
+        response['Content-Disposition'] = f'attachment; filename="strava-{activity_id}.gpx"'
+        return response

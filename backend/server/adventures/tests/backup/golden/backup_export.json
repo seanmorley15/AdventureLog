@@ -159,6 +159,7 @@
   "day_activities": [
     {
       "average_cadence": null,
+      "average_heart_rate": null,
       "average_speed": null,
       "calories": 0.0,
       "collection_export_id": 1,
@@ -174,6 +175,7 @@
       "external_service_id": "strava-7",
       "gpx_filename": "<file-15>",
       "images": [],
+      "max_heart_rate": null,
       "max_speed": null,
       "moving_time": 0.0,
       "name": "Morning run",
@@ -466,6 +468,7 @@
           "activities": [
             {
               "average_cadence": 80.0,
+              "average_heart_rate": 138.0,
               "average_speed": 1.2,
               "calories": 2100.0,
               "distance": 7200.5,
@@ -489,6 +492,7 @@
                   "source_url": null
                 }
               ],
+              "max_heart_rate": 171.0,
               "max_speed": 2.5,
               "moving_time": 18000.0,
               "name": "Ascent",

@@ -1,22 +1,41 @@
+from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from adventures.access.audience import can_edit, member_collections_q
 from adventures.models import Activity, CollectionItineraryItem
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import ActivitySerializer, CollectionItineraryItemSerializer, VisitSerializer
+from adventures.serializers import (
+    ActivityAnalysisSerializer,
+    ActivityAnalyzeRequestSerializer,
+    ActivitySerializer,
+    CollectionItineraryItemSerializer,
+    VisitSerializer,
+)
 from adventures.serializers.day_plan import DayDateField
+from adventures.services.activities import analyze_track, prepare_activity_file, read_track, track_to_gpx
 from adventures.services.day_plan import DayPlanError
 from adventures.services.day_plan.files import activity_collection, promote_day_activity
-from adventures.services.gpx import fill_from_gpx
+from adventures.utils.geojson import gpx_bytes_to_geojson
 from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
 from core.exceptions import APIError
 from core.serializers import validated
+
+
+def delete_replaced_gpx(gpx_file):
+    """Queue removal of a track file an update replaced, once the update commits."""
+    from adventures.tasks import delete_stored_file
+
+    transaction.on_commit(
+        lambda: delete_stored_file.defer(
+            model_label=Activity._meta.label, field_name='gpx_file', name=gpx_file.name
+        )
+    )
 
 
 class ActivityLogVisitSerializer(serializers.Serializer):
@@ -33,13 +52,16 @@ _QUOTA = OpenApiResponse(description="The GPX file would exceed the owner's medi
 @extend_schema_view(
     create=extend_schema(
         description='Attach it to a `visit`, a trip `day`, or a `collection` (its Ideas). Send `multipart/form-data` '
-        'with a `gpx_file` to upload a track: elevation and start and end points missing from the request are read '
-        'from it. A day or Ideas activity belongs to the collection owner.',
+        'with a `gpx_file` (a GPX, FIT, TCX, KML or KMZ track) to fill in the activity: every field missing from the '
+        'request is worked out from the file, and the file is stored as GPX. A day or Ideas activity belongs to the '
+        'collection owner.',
         responses={201: ActivitySerializer, 413: _QUOTA},
     ),
     update=extend_schema(responses={200: ActivitySerializer, 413: _QUOTA}),
     partial_update=extend_schema(
-        description='The visit, day or collection cannot be changed.', responses={200: ActivitySerializer, 413: _QUOTA}
+        description='The visit, day or collection cannot be changed. A new `gpx_file` replaces the track and fills '
+        'the fields missing from the request.',
+        responses={200: ActivitySerializer, 413: _QUOTA},
     ),
 )
 class ActivityViewSet(viewsets.ModelViewSet):
@@ -125,8 +147,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
         gpx_file = serializer.validated_data.get('gpx_file')
         if gpx_file:
-            ensure_media_storage_available(owner, get_uploaded_file_size(gpx_file))
-            fill_from_gpx(serializer.validated_data, gpx_file)
+            prepare_activity_file(serializer.validated_data, gpx_file)
+            ensure_media_storage_available(owner, get_uploaded_file_size(serializer.validated_data['gpx_file']))
 
         serializer.save(user=owner)
 
@@ -157,13 +179,56 @@ class ActivityViewSet(viewsets.ModelViewSet):
         else:
             raise PermissionDenied("You do not have permission to update this activity.")
 
+        replaced_file = None
         if new_gpx_file:
+            prepare_activity_file(serializer.validated_data, new_gpx_file)
             exclude_names = []
             if instance.gpx_file and instance.gpx_file.name:
                 exclude_names.append(instance.gpx_file.name)
-            ensure_media_storage_available(owner, get_uploaded_file_size(new_gpx_file), exclude_names=exclude_names)
+                replaced_file = instance.gpx_file
+            ensure_media_storage_available(
+                owner, get_uploaded_file_size(serializer.validated_data['gpx_file']), exclude_names=exclude_names
+            )
 
-        serializer.save()
+        with transaction.atomic():
+            serializer.save()
+            if replaced_file is not None:
+                # The old track is no longer referenced once the new one is saved.
+                delete_replaced_gpx(replaced_file)
+
+    @extend_schema(
+        request={'multipart/form-data': ActivityAnalyzeRequestSerializer},
+        responses={
+            200: ActivityAnalysisSerializer,
+            400: OpenApiResponse(description='Not a track file we can read (`activity.unreadable_track`).'),
+        },
+    )
+    @action(detail=False, methods=['post'], url_path='analyze', parser_classes=[MultiPartParser])
+    def analyze(self, request):
+        """
+        Read an activity file
+
+        Reads a GPX, FIT, TCX, KML or KMZ file and returns every activity field it can fill (distance,
+        elevation, times, speeds, sport, start point), where each one came from, and the track as
+        GeoJSON for a preview. Nothing is saved: send the file again when creating the activity.
+        """
+        if not request.user.is_authenticated:
+            raise NotAuthenticated()
+        upload = validated(ActivityAnalyzeRequestSerializer, request.data)['file']
+        track = read_track(upload)
+        analysis = analyze_track(track)
+        body = {
+            'values': analysis.values,
+            'sources': analysis.sources,
+            'format': analysis.format,
+            'point_count': analysis.point_count,
+            'has_timestamps': analysis.has_timestamps,
+            'has_elevation': analysis.has_elevation,
+            'utc_offset_minutes': analysis.utc_offset_minutes,
+            'warnings': analysis.warnings,
+            'geojson': gpx_bytes_to_geojson(track_to_gpx(track)),
+        }
+        return Response(ActivityAnalysisSerializer(body).data)
 
     def perform_destroy(self, instance):
         parent_collection = activity_collection(instance)

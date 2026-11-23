@@ -3,6 +3,8 @@
 from datetime import datetime, timezone as dt_timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from adventures.services.activities import normalize_sport_type
+
 from .connection import format_server_url
 
 
@@ -58,9 +60,10 @@ ACTIVITY_TYPE_MAP = {
 
 
 def _sport_type_name(activity_type: int | None) -> str:
+    """The ``SPORT_TYPE_CHOICES`` key for an Endurain activity type, ``General`` when it has none."""
     if activity_type is None:
-        return 'Activity'
-    return ACTIVITY_TYPE_MAP.get(int(activity_type), 'Activity')
+        return normalize_sport_type(None)
+    return normalize_sport_type(ACTIVITY_TYPE_MAP.get(int(activity_type)))
 
 
 def _local_start_time(start_time: str, timezone_name: str | None) -> str | None:
@@ -128,10 +131,9 @@ def normalize_activity(activity: dict, server_url: str) -> dict:
         'elapsed_time': elapsed_time,
         'rest_time': rest_time,
         'total_elevation_gain': elevation_gain,
-        'estimated_elevation_loss': elevation_loss,
+        'elevation_loss': elevation_loss,
         'elev_high': None,
         'elev_low': None,
-        'total_elevation_range': None,
         'start_date': start_date,
         'start_date_local': start_date_local,
         'timezone': activity.get('timezone') or '',
