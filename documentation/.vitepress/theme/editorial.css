@@ -141,8 +141,8 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  min-height: clamp(560px, 78vh, 800px);
-  padding: clamp(56px, 9vh, 104px) 32px 220px;
+  min-height: clamp(500px, 66vh, 680px);
+  padding: clamp(36px, 5vh, 64px) 32px 136px;
   overflow: hidden;
   background: var(--al-sky);
 }
@@ -194,7 +194,7 @@
 .VPHome .al-hero__title {
   max-width: 13ch;
   margin: 0 0 22px;
-  font-size: clamp(2.6rem, 5.6vw, 4.5rem);
+  font-size: clamp(2.6rem, 5.2vw, 4.1rem);
   font-weight: 800;
   line-height: 1.02;
   letter-spacing: -0.04em;
@@ -232,7 +232,7 @@
   position: relative;
   z-index: 2;
   width: min(1120px, calc(100% - 48px));
-  margin: -130px auto 0;
+  margin: -104px auto 0;
 }
 
 .al-hero__app figcaption,
@@ -254,7 +254,7 @@
 .al-pillars {
   max-width: 1120px;
   margin: 0 auto;
-  padding: clamp(64px, 10vw, 120px) 0 0;
+  padding: clamp(48px, 7vw, 88px) 0 0;
 }
 
 .al-chapter__head {
@@ -321,6 +321,220 @@
   padding-left: 18px;
   border-left: 2px solid var(--al-ochre);
   font-size: 1.05rem;
+}
+
+
+/* ─── Showcase (tabbed features) ─── */
+
+.al-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.al-showcase {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(48px, 7vw, 88px) 0 0;
+}
+
+.al-showcase__tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 36px;
+}
+
+.al-showcase__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 150px;
+  padding: 10px 18px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.al-showcase__tab:hover {
+  border-color: var(--vp-c-brand-1);
+}
+
+.al-showcase__tab:focus-visible,
+.al-showcase__view:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
+}
+
+.al-showcase__tab[aria-selected="true"] {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-1);
+}
+
+.al-showcase__tab-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--al-ochre);
+}
+
+.al-showcase__tab-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.al-showcase__panel {
+  display: grid;
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: start;
+  /* Tall enough for the longest tab, so the page below never jumps. */
+  min-height: 520px;
+}
+
+.al-showcase__panel[hidden] {
+  display: none;
+}
+
+.VPHome .vp-doc .al-showcase__copy h2 {
+  margin: 0 0 14px;
+  padding: 0;
+  border: none;
+  font-size: clamp(1.7rem, 2.8vw, 2.3rem);
+  line-height: 1.1;
+  color: var(--vp-c-text-1);
+  text-wrap: balance;
+}
+
+.al-showcase__intro,
+.al-showcase__single {
+  margin: 0 0 20px;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+.al-showcase__views {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.al-showcase__views li {
+  margin: 0;
+}
+
+.al-showcase__view {
+  display: block;
+  width: 100%;
+  padding: 10px 0 10px 16px;
+  border: none;
+  border-left: 2px solid var(--vp-c-divider);
+  background: none;
+  text-align: left;
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.al-showcase__view:hover {
+  border-left-color: var(--vp-c-brand-1);
+}
+
+.al-showcase__view strong {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--vp-c-text-1);
+}
+
+/* Only the selected view shows its description. */
+.al-showcase__view span {
+  display: none;
+  margin-top: 4px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.al-showcase__view[aria-pressed="true"] {
+  border-left-color: var(--al-ochre);
+}
+
+.al-showcase__view[aria-pressed="true"] span {
+  display: block;
+}
+
+.VPHome .vp-doc .al-showcase__note {
+  margin: 18px 0 0;
+  padding-left: 14px;
+  border-left: 2px solid var(--al-ochre);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--vp-c-text-2);
+}
+
+.al-showcase__stage {
+  display: grid;
+  min-width: 0;
+}
+
+.al-showcase__shot {
+  grid-area: 1 / 1;
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0s linear 0.3s;
+}
+
+.al-showcase__shot.is-active {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+@media (max-width: 900px) {
+  .al-showcase__panel {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .al-showcase__stage {
+    order: -1;
+  }
+
+  .al-showcase__tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .al-showcase__tab {
+    min-width: 0;
+    flex: 1 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .al-showcase__shot {
+    transition: none;
+  }
 }
 
 /* ─── Self-hosted ─── */
@@ -390,7 +604,7 @@
 .al-install,
 .al-proof,
 .al-faq {
-  padding-top: clamp(64px, 10vw, 120px);
+  padding-top: clamp(48px, 7vw, 88px);
 }
 
 /* ─── Closing ─── */
@@ -399,9 +613,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 520px;
-  margin-top: clamp(64px, 10vw, 120px);
-  padding: 88px 24px;
+  min-height: 440px;
+  margin-top: clamp(48px, 7vw, 88px);
+  padding: 72px 24px;
   overflow: hidden;
   text-align: center;
   background: #2a1f2e;

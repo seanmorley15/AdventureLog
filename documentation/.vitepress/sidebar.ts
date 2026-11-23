@@ -209,6 +209,7 @@ export const sidebar: DefaultTheme.SidebarItem[] = [
         link: "/docs/configuration/environment_variables",
       },
       { text: "API Keys", link: "/docs/configuration/api_keys" },
+      { text: "MCP Server (AI)", link: "/docs/configuration/mcp_server" },
     ],
   },
   {

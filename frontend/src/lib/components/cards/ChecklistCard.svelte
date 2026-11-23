@@ -16,6 +16,7 @@
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '#lib/types.js';
+	import ChecklistViewDialog from '../ChecklistViewDialog.svelte';
 	import CardActionsMenu from './parts/CardActionsMenu.svelte';
 	import ClipboardListOutline from '~icons/mdi/clipboard-list-outline';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
@@ -158,99 +159,19 @@
 {/if}
 
 {#if isDetailsOpen}
-	<dialog class="modal modal-open" open>
-		<div class="modal-box max-w-3xl space-y-4">
-			<div class="flex items-start justify-between gap-3">
-				<div class="space-y-2">
-					<div class="flex items-center gap-2">
-						<h3 class="text-xl font-semibold leading-tight">{checklist.name}</h3>
-						<div class="badge badge-primary badge-sm">{$t('adventures.checklist')}</div>
-					</div>
-
-					<div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
-						{#if checklist.date && checklist.date !== ''}
-							<div class="flex items-center gap-2">
-								<Calendar class="w-4 h-4 text-primary" />
-								<span>
-									{formatDisplayDate(checklist.date, dateFormat, { timeZone: 'UTC' })}
-								</span>
-							</div>
-						{/if}
-						{#if checklist.items.length > 0}
-							{@const completedCount = checklist.items.filter((item) => item.is_checked).length}
-							<div class="badge badge-ghost badge-sm">
-								{completedCount}/{checklist.items.length}
-								{$t('checklist.completed')}
-							</div>
-						{/if}
-					</div>
-				</div>
-				<button
-					type="button"
-					class="btn btn-circle btn-ghost btn-sm"
-					onclick={() => (isDetailsOpen = false)}
-					aria-label={$t('about.close')}
-				>
-					<Close class="w-4 h-4" />
-				</button>
-			</div>
-
-			{#if checklist.items.length > 0}
-				<div class="space-y-2 max-h-96 overflow-y-auto pr-1">
-					{#each checklist.items as item}
-						{#if canEdit}
-							<button
-								type="button"
-								onclick={() => toggleItemStatus(item.id)}
-								disabled={updatingItemId === item.id}
-								class="flex w-full items-center gap-3 rounded-lg bg-base-200/60 p-2 text-left transition-colors hover:bg-base-200 disabled:opacity-70"
-							>
-								{#if updatingItemId === item.id}
-									<span class="loading loading-spinner loading-xs text-primary shrink-0"></span>
-								{:else if item.is_checked}
-									<CheckCircle class="w-5 h-5 text-success shrink-0" />
-								{:else}
-									<CheckboxBlankCircleOutline class="w-5 h-5 shrink-0" />
-								{/if}
-								<span
-									class="flex-1 text-sm"
-									class:line-through={item.is_checked}
-									class:opacity-60={item.is_checked}
-								>
-									{item.name}
-								</span>
-							</button>
-						{:else}
-							<div class="flex items-center gap-3 rounded-lg bg-base-200/60 p-2">
-								{#if item.is_checked}
-									<CheckCircle class="w-5 h-5 text-success shrink-0" />
-								{:else}
-									<CheckboxBlankCircleOutline class="w-5 h-5 shrink-0" />
-								{/if}
-								<span
-									class="flex-1 text-sm"
-									class:line-through={item.is_checked}
-									class:opacity-60={item.is_checked}
-								>
-									{item.name}
-								</span>
-							</div>
-						{/if}
-					{/each}
-				</div>
-			{:else}
-				<p class="text-sm text-base-content/70">No items added yet.</p>
-			{/if}
-
-			<div class="modal-action">
-				<button class="btn" onclick={() => (isDetailsOpen = false)}>Close</button>
-			</div>
-		</div>
-		<form method="dialog" class="modal-backdrop">
-			<button aria-label="close" onclick={() => (isDetailsOpen = false)}>Close</button>
-		</form>
-	</dialog>
+	<ChecklistViewDialog
+		{checklist}
+		{user}
+		canToggle={Boolean(canEdit)}
+		onEdit={canEdit ? () => ((isDetailsOpen = false), editChecklist()) : null}
+		onUpdate={(data) => {
+			checklist = data;
+			dispatch('update', data);
+		}}
+		onClose={() => (isDetailsOpen = false)}
+	/>
 {/if}
+
 <div
 	class="card h-full flex flex-col rounded-2xl border border-base-300/60 bg-base-100 shadow-xs transition-colors hover:border-base-300"
 	aria-label="checklist-card"

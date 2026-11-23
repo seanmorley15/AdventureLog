@@ -382,7 +382,7 @@
 }
 
 .al-pillar {
-  padding: 24px;
+  padding: 20px 22px;
   border-radius: 16px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg);
@@ -417,7 +417,7 @@
 /* ─── Social proof ────────────────────────────────────────────────── */
 
 .al-proof {
-  padding: 80px 24px;
+  padding: 64px 24px 0;
 }
 
 .al-proof__grid {
@@ -430,13 +430,13 @@
 
 .al-quote {
   margin: 0;
-  padding: 24px;
+  padding: 20px 22px;
   border-radius: 16px;
   border: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg-soft);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .al-quote p {

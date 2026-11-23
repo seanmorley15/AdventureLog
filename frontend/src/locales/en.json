@@ -1105,6 +1105,7 @@
 		"add": "Add"
 	},
 	"notes": {
+		"no_content": "This note is empty.",
 		"private_from_story_hint": "Members still see it. A published story never shows it, even when note text is on.",
 		"note_deleted": "Note deleted successfully!",
 		"note_delete_error": "Error deleting note",

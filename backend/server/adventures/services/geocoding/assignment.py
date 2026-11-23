@@ -54,8 +54,16 @@ def geocode_and_assign_location(location_id: str, raise_if_unavailable: bool = F
             if country:
                 location.country = country
 
+        # A place made without an address (the API, imports) gets the same "City, Region, US" label the
+        # map picker fills in. An address someone typed is never replaced.
+        fields = ["region", "city", "country"]
+        label = str(result.get('display_name') or '').strip()
+        if label and not (location.location or '').strip():
+            location.location = label
+            fields.append("location")
+
         # Save updated location info, without queueing another geocode
-        location.save(update_fields=["region", "city", "country"], _skip_geocode=True)
+        location.save(update_fields=fields, _skip_geocode=True)
 
     except GeocodeUnavailable:
         raise

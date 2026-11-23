@@ -47,4 +47,9 @@ def search_places(
     except requests.exceptions.RequestException:
         return ProviderResult(error="OpenStreetMap service error")
 
-    return ProviderResult(data=response.json() or [])
+    try:
+        data = response.json()
+    except ValueError:
+        # Nominatim answers blocks and rate limits with an HTML page, not JSON.
+        return ProviderResult(error="OpenStreetMap returned an unreadable response")
+    return ProviderResult(data=data or [])

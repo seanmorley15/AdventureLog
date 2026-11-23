@@ -60,6 +60,8 @@
 	import TransportationModal, {
 		createEmptyTransportation
 	} from '#lib/components/transportation/TransportationModal.svelte';
+	import NoteViewDialog from '#lib/components/NoteViewDialog.svelte';
+	import ChecklistViewDialog from '#lib/components/ChecklistViewDialog.svelte';
 	import NoteModal from '#lib/components/NoteModal.svelte';
 	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
 	import Plus from '~icons/mdi/plus';
@@ -1025,6 +1027,7 @@
 	let transportationToEdit = $state<Transportation | null>(null);
 	let noteToEdit = $state<Note | null>(null);
 	let checklistToEdit = $state<Checklist | null>(null);
+	let viewing = $state<{ type: 'note' | 'checklist'; row: PlanRow } | null>(null);
 	let locationDraft = $state(createEmptyLocation());
 	let lodgingDraft = $state<Lodging | null>(null);
 	let transportationDraft = $state<Transportation>(createEmptyTransportation());
@@ -1047,6 +1050,14 @@
 		lodgingDraft = null;
 		transportationDraft = createEmptyTransportation();
 		openModal = type;
+	}
+
+	function viewObject(row: PlanRow) {
+		if (row.type === 'note' || row.type === 'checklist') {
+			if (row.object) viewing = { type: row.type, row };
+		} else {
+			editObject(row);
+		}
 	}
 
 	function editObject(row: PlanRow) {
@@ -1275,6 +1286,7 @@
 		{collection}
 		onLogVisit={logVisit}
 		onEditObject={editObject}
+		onViewObject={viewObject}
 		onEditPlacement={(target) =>
 			(placementEdit = { mode: 'edit', row: target, dayIndex: target.item?.day_index ?? null })}
 		onToggleOptional={toggleOptional}
@@ -1960,6 +1972,38 @@
 		bind:transportation={transportationDraft}
 		{collection}
 		initialVisitDate={transportationToEdit ? null : createDate}
+	/>
+{/if}
+
+{#if viewing?.type === 'note' && viewing.row.object}
+	<NoteViewDialog
+		note={viewing.row.object as Note}
+		{user}
+		onEdit={canModify && !readMode
+			? () => {
+					const row = viewing!.row;
+					viewing = null;
+					editObject(row);
+				}
+			: null}
+		onClose={() => (viewing = null)}
+	/>
+{/if}
+
+{#if viewing?.type === 'checklist' && viewing.row.object}
+	<ChecklistViewDialog
+		checklist={viewing.row.object as Checklist}
+		{user}
+		canToggle={canModify && !readMode}
+		onEdit={canModify && !readMode
+			? () => {
+					const row = viewing!.row;
+					viewing = null;
+					editObject(row);
+				}
+			: null}
+		onUpdate={(data) => upsertObject('checklist', data)}
+		onClose={() => (viewing = null)}
 	/>
 {/if}
 

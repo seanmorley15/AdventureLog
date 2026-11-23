@@ -13,9 +13,9 @@ import MountainScene from "./MountainScene.vue";
           Everything travel, united in one place.
         </h1>
         <p class="al-hero__lead">
-          AdventureLog is the open-source travel journal and trip planner you
-          host yourself. Keep a record of every place you've been, and plan the
-          ones you haven't reached yet.
+          AdventureLog is your ultimate travel journal and trip planner. Track
+          the places you've visited, organize your discoveries, and plan what's
+          next.
         </p>
         <div class="al-hero__actions">
           <a

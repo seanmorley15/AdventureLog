@@ -286,6 +286,11 @@ export const pageSeo: Record<string, PageSeo> = {
       "Create and use AdventureLog REST API keys for scripts and integrations with the locations, collections, and stats endpoints.",
     keywords: ["AdventureLog API keys", "REST API authentication"],
   },
+  "docs/configuration/mcp_server.md": {
+    description:
+      "Run the optional AdventureLog MCP server so AI assistants like Claude Code can create locations, build collections, and plan day by day.",
+    keywords: ["AdventureLog MCP server", "AI trip planning", "Model Context Protocol"],
+  },
   "docs/configuration/advanced_configuration.md": {
     description:
       "Advanced AdventureLog settings: rate limits, Gunicorn workers, email verification, social-only login, and first-boot world data options.",
