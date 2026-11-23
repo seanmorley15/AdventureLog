@@ -50,6 +50,11 @@ export async function saveLocation({
 				: null
 	};
 
+	// Visits are saved on their own through /api/visits/ (the Visits step). The server treats a
+	// `visits` list sent with a place as the complete set and deletes every visit left out, so
+	// a place opened from a list payload (which has no visits) would lose them all on save.
+	delete payload.visits;
+
 	const isUpdate = Boolean(locationToEdit?.id);
 
 	// Membership is set on create only. Editing a place never rewrites its collections,

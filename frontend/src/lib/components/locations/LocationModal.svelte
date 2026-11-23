@@ -229,6 +229,30 @@
 		};
 	});
 
+	// List endpoints return a slim location without visits, trails or attachments, and a copy can be
+	// stale. Opened with no visits, the Visits step would look empty, so load the full record.
+	let hydratedFor: string | null = null;
+	$effect(() => {
+		const id = locationToEdit?.id;
+		if (!id || hydratedFor === id) return;
+		if ((untrack(() => locationToEdit?.visits?.length) ?? 0) > 0) return;
+		hydratedFor = id;
+		void fetch(`/api/locations/${id}/`)
+			.then((res) => (res.ok ? res.json() : null))
+			.then((full) => {
+				if (!full || location.id !== id) return;
+				// Never replace visits the user has added since the modal opened.
+				if ((location.visits?.length ?? 0) === 0) location.visits = full.visits ?? [];
+				if ((location.trails?.length ?? 0) === 0) location.trails = full.trails ?? [];
+				if ((location.attachments?.length ?? 0) === 0)
+					location.attachments = full.attachments ?? [];
+				location.is_visited = full.is_visited ?? location.is_visited;
+			})
+			.catch(() => {
+				// Keep what the caller passed.
+			});
+	});
+
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal?.showModal();

@@ -101,6 +101,12 @@ class ConditionalWritesMixin:
             updated_at = None
         if updated_at is not None:
             response['ETag'] = etag_for_time(updated_at)
+            # The tag versions the record's own row, for If-Match. The body also carries children
+            # (a place's visits, photos, trails) that change without touching ``updated_at``, so the
+            # tag cannot vouch for the body. Without this, a browser revalidating with
+            # If-None-Match is told "304 Not Modified" (the web app's /api proxy answers that from
+            # the tag alone) and keeps showing a place without the visit just added to it.
+            response.setdefault('Cache-Control', 'private, no-store')
         return response
 
 

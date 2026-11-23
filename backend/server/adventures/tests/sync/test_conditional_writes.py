@@ -34,6 +34,16 @@ class ConditionalWriteTests(APITestCase):
         self.assertRegex(patched['ETag'], r'^"\d+"$')
         self.assertNotEqual(patched['ETag'], read['ETag'])
 
+    def test_a_tagged_read_is_never_cached(self):
+        # Adding a visit does not change the place's own updated_at, so its tag stays the same
+        # while the body changes. A cache trusting the tag would keep serving the old visits.
+        before = self.read()
+        Visit.objects.create(location=self.place, start_date='2026-11-23T00:00:00Z', end_date='2026-11-23T00:00:00Z')
+        after = self.read()
+        self.assertEqual(before['ETag'], after['ETag'])
+        self.assertEqual(len(after.data['visits']), 1)
+        self.assertEqual(after['Cache-Control'], 'private, no-store')
+
     def test_creating_returns_the_etag_too(self):
         response = self.client.post('/api/locations/', {'name': 'New'}, format='json')
 
