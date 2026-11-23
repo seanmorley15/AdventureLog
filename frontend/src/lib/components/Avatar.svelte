@@ -59,7 +59,7 @@
 	let adminMenuItem = $derived(
 		user.is_staff
 			? {
-					path: '/admin',
+					path: '/admin/',
 					icon: Shield,
 					label: 'navbar.admin_panel',
 					section: 'secondary'
@@ -167,7 +167,7 @@
 				<li>
 					<button
 						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-						onclick={() => goto(adminMenuItem.path)}
+						onclick={() => window.location.assign(adminMenuItem.path)}
 					>
 						<adminMenuItem.icon class="w-5 h-5 text-warning" />
 						<span class="text-warning font-medium">{$t(adminMenuItem.label)}</span>
