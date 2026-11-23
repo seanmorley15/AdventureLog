@@ -3,6 +3,7 @@
 	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { Category } from '#lib/types.js';
+	import { createIconSuggester } from '#lib/utils/emojiSuggest.js';
 	import { shouldFlipDropdownUp } from '#lib/utils/flipDropdown.js';
 
 	interface Props {
@@ -161,6 +162,8 @@
 		}
 	}
 
+	const suggestIcon = createIconSuggester(() => newCategory);
+
 	function handleEmojiSelect(event: CustomEvent) {
 		newCategory.icon = event.detail.unicode;
 	}
@@ -311,6 +314,7 @@
 							placeholder={$t('categories.category_name')}
 							class="input w-full h-12 text-base"
 							bind:value={newCategory.display_name}
+							oninput={suggestIcon}
 							onkeydown={handleCategoryNameKeydown}
 						/>
 						<div class="join w-full">
@@ -449,11 +453,11 @@
 
 		<div
 			tabindex="-1"
-			class="dropdown-content z-[1] w-full bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[28rem] overflow-y-auto hidden sm:block {openUpward
+			class="dropdown-content z-[1] w-full bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[32rem] overflow-hidden hidden sm:flex sm:flex-col {openUpward
 				? 'mb-1'
 				: 'mt-1'}"
 		>
-			<div class="p-4 border-b border-base-300 space-y-3">
+			<div class="shrink-0 px-5 py-4 border-b border-base-300 space-y-3">
 				<div class="flex items-center gap-2 text-sm font-semibold text-base-content/80">
 					<svg
 						class="w-4 h-4"
@@ -472,19 +476,20 @@
 					{$t('categories.add_new_category')}
 				</div>
 
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+				<div class="flex items-center gap-2">
 					<input
 						type="text"
 						placeholder={$t('categories.category_name')}
-						class="input input-sm w-full"
+						class="input input-sm min-w-0 flex-1"
 						bind:value={newCategory.display_name}
+						oninput={suggestIcon}
 						onkeydown={handleCategoryNameKeydown}
 					/>
-					<div class="join w-full">
+					<div class="join w-36 shrink-0">
 						<input
 							type="text"
 							placeholder={$t('categories.icon')}
-							class="input input-sm join-item flex-1"
+							class="input input-sm join-item min-w-0 flex-1"
 							bind:value={newCategory.icon}
 						/>
 						<button
@@ -496,12 +501,9 @@
 							😊
 						</button>
 					</div>
-				</div>
-
-				<div class="flex justify-end">
 					<button
 						type="button"
-						class="btn btn-primary btn-sm"
+						class="btn btn-primary btn-sm shrink-0"
 						onclick={createCustomCategory}
 						disabled={!newCategory.display_name.trim() || isCreatingCategory}
 					>
@@ -509,7 +511,7 @@
 							<span class="loading loading-spinner loading-xs"></span>
 						{:else}
 							<svg
-								class="w-4 h-4 mr-1"
+								class="w-4 h-4"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -531,13 +533,17 @@
 				{/if}
 
 				{#if isEmojiPickerVisible}
-					<div class="p-3 rounded-lg border border-base-300">
-						<emoji-picker onemoji-click={handleEmojiSelect}></emoji-picker>
+					<div class="overflow-hidden rounded-lg border border-base-300">
+						<emoji-picker
+							class="block w-full"
+							style="width: 100%;"
+							onemoji-click={handleEmojiSelect}
+						></emoji-picker>
 					</div>
 				{/if}
 			</div>
 
-			<div class="p-4 space-y-3">
+			<div class="flex min-h-0 flex-1 flex-col gap-3 px-5 py-4">
 				<div class="flex items-center gap-2 text-sm font-semibold text-base-content/80">
 					<svg
 						class="w-4 h-4"
@@ -566,21 +572,21 @@
 					/>
 
 					<div
-						class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto"
+						class="grid grid-cols-1 sm:grid-cols-2 gap-1 min-h-0 flex-1 overflow-x-hidden overflow-y-auto"
 						role="listbox"
 					>
 						{#each filteredCategories as category (category.id)}
 							<button
 								type="button"
-								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
+								class="btn btn-ghost justify-start h-auto min-w-0 py-2 px-3 font-normal"
 								class:btn-active={selected_category && selected_category.id === category.id}
 								onclick={() => selectCategory(category)}
 								role="option"
 								aria-selected={selected_category && selected_category.id === category.id}
 							>
-								<div class="flex items-center gap-2 w-full">
-									<span class="text-lg shrink-0">{category.icon}</span>
-									<div class="flex-1 text-left">
+								<div class="flex items-center gap-3 w-full min-w-0">
+									<span class="text-xl shrink-0">{category.icon}</span>
+									<div class="flex-1 min-w-0 text-left">
 										<div class="font-medium text-sm truncate">{category.display_name}</div>
 										<div class="text-xs text-base-content/60">
 											{category.num_locations}

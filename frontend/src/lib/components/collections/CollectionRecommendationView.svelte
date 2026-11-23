@@ -539,22 +539,6 @@
 			<div class="space-y-4">
 				<section class="card bg-base-200 shadow-xl">
 					<div class="card-body gap-3 p-4 sm:p-5">
-						<h3 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">
-							{$t('collection.find_place')}
-						</h3>
-						<PlaceSearchAdd
-							{collection}
-							{user}
-							onSelect={selectSearchedPlace}
-							onAdded={upsertLocation}
-							onDetails={(prefill) => (locationToEdit = prefill)}
-							onSearchNearby={searchAround}
-						/>
-					</div>
-				</section>
-
-				<section class="card bg-base-200 shadow-xl">
-					<div class="card-body gap-3 p-4 sm:p-5">
 						<RecommendationControls
 							bind:category
 							bind:radius={() => radiusMeters, (value) => (radius = value)}
@@ -565,6 +549,22 @@
 							{anchorOptions}
 							onAnchor={setAnchor}
 						/>
+
+						<div class="divider my-0"></div>
+
+						<div class="space-y-1.5">
+							<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
+								{$t('collection.find_place')}
+							</p>
+							<PlaceSearchAdd
+								{collection}
+								{user}
+								onSelect={selectSearchedPlace}
+								onAdded={upsertLocation}
+								onDetails={(prefill) => (locationToEdit = prefill)}
+								onSearchNearby={searchAround}
+							/>
+						</div>
 					</div>
 				</section>
 
