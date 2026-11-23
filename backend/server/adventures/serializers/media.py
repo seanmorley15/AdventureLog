@@ -151,7 +151,7 @@ class AttachmentSerializer(CustomModelSerializer):
         # The story payload never carries attachment GeoJSON, so skip the work.
         if self.context.get('story'):
             return None
-        if obj.file and obj.file.name.endswith('.gpx'):
+        if obj.file and obj.file.name.lower().endswith('.gpx'):
             return cached_gpx_geojson(obj.file)
         return None
 

@@ -65,4 +65,4 @@ Both use the stored world data only and make no geocoding requests. Without `--a
 
 | Command | What it does |
 | ------- | ------------ |
-| `activity_elevation_fix` | Recalculates elevation for activities that have a GPX file. Takes `--dry-run`, `--activity-id ID`, and `--batch-size N`. |
+| `activity_elevation_fix` | Measures elevation gain, loss, high, and low again from each activity's stored track, with the method new uploads use. Activities imported from Strava or Endurain are skipped, because their totals came from the recording device. Takes `--dry-run`, `--activity-id UUID`, and `--force` to include imported activities. |

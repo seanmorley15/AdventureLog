@@ -216,6 +216,8 @@ class BackupExporter:
             'average_speed': ser.float_or_none(activity.average_speed),
             'max_speed': ser.float_or_none(activity.max_speed),
             'average_cadence': ser.float_or_none(activity.average_cadence),
+            'average_heart_rate': ser.float_or_none(activity.average_heart_rate),
+            'max_heart_rate': ser.float_or_none(activity.max_heart_rate),
             'calories': ser.float_or_none(activity.calories),
             'start_lat': start_lat,
             'start_lng': start_lng,

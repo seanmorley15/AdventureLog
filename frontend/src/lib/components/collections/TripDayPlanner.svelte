@@ -9,6 +9,7 @@
 		type DndEvent
 	} from 'svelte-dnd-action';
 	import type {
+		Activity,
 		Checklist,
 		Collection,
 		CollectionItineraryDay,
@@ -1008,6 +1009,8 @@
 	let fileDialog = $state<{
 		kind: 'trail' | 'activity' | 'photos';
 		day: CollectionItineraryDay;
+		/** The saved activity being edited. */
+		activity?: Activity;
 	} | null>(null);
 
 	function openFile(kind: 'trail' | 'activity' | 'photos', dayIndex: number | null) {
@@ -1794,6 +1797,7 @@
 							if (result.item) upsertItems([result.item]);
 							if (result.visit) addVisits([result.visit]);
 						}}
+						onEditActivity={(activity) => (fileDialog = { kind: 'activity', day, activity })}
 					/>
 				</div>
 			</section>
@@ -1875,6 +1879,7 @@
 		bind:collection
 		day={fileDialog.day}
 		kind={fileDialog.kind}
+		activity={fileDialog.activity}
 		onClose={() => (fileDialog = null)}
 	/>
 {/if}

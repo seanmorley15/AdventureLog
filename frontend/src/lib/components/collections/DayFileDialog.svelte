@@ -19,10 +19,12 @@
 		collection: Collection;
 		day: CollectionItineraryDay;
 		kind: 'trail' | 'activity' | 'photos';
+		/** Edit this saved day activity instead of adding one. */
+		activity?: Activity | null;
 		onClose: () => void;
 	}
 
-	let { collection = $bindable(), day, kind, onClose }: Props = $props();
+	let { collection = $bindable(), day, kind, activity = null, onClose }: Props = $props();
 
 	const user = $derived(page.data?.user);
 	const userIsOwner = $derived(
@@ -67,10 +69,19 @@
 		onClose();
 	}
 
-	function rememberActivity(activity: Activity) {
-		collection.day_activities = [...(collection.day_activities ?? []), activity];
+	function rememberActivity(saved: Activity) {
+		const existing = collection.day_activities ?? [];
+		collection.day_activities = existing.some((item) => item.id === saved.id)
+			? existing.map((item) => (item.id === saved.id ? saved : item))
+			: [...existing, saved];
 		onClose();
 	}
+
+	const importedIds = $derived(
+		(collection.day_activities ?? [])
+			.filter((item) => item.day === day.id && item.external_service_id)
+			.map((item) => item.external_service_id as string)
+	);
 
 	function rememberPhotos(next: ContentImage[]) {
 		const others = (collection.day_images ?? []).filter(
@@ -105,7 +116,9 @@
 	title={kind === 'trail'
 		? $t('adventures.trails_management')
 		: kind === 'activity'
-			? $t('adventures.add_new_activity')
+			? activity
+				? $t('activities.edit_activity')
+				: $t('adventures.add_new_activity')
 			: $t('adventures.images')}
 	{subtitle}
 	{onClose}
@@ -122,6 +135,8 @@
 	{:else if kind === 'activity'}
 		<ActivityComposer
 			dayId={day.id}
+			{activity}
+			{importedIds}
 			dateStart={day.date ? `${day.date}T00:00:00` : null}
 			dateEnd={day.date ? `${day.date}T23:59:59` : null}
 			timezone={collection.timezone}
