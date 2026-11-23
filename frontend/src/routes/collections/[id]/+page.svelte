@@ -27,6 +27,11 @@
 	import CollectionAllItems from '#lib/components/collections/CollectionAllItems.svelte';
 	import TripWorkspace from '#lib/components/collections/TripWorkspace.svelte';
 	import LinkVariant from '~icons/mdi/link-variant';
+	import MapMarkerOutline from '~icons/mdi/map-marker-outline';
+	import BedOutline from '~icons/mdi/bed-outline';
+	import CarOutline from '~icons/mdi/car-outline';
+	import NoteTextOutline from '~icons/mdi/note-text-outline';
+	import CheckboxMarkedOutline from '~icons/mdi/checkbox-marked-outline';
 	import LinkItemsModal from '#lib/components/collections/LinkItemsModal.svelte';
 	import type { LinkScope } from '#lib/components/collections/LinkItemsModal.svelte';
 	import { placementType, showsDayPlanner, type PlanObjectType } from '#lib/collections/plan.js';
@@ -719,6 +724,37 @@
 			currentView !== 'discussion' &&
 			currentView !== 'recommendations'
 	);
+	// The header "Add" menu works in every view, so quick-adding never depends on where you are.
+	let canQuickAdd = $derived(
+		!!collection && canModifyCollection && !collection.is_archived && currentView !== 'read'
+	);
+
+	type CreateType = 'location' | 'transportation' | 'lodging' | 'note' | 'checklist';
+
+	function openCreate(type: CreateType) {
+		if (type === 'location') {
+			adventureToEdit = null;
+			isLocationModalOpen = true;
+		} else if (type === 'transportation') {
+			transportationToEdit = null;
+			isTransportationModalOpen = true;
+		} else if (type === 'lodging') {
+			lodgingToEdit = null;
+			isLodgingModalOpen = true;
+		} else if (type === 'note') {
+			noteToEdit = null;
+			isNoteModalOpen = true;
+		} else {
+			checklistToEdit = null;
+			isChecklistModalOpen = true;
+		}
+	}
+
+	// A daisyUI dropdown stays open while it holds focus, so drop focus once an entry is chosen.
+	function closeAddMenu() {
+		(document.activeElement as HTMLElement | null)?.blur();
+	}
+
 	let availableViews = $derived({
 		all: true,
 		plan: dayPlanner && !storyMode,
@@ -1132,9 +1168,9 @@
 			? 'min-h-screen bg-gradient-to-b from-base-200 via-base-100 to-base-200'
 			: 'flex h-[calc(100dvh-4.75rem)] min-h-0 flex-col'}
 	>
-		<header class="relative shrink-0 overflow-hidden bg-base-100">
+		<header class="relative z-[100] shrink-0 bg-base-100">
 			{#if coverImage}
-				<div class="pointer-events-none absolute inset-0" aria-hidden="true">
+				<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
 					<img src={coverImage.image} alt="" class="h-full w-full object-cover opacity-40" />
 					<div
 						class="absolute inset-0 bg-gradient-to-r from-base-100 from-25% via-base-100/90 to-base-100/65"
@@ -1211,36 +1247,72 @@
 					</div>
 				</div>
 				{#if canExportCollection}
-					<div class="flex shrink-0 gap-2">
+					<div class="flex shrink-0 items-center gap-1.5">
+						{#if canQuickAdd}
+							{@render addMenu()}
+						{/if}
 						{#if canModifyCollection}
 							<button
-								class="btn btn-outline btn-primary btn-sm gap-2"
+								type="button"
+								class="btn btn-outline btn-primary btn-sm btn-square tooltip tooltip-bottom"
+								data-tip={$t('adventures.edit_collection')}
+								aria-label={$t('adventures.edit_collection')}
 								onclick={() => (isCollectionModalOpen = true)}
 							>
 								<PencilIcon class="h-4 w-4" />
-								<span class="hidden lg:inline">{$t('adventures.edit_collection')}</span>
 							</button>
 						{/if}
 						{#if isOwner}
-							<button class="btn btn-primary btn-sm gap-2" onclick={() => openShareSheet('people')}>
+							<button
+								type="button"
+								class="btn btn-outline btn-primary btn-sm btn-square tooltip tooltip-bottom"
+								data-tip={$t('adventures.share')}
+								aria-label={$t('adventures.share')}
+								onclick={() => openShareSheet('people')}
+							>
 								<ShareVariant class="h-4 w-4" />
-								<span class="hidden lg:inline">{$t('adventures.share')}</span>
 							</button>
 						{/if}
-						<button
-							class="btn btn-outline btn-primary btn-sm gap-2"
-							onclick={() => (isSocialShareModalOpen = true)}
-						>
-							<ImageOutline class="h-4 w-4" />
-							<span class="hidden lg:inline">{$t('social_share.share_externally')}</span>
-						</button>
-						<button
-							class="btn btn-outline btn-primary btn-sm gap-2"
-							onclick={() => (isPdfDialogOpen = true)}
-						>
-							<FilePdfBox class="h-4 w-4" />
-							<span class="hidden lg:inline">{$t('adventures.export_pdf')}</span>
-						</button>
+						<div class="dropdown dropdown-end">
+							<button
+								type="button"
+								class="btn btn-outline btn-primary btn-sm btn-square tooltip tooltip-bottom"
+								data-tip={$t('collection.more')}
+								aria-label={$t('collection.more')}
+								aria-haspopup="menu"
+							>
+								<DotsHorizontal class="h-4 w-4" />
+							</button>
+							<ul
+								tabindex="-1"
+								class="dropdown-content menu z-[110] w-56 rounded-box bg-base-300 p-2 text-base-content shadow-xl"
+							>
+								<li>
+									<button
+										type="button"
+										onclick={() => {
+											closeAddMenu();
+											isSocialShareModalOpen = true;
+										}}
+									>
+										<ImageOutline class="h-4 w-4 opacity-70" />
+										{$t('social_share.share_externally')}
+									</button>
+								</li>
+								<li>
+									<button
+										type="button"
+										onclick={() => {
+											closeAddMenu();
+											isPdfDialogOpen = true;
+										}}
+									>
+										<FilePdfBox class="h-4 w-4 opacity-70" />
+										{$t('adventures.export_pdf')}
+									</button>
+								</li>
+							</ul>
+						</div>
 					</div>
 				{/if}
 			</div>
@@ -1474,6 +1546,7 @@
 										{isFolderView}
 										{filters}
 										showMapToggles
+										onAdd={showComposer ? openCreate : undefined}
 										on:openEdit={handleOpenEdit}
 									/>
 								{/snippet}
@@ -1732,76 +1805,102 @@
 {/if}
 
 <!-- Floating Action Button (FAB) - Only shown if user can modify collection -->
-{#if showComposer && !(isFolderView && currentView === 'all')}
-	<div class="fixed bottom-6 right-6 z-[999]">
-		<div class="dropdown dropdown-top dropdown-end">
-			<div
-				tabindex="0"
-				role="button"
-				aria-haspopup="menu"
-				aria-label={$t('adventures.create_new')}
-				class="btn btn-primary btn-circle w-16 h-16 shadow-2xl hover:shadow-primary/25 transition-all duration-200"
-			>
-				<Plus class="w-8 h-8" />
-			</div>
-			<ul
-				tabindex="-1"
-				class="dropdown-content z-[1] menu p-4 shadow-sm bg-base-300 text-base-content rounded-box w-52 gap-4"
-			>
+{#snippet addMenu()}
+	<div class="dropdown dropdown-end">
+		<button
+			type="button"
+			class="btn btn-outline btn-primary btn-sm btn-square tooltip tooltip-bottom"
+			data-tip={$t('collection.add')}
+			aria-label={$t('collection.add')}
+			aria-haspopup="menu"
+		>
+			<Plus class="h-4 w-4" />
+		</button>
+		<ul
+			tabindex="-1"
+			class="dropdown-content menu z-[110] w-60 gap-0.5 rounded-box bg-base-300 p-2 text-base-content shadow-xl"
+		>
+			<li>
 				<button
-					class="btn btn-primary"
-					onclick={() => (linkScope = dayPlanner ? { kind: 'ideas' } : { kind: 'collection' })}
+					type="button"
+					class="font-medium"
+					onclick={() => {
+						closeAddMenu();
+						linkScope = dayPlanner ? { kind: 'ideas' } : { kind: 'collection' };
+					}}
 				>
+					<LinkVariant class="h-4 w-4 opacity-70" />
 					{$t('itinerary.add_existing')}
 				</button>
-
-				{#if !isFolderView}
-					<button
-						class="btn btn-primary"
-						onclick={() => {
-							transportationToEdit = null;
-							isTransportationModalOpen = true;
-						}}
-					>
-						{$t('adventures.transportation')}
-					</button>
-				{/if}
-
+			</li>
+			<li class="menu-title pt-2">{$t('collection.create_new')}</li>
+			<li>
 				<button
-					class="btn btn-primary"
+					type="button"
 					onclick={() => {
-						isNoteModalOpen = true;
-						noteToEdit = null;
+						closeAddMenu();
+						openCreate('location');
 					}}
 				>
-					{$t('adventures.note')}
+					<MapMarkerOutline class="h-4 w-4 opacity-70" />
+					{$t('locations.location')}
 				</button>
-
-				<button
-					class="btn btn-primary"
-					onclick={() => {
-						checklistToEdit = null;
-						isChecklistModalOpen = true;
-					}}
-				>
-					{$t('adventures.checklist')}
-				</button>
-
-				{#if !isFolderView}
+			</li>
+			{#if !isFolderView}
+				<li>
 					<button
-						class="btn btn-primary"
+						type="button"
 						onclick={() => {
-							lodgingToEdit = null;
-							isLodgingModalOpen = true;
+							closeAddMenu();
+							openCreate('lodging');
 						}}
 					>
+						<BedOutline class="h-4 w-4 opacity-70" />
 						{$t('adventures.lodging')}
 					</button>
-				{/if}
-			</ul>
-		</div>
+				</li>
+			{/if}
+			{#if !isFolderView}
+				<li>
+					<button
+						type="button"
+						onclick={() => {
+							closeAddMenu();
+							openCreate('transportation');
+						}}
+					>
+						<CarOutline class="h-4 w-4 opacity-70" />
+						{$t('adventures.transportation')}
+					</button>
+				</li>
+			{/if}
+			<li>
+				<button
+					type="button"
+					onclick={() => {
+						closeAddMenu();
+						openCreate('note');
+					}}
+				>
+					<NoteTextOutline class="h-4 w-4 opacity-70" />
+					{$t('adventures.note')}
+				</button>
+			</li>
+			<li>
+				<button
+					type="button"
+					onclick={() => {
+						closeAddMenu();
+						openCreate('checklist');
+					}}
+				>
+					<CheckboxMarkedOutline class="h-4 w-4 opacity-70" />
+					{$t('adventures.checklist')}
+				</button>
+			</li>
+		</ul>
 	</div>
-{/if}
+{/snippet}
 
 <svelte:head>
 	<title>

@@ -43,6 +43,9 @@
 	let query = $state('');
 	let results = $state<PlaceSearchResult[]>([]);
 	let searching = $state(false);
+	let searchError = $state<string | null>(null);
+	// True once a search for the current text has finished, so "no results" is not shown early.
+	let searched = $state(false);
 	let menu = $state<HTMLDetailsElement | null>(null);
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let requestId = 0;
@@ -63,13 +66,18 @@
 		if (menu) menu.open = false;
 		query = '';
 		results = [];
+		searchError = null;
+		searched = false;
 		onAnchor(next);
 	}
 
 	function onQuery() {
 		if (timer) clearTimeout(timer);
 		const text = query.trim();
+		searchError = null;
+		searched = false;
 		if (text.length < 3) {
+			requestId++;
 			results = [];
 			searching = false;
 			return;
@@ -80,14 +88,31 @@
 			try {
 				const found = await searchPlaces(text);
 				if (id === requestId) results = found.results.slice(0, 6);
-			} catch {
-				if (id === requestId) results = [];
+			} catch (err) {
+				if (id === requestId) {
+					results = [];
+					searchError = err instanceof Error ? err.message : $t('map.search_error');
+				}
 			} finally {
-				if (id === requestId) searching = false;
+				if (id === requestId) {
+					searching = false;
+					searched = true;
+				}
 			}
 		}, 300);
 	}
+
+	// A <details> dropdown only closes through its own summary, so close it on any outside click or Esc.
+	function onWindowPointerDown(event: PointerEvent) {
+		if (menu?.open && !menu.contains(event.target as Node)) menu.open = false;
+	}
+
+	function onWindowKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape' && menu?.open) menu.open = false;
+	}
 </script>
+
+<svelte:window onpointerdown={onWindowPointerDown} onkeydown={onWindowKeydown} />
 
 <div class="space-y-3">
 	<div class="flex items-center gap-3">
@@ -126,6 +151,11 @@
 					{#if searching}<span class="loading loading-spinner loading-xs"></span>{/if}
 				</label>
 				<ul class="menu menu-sm w-full p-0">
+					{#if searchError}
+						<li class="px-3 py-2 text-xs text-error">{searchError}</li>
+					{:else if searched && !results.length}
+						<li class="px-3 py-2 text-xs opacity-60">{$t('collection.no_places_found')}</li>
+					{/if}
 					{#each results as place (place.id)}
 						<li>
 							<button
@@ -179,7 +209,9 @@
 		</details>
 	</div>
 
-	<div class="flex flex-wrap gap-1.5">
+	<div
+		class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible *:shrink-0"
+	>
 		{#each RECOMMENDATION_CATEGORIES as option (option.key)}
 			<FilterChip active={category === option.key} onclick={() => (category = option.key)}>
 				{option.emoji}
@@ -192,7 +224,9 @@
 		<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
 			{$t('map.recommendation_radius')}
 		</p>
-		<div class="flex flex-wrap gap-1.5">
+		<div
+			class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible *:shrink-0"
+		>
 			{#each radiusOptions as option (option.value)}
 				<FilterChip active={radius === option.value} onclick={() => (radius = option.value)}>
 					{option.label}

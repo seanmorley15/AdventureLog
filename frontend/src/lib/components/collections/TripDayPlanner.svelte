@@ -62,6 +62,16 @@
 	import NoteModal from '#lib/components/NoteModal.svelte';
 	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
 	import Plus from '~icons/mdi/plus';
+	import ChevronDown from '~icons/mdi/chevron-down';
+	import LinkVariant from '~icons/mdi/link-variant';
+	import MapMarkerOutline from '~icons/mdi/map-marker-outline';
+	import BedOutline from '~icons/mdi/bed-outline';
+	import CarOutline from '~icons/mdi/car-outline';
+	import NoteTextOutline from '~icons/mdi/note-text-outline';
+	import CheckboxMarkedOutline from '~icons/mdi/checkbox-marked-outline';
+	import Hiking from '~icons/mdi/hiking';
+	import RunFast from '~icons/mdi/run-fast';
+	import ImageMultipleOutline from '~icons/mdi/image-multiple-outline';
 	import RenameOutline from '~icons/mdi/rename-outline';
 	import TextBoxOutline from '~icons/mdi/text-box-outline';
 	import DotsVertical from '~icons/mdi/dots-vertical';
@@ -197,6 +207,18 @@
 		}
 		return rows;
 	});
+
+	// Ideas can get long, so only the first few show until the user asks for all of them.
+	// The budget is shared by the draggable ideas and the "not on plan" rows below them.
+	const IDEAS_PREVIEW = 5;
+	let ideasExpanded = $state(false);
+	const ideasTotal = $derived(zones.ideas.length + unplaced.length);
+	const ideasCollapsible = $derived(ideasTotal > IDEAS_PREVIEW);
+	const ideasCollapsed = $derived(ideasCollapsible && !ideasExpanded);
+	const ideasZoneLimit = $derived(ideasCollapsed ? IDEAS_PREVIEW : Infinity);
+	const unplacedLimit = $derived(
+		ideasCollapsed ? Math.max(0, IDEAS_PREVIEW - zones.ideas.length) : Infinity
+	);
 
 	function dayTitle(day: CollectionItineraryDay): string {
 		return $t('itinerary.day_n', { values: { n: day.index } });
@@ -1146,13 +1168,14 @@
 		</div>
 		<ul
 			tabindex="-1"
-			class="dropdown-content menu z-[9999] w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
+			class="dropdown-content menu z-[9999] w-60 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg max-h-[min(28rem,calc(100vh-2rem))] overflow-y-auto"
 			role="menu"
 		>
 			<li>
 				<button
 					type="button"
 					role="menuitem"
+					class="font-medium"
 					onclick={() =>
 						onOpenLink?.(
 							target.isGlobal
@@ -1162,18 +1185,21 @@
 									: { kind: 'ideas' }
 						)}
 				>
+					<LinkVariant class="h-4 w-4 opacity-70" />
 					{$t('itinerary.add_existing')}
 				</button>
 			</li>
-			<li class="menu-title">{$t('adventures.create_new')}</li>
+			<li class="menu-title pt-2">{$t('adventures.create_new')}</li>
 			{#if !target.isGlobal}
 				<li>
 					<button type="button" role="menuitem" onclick={() => startCreate('location', target)}>
+						<MapMarkerOutline class="h-4 w-4 opacity-70" />
 						{$t('adventures.location')}
 					</button>
 				</li>
 				<li>
 					<button type="button" role="menuitem" onclick={() => startCreate('lodging', target)}>
+						<BedOutline class="h-4 w-4 opacity-70" />
 						{$t('adventures.lodging')}
 					</button>
 				</li>
@@ -1183,24 +1209,30 @@
 						role="menuitem"
 						onclick={() => startCreate('transportation', target)}
 					>
+						<CarOutline class="h-4 w-4 opacity-70" />
 						{$t('adventures.transportation')}
 					</button>
 				</li>
 			{/if}
 			<li>
 				<button type="button" role="menuitem" onclick={() => startCreate('note', target)}>
+					<NoteTextOutline class="h-4 w-4 opacity-70" />
 					{$t('adventures.note')}
 				</button>
 			</li>
 			<li>
 				<button type="button" role="menuitem" onclick={() => startCreate('checklist', target)}>
+					<CheckboxMarkedOutline class="h-4 w-4 opacity-70" />
 					{$t('adventures.checklist')}
 				</button>
 			</li>
 			{#if target.dayIndex}
-				<li class="menu-title">{$t('itinerary.day_n', { values: { n: target.dayIndex } })}</li>
+				<li class="menu-title pt-2">
+					{$t('itinerary.day_n', { values: { n: target.dayIndex } })}
+				</li>
 				<li>
 					<button type="button" role="menuitem" onclick={() => openFile('trail', target.dayIndex)}>
+						<Hiking class="h-4 w-4 opacity-70" />
 						{$t('itinerary.day_trail')}
 					</button>
 				</li>
@@ -1210,11 +1242,13 @@
 						role="menuitem"
 						onclick={() => openFile('activity', target.dayIndex)}
 					>
+						<RunFast class="h-4 w-4 opacity-70" />
 						{$t('itinerary.day_activity')}
 					</button>
 				</li>
 				<li>
 					<button type="button" role="menuitem" onclick={() => openFile('photos', target.dayIndex)}>
+						<ImageMultipleOutline class="h-4 w-4 opacity-70" />
 						{$t('itinerary.day_photos')}
 					</button>
 				</li>
@@ -1248,7 +1282,13 @@
 	/>
 {/snippet}
 
-{#snippet zone(key: string, rows: PlanRow[], projected: boolean, emptyText: string)}
+{#snippet zone(
+	key: string,
+	rows: PlanRow[],
+	projected: boolean,
+	emptyText: string,
+	limit: number = Infinity
+)}
 	<div class="relative">
 		<div
 			class={['flex flex-col gap-2', rows.length === 0 && 'min-h-14']}
@@ -1256,8 +1296,13 @@
 			onconsider={(e) => handleConsider(key, e)}
 			onfinalize={(e) => handleFinalize(key, e)}
 		>
-			{#each rows as row (row.id)}
-				<div animate:flip={{ duration: FLIP_MS }} class={[isShadow(row) && 'opacity-40']}>
+			{#each rows as row, index (row.id)}
+				<!-- Rows past the limit stay in the DOM so the zone keeps its full list while dragging.
+				     A drag placeholder is never hidden, so the drop position stays visible. -->
+				<div
+					animate:flip={{ duration: FLIP_MS }}
+					class={[isShadow(row) && 'opacity-40', index >= limit && !isShadow(row) && 'hidden']}
+				>
 					{@render planRow(row, { draggable: planning, projected })}
 				</div>
 			{/each}
@@ -1429,24 +1474,42 @@
 				<div class="flex items-center gap-3">
 					<Lightbulb class="h-5 w-5 text-warning" />
 					<div class="min-w-0 flex-1">
-						<h3 class="text-lg font-bold">{$t('itinerary.ideas')}</h3>
+						<h3 class="flex items-center gap-2 text-lg font-bold">
+							{$t('itinerary.ideas')}
+							{#if ideasTotal > 0}
+								<span class="badge badge-ghost badge-sm font-medium">{ideasTotal}</span>
+							{/if}
+						</h3>
 						<p class="text-sm opacity-70">{$t('itinerary.ideas_desc')}</p>
 					</div>
 					{#if planning}
 						{@render addMenu({ dayIndex: null, isGlobal: false })}
 					{/if}
 				</div>
-				{@render zone('ideas', zones.ideas, false, $t('itinerary.ideas_empty'))}
+				{@render zone('ideas', zones.ideas, false, $t('itinerary.ideas_empty'), ideasZoneLimit)}
 				<DayFileRows bind:collection day={null} {canModify} {readMode} {anchored} />
 				{#if unplaced.length > 0}
 					<div class="space-y-2 pt-2">
 						<h4 class="text-xs font-semibold uppercase tracking-wide opacity-60">
 							{$t('itinerary.not_on_plan')}
 						</h4>
-						{#each unplaced as row (row.id)}
+						{#each unplaced.slice(0, unplacedLimit) as row (row.id)}
 							{@render planRow(row, { draggable: false, projected: false })}
 						{/each}
 					</div>
+				{/if}
+				{#if ideasCollapsible}
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm self-center gap-1"
+						aria-expanded={ideasExpanded}
+						onclick={() => (ideasExpanded = !ideasExpanded)}
+					>
+						<ChevronDown class={['h-4 w-4 transition-transform', ideasExpanded && 'rotate-180']} />
+						{ideasExpanded
+							? $t('collection.show_less')
+							: $t('collection.show_all_n', { values: { count: ideasTotal } })}
+					</button>
 				{/if}
 			</div>
 		</section>

@@ -10,6 +10,7 @@
 	import PinIcon from '~icons/mdi/map-marker';
 	import Clear from '~icons/mdi/close';
 	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
+	import PlaceSearchAdd from '#lib/components/collections/PlaceSearchAdd.svelte';
 	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
 	import ImageMapPinPopup from '#lib/components/map/ImageMapPinPopup.svelte';
 	import {
@@ -18,7 +19,7 @@
 		type ImagePinProperties
 	} from '#lib/map/imagePins.js';
 	import { t } from 'svelte-i18n';
-	import type { Collection, Location, User } from '#lib/types.js';
+	import type { Collection, Location, PlaceSearchResult, User } from '#lib/types.js';
 	import { dayPinColor, dayStopPath, pinCoversDay, type PlanPin } from '#lib/collections/plan.js';
 	import {
 		CatalogFilters,
@@ -128,6 +129,10 @@
 	let createModalOpen = $state(false);
 	let initialLatLng: { lat: number; lng: number } | null = $state(null);
 	let newMarker: { lngLat: { lng: number; lat: number } } | null = $state(null);
+	// A place picked in the search box, and the prefilled form when the user wants to edit it first.
+	let searchedPlace: PlaceSearchResult | null = $state(null);
+	let detailsPrefill: Location | null = $state(null);
+	let placeSearch: ReturnType<typeof PlaceSearchAdd> | undefined = $state();
 	let newLatitude: number | null = $state(null);
 	let newLongitude: number | null = $state(null);
 
@@ -559,7 +564,27 @@
 		newLatitude = e.detail.lngLat.lat;
 	}
 
+	function handlePlaceSelect(place: PlaceSearchResult | null) {
+		searchedPlace = place;
+		if (!place) return;
+		// A map click and a searched place are two ways to point at the same thing, so keep one.
+		clearNewMarker();
+		mapCenterCoords = [place.lng, place.lat];
+		mapZoom = 14;
+	}
+
+	function handlePlaceAdded(created: Location) {
+		upsertLocation(created);
+		const lat = parseNumber(created.latitude);
+		const lon = parseNumber(created.longitude);
+		if (lat !== null && lon !== null) {
+			mapCenterCoords = [lon, lat];
+			mapZoom = 14;
+		}
+	}
+
 	function openCreateModal() {
+		detailsPrefill = null;
 		initialLatLng = newMarker ? { lat: newMarker.lngLat.lat, lng: newMarker.lngLat.lng } : null;
 		createModalOpen = true;
 	}
@@ -606,7 +631,9 @@
 		}
 
 		createModalOpen = false;
+		detailsPrefill = null;
 		clearNewMarker();
+		placeSearch?.clear();
 	}
 
 	function getMarkerColorClass(props: MarkerProperties) {
@@ -1216,14 +1243,70 @@
 				</Marker>
 			{/if}
 
+			{#if canModify && searchedPlace}
+				<Marker lngLat={[searchedPlace.lng, searchedPlace.lat]} class="map-pin">
+					<div
+						class="map-pin-hit grid h-10 w-10 place-items-center rounded-full border-2 border-base-100 bg-accent text-accent-content shadow-lg"
+					>
+						<PinIcon class="h-5 w-5" />
+					</div>
+				</Marker>
+			{/if}
+
 			{#if !clusterEnabled}
 				<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
 			{/if}
 		{/snippet}
 	</FullMap>
 
+	{#if canModify}
+		<div
+			class={[
+				'absolute left-3 top-3 z-30',
+				pinStyleToggle && planPins.length > 0
+					? 'w-[calc(100%-10rem)] sm:w-80'
+					: 'w-[calc(100%-1.5rem)] sm:w-80'
+			]}
+		>
+			<PlaceSearchAdd
+				bind:this={placeSearch}
+				{collection}
+				{user}
+				onSelect={handlePlaceSelect}
+				onAdded={handlePlaceAdded}
+				onDetails={(prefill) => {
+					detailsPrefill = prefill;
+					createModalOpen = true;
+				}}
+			/>
+		</div>
+	{/if}
+
+	{#if canModify && embedded && newMarker}
+		<div
+			class="absolute bottom-8 left-3 z-20 flex items-center gap-2 rounded-box border border-base-300 bg-base-100/95 p-2 pl-3 shadow-lg backdrop-blur-lg"
+		>
+			<PinIcon class="h-4 w-4 shrink-0 text-primary" />
+			<span class="text-xs tabular-nums text-base-content/70">
+				{newLatitude?.toFixed(4)}, {newLongitude?.toFixed(4)}
+			</span>
+			<button type="button" class="btn btn-primary btn-xs gap-1" onclick={openCreateModal}>
+				<Plus class="h-3.5 w-3.5" />
+				{$t('collection.add_location_here')}
+			</button>
+			<button
+				type="button"
+				class="btn btn-ghost btn-xs btn-square"
+				aria-label={$t('adventures.clear')}
+				onclick={clearNewMarker}
+			>
+				<Clear class="h-4 w-4" />
+			</button>
+		</div>
+	{/if}
+
 	{#if selectedDay != null}
-		<div class="pointer-events-none absolute left-3 top-3 z-20">
+		<div class={['pointer-events-none absolute left-3 z-20', canModify ? 'top-14' : 'top-3']}>
 			<button
 				type="button"
 				class={[
@@ -1263,8 +1346,13 @@
 	<NewLocationModal
 		on:create={handleLocationCreated}
 		on:save={handleLocationSaved}
-		on:close={() => (createModalOpen = false)}
+		on:close={() => {
+			createModalOpen = false;
+			detailsPrefill = null;
+		}}
 		{initialLatLng}
+		locationToEdit={detailsPrefill}
+		skipQuickStart={detailsPrefill !== null}
 		{collection}
 		{user}
 	/>

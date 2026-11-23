@@ -3,7 +3,14 @@
 	import { untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { Marker } from 'svelte-maplibre';
-	import type { Collection, Location, Lodging, Recommendation, User } from '#lib/types.js';
+	import type {
+		Collection,
+		Location,
+		Lodging,
+		PlaceSearchResult,
+		Recommendation,
+		User
+	} from '#lib/types.js';
 	import FullMap from '#lib/components/map/FullMap.svelte';
 	import MapNearbyRadiusLayer from '#lib/components/map/MapNearbyRadiusLayer.svelte';
 	import MapRecommendationsLayer from '#lib/components/map/MapRecommendationsLayer.svelte';
@@ -16,6 +23,9 @@
 	import RecommendationListItem from '#lib/components/recommendations/RecommendationListItem.svelte';
 	import type { DayOption } from '#lib/components/recommendations/RecommendationAddButton.svelte';
 	import LocationModal from '#lib/components/locations/LocationModal.svelte';
+	import PlaceSearchAdd from '#lib/components/collections/PlaceSearchAdd.svelte';
+	import CategoryDropdown from '#lib/components/CategoryDropdown.svelte';
+	import { placeCategory } from '#lib/collections/place-category.svelte.js';
 	import LodgingModal from '#lib/components/lodging/LodgingModal.svelte';
 	import { normalizeBasemapType } from '#lib';
 	import { addToast } from '#lib/toasts.js';
@@ -41,6 +51,7 @@
 	import Compass from '~icons/mdi/compass';
 	import Lightbulb from '~icons/mdi/lightbulb-outline';
 	import ChevronLeft from '~icons/mdi/chevron-left';
+	import PinIcon from '~icons/mdi/map-marker';
 
 	interface Props {
 		collection: Collection;
@@ -73,6 +84,8 @@
 		};
 	};
 	let locationToEdit = $state<Location | null>(null);
+	// The place picked in "Find a specific place", shown on the map until it is added or cleared.
+	let searchedPlace = $state<PlaceSearchResult | null>(null);
 	let lodgingToEdit = $state<Lodging | null>(null);
 	let listScroller = $state<HTMLElement | null>(null);
 	let savedScroll = 0;
@@ -296,6 +309,8 @@
 
 	function selectRecommendation(item: Recommendation) {
 		if (!selected) savedScroll = listScroller?.scrollTop ?? 0;
+		// The search box is replaced by the detail view, so its pick goes with it.
+		searchedPlace = null;
 		selected = item;
 		focusCenter = [item.longitude, item.latitude];
 		focusZoom = 14;
@@ -342,11 +357,32 @@
 		}
 	}
 
+	function selectSearchedPlace(place: PlaceSearchResult | null) {
+		searchedPlace = place;
+		if (!place) return;
+		focusCenter = [place.lng, place.lat];
+		focusZoom = 15;
+	}
+
+	function searchAround(place: PlaceSearchResult) {
+		setAnchor({
+			kind: 'point',
+			id: `search-${place.id}`,
+			label: place.name,
+			lng: place.lng,
+			lat: place.lat
+		});
+	}
+
 	async function add(item: Recommendation, opts: { date?: string; lodging?: boolean } = {}) {
 		if (busyIds.has(item.id)) return;
 		setBusy(item.id, true);
 		try {
-			const payload = await resolveQuickAddPayload(recommendationToQuickAddPayload(item));
+			const payload = await resolveQuickAddPayload({
+				...recommendationToQuickAddPayload(item),
+				// Lodging has no category; only places are filed under one.
+				category: opts.lodging ? null : placeCategory.current
+			});
 			const options = { collectionId: collection.id, itineraryDate: opts.date ?? null };
 			const created = opts.lodging
 				? await quickAddLodging(payload, options)
@@ -365,7 +401,7 @@
 					: $t('recomendations.added_to_ideas', { values: { name: item.name } })
 			);
 		} catch (err) {
-			addToast('error', err instanceof Error ? err.message : $t('map.search_error'));
+			addToast('error', err instanceof Error ? err.message : $t('collection.add_failed'));
 		} finally {
 			setBusy(item.id, false);
 		}
@@ -393,6 +429,7 @@
 		if (!event.detail?.id) return;
 		upsertLocation(event.detail);
 		locationToEdit = null;
+		searchedPlace = null;
 	}
 
 	function keepLodging(event: CustomEvent<Lodging>) {
@@ -427,6 +464,15 @@
 					{addedIds}
 					on:select={(event) => selectRecommendation(event.detail.item)}
 				/>
+				{#if searchedPlace}
+					<Marker lngLat={[searchedPlace.lng, searchedPlace.lat]}>
+						<div
+							class="grid h-9 w-9 place-items-center rounded-full border-2 border-base-100 bg-accent text-accent-content shadow-lg"
+						>
+							<PinIcon class="h-5 w-5" />
+						</div>
+					</Marker>
+				{/if}
 				{#each collectionPoints as point (point.id)}
 					<Marker lngLat={point.lngLat}>
 						<div
@@ -493,6 +539,22 @@
 			<div class="space-y-4">
 				<section class="card bg-base-200 shadow-xl">
 					<div class="card-body gap-3 p-4 sm:p-5">
+						<h3 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">
+							{$t('collection.find_place')}
+						</h3>
+						<PlaceSearchAdd
+							{collection}
+							{user}
+							onSelect={selectSearchedPlace}
+							onAdded={upsertLocation}
+							onDetails={(prefill) => (locationToEdit = prefill)}
+							onSearchNearby={searchAround}
+						/>
+					</div>
+				</section>
+
+				<section class="card bg-base-200 shadow-xl">
+					<div class="card-body gap-3 p-4 sm:p-5">
 						<RecommendationControls
 							bind:category
 							bind:radius={() => radiusMeters, (value) => (radius = value)}
@@ -513,9 +575,16 @@
 							<h3 class="min-w-0 flex-1 text-lg font-bold">
 								{$t('map.recommendations_count', { values: { count: visible.length } })}
 							</h3>
-							{#if hasSearched}
-								<span class="badge badge-ghost badge-sm font-medium">{recommendations.length}</span>
+							{#if hasSearched && recommendations.length !== visible.length}
+								<span class="badge badge-ghost badge-sm font-medium">
+									{$t('collection.of_total', { values: { total: recommendations.length } })}
+								</span>
 							{/if}
+						</div>
+
+						<div>
+							<span class="field-label">{$t('collection.save_to_category')}</span>
+							<CategoryDropdown bind:selected_category={placeCategory.current} />
 						</div>
 
 						{#if error}

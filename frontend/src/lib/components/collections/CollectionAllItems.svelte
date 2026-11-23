@@ -9,6 +9,7 @@
 	import CollectionCatalogFilters from './CollectionCatalogFilters.svelte';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import MapMarker from '~icons/mdi/map-marker';
+	import Plus from '~icons/mdi/plus';
 	import Airplane from '~icons/mdi/airplane';
 	import Bed from '~icons/mdi/bed';
 	import NoteTextOutline from '~icons/mdi/note-text-outline';
@@ -28,12 +29,16 @@
 
 	const dispatch = createEventDispatcher();
 
+	type AddType = 'location' | 'transportation' | 'lodging' | 'note' | 'checklist';
+
 	interface Props {
 		collection: Collection;
 		user: any;
 		isFolderView?: boolean;
 		filters?: CatalogFilters;
 		showMapToggles?: boolean;
+		/** Opens the create flow for a type; the "new" buttons only show when this is set. */
+		onAdd?: (type: AddType) => void;
 	}
 
 	let {
@@ -41,7 +46,8 @@
 		user,
 		isFolderView = false,
 		filters = new CatalogFilters(),
-		showMapToggles = false
+		showMapToggles = false,
+		onAdd
 	}: Props = $props();
 
 	// Generic handlers for editing and deleting items in the collection.
@@ -168,6 +174,15 @@
 	);
 </script>
 
+{#snippet addButton(type: AddType, label: string)}
+	{#if onAdd}
+		<button type="button" class="btn btn-ghost btn-sm gap-1" onclick={() => onAdd(type)}>
+			<Plus class="h-4 w-4" />
+			{label}
+		</button>
+	{/if}
+{/snippet}
+
 <div class="space-y-4 pb-24">
 	<CollectionCatalogFilters
 		{filters}
@@ -187,6 +202,16 @@
 				>
 					{$t('collections.no_items')}
 				</p>
+				{#if onAdd}
+					<button
+						type="button"
+						class="btn btn-primary btn-sm mx-auto gap-1"
+						onclick={() => onAdd('location')}
+					>
+						<Plus class="h-4 w-4" />
+						{$t('collection.new_location')}
+					</button>
+				{/if}
 			</div>
 		</section>
 	{/if}
@@ -204,6 +229,7 @@
 							{sortedLocations.length}/{collection.locations.length}
 						</span>
 					</div>
+					{@render addButton('location', $t('collection.new_location'))}
 				</div>
 
 				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
@@ -249,6 +275,7 @@
 							{filteredTransportations.length}/{collection.transportations.length}
 						</span>
 					</div>
+					{@render addButton('transportation', $t('collection.new_transportation'))}
 				</div>
 
 				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
@@ -289,6 +316,7 @@
 							{filteredLodging.length}/{collection.lodging.length}
 						</span>
 					</div>
+					{@render addButton('lodging', $t('collection.new_lodging'))}
 				</div>
 
 				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
@@ -329,6 +357,7 @@
 							{filteredNotes.length}/{collection.notes.length}
 						</span>
 					</div>
+					{@render addButton('note', $t('collection.new_note'))}
 				</div>
 
 				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
@@ -369,6 +398,7 @@
 							{filteredChecklists.length}/{collection.checklists.length}
 						</span>
 					</div>
+					{@render addButton('checklist', $t('collection.new_checklist'))}
 				</div>
 
 				<div class="grid auto-rows-fr grid-cols-1 items-stretch gap-4 sm:grid-cols-2">
