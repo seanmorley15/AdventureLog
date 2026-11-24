@@ -50,7 +50,10 @@ Built for travelers who want to track, plan, and remember their travel experienc
 ## See it in action
 
 <p align="center">
-  <img src="brand/screenshots/map.png" alt="Interactive world map with location pins and visit filters" width="100%" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/map-dark.webp" />
+    <img src="brand/screenshots/map-light.webp" alt="Interactive world map with location pins and visit filters" width="100%" />
+  </picture>
   <br />
   <em>Interactive world map — every location, visit status, and filter at a glance</em>
 </p>
@@ -58,12 +61,18 @@ Built for travelers who want to track, plan, and remember their travel experienc
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="brand/screenshots/adventures.png" alt="Location list with filters and categories" width="100%" />
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/locations-dark.webp" />
+        <img src="brand/screenshots/locations-light.webp" alt="Location list with filters and categories" width="100%" />
+      </picture>
       <br />
       <strong>Locations</strong> — browse, filter, categorize &amp; organize
     </td>
     <td width="50%" align="center">
-      <img src="brand/screenshots/dashboard.png" alt="Travel statistics dashboard" width="100%" />
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/dashboard-dark.webp" />
+        <img src="brand/screenshots/dashboard-light.webp" alt="Travel statistics dashboard" width="100%" />
+      </picture>
       <br />
       <strong>Dashboard</strong> — travel stats, progress &amp; milestones
     </td>
@@ -71,7 +80,10 @@ Built for travelers who want to track, plan, and remember their travel experienc
 </table>
 
 <p align="center">
-  <img src="brand/screenshots/itinerary.png" alt="Trip itinerary planner with daily activities and lodging" width="520" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/trip-dark.webp" />
+    <img src="brand/screenshots/trip-light.webp" alt="Trip itinerary planner with daily activities and lodging" width="100%" />
+  </picture>
   <br />
   <strong>Trip planning</strong> — itineraries, notes &amp; daily activities
 </p>
@@ -79,12 +91,18 @@ Built for travelers who want to track, plan, and remember their travel experienc
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="brand/screenshots/countries.png" alt="World travel book with countries visited" width="100%" />
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/world-dark.webp" />
+        <img src="brand/screenshots/world-light.webp" alt="World travel book with countries visited" width="100%" />
+      </picture>
       <br />
       <strong>World travel</strong> — countries, regions &amp; cities
     </td>
     <td width="50%" align="center">
-      <img src="brand/screenshots/trip_stats.png" alt="Trip statistics with geographic breakdown and timeline" width="100%" />
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/trip-stats-dark.webp" />
+        <img src="brand/screenshots/trip-stats-light.webp" alt="Trip statistics with geographic breakdown and timeline" width="100%" />
+      </picture>
       <br />
       <strong>Trip stats</strong> — costs, geography &amp; per-trip milestones
     </td>
@@ -96,17 +114,26 @@ Built for travelers who want to track, plan, and remember their travel experienc
 <br />
 
 <p align="center">
-  <img src="brand/screenshots/details.png" alt="Location detail view with notes and rating" width="100%" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/place-dark.webp" />
+    <img src="brand/screenshots/place-light.webp" alt="Location detail view with notes and rating" width="100%" />
+  </picture>
   <br /><em>Rich location details — dates, notes, ratings &amp; visit history</em>
 </p>
 
 <p align="center">
-  <img src="brand/screenshots/map-satellite.png" alt="3D satellite map view of travel locations" width="100%" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/map-satellite-dark.webp" />
+    <img src="brand/screenshots/map-satellite-light.webp" alt="3D satellite map view of travel locations" width="100%" />
+  </picture>
   <br /><em>3D satellite view — explore your travel history immersively</em>
 </p>
 
 <p align="center">
-  <img src="brand/screenshots/regions.png" alt="Regional map for tracking sub-country travel" width="100%" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/screenshots/regions-dark.webp" />
+    <img src="brand/screenshots/regions-light.webp" alt="Regional map for tracking sub-country travel" width="100%" />
+  </picture>
   <br /><em>Regions — drill into states, provinces &amp; territories</em>
 </p>
 
