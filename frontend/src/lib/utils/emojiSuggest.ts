@@ -49,7 +49,9 @@ export function createIconSuggester(getForm: () => { display_name: string; icon:
 					lastAuto = emoji;
 				}
 			} catch (error) {
-				console.error('Emoji suggestion failed', error);
+				// Optional nicety: emoji data comes from a CDN, so offline/self-hosted installs land
+				// here. Not a UI fault, so warn rather than error.
+				console.warn('Emoji suggestion unavailable', error);
 			}
 		}, 250);
 	};
