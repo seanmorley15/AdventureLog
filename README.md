@@ -197,7 +197,7 @@ Or follow the [Standard Deployment guide](https://adventurelog.app/docs/install/
 | Run on Kubernetes                     | [Kustomize guide](https://adventurelog.app/docs/install/kustomize.html)           |
 | Learn the app                         | [Usage guide](https://adventurelog.app/docs/usage/usage.html)                     |
 
-> Default login is `admin` / `admin` — it's recommended to change it immediately after first sign-in.
+> **First login:** the username is `admin`. The password is generated on first start and printed once in the logs (`docker compose logs app | grep -A3 "Admin username"`), or shown by the Quick Start Installer. There is no default password. See [First Steps](https://adventurelog.app/docs/install/first_steps.html).
 
 ## Tech stack
 
