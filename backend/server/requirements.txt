@@ -1,6 +1,6 @@
 Django==5.2.19
 djangorestframework>=3.18.3,<3.19
-django-allauth==0.63.6
+django-allauth==65.14.1
 django-money==3.6.2
 babel==2.18.0  # transitive via py-moneyed; currency names feed model choices, so a bump needs a migration
 django-invitations==2.1.0
