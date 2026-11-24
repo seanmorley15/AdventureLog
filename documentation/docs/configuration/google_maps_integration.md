@@ -13,10 +13,6 @@ By default AdventureLog uses OpenStreetMap to search for places and look up addr
 5. Go to **Keys & Credentials**, choose **Create credentials → API key**, and copy the key.
 6. Restrict the key to the **Geocoding API** and the **Places API (New)**. See [Securing the API key](#securing-the-api-key).
 
-::: tip
-AdventureLog versions _v0.10.0 and lower_ use the legacy **Places API** instead of **Places API (New)**.
-:::
-
 ## Server setup
 
 Add the key to your env file (`.env` for Standard Deployment, `.env.advanced` for Advanced, where it belongs to the backend `server` service), then restart:
@@ -37,16 +33,12 @@ GOOGLE_MAPS_API_KEY=your_api_key
 
 ## Securing the API key
 
-Photos in search results and recommendations are loaded by the browser from a Google URL that contains the API key, so anyone who can use your AdventureLog server can see the key. Restrict it.
+The key stays on your server. Search, recommendations and photos all go through AdventureLog's backend, so the key is never sent to a browser. Photos are fetched by the server and only signed-in users can request them. Still, restrict the key so it is useless if it leaks.
 
 Edit the key under **Keys & Credentials** and set:
 
 - **APIs**: restrict the key to the **Geocoding API** and the **Places API (New)**.
-- **Application**: optionally, restrict the key to the public **IP address(es)** of your server.
-
-::: info
-Photos in search results and recommendations are loaded directly by the browser. With an IP address restriction, photos only load for users whose public IP address is on the list (for example, users on the same network as the server); search and recommendations still work for everyone.
-:::
+- **Application**: restrict the key to the public **IP address** of your server. Every request comes from there, so this works for all users.
 
 ## Costs
 

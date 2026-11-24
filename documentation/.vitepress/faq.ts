@@ -55,7 +55,7 @@ export const faq: FaqItem[] = [
   {
     question: "Can I share trips with other people?",
     answer:
-      "Yes. Collections can be shared with other users on your instance so you can plan a trip together, and you can make individual locations or collections public.",
+      "Yes. Trips can be shared with other users on your instance as editors or viewers, or with a guest link that needs no account, so you can plan together. You can also publish a trip as a read-only travel story and make individual locations public.",
     links: [{ text: "Usage guide", href: "/docs/usage/usage" }],
   },
 ];

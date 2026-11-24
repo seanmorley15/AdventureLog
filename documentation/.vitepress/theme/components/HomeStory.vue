@@ -58,7 +58,7 @@ const chapters: Chapter[] = [
       {
         shot: "collections",
         title: "Trips and wish lists",
-        text: "Keep dated trips next to open-ended collections, like a bucket list or the national parks you still want to see.",
+        text: "Keep day-by-day trips next to folders for open-ended lists, like a bucket list or the national parks you still want to see.",
       },
       {
         shot: "calendar",
@@ -66,7 +66,7 @@ const chapters: Chapter[] = [
         text: "See stops, transport, and lodging laid out by day, and download the calendar for the calendar app you already use.",
       },
     ],
-    note: "Planning with other people? Share a trip so your travel companions can edit it with you, or send a link to anyone who just needs to follow along.",
+    note: "Planning with other people? Share a trip so your travel companions can edit it with you, send a guest link to anyone who just needs to follow along, or publish it as a travel story.",
   },
   {
     id: "map",

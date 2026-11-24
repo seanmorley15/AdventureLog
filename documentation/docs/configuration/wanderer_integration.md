@@ -15,10 +15,10 @@ AdventureLog's server connects to Wanderer, so use an address that server can re
 ## Use it
 
 1. Open a location to edit it, and go to the **Media** tab.
-2. Under **Trail Management**, choose **Add Wanderer Trail**.
+2. Under **Trails Management**, choose **Add Wanderer Trail**.
 3. Search for the trail by name, and choose the link icon on the result.
 
-The trail joins the location's trails, with its distance and elevation gain, and an **Open in Wanderer** link.
+The trail joins the location's trails, with its distance and elevation gain, and a **View Trail** link back to Wanderer.
 
 ## Troubleshooting
 

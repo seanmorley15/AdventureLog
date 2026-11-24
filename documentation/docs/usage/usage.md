@@ -37,7 +37,7 @@ AdventureLog keeps a record of the places you've been and helps you plan the one
 | **Tag** | A free-form label. A location can have many. |
 | **Trail** | A route linked to a location, such as a hike. |
 | **Activity** | What you did on a visit, such as a hike or a ride, with a GPS track. |
-| **Collection** | A group of locations. With dates it's a **trip**; without, it's a **folder**. |
+| **Collection** | A group of locations. A **trip** plans an itinerary day by day; a **folder** just groups locations, with no dates. |
 | **Lodging**, **Transportation** | Where you stay and how you travel on a trip, with booking details. |
 | **Note**, **Checklist** | Free text and to-do lists inside a trip, optionally on a given day. |
 | **Travel story** | A read-only page of a trip to share with others. |

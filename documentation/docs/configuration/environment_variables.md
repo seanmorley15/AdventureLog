@@ -2,12 +2,12 @@
 
 AdventureLog configuration is driven by environment variables. The file you edit depends on your install type:
 
-| Install type | Env file | Compose file |
-| ------------ | -------- | ------------ |
-| Standard Deployment | `.env` | `docker-compose.yml` |
+| Install type        | Env file        | Compose file                         |
+| ------------------- | --------------- | ------------------------------------ |
+| Standard Deployment | `.env`          | `docker-compose.yml`                 |
 | Advanced Deployment | `.env.advanced` | `docker/docker-compose.advanced.yml` |
-| Traefik | `.env.advanced` | `docker/docker-compose.traefik.yaml` |
-| Development | `.env` | `docker/docker-compose.dev.yml` |
+| Traefik             | `.env.advanced` | `docker/docker-compose.traefik.yaml` |
+| Development         | `.env`          | `docker/docker-compose.dev.yml`      |
 
 Validate before deploying:
 
@@ -27,161 +27,168 @@ Standard Deployment only requires `POSTGRES_PASSWORD` in `.env`. URLs, `SECRET_K
 
 These variables control how the browser, SvelteKit SSR, and Django talk to each other.
 
-| Variable | Required | Used by | Description | Default |
-| -------- | -------- | ------- | ----------- | ------- |
-| `SITE_URL` | No | Both | Single public URL when frontend and backend share one domain. Derives `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS` when those are unset. | — |
-| `PUBLIC_SERVER_URL` | Yes | Frontend SSR | Internal backend URL for server-side requests. **Keep `http://server:8000` in Advanced Deployment.** Standard Deployment uses `http://127.0.0.1:8000`. | `http://server:8000` |
-| `ORIGIN` | Sometimes | Frontend | Public frontend origin (needed without HTTPS). | `http://localhost:8015` |
-| `FRONTEND_URL` | Yes | Backend | Public frontend URL for emails and redirects. | `http://localhost:8015` |
-| `PUBLIC_URL` | Yes | Backend | Public backend URL for media and OAuth callbacks. | `http://localhost:8016` |
-| `CSRF_TRUSTED_ORIGINS` | Yes | Backend | Comma-separated browser origins allowed to submit forms. | `http://localhost:8015,http://localhost:8016` |
-| `FRONTEND_PORT` | Yes | Compose | Host port for the frontend container. | `8015` |
-| `BACKEND_PORT` | Yes | Compose | Host port for the backend container. | `8016` |
-| `HOST_PORT` | No | Standard Deployment compose | Host port mapped to the single-container stack. | `8015` |
-| `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size (such as a backup restore): bytes, or with a `K`, `M` or `G` suffix, or `Infinity`. Standard Deployment applies it to its built-in nginx too, and defaults to `100M`. | `Infinity` |
+| Variable               | Required  | Used by                     | Description                                                                                                                                                                               | Default                                       |
+| ---------------------- | --------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `SITE_URL`             | No        | Both                        | Single public URL when frontend and backend share one domain. Derives `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS` when those are unset.                            | —                                             |
+| `PUBLIC_SERVER_URL`    | Yes       | Frontend SSR                | Internal backend URL for server-side requests. **Keep `http://server:8000` in Advanced Deployment.** Standard Deployment uses `http://127.0.0.1:8000`.                                    | `http://server:8000`                          |
+| `ORIGIN`               | Sometimes | Frontend                    | Public frontend origin (needed without HTTPS).                                                                                                                                            | `http://localhost:8015`                       |
+| `FRONTEND_URL`         | Yes       | Backend                     | Public frontend URL for emails and redirects.                                                                                                                                             | `http://localhost:8015`                       |
+| `PUBLIC_URL`           | Yes       | Backend                     | Public backend URL for media and OAuth callbacks.                                                                                                                                         | `http://localhost:8016`                       |
+| `CSRF_TRUSTED_ORIGINS` | Yes       | Backend                     | Comma-separated browser origins allowed to submit forms.                                                                                                                                  | `http://localhost:8015,http://localhost:8016` |
+| `FRONTEND_PORT`        | Yes       | Compose                     | Host port for the frontend container.                                                                                                                                                     | `8015`                                        |
+| `BACKEND_PORT`         | Yes       | Compose                     | Host port for the backend container.                                                                                                                                                      | `8016`                                        |
+| `HOST_PORT`            | No        | Standard Deployment compose | Host port mapped to the single-container stack.                                                                                                                                           | `8015`                                        |
+| `BODY_SIZE_LIMIT`      | Yes       | Frontend                    | Maximum upload size (such as a backup restore): bytes, or with a `K`, `M` or `G` suffix, or `Infinity`. Standard Deployment applies it to its built-in nginx too, and defaults to `100M`. | `Infinity`                                    |
 
 See [Advanced Deployment](../install/docker.md#urls) for what each URL setting does.
 
 ## Database (PostgreSQL / PostGIS)
 
-| Variable | Required | Description | Default |
-| -------- | -------- | ----------- | ------- |
-| `PGHOST` | Yes | Database hostname inside Docker network. | `db` |
-| `POSTGRES_DB` / `PGDATABASE` | Yes | Database name. | `database` |
-| `POSTGRES_USER` / `PGUSER` | Yes | Database user. | `adventure` |
-| `POSTGRES_PASSWORD` / `PGPASSWORD` | Yes | Database password. Change in production. | `changeme123` |
-| `PG_CONN_MAX_AGE` | No | Seconds to reuse database connections between requests (`0` closes after each request). When `DEBUG` is on, this is forced to `0` unless the variable is set explicitly — Django's `runserver` cannot reuse connections across requests. | `300` |
+| Variable                           | Required | Description                                                                                                                                                                                                                              | Default       |
+| ---------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `PGHOST`                           | Yes      | Database hostname inside Docker network.                                                                                                                                                                                                 | `db`          |
+| `POSTGRES_DB` / `PGDATABASE`       | Yes      | Database name.                                                                                                                                                                                                                           | `database`    |
+| `POSTGRES_USER` / `PGUSER`         | Yes      | Database user.                                                                                                                                                                                                                           | `adventure`   |
+| `POSTGRES_PASSWORD` / `PGPASSWORD` | Yes      | Database password. Change in production.                                                                                                                                                                                                 | `changeme123` |
+| `PGPORT`                           | No       | Database port.                                                                                                                                                                                                                           | `5432`        |
+| `PG_CONN_MAX_AGE`                  | No       | Seconds to reuse database connections between requests (`0` closes after each request). When `DEBUG` is on, this is forced to `0` unless the variable is set explicitly — Django's `runserver` cannot reuse connections across requests. | `300`         |
 
 ## Django core
 
-| Variable | Required | Description | Default |
-| -------- | -------- | ----------- | ------- |
-| `SECRET_KEY` | Yes | Django secret key. Auto-generated in Standard Deployment if unset. | `changeme123` |
-| `DEBUG` | No | Enable debug mode. Use `False` in production. | `False` |
-| `DJANGO_ADMIN_USERNAME` | Yes | First-boot superuser username. | `admin` |
-| `DJANGO_ADMIN_PASSWORD` | No | First-boot superuser password. Leave empty, or set a weak one such as `admin`, and a random password is generated on first start and printed once in the logs (`docker compose logs app \| grep -A3 "Admin username"`). | empty (generated) |
-| `DJANGO_ADMIN_EMAIL` | Yes | First-boot superuser email. | `admin@example.com` |
-| `GUNICORN_WORKERS` | No | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers. | `2` |
-| `GUNICORN_THREADS` | No | Threads per Gunicorn worker. Each thread holds its own database connection. | `4` |
-| `GUNICORN_TIMEOUT` | No | Seconds a Gunicorn worker may spend on one request before it is restarted. | `120` |
-| `GUNICORN_MAX_REQUESTS` | No | Requests after which a Gunicorn worker is restarted, so memory grown by a heavy request is returned. `0` never restarts. Each restart can fail one in-flight request, so keep it high. | `10000` |
-| `WORKER_ENABLED` | No | Set to `false` to idle the [background worker](background_jobs.md) in this container. | `true` |
-| `WORKER_CONCURRENCY` | No | Background jobs the worker runs at the same time. | `3` |
-| `JOB_RESULT_TTL_HOURS` | No | Hours a finished export stays downloadable. | `24` |
-| `SKIP_WORLD_DATA` | No | Set to `1` to skip the first-boot `download_countries` import (saves RAM; world travel data loads later). | unset |
+| Variable                | Required | Description                                                                                                                                                                                                             | Default             |
+| ----------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| `SECRET_KEY`            | Yes      | Django secret key. Auto-generated in Standard Deployment if unset.                                                                                                                                                      | `changeme123`       |
+| `DEBUG`                 | No       | Enable debug mode. Use `False` in production.                                                                                                                                                                           | `False`             |
+| `DJANGO_ADMIN_USERNAME` | Yes      | First-boot superuser username.                                                                                                                                                                                          | `admin`             |
+| `DJANGO_ADMIN_PASSWORD` | No       | First-boot superuser password. Leave empty, or set a weak one such as `admin`, and a random password is generated on first start and printed once in the logs (`docker compose logs app \| grep -A3 "Admin username"`). | empty (generated)   |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | First-boot superuser email.                                                                                                                                                                                             | `admin@example.com` |
+| `GUNICORN_WORKERS`      | No       | Gunicorn worker processes. Use `1` on small hosts; `(2 × CPU) + 1` on larger servers.                                                                                                                                   | `2`                 |
+| `GUNICORN_THREADS`      | No       | Threads per Gunicorn worker. Each thread holds its own database connection.                                                                                                                                             | `4`                 |
+| `GUNICORN_TIMEOUT`      | No       | Seconds a Gunicorn worker may spend on one request before it is restarted.                                                                                                                                              | `120`               |
+| `GUNICORN_MAX_REQUESTS` | No       | Requests after which a Gunicorn worker is restarted, so memory grown by a heavy request is returned. `0` never restarts. Each restart can fail one in-flight request, so keep it high.                                  | `10000`             |
+| `WORKER_ENABLED`        | No       | Set to `false` to idle the [background worker](background_jobs.md) in this container.                                                                                                                                   | `true`              |
+| `WORKER_CONCURRENCY`    | No       | Background jobs the worker runs at the same time.                                                                                                                                                                       | `3`                 |
+| `JOB_RESULT_TTL_HOURS`  | No       | Hours a finished export stays downloadable.                                                                                                                                                                             | `24`                |
+| `SKIP_WORLD_DATA`       | No       | Set to `1` to skip the first-boot `download_countries` import (saves RAM; world travel data loads later).                                                                                                               | unset               |
 
 ## Caching
 
 See [Caching](caching.md) for what is cached and how to use Redis.
 
-| Variable | Required | Description | Default |
-| -------- | -------- | ----------- | ------- |
-| `CACHE_BACKEND` | No | `memcached` (bundled in the image), `redis`, `locmem`, or `dummy`. | `memcached` |
-| `MEMCACHED_LOCATION` | No | Memcached address when `CACHE_BACKEND=memcached`. | `127.0.0.1:11211` |
-| `REDIS_URL` | With Redis | Redis connection URL when `CACHE_BACKEND=redis`. | `redis://127.0.0.1:6379/0` |
-| `CACHE_KEY_PREFIX` | No | Prefix for cache keys. Set it if several apps share one cache server. | empty |
-| `EXTERNAL_API_CACHE_TIMEOUT` | No | Seconds that geocoding, places and similar lookups are cached. | `86400` |
-| `OSM_CACHE_TIMEOUT` | No | Seconds that OpenStreetMap lookups (Nominatim search and reverse geocoding, Overpass recommendations) are cached. Google Maps results are never cached, as Google's terms require. | `86400` |
-| `PDF_MAP_TILES` | No | Draw map tiles into exported PDFs (the Trip Book and Field Guide). Set to `false` to never contact a tile server; the maps are then drawn without a basemap. | `true` |
-| `PDF_MAP_TILE_URL` | No | The tile server for PDF maps, with `{z}`, `{x}` and `{y}`. An `@2x` in the URL is read as retina tiles. The default is the OpenStreetMap tile server, whose [usage policy](https://operations.osmfoundation.org/policies/tiles/) is for light use: point this at your own or a paid tile server if you export many large trips. | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` |
-| `PDF_MAP_ATTRIBUTION` | No | The credit printed in the corner of each PDF map. Match it to your tile server. | `© OpenStreetMap contributors` |
-| `SESSION_CACHE_SECONDS` | No | How long a login session is kept in the cache before it is read from the database again. | `300` |
+| Variable                     | Required   | Description                                                                                                                                                                                                                                                                                                                     | Default                                          |
+| ---------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `CACHE_BACKEND`              | No         | `memcached` (bundled in the image), `redis`, `locmem`, or `dummy`.                                                                                                                                                                                                                                                              | `memcached`                                      |
+| `MEMCACHED_LOCATION`         | No         | Memcached address when `CACHE_BACKEND=memcached`.                                                                                                                                                                                                                                                                               | `127.0.0.1:11211`                                |
+| `REDIS_URL`                  | With Redis | Redis connection URL when `CACHE_BACKEND=redis`.                                                                                                                                                                                                                                                                                | `redis://127.0.0.1:6379/0`                       |
+| `CACHE_KEY_PREFIX`           | No         | Prefix for cache keys. Set it if several apps share one cache server.                                                                                                                                                                                                                                                           | empty                                            |
+| `EXTERNAL_API_CACHE_TIMEOUT` | No         | Seconds that geocoding, places and similar lookups are cached.                                                                                                                                                                                                                                                                  | `86400`                                          |
+| `OSM_CACHE_TIMEOUT`          | No         | Seconds that OpenStreetMap lookups (Nominatim search and reverse geocoding, Overpass recommendations) are cached. Google Maps results are never cached, as Google's terms require.                                                                                                                                              | `86400`                                          |
+| `PDF_MAP_TILES`              | No         | Draw map tiles into exported PDFs (the Trip Book and Field Guide). Set to `false` to never contact a tile server; the maps are then drawn without a basemap.                                                                                                                                                                    | `true`                                           |
+| `PDF_MAP_TILE_URL`           | No         | The tile server for PDF maps, with `{z}`, `{x}` and `{y}`. An `@2x` in the URL is read as retina tiles. The default is the OpenStreetMap tile server, whose [usage policy](https://operations.osmfoundation.org/policies/tiles/) is for light use: point this at your own or a paid tile server if you export many large trips. | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` |
+| `PDF_MAP_ATTRIBUTION`        | No         | The credit printed in the corner of each PDF map. Match it to your tile server.                                                                                                                                                                                                                                                 | `© OpenStreetMap contributors`                   |
+| `SESSION_CACHE_SECONDS`      | No         | How long a login session is kept in the cache before it is read from the database again.                                                                                                                                                                                                                                        | `300`                                            |
 
 ## Registration and authentication
 
-| Variable | Required | Description | Default |
-| -------- | -------- | ----------- | ------- |
-| `DISABLE_REGISTRATION` | No | Block new account signups. | `False` |
-| `DISABLE_REGISTRATION_MESSAGE` | No | Message shown when registration is disabled. | Custom message |
-| `ALLOW_PUBLIC_ACCESS` | No | Let people who are not signed in see public and unlisted collections, public locations and profiles, and guest links. `False` makes the server signed-in only. | `True` |
-| `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
-| `MOBILE_AUTH_REDIRECT_URIS` | No | Comma-separated redirect URIs the mobile app may use when signing in with a social/OIDC provider. Only needed for a custom-built app. | `adventurelog://auth/callback` |
-| `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
-| `SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT` | No | When a social sign-in matches an existing account by email, also link the provider to it. Matching by email only happens for accounts whose address is verified; others link the provider from Settings → Security. | `False` |
-| `ACCOUNT_EMAIL_VERIFICATION` | No | `none` (skip), `optional` (send link, still allow login), or `mandatory` (block login until verified). Requires working email (SMTP or console). | `none` |
-| `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |
-| `AUTH_PASSWORD_VALIDATORS_ENABLED` | No | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name). | `False` |
+| Variable                                          | Required | Description                                                                                                                                                                                                         | Default                        |
+| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `DISABLE_REGISTRATION`                            | No       | Block new account signups.                                                                                                                                                                                          | `False`                        |
+| `DISABLE_REGISTRATION_MESSAGE`                    | No       | Message shown when registration is disabled.                                                                                                                                                                        | Custom message                 |
+| `ALLOW_PUBLIC_ACCESS`                             | No       | Let people who are not signed in see public and unlisted collections, public locations and profiles, and guest links. `False` makes the server signed-in only.                                                      | `True`                         |
+| `SOCIALACCOUNT_ALLOW_SIGNUP`                      | No       | Allow new accounts via social providers when registration is disabled.                                                                                                                                              | `False`                        |
+| `MOBILE_AUTH_REDIRECT_URIS`                       | No       | Comma-separated redirect URIs the mobile app may use when signing in with a social/OIDC provider. Only needed for a custom-built app.                                                                               | `adventurelog://auth/callback` |
+| `FORCE_SOCIALACCOUNT_LOGIN`                       | No       | Disable password login; social/OIDC only.                                                                                                                                                                           | `False`                        |
+| `SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT` | No       | When a social sign-in matches an existing account by email, also link the provider to it. Matching by email only happens for accounts whose address is verified; others link the provider from Settings → Security. | `False`                        |
+| `SESSION_COOKIE_AGE`                              | No       | How long a login session lasts, in seconds.                                                                                                                                                                         | `1209600` (2 weeks)            |
+| `SESSION_TOUCH_INTERVAL_SECONDS`                  | No       | A session's expiry is extended at most this often while it is in use.                                                                                                                                               | `86400` (1 day)                |
+| `TERMS_OF_SERVICE_URL`                            | No       | Link to your terms of service, shown on the sign-up and sign-in pages when set.                                                                                                                                     | empty                          |
+| `PRIVACY_POLICY_URL`                              | No       | Link to your privacy policy, shown the same way.                                                                                                                                                                    | empty                          |
+| `ACCOUNT_EMAIL_VERIFICATION`                      | No       | `none` (skip), `optional` (send link, still allow login), or `mandatory` (block login until verified). Requires working email (SMTP or console).                                                                    | `none`                         |
+| `ACCOUNT_PASSWORD_MIN_LENGTH`                     | No       | Minimum password length enforced on signup, change, and reset.                                                                                                                                                      | `10`                           |
+| `AUTH_PASSWORD_VALIDATORS_ENABLED`                | No       | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name).                  | `False`                        |
 
 Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_registration.md), [Public Access](public_access.md), [API Keys](api_keys.md).
 
 ## Rate limiting
 
-| Variable | Required | Description | Default |
-| -------- | -------- | ----------- | ------- |
-| `ENABLE_RATE_LIMITS` | No | Enable API rate limiting. Recommended in production. | `False` |
-| `RATE_LIMIT_USER` | No | Default authenticated user throttle. | `10000/hour` |
-| `RATE_LIMIT_IMAGE_PROXY` | No | Image proxy endpoint limit. | `60/minute` |
-| `RATE_LIMIT_PLACE_PHOTO` | No | Google place photo endpoint limit. | `300/minute` |
-| `RATE_LIMIT_IMAGE_IMPORT` | No | Image import limit. | `12/minute` |
-| `RATE_LIMIT_EXTERNAL_GEOCODE` | No | External geocoding limit. | `120/minute` |
-| `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | No | Recommendations API limit. | `30/minute` |
-| `RATE_LIMIT_EXTERNAL_WIKIPEDIA` | No | Wikipedia lookup limit. | `60/minute` |
-| `RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET` | No | Sunrise/sunset API limit. | `30/minute` |
+| Variable                              | Required | Description                                                                               | Default      |
+| ------------------------------------- | -------- | ----------------------------------------------------------------------------------------- | ------------ |
+| `ENABLE_RATE_LIMITS`                  | No       | Enable API rate limiting. Recommended in production.                                      | `False`      |
+| `RATE_LIMIT_USER`                     | No       | Default authenticated user throttle.                                                      | `10000/hour` |
+| `RATE_LIMIT_IMAGE_PROXY`              | No       | Image proxy endpoint limit.                                                               | `60/minute`  |
+| `RATE_LIMIT_PLACE_PHOTO`              | No       | Google place photo endpoint limit.                                                        | `300/minute` |
+| `RATE_LIMIT_IMAGE_IMPORT`             | No       | Image import limit.                                                                       | `12/minute`  |
+| `RATE_LIMIT_EXTERNAL_GEOCODE`         | No       | External geocoding limit.                                                                 | `120/minute` |
+| `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | No       | Recommendations API limit.                                                                | `30/minute`  |
+| `RATE_LIMIT_EXTERNAL_WIKIPEDIA`       | No       | Wikipedia lookup limit.                                                                   | `60/minute`  |
+| `RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET`  | No       | Sunrise/sunset API limit.                                                                 | `30/minute`  |
+| `RATE_LIMIT_ENDURAIN_AUTH`            | No       | Endurain connect and MFA attempts. Always applied, even when `ENABLE_RATE_LIMITS` is off. | `10/minute`  |
+| `RATE_LIMIT_MOBILE_AUTH`              | No       | The mobile app's sign-in code exchange. Always applied.                                   | `20/minute`  |
 
 See [Advanced Configuration](advanced_configuration.md) for usage notes.
 
 ## Email (SMTP)
 
-| Variable | Required | Description |
-| -------- | -------- | ----------- |
-| `EMAIL_BACKEND` | No | `console` (logs only) or `email` (SMTP). |
-| `EMAIL_HOST` | If SMTP | SMTP server hostname. |
-| `EMAIL_PORT` | No | SMTP port. Default `587`. |
-| `EMAIL_USE_TLS` | No | Enable TLS. Default `true`. |
-| `EMAIL_USE_SSL` | No | Enable SSL. Default `false`. |
-| `EMAIL_HOST_USER` | If SMTP | SMTP username. |
-| `EMAIL_HOST_PASSWORD` | If SMTP | SMTP password. |
-| `DEFAULT_FROM_EMAIL` | If SMTP | Sender address. |
+| Variable              | Required | Description                              |
+| --------------------- | -------- | ---------------------------------------- |
+| `EMAIL_BACKEND`       | No       | `console` (logs only) or `email` (SMTP). |
+| `EMAIL_HOST`          | If SMTP  | SMTP server hostname.                    |
+| `EMAIL_PORT`          | No       | SMTP port. Default `587`.                |
+| `EMAIL_USE_TLS`       | No       | Enable TLS. Default `true`.              |
+| `EMAIL_USE_SSL`       | No       | Enable SSL. Default `false`.             |
+| `EMAIL_HOST_USER`     | If SMTP  | SMTP username.                           |
+| `EMAIL_HOST_PASSWORD` | If SMTP  | SMTP password.                           |
+| `DEFAULT_FROM_EMAIL`  | If SMTP  | Sender address.                          |
 
 See [SMTP Email](email.md).
 
 ## Media storage
 
-| Variable | Required | Description | Default |
-| -------- | -------- | ----------- | ------- |
-| `MEDIA_STORAGE` | No | `local` or `s3`. | `local` |
-| `MEDIA_STORAGE_LIMIT_MB` | No | Per-user storage cap in MB (`0` = unlimited). | `0` |
-| `MEDIA_STORAGE_LIMIT_BYTES` | No | Overrides MB limit when set. | `0` |
-| `AWS_ACCESS_KEY_ID` | If S3 | S3 access key. | — |
-| `AWS_SECRET_ACCESS_KEY` | If S3 | S3 secret key. | — |
-| `AWS_STORAGE_BUCKET_NAME` | If S3 | Bucket name. | — |
-| `AWS_S3_ENDPOINT_URL` | If non-AWS | Provider endpoint (R2, MinIO, Spaces). | — |
-| `AWS_S3_REGION_NAME` | No | Region (`auto` for Cloudflare R2). | — |
-| `AWS_S3_CUSTOM_DOMAIN` | No | CDN or custom domain for media URLs. | — |
+| Variable                    | Required   | Description                                   | Default |
+| --------------------------- | ---------- | --------------------------------------------- | ------- |
+| `MEDIA_STORAGE`             | No         | `local` or `s3`.                              | `local` |
+| `MEDIA_STORAGE_LIMIT_MB`    | No         | Per-user storage cap in MB (`0` = unlimited). | `0`     |
+| `MEDIA_STORAGE_LIMIT_BYTES` | No         | Overrides MB limit when set.                  | `0`     |
+| `AWS_ACCESS_KEY_ID`         | If S3      | S3 access key.                                | —       |
+| `AWS_SECRET_ACCESS_KEY`     | If S3      | S3 secret key.                                | —       |
+| `AWS_STORAGE_BUCKET_NAME`   | If S3      | Bucket name.                                  | —       |
+| `AWS_S3_ENDPOINT_URL`       | If non-AWS | Provider endpoint (R2, MinIO, Spaces).        | —       |
+| `AWS_S3_REGION_NAME`        | No         | Region (`auto` for Cloudflare R2).            | —       |
+| `AWS_S3_CUSTOM_DOMAIN`      | No         | CDN or custom domain for media URLs.          | —       |
 
 See [S3 Media Storage](s3_storage.md).
 
 ## Integrations
 
-| Variable | Required | Description |
-| -------- | -------- | ----------- |
-| `GOOGLE_MAPS_API_KEY` | If enabled | Google Maps tiles and place search. |
-| `PUBLIC_CARTO_BASEMAP_API_KEY` | If using CARTO basemaps | Free domain-restricted CARTO key sent by the browser with map tile requests. Enables Light, Dark, Positron, Positron + Labels, Voyager, and 3D Terrain, and makes the default basemap CARTO Positron in light mode and CARTO Dark Matter in dark mode. Without it, those styles stay hidden and the default is OpenFreeMap Bright in light mode and OpenFreeMap Dark in dark mode. |
-| `INTEGRATIONS_ALLOW_PRIVATE_NETWORKS` | No | Let Immich, Wanderer and Endurain live on a LAN or loopback address. Turn off on an instance strangers can sign up to, so no user can reach the server's own network through an integration. Cloud-metadata addresses are always refused. Default `True`, or `False` with `CLOUD_MODE`. |
-| `STRAVA_CLIENT_ID` | If enabled | Strava OAuth client ID. |
-| `STRAVA_CLIENT_SECRET` | If enabled | Strava OAuth client secret. |
-| `PUBLIC_UMAMI_SRC` | If enabled | Umami analytics script URL. |
-| `PUBLIC_UMAMI_WEBSITE_ID` | If enabled | Umami website ID. |
+| Variable                              | Required                | Description                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GOOGLE_MAPS_API_KEY`                 | If enabled              | Google Maps tiles and place search.                                                                                                                                                                                                                                                                                                                                                |
+| `PUBLIC_CARTO_BASEMAP_API_KEY`        | If using CARTO basemaps | Free domain-restricted CARTO key sent by the browser with map tile requests. Enables Light, Dark, Positron, Positron + Labels, Voyager, and 3D Terrain, and makes the default basemap CARTO Positron in light mode and CARTO Dark Matter in dark mode. Without it, those styles stay hidden and the default is OpenFreeMap Bright in light mode and OpenFreeMap Dark in dark mode. |
+| `INTEGRATIONS_ALLOW_PRIVATE_NETWORKS` | No                      | Let Immich, Wanderer and Endurain live on a LAN or loopback address. Turn off on an instance strangers can sign up to, so no user can reach the server's own network through an integration. Cloud-metadata addresses are always refused. Default `True`.                                                                                                                                          |
+| `STRAVA_CLIENT_ID`                    | If enabled              | Strava OAuth client ID.                                                                                                                                                                                                                                                                                                                                                            |
+| `STRAVA_CLIENT_SECRET`                | If enabled              | Strava OAuth client secret.                                                                                                                                                                                                                                                                                                                                                        |
+| `PUBLIC_UMAMI_SRC`                    | If enabled              | Umami analytics script URL.                                                                                                                                                                                                                                                                                                                                                        |
+| `PUBLIC_UMAMI_WEBSITE_ID`             | If enabled              | Umami website ID.                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## Traefik compose
 
 Used with `docker/docker-compose.traefik.yaml`:
 
-| Variable | Required | Description |
-| -------- | -------- | ----------- |
-| `ACME_EMAIL` | Yes | Let's Encrypt registration email. |
-| `TRAEFIK_DOMAIN` | Yes | Public domain for the Traefik router. |
+| Variable         | Required | Description                           |
+| ---------------- | -------- | ------------------------------------- |
+| `ACME_EMAIL`     | Yes      | Let's Encrypt registration email.     |
+| `TRAEFIK_DOMAIN` | Yes      | Public domain for the Traefik router. |
 
 ## Operations
 
 These are not application settings but affect management scripts:
 
-| Variable | Description | Default |
-| -------- | ----------- | ------- |
-| `COMPOSE_FILE` | Override compose file (`scripts/deploy.sh`, backup, restore). | Auto-detected |
-| `ADVENTURELOG_COMPOSE` | Set to `advanced` to prefer Advanced Deployment when both env files exist. Legacy `aio`/`standard` values still select Standard Deployment. | unset |
-| `BACKUP_DIR` | Backup output directory for `scripts/backup.sh`. | `backups` |
-| `ADVENTURELOG_REF` | Git ref for installer downloads. | `main` |
+| Variable               | Description                                                                                                                                 | Default       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `COMPOSE_FILE`         | Override compose file (`scripts/deploy.sh`, backup, restore).                                                                               | Auto-detected |
+| `ADVENTURELOG_COMPOSE` | Set to `advanced` to prefer Advanced Deployment when both env files exist. Legacy `aio`/`standard` values still select Standard Deployment. | unset         |
+| `BACKUP_DIR`           | Backup output directory for `scripts/backup.sh`.                                                                                            | `backups`     |
+| `ADVENTURELOG_REF`     | Git ref for installer downloads.                                                                                                            | `main`        |
 
 See [Operations & Maintenance](operations.md).
 

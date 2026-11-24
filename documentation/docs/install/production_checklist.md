@@ -15,6 +15,7 @@ Go through this list before other people rely on your server. Each item links to
 - **Debug off.** `DEBUG` is `False` unless you set it. Never turn it on for a public server.
 - **Rate limits.** Set `ENABLE_RATE_LIMITS=True`. See [Advanced Settings](../configuration/advanced_configuration.md#rate-limiting).
 - **Upload size.** Cap single uploads with `BODY_SIZE_LIMIT` (bytes, or a `K`/`M`/`G` suffix; `100M` by default on Standard Deployment, unlimited on Advanced), and each user's total storage with `MEDIA_STORAGE_LIMIT_MB` (unlimited by default).
+- **Integrations on your network.** Immich, Wanderer and Endurain may live on a private or LAN address by default. If strangers can sign up to your server, set `INTEGRATIONS_ALLOW_PRIVATE_NETWORKS=False` so no user can reach your server's own network through an integration. See [Environment Variables](../configuration/environment_variables.md#integrations).
 - **Email.** Set up SMTP so invitations and password resets reach people. See [SMTP Email](../configuration/email.md).
 
 ## Data

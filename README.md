@@ -145,12 +145,12 @@ Built for travelers who want to track, plan, and remember their travel experienc
 | --- | ----------------------- | --------------------------------------------------------------------------------------------- |
 | 📍  | **Locations & visits**  | Pin locations on the map with dates, notes, photos, categories, tags, and multi-visit history |
 | 🗺️  | **Interactive map**     | Filter by visited / planned, add locations by click, 2D & 3D views                            |
-| ✈️  | **Trip itineraries**    | Multi-day collections with flights, lodging, checklists, links & calendar views               |
-| 🤝  | **Collaboration**       | Share locations and itineraries via public links or invite other users to edit together       |
+| ✈️  | **Trip itineraries**    | Plan trips day by day with flights, lodging, notes, checklists, recommendations & a printable Trip Book |
+| 🤝  | **Collaboration**       | Invite editors or viewers, share guest links, comment on the plan & publish travel stories    |
 | 🌍  | **World travel book**   | Track countries, regions, and cities — with stats and progress milestones                     |
-| 🥾  | **Trails & activities** | Attach hiking routes, GPX tracks, distance, elevation & outdoor activity logs                 |
+| 🥾  | **Trails & activities** | Attach trails and log activities from GPX, FIT, TCX, KML & KMZ files, with distance & elevation |
 | 🔍  | **Search & organize**   | Full-text search, custom categories, public/private visibility                                |
-| 🔐  | **Security**            | MFA, API keys, social auth (Google, GitHub, Authelia & more)                                  |
+| 🔐  | **Security**            | MFA, API keys, social auth (GitHub, Authentik, Authelia, Pocket ID & any OIDC provider)                                  |
 
 ### Integrations
 

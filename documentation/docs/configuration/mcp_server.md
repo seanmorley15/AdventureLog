@@ -31,7 +31,7 @@ Whatever the assistant reads through the tools is sent to the AI provider you us
 
    Then run `docker compose up -d`.
 
-   On [Advanced Deployment](../install/docker.md) set `ADVENTURELOG_URL` to the backend container, `http://server:80`. A ready-made file with the MCP service already added is in the repository: [`docker/docker-compose.advanced-mcp.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/docker-compose.advanced-mcp.yml). Start it with `docker compose --env-file .env.advanced -f docker/docker-compose.advanced-mcp.yml up -d --wait`.
+   On [Advanced Deployment](../install/docker.md) add the same service to `docker/docker-compose.advanced.yml` and set `ADVENTURELOG_URL` to the backend container, `http://server:80`. Use `depends_on: server` there, since the stack has no `app` service.
 
 3. **Connect your assistant** to `http://localhost:8017/mcp`, sending your key as `Authorization: Bearer al_your_key` (or `X-API-Key: al_your_key`). The key lives in the assistant's settings, never in the compose file, so each person who connects uses their own account. With Claude Code:
 
