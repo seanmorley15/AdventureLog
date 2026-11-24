@@ -3,9 +3,20 @@ import { createTrip, planSection } from '../support/trip';
 
 /** A date `offset` days from today, typed the way the date fields expect (MM/DD/YYYY). */
 function typedDate(offset: number): string {
-	const d = new Date();
-	d.setDate(d.getDate() + offset);
-	return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
+	// "Today" is the browser's day, and the Playwright config pins the browser to
+	// America/New_York. The runner is UTC, so reading its own calendar date would be a
+	// day ahead for the first hours of every UTC day.
+	const [month, day, year] = new Date()
+		.toLocaleDateString('en-US', {
+			timeZone: 'America/New_York',
+			month: '2-digit',
+			day: '2-digit',
+			year: 'numeric'
+		})
+		.split('/')
+		.map(Number);
+	const d = new Date(Date.UTC(year, month - 1, day + offset));
+	return `${String(d.getUTCMonth() + 1).padStart(2, '0')}/${String(d.getUTCDate()).padStart(2, '0')}/${d.getUTCFullYear()}`;
 }
 
 // #1346: open the itinerary on a named day, or on today while the trip is on.
