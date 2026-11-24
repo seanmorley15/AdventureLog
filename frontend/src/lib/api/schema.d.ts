@@ -2763,7 +2763,7 @@ export interface paths {
          * Get a Google place photo
          * @description The picture behind a `photos` address from a place search or recommendation. The server
          *     fetches it from Google with its own API key, so the key never reaches the browser. Only
-         *     signed-in users can use it, and the browser may keep the picture for a day.
+         *     signed-in users can use it, and the browser does not keep a copy.
          */
         get: operations["places_photo"];
         put?: never;
