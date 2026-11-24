@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import type { Collection, Location, PlaceSearchResult, User } from '#lib/types.js';
+	import type {
+		Collection,
+		CollectionItineraryItem,
+		Location,
+		PlaceSearchResult,
+		User
+	} from '#lib/types.js';
 	import CategoryDropdown from '#lib/components/CategoryDropdown.svelte';
 	import { placeCategory } from '#lib/collections/place-category.svelte.js';
 	import {
@@ -10,8 +16,11 @@
 		placeToQuickAddPayload,
 		quickAddLocation,
 		resolveQuickAddPayload,
+		placePhotoThumbnail,
 		searchPlaces
 	} from '#lib/map/places.js';
+	import { renderMarkdown } from '#lib/markdown.js';
+	import { errorMessage, indexedDays, planRequest } from '#lib/collections/plan.js';
 	import { findCollectionMatch } from '#lib/recommendations/match.js';
 	import { addToast } from '#lib/toasts.js';
 
@@ -21,6 +30,8 @@
 	import MapMarker from '~icons/mdi/map-marker';
 	import Compass from '~icons/mdi/compass-outline';
 	import Check from '~icons/mdi/check';
+	import Star from '~icons/mdi/star';
+	import OpenInNew from '~icons/mdi/open-in-new';
 	import TextBoxEdit from '~icons/mdi/text-box-edit-outline';
 
 	interface Props {
@@ -29,7 +40,9 @@
 		/** A place was picked (or the pick was cleared with `null`), so the parent can show it on its map. */
 		onSelect?: (place: PlaceSearchResult | null) => void;
 		/** The place was quick-added to the collection. */
-		onAdded?: (location: Location) => void;
+		onAdded?: (location: Location, item?: CollectionItineraryItem) => void;
+		/** Offer a day picker so the place lands on a day of the plan. */
+		dayPicker?: boolean;
 		/** The user wants the full form; receives a prefilled location to edit. Hidden when not provided. */
 		onDetails?: (prefill: Location) => void;
 		/** Recenter a nearby search on the place. Hidden when not provided. */
@@ -42,6 +55,7 @@
 		user = null,
 		onSelect,
 		onAdded,
+		dayPicker = false,
 		onDetails,
 		onSearchNearby,
 		class: className = ''
@@ -58,6 +72,10 @@
 	let open = $state(false);
 	let picked = $state<PlaceSearchResult | null>(null);
 	let adding = $state(false);
+	let descExpanded = $state(false);
+	const DESC_LIMIT = 220;
+	let dayIndex = $state<number | ''>('');
+	const days = $derived(indexedDays(collection));
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let requestId = 0;
 
@@ -108,6 +126,7 @@
 
 	async function pick(place: PlaceSearchResult) {
 		picked = place;
+		descExpanded = false;
 		query = place.name;
 		open = false;
 		onSelect?.(place);
@@ -139,8 +158,24 @@
 				category: placeCategory.current
 			});
 			const created = await quickAddLocation(payload, { collectionId: String(collection.id) });
+			let item: CollectionItineraryItem | undefined;
+			if (dayPicker && dayIndex !== '') {
+				const res = await planRequest<CollectionItineraryItem>(
+					`/api/collections/${collection.id}/itinerary-items/`,
+					'POST',
+					{
+						content_type: 'location',
+						object_id: created.id,
+						day_index: dayIndex,
+						is_global: false
+					}
+				);
+				if (res.ok) item = res.data;
+				else addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
+			}
 			addToast('success', $t('collection.place_added', { values: { name: created.name } }));
-			onAdded?.(created);
+			onAdded?.(created, item);
+			dayIndex = '';
 			clear();
 		} catch (err) {
 			addToast('error', err instanceof Error ? err.message : $t('collection.add_failed'));
@@ -177,8 +212,12 @@
 
 <svelte:window onpointerdown={onWindowPointerDown} onkeydown={onWindowKeydown} />
 
-<div bind:this={root} class={['relative w-full', className]} role="search">
-	<label class="input input-sm flex w-full items-center gap-2 bg-base-100 shadow-md">
+<div
+	bind:this={root}
+	class={['relative flex max-h-full min-h-0 w-full flex-col', className]}
+	role="search"
+>
+	<label class="input input-sm flex w-full shrink-0 items-center gap-2 bg-base-100 shadow-md">
 		<Search class="h-4 w-4 shrink-0 opacity-60" />
 		<input
 			type="text"
@@ -239,7 +278,9 @@
 	{/if}
 
 	{#if picked}
-		<div class="card mt-2 border border-base-300 bg-base-100 shadow-xl">
+		<div
+			class="card mt-2 min-h-0 flex-1 overflow-y-auto overscroll-contain border border-base-300 bg-base-100 shadow-xl"
+		>
 			<div class="card-body gap-3 p-3">
 				<div class="flex items-start gap-2">
 					<MapMarker class="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -250,6 +291,66 @@
 						{/if}
 					</div>
 				</div>
+
+				{#if picked.photos?.length}
+					<div class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+						{#each picked.photos.slice(0, 6) as photo (photo)}
+							<img
+								src={placePhotoThumbnail(photo, 320)}
+								alt=""
+								loading="lazy"
+								class="h-24 w-32 shrink-0 rounded-lg object-cover"
+							/>
+						{/each}
+					</div>
+				{/if}
+
+				{#if picked.rating != null || picked.website}
+					<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+						{#if picked.rating != null}
+							<span class="inline-flex items-center gap-0.5 font-medium text-warning">
+								<Star class="h-3.5 w-3.5" />{picked.rating.toFixed(1)}
+								{#if picked.review_count}
+									<span class="font-normal opacity-60">({picked.review_count})</span>
+								{/if}
+							</span>
+						{/if}
+						{#if picked.website}
+							<a
+								href={picked.website}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="link inline-flex items-center gap-1"
+							>
+								<OpenInNew class="h-3.5 w-3.5" />
+								{$t('map.visit_website')}
+							</a>
+						{/if}
+					</div>
+				{/if}
+
+				{#if picked.description}
+					{@const long = picked.description.length > DESC_LIMIT}
+					<div class="text-xs">
+						<div
+							class="prose prose-sm max-w-none text-xs opacity-80 [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-xs [&_h3]:font-semibold {long &&
+							!descExpanded
+								? 'max-h-20 overflow-hidden [mask-image:linear-gradient(to_bottom,black_55%,transparent)]'
+								: ''}"
+						>
+							{@html renderMarkdown(picked.description)}
+						</div>
+						{#if long}
+							<button
+								type="button"
+								class="link link-primary mt-1"
+								onclick={() => (descExpanded = !descExpanded)}
+							>
+								{descExpanded ? $t('map.show_less') : $t('map.show_more')}
+							</button>
+						{/if}
+					</div>
+				{/if}
 
 				{#if alreadyAdded}
 					<p class="flex items-center gap-1.5 text-xs text-warning">
@@ -262,6 +363,20 @@
 					<span class="field-label">{$t('collection.save_to_category')}</span>
 					<CategoryDropdown bind:selected_category={placeCategory.current} />
 				</div>
+
+				{#if dayPicker && days.length > 0}
+					<div>
+						<span class="field-label">{$t('itinerary.add_to_day_label')}</span>
+						<select class="select select-sm select-bordered w-full" bind:value={dayIndex}>
+							<option value="">{$t('itinerary.ideas')}</option>
+							{#each days as day (day.id)}
+								<option value={day.index}>
+									{$t('itinerary.day_n', { values: { n: day.index } })}
+								</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
 
 				<div class="flex flex-wrap items-center gap-2">
 					<button

@@ -19,8 +19,24 @@
 		type ImagePinProperties
 	} from '#lib/map/imagePins.js';
 	import { t } from 'svelte-i18n';
-	import type { Collection, Location, PlaceSearchResult, User } from '#lib/types.js';
-	import { dayPinColor, dayStopPath, pinCoversDay, type PlanPin } from '#lib/collections/plan.js';
+	import type {
+		Collection,
+		CollectionItineraryItem,
+		Location,
+		PlaceSearchResult,
+		User
+	} from '#lib/types.js';
+	import {
+		dayPinColor,
+		dayStopPath,
+		placementType,
+		errorMessage,
+		indexedDays,
+		pinCoversDay,
+		planRequest,
+		type PlanPin
+	} from '#lib/collections/plan.js';
+	import { addToast } from '#lib/toasts.js';
 	import {
 		CatalogFilters,
 		isWithinDateRange,
@@ -57,6 +73,8 @@
 		pinStyleToggle?: boolean;
 		/** Fit the viewport to the visible pins on load and whenever the filters change. */
 		autoFit?: boolean;
+		/** Let editors add a pin to a day straight from its hover card. */
+		dayPicker?: boolean;
 	}
 
 	let {
@@ -75,7 +93,8 @@
 		filters = new CatalogFilters(),
 		numberedPins = true,
 		pinStyleToggle = false,
-		autoFit = false
+		autoFit = false,
+		dayPicker = false
 	}: Props = $props();
 
 	let basemapType = $state('default');
@@ -573,8 +592,13 @@
 		mapZoom = 14;
 	}
 
-	function handlePlaceAdded(created: Location) {
+	function handlePlaceAdded(created: Location, item?: CollectionItineraryItem) {
 		upsertLocation(created);
+		if (item) {
+			const byId = new Map((collection.itinerary ?? []).map((row) => [String(row.id), row]));
+			byId.set(String(item.id), item);
+			collection.itinerary = [...byId.values()];
+		}
 		const lat = parseNumber(created.latitude);
 		const lon = parseNumber(created.longitude);
 		if (lat !== null && lon !== null) {
@@ -676,6 +700,48 @@
 			return matches.find((pin) => pinCoversDay(pin, selectedDay)) ?? null;
 		}
 		return matches.find((pin) => pin.dayIndex != null) ?? matches[0];
+	}
+
+	let planDays = $derived(indexedDays(collection));
+	let addingKey = $state<string | null>(null);
+
+	async function addPinToDay(props: MarkerProperties, dayIndex: number) {
+		const objectId = pinObjectId(props);
+		const key = `${props.type}:${objectId}`;
+		if (addingKey) return;
+		addingKey = key;
+		try {
+			// Move the Ideas entry onto the day so it leaves Ideas; create a placement if there is none.
+			const ideasItem = (collection.itinerary ?? []).find(
+				(row) =>
+					String(row.object_id) === objectId &&
+					placementType(row) === props.type &&
+					!row.day &&
+					!row.is_global
+			);
+			const res = ideasItem
+				? await planRequest<any>(
+						`/api/collections/${collection.id}/itinerary-items/${ideasItem.id}/`,
+						'PATCH',
+						{ day_index: dayIndex, is_global: false }
+					)
+				: await planRequest<any>(`/api/collections/${collection.id}/itinerary-items/`, 'POST', {
+						content_type: props.type,
+						object_id: objectId,
+						day_index: dayIndex,
+						is_global: false
+					});
+			if (!res.ok) {
+				addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
+				return;
+			}
+			const { updated_object: _updated, ...item } = res.data;
+			const byId = new Map((collection.itinerary ?? []).map((row) => [String(row.id), row]));
+			byId.set(String(item.id), item);
+			collection.itinerary = [...byId.values()];
+		} finally {
+			addingKey = null;
+		}
 	}
 
 	function pinIsHighlighted(pin: PlanPin | null): boolean {
@@ -911,14 +977,21 @@
 		return [first[0], first[1]];
 	}
 
+	// The fallback centre is captured once. Re-deriving it from the first pin made the map
+	// jump back to that pin whenever the collection changed (e.g. adding a place to a day).
+	let initialCenter: [number, number] | null = $state(null);
+	$effect(() => {
+		if (untrack(() => initialCenter)) return;
+		const fallback =
+			(markerGeoJson.features[0]?.geometry.coordinates as [number, number] | undefined) ??
+			firstTrackCoordinate(linesGeoJson) ??
+			firstTrackCoordinate(trailsGeoJson);
+		if (fallback) initialCenter = [fallback[0], fallback[1]];
+	});
 	let mapCenter = $derived(
 		mapCenterCoords[0] !== 0 || mapCenterCoords[1] !== 0
 			? mapCenterCoords
-			: markerGeoJson.features.length
-				? markerGeoJson.features[0].geometry.coordinates
-				: (firstTrackCoordinate(linesGeoJson) ??
-					firstTrackCoordinate(trailsGeoJson) ??
-					([0, 0] as [number, number]))
+			: (initialCenter ?? ([0, 0] as [number, number]))
 	);
 </script>
 
@@ -1050,7 +1123,19 @@
 			{:else if markerProps && markerLngLat}
 				{@const pin = showNumberedPins ? displayPin(markerProps) : null}
 				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
-					<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
+					<div
+						class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]"
+						role="presentation"
+						onmouseenter={() => setActive(true)}
+						onmouseleave={(e) => {
+							// Keep the card open while its day picker has focus.
+							if (!e.currentTarget.contains(document.activeElement)) setActive(false);
+						}}
+						onfocusin={() => setActive(true)}
+						onfocusout={(e) => {
+							if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setActive(false);
+						}}
+					>
 						<div
 							class="map-pin-hit relative grid place-items-center w-8 h-8 rounded-full border-2 shadow-lg text-sm font-bold group-hover:scale-110 transition-all duration-200 {pin
 								? 'text-white'
@@ -1069,10 +1154,6 @@
 									: undefined}
 							role="button"
 							tabindex="0"
-							onmouseenter={() => setActive(true)}
-							onmouseleave={() => setActive(false)}
-							onfocus={() => setActive(true)}
-							onblur={() => setActive(false)}
 							onclick={(e) => {
 								e.stopPropagation();
 								if (onPinSelect) {
@@ -1113,7 +1194,7 @@
 
 						<!-- Marker Popup -->
 						<div
-							class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-all duration-200 z-[9999]"
+							class="absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-all duration-200 z-[9999]"
 							class:opacity-100={isActive}
 							class:pointer-events-auto={isActive}
 						>
@@ -1147,6 +1228,33 @@
 											</div>
 										</div>
 									</div>
+									{#if dayPicker && canModify && planDays.length > 0 && !pinsFor(markerProps).some((p) => p.dayIndex != null)}
+										<div class="space-y-1">
+											<p class="text-xs font-medium opacity-70">
+												{$t('itinerary.add_to_day_label')}
+											</p>
+											<div
+												class="grid max-h-28 grid-cols-6 gap-1 overflow-y-auto overscroll-contain pr-1"
+												onwheel={(e) => e.stopPropagation()}
+											>
+												{#each planDays as day (day.id)}
+													<button
+														type="button"
+														class="btn btn-xs btn-outline px-0"
+														style={`border-color:${dayPinColor(day.index ?? 1)}`}
+														disabled={addingKey !== null}
+														onpointerdown={(e) => e.stopPropagation()}
+														onclick={(e) => {
+															e.stopPropagation();
+															if (day.index != null) addPinToDay(markerProps, day.index);
+														}}
+													>
+														{day.index}
+													</button>
+												{/each}
+											</div>
+										</div>
+									{/if}
 									{#if canNavigate(markerProps)}
 										<div class="card-actions">
 											<button
@@ -1262,7 +1370,7 @@
 	{#if canModify}
 		<div
 			class={[
-				'absolute left-3 top-3 z-30',
+				'absolute left-3 top-3 z-30 flex max-h-[calc(100%-1.5rem)] flex-col',
 				pinStyleToggle && planPins.length > 0
 					? 'w-[calc(100%-10rem)] sm:w-80'
 					: 'w-[calc(100%-1.5rem)] sm:w-80'
@@ -1274,6 +1382,7 @@
 				{user}
 				onSelect={handlePlaceSelect}
 				onAdded={handlePlaceAdded}
+				{dayPicker}
 				onDetails={(prefill) => {
 					detailsPrefill = prefill;
 					createModalOpen = true;

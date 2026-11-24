@@ -70,6 +70,7 @@
 			clusterEnabled={folder}
 			clusterOptions={{ radius: 300, maxZoom: 8, minPoints: 2 }}
 			autoFit={folder}
+			dayPicker={!children}
 		/>
 	</div>
 

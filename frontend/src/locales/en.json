@@ -2043,6 +2043,7 @@
 		"add_to_day": "Add to Day {n}",
 		"day_n": "Day {n}",
 		"ideas": "Ideas",
+		"add_to_day_label": "Add to day…",
 		"ideas_desc": "Locations and plans you might fit in. Drag one onto a day when you decide.",
 		"ideas_empty": "Nothing in Ideas yet.",
 		"not_on_plan": "Linked to this trip but not on the plan",
