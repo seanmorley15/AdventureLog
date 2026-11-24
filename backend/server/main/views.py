@@ -1,26 +1,58 @@
 from django.http import JsonResponse
-from django.middleware.csrf import get_token
-from os import getenv
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.views.generic import RedirectView
 from django.views.static import serve
 from django.core.files.storage import default_storage
-from adventures.utils.file_permissions import (
-    checkFilePermission,
+from adventures.access.file_permissions import (
+    check_file_permission,
+    is_day_owned_media,
     is_public_media_path,
     is_protected_media_path,
     normalize_media_request_path,
 )
 
-def get_csrf_token(request):
-    csrf_token = get_token(request)
-    return JsonResponse({'csrfToken': csrf_token})
+# What this server can do that the mobile app checks for before using it.
+CAPABILITIES = ['mobile_auth_v1', 'conditional_writes_v1', 'client_ids_v1']
 
-def get_public_url(request):
-    return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
+
+class ServerInfoView(APIView):
+    openapi_tags = ['Server']
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        responses=inline_serializer('ServerInfo', fields={
+            'public_url': serializers.URLField(help_text='The address of this server, used in links and media URLs.'),
+            'allow_public_access': serializers.BooleanField(
+                help_text='Whether people who are not signed in can see public collections, places, '
+                'profiles and guest links on this server (`ALLOW_PUBLIC_ACCESS`).'
+            ),
+            'version': serializers.CharField(help_text='The AdventureLog release this server runs.'),
+            'capabilities': serializers.ListField(
+                child=serializers.CharField(),
+                help_text='Features clients can rely on: `mobile_auth_v1` (app sign-in with a session token), '
+                '`conditional_writes_v1` (`ETag` and `If-Match`) and `client_ids_v1` '
+                '(a client may choose the id of what it creates).',
+            ),
+        })
+    )
+    def get(self, request):
+        """Get server information"""
+        return Response({
+            'public_url': settings.PUBLIC_URL,
+            'allow_public_access': settings.ALLOW_PUBLIC_ACCESS,
+            'version': settings.ADVENTURELOG_RELEASE_VERSION,
+            'capabilities': CAPABILITIES,
+        })
+
 
 def health_check(request):
+    """For container health checks and monitors. Not part of the API."""
     from django.db import connection
     try:
         connection.ensure_connection()
@@ -55,6 +87,13 @@ def _resolve_user(request):
         except AuthenticationFailed:
             return None
 
+    if not user.is_authenticated:
+        token = request.META.get('HTTP_X_SESSION_TOKEN')
+        if token:
+            from users.authentication import user_from_session_token
+            # A bad token is treated as no user, like a bad API key.
+            return user_from_session_token(token)
+
     return user
 
 
@@ -85,13 +124,15 @@ def serve_protected_media(request, path):
         return HttpResponseForbidden()
 
     user = _resolve_user(request)
-    if user is None:
-        return HttpResponseForbidden()
-
     media_type = path_parts[0] + '/'
     file_id = path_parts[1]
+    authenticated = bool(user and getattr(user, 'is_authenticated', False))
 
-    if checkFilePermission(file_id, user, media_type):
+    # Owners and members, guest links (cookie), and story readers. See check_file_permission.
+    if check_file_permission(file_id, user if authenticated else None, media_type, request):
         return _serve_media_file(request, normalized_path)
+
+    if is_day_owned_media(file_id, media_type):
+        return HttpResponseNotFound()
 
     return HttpResponseForbidden()

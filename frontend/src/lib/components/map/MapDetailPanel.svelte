@@ -3,8 +3,7 @@
 
 	import { createEventDispatcher } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import type {
 		Location,
 		PlaceSearchResult,
@@ -52,6 +51,10 @@
 		duplicateMatches?: DuplicateLocationMatch[];
 		isCheckingDuplicates?: boolean;
 		showDuplicatePrompt?: boolean;
+		/** Sit inside another card instead of filling a map drawer. */
+		embedded?: boolean;
+		/** The surrounding modal already shows the name and address. */
+		hideHeading?: boolean;
 	}
 
 	let {
@@ -70,7 +73,9 @@
 		isMetric = true,
 		duplicateMatches = [],
 		isCheckingDuplicates = false,
-		showDuplicatePrompt = false
+		showDuplicatePrompt = false,
+		embedded = false,
+		hideHeading = false
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
@@ -93,14 +98,6 @@
 
 	const DESCRIPTION_COLLAPSE_CHARS = 320;
 
-	function renderMarkdown(markdown: string): string {
-		return marked(markdown) as string;
-	}
-
-	function sanitizeMarkdown(html: string): string {
-		return DOMPurify.sanitize(html);
-	}
-
 	function formatDate(value: string | null | undefined): string {
 		if (!value) return '';
 		return formatDisplayDate(value, dateFormat);
@@ -119,16 +116,10 @@
 		return stars;
 	}
 
-	function getPriceLevelDisplay(priceLevel: string | null | undefined) {
-		if (!priceLevel) return '';
-		const levels: Record<string, string> = {
-			FREE: 'Free',
-			INEXPENSIVE: '$',
-			MODERATE: '$$',
-			EXPENSIVE: '$$$',
-			VERY_EXPENSIVE: '$$$$'
-		};
-		return levels[priceLevel] || '';
+	// price_level is 0 (free) to 4 (very expensive).
+	function getPriceLevelDisplay(priceLevel: number | null | undefined) {
+		if (priceLevel == null || priceLevel < 1) return '';
+		return '$'.repeat(Math.min(priceLevel, 4));
 	}
 
 	function formatDistance(km: number | null | undefined, metric: boolean) {
@@ -275,15 +266,21 @@
 	/>
 {/if}
 
-<div class="flex flex-col h-full min-h-0 max-h-full">
-	<button
-		type="button"
-		class="btn btn-ghost btn-sm gap-2 justify-start shrink-0 mb-4"
-		onclick={() => dispatch('back')}
-	>
-		<ArrowLeft class="w-4 h-4" />
-		{$t('map.back_to_controls')}
-	</button>
+<div
+	class={embedded
+		? 'flex h-full min-h-0 flex-1 flex-col'
+		: 'flex h-full min-h-0 max-h-full flex-col'}
+>
+	{#if !embedded}
+		<button
+			type="button"
+			class="btn btn-ghost btn-sm mb-4 shrink-0 justify-start gap-2"
+			onclick={() => dispatch('back')}
+		>
+			<ArrowLeft class="w-4 h-4" />
+			{$t('map.back_to_controls')}
+		</button>
+	{/if}
 
 	{#if !selectionKind}
 		<p class="text-sm text-base-content/60">{$t('map.select_on_map')}</p>
@@ -302,13 +299,19 @@
 			<span class="text-sm">{error}</span>
 		</div>
 	{:else}
-		<div class="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
-			<div>
-				<h2 class="text-lg font-bold leading-tight">{title}</h2>
-				{#if subtitle}
-					<p class="text-sm text-base-content/70 mt-1 leading-snug">{subtitle}</p>
-				{/if}
-			</div>
+		<div
+			class={embedded
+				? 'min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 md:px-6'
+				: 'min-h-0 flex-1 space-y-4 overflow-y-auto pr-1'}
+		>
+			{#if !hideHeading}
+				<div>
+					<h2 class="text-lg font-bold leading-tight">{title}</h2>
+					{#if subtitle}
+						<p class="text-sm text-base-content/70 mt-1 leading-snug">{subtitle}</p>
+					{/if}
+				</div>
+			{/if}
 
 			{#if selectionKind === 'image' && imagePin}
 				<div class="rounded-xl overflow-hidden border border-base-300">
@@ -503,7 +506,7 @@
 					<h3 class="text-sm font-semibold mb-2">{$t('adventures.description')}</h3>
 					{#if descriptionExpanded}
 						<article class="prose prose-sm max-w-none text-base-content">
-							{@html sanitizeMarkdown(renderMarkdown(descriptionText))}
+							{@html renderMarkdown(descriptionText)}
 						</article>
 					{:else if descriptionIsLong}
 						<p class="text-sm text-base-content/80 leading-relaxed whitespace-pre-wrap">
@@ -511,7 +514,7 @@
 						</p>
 					{:else}
 						<article class="prose prose-sm max-w-none text-base-content">
-							{@html sanitizeMarkdown(renderMarkdown(descriptionText))}
+							{@html renderMarkdown(descriptionText)}
 						</article>
 					{/if}
 					{#if descriptionIsLong}
@@ -601,7 +604,11 @@
 			{/if}
 		</div>
 
-		<div class="shrink-0 pt-4 space-y-2 border-t border-base-300 mt-4">
+		<div
+			class={embedded
+				? 'flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-base-300 px-4 py-3 md:px-6'
+				: 'mt-4 shrink-0 space-y-2 border-t border-base-300 pt-4'}
+		>
 			{#if selectionKind === 'pin' && location?.id}
 				<button
 					type="button"
@@ -626,9 +633,25 @@
 				{#if showDuplicatePrompt}
 					<DuplicateLocationPrompt matches={duplicateMatches} checking={isCheckingDuplicates} />
 				{/if}
+				{#if embedded && showLodgingAdd && selectionKind === 'recommendation'}
+					<button type="button" class="btn btn-ghost gap-2" onclick={() => dispatch('addLodging')}>
+						{$t('map.add_as_lodging')}
+					</button>
+				{/if}
+				{#if embedded}
+					<button
+						type="button"
+						class="btn btn-outline gap-2"
+						disabled={isQuickAdding}
+						onclick={() => dispatch('addDetails')}
+					>
+						<Plus class="w-4 h-4" />
+						{$t('map.add_with_details')}
+					</button>
+				{/if}
 				<button
 					type="button"
-					class="btn btn-primary w-full gap-2"
+					class="btn btn-primary gap-2 {embedded ? '' : 'w-full'}"
 					class:loading={isQuickAdding}
 					disabled={isQuickAdding}
 					onclick={() => dispatch('quickAdd')}
@@ -636,23 +659,25 @@
 					<LightningIcon class="w-4 h-4" />
 					{$t('map.quick_add')}
 				</button>
-				<button
-					type="button"
-					class="btn btn-outline w-full gap-2"
-					disabled={isQuickAdding}
-					onclick={() => dispatch('addDetails')}
-				>
-					<Plus class="w-4 h-4" />
-					{$t('map.add_with_details')}
-				</button>
-				{#if showLodgingAdd && selectionKind === 'recommendation'}
+				{#if !embedded}
 					<button
 						type="button"
-						class="btn btn-ghost w-full gap-2"
-						onclick={() => dispatch('addLodging')}
+						class="btn btn-outline w-full gap-2"
+						disabled={isQuickAdding}
+						onclick={() => dispatch('addDetails')}
 					>
-						{$t('map.add_as_lodging')}
+						<Plus class="w-4 h-4" />
+						{$t('map.add_with_details')}
 					</button>
+					{#if showLodgingAdd && selectionKind === 'recommendation'}
+						<button
+							type="button"
+							class="btn btn-ghost w-full gap-2"
+							onclick={() => dispatch('addLodging')}
+						>
+							{$t('map.add_as_lodging')}
+						</button>
+					{/if}
 				{/if}
 			{/if}
 		</div>

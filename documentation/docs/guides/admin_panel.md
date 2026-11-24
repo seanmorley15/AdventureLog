@@ -1,42 +1,25 @@
 # Admin Panel
 
-The AdventureLog admin panel is powered by Django and is available at `/admin` on your backend URL. In Standard Deployment installs, that is the same domain as the frontend (for example `https://adventurelog.example.com/admin`).
+The admin panel is where server admins manage users, sign-in providers, invitations, and the data behind the app. Open it from **Settings → Admin → Launch Administration Panel**, or go to `/admin` on your backend address. On Standard Deployment that's the same domain as the app, for example `https://adventurelog.example.com/admin`.
 
-## Access requirements
+## Who can open it
 
-Only users with the **staff** flag (`is_staff=True`) can access the admin panel. The first-boot superuser created from `DJANGO_ADMIN_*` environment variables has staff access by default.
+Users with **staff** status. The first admin account, created on first start, is a staff superuser. See [First Steps](../install/first_steps.md).
 
 ## What you can manage
 
-| Section | Description |
-| ------- | ----------- |
-| **Users** | Create, edit, and deactivate user accounts |
-| **Locations** | View and manage location records in the database |
-| **Social applications** | Configure OAuth/OIDC providers (GitHub, OIDC, etc.) |
-| **Invitations** | Send invite links for private instances |
-| **World data** | Countries, regions, and cities reference data |
+| Section | What it's for |
+| ------- | ------------- |
+| **Users** | Edit or deactivate accounts. Tick **Staff status** to let someone open the admin panel, and **Superuser status** to give them every permission. |
+| **Invitations** | Invite people by email. See [Invite a User](invite_user.md). |
+| **Social applications** | Set up sign-in providers such as Authentik or GitHub. See [Social Auth & OIDC](../configuration/social_auth.md). |
+| **Sites** | The domain and name shown in emails. See [SMTP Email](../configuration/email.md#set-the-site-name-in-emails). |
+| **Jobs** and **Procrastinate** | Background exports and imports, and every queued task, with retry. See [Background Jobs](../configuration/background_jobs.md#seeing-and-managing-jobs). |
+| **Locations**, **Collections**, and their parts | Every user's data, for support and repairs. Edit with care. |
+| **World travel** | Countries, regions, and cities, and what users have visited |
+| **Integrations** | Each user's Immich, Strava, Wanderer, and Endurain connections |
+| **API keys**, **Sessions** | Revoke a user's API keys or sign them out everywhere |
 
-## CSRF configuration
+## If saving fails
 
-If the admin panel loads but form submissions fail, verify `CSRF_TRUSTED_ORIGINS` in your `.env` or `.env.advanced` includes your public domain:
-
-```env
-CSRF_TRUSTED_ORIGINS=https://adventurelog.example.com
-```
-
-When using a single domain, set `SITE_URL` instead and the origins are derived automatically. See [Environment Variables](../configuration/environment_variables.md#url-and-networking).
-
-## Social auth setup
-
-OAuth and OIDC providers are configured in the admin panel under **Social applications** and **Social accounts**. Step-by-step guides:
-
-- [Social Auth overview](../configuration/social_auth.md)
-- [GitHub](../configuration/social_auth/github.md)
-- [Authentik](../configuration/social_auth/authentik.md)
-- [Pocket ID](../configuration/social_auth/pocket_id.md)
-- [OpenID Connect](../configuration/social_auth/oidc.md)
-
-## Related guides
-
-- [Invite a User](invite_user.md)
-- [Disable Registration](../configuration/disable_registration.md)
+If pages load but saving a form fails with a CSRF error, the admin panel isn't accepting your address. Set `SITE_URL` to the address you use (Standard Deployment), or add it to `CSRF_TRUSTED_ORIGINS` (Advanced Deployment). See [Login and Registration Unresponsive](../troubleshooting/login_unresponsive.md).

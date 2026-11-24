@@ -98,6 +98,7 @@ spec:
       labels:
         app: adventurelog
     spec:
+      terminationGracePeriodSeconds: 70
       containers:
         - name: app
           image: ghcr.io/seanmorley15/adventurelog:latest

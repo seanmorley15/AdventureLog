@@ -64,6 +64,7 @@ services:
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     restart: unless-stopped
+    stop_grace_period: 70s
     env_file: ../.env.advanced
     volumes:
       - adventurelog-media:/code/media

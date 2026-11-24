@@ -494,7 +494,9 @@
 		"visit_added": "Besuch hinzugefügt",
 		"visit_updated": "Besuch aktualisiert",
 		"visit_add_failed": "Fehler beim Hinzufügen des Besuchs",
-		"visit_update_failed": "Fehler beim Aktualisieren des Besuchs"
+		"visit_update_failed": "Fehler beim Aktualisieren des Besuchs",
+		"trip": "Reise",
+		"collection_type": "Art"
 	},
 	"home": {
 		"desc_1": "Entdecke, plane und erkunde mühelos",
@@ -1043,6 +1045,7 @@
 			"bus": "Bus",
 			"walking": "Gehen",
 			"car": "Auto",
+			"motorcycle": "Motorrad",
 			"other": "Andere",
 			"plane": "Flugzeug",
 			"train": "Zug"
@@ -1492,26 +1495,6 @@
 		"show_more": "Mehr anzeigen"
 	},
 	"currencies": {
-		"AED": "VAE-Dirham",
-		"AUD": "Australischer Dollar",
-		"BRL": "Brasilianischer Real",
-		"CAD": "Kanadischer Dollar",
-		"CHF": "Schweizer Franken",
-		"CNY": "Chinesischer Yuan",
-		"DKK": "Dänische Krone",
-		"EUR": "Euro",
-		"GBP": "Britisches Pfund",
-		"HKD": "Hongkong-Dollar",
-		"INR": "Indische Rupie",
-		"JPY": "Japanischer Yen",
-		"MXN": "Mexikanischer Peso",
-		"NOK": "Norwegische Krone",
-		"NZD": "Neuseeland-Dollar",
-		"SEK": "Schwedische Krone",
-		"SGD": "Singapur-Dollar",
-		"TRY": "Türkische Lira",
-		"USD": "US-Dollar",
-		"ZAR": "Südafrikanischer Rand",
 		"no_matches": "Keine Übereinstimmungen",
 		"search": "Währung suchen",
 		"select_currency": "Währung auswählen",

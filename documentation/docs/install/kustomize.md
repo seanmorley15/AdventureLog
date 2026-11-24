@@ -1,52 +1,52 @@
-# Kubernetes and Kustomize (k8s)
+# Kubernetes with Kustomize
 
-_AdventureLog can be run inside a kubernetes cluster using [kustomize](https://kustomize.io/)._
+AdventureLog runs on Kubernetes with the [Kustomize](https://kustomize.io/) example in the repository. It has been tested on k8s; other Kustomize-capable distributions should work too.
 
-## Prerequisites
+## What's included
 
-A working kubernetes cluster. AdventureLog has been tested on k8s, but any Kustomize-capable flavor should be easy to use.
+The example in [`k8s/base/`](https://github.com/seanmorley15/AdventureLog/tree/main/k8s/base) runs Standard Deployment:
 
-Allocate at least **2 GB RAM** for first boot (world geography import) and **1 GB** steady-state for small clusters.
+| Resource | Purpose |
+| -------- | ------- |
+| `adventurelog-secret` (Secret) | The database password and Django `SECRET_KEY` |
+| `adventurelog-db` (StatefulSet and Service) | PostGIS, with a 10 Gi volume |
+| `adventurelog` (Deployment and Service) | The app on port 80, with a 10 Gi media volume |
+| `adventurelog` (Ingress) | One public hostname |
 
-## Recommended layout
+## Install
 
-The maintained example lives in [`k8s/base/`](https://github.com/seanmorley15/AdventureLog/tree/main/k8s/base):
+1. Check the [requirements](getting_started.md#requirements). The app pod needs about 2 GB of memory on first start, and 1 GB afterward.
+2. Copy `k8s/base/` and edit `adventurelog.yaml`:
+   - Set the secret values. Keep `SECRET_KEY` once set: changing it signs everyone out.
+   - Set `SITE_URL` to your public address.
+   - Set the Ingress host to your domain.
+3. Apply it:
 
-- **PostGIS** runs in its own StatefulSet (not co-located with the app)
-- **Standard Deployment** runs as a single Deployment on port 80 — simpler ingress than the 3-container split
-- **Secrets** for database and Django credentials (no hardcoded admin password)
-- **Ingress** for a single public hostname
+   ```bash
+   kubectl apply -k k8s/base/
+   ```
 
-Apply it with:
+4. Read the admin password from the app's log, as described in [First Steps](first_steps.md#_2-find-the-admin-password):
 
-```bash
-kubectl apply -k k8s/base/
-```
+   ```bash
+   kubectl logs deploy/adventurelog | grep -A3 "Admin username"
+   ```
 
-Edit `SITE_URL`, ingress host, and secret values before applying in production.
+Every other setting is an environment variable on the `app` container. See [Environment Variables](../configuration/environment_variables.md).
 
-The legacy [`k8s/legacy/kustomization.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/k8s/legacy/kustomization.yml) example is **deprecated** — it colocates frontend, backend, and database in one pod.
+The older [`k8s/legacy/`](https://github.com/seanmorley15/AdventureLog/blob/main/k8s/legacy/kustomization.yml) example, which puts the frontend, backend, and database in one pod, is deprecated.
 
-## Advanced 3-container on Kubernetes
+## Separate frontend and backend
 
-If you need separate frontend and backend Deployments, use the [Advanced Deployment env reference](docker.md#configuration) and configure ingress path routing:
+To run the frontend and backend as separate Deployments, use the Advanced Deployment images and settings (see [Advanced Deployment](docker.md#urls)), and route paths in the Ingress:
 
-- Frontend: all paths **except** `/media`, `/admin`, `/static`, `/accounts`
-- Backend: `/media`, `/admin`, `/static`, `/accounts`
+| Path | Service |
+| ---- | ------- |
+| `/media`, `/admin`, `/static`, `/accounts` | Backend |
+| Everything else | Frontend |
 
-The backend must be reachable **both** from browsers and from the frontend SSR process. Set `PUBLIC_SERVER_URL` to an internal service URL and configure public URLs separately — see the Docker docs.
+The frontend's server also calls the backend directly: set `PUBLIC_SERVER_URL` to the backend's internal Service address.
 
-## Tailscale and Headscale
+## Tailscale
 
-Many k8s homelabs choose to use [Tailscale](https://tailscale.com/) or similar projects to remove the need for open ports in your home firewall.
-
-The [Tailscale k8s Operator](https://tailscale.com/kb/1185/kubernetes/) will set up an externally resolvable service/ingress for your AdventureLog instance,
-but it will fail to resolve internally.
-
-You must [expose tailnet IPs to your cluster](https://tailscale.com/kb/1438/kubernetes-operator-cluster-egress#expose-a-tailnet-https-service-to-your-cluster-workloads) so the AdventureLog pods can resolve them.
-
-## Environment Variables
-
-Look at the [environment variable summary](docker.md#configuration) in the docker install section to see available and required configuration options. Standard Deployment installs can use `SITE_URL` and `POSTGRES_PASSWORD` with other values derived at startup.
-
-Enjoy AdventureLog! 🎉
+The [Tailscale Kubernetes operator](https://tailscale.com/kb/1185/kubernetes/) can expose AdventureLog on your tailnet without opening firewall ports. Its address resolves from outside the cluster but not from inside, so the pods can't reach it. [Expose the tailnet service to your cluster](https://tailscale.com/kb/1438/kubernetes-operator-cluster-egress#expose-a-tailnet-https-service-to-your-cluster-workloads) so they can.

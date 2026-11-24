@@ -1,12 +1,19 @@
 import hashlib
+import hmac
 import secrets
 import uuid
+from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django_resized import ResizedImageField
 
+from core.visibility import ProfileVisibility
 
+
+# The currencies people choose from: those in circulation (ISO 4217), the most used first.
+# frontend/src/lib/money.ts offers the same codes; money.test.ts checks that they match.
 CURRENCY_CHOICES = (
     ('USD', 'US Dollar'),
     ('EUR', 'Euro'),
@@ -26,8 +33,141 @@ CURRENCY_CHOICES = (
     ('MXN', 'Mexican Peso'),
     ('BRL', 'Brazilian Real'),
     ('ZAR', 'South African Rand'),
-    ('AED', 'UAE Dirham'),
+    ('AED', 'United Arab Emirates Dirham'),
     ('TRY', 'Turkish Lira'),
+    ('AFN', 'Afghan Afghani'),
+    ('ALL', 'Albanian Lek'),
+    ('AMD', 'Armenian Dram'),
+    ('AOA', 'Angolan Kwanza'),
+    ('ARS', 'Argentine Peso'),
+    ('AWG', 'Aruban Florin'),
+    ('AZN', 'Azerbaijani Manat'),
+    ('BAM', 'Bosnia-Herzegovina Convertible Mark'),
+    ('BBD', 'Barbadian Dollar'),
+    ('BDT', 'Bangladeshi Taka'),
+    ('BGN', 'Bulgarian Lev'),
+    ('BHD', 'Bahraini Dinar'),
+    ('BIF', 'Burundian Franc'),
+    ('BMD', 'Bermudan Dollar'),
+    ('BND', 'Brunei Dollar'),
+    ('BOB', 'Bolivian Boliviano'),
+    ('BSD', 'Bahamian Dollar'),
+    ('BTN', 'Bhutanese Ngultrum'),
+    ('BWP', 'Botswanan Pula'),
+    ('BYN', 'Belarusian Ruble'),
+    ('BZD', 'Belize Dollar'),
+    ('CDF', 'Congolese Franc'),
+    ('CLP', 'Chilean Peso'),
+    ('COP', 'Colombian Peso'),
+    ('CRC', 'Costa Rican Colón'),
+    ('CUP', 'Cuban Peso'),
+    ('CVE', 'Cape Verdean Escudo'),
+    ('CZK', 'Czech Koruna'),
+    ('DJF', 'Djiboutian Franc'),
+    ('DOP', 'Dominican Peso'),
+    ('DZD', 'Algerian Dinar'),
+    ('EGP', 'Egyptian Pound'),
+    ('ERN', 'Eritrean Nakfa'),
+    ('ETB', 'Ethiopian Birr'),
+    ('FJD', 'Fijian Dollar'),
+    ('FKP', 'Falkland Islands Pound'),
+    ('GEL', 'Georgian Lari'),
+    ('GHS', 'Ghanaian Cedi'),
+    ('GIP', 'Gibraltar Pound'),
+    ('GMD', 'Gambian Dalasi'),
+    ('GNF', 'Guinean Franc'),
+    ('GTQ', 'Guatemalan Quetzal'),
+    ('GYD', 'Guyanaese Dollar'),
+    ('HNL', 'Honduran Lempira'),
+    ('HTG', 'Haitian Gourde'),
+    ('HUF', 'Hungarian Forint'),
+    ('IDR', 'Indonesian Rupiah'),
+    ('ILS', 'Israeli New Shekel'),
+    ('IQD', 'Iraqi Dinar'),
+    ('IRR', 'Iranian Rial'),
+    ('ISK', 'Icelandic Króna'),
+    ('JMD', 'Jamaican Dollar'),
+    ('JOD', 'Jordanian Dinar'),
+    ('KES', 'Kenyan Shilling'),
+    ('KGS', 'Kyrgyz Som'),
+    ('KHR', 'Cambodian Riel'),
+    ('KMF', 'Comorian Franc'),
+    ('KPW', 'North Korean Won'),
+    ('KRW', 'South Korean Won'),
+    ('KWD', 'Kuwaiti Dinar'),
+    ('KYD', 'Cayman Islands Dollar'),
+    ('KZT', 'Kazakhstani Tenge'),
+    ('LAK', 'Laotian Kip'),
+    ('LBP', 'Lebanese Pound'),
+    ('LKR', 'Sri Lankan Rupee'),
+    ('LRD', 'Liberian Dollar'),
+    ('LSL', 'Lesotho Loti'),
+    ('LYD', 'Libyan Dinar'),
+    ('MAD', 'Moroccan Dirham'),
+    ('MDL', 'Moldovan Leu'),
+    ('MGA', 'Malagasy Ariary'),
+    ('MKD', 'Macedonian Denar'),
+    ('MMK', 'Myanmar Kyat'),
+    ('MNT', 'Mongolian Tugrik'),
+    ('MOP', 'Macanese Pataca'),
+    ('MRU', 'Mauritanian Ouguiya'),
+    ('MUR', 'Mauritian Rupee'),
+    ('MVR', 'Maldivian Rufiyaa'),
+    ('MWK', 'Malawian Kwacha'),
+    ('MYR', 'Malaysian Ringgit'),
+    ('MZN', 'Mozambican Metical'),
+    ('NAD', 'Namibian Dollar'),
+    ('NGN', 'Nigerian Naira'),
+    ('NIO', 'Nicaraguan Córdoba'),
+    ('NPR', 'Nepalese Rupee'),
+    ('OMR', 'Omani Rial'),
+    ('PAB', 'Panamanian Balboa'),
+    ('PEN', 'Peruvian Sol'),
+    ('PGK', 'Papua New Guinean Kina'),
+    ('PHP', 'Philippine Peso'),
+    ('PKR', 'Pakistani Rupee'),
+    ('PLN', 'Polish Zloty'),
+    ('PYG', 'Paraguayan Guarani'),
+    ('QAR', 'Qatari Riyal'),
+    ('RON', 'Romanian Leu'),
+    ('RSD', 'Serbian Dinar'),
+    ('RUB', 'Russian Ruble'),
+    ('RWF', 'Rwandan Franc'),
+    ('SAR', 'Saudi Riyal'),
+    ('SBD', 'Solomon Islands Dollar'),
+    ('SCR', 'Seychellois Rupee'),
+    ('SDG', 'Sudanese Pound'),
+    ('SHP', 'St. Helena Pound'),
+    ('SLE', 'Sierra Leonean Leone'),
+    ('SOS', 'Somali Shilling'),
+    ('SRD', 'Surinamese Dollar'),
+    ('SSP', 'South Sudanese Pound'),
+    ('STN', 'São Tomé & Príncipe Dobra'),
+    ('SVC', 'Salvadoran Colón'),
+    ('SYP', 'Syrian Pound'),
+    ('SZL', 'Swazi Lilangeni'),
+    ('THB', 'Thai Baht'),
+    ('TJS', 'Tajikistani Somoni'),
+    ('TMT', 'Turkmenistani Manat'),
+    ('TND', 'Tunisian Dinar'),
+    ('TOP', 'Tongan Paʻanga'),
+    ('TTD', 'Trinidad & Tobago Dollar'),
+    ('TWD', 'New Taiwan Dollar'),
+    ('TZS', 'Tanzanian Shilling'),
+    ('UAH', 'Ukrainian Hryvnia'),
+    ('UGX', 'Ugandan Shilling'),
+    ('UYU', 'Uruguayan Peso'),
+    ('UZS', 'Uzbekistani Som'),
+    ('VES', 'Venezuelan Bolívar'),
+    ('VND', 'Vietnamese Dong'),
+    ('VUV', 'Vanuatu Vatu'),
+    ('WST', 'Samoan Tala'),
+    ('XAF', 'Central African CFA Franc'),
+    ('XCD', 'East Caribbean Dollar'),
+    ('XOF', 'West African CFA Franc'),
+    ('XPF', 'CFP Franc'),
+    ('YER', 'Yemeni Rial'),
+    ('ZMW', 'Zambian Kwacha'),
 )
 
 DATE_FORMAT_CHOICES = (
@@ -71,6 +211,11 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=True)
     profile_pic = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='profile-pics/')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    # Who can see the profile and find this user to share with (#1226). ``public_profile``
+    # mirrors ``profile_visibility == public`` for clients that only know the old switch.
+    profile_visibility = models.CharField(
+        max_length=10, choices=ProfileVisibility.choices, default=ProfileVisibility.PRIVATE
+    )
     public_profile = models.BooleanField(default=False)
     disable_password = models.BooleanField(default=False)
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
@@ -78,11 +223,47 @@ class CustomUser(AbstractUser):
     date_format = models.CharField(max_length=10, choices=DATE_FORMAT_CHOICES, default='locale')
     map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
     legal_consent = models.JSONField(null=True, blank=True, editable=False)
+    # The address this account had when social sign-in started requiring a verified email.
+    # Social sign-in may still match the account by this address, so nobody who signed in
+    # that way before is locked out. New accounts never get one, and it does not follow later
+    # email changes (users.adapters.CustomSocialAccountAdapter.can_authenticate_by_email).
+    legacy_email_login = models.EmailField(null=True, blank=True, editable=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._loaded_profile_visibility = self.__dict__.get('profile_visibility')
+
+    def _sync_public_profile(self):
+        """
+        Keep ``public_profile`` a mirror of ``profile_visibility``. A changed visibility wins;
+        otherwise an old client that only flipped ``public_profile`` moves the visibility: on
+        makes the profile public, off makes a public profile private and leaves a signed-in
+        one alone.
+        """
+        public = ProfileVisibility.PUBLIC
+        if 'profile_visibility' not in self.__dict__ or 'public_profile' not in self.__dict__:
+            return
+        if self._state.adding:
+            if self.profile_visibility == ProfileVisibility.PRIVATE and self.public_profile:
+                self.profile_visibility = public
+            self.public_profile = self.profile_visibility == public
+        elif self.profile_visibility != self._loaded_profile_visibility:
+            self.public_profile = self.profile_visibility == public
+        elif self.public_profile != (self.profile_visibility == public):
+            if self.public_profile:
+                self.profile_visibility = public
+            elif self.profile_visibility == public:
+                self.profile_visibility = ProfileVisibility.PRIVATE
 
     def save(self, *args, **kwargs):
         if isinstance(self.email, str) and not self.email.strip():
             self.email = None
+        self._sync_public_profile()
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and ({'profile_visibility', 'public_profile'} & set(update_fields)):
+            kwargs['update_fields'] = list(set(update_fields) | {'profile_visibility', 'public_profile'})
         super().save(*args, **kwargs)
+        self._loaded_profile_visibility = self.profile_visibility
 
     def __str__(self):
         return self.username
@@ -94,14 +275,20 @@ class APIKey(models.Model):
 
     Security design:
     - A 32-byte cryptographically random token is generated with the prefix ``al_``.
-    - Only a PBKDF2-HMAC-SHA256 derived hash of the full token is persisted;
-        the plaintext is returned exactly once at creation time and never stored.
+    - Only a SHA-256 hash of the full token is persisted; the plaintext is returned
+        exactly once at creation time and never stored. The token is 256 random bits,
+        so it needs no salt or slow hash, and checking a key costs almost nothing.
+    - Keys made before this scheme carry a salted PBKDF2 hash in ``key_hash``. They
+        are checked the slow way once, then moved to the fast hash.
     - The first 12 characters of the token are kept as ``key_prefix`` so users can
         identify their keys without revealing the secret.
     """
 
     _KEY_HASH_ITERATIONS = 600000
     _KEY_HASH_SALT_NAMESPACE = "users.APIKey"
+    _FAST_HASH_NAMESPACE = "adventurelog.api-key.v2:"
+    # last_used_at is a hint for the key list, so it is written at most this often.
+    _LAST_USED_RESOLUTION = timedelta(minutes=5)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -109,7 +296,9 @@ class APIKey(models.Model):
     )
     name = models.CharField(max_length=100)
     key_prefix = models.CharField(max_length=12, editable=False)
-    key_hash = models.CharField(max_length=64, unique=True, editable=False)
+    # Legacy salted PBKDF2 hash. Empty once the key has been moved to key_hash_v2.
+    key_hash = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
+    key_hash_v2 = models.CharField(max_length=64, unique=True, null=True, blank=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
 
@@ -120,8 +309,12 @@ class APIKey(models.Model):
         return f"{self.user.username} – {self.name} ({self.key_prefix}…)"
 
     @classmethod
-    def _hash_raw_key(cls, raw_key: str) -> str:
-        """Derive a computationally expensive hash for API key persistence."""
+    def _fast_hash(cls, raw_key: str) -> str:
+        return hashlib.sha256((cls._FAST_HASH_NAMESPACE + raw_key).encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _legacy_hash(cls, raw_key: str) -> str:
+        """The expensive salted hash that keys made before the fast hash were stored under."""
         salt = f"{cls._KEY_HASH_SALT_NAMESPACE}:{settings.SECRET_KEY}".encode("utf-8")
         return hashlib.pbkdf2_hmac(
             "sha256",
@@ -139,13 +332,11 @@ class APIKey(models.Model):
         user once and must never be stored anywhere after that.
         """
         raw_key = f"al_{secrets.token_urlsafe(32)}"
-        key_hash = cls._hash_raw_key(raw_key)
-        key_prefix = raw_key[:12]
         instance = cls.objects.create(
             user=user,
             name=name,
-            key_prefix=key_prefix,
-            key_hash=key_hash,
+            key_prefix=raw_key[:12],
+            key_hash_v2=cls._fast_hash(raw_key),
         )
         return instance, raw_key
 
@@ -154,14 +345,61 @@ class APIKey(models.Model):
         """
         Look up an APIKey by its raw value.
 
-        Returns the matching ``APIKey`` instance (updating ``last_used_at``) or
-        ``None`` if not found.
+        Returns the matching ``APIKey`` instance (recording when it was last used) or
+        ``None`` if there is no such key or its user is deactivated.
         """
-        key_hash = cls._hash_raw_key(raw_key)
-        try:
-            api_key = cls.objects.select_related('user').get(key_hash=key_hash)
-        except cls.DoesNotExist:
+        fast_hash = cls._fast_hash(raw_key)
+        api_key = cls.objects.select_related('user').filter(key_hash_v2=fast_hash).first()
+        if api_key is None:
+            api_key = cls._authenticate_legacy(raw_key, fast_hash)
+        if api_key is None or not api_key.user.is_active:
             return None
-        from django.utils import timezone
-        cls.objects.filter(pk=api_key.pk).update(last_used_at=timezone.now())
+
+        now = timezone.now()
+        if api_key.last_used_at is None or now - api_key.last_used_at >= cls._LAST_USED_RESOLUTION:
+            cls.objects.filter(pk=api_key.pk).update(last_used_at=now)
+            api_key.last_used_at = now
         return api_key
+
+    @classmethod
+    def _authenticate_legacy(cls, raw_key: str, fast_hash: str):
+        """
+        Check a key that is still stored under the old PBKDF2 hash, and move it to the
+        fast hash. The slow hash is computed only when a stored legacy key shares this
+        key's 12-character prefix, so a made-up key never costs more than a lookup.
+        """
+        candidates = list(
+            cls.objects.select_related('user').filter(key_hash_v2__isnull=True, key_prefix=raw_key[:12])
+        )
+        if not candidates:
+            return None
+
+        legacy_hash = cls._legacy_hash(raw_key)
+        for candidate in candidates:
+            if candidate.key_hash and hmac.compare_digest(candidate.key_hash, legacy_hash):
+                cls.objects.filter(pk=candidate.pk).update(key_hash_v2=fast_hash, key_hash=None)
+                candidate.key_hash_v2, candidate.key_hash = fast_hash, None
+                return candidate
+        return None
+
+class MobileAuthCode(models.Model):
+    """
+    A one-time code that carries a browser sign-in back to the mobile app.
+
+    Only a hash of the code is stored. The app redeems it, with the PKCE verifier matching
+    ``code_challenge``, for an app session. See ``users.services.mobile_auth``.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    code_hash = models.CharField(max_length=64, unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mobile_auth_codes')
+    code_challenge = models.CharField(max_length=43)
+    redirect_uri = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    # The app session this code produced, so a replayed code can take it back.
+    session_key = models.CharField(max_length=40, blank=True, default='')
+
+    def __str__(self):
+        return f'Mobile sign-in code for {self.user_id}'

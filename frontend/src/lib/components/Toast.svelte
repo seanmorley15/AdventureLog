@@ -3,9 +3,52 @@
 	import { onMount } from 'svelte';
 
 	let toastList: any[] = $state([]);
+	let container: HTMLDivElement | undefined = $state();
 
 	toasts.subscribe((value) => {
 		toastList = value;
+		placeContainer();
+	});
+
+	/**
+	 * A dialog opened with showModal() sits in the browser's top layer, above every z-index,
+	 * and makes the rest of the page inert. While one is open the toasts live inside it, so
+	 * they stay visible and their close button still works; they move back out when it closes.
+	 */
+	function topModalDialog(): HTMLDialogElement | null {
+		const open = document.querySelectorAll<HTMLDialogElement>('dialog[open]');
+		for (let i = open.length - 1; i >= 0; i--) {
+			try {
+				if (open[i].matches(':modal')) return open[i];
+			} catch {
+				return null; // a browser without :modal keeps the old behaviour
+			}
+		}
+		return null;
+	}
+
+	function placeContainer() {
+		if (!container || typeof document === 'undefined') return;
+		const host = topModalDialog() ?? document.body;
+		if (container.parentElement !== host) host.appendChild(container);
+	}
+
+	onMount(() => {
+		placeContainer();
+		// Dialogs open, close and unmount without telling us; follow them while toasts show.
+		const observer = new MutationObserver(() => {
+			if (toastList.length > 0 || !container?.isConnected) placeContainer();
+		});
+		observer.observe(document.body, {
+			subtree: true,
+			childList: true,
+			attributes: true,
+			attributeFilter: ['open']
+		});
+		return () => {
+			observer.disconnect();
+			container?.remove();
+		};
 	});
 
 	function getIconSvg(type: string) {
@@ -24,7 +67,7 @@
 	}
 </script>
 
-<div class="toast toast-top toast-end z-[9999] mt-16 gap-3 max-w-md px-4">
+<div bind:this={container} class="toast toast-top toast-end z-[9999] mt-16 gap-3 max-w-md px-4">
 	{#each toastList as { type, message, id }}
 		<div
 			class="alert alert-{type} shadow-2xl backdrop-blur-xs rounded-2xl border-0 min-w-80 max-w-md animate-in slide-in-from-right-5 fade-in duration-300"

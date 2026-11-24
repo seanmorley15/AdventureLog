@@ -15,7 +15,7 @@ export const load = (async (event) => {
 		return { verified: false };
 	}
 
-	const verifyFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/email/verify', {
+	const verifyFetch = await djangoBrowserFetch(event, '/api/auth/browser/v1/auth/email/verify', {
 		method: 'POST',
 		csrfToken,
 		headers: { 'Content-Type': 'application/json' },

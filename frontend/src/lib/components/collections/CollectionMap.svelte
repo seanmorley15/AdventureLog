@@ -6,18 +6,47 @@
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
 	import { LODGING_TYPES_ICONS, getActivityColor, normalizeBasemapType } from '#lib';
-	import SearchIcon from '~icons/mdi/magnify';
-	import FilterIcon from '~icons/mdi/filter-variant';
-	import ChevronDown from '~icons/mdi/chevron-down';
 	import Plus from '~icons/mdi/plus';
 	import PinIcon from '~icons/mdi/map-marker';
 	import Clear from '~icons/mdi/close';
 	import NewLocationModal from '#lib/components/locations/LocationModal.svelte';
+	import PlaceSearchAdd from '#lib/components/collections/PlaceSearchAdd.svelte';
 	import MapImagePinLayer from '#lib/components/map/MapImagePinLayer.svelte';
-	import { collectCollectionImageGeoJson } from '#lib/map/imagePins.js';
+	import ImageMapPinPopup from '#lib/components/map/ImageMapPinPopup.svelte';
+	import {
+		collectCollectionImageGeoJson,
+		getImagePinNavigationUrl,
+		type ImagePinProperties
+	} from '#lib/map/imagePins.js';
 	import { t } from 'svelte-i18n';
-	import type { Collection, Location, User } from '#lib/types.js';
-	import DateInput from '#lib/components/shared/DateInput.svelte';
+	import type {
+		Collection,
+		CollectionItineraryItem,
+		Location,
+		PlaceSearchResult,
+		User
+	} from '#lib/types.js';
+	import {
+		dayPinColor,
+		dayStopPath,
+		placementType,
+		errorMessage,
+		indexedDays,
+		pinCoversDay,
+		planRequest,
+		type PlanPin
+	} from '#lib/collections/plan.js';
+	import { addToast } from '#lib/toasts.js';
+	import {
+		CatalogFilters,
+		isWithinDateRange,
+		locationMatches,
+		lodgingMatches,
+		transportationMatches
+	} from '#lib/collections/catalog.svelte.js';
+	import CollectionCatalogFilters from './CollectionCatalogFilters.svelte';
+	import MapMarkerPath from '~icons/mdi/map-marker-path';
+	import Numeric from '~icons/mdi/numeric';
 
 	interface Props {
 		collection: Collection;
@@ -26,6 +55,26 @@
 		// Allow disabling/enabling clustering for markers
 		clusterEnabled?: boolean;
 		clusterOptions?: any;
+		/** Day-plan pins. A span is one pin, numbered by its start day. */
+		planPins?: PlanPin[];
+		selectedDay?: number | null;
+		highlightedDay?: number | null;
+		onPinSelect?: (type: string, objectId: string, dayIndex: number | null) => void;
+		/** Map fills its parent and hides the filter chrome. */
+		embedded?: boolean;
+		mapClass?: string;
+		/** Folder maps hide route and trail controls. */
+		showRoutes?: boolean;
+		/** Shared catalog filters. When omitted the map keeps its own. */
+		filters?: CatalogFilters;
+		/** Day-numbered pins. Catalog defaults this off so icons show first. */
+		numberedPins?: boolean;
+		/** Show a map overlay to switch icon pins vs day numbers. */
+		pinStyleToggle?: boolean;
+		/** Fit the viewport to the visible pins on load and whenever the filters change. */
+		autoFit?: boolean;
+		/** Let editors add a pin to a day straight from its hover card. */
+		dayPicker?: boolean;
 	}
 
 	let {
@@ -33,10 +82,23 @@
 		user = null,
 		canModify = false,
 		clusterEnabled = false,
-		clusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 }
+		clusterOptions = { radius: 300, maxZoom: 8, minPoints: 2 },
+		planPins = [],
+		selectedDay = null,
+		highlightedDay = null,
+		onPinSelect,
+		embedded = false,
+		mapClass = 'w-full h-[600px]',
+		showRoutes = true,
+		filters = new CatalogFilters(),
+		numberedPins = true,
+		pinStyleToggle = false,
+		autoFit = false,
+		dayPicker = false
 	}: Props = $props();
 
 	let basemapType = $state('default');
+	let map: any = $state(undefined);
 
 	type MarkerType = 'location' | 'lodging' | 'transportation';
 	type VisitStatus = 'visited' | 'planned';
@@ -63,20 +125,20 @@
 		features: MarkerFeature[];
 	};
 
-	// Filter state
-	let showFilters = $state(false);
-	let showLocations = $state(true);
-	let showLodging = $state(true);
-	let showTransportation = $state(true);
-	let showVisited = $state(true);
-	let showPlanned = $state(true);
-	let showLines = $state(true);
-	let showTrails = $state(true);
-	let showImagePins = $state(true);
-	let startDateFilter = $state('');
-	let endDateFilter = $state('');
-	let selectedCategories: Set<string> = $state(new Set());
-	let searchQuery = $state('');
+	let showDayLinks = $state(false);
+	let showLocations = $derived(filters.showLocations);
+	let showLodging = $derived(filters.showLodging);
+	let showTransportation = $derived(filters.showTransportation);
+	let showVisited = $derived(filters.showVisited);
+	let showPlanned = $derived(filters.showPlanned);
+	let showLines = $derived(filters.showLines);
+	let showTrails = $derived(filters.showTrails);
+	let showImagePins = $derived(filters.showImagePins);
+	let startDateFilter = $derived(filters.startDate);
+	let endDateFilter = $derived(filters.endDate);
+	let selectedCategories = $derived(filters.categories);
+	let searchQuery = $derived(filters.search);
+	let showNumberedPins = $derived(pinStyleToggle ? filters.numberedPins : numberedPins);
 
 	// Map state for zoom control
 	let mapZoom = $state(8);
@@ -86,6 +148,10 @@
 	let createModalOpen = $state(false);
 	let initialLatLng: { lat: number; lng: number } | null = $state(null);
 	let newMarker: { lngLat: { lng: number; lat: number } } | null = $state(null);
+	// A place picked in the search box, and the prefilled form when the user wants to edit it first.
+	let searchedPlace: PlaceSearchResult | null = $state(null);
+	let detailsPrefill: Location | null = $state(null);
+	let placeSearch: ReturnType<typeof PlaceSearchAdd> | undefined = $state();
 	let newLatitude: number | null = $state(null);
 	let newLongitude: number | null = $state(null);
 
@@ -169,42 +235,11 @@
 		return cloned;
 	}
 
-	function parseDate(value: string | null | undefined): number | null {
-		if (!value) return null;
-		const ts = Date.parse(value);
-		return Number.isFinite(ts) ? ts : null;
-	}
-
 	function formatShortDate(value: string | null | undefined): string {
 		if (!value) return '';
-		const parsed = parseDate(value);
-		if (!parsed) return '';
+		const parsed = Date.parse(value);
+		if (!Number.isFinite(parsed)) return '';
 		return new Date(parsed).toISOString().split('T')[0];
-	}
-
-	type FilterConfig = {
-		showLocations: boolean;
-		showLodging: boolean;
-		showTransportation: boolean;
-		showVisited: boolean;
-		showPlanned: boolean;
-		startDate: string;
-		endDate: string;
-		categories: Set<string>;
-	};
-
-	function isWithinDateRange(
-		value: string | null | undefined,
-		startDate: string,
-		endDate: string
-	): boolean {
-		const hasRange = Boolean(startDate || endDate);
-		if (!hasRange) return true;
-		const ts = parseDate(value ?? null);
-		if (!ts) return false;
-		const startTs = startDate ? Date.parse(startDate) : -Infinity;
-		const endTs = endDate ? Date.parse(endDate) + 24 * 60 * 60 * 1000 - 1 : Infinity;
-		return ts >= startTs && ts <= endTs;
 	}
 
 	function getLocationPrimaryDate(loc: any): string | null {
@@ -238,6 +273,7 @@
 			return '✈️';
 		if (normalized.includes('train')) return '🚆';
 		if (normalized.includes('bus')) return '🚌';
+		if (normalized.includes('motorcycle')) return '🏍️';
 		if (normalized.includes('car') || normalized.includes('drive') || normalized.includes('taxi'))
 			return '🚗';
 		if (normalized.includes('boat') || normalized.includes('ferry')) return '⛴️';
@@ -274,7 +310,7 @@
 				id: String(l.id),
 				name: l.name || 'Lodging',
 				categoryIcon: getLodgingIcon(l.type),
-				categoryName: l.type || 'Lodging',
+				categoryName: l.type || 'other',
 				type: 'lodging',
 				date: l.check_in || l.check_out || null
 			}
@@ -345,23 +381,6 @@
 		};
 	}
 
-	function transportationMatchesFilters(
-		t: any,
-		filters: { startDate: string; endDate: string; search: string }
-	): boolean {
-		const date = getTransportationDate(t);
-		if (!isWithinDateRange(date, filters.startDate, filters.endDate)) return false;
-
-		if (filters.search) {
-			const query = filters.search.toLowerCase();
-			const nameMatch = (t?.name || '').toLowerCase().includes(query);
-			const typeMatch = (t?.type || '').toLowerCase().includes(query);
-			if (!nameMatch && !typeMatch) return false;
-		}
-
-		return true;
-	}
-
 	function collectTransportationLinesGeojson(
 		transportations: any[]
 	): { type: 'FeatureCollection'; features: GeoJSON.Feature<GeoJSON.LineString>[] } | null {
@@ -383,10 +402,25 @@
 		);
 	}
 
+	type DayTrackScope = {
+		locationIds: Set<string>;
+		transportIds: Set<string>;
+	};
+
 	// Merge attachments/activity geojson into a single feature collection
+	function dayActivityMatches(activity: any, dayIndex: number | null, trails: any[]): boolean {
+		if (dayIndex == null) return true;
+		if (activity?.day_index === dayIndex) return true;
+		const trail = trails.find((entry) => entry.id === activity?.trail);
+		if (!trail?.day_index || !trail.span_end_index) return false;
+		return trail.day_index <= dayIndex && dayIndex <= trail.span_end_index;
+	}
+
 	function collectLinesGeojson(
 		coll: Collection,
-		filters: { startDate: string; endDate: string }
+		dateWindow: { startDate: string; endDate: string },
+		scope: DayTrackScope | null,
+		dayIndex: number | null
 	): { type: 'FeatureCollection'; features: any[] } | null {
 		if (!coll) return null;
 		const features: any[] = [];
@@ -407,6 +441,8 @@
 
 		// Locations: attachments and visits -> activities
 		for (const loc of coll.locations || []) {
+			if (!locationMatches(loc, filters)) continue;
+			if (scope && !scope.locationIds.has(String(loc.id))) continue;
 			if (Array.isArray(loc.attachments)) {
 				for (const a of loc.attachments) {
 					if (!a || !a.geojson) continue;
@@ -419,7 +455,8 @@
 					if (!visit.activities) continue;
 					for (const activity of visit.activities) {
 						const activityDate = getActivityDate(activity, visit);
-						if (!isWithinDateRange(activityDate, filters.startDate, filters.endDate)) continue;
+						if (!isWithinDateRange(activityDate, dateWindow.startDate, dateWindow.endDate))
+							continue;
 						if (activity && activity.geojson) {
 							const color = getActivityColor(activity.sport_type || (activity as any).type || '');
 							pushGeoJson(activity.geojson, {
@@ -432,8 +469,21 @@
 			}
 		}
 
+		// Day activities carry the GPX. A trail card is only a link.
+		for (const activity of coll.day_activities || []) {
+			if (!dayActivityMatches(activity, dayIndex, coll.day_trails || [])) continue;
+			if (!activity?.geojson) continue;
+			const color = getActivityColor(activity.sport_type || '');
+			pushGeoJson(activity.geojson, {
+				_color: color,
+				activity_type: activity.sport_type || null
+			});
+		}
+
 		// Transportations: attachments
 		for (const t of coll.transportations || []) {
+			if (!transportationMatches(t, filters)) continue;
+			if (scope && !scope.transportIds.has(String(t.id))) continue;
 			if (!t || !Array.isArray(t.attachments)) continue;
 			for (const a of t.attachments) {
 				if (!a || !a.geojson) continue;
@@ -445,61 +495,48 @@
 		return { type: 'FeatureCollection', features };
 	}
 
+	function appendTrailGeometry(features: any[], geojson: any) {
+		if (!geojson) return;
+		if (geojson.type === 'FeatureCollection' && Array.isArray(geojson.features)) {
+			for (const feature of geojson.features) {
+				const cloned = cloneFeature(feature);
+				if (cloned) features.push(cloned);
+			}
+		} else if (geojson.type === 'Feature') {
+			const cloned = cloneFeature(geojson);
+			if (cloned) features.push(cloned);
+		}
+	}
+
+	function dayTrailMatches(trail: any, dayIndex: number | null): boolean {
+		if (dayIndex == null) return true;
+		if (trail?.day_index === dayIndex) return true;
+		if (!trail?.day_index || !trail.span_end_index) return false;
+		return trail.day_index <= dayIndex && dayIndex <= trail.span_end_index;
+	}
+
 	function collectTrailGeojson(
-		coll: Collection
+		coll: Collection,
+		scope: DayTrackScope | null,
+		dayIndex: number | null
 	): { type: 'FeatureCollection'; features: any[] } | null {
 		if (!coll) return null;
 		const features: any[] = [];
 
 		for (const loc of coll.locations || []) {
+			if (!locationMatches(loc, filters)) continue;
+			if (scope && !scope.locationIds.has(String(loc.id))) continue;
 			if (!Array.isArray(loc.trails)) continue;
-			for (const trail of loc.trails) {
-				if (!trail?.geojson) continue;
-				if (trail.geojson.type === 'FeatureCollection' && Array.isArray(trail.geojson.features)) {
-					for (const f of trail.geojson.features) {
-						const cloned = cloneFeature(f);
-						if (cloned) features.push(cloned);
-					}
-				} else if (trail.geojson.type === 'Feature') {
-					const cloned = cloneFeature(trail.geojson);
-					if (cloned) features.push(cloned);
-				}
-			}
+			for (const trail of loc.trails) appendTrailGeometry(features, trail?.geojson);
+		}
+
+		for (const trail of coll.day_trails || []) {
+			if (!dayTrailMatches(trail, dayIndex)) continue;
+			appendTrailGeometry(features, trail?.geojson);
 		}
 
 		if (features.length === 0) return null;
 		return { type: 'FeatureCollection', features };
-	}
-
-	function matchesFilters(
-		feature: MarkerFeature,
-		filters: FilterConfig & { search: string }
-	): boolean {
-		const props = feature.properties;
-
-		// Search filter
-		if (filters.search) {
-			const query = filters.search.toLowerCase();
-			const nameMatch = props.name?.toLowerCase().includes(query);
-			const categoryMatch = props.categoryName?.toLowerCase().includes(query);
-			if (!nameMatch && !categoryMatch) return false;
-		}
-
-		if (props.type === 'location') {
-			if (!filters.showLocations) return false;
-			if (props.visitStatus === 'visited' && !filters.showVisited) return false;
-			if (props.visitStatus === 'planned' && !filters.showPlanned) return false;
-			if (filters.categories.size) {
-				if (!props.categoryName || !filters.categories.has(props.categoryName)) return false;
-			}
-		} else if (props.type === 'lodging') {
-			if (!filters.showLodging) return false;
-		} else if (props.type === 'transportation') {
-			if (!filters.showTransportation) return false;
-		}
-
-		if (!isWithinDateRange(props.date ?? null, filters.startDate, filters.endDate)) return false;
-		return true;
 	}
 
 	function zoomToFilteredFeatures() {
@@ -546,7 +583,32 @@
 		newLatitude = e.detail.lngLat.lat;
 	}
 
+	function handlePlaceSelect(place: PlaceSearchResult | null) {
+		searchedPlace = place;
+		if (!place) return;
+		// A map click and a searched place are two ways to point at the same thing, so keep one.
+		clearNewMarker();
+		mapCenterCoords = [place.lng, place.lat];
+		mapZoom = 14;
+	}
+
+	function handlePlaceAdded(created: Location, item?: CollectionItineraryItem) {
+		upsertLocation(created);
+		if (item) {
+			const byId = new Map((collection.itinerary ?? []).map((row) => [String(row.id), row]));
+			byId.set(String(item.id), item);
+			collection.itinerary = [...byId.values()];
+		}
+		const lat = parseNumber(created.latitude);
+		const lon = parseNumber(created.longitude);
+		if (lat !== null && lon !== null) {
+			mapCenterCoords = [lon, lat];
+			mapZoom = 14;
+		}
+	}
+
 	function openCreateModal() {
+		detailsPrefill = null;
 		initialLatLng = newMarker ? { lat: newMarker.lngLat.lat, lng: newMarker.lngLat.lng } : null;
 		createModalOpen = true;
 	}
@@ -593,32 +655,9 @@
 		}
 
 		createModalOpen = false;
+		detailsPrefill = null;
 		clearNewMarker();
-	}
-
-	function toggleCategory(name: string) {
-		const next = new Set(selectedCategories);
-		if (next.has(name)) {
-			next.delete(name);
-		} else {
-			next.add(name);
-		}
-		selectedCategories = next;
-	}
-
-	function resetFilters() {
-		showLocations = true;
-		showLodging = true;
-		showTransportation = true;
-		showVisited = true;
-		showPlanned = true;
-		showLines = true;
-		showTrails = true;
-		showImagePins = true;
-		startDateFilter = '';
-		endDateFilter = '';
-		selectedCategories = new Set();
-		searchQuery = '';
+		placeSearch?.clear();
 	}
 
 	function getMarkerColorClass(props: MarkerProperties) {
@@ -645,6 +684,71 @@
 		return true;
 	}
 
+	function pinObjectId(props: MarkerProperties): string {
+		return props.type === 'transportation' ? props.id.split(':')[0] : props.id;
+	}
+
+	function pinsFor(props: MarkerProperties): PlanPin[] {
+		const objectId = pinObjectId(props);
+		return planPins.filter((pin) => pin.type === props.type && pin.objectId === objectId);
+	}
+
+	function displayPin(props: MarkerProperties): PlanPin | null {
+		const matches = pinsFor(props);
+		if (!matches.length) return null;
+		if (selectedDay != null) {
+			return matches.find((pin) => pinCoversDay(pin, selectedDay)) ?? null;
+		}
+		return matches.find((pin) => pin.dayIndex != null) ?? matches[0];
+	}
+
+	let planDays = $derived(indexedDays(collection));
+	let addingKey = $state<string | null>(null);
+
+	async function addPinToDay(props: MarkerProperties, dayIndex: number) {
+		const objectId = pinObjectId(props);
+		const key = `${props.type}:${objectId}`;
+		if (addingKey) return;
+		addingKey = key;
+		try {
+			// Move the Ideas entry onto the day so it leaves Ideas; create a placement if there is none.
+			const ideasItem = (collection.itinerary ?? []).find(
+				(row) =>
+					String(row.object_id) === objectId &&
+					placementType(row) === props.type &&
+					!row.day &&
+					!row.is_global
+			);
+			const res = ideasItem
+				? await planRequest<any>(
+						`/api/collections/${collection.id}/itinerary-items/${ideasItem.id}/`,
+						'PATCH',
+						{ day_index: dayIndex, is_global: false }
+					)
+				: await planRequest<any>(`/api/collections/${collection.id}/itinerary-items/`, 'POST', {
+						content_type: props.type,
+						object_id: objectId,
+						day_index: dayIndex,
+						is_global: false
+					});
+			if (!res.ok) {
+				addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
+				return;
+			}
+			const { updated_object: _updated, ...item } = res.data;
+			const byId = new Map((collection.itinerary ?? []).map((row) => [String(row.id), row]));
+			byId.set(String(item.id), item);
+			collection.itinerary = [...byId.values()];
+		} finally {
+			addingKey = null;
+		}
+	}
+
+	function pinIsHighlighted(pin: PlanPin | null): boolean {
+		if (!pin || highlightedDay == null) return false;
+		return pinCoversDay(pin, highlightedDay);
+	}
+
 	function getNavigationUrl(props: MarkerProperties): string {
 		if (props.type === 'location') {
 			return `/locations/${props.id}`;
@@ -658,12 +762,6 @@
 		return '#';
 	}
 
-	function filterChipClass(active: boolean, activeClass = 'btn-primary') {
-		return active
-			? `btn btn-xs h-7 min-h-7 ${activeClass} gap-1 font-normal px-2.5`
-			: 'btn btn-xs h-7 min-h-7 btn-ghost border border-base-300/80 opacity-70 gap-1 font-normal px-2.5';
-	}
-
 	$effect(() => {
 		const style = user?.map_style;
 		if (!style) return;
@@ -672,22 +770,6 @@
 	});
 	let resolvedClusterOptions = $derived(clusterOptions || defaultClusterOptions);
 	// Normalize collection start/end dates to YYYY-MM-DD for cross-browser compatibility (Firefox is strict)
-	let collectionStartDateISO = $derived(
-		formatShortDate(collection?.start_date || null) || undefined
-	);
-	let collectionEndDateISO = $derived(formatShortDate(collection?.end_date || null) || undefined);
-	// Build features and apply filters
-	let categoryOptions = $derived(
-		Array.from(
-			(collection?.locations || []).reduce((counts, loc: any) => {
-				const name = loc?.category?.display_name;
-				if (name) counts.set(name, (counts.get(name) || 0) + 1);
-				return counts;
-			}, new Map<string, number>())
-		)
-			.sort((a: [string, number], b: [string, number]) => b[1] - a[1] || a[0].localeCompare(b[0]))
-			.map(([name]: [string, number]) => name)
-	);
 	let locationFeatures = $derived(
 		(collection?.locations || []).map(locationToFeature).filter(Boolean) as MarkerFeature[]
 	);
@@ -700,47 +782,137 @@
 			.filter(Boolean) as MarkerFeature[]
 	);
 	let allFeatures = $derived([...locationFeatures, ...lodgingFeatures, ...transportationFeatures]);
+	let trackScope = $derived.by(() => {
+		if (selectedDay == null || planPins.length === 0) return null;
+		const dayIndex = selectedDay;
+		return {
+			locationIds: new Set(
+				planPins
+					.filter((pin) => pin.type === 'location' && pinCoversDay(pin, dayIndex))
+					.map((pin) => pin.objectId)
+			),
+			transportIds: new Set(
+				planPins
+					.filter((pin) => pin.type === 'transportation' && pinCoversDay(pin, dayIndex))
+					.map((pin) => pin.objectId)
+			)
+		};
+	});
 	let linesGeoJson = $derived(
-		collectLinesGeojson(collection, {
-			startDate: startDateFilter || collection?.start_date || '',
-			endDate: endDateFilter || collection?.end_date || ''
-		})
+		collectLinesGeojson(
+			collection,
+			{
+				startDate: startDateFilter || collection?.start_date || '',
+				endDate: endDateFilter || collection?.end_date || ''
+			},
+			trackScope,
+			selectedDay
+		)
 	);
 	let transportationLinesGeoJson = $derived(
 		showTransportation
 			? collectTransportationLinesGeojson(
-					(collection?.transportations || []).filter((t) =>
-						transportationMatchesFilters(t, {
-							startDate: startDateFilter,
-							endDate: endDateFilter,
-							search: searchQuery.trim()
-						})
-					)
+					(collection?.transportations || []).filter((item) => {
+						if (trackScope && !trackScope.transportIds.has(String(item.id))) return false;
+						return transportationMatches(item, filters);
+					})
 				)
 			: null
 	);
-	let trailsGeoJson = $derived(collectTrailGeojson(collection));
+	let trailsGeoJson = $derived(collectTrailGeojson(collection, trackScope, selectedDay));
+	let dayLinkGeoJson = $derived.by(() => {
+		if (selectedDay == null || !showDayLinks) return null;
+		const coordinates = dayStopPath(collection, selectedDay);
+		if (coordinates.length < 2) return null;
+		return {
+			type: 'FeatureCollection' as const,
+			features: [
+				{
+					type: 'Feature' as const,
+					geometry: { type: 'LineString' as const, coordinates },
+					properties: { _color: dayPinColor(selectedDay) }
+				}
+			]
+		};
+	});
 	let trailCount = $derived(
 		(collection?.locations || []).reduce(
 			(count, loc) => count + (loc.trails || []).filter((trail) => trail.geojson).length,
 			0
+		) + (collection?.day_trails || []).filter((trail) => trail.geojson).length
+	);
+	let matchedLocationIds = $derived(
+		new Set(
+			(collection?.locations ?? [])
+				.filter((loc) => locationMatches(loc, filters))
+				.map((loc) => String(loc.id))
+		)
+	);
+	let matchedLodgingIds = $derived(
+		new Set(
+			(collection?.lodging ?? [])
+				.filter((item) => lodgingMatches(item, filters))
+				.map((item) => String(item.id))
+		)
+	);
+	let matchedTransportIds = $derived(
+		new Set(
+			(collection?.transportations ?? [])
+				.filter((item) => transportationMatches(item, filters))
+				.map((item) => String(item.id))
 		)
 	);
 	let filteredFeatures = $derived(
-		allFeatures.filter((feature) =>
-			matchesFilters(feature, {
-				showLocations,
-				showLodging,
-				showTransportation,
-				showVisited,
-				showPlanned,
-				startDate: startDateFilter,
-				endDate: endDateFilter,
-				categories: selectedCategories,
-				search: searchQuery.trim()
-			})
-		)
+		allFeatures.filter((feature) => {
+			const props = feature.properties;
+			const listed =
+				props.type === 'location'
+					? matchedLocationIds.has(props.id)
+					: props.type === 'lodging'
+						? matchedLodgingIds.has(props.id)
+						: matchedTransportIds.has(pinObjectId(props));
+			if (!listed) return false;
+			if (selectedDay == null || planPins.length === 0) return true;
+			return displayPin(props) != null;
+		})
 	);
+	// Fit the viewport to whatever pins are visible, so a folder opens framed on its places.
+	let fitSignature = $derived(
+		filteredFeatures
+			.map((f) => f.geometry.coordinates.join(','))
+			.sort()
+			.join('|')
+	);
+	let hasFitted = false;
+	$effect(() => {
+		const signature = fitSignature;
+		const currentMap = map;
+		if (!autoFit || !currentMap || !signature) return;
+		untrack(() => {
+			const coords = filteredFeatures.map((f) => f.geometry.coordinates);
+			const lngs = coords.map((c) => c[0]);
+			const lats = coords.map((c) => c[1]);
+			const bounds: [[number, number], [number, number]] = [
+				[Math.min(...lngs), Math.min(...lats)],
+				[Math.max(...lngs), Math.max(...lats)]
+			];
+			const fit = () =>
+				currentMap.fitBounds(bounds, {
+					padding: 64,
+					maxZoom: 12,
+					duration: hasFitted ? 600 : 0
+				});
+			if (currentMap.loaded?.()) {
+				fit();
+				hasFitted = true;
+			} else {
+				currentMap.once('load', () => {
+					fit();
+					hasFitted = true;
+				});
+			}
+		});
+	});
 	// Auto-zoom when search results change
 	$effect(() => {
 		const query = searchQuery.trim();
@@ -748,65 +920,83 @@
 		if (!query || matches.length === 0) return;
 		untrack(() => zoomToFilteredFeatures());
 	});
+	let imagePinGeoJson = $derived(collectCollectionImageGeoJson(collection));
+	// With clustering on, photo pins join the same source so they group with places.
+	let clusteredImageFeatures = $derived(
+		clusterEnabled && showImagePins
+			? imagePinGeoJson.features.map((feature) => ({
+					...feature,
+					properties: {
+						...feature.properties,
+						id: `image:${feature.properties.imageId}`,
+						name: feature.properties.parentName,
+						type: 'image'
+					}
+				}))
+			: []
+	);
 	let markerGeoJson = $derived({
 		type: 'FeatureCollection',
-		features: filteredFeatures
-	} as MarkerFeatureCollection);
+		features: [...filteredFeatures, ...clusteredImageFeatures]
+	} as unknown as MarkerFeatureCollection);
+
+	function imagePinProps(props: Record<string, any>): ImagePinProperties {
+		return {
+			imageId: String(props.imageId),
+			imageUrl: String(props.imageUrl ?? ''),
+			source: props.source ?? 'upload',
+			isPrimary: Boolean(props.isPrimary),
+			parentType: String(props.parentType ?? 'location'),
+			parentId: String(props.parentId ?? ''),
+			parentName: String(props.parentName ?? '')
+		};
+	}
+
+	function openImagePin(props: ImagePinProperties) {
+		const href = getImagePinNavigationUrl(props);
+		if (href) goto(href);
+	}
 	// Stats
 	let visiblePinCount = $derived(filteredFeatures.length);
 	let totalPinCount = $derived(allFeatures.length);
-	let totalLocations = $derived(locationFeatures.length);
-	let visitedCount = $derived(
-		locationFeatures.filter((f) => f.properties.visitStatus === 'visited').length
-	);
-	let plannedCount = $derived(
-		locationFeatures.filter((f) => f.properties.visitStatus === 'planned').length
-	);
-	let filteredVisitedCount = $derived(
-		filteredFeatures.filter(
-			(f) => f.properties.type === 'location' && f.properties.visitStatus === 'visited'
-		).length
-	);
-	let filteredPlannedCount = $derived(
-		filteredFeatures.filter(
-			(f) => f.properties.type === 'location' && f.properties.visitStatus === 'planned'
-		).length
-	);
-	let hasActiveCategoryFilter = $derived(selectedCategories.size > 0);
-	let hasActiveDateFilter = $derived(Boolean(startDateFilter || endDateFilter));
-	let hasActiveSearchFilter = $derived(Boolean(searchQuery.trim()));
-	let filtersPristine = $derived(
-		showLocations &&
-			showLodging &&
-			showTransportation &&
-			showVisited &&
-			showPlanned &&
-			showLines &&
-			showTrails &&
-			!hasActiveCategoryFilter &&
-			!hasActiveDateFilter &&
-			!hasActiveSearchFilter
-	);
-	let imagePinGeoJson = $derived(collectCollectionImageGeoJson(collection));
 	let imagePinCount = $derived(imagePinGeoJson.features.length);
 	let mapKey = $derived(
-		`${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${Array.from(
+		`${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${selectedDay ?? 'all'}-${showDayLinks}-${showNumberedPins}-${Array.from(
 			selectedCategories
 		)
 			.sort()
-			.join('|')}`
+			.join(
+				'|'
+			)}-${Array.from(filters.lodgingTypes).sort().join('|')}-${Array.from(filters.transportTypes).sort().join('|')}`
 	);
+	function firstTrackCoordinate(geojson: { features?: any[] } | null): [number, number] | null {
+		const coordinates = geojson?.features?.[0]?.geometry?.coordinates;
+		if (!Array.isArray(coordinates) || coordinates.length === 0) return null;
+		const first = Array.isArray(coordinates[0]) ? coordinates[0] : coordinates;
+		if (typeof first[0] !== 'number' || typeof first[1] !== 'number') return null;
+		return [first[0], first[1]];
+	}
+
+	// The fallback centre is captured once. Re-deriving it from the first pin made the map
+	// jump back to that pin whenever the collection changed (e.g. adding a place to a day).
+	let initialCenter: [number, number] | null = $state(null);
+	$effect(() => {
+		if (untrack(() => initialCenter)) return;
+		const fallback =
+			(markerGeoJson.features[0]?.geometry.coordinates as [number, number] | undefined) ??
+			firstTrackCoordinate(linesGeoJson) ??
+			firstTrackCoordinate(trailsGeoJson);
+		if (fallback) initialCenter = [fallback[0], fallback[1]];
+	});
 	let mapCenter = $derived(
 		mapCenterCoords[0] !== 0 || mapCenterCoords[1] !== 0
 			? mapCenterCoords
-			: markerGeoJson.features.length
-				? markerGeoJson.features[0].geometry.coordinates
-				: ([0, 0] as [number, number])
+			: (initialCenter ?? ([0, 0] as [number, number]))
 	);
 </script>
 
 <!-- Add to Collection CTA (compact) -->
-{#if canModify}
+{#if canModify && !embedded}
 	<div class="card bg-base-100 shadow-xs mb-3 border border-base-200">
 		<div class="card-body py-3 px-4 gap-2">
 			<div class="flex items-center justify-between gap-3">
@@ -868,237 +1058,31 @@
 	</div>
 {/if}
 
-<!-- Filter Header -->
-<div class="card bg-base-100 shadow-lg mb-4">
-	<div class="card-body p-3 gap-2">
-		<!-- Toggle filter visibility -->
-		<div class="flex items-center justify-between gap-3">
-			<button
-				type="button"
-				class="btn btn-sm btn-ghost gap-2 min-w-0 flex-1 justify-start px-2"
-				onclick={() => (showFilters = !showFilters)}
-			>
-				<span
-					class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-primary/10 text-primary shrink-0"
-				>
-					<FilterIcon class="w-4 h-4" />
-				</span>
-				<span class="font-medium text-sm truncate">
-					{showFilters ? $t('adventures.hide_filters') : $t('adventures.show_filters')}
-				</span>
-				<ChevronDown
-					class="w-4 h-4 shrink-0 transition-transform ml-auto {showFilters ? 'rotate-180' : ''}"
-				/>
-			</button>
-
-			<div class="flex items-center gap-1.5 shrink-0">
-				<div class="badge badge-ghost badge-sm whitespace-nowrap">
-					{visiblePinCount}/{totalPinCount}
-				</div>
-				{#if !filtersPristine}
-					<button type="button" class="btn btn-xs btn-ghost" onclick={resetFilters}>
-						{$t('adventures.reset_filters')}
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Expanded Filter UI -->
-		{#if showFilters}
-			<div class="divider my-1"></div>
-			<div class="space-y-3">
-				<label class="input input-xs flex items-center gap-2 h-8 min-h-8">
-					<SearchIcon class="h-3.5 w-3.5 opacity-70 shrink-0" />
-					<input
-						type="text"
-						class="grow text-sm"
-						placeholder={$t('map.search_locations')}
-						bind:value={searchQuery}
-					/>
-					{#if searchQuery}
-						<button
-							type="button"
-							class="btn btn-ghost btn-xs btn-circle h-5 w-5 min-h-5"
-							onclick={() => (searchQuery = '')}
-							aria-label={$t('adventures.clear_search')}
-						>
-							✕
-						</button>
-					{/if}
-				</label>
-
-				<div class="grid gap-3 lg:grid-cols-2">
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.visits')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={filterChipClass(showVisited, 'btn-success')}
-								onclick={() => (showVisited = !showVisited)}
-							>
-								✓ {$t('adventures.visited')}
-								<span class="opacity-80">({filteredVisitedCount})</span>
-							</button>
-							<button
-								type="button"
-								class={filterChipClass(showPlanned, 'btn-info')}
-								onclick={() => (showPlanned = !showPlanned)}
-							>
-								○ {$t('adventures.planned')}
-								<span class="opacity-80">({filteredPlannedCount})</span>
-							</button>
-						</div>
-					</div>
-
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.pins')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={filterChipClass(showLocations, 'btn-primary')}
-								onclick={() => (showLocations = !showLocations)}
-							>
-								📍 {$t('locations.locations')}
-								<span class="opacity-80">({locationFeatures.length})</span>
-							</button>
-							{#if lodgingFeatures.length}
-								<button
-									type="button"
-									class={filterChipClass(showLodging, 'btn-secondary')}
-									onclick={() => (showLodging = !showLodging)}
-								>
-									🏨 {$t('adventures.lodging')}
-									<span class="opacity-80">({lodgingFeatures.length})</span>
-								</button>
-							{/if}
-							{#if transportationFeatures.length}
-								<button
-									type="button"
-									class={filterChipClass(showTransportation, 'btn-accent')}
-									onclick={() => (showTransportation = !showTransportation)}
-								>
-									✈️ {$t('adventures.transportation')}
-									<span class="opacity-80">({transportationFeatures.length / 2})</span>
-								</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				{#if categoryOptions.length}
-					<div class="space-y-1.5">
-						<div class="flex items-center justify-between gap-2">
-							<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-								{$t('adventures.categories')}
-							</p>
-							{#if hasActiveCategoryFilter}
-								<button
-									type="button"
-									class="btn btn-ghost btn-xs h-6 min-h-6"
-									onclick={() => (selectedCategories = new Set())}
-								>
-									{$t('adventures.clear')}
-								</button>
-							{/if}
-						</div>
-						<div class="flex flex-wrap gap-1">
-							{#each categoryOptions as category}
-								<button
-									type="button"
-									class="badge badge-sm h-6 {selectedCategories.has(category)
-										? 'badge-primary'
-										: 'badge-ghost border border-base-300/80'} cursor-pointer"
-									onclick={() => toggleCategory(category)}
-								>
-									{category}
-								</button>
-							{/each}
-						</div>
-					</div>
-				{/if}
-
-				<div class="grid gap-3 md:grid-cols-2">
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.dates')}
-						</p>
-						<div class="flex gap-2">
-							<DateInput
-								bind:value={startDateFilter}
-								size="xs"
-								min={collectionStartDateISO}
-								max={collectionEndDateISO}
-								clearable={true}
-								placeholder={$t('adventures.start_date')}
-							/>
-							<DateInput
-								bind:value={endDateFilter}
-								size="xs"
-								min={collectionStartDateISO}
-								max={collectionEndDateISO}
-								clearable={true}
-								placeholder={$t('adventures.end_date')}
-							/>
-						</div>
-					</div>
-
-					<div class="space-y-1.5">
-						<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
-							{$t('adventures.routes_and_activities')}
-						</p>
-						<div class="flex flex-wrap gap-1.5">
-							<button
-								type="button"
-								class={filterChipClass(showLines, 'btn-neutral')}
-								onclick={() => (showLines = !showLines)}
-							>
-								🗺️ {$t('adventures.gpx_routes')}
-							</button>
-							{#if trailCount > 0}
-								<button
-									type="button"
-									class={filterChipClass(
-										showTrails,
-										'bg-[#a855f7] hover:bg-[#9333ea] border-[#a855f7] text-white'
-									)}
-									onclick={() => (showTrails = !showTrails)}
-								>
-									🥾 {$t('adventures.trails')}
-									<span class="opacity-80">({trailCount})</span>
-								</button>
-							{/if}
-							{#if imagePinCount > 0}
-								<button
-									type="button"
-									class={filterChipClass(
-										showImagePins,
-										'bg-rose-500 hover:bg-rose-600 border-rose-500 text-white'
-									)}
-									onclick={() => (showImagePins = !showImagePins)}
-								>
-									📷 {$t('map.photos')}
-									<span class="opacity-80">({imagePinCount})</span>
-								</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-			</div>
-		{/if}
-	</div>
-</div>
+{#if !embedded}
+	<CollectionCatalogFilters
+		{filters}
+		{collection}
+		class="mb-4"
+		showMapToggles={showRoutes}
+		matchedCount={visiblePinCount}
+		totalCount={totalPinCount}
+		{trailCount}
+		{imagePinCount}
+		startOpen={false}
+	/>
+{/if}
 
 <!-- Map -->
-<div class="w-full" style="min-height:600px; height:600px;">
+<div
+	class={embedded ? 'relative h-full w-full' : 'relative w-full'}
+	style={embedded ? undefined : 'min-height:600px; height:600px;'}
+>
 	<FullMap
+		bind:map
 		geoJson={markerGeoJson}
 		center={mapCenter}
 		zoom={mapZoom}
-		mapClass="w-full h-[600px]"
+		{mapClass}
 		bind:basemapType
 		{clusterEnabled}
 		clusterOptions={resolvedClusterOptions}
@@ -1106,40 +1090,111 @@
 		on:mapClick={handleMapClick}
 	>
 		{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
-			{#if markerProps && markerLngLat}
+			{#if markerProps && markerLngLat && markerProps.type === 'image'}
+				{@const imageProps = imagePinProps(markerProps)}
 				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
 					<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
 						<div
-							class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base group-hover:scale-110 transition-all duration-200 {getMarkerColorClass(
-								markerProps
-							)}"
+							class="map-pin-hit grid h-8 w-8 cursor-pointer place-items-center rounded-full border-2 border-white bg-gradient-to-br from-rose-400 to-rose-600 text-sm shadow-lg transition-all duration-200 group-hover:scale-110"
 							class:scale-110={isActive}
-							class:cursor-pointer={canNavigate(markerProps)}
-							class:cursor-default={!canNavigate(markerProps)}
 							role="button"
 							tabindex="0"
+							aria-label={imageProps.parentName || imageProps.imageId}
 							onmouseenter={() => setActive(true)}
 							onmouseleave={() => setActive(false)}
 							onfocus={() => setActive(true)}
 							onblur={() => setActive(false)}
 							onclick={(e) => {
 								e.stopPropagation();
+								openImagePin(imageProps);
+							}}
+							onkeydown={(e) => {
+								if (e.key !== 'Enter' && e.key !== ' ') return;
+								e.preventDefault();
+								e.stopPropagation();
+								openImagePin(imageProps);
+							}}
+						>
+							<span aria-hidden="true">📷</span>
+						</div>
+						<ImageMapPinPopup props={imageProps} visible={isActive} />
+					</div>
+				</Marker>
+			{:else if markerProps && markerLngLat}
+				{@const pin = showNumberedPins ? displayPin(markerProps) : null}
+				<Marker lngLat={markerLngLat} class={isActive ? 'map-pin-active' : 'map-pin'}>
+					<div
+						class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]"
+						role="presentation"
+						onmouseenter={() => setActive(true)}
+						onmouseleave={(e) => {
+							// Keep the card open while its day picker has focus.
+							if (!e.currentTarget.contains(document.activeElement)) setActive(false);
+						}}
+						onfocusin={() => setActive(true)}
+						onfocusout={(e) => {
+							if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setActive(false);
+						}}
+					>
+						<div
+							class="map-pin-hit relative grid place-items-center w-8 h-8 rounded-full border-2 shadow-lg text-sm font-bold group-hover:scale-110 transition-all duration-200 {pin
+								? 'text-white'
+								: getMarkerColorClass(markerProps)}"
+							class:border-white={!pin?.optional && !pin?.ideas}
+							class:border-dashed={pin?.optional || pin?.ideas}
+							class:border-warning={pin?.ideas}
+							class:scale-110={isActive}
+							class:ring-4={pinIsHighlighted(pin)}
+							class:ring-primary={pinIsHighlighted(pin)}
+							class:cursor-pointer={canNavigate(markerProps)}
+							style={pin?.dayIndex
+								? `background:${dayPinColor(pin.dayIndex)}`
+								: pin?.ideas
+									? 'background:#78716c'
+									: undefined}
+							role="button"
+							tabindex="0"
+							onclick={(e) => {
+								e.stopPropagation();
+								if (onPinSelect) {
+									onPinSelect(markerProps.type, pinObjectId(markerProps), pin?.dayIndex ?? null);
+									return;
+								}
 								if (canNavigate(markerProps)) goto(getNavigationUrl(markerProps));
 							}}
 							onkeydown={(e) => {
-								if ((e.key === 'Enter' || e.key === ' ') && canNavigate(markerProps)) {
-									e.preventDefault();
-									e.stopPropagation();
-									goto(getNavigationUrl(markerProps));
+								if (e.key !== 'Enter' && e.key !== ' ') return;
+								e.preventDefault();
+								e.stopPropagation();
+								if (onPinSelect) {
+									onPinSelect(markerProps.type, pinObjectId(markerProps), pin?.dayIndex ?? null);
+									return;
 								}
+								if (canNavigate(markerProps)) goto(getNavigationUrl(markerProps));
 							}}
 						>
-							{markerProps.categoryIcon || '📍'}
+							{#if pin?.dayIndex}
+								{pin.dayIndex}
+							{:else if pin?.ideas}
+								?
+							{:else}
+								{markerProps.categoryIcon || '📍'}
+							{/if}
+							{#if pin?.visited && pin.visitId}
+								<a
+									href={`/locations/${pin.objectId}#visit-${pin.visitId}`}
+									class="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-success text-[10px] text-success-content"
+									aria-label={$t('itinerary.visited')}
+									onclick={(e) => e.stopPropagation()}
+								>
+									✓
+								</a>
+							{/if}
 						</div>
 
 						<!-- Marker Popup -->
 						<div
-							class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-all duration-200 z-[9999]"
+							class="absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-all duration-200 z-[9999]"
 							class:opacity-100={isActive}
 							class:pointer-events-auto={isActive}
 						>
@@ -1173,6 +1228,33 @@
 											</div>
 										</div>
 									</div>
+									{#if dayPicker && canModify && planDays.length > 0 && !pinsFor(markerProps).some((p) => p.dayIndex != null)}
+										<div class="space-y-1">
+											<p class="text-xs font-medium opacity-70">
+												{$t('itinerary.add_to_day_label')}
+											</p>
+											<div
+												class="grid max-h-28 grid-cols-6 gap-1 overflow-y-auto overscroll-contain pr-1"
+												onwheel={(e) => e.stopPropagation()}
+											>
+												{#each planDays as day (day.id)}
+													<button
+														type="button"
+														class="btn btn-xs btn-outline px-0"
+														style={`border-color:${dayPinColor(day.index ?? 1)}`}
+														disabled={addingKey !== null}
+														onpointerdown={(e) => e.stopPropagation()}
+														onclick={(e) => {
+															e.stopPropagation();
+															if (day.index != null) addPinToDay(markerProps, day.index);
+														}}
+													>
+														{day.index}
+													</button>
+												{/each}
+											</div>
+										</div>
+									{/if}
 									{#if canNavigate(markerProps)}
 										<div class="card-actions">
 											<button
@@ -1192,7 +1274,30 @@
 		{/snippet}
 
 		{#snippet overlays()}
-			{#if showLines && linesGeoJson}
+			{#if showRoutes && dayLinkGeoJson}
+				<GeoJSON id={`collection-day-links-${mapKey}`} data={dayLinkGeoJson} generateId>
+					<LineLayer
+						id={`collection-day-links-casing-${mapKey}`}
+						layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+						paint={{
+							'line-color': '#ffffff',
+							'line-width': 6,
+							'line-opacity': 0.85
+						}}
+					/>
+					<LineLayer
+						id={`collection-day-links-path-${mapKey}`}
+						layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+						paint={{
+							'line-color': ['coalesce', ['get', '_color'], '#0ea5e9'],
+							'line-width': 3,
+							'line-opacity': 0.95
+						}}
+					/>
+				</GeoJSON>
+			{/if}
+
+			{#if showRoutes && showLines && linesGeoJson}
 				<GeoJSON id={`collection-lines-${mapKey}`} data={linesGeoJson} generateId>
 					<LineLayer
 						id={`collection-lines-path-${mapKey}`}
@@ -1205,7 +1310,7 @@
 				</GeoJSON>
 			{/if}
 
-			{#if showTrails && trailsGeoJson}
+			{#if showRoutes && showTrails && trailsGeoJson}
 				<GeoJSON id={`collection-trails-${mapKey}`} data={trailsGeoJson} generateId>
 					<LineLayer
 						id={`collection-trails-path-${mapKey}`}
@@ -1218,7 +1323,7 @@
 				</GeoJSON>
 			{/if}
 
-			{#if transportationLinesGeoJson}
+			{#if showRoutes && transportationLinesGeoJson}
 				<GeoJSON
 					id={`collection-transport-lines-${mapKey}`}
 					data={transportationLinesGeoJson}
@@ -1246,17 +1351,117 @@
 				</Marker>
 			{/if}
 
-			<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
+			{#if canModify && searchedPlace}
+				<Marker lngLat={[searchedPlace.lng, searchedPlace.lat]} class="map-pin">
+					<div
+						class="map-pin-hit grid h-10 w-10 place-items-center rounded-full border-2 border-base-100 bg-accent text-accent-content shadow-lg"
+					>
+						<PinIcon class="h-5 w-5" />
+					</div>
+				</Marker>
+			{/if}
+
+			{#if !clusterEnabled}
+				<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
+			{/if}
 		{/snippet}
 	</FullMap>
+
+	{#if canModify}
+		<div
+			class={[
+				'absolute left-3 top-3 z-30 flex max-h-[calc(100%-1.5rem)] flex-col',
+				pinStyleToggle && planPins.length > 0
+					? 'w-[calc(100%-10rem)] sm:w-80'
+					: 'w-[calc(100%-1.5rem)] sm:w-80'
+			]}
+		>
+			<PlaceSearchAdd
+				bind:this={placeSearch}
+				{collection}
+				{user}
+				onSelect={handlePlaceSelect}
+				onAdded={handlePlaceAdded}
+				{dayPicker}
+				onDetails={(prefill) => {
+					detailsPrefill = prefill;
+					createModalOpen = true;
+				}}
+			/>
+		</div>
+	{/if}
+
+	{#if canModify && embedded && newMarker}
+		<div
+			class="absolute bottom-8 left-3 z-20 flex items-center gap-2 rounded-box border border-base-300 bg-base-100/95 p-2 pl-3 shadow-lg backdrop-blur-lg"
+		>
+			<PinIcon class="h-4 w-4 shrink-0 text-primary" />
+			<span class="text-xs tabular-nums text-base-content/70">
+				{newLatitude?.toFixed(4)}, {newLongitude?.toFixed(4)}
+			</span>
+			<button type="button" class="btn btn-primary btn-xs gap-1" onclick={openCreateModal}>
+				<Plus class="h-3.5 w-3.5" />
+				{$t('collection.add_location_here')}
+			</button>
+			<button
+				type="button"
+				class="btn btn-ghost btn-xs btn-square"
+				aria-label={$t('adventures.clear')}
+				onclick={clearNewMarker}
+			>
+				<Clear class="h-4 w-4" />
+			</button>
+		</div>
+	{/if}
+
+	{#if selectedDay != null}
+		<div class={['pointer-events-none absolute left-3 z-20', canModify ? 'top-14' : 'top-3']}>
+			<button
+				type="button"
+				class={[
+					'pointer-events-auto btn btn-sm gap-2 border border-base-300 bg-base-100/90 shadow-md backdrop-blur-lg',
+					showDayLinks && 'border-primary bg-primary text-primary-content'
+				]}
+				aria-pressed={showDayLinks}
+				title={showDayLinks ? $t('itinerary.hide_day_route') : $t('itinerary.show_day_route')}
+				onclick={() => (showDayLinks = !showDayLinks)}
+			>
+				<MapMarkerPath class="h-4 w-4" />
+				{$t('itinerary.connect_stops')}
+			</button>
+		</div>
+	{/if}
+
+	{#if pinStyleToggle && planPins.length > 0}
+		<div class="pointer-events-none absolute right-3 top-3 z-20">
+			<button
+				type="button"
+				class={[
+					'pointer-events-auto btn btn-sm gap-2 border border-base-300 bg-base-100/90 shadow-md backdrop-blur-lg',
+					showNumberedPins && 'border-primary bg-primary text-primary-content'
+				]}
+				aria-pressed={showNumberedPins}
+				title={$t('collections.day_numbers')}
+				onclick={() => (filters.numberedPins = !showNumberedPins)}
+			>
+				<Numeric class="h-4 w-4" />
+				{$t('collections.day_numbers')}
+			</button>
+		</div>
+	{/if}
 </div>
 
 {#if canModify && createModalOpen}
 	<NewLocationModal
 		on:create={handleLocationCreated}
 		on:save={handleLocationSaved}
-		on:close={() => (createModalOpen = false)}
+		on:close={() => {
+			createModalOpen = false;
+			detailsPrefill = null;
+		}}
 		{initialLatLng}
+		locationToEdit={detailsPrefill}
+		skipQuickStart={detailsPrefill !== null}
 		{collection}
 		{user}
 	/>

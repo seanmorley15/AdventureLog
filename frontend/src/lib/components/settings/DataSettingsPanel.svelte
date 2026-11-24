@@ -2,6 +2,8 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
+	import { addToast } from '#lib/toasts.js';
+	import { jobErrorMessage, runExport } from '#lib/jobs.js';
 	import type { MediaUsage } from '#lib/types.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
@@ -38,6 +40,21 @@
 		isRestoring,
 		onRestoreStart
 	}: Props = $props();
+
+	// The backup is built on the server in the background; the file downloads when it is ready.
+	let isPreparingBackup = $state(false);
+	async function downloadBackup() {
+		if (isPreparingBackup) return;
+		isPreparingBackup = true;
+		addToast('info', $t('jobs.preparing'));
+		try {
+			await runExport('/api/backup/export/');
+		} catch (e) {
+			addToast('error', jobErrorMessage(e, $t('jobs.failed')));
+		} finally {
+			isPreparingBackup = false;
+		}
+	}
 </script>
 
 <SettingsCard>
@@ -118,7 +135,10 @@
 		<div class="p-6 bg-base-200 rounded-xl">
 			<h3 class="font-semibold mb-2">📤 {$t('settings.backup_your_data')}</h3>
 			<p class="text-sm text-base-content/80 mb-4">{$t('settings.backup_your_data_desc')}</p>
-			<a class="btn btn-primary" href="/api/backup/export">💾 {$t('settings.download_backup')}</a>
+			<button class="btn btn-primary" onclick={downloadBackup} disabled={isPreparingBackup}>
+				{#if isPreparingBackup}<span class="loading loading-spinner loading-sm"></span>{/if}
+				💾 {$t('settings.download_backup')}
+			</button>
 		</div>
 		<div class="p-6 bg-base-200 rounded-xl">
 			<h3 class="font-semibold mb-2">📥 {$t('settings.restore_data')}</h3>

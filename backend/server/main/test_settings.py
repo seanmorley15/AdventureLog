@@ -23,3 +23,21 @@ AUTH_PASSWORD_VALIDATORS = []
 
 # Location.save starts a geocode thread that outlives the test transaction.
 DISABLE_BACKGROUND_GEOCODE = True
+
+# Production serves static files from a manifest that `collectstatic` writes; a test that renders a
+# template (the admin, for one) has no such manifest.
+STORAGES = {
+    **STORAGES,  # noqa: F405
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+}
+
+# Background jobs are not run by a worker in tests. Tests queue them for real (into the test
+# database) and run what is queued with `jobs.testing.run_pending_jobs`.
+JOBS_RUN_INLINE = False
+
+# Procrastinate logs a line for every job a test queues.
+LOGGING = {**LOGGING, 'loggers': {**LOGGING['loggers'], 'procrastinate': {'level': 'WARNING'}}}  # noqa: F405
+
+# The PDF export fetches map tiles from the network; tests draw plain maps instead. A test that wants
+# tiles patches `adventures.services.exports.pdf.maps.fetch_tile` and turns this on.
+PDF_MAP_TILES = False

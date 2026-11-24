@@ -1,0 +1,1 @@
+"""Operations on whole collections."""

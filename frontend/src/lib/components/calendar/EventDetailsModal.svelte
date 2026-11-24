@@ -5,8 +5,7 @@
 	import ClockIcon from '~icons/mdi/clock';
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import FolderIcon from '~icons/mdi/folder';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
+	import { renderMarkdown } from '#lib/markdown.js';
 	import type { CalendarDisplayEvent } from '#lib/calendar/types.js';
 
 	interface Props {
@@ -24,8 +23,6 @@
 		timezoneMode = 'event',
 		userTimezone = ''
 	}: Props = $props();
-
-	const renderMarkdown = (markdown: string) => DOMPurify.sanitize(marked(markdown) as string);
 
 	let detailUrl = $derived(event?.extendedProps?.url || '');
 	let typeLabel = $derived(

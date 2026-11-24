@@ -1,19 +1,17 @@
-# travel/urls.py
+"""World travel routes. Mounted at ``api/`` by ``main.api_urls``."""
 
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
-from .views import CountryViewSet, RegionViewSet, VisitedRegionViewSet, regions_by_country, visits_by_country, cities_by_region, VisitedCityViewSet, visits_by_region, globespin
-router = DefaultRouter()
+from rest_framework.routers import SimpleRouter
+
+from .views import CountryViewSet, GlobeSpinView, RegionViewSet, VisitedCityViewSet, VisitedRegionViewSet
+
+router = SimpleRouter()
 router.register(r'countries', CountryViewSet, basename='countries')
 router.register(r'regions', RegionViewSet, basename='regions')
-router.register(r'visitedregion', VisitedRegionViewSet, basename='visitedregion')
-router.register(r'visitedcity', VisitedCityViewSet, basename='visitedcity')
+router.register(r'visited-regions', VisitedRegionViewSet, basename='visited-regions')
+router.register(r'visited-cities', VisitedCityViewSet, basename='visited-cities')
 
 urlpatterns = [
+    path('globe-spin/', GlobeSpinView.as_view(), name='globe-spin'),
     path('', include(router.urls)),
-    path('<str:country_code>/regions/', regions_by_country, name='regions-by-country'),
-    path('<str:country_code>/visits/', visits_by_country, name='visits-by-country'),
-    path('regions/<str:region_id>/cities/', cities_by_region, name='cities-by-region'),
-    path('regions/<str:region_id>/cities/visits/', visits_by_region, name='visits-by-region'),
-    path('globespin/', globespin, name='globespin'),
 ]

@@ -3,6 +3,7 @@
 
 	import { goto } from '$app/navigation';
 	import CountryCard from '#lib/components/cards/CountryCard.svelte';
+	import { matchesName } from '#lib/worldtravel.js';
 	import ClusterMap from '#lib/components/ClusterMap.svelte';
 	import type { Country } from '#lib/types.js';
 	import type { PageData } from './$types';
@@ -200,7 +201,7 @@
 			filteredCountries = allCountries;
 		} else {
 			filteredCountries = allCountries.filter((country) =>
-				country.name.toLowerCase().includes(searchQuery.toLowerCase())
+				matchesName(searchQuery, country.name, country.native_name)
 			);
 		}
 
@@ -239,7 +240,7 @@
 		};
 	});
 
-	// when isGlobeSpin is enabled, fetch /api/globespin/
+	// when isGlobeSpin is enabled, fetch /api/globe-spin/
 	type GlobeSpinData = {
 		country: {
 			flag_url: string;
@@ -259,7 +260,7 @@
 	async function fetchGlobeSpin() {
 		isLoadingGlobeSpin = true;
 		try {
-			const response = await fetch('/api/globespin/');
+			const response = await fetch('/api/globe-spin/');
 			if (response.ok) {
 				globeSpinData = await response.json();
 			} else {

@@ -2,9 +2,15 @@ from typing import Dict, List, Optional
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from django.conf import settings
+
+from core.results import ProviderResult
+from core.cache import cached_provider
 
 SEARCH_URL = "https://nominatim.openstreetmap.org/search"
+
+# OpenStreetMap's usage policies ask clients to cache. One setting covers every OSM lookup.
+OSM_CACHE_TIMEOUT = getattr(settings, 'OSM_CACHE_TIMEOUT', 60 * 60 * 24)
 
 
 def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
@@ -14,6 +20,12 @@ def _headers(user_agent: str, language: Optional[str]) -> Dict[str, str]:
     return headers
 
 
+# Names come back in the requested language, so the language is part of the key.
+@cached_provider(
+    'osm_search',
+    lambda query, limit=20, user_agent=None, language=None, **k: (query, limit, language or ''),
+    OSM_CACHE_TIMEOUT,
+)
 def search_places(
     query: str,
     limit: int = 20,
@@ -35,4 +47,9 @@ def search_places(
     except requests.exceptions.RequestException:
         return ProviderResult(error="OpenStreetMap service error")
 
-    return ProviderResult(data=response.json() or [])
+    try:
+        data = response.json()
+    except ValueError:
+        # Nominatim answers blocks and rate limits with an HTML page, not JSON.
+        return ProviderResult(error="OpenStreetMap returned an unreadable response")
+    return ProviderResult(data=data or [])

@@ -1,18 +1,17 @@
-from integrations.views import *
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from integrations.views import IntegrationView, StravaIntegrationView, WandererIntegrationViewSet, EndurainIntegrationViewSet
+"""Integration routes. Mounted at ``api/integrations/``. Each integration is a per-user singleton."""
 
-# Create the router and register the ViewSet
-router = DefaultRouter()
-router.register(r'immich', ImmichIntegrationView, basename='immich')
-router.register(r'', IntegrationView, basename='integrations')
-router.register(r'immich', ImmichIntegrationViewSet, basename='immich_viewset')
-router.register(r'strava', StravaIntegrationView, basename='strava')
-router.register(r'wanderer', WandererIntegrationViewSet, basename='wanderer')
-router.register(r'endurain', EndurainIntegrationViewSet, basename='endurain')
+from django.urls import include, path
 
-# Include the router URLs
+from core.routers import SingletonRouter
+from integrations.views import EndurainViewSet, ImmichViewSet, IntegrationStatusView, StravaViewSet, WandererViewSet
+
+router = SingletonRouter()
+router.register(r'immich', ImmichViewSet, basename='immich')
+router.register(r'strava', StravaViewSet, basename='strava')
+router.register(r'wanderer', WandererViewSet, basename='wanderer')
+router.register(r'endurain', EndurainViewSet, basename='endurain')
+
 urlpatterns = [
-    path("", include(router.urls)),  # Includes /immich/ routes
+    path('', IntegrationStatusView.as_view(), name='integrations'),
+    path('', include(router.urls)),
 ]

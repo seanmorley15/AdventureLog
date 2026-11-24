@@ -12,9 +12,9 @@ class SignupLegalLinksTestCase(APITestCase):
         PRIVACY_POLICY_URL='https://example.com/privacy',
     )
     def test_signup_legal_links_endpoint_returns_configured_urls(self):
-        response = self.client.get('/auth/signup-legal-links/')
+        response = self.client.get('/api/auth/config/')
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()['legal_links']
         self.assertEqual(data['terms_of_service_url'], 'https://example.com/terms')
         self.assertEqual(data['privacy_policy_url'], 'https://example.com/privacy')
 
@@ -23,7 +23,7 @@ class SignupLegalLinksTestCase(APITestCase):
         PRIVACY_POLICY_URL='https://example.com/privacy',
     )
     def test_signup_rejects_missing_terms_acceptance(self):
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'termsuser',
             'email': 'termsuser@example.com',
             'password': 'testpassword',
@@ -38,7 +38,7 @@ class SignupLegalLinksTestCase(APITestCase):
         PRIVACY_POLICY_URL='https://example.com/privacy',
     )
     def test_signup_accepts_terms_acceptance(self):
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'termsaccepted',
             'email': 'termsaccepted@example.com',
             'password': 'testpassword',
@@ -58,7 +58,7 @@ class UserAPITestCase(APITestCase):
     
     def setUp(self):
         # Signup a new user
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'testuser',
             'email': 'testuser@example.com',
             'password': 'testpassword',
@@ -69,9 +69,9 @@ class UserAPITestCase(APITestCase):
 
     def test_001_user(self):
         # Fetch user metadata
-        response = self.client.get('/auth/user-metadata/', format='json')
+        response = self.client.get('/api/account/', format='json')
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()['user']
         self.assertEqual(data['username'], 'testuser')
         self.assertEqual(data['first_name'], 'Test')
         self.assertEqual(data['last_name'], 'User')
@@ -89,7 +89,7 @@ class UserAPITestCase(APITestCase):
     
         self.assertEqual(userModel, None)
         # Update user metadata
-        response = self.client.patch('/auth/update-user/', {
+        response = self.client.patch('/api/account/', {
             'username': 'testuser2',
             'first_name': 'Test2',
             'last_name': 'User2',
@@ -111,7 +111,7 @@ class UserAPITestCase(APITestCase):
 
     def test_003_user_add_email(self):
         # Update user email
-        response = self.client.post('/auth/browser/v1/account/email', {
+        response = self.client.post('/api/auth/browser/v1/account/email', {
             'email': 'testuser2@example.com',
         }, format='json')
         self.assertEqual(response.status_code, 200)
@@ -132,21 +132,21 @@ class UserAPITestCase(APITestCase):
 
 class PasswordPolicyTestCase(APITestCase):
     def test_password_policy_endpoint_returns_defaults(self):
-        response = self.client.get('/auth/password-policy/')
+        response = self.client.get('/api/auth/config/')
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()['password_policy']
         self.assertEqual(data['min_length'], 10)
         self.assertFalse(data['validators_enabled'])
 
     def test_signup_legal_links_endpoint_returns_empty_by_default(self):
-        response = self.client.get('/auth/signup-legal-links/')
+        response = self.client.get('/api/auth/config/')
         self.assertEqual(response.status_code, 200)
-        data = response.json()
+        data = response.json()['legal_links']
         self.assertIsNone(data['terms_of_service_url'])
         self.assertIsNone(data['privacy_policy_url'])
 
     def test_signup_rejects_password_below_min_length(self):
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'shortpwuser',
             'email': 'shortpwuser@example.com',
             'password': 'short',
@@ -157,7 +157,7 @@ class PasswordPolicyTestCase(APITestCase):
         self.assertFalse(CustomUser.objects.filter(username='shortpwuser').exists())
 
     def test_signup_accepts_password_at_min_length(self):
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'validpwuser',
             'email': 'validpwuser@example.com',
             'password': 'validpass1',
@@ -170,7 +170,7 @@ class PasswordPolicyTestCase(APITestCase):
 
 class LoginByEmailTestCase(APITestCase):
     def setUp(self):
-        self.client.post('/auth/browser/v1/auth/signup', {
+        self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'loginbyemail',
             'email': 'loginbyemail@example.com',
             'password': 'testpassword',
@@ -180,7 +180,7 @@ class LoginByEmailTestCase(APITestCase):
 
     def test_login_with_username(self):
         self.client.cookies.clear()
-        response = self.client.post('/auth/browser/v1/auth/login', {
+        response = self.client.post('/api/auth/browser/v1/auth/login', {
             'username': 'loginbyemail',
             'password': 'testpassword',
         }, format='json')
@@ -188,7 +188,7 @@ class LoginByEmailTestCase(APITestCase):
 
     def test_login_with_email(self):
         self.client.cookies.clear()
-        response = self.client.post('/auth/browser/v1/auth/login', {
+        response = self.client.post('/api/auth/browser/v1/auth/login', {
             'username': 'loginbyemail@example.com',
             'password': 'testpassword',
         }, format='json')
@@ -209,7 +209,7 @@ class ServerSignupRedirectTestCase(APITestCase):
         self.assertEqual(response['Location'], 'http://localhost:3000/signup?invite_key=abc123')
 
     def test_headless_signup_still_works_when_registration_enabled(self):
-        response = self.client.post('/auth/browser/v1/auth/signup', {
+        response = self.client.post('/api/auth/browser/v1/auth/signup', {
             'username': 'frontenduser',
             'email': 'frontenduser@example.com',
             'password': 'testpassword',

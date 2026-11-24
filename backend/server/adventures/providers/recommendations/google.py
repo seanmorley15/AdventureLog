@@ -2,15 +2,18 @@ from typing import Dict, List
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
+
+# Google's Maps Platform terms allow caching only place IDs and coordinates, so Google
+# results are never cached here. See documentation/docs/configuration/caching.md.
 
 NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 
+# Only the fields the results use, as Google's policy asks (and cheaper).
 FIELD_MASK = (
     "places.id,"
-    "places.displayName,"
+    "places.displayName.text,"
     "places.formattedAddress,"
-    "places.shortFormattedAddress,"
     "places.location,"
     "places.types,"
     "places.rating,"
@@ -20,11 +23,10 @@ FIELD_MASK = (
     "places.websiteUri,"
     "places.googleMapsUri,"
     "places.nationalPhoneNumber,"
-    "places.internationalPhoneNumber,"
-    "places.editorialSummary,"
-    "places.photos,"
-    "places.currentOpeningHours,"
-    "places.regularOpeningHours"
+    "places.editorialSummary.text,"
+    "places.photos.name,"
+    "places.currentOpeningHours.openNow,"
+    "places.regularOpeningHours.weekdayDescriptions"
 )
 
 
@@ -35,6 +37,7 @@ def search_nearby(
     api_key: str,
     included_types: List[str],
     max_results: int = 20,
+    language_code: str = '',
 ) -> ProviderResult[List[Dict]]:
     if not api_key:
         return ProviderResult(error="Google Maps API key not configured")
@@ -47,7 +50,8 @@ def search_nearby(
     payload = {
         "includedTypes": included_types,
         "maxResultCount": max_results,
-        "rankPreference": "DISTANCE",
+        "rankPreference": "POPULARITY",
+        **({"languageCode": language_code} if language_code else {}),
         "locationRestriction": {
             "circle": {
                 "center": {"latitude": float(lat), "longitude": float(lon)},
@@ -79,7 +83,9 @@ def search_nearby(
                     # Use the first included type as the 'type' or use keyword
                 }
                 if included_types:
-                    params['keyword'] = ','.join(included_types[:5])
+                    params['type'] = included_types[0]
+                if language_code:
+                    params['language'] = language_code
 
                 legacy_resp = requests.get(legacy_url, params=params, timeout=10)
                 legacy_resp.raise_for_status()

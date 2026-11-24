@@ -2,11 +2,13 @@ from typing import Dict, List
 
 import requests
 
-from adventures.providers.base import ProviderResult
+from core.results import ProviderResult
+
+# Google's Maps Platform terms allow caching only place IDs and coordinates, so Google
+# results are never cached here. See documentation/docs/configuration/caching.md.
 
 SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
 DETAILS_URL = "https://places.googleapis.com/v1/places/{place_id}"
-NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 
 SEARCH_FIELD_MASK = (
     "places.id,places.displayName.text,places.formattedAddress,places.location,"
@@ -20,8 +22,6 @@ DETAILS_FIELD_MASK = (
     "rating,userRatingCount,websiteUri,nationalPhoneNumber,"
     "internationalPhoneNumber,googleMapsUri,reviews.text.text"
 )
-
-NEARBY_FIELD_MASK = "places.displayName.text,places.formattedAddress,places.types"
 
 
 def search_places(query: str, api_key: str, max_results: int = 20) -> ProviderResult[List[Dict]]:
@@ -72,33 +72,3 @@ def fetch_place_details(place_id: str, api_key: str) -> ProviderResult[Dict]:
         return ProviderResult(error="Google Maps service error")
 
     return ProviderResult(data=response.json() or {})
-
-
-def search_nearby(lat: float, lon: float, api_key: str, radius: float = 45.0) -> ProviderResult[List[Dict]]:
-    if not api_key:
-        return ProviderResult(error="Google Maps API key not configured")
-
-    headers = {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": api_key,
-        "X-Goog-FieldMask": NEARBY_FIELD_MASK,
-    }
-    payload = {
-        "maxResultCount": 6,
-        "rankPreference": "DISTANCE",
-        "locationRestriction": {
-            "circle": {
-                "center": {"latitude": float(lat), "longitude": float(lon)},
-                "radius": float(radius),
-            }
-        },
-    }
-
-    try:
-        response = requests.post(NEARBY_URL, headers=headers, json=payload, timeout=(2, 5))
-        response.raise_for_status()
-    except requests.exceptions.RequestException:
-        return ProviderResult(error="Google Maps service error")
-
-    data = response.json() or {}
-    return ProviderResult(data=data.get("places", []))

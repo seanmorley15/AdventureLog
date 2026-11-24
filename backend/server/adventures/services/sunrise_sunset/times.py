@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.dateparse import parse_date, parse_datetime
 
 from adventures.providers.sun.sunrisesunset import SunriseSunsetData, fetch_sunrise_sunset
-from adventures.services.external_cache import get_or_fetch_cached
+from core.cache import get_or_fetch_cached
 
 logger = logging.getLogger(__name__)
 

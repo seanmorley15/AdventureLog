@@ -1,9 +1,7 @@
 import logging
-import socket
-import ipaddress
 import mimetypes
 import uuid
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List
 
@@ -11,7 +9,8 @@ import requests
 from django.core.files.base import ContentFile
 from django.contrib.contenttypes.models import ContentType
 
-from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
+from core.net import check_public_http_url, public_session
+from adventures.services.media_quota import enforce_media_storage_limit
 from adventures.models import ContentImage
 from adventures.services.images.metadata import create_content_image
 
@@ -28,51 +27,42 @@ def _public_import_error_message(exc):
     return "Image import failed"
 
 
-def _is_safe_url(image_url):
-    parsed = urlparse(image_url)
-
-    if parsed.scheme not in ("http", "https"):
-        return False, "Invalid URL scheme. Only http and https are allowed."
-
-    port = parsed.port
-    if port is not None and port not in (80, 443):
-        return False, "Non-standard ports are not allowed."
-
-    hostname = parsed.hostname
-    if not hostname:
-        return False, "Invalid URL: missing hostname."
-
-    try:
-        addr_infos = socket.getaddrinfo(hostname, None)
-    except socket.gaierror:
-        return False, "Could not resolve hostname."
-
-    if not addr_infos:
-        return False, "Could not resolve hostname."
-
-    for addr_info in addr_infos:
-        try:
-            ip = ipaddress.ip_address(addr_info[4][0])
-        except ValueError:
-            return False, "Invalid IP address resolved from hostname."
-        if (ip.is_private or ip.is_loopback or ip.is_reserved
-                or ip.is_link_local or ip.is_multicast):
-            return False, "Access to internal networks is not allowed."
-
-    return True, parsed
-
-
 def download_remote_image(image_url: str, max_redirects: int = 3, timeout: int = 10):
-    safe, result = _is_safe_url(image_url)
+    # A Google photo from a search result is an app address; it is fetched with the server's key.
+    from adventures.services.places.photos import (
+        PhotoError,
+        fetch_google_photo,
+        google_photo_source_url,
+        parse_proxy_photo_url,
+    )
+
+    photo = parse_proxy_photo_url(image_url)
+    if photo:
+        name, reference, size = photo
+        try:
+            image = fetch_google_photo(name=name, reference=reference, size=size)
+        except PhotoError as exc:
+            raise ValueError(str(exc)) from None
+        return {**image, "source_url": google_photo_source_url(name=name, reference=reference)}
+
+    safe, result = check_public_http_url(image_url)
     if not safe:
         raise ValueError(result)
 
     headers = {"User-Agent": "AdventureLog/1.0 (Image Import)"}
+    session = public_session()
+    try:
+        return _download(session, image_url, headers, max_redirects, timeout)
+    finally:
+        session.close()
+
+
+def _download(session, image_url, headers, max_redirects, timeout):
     current_url = image_url
     response = None
 
     for _ in range(max_redirects + 1):
-        response = requests.get(
+        response = session.get(
             current_url,
             timeout=timeout,
             headers=headers,
@@ -88,7 +78,7 @@ def download_remote_image(image_url: str, max_redirects: int = 3, timeout: int =
             raise ValueError("Redirect with missing Location header")
 
         redirect_url = urljoin(current_url, redirect_url)
-        safe, result = _is_safe_url(redirect_url)
+        safe, result = check_public_http_url(redirect_url)
         if not safe:
             raise ValueError(f"Redirect blocked: {result}")
 
@@ -178,7 +168,8 @@ def import_remote_images_for_object(
             object_id=object_id,
             image_file=image_file,
             file_bytes=file_data["content"],
-            source_url=image_url,
+            # Not `image_url`: an app photo path is relative, and source_url must be absolute.
+            source_url=file_data.get("source_url") or image_url,
             explicit_source=explicit_source,
             is_primary=set_primary_next,
         )

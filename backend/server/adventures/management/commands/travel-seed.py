@@ -1,50 +1,9 @@
-# myapp/management/commands/seed.py
+"""The old name of ``travel_seed``, kept so existing scripts keep working."""
 
-from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
-from adventures.models import Location
+from adventures.management.commands.travel_seed import Command as _Command
 
 
-class Command(BaseCommand):
-    help = 'Imports the featured adventures'
-
-    def handle(self, *args, **kwargs):
-        User = get_user_model()
-        username = input(
-            "Enter a username to own the featured adventures: ")
-
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(
-                f'User with username "{username}" does not exist.'))
-            return
-
-        adventures = [
-            ('Yellowstone National Park', 'Wyoming, Montana, Idaho, USA', 'featured'),
-            ('Yosemite National Park', 'California, USA', 'featured'),
-            ('Banff National Park', 'Alberta, Canada', 'featured'),
-            ('Kruger National Park', 'Limpopo, South Africa', 'featured'),
-            ('Grand Canyon National Park', 'Arizona, USA', 'featured'),
-            ('Great Smoky Mountains National Park',
-             'North Carolina, Tennessee, USA', 'featured'),
-            ('Zion National Park', 'Utah, USA', 'featured'),
-            ('Glacier National Park', 'Montana, USA', 'featured'),
-            ('Rocky Mountain National Park', 'Colorado, USA', 'featured'),
-            ('Everglades National Park', 'Florida, USA', 'featured'),
-            ('Arches National Park', 'Utah, USA', 'featured'),
-            ('Acadia National Park', 'Maine, USA', 'featured'),
-            ('Sequoia National Park', 'California, USA', 'featured'),
-        ]
-
-        for name, location, type_ in adventures:
-            Location.objects.create(
-                user=user,
-                name=name,
-                location=location,
-                type=type_,
-                is_public=True
-            )
-
-        self.stdout.write(self.style.SUCCESS(
-            'Successfully inserted featured adventures!'))
+class Command(_Command):
+    def handle(self, *args, **options):
+        self.stderr.write(self.style.WARNING("'travel-seed' is now 'travel_seed'; the old name will be removed."))
+        return super().handle(*args, **options)

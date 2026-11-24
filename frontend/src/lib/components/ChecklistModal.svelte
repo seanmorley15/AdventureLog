@@ -17,6 +17,8 @@
 	import CloseIcon from '~icons/mdi/close';
 	import PlusIcon from '~icons/mdi/plus';
 	import DeleteIcon from '~icons/mdi/delete-outline';
+	import EyeIcon from '~icons/mdi/eye-outline';
+	import EyeOffIcon from '~icons/mdi/eye-off-outline';
 
 	interface Props {
 		checklist?: Checklist | null;
@@ -103,7 +105,8 @@
 			date: getSeedDate() || null,
 			items: checklist?.items || [],
 			collection: collection.id,
-			is_public: collection.is_public
+			// A collection's visibility no longer sets its checklists' own flag.
+			is_public: checklist?.is_public ?? false
 		};
 	});
 
@@ -143,15 +146,19 @@
 		if (newChecklist.date == '') {
 			newChecklist.date = null;
 		}
+		// Items added in this dialog have no id yet; the server gives them one.
+		const body = JSON.stringify({
+			...newChecklist,
+			items: newChecklist.items.map(({ id, ...item }) => (id ? { id, ...item } : item))
+		});
 
 		if (checklist && checklist.id) {
-			console.log('newChecklist', newChecklist);
 			const res = await fetch(`/api/checklists/${checklist.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(newChecklist)
+				body
 			});
 			if (res.ok) {
 				let data = await res.json();
@@ -162,13 +169,12 @@
 				console.error('Failed to save checklist');
 			}
 		} else {
-			console.log('newChecklist', newChecklist);
 			const res = await fetch(`/api/checklists/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(newChecklist)
+				body
 			});
 			if (res.ok) {
 				let data = await res.json();
@@ -402,6 +408,22 @@
 													{#if !isReadOnly}
 														<button
 															type="button"
+															class="btn btn-ghost btn-sm btn-square {item.is_private
+																? 'text-primary'
+																: 'opacity-60'}"
+															aria-pressed={!!item.is_private}
+															aria-label={$t('share.private_from_story')}
+															title={$t('share.private_from_story')}
+															onclick={() => (item.is_private = !item.is_private)}
+														>
+															{#if item.is_private}
+																<EyeOffIcon class="w-4 h-4" />
+															{:else}
+																<EyeIcon class="w-4 h-4" />
+															{/if}
+														</button>
+														<button
+															type="button"
 															class="btn btn-ghost btn-sm text-error opacity-0 group-hover:opacity-100 transition-opacity"
 															aria-label={$t('adventures.remove')}
 															title={$t('adventures.remove')}
@@ -428,13 +450,6 @@
 							<div role="alert" class="alert alert-error rounded-xl border border-error/20">
 								<InfoIcon class="h-6 w-6 shrink-0" />
 								<span class="font-medium">{warning}</span>
-							</div>
-						{/if}
-
-						{#if collection.is_public}
-							<div role="alert" class="alert alert-info rounded-xl border border-info/20">
-								<InfoIcon class="h-6 w-6 shrink-0" />
-								<span class="font-medium">{$t('checklist.checklist_public')}</span>
 							</div>
 						{/if}
 					</div>

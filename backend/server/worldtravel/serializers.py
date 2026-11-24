@@ -1,7 +1,9 @@
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from rest_framework import serializers
-from main.utils import CustomModelSerializer, build_media_url
-from adventures.utils.geo import point_to_lat_lon
+from drf_spectacular.utils import extend_schema_field
+from core.serializers import CustomModelSerializer, memoized_count
+from core.public_url import build_media_url
+from core.geo import point_to_lat_lon
 
 
 class ReadOnlyLatLonMixin:
@@ -20,39 +22,64 @@ class CountrySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     num_regions = serializers.SerializerMethodField()
     num_visits = serializers.SerializerMethodField()
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_flag_url(self, obj):
         flag_path = f"flags/{obj.country_code.lower()}.png"
         return build_media_url(flag_path)
     
+    @extend_schema_field(serializers.IntegerField())
     def get_num_regions(self, obj):
-        # get the number of regions in the country
-        return Region.objects.filter(country=obj).count()
+        # Annotated by the viewsets that list countries; per-row count otherwise.
+        if hasattr(obj, 'num_regions_annotated'):
+            return obj.num_regions_annotated
+        return memoized_count(self, 'country_regions', obj.pk, lambda: Region.objects.filter(country=obj).count())
     
+    @extend_schema_field(serializers.IntegerField())
     def get_num_visits(self, obj):
         request = self.context.get('request')
         user = getattr(request, 'user', None)
         
+        if hasattr(obj, 'num_visits_annotated'):
+            return obj.num_visits_annotated
+
         if user and user.is_authenticated:
-            return VisitedRegion.objects.filter(region__country=obj, user=user).count()
+            return memoized_count(
+                self,
+                'country_visits',
+                (obj.pk, user.pk),
+                lambda: VisitedRegion.objects.filter(region__country=obj, user=user).count(),
+            )
         
         return 0
 
     class Meta:
         model = Country
         exclude = ['coordinates']
-        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital']
+        read_only_fields = ['id', 'name', 'native_name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital']
 
 
 class RegionSerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):
     num_cities = serializers.SerializerMethodField()
     country_name = serializers.CharField(source='country.name', read_only=True)
+    territory_country_code = serializers.CharField(
+        source='territory.country_code', read_only=True, allow_null=True,
+        help_text='Set when this region is also a country of its own. Visits are marked on that country\'s pages.',
+    )
+    territory_country_name = serializers.CharField(source='territory.name', read_only=True, allow_null=True)
+
     class Meta:
         model = Region
-        exclude = ['coordinates']
-        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name']
+        exclude = ['coordinates', 'territory']
+        read_only_fields = [
+            'id', 'name', 'native_name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name',
+            'territory_country_code', 'territory_country_name',
+        ]
 
+    @extend_schema_field(serializers.IntegerField())
     def get_num_cities(self, obj):
-        return City.objects.filter(region=obj).count()
+        if hasattr(obj, 'num_cities_annotated'):
+            return obj.num_cities_annotated
+        return memoized_count(self, 'region_cities', obj.pk, lambda: City.objects.filter(region=obj).count())
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

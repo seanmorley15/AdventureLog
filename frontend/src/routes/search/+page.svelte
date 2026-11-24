@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { openLocationHref } from '#lib/location-drawer.svelte.js';
 	import { page } from '$app/state';
 	import { searchApp } from '#lib/search/api.js';
 	import SearchResultRow from '#lib/search/SearchResultRow.svelte';
@@ -104,7 +105,7 @@
 				offset: nextOffset
 			});
 			results = [...results, ...response.results];
-			total = response.total;
+			total = response.count;
 			offset = response.offset;
 		} catch (err) {
 			loadMoreError = (err as Error).message || 'Failed to load more results';
@@ -217,7 +218,13 @@
 				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-xs divide-y divide-base-300"
 			>
 				{#each results as hit (hit.type + hit.id)}
-					<SearchResultRow {hit} spotlight on:select={() => goto(hit.url)} />
+					<SearchResultRow
+						{hit}
+						spotlight
+						on:select={() => {
+							if (!openLocationHref(hit.url)) goto(hit.url);
+						}}
+					/>
 				{/each}
 			</div>
 

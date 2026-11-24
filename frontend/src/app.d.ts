@@ -4,7 +4,11 @@
 // for information about these interfaces
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			message: string;
+			/** A short reference the person can quote; the same id is in the server log. */
+			errorId?: string;
+		}
 		interface Locals {
 			user: {
 				pk: number;
@@ -16,6 +20,7 @@ declare global {
 				is_staff: boolean;
 				profile_pic: string | null;
 				uuid: string;
+				profile_visibility: 'private' | 'signed_in' | 'public';
 				public_profile: boolean;
 				has_password: boolean;
 				disable_password: boolean;
@@ -33,6 +38,9 @@ declare global {
 			} | null;
 			hasAccess: boolean;
 			cloudMode: boolean;
+			/** Navbar badges, read from /api/account/ with the rest of the session. */
+			pendingInviteCount?: number;
+			unreadCommentCount?: number;
 			locale: string;
 		}
 		// interface PageData {}

@@ -2,6 +2,7 @@
 	import type { Category } from '#lib/types.js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import { createIconSuggester } from '#lib/utils/emojiSuggest.js';
 
 	import TagIcon from '~icons/mdi/tag-multiple';
 	import CloseIcon from '~icons/mdi/close';
@@ -25,6 +26,7 @@
 	let categoryToEdit: Category | null = $state(null);
 	let categoryToDelete: Category | null = $state(null);
 	let newCategory = $state({ display_name: '', icon: '' });
+	const suggestIcon = createIconSuggester(() => newCategory);
 	let isChanged = $state(false);
 	let hasLoaded = $state(false);
 	let warningMessage: string | null = $state(null);
@@ -483,6 +485,7 @@
 									type="text"
 									class="input w-full min-w-0 bg-base-100"
 									bind:value={newCategory.display_name}
+									oninput={suggestIcon}
 									placeholder={$t('categories.category_name')}
 									required
 								/>

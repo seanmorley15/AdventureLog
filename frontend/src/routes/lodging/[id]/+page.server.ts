@@ -5,7 +5,7 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
-	let request = await fetch(`${endpoint}/api/lodging/${id.id}/`, {
+	let request = await fetch(`${endpoint}/api/lodgings/${id.id}/`, {
 		headers: {
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
 		},

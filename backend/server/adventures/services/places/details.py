@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from django.conf import settings
 
 from adventures.providers.places.google import fetch_place_details
-from adventures.providers.places.wikipedia import fetch_summary
+from adventures.providers.wikipedia import fetch_summary
 
 
 @dataclass

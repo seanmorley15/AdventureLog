@@ -1,3 +1,4 @@
+import { apiErrorMessage } from '#lib/api/index.js';
 import { DEFAULT_CURRENCY, normalizeMoneyPayload } from '#lib/money.js';
 import type { Location } from '#lib/types.js';
 
@@ -28,16 +29,8 @@ function sanitizeLink(value: unknown): string | null {
 	}
 }
 
-function parseApiError(errorData: any): string {
-	let errorMsg = errorData?.detail || errorData?.name?.[0] || '';
-	if (errorMsg) return String(errorMsg);
-
-	const fieldErrors = Object.entries(errorData || {})
-		.filter(([_, value]) => Array.isArray(value))
-		.map(([key, value]) => `${key}: ${(value as string[]).join(', ')}`)
-		.join('; ');
-
-	return fieldErrors || 'Failed to save location';
+function parseApiError(errorData: unknown): string {
+	return apiErrorMessage(errorData, 'Failed to save location');
 }
 
 export async function saveLocation({
@@ -57,8 +50,20 @@ export async function saveLocation({
 				: null
 	};
 
-	if (collectionId) {
+	// Visits are saved on their own through /api/visits/ (the Visits step). The server treats a
+	// `visits` list sent with a place as the complete set and deletes every visit left out, so
+	// a place opened from a list payload (which has no visits) would lose them all on save.
+	delete payload.visits;
+
+	const isUpdate = Boolean(locationToEdit?.id);
+
+	// Membership is set on create only. Editing a place never rewrites its collections,
+	// so a place shared across trips keeps every link.
+	if (collectionId && !isUpdate) {
 		payload.collections = [collectionId];
+	}
+	if (isUpdate) {
+		delete payload.collections;
 	}
 
 	if (location.price === null || location.price === undefined) {
@@ -68,11 +73,6 @@ export async function saveLocation({
 		const normalized = normalizeMoneyPayload(payload, 'price', 'price_currency', defaultCurrency);
 		payload.price = normalized.price;
 		payload.price_currency = normalized.price_currency;
-	}
-
-	const isUpdate = Boolean(locationToEdit?.id);
-	if (isUpdate && !collectionId) {
-		delete payload.collections;
 	}
 
 	const res = await fetch(isUpdate ? `/api/locations/${locationToEdit?.id}` : '/api/locations', {

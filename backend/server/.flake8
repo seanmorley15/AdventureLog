@@ -1,0 +1,17 @@
+[flake8]
+# Only the pyflakes checks: unused and undefined names, redefinitions, f-strings without placeholders.
+select = F
+exclude =
+    .venv,
+    .venv-ci,
+    __pycache__,
+    migrations,
+    static,
+    staticfiles,
+    media
+per-file-ignores =
+    # A package __init__ re-exports names on purpose.
+    */__init__.py: F401,F403
+    # Settings modules are built with star imports.
+    main/settings.py: F403,F405
+    main/test_settings.py: F401,F403,F405

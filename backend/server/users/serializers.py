@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 from adventures.models import Collection, CollectionInvite
-from main.utils import build_media_url
+from core.public_url import build_media_url
+from core.visibility import ProfileVisibility
 from .models import CustomUser, APIKey
 
 User = get_user_model()
@@ -26,7 +27,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        extra_fields = ['profile_pic', 'uuid', 'public_profile']
+        extra_fields = ['profile_pic', 'uuid', 'profile_visibility', 'public_profile']
 
         if hasattr(UserModel, 'USERNAME_FIELD'):
             extra_fields.append(UserModel.USERNAME_FIELD)
@@ -54,13 +55,32 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         fields = ['pk', *extra_fields]
         read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk', 'disable_password')
 
+    @staticmethod
+    def resulting_profile_visibility(instance, validated_data):
+        """
+        The profile visibility this update leaves, or None when it does not touch it. Mirrors
+        ``CustomUser._sync_public_profile``: a chosen visibility wins; the old ``public_profile``
+        switch turns a profile public, or a public one private.
+        """
+        requested = validated_data.get('profile_visibility')
+        if requested is not None and requested != instance.profile_visibility:
+            return requested
+        if 'public_profile' in validated_data:
+            if validated_data['public_profile']:
+                return ProfileVisibility.PUBLIC
+            if instance.profile_visibility == ProfileVisibility.PUBLIC:
+                return ProfileVisibility.PRIVATE
+            return instance.profile_visibility
+        return requested
+
     def handle_public_profile_change(self, instance, validated_data):
         """
         Leaving shared collections when a profile becomes private is intentional:
         private profiles are not discoverable for new shares, and collaborators
-        should not retain access through a relationship that started via public discovery.
+        should not retain access through a relationship that started via discovery.
+        A profile shown to signed-in users can still be shared with, so it keeps them.
         """
-        if 'public_profile' in validated_data and not validated_data['public_profile']:
+        if self.resulting_profile_visibility(instance, validated_data) == ProfileVisibility.PRIVATE:
             shared_collections = list(Collection.objects.filter(shared_with=instance))
             left_count = len(shared_collections)
             for collection in shared_collections:
@@ -97,7 +117,8 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + [
+        # `pk` and `email` are never sent (see to_representation); emails are managed through allauth.
+        fields = [f for f in UserDetailsSerializer.Meta.fields if f not in ('pk', 'email')] + [
             'has_password',
             'disable_password',
             'shared_collection_count',
@@ -112,14 +133,17 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         )
 
     @staticmethod
+    @extend_schema_field(serializers.IntegerField())
     def get_shared_collection_count(instance):
         return Collection.objects.filter(shared_with=instance).count()
 
     @staticmethod
+    @extend_schema_field(serializers.IntegerField())
     def get_pending_collection_invite_count(instance):
         return CollectionInvite.objects.filter(invited_user=instance).count()
 
     @staticmethod
+    @extend_schema_field(serializers.BooleanField())
     def get_has_password(instance):
         """
         Computes whether the user has a usable password set.
@@ -146,6 +170,20 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             representation.update(sharing_impact)
 
         return representation
+
+
+# Account details that belong to the signed-in user only. Anyone else's view of a person omits them.
+PRIVATE_USER_FIELDS = (
+    'has_password',
+    'disable_password',
+    'shared_collection_count',
+    'pending_collection_invite_count',
+)
+
+
+def without_private_fields(data):
+    """A copy of serialized user data without the fields only the user themselves should see."""
+    return {key: value for key, value in data.items() if key not in PRIVATE_USER_FIELDS}
 
 
 class APIKeySerializer(serializers.ModelSerializer):
@@ -192,3 +230,129 @@ class DeleteAccountSerializer(serializers.Serializer):
                 raise serializers.ValidationError({"password": "Incorrect password."})
 
         return attrs
+
+
+class PublicProfileSerializer(CustomUserDetailsSerializer):
+    """A user as anyone else sees them: the account-only fields are left out."""
+
+    class Meta(CustomUserDetailsSerializer.Meta):
+        fields = [f for f in CustomUserDetailsSerializer.Meta.fields if f not in PRIVATE_USER_FIELDS]
+
+
+class APIKeyCreatedSerializer(APIKeySerializer):
+    key = serializers.CharField(
+        read_only=True,
+        help_text='The full key. It is returned only in this response and cannot be shown again.',
+    )
+
+    class Meta(APIKeySerializer.Meta):
+        fields = APIKeySerializer.Meta.fields + ['key']
+
+
+class MediaUsageSerializer(serializers.Serializer):
+    total_bytes = serializers.IntegerField()
+    images_bytes = serializers.IntegerField()
+    attachments_bytes = serializers.IntegerField()
+    profile_pics_bytes = serializers.IntegerField()
+    images_files = serializers.IntegerField()
+    attachments_files = serializers.IntegerField()
+    profile_pics_files = serializers.IntegerField()
+    limit_bytes = serializers.IntegerField(
+        allow_null=True, help_text='The storage limit for the account, or null when there is none.'
+    )
+
+
+class PasswordLoginSerializer(serializers.Serializer):
+    disable_password = serializers.BooleanField(
+        help_text='True when signing in with a password is turned off for this account.'
+    )
+
+
+class _RegistrationSerializer(serializers.Serializer):
+    enabled = serializers.BooleanField()
+    message = serializers.CharField(allow_blank=True, allow_null=True, help_text='Shown when sign-up is closed.')
+
+
+class _PasswordPolicySerializer(serializers.Serializer):
+    min_length = serializers.IntegerField()
+    validators_enabled = serializers.BooleanField(
+        help_text="True when Django's password strength checks (common, numeric, similar) are on."
+    )
+
+
+class _LegalLinksSerializer(serializers.Serializer):
+    terms_of_service_url = serializers.URLField(allow_null=True)
+    privacy_policy_url = serializers.URLField(allow_null=True)
+
+
+class _SocialProviderSerializer(serializers.Serializer):
+    id = serializers.CharField(help_text='Pass as `provider` to `/accounts/mobile/start/`, e.g. `oidc/authentik` or `github`.')
+    provider = serializers.CharField(help_text='e.g. `github`, `openid_connect`.')
+    name = serializers.CharField()
+    url = serializers.URLField(help_text='Open this in the browser to sign in with the provider.')
+    usage_required = serializers.BooleanField(help_text='True when password sign-in is disabled on this server.')
+
+
+class MobileTokenRequestSerializer(serializers.Serializer):
+    code = serializers.CharField(help_text='The one-time code from the app\'s redirect URI.')
+    code_verifier = serializers.CharField(help_text='The PKCE secret whose SHA-256 was sent as `code_challenge`.')
+    redirect_uri = serializers.CharField(help_text='The same redirect URI the sign-in started with.')
+
+
+class _MobileTokenMetaSerializer(serializers.Serializer):
+    is_authenticated = serializers.BooleanField()
+    session_token = serializers.CharField(help_text='Send as `X-Session-Token` on every request.')
+
+
+class MobileTokenResponseSerializer(serializers.Serializer):
+    status = serializers.IntegerField()
+    meta = _MobileTokenMetaSerializer()
+
+
+class AuthConfigSerializer(serializers.Serializer):
+    registration = _RegistrationSerializer()
+    password_policy = _PasswordPolicySerializer()
+    legal_links = _LegalLinksSerializer()
+    social_providers = _SocialProviderSerializer(many=True)
+
+
+class CsrfTokenSerializer(serializers.Serializer):
+    csrf_token = serializers.CharField(help_text='Send as `X-CSRFToken` on requests that change data.')
+
+
+class InviteStatusSerializer(serializers.Serializer):
+    valid = serializers.BooleanField()
+    email = serializers.EmailField(allow_null=True)
+    expired = serializers.BooleanField()
+    accepted = serializers.BooleanField()
+    registered = serializers.BooleanField(help_text='True when an account with this email already exists.')
+    message = serializers.CharField(
+        allow_null=True, help_text='Why the invite cannot be used: `invalid`, `expired`, `already_accepted` or `already_registered`.'
+    )
+
+
+class AccountSerializer(serializers.Serializer):
+    user = CustomUserDetailsSerializer()
+    pending_invite_count = serializers.IntegerField(help_text='Collection invites waiting for an answer.')
+    unread_comment_count = serializers.IntegerField(help_text='Comments in your inbox you have not seen.')
+
+
+class UserStatsSerializer(serializers.Serializer):
+    location_count = serializers.IntegerField()
+    visited_location_count = serializers.IntegerField()
+    trips_count = serializers.IntegerField(help_text='Collections the user owns.')
+    visited_city_count = serializers.IntegerField()
+    total_cities = serializers.IntegerField()
+    visited_region_count = serializers.IntegerField()
+    total_regions = serializers.IntegerField()
+    visited_country_count = serializers.IntegerField()
+    total_countries = serializers.IntegerField()
+    activities_overall = serializers.DictField(
+        help_text='Totals over all activities: `total_count`, `total_distance` (m), '
+        '`total_moving_time` (s), `total_elevation_gain` (m) and more.'
+    )
+    activity_distance = serializers.FloatField(help_text='Total distance in meters.')
+    activity_moving_time = serializers.FloatField(help_text='Total moving time in seconds.')
+    activity_elevation = serializers.FloatField(help_text='Total elevation gain in meters.')
+    activity_count = serializers.IntegerField()
+    activities_by_category = serializers.JSONField(help_text='The same totals per sport category.')

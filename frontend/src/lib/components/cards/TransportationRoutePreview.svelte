@@ -8,10 +8,11 @@
 		geojson: any;
 		name?: string;
 		images?: ContentImage[];
+		/** Tailwind sizing for the preview box. */
 		heightClass?: string;
 	}
 
-	let { geojson, name = '', images = [], heightClass = 'h-48' }: Props = $props();
+	let { geojson, name = '', images = [], heightClass = 'aspect-[16/10]' }: Props = $props();
 
 	let showImageModal = $state(false);
 	let modalInitialIndex = $state(0);
@@ -126,12 +127,10 @@
 {/if}
 
 <div
-	class={`relative w-full ${heightClass} rounded-t-2xl bg-gradient-to-r from-success via-base to-primary overflow-hidden`}
+	class={`relative w-full ${heightClass} bg-base-200 overflow-hidden`}
 	aria-label="route-preview"
 >
 	<svg viewBox="0 0 100 100" class="w-full h-full" role="img" aria-label="Route preview">
-		<!-- No separate bg; rely on parent gradient -->
-
 		{#if hasRoute}
 			<g stroke-linecap="round" stroke-linejoin="round">
 				<path
@@ -173,7 +172,7 @@
 		{/if}
 	</svg>
 
-	<div class="absolute top-3 left-3 badge badge-primary gap-1 shadow-sm">
+	<div class="absolute top-2 left-2 badge badge-primary badge-sm gap-1 shadow-sm">
 		<span class="text-xs font-semibold">GPX</span>
 		<span class="text-xs">Route</span>
 	</div>
@@ -182,7 +181,7 @@
 		<button
 			type="button"
 			onclick={stopPropagation(() => openImageModal(0))}
-			class="btn btn-xs btn-neutral absolute bottom-3 right-3 shadow-sm"
+			class="btn btn-xs btn-neutral absolute bottom-2 right-2 shadow-sm"
 		>
 			View photos ({sortedImages.length})
 		</button>

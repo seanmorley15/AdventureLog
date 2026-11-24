@@ -138,7 +138,7 @@ ensure_secret_key() {
 	SECRET_KEY="$(generate_secure_password 50)"
 }
 
-# Fresh install only: offer to replace admin/admin.
+# Fresh install only: pick the admin name and generate its password.
 # After first start, the superuser already exists in the DB — rewriting
 # DJANGO_ADMIN_* in .env has no effect, so reconfigure skips this prompt.
 prompt_admin_credentials() {
@@ -149,16 +149,11 @@ prompt_admin_credentials() {
 		return 0
 	fi
 
-	if tui_confirm "Change default admin credentials (admin/admin)?" "y"; then
-		DJANGO_ADMIN_USERNAME="$(prompt_with_default "Admin username" "admin")"
-		DJANGO_ADMIN_PASSWORD="$(generate_secure_password 24)"
-		DJANGO_ADMIN_EMAIL="$(prompt_with_default "Admin email" "admin@example.com")"
-	else
-		DJANGO_ADMIN_USERNAME="admin"
-		DJANGO_ADMIN_PASSWORD="admin"
-		DJANGO_ADMIN_EMAIL="admin@example.com"
-		log_warning "Using default admin/admin — change after first login"
-	fi
+	# There is no default password: a guessable superuser is the first thing scanners try.
+	DJANGO_ADMIN_USERNAME="$(prompt_with_default "Admin username" "admin")"
+	DJANGO_ADMIN_EMAIL="$(prompt_with_default "Admin email" "admin@example.com")"
+	DJANGO_ADMIN_PASSWORD="$(generate_secure_password 24)"
+	log_muted "A random admin password was generated; it is shown at the end and saved to credentials.txt"
 }
 
 validate_url() {
@@ -285,7 +280,7 @@ load_existing_env() {
 	HOST_PORT="${HOST_PORT:-}"
 	POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-}"
 	DJANGO_ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"
-	DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-admin}"
+	DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-}"
 	DJANGO_ADMIN_EMAIL="${DJANGO_ADMIN_EMAIL:-admin@example.com}"
 	SECRET_KEY="${SECRET_KEY:-}"
 	FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-${ORIGIN:-${FRONTEND_URL:-}}}"

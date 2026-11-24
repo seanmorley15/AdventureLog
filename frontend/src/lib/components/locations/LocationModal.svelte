@@ -27,6 +27,8 @@
 		collection?: Collection | null;
 		initialLatLng?: { lat: number; lng: number } | null;
 		initialVisitDate?: string | null;
+		/** The trip day the place is planned on. The Immich picker opens on it until the place has a visit. */
+		initialPhotoDate?: string | null;
 		itineraryDayLabel?: string | null;
 		/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
 		skipQuickStart?: boolean;
@@ -54,6 +56,7 @@
 		collection = null,
 		initialLatLng = null,
 		initialVisitDate = null,
+		initialPhotoDate = null,
 		itineraryDayLabel = null,
 		skipQuickStart = false,
 		initialStep = null,
@@ -70,7 +73,9 @@
 			.filter((date) => !Number.isNaN(date.getTime()))
 			.sort((a, b) => +b - +a)[0];
 		if (latest) return latest.toISOString().split('T')[0];
-		return storedInitialVisitDate?.split('T')[0] ?? '';
+		// A place with no visits yet: its planned day, else the trip's start, not today (#1255).
+		const fallback = storedInitialVisitDate || initialPhotoDate || collection?.start_date;
+		return fallback?.split('T')[0] ?? '';
 	});
 
 	function resolveInitialStepIndex(): number {
@@ -222,6 +227,30 @@
 			trails: locationToEdit?.trails || [],
 			attachments: locationToEdit?.attachments || []
 		};
+	});
+
+	// List endpoints return a slim location without visits, trails or attachments, and a copy can be
+	// stale. Opened with no visits, the Visits step would look empty, so load the full record.
+	let hydratedFor: string | null = null;
+	$effect(() => {
+		const id = locationToEdit?.id;
+		if (!id || hydratedFor === id) return;
+		if ((untrack(() => locationToEdit?.visits?.length) ?? 0) > 0) return;
+		hydratedFor = id;
+		void fetch(`/api/locations/${id}/`)
+			.then((res) => (res.ok ? res.json() : null))
+			.then((full) => {
+				if (!full || location.id !== id) return;
+				// Never replace visits the user has added since the modal opened.
+				if ((location.visits?.length ?? 0) === 0) location.visits = full.visits ?? [];
+				if ((location.trails?.length ?? 0) === 0) location.trails = full.trails ?? [];
+				if ((location.attachments?.length ?? 0) === 0)
+					location.attachments = full.attachments ?? [];
+				location.is_visited = full.is_visited ?? location.is_visited;
+			})
+			.catch(() => {
+				// Keep what the caller passed.
+			});
 	});
 
 	onMount(() => {

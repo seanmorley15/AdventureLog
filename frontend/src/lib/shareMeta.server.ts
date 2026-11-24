@@ -1,25 +1,6 @@
-const MARKDOWN_PATTERNS: Array<[RegExp, string]> = [
-	[/!\[.*?\]\(.*?\)/g, ''],
-	[/\[([^\]]+)\]\([^)]+\)/g, '$1'],
-	[/#{1,6}\s*/g, ''],
-	[/\*\*([^*]+)\*\*/g, '$1'],
-	[/\*([^*]+)\*/g, '$1'],
-	[/`([^`]+)`/g, '$1']
-];
+import { stripMarkdown } from './markdown.js';
 
-export function stripMarkdown(value: string | null | undefined, maxLength = 200): string {
-	if (!value) return '';
-	let text = String(value);
-	for (const [pattern, replacement] of MARKDOWN_PATTERNS) {
-		text = text.replace(pattern, replacement);
-	}
-	text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-	text = text.replace(/\n{3,}/g, '\n\n').trim();
-	if (text.length > maxLength) {
-		return `${text.slice(0, maxLength - 3)}...`;
-	}
-	return text;
-}
+export { stripMarkdown };
 
 export type ShareMeta = {
 	title: string;
@@ -41,13 +22,16 @@ export function buildCollectionShareMeta(
 		name: string;
 		description?: string | null;
 		is_public?: boolean;
+		visibility?: string;
 		start_date?: string | null;
 		end_date?: string | null;
 		locations?: unknown[] | null;
 	},
 	origin: string
 ): ShareMeta | null {
-	if (!collection?.is_public) return null;
+	// Only a public story gets a share card; an unlisted link stays out of crawlers.
+	const visibility = collection?.visibility ?? (collection?.is_public ? 'public' : 'private');
+	if (visibility !== 'public') return null;
 
 	const locCount = collection.locations?.length ?? 0;
 	let description = stripMarkdown(collection.description);

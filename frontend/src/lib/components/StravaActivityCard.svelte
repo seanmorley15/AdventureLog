@@ -1,20 +1,25 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { t } from 'svelte-i18n';
+	import { getActivityColor, getActivityIcon, SPORT_TYPE_CHOICES } from '#lib';
 	import { formatDateInTimezone } from '#lib/dateUtils.js';
 	import { dateFormatFromUser } from '#lib/dateFormat.js';
 	import type { StravaActivity } from '#lib/types.js';
-	import { createEventDispatcher } from 'svelte';
-	import { t } from 'svelte-i18n';
-	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
-	import { page } from '$app/state';
-
-	const dispatch = createEventDispatcher();
+	import { formatDuration } from '#lib/components/activities/activityForm.js';
+	import DownloadIcon from '~icons/mdi/download';
+	import CheckIcon from '~icons/mdi/check-bold';
+	import OpenInNewIcon from '~icons/mdi/open-in-new';
 
 	interface Props {
 		activity: StravaActivity;
 		measurementSystem?: 'metric' | 'imperial';
+		/** Show a download link in place of the import button. */
 		downloadOnly?: boolean;
 		importing?: boolean;
+		/** Already saved as an activity here. */
+		imported?: boolean;
 		provider?: 'strava' | 'endurain';
+		onImport?: (activity: StravaActivity) => void;
 	}
 
 	let {
@@ -22,283 +27,129 @@
 		measurementSystem = 'metric',
 		downloadOnly = false,
 		importing = false,
-		provider = 'strava'
+		imported = false,
+		provider = 'strava',
+		onImport
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
-
-	interface SportConfig {
-		color: string;
-		icon: string;
-		name: string;
-	}
-
-	const sportTypeConfig: Record<string, SportConfig> = {
-		StandUpPaddling: { color: 'info', icon: '🏄', name: 'Stand Up Paddling' },
-		Run: { color: 'success', icon: '🏃', name: 'Running' },
-		Ride: { color: 'warning', icon: '🚴', name: 'Cycling' },
-		Swim: { color: 'primary', icon: '🏊', name: 'Swimming' },
-		Hike: { color: 'accent', icon: '🥾', name: 'Hiking' },
-		Walk: { color: 'neutral', icon: '🚶', name: 'Walking' },
-		default: { color: 'secondary', icon: '⚡', name: 'Activity' }
-	};
-
-	function getTypeConfig(type: string): SportConfig {
-		return sportTypeConfig[type] || sportTypeConfig.default;
-	}
-
-	function formatTime(seconds: number): string {
-		const hours = Math.floor(seconds / 3600);
-		const minutes = Math.floor((seconds % 3600) / 60);
-		const secs = Math.floor(seconds % 60);
-
-		if (hours > 0) {
-			return `${hours}h ${minutes}m ${secs}s`;
-		}
-		return `${minutes}m ${secs}s`;
-	}
-
-	function formatPace(seconds: number, system: 'metric' | 'imperial'): string {
-		const minutes = Math.floor(seconds / 60);
-		const secs = Math.floor(seconds % 60);
-		const unit = system === 'metric' ? 'km' : 'mi';
-		return `${minutes}:${secs.toString().padStart(2, '0')}/${unit}`;
-	}
-
-	// Endurain activities without GPS/sensor data report null metrics
-	function formatNumber(value: number | null | undefined, digits: number): string {
-		return value != null ? value.toFixed(digits) : '–';
-	}
-
-	function convertElevation(
-		meters: number | null,
-		system: 'metric' | 'imperial'
-	): { value: number | null; unit: string } {
-		if (system === 'imperial' && meters != null) {
-			return { value: meters * 3.28084, unit: 'ft' };
-		}
-		return { value: meters, unit: 'm' };
-	}
-
-	function handleImportActivity() {
-		dispatch('import', activity);
-	}
-
-	let typeConfig = $derived(getTypeConfig(activity.sport_type));
-	let distance = $derived(
-		measurementSystem === 'metric'
-			? { value: activity.distance_km, unit: 'km' }
-			: { value: activity.distance_miles, unit: 'mi' }
+	const imperial = $derived(measurementSystem === 'imperial');
+	const zone = $derived(activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
+	const sportLabel = $derived(
+		SPORT_TYPE_CHOICES.find((choice) => choice.key === activity.sport_type)?.label ??
+			activity.sport_type
 	);
-	let speed = $derived(
-		measurementSystem === 'metric'
-			? { value: activity.average_speed_kmh, unit: 'km/h' }
-			: { value: activity.average_speed_mph, unit: 'mph' }
+	const providerUrl = $derived(
+		provider === 'endurain'
+			? activity.export_original
+			: `https://www.strava.com/activities/${activity.id}`
 	);
-	let maxSpeed = $derived(
-		measurementSystem === 'metric'
-			? { value: activity.max_speed_kmh, unit: 'km/h' }
-			: { value: activity.max_speed_mph, unit: 'mph' }
-	);
-	let elevation = $derived(convertElevation(activity.total_elevation_gain, measurementSystem));
-	let paceSeconds = $derived(
-		measurementSystem === 'metric' ? activity.pace_per_km_seconds : activity.pace_per_mile_seconds
-	);
+
+	const stat = (value: number | null | undefined, digits: number) =>
+		value == null || Number.isNaN(value) ? '—' : value.toFixed(digits);
 </script>
 
-<div class="card bg-base-50 border border-base-200 hover:shadow-md transition-shadow">
-	<div class="card-body p-4">
-		<!-- Activity Header -->
-		<div class="flex items-start justify-between mb-3">
-			<div class="flex items-center gap-3">
-				<div class="text-2xl" aria-label="Sport icon">{typeConfig.icon}</div>
-				<div>
-					<h3 class="font-semibold text-lg">{activity.name}</h3>
-					<div class="flex items-center gap-2 text-sm text-base-content/70">
-						<span class="badge badge-{typeConfig.color} badge-sm">{typeConfig.name}</span>
-						<span>•</span>
+<div
+	class="card border border-base-200 bg-base-100 transition-shadow hover:shadow-md {imported
+		? 'opacity-70'
+		: ''}"
+>
+	<div class="card-body gap-3 p-4">
+		<div class="flex items-start justify-between gap-3">
+			<div class="flex min-w-0 items-center gap-3">
+				<div class="text-2xl" aria-hidden="true">{getActivityIcon(activity.sport_type)}</div>
+				<div class="min-w-0">
+					<h3 class="truncate text-lg font-semibold">{activity.name}</h3>
+					{#if activity.garmin_attribution}
+						<p class="text-xs text-base-content/70">{activity.garmin_attribution}</p>
+					{/if}
+					<div class="flex flex-wrap items-center gap-2 text-sm text-base-content/70">
 						<span
-							>{formatDateInTimezone(
-								activity.start_date,
-								activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
-								dateFormat
-							)} ({activity.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone})</span
+							class="badge badge-sm border-0 text-white"
+							style="background-color: {getActivityColor(activity.sport_type)}">{sportLabel}</span
 						>
+						<span>
+							{formatDateInTimezone(activity.start_date, zone, dateFormat)} ({zone})
+						</span>
 					</div>
 				</div>
 			</div>
 
-			<div class="flex items-center gap-2">
+			<div class="flex shrink-0 items-center gap-2">
+				<a
+					href={providerUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="btn btn-ghost btn-sm btn-circle"
+					aria-label={`${$t('adventures.view_on')} ${provider === 'endurain' ? 'Endurain' : 'Strava'}`}
+				>
+					<OpenInNewIcon class="h-4 w-4" />
+				</a>
 				{#if downloadOnly}
 					<a
 						href={activity.export_gpx}
 						target="_blank"
 						rel="noopener noreferrer"
 						class="btn btn-success btn-sm gap-1"
-						aria-label={$t('adventures.download_gpx')}
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-							/>
-						</svg>
+						<DownloadIcon class="h-4 w-4" />
 						{$t('adventures.download_gpx')}
 					</a>
+				{:else if imported}
+					<span class="badge badge-success badge-outline gap-1">
+						<CheckIcon class="h-3 w-3" />
+						{$t('activities.already_imported')}
+					</span>
 				{:else}
 					<button
 						type="button"
-						onclick={handleImportActivity}
-						class="btn btn-success btn-sm btn-circle"
+						class="btn btn-success btn-sm gap-1"
 						disabled={importing}
-						aria-label={$t('adventures.import_activity')}
+						onclick={() => onImport?.(activity)}
 					>
 						{#if importing}
 							<span class="loading loading-spinner loading-xs"></span>
 						{:else}
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-								/>
-							</svg>
+							<DownloadIcon class="h-4 w-4" />
 						{/if}
+						{$t('adventures.import_activity')}
 					</button>
-					<div
-						class="dropdown dropdown-end relative z-50"
-						role="group"
-						onpointerdown={(e) => applyDropdownFlip(e.currentTarget)}
-					>
-						<div
-							tabindex="0"
-							role="button"
-							class="btn btn-ghost btn-sm btn-circle"
-							aria-label={$t('adventures.activity_options')}
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z"
-								/>
-							</svg>
-						</div>
-						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-sm"
-						>
-							<li>
-								<a href={activity.export_gpx} target="_blank" rel="noopener noreferrer">
-									{$t('adventures.export_gpx')}
-								</a>
-							</li>
-							<li>
-								<a href={activity.export_original} target="_blank" rel="noopener noreferrer">
-									{$t('adventures.export_original')}
-								</a>
-							</li>
-							<li>
-								<a
-									href={provider === 'endurain'
-										? activity.export_original
-										: `https://www.strava.com/activities/${activity.id}`}
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									{$t('adventures.view_on') + (provider === 'endurain' ? ' Endurain' : ' Strava')}
-								</a>
-							</li>
-						</ul>
-					</div>
 				{/if}
 			</div>
 		</div>
 
-		<!-- Main Stats -->
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">{$t('adventures.distance')}</div>
-				<div class="stat-value text-lg">{formatNumber(distance.value, 2)}</div>
-				<div class="stat-desc">{distance.unit}</div>
+		<div class="grid grid-cols-2 gap-2 md:grid-cols-4">
+			<div class="rounded-lg bg-base-200/60 p-3 text-center">
+				<div class="text-lg font-bold">
+					{stat(imperial ? activity.distance_miles : activity.distance_km, 2)}
+				</div>
+				<div class="text-xs text-base-content/70">
+					{$t('adventures.distance')} ({imperial ? 'mi' : 'km'})
+				</div>
 			</div>
-			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">{$t('adventures.time')}</div>
-				<div class="stat-value text-lg">{formatTime(activity.moving_time)}</div>
-				<div class="stat-desc">{$t('adventures.moving_time')}</div>
+			<div class="rounded-lg bg-base-200/60 p-3 text-center">
+				<div class="text-lg font-bold">{formatDuration(activity.moving_time) || '—'}</div>
+				<div class="text-xs text-base-content/70">{$t('adventures.moving_time')}</div>
 			</div>
-			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">{$t('adventures.avg_speed')}</div>
-				<div class="stat-value text-lg">{formatNumber(speed.value, 1)}</div>
-				<div class="stat-desc">{speed.unit}</div>
+			<div class="rounded-lg bg-base-200/60 p-3 text-center">
+				<div class="text-lg font-bold">
+					{stat(imperial ? activity.average_speed_mph : activity.average_speed_kmh, 1)}
+				</div>
+				<div class="text-xs text-base-content/70">
+					{$t('adventures.avg_speed')} ({imperial ? 'mph' : 'km/h'})
+				</div>
 			</div>
-			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">{$t('adventures.elevation')}</div>
-				<div class="stat-value text-lg">{formatNumber(elevation.value, 0)}</div>
-				<div class="stat-desc">{elevation.unit} {$t('adventures.gain')}</div>
+			<div class="rounded-lg bg-base-200/60 p-3 text-center">
+				<div class="text-lg font-bold">
+					{stat(
+						imperial ? activity.total_elevation_gain * 3.28084 : activity.total_elevation_gain,
+						0
+					)}
+				</div>
+				<div class="text-xs text-base-content/70">
+					{$t('adventures.gain')} ({imperial ? 'ft' : 'm'})
+				</div>
 			</div>
 		</div>
-
-		<!-- Additional Stats -->
-		<div class="flex flex-wrap gap-2 text-sm">
-			{#if activity.average_cadence}
-				<div class="badge badge-ghost">
-					<span class="font-medium">{$t('adventures.cadence')}:</span
-					>&nbsp;{activity.average_cadence.toFixed(1)}
-				</div>
-			{/if}
-			{#if activity.calories}
-				<div class="badge badge-ghost">
-					<span class="font-medium">{$t('adventures.calories')}:</span>&nbsp;{activity.calories}
-				</div>
-			{/if}
-			{#if activity.kudos_count > 0}
-				<div class="badge badge-ghost">
-					<span class="font-medium">Kudos:</span>&nbsp;{activity.kudos_count}
-				</div>
-			{/if}
-			{#if activity.achievement_count > 0}
-				<div class="badge badge-success badge-outline">
-					<span class="font-medium">{$t('adventures.achievements')}:</span
-					>&nbsp;{activity.achievement_count}
-				</div>
-			{/if}
-			{#if activity.pr_count > 0}
-				<div class="badge badge-warning badge-outline">
-					<span class="font-medium">PRs:</span>&nbsp;{activity.pr_count}
-				</div>
-			{/if}
-		</div>
-
-		<!-- Footer with pace and max speed -->
-		{#if paceSeconds}
-			<div class="flex justify-between items-center mt-3 pt-3 border-t border-base-300">
-				<div class="text-sm">
-					<span class="font-medium">{$t('adventures.pace')}:</span>
-					{formatPace(paceSeconds, measurementSystem)}
-				</div>
-				<div class="text-sm">
-					<span class="font-medium">{$t('adventures.max_speed')}:</span>
-					{formatNumber(maxSpeed.value, 1)}
-					{maxSpeed.unit}
-				</div>
-			</div>
-		{/if}
 	</div>
 </div>
-
-<style>
-	.stat {
-		min-height: auto;
-	}
-
-	.stat-value {
-		font-size: 1.25rem;
-		line-height: 1.75rem;
-	}
-</style>

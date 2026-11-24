@@ -1,16 +1,19 @@
 # Easypanel
 
-[Easypanel](https://easypanel.io/) is a server control panel that can deploy AdventureLog with one click using its official template, without needing to manually run Docker commands.
+[Easypanel](https://easypanel.io/) is a server control panel. Its official AdventureLog template deploys the app without any Docker commands.
 
-1. Open your Easypanel dashboard and create (or open) a project
-2. Click **+ Add Service** and choose **Templates**
-3. Search for **AdventureLog** and select it
-4. Click **Create** to deploy the service
+## Install
 
-Easypanel provisions the required PostGIS database automatically and runs the frontend and backend containers for you, exposing them through a domain.
+1. Open your Easypanel dashboard and create or open a project.
+2. Choose **+ Add Service**, then **Templates**.
+3. Search for **AdventureLog**, select it, and choose **Create**.
+
+Easypanel creates the PostGIS database, runs the frontend and backend containers, and exposes them on a domain.
 
 ![AdventureLog deployed on Easypanel](/easypanel_deployed.png)
 
-Set `SITE_URL` to your public HTTPS URL so Django CSRF and SvelteKit origins stay correct. See [Environment Variables](../configuration/environment_variables.md#url-and-networking).
+Set `SITE_URL` to your public HTTPS address, so sign-in and photo URLs match. See [URL and networking](../configuration/environment_variables.md#url-and-networking). The [template page](https://easypanel.io/templates/adventurelog) has more details.
 
-See the [official AdventureLog template on Easypanel](https://easypanel.io/templates/adventurelog) for more details.
+## Next steps
+
+- [First Steps](first_steps.md): sign in, secure the admin account, and decide who can join.

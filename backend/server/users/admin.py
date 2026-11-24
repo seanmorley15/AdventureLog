@@ -4,9 +4,10 @@ from django.contrib.sessions.models import Session
 from django.utils.html import format_html_join
 from allauth.account.decorators import secure_admin_login
 
-from main.admin_utils import TIMESTAMP_READONLY, admin_image_preview
+from core.admin import admin_image_preview
 from users.legal import legal_links_required
 from users.models import APIKey, CustomUser
+from users.services.emails import ensure_email_address
 
 admin.site.login = secure_admin_login(admin.site.login)
 
@@ -19,7 +20,7 @@ class CustomUserAdmin(UserAdmin):
         'email',
         'is_staff',
         'is_active',
-        'public_profile',
+        'profile_visibility',
         'measurement_system',
         'default_currency',
         'date_format',
@@ -31,7 +32,7 @@ class CustomUserAdmin(UserAdmin):
         'is_staff',
         'is_active',
         'is_superuser',
-        'public_profile',
+        'profile_visibility',
         'measurement_system',
         'default_currency',
         'date_format',
@@ -39,8 +40,15 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ('username', 'email', 'first_name', 'last_name', 'uuid')
     ordering = ('username',)
-    readonly_fields = ('uuid', 'profile_preview_large', 'last_login', 'date_joined', 'legal_consent_display')
+    readonly_fields = (
+        'uuid', 'profile_preview_large', 'last_login', 'date_joined', 'legal_consent_display', 'legacy_email_login',
+    )
     filter_horizontal = ('groups', 'user_permissions')
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # The admin form only sets user.email; Settings -> Emails reads allauth's records.
+        ensure_email_address(obj)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
@@ -64,8 +72,9 @@ class CustomUserAdmin(UserAdmin):
                     'profile_pic',
                     'profile_preview_large',
                     'uuid',
-                    'public_profile',
+                    'profile_visibility',
                     'disable_password',
+                    'legacy_email_login',
                     'measurement_system',
                     'default_currency',
                     'date_format',
@@ -112,7 +121,7 @@ class APIKeyAdmin(admin.ModelAdmin):
     list_filter = ('user',)
     search_fields = ('name', 'key_prefix', 'user__username')
     autocomplete_fields = ('user',)
-    readonly_fields = ('id', 'key_prefix', 'key_hash', 'created_at', 'last_used_at')
+    readonly_fields = ('id', 'key_prefix', 'key_hash', 'key_hash_v2', 'created_at', 'last_used_at')
     ordering = ('-created_at',)
 
     fieldsets = (
@@ -120,7 +129,7 @@ class APIKeyAdmin(admin.ModelAdmin):
         (
             'Key metadata',
             {
-                'fields': ('id', 'key_prefix', 'key_hash', 'created_at', 'last_used_at'),
+                'fields': ('id', 'key_prefix', 'key_hash', 'key_hash_v2', 'created_at', 'last_used_at'),
                 'description': 'Plaintext API keys are only shown once at creation and are never stored.',
             },
         ),

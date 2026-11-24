@@ -1,61 +1,24 @@
 import logging
 
-import stripe
-from stripe.error import InvalidRequestError
 from django.conf import settings
 from django.db import transaction
 
-from adventures.models import (
-    Activity,
-    Category,
-    Checklist,
-    ChecklistItem,
-    Collection,
-    CollectionInvite,
-    CollectionItineraryItem,
-    ContentAttachment,
-    ContentImage,
-    Location,
-    Lodging,
-    Note,
-    Trail,
-    Transportation,
-)
-from worldtravel.models import VisitedCity, VisitedRegion
+from adventures.models import Collection, CollectionInvite
+from adventures.services.account_data import clear_user_adventure_data
+from core.errors import ServiceError
+from core.lazy import lazy_module
+
+# stripe costs ~40 MB and ~3 s to import; load it only when billing code actually runs.
+stripe = lazy_module('stripe')
 
 logger = logging.getLogger(__name__)
 
 
-class AccountDeletionError(Exception):
+class AccountDeletionError(ServiceError):
     """Raised when account deletion cannot be completed."""
 
-
-def clear_user_adventure_data(user) -> None:
-    """Remove all adventure and world-travel data owned by the user."""
-    CollectionItineraryItem.objects.filter(collection__user=user).delete()
-
-    for activity in Activity.objects.filter(user=user):
-        if activity.gpx_file:
-            activity.gpx_file.delete(save=False)
-
-    for image in ContentImage.objects.filter(user=user):
-        image.delete()
-
-    for attachment in ContentAttachment.objects.filter(user=user):
-        attachment.delete()
-
-    Activity.objects.filter(user=user).delete()
-    Trail.objects.filter(user=user).delete()
-    ChecklistItem.objects.filter(user=user).delete()
-    Checklist.objects.filter(user=user).delete()
-    Note.objects.filter(user=user).delete()
-    Transportation.objects.filter(user=user).delete()
-    Lodging.objects.filter(user=user).delete()
-    Location.objects.filter(user=user).delete()
-    Collection.objects.filter(user=user).delete()
-    Category.objects.filter(user=user).delete()
-    VisitedCity.objects.filter(user=user).delete()
-    VisitedRegion.objects.filter(user=user).delete()
+    status = 502
+    code = 'billing_cleanup_failed'
 
 
 def cancel_stripe_billing(user) -> None:
@@ -67,6 +30,8 @@ def cancel_stripe_billing(user) -> None:
         subscription = user.subscription
     except Exception:
         return
+
+    from stripe.error import InvalidRequestError
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
