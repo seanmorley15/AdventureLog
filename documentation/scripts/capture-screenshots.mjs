@@ -16,7 +16,8 @@
  *   readme  the GitHub README set  -> optimize-images.sh readme <dir>
  *   all     both (names that overlap are captured once)
  * SHOT_ONLY=a,b limits the run to those shots. SHOT_TRIP_ID skips the trip name lookup. Extra knobs for the README set: SHOT_COUNTRY (ISO code for the regions
- * shot, default jp) and SHOT_SAT_VIEW (map query for the satellite shot).
+ * shot, default jp), SHOT_SAT_VIEW (map query for the satellite shot) and
+ * SHOT_SAT_TILT (pixels dragged to pitch the camera, negative tilts the other way).
  *
  * The trip and place are looked up by name, so any account works as long as
  * it has them: override with SHOT_TRIP and SHOT_PLACE.
@@ -42,7 +43,8 @@ const TRIP = process.env.SHOT_TRIP ?? "Japan in Autumn";
 const PLACE = process.env.SHOT_PLACE ?? "Reinebringen";
 const SET = process.env.SHOT_SET ?? "docs";
 const COUNTRY = (process.env.SHOT_COUNTRY ?? "jp").toLowerCase();
-const SAT_VIEW = process.env.SHOT_SAT_VIEW ?? "lat=36.4&lng=137.7&zoom=8.5";
+const SAT_VIEW = process.env.SHOT_SAT_VIEW ?? "lat=67.97&lng=12.95&zoom=9.8";
+const SAT_TILT = Number(process.env.SHOT_SAT_TILT ?? 260);
 if (!["docs", "readme", "all"].includes(SET)) {
   console.error('SHOT_SET must be "docs", "readme" or "all".');
   process.exit(1);
@@ -164,6 +166,14 @@ const catalog = {
       await page
         .getByRole("menuitemradio", { name: /3D Satellite Terrain/ })
         .click();
+      await page.waitForTimeout(4000);
+      // Tilt the camera: right-button drag pitches (vertical) and rotates
+      // (horizontal) a MapLibre map. Drag inside the map, clear of the panels.
+      const x = 1000;
+      await page.mouse.move(x, 600);
+      await page.mouse.down({ button: "right" });
+      await page.mouse.move(x - 60, 600 - SAT_TILT, { steps: 30 });
+      await page.mouse.up({ button: "right" });
       await page.waitForTimeout(10000); // tiles + terrain
     },
   ],
