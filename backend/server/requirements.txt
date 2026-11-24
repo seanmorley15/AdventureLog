@@ -38,6 +38,6 @@ defusedxml==0.7.1  # Safe XML parsing for uploaded TCX and KML files
 pymemcache==4.0.0
 redis==5.2.1  # Optional: only used when CACHE_BACKEND=redis
 legacy-cgi==2.6.4
-requests>=2.32.4
+requests>=2.34.2
 stripe==11.3.0
 reportlab>=4.2.0,<5
