@@ -18,7 +18,7 @@ services:
       - "traefik-letsencrypt:/letsencrypt"
 
   db:
-    image: postgis/postgis:16-3.5
+    image: postgis/postgis:18-3.6
     container_name: adventurelog-traefik-db
     restart: unless-stopped
     env_file: ../.env.advanced
