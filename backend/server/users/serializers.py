@@ -2,7 +2,9 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.db import transaction
 from adventures.models import Collection, CollectionInvite
+from adventures.services import travelers
 from core.public_url import build_media_url
 from core.visibility import ProfileVisibility
 from .models import CustomUser, APIKey
@@ -83,8 +85,11 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         if self.resulting_profile_visibility(instance, validated_data) == ProfileVisibility.PRIVATE:
             shared_collections = list(Collection.objects.filter(shared_with=instance))
             left_count = len(shared_collections)
-            for collection in shared_collections:
-                collection.shared_with.remove(instance)
+            with transaction.atomic():
+                for collection in shared_collections:
+                    # They did not pick this the way leaving does, so they keep copies of where they travelled.
+                    travelers.release_member(collection, instance, keep_copies=True)
+                    collection.shared_with.remove(instance)
 
             pending_invites = CollectionInvite.objects.filter(invited_user=instance)
             invite_count = pending_invites.count()

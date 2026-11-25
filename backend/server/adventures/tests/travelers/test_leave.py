@@ -457,3 +457,16 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
         self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 1})
         self.assertEqual(self._rows(), before)
         self.assertTrue(self.trip.shared_with.filter(pk=self.editor.pk).exists())
+
+
+class PrivateProfileLeavesTripsTests(AudienceTestBase):
+    def test_going_private_keeps_copies_and_leaves_the_visits(self):
+        visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z')
+        visit.travelers.set([self.owner, self.editor])
+        self.as_user(self.editor)
+        response = self.client.patch('/api/account/', {'profile_visibility': 'private'}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertFalse(self.trip.shared_with.filter(pk=self.editor.pk).exists())
+        self.assertEqual([u.pk for u in visit.travelers.all()], [self.owner.pk])
+        copy = Location.objects.get(user=self.editor, name='Hut')
+        self.assertEqual([u.pk for u in copy.visits.get().travelers.all()], [self.editor.pk])
