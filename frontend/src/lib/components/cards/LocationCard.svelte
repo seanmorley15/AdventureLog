@@ -102,6 +102,47 @@
 		dispatch('changeDay', { type: 'location', item: adventure, forcePicker: true });
 	}
 
+	// Other people who were on a visit lose the location from their map when it is deleted.
+	let otherTravelerNames = $state<string[]>([]);
+
+	function travelerName(person: {
+		first_name?: string | null;
+		last_name?: string | null;
+		username: string;
+	}) {
+		return [person.first_name, person.last_name].filter(Boolean).join(' ') || person.username;
+	}
+
+	async function openDeleteWarning() {
+		otherTravelerNames = [];
+		let visits = adventure.visits;
+		if (!visits) {
+			// List cards leave visits out, so ask for the full location before warning.
+			try {
+				const res = await fetch(`/api/locations/${adventure.id}/`);
+				if (res.ok) visits = (await res.json()).visits;
+			} catch {
+				// Without the visits the usual warning still applies.
+			}
+		}
+		const others = new Map<string, string>();
+		for (const visit of visits ?? []) {
+			for (const person of visit.travelers ?? []) {
+				if (person.uuid !== adventure.user?.uuid) others.set(person.uuid, travelerName(person));
+			}
+		}
+		otherTravelerNames = [...others.values()];
+		isWarningModalOpen = true;
+	}
+
+	let deleteDescription = $derived(
+		otherTravelerNames.length
+			? `${$t('adventures.location_delete_confirm')} ${$t('adventures.location_delete_travelers', {
+					values: { names: otherTravelerNames.join(', ') }
+				})}`
+			: $t('adventures.location_delete_confirm')
+	);
+
 	async function deleteAdventure() {
 		let res = await fetch(`/api/locations/${adventure.id}`, {
 			method: 'DELETE'
@@ -214,6 +255,8 @@
 	let adventurePriceLabel = $derived(
 		formatMoney(toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY))
 	);
+	// Locations you traveled to but someone else owns say whose they are.
+	let ownerShortName = $derived(adventure.user?.first_name || adventure.user?.username || '');
 	// Creator avatar helpers
 	let creatorDisplayName = $derived(
 		adventure.user?.first_name
@@ -238,7 +281,7 @@
 	<DeleteWarning
 		title={$t('adventures.delete_location')}
 		button_text="Delete"
-		description={$t('adventures.location_delete_confirm')}
+		description={deleteDescription}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteAdventure}
@@ -459,7 +502,7 @@
 											class="text-error"
 											onclick={() => {
 												close();
-												isWarningModalOpen = true;
+												openDeleteWarning();
 											}}
 										>
 											<TrashCan class="h-4 w-4" />
@@ -525,6 +568,21 @@
 				{#if remainingCount > 0}
 					<span class="badge badge-ghost badge-sm">+{remainingCount}</span>
 				{/if}
+			</div>
+		{/if}
+
+		{#if adventure.user && user && adventure.user.uuid !== user.uuid && !collection}
+			<div class="mt-auto flex items-center gap-2 pt-1 text-xs text-base-content/60">
+				<UserAvatar
+					user={adventure.user}
+					alt={creatorDisplayName}
+					className="h-5 w-5 shrink-0 rounded-full"
+					imgClass="h-5 w-5 shrink-0 rounded-full object-cover"
+					textClass="text-[9px]"
+				/>
+				<span class="badge badge-ghost badge-sm max-w-full truncate">
+					{$t('cards.with_owner', { values: { name: ownerShortName } })}
+				</span>
 			</div>
 		{/if}
 

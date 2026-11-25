@@ -21,7 +21,7 @@
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
 	import { addToast } from '#lib/toasts.js';
-	import DeleteWarning from '#lib/components/DeleteWarning.svelte';
+	import LeaveCollectionDialog from '#lib/components/collections/LeaveCollectionDialog.svelte';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 
 	interface Props {
@@ -242,21 +242,10 @@
 	let isShowingConfirmLeaveModal: boolean = $state(false);
 	let collectionIdToLeave: string | null = $state(null);
 
-	async function leaveCollection() {
-		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave/`, {
-			method: 'POST'
-		});
-		if (res.ok) {
-			addToast('info', $t('adventures.left_collection_message'));
-			// Remove from shared collections
-			sharedCollections = sharedCollections.filter(
-				(collection) => collection.id !== collectionIdToLeave
-			);
-			// Optionally, you can also remove from owned collections if needed
-			collections = collections.filter((collection) => collection.id !== collectionIdToLeave);
-		} else {
-			console.log('Error leaving collection');
-		}
+	// Called once the leave dialog has removed the person from the trip.
+	function collectionLeft(id: string) {
+		sharedCollections = sharedCollections.filter((collection) => collection.id !== id);
+		collections = collections.filter((collection) => collection.id !== id);
 	}
 
 	function saveEdit(event: CustomEvent<SlimCollection>) {
@@ -334,14 +323,11 @@
 	<meta name="description" content="View your adventure collections." />
 </svelte:head>
 
-{#if isShowingConfirmLeaveModal}
-	<DeleteWarning
-		title={$t('adventures.leave_collection')}
-		button_text={$t('adventures.leave')}
-		description={$t('adventures.leave_collection_warning')}
-		is_warning={true}
-		on:close={() => (isShowingConfirmLeaveModal = false)}
-		on:confirm={leaveCollection}
+{#if isShowingConfirmLeaveModal && collectionIdToLeave}
+	<LeaveCollectionDialog
+		collectionId={collectionIdToLeave}
+		onclose={() => (isShowingConfirmLeaveModal = false)}
+		onleft={collectionLeft}
 	/>
 {/if}
 

@@ -347,6 +347,13 @@
 					{#if location?.category?.display_name}
 						<div class="badge badge-outline badge-sm">{location.category.display_name}</div>
 					{/if}
+					{#if location?.user && page.data?.user && location.user.uuid !== page.data.user.uuid}
+						<div class="badge badge-ghost badge-sm">
+							{$t('cards.with_owner', {
+								values: { name: location.user.first_name || location.user.username }
+							})}
+						</div>
+					{/if}
 				</div>
 			{/if}
 

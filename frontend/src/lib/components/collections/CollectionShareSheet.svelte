@@ -33,6 +33,8 @@
 	import AccountMultiple from '~icons/mdi/account-multiple-outline';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import Plus from '~icons/mdi/plus';
+	import MapMarkerCheck from '~icons/mdi/map-marker-check-outline';
+	import DeleteWarning from '#lib/components/DeleteWarning.svelte';
 	import Check from '~icons/mdi/check';
 	import CommentMultiple from '~icons/mdi/comment-multiple-outline';
 	import BookOpenPageVariant from '~icons/mdi/book-open-page-variant-outline';
@@ -239,6 +241,13 @@
 		}
 	}
 
+	// A confirm that waits on the owner's answer: removing someone, or adding them to visits.
+	let pendingAction = $state<{
+		person: CollectionSharingPerson;
+		kind: 'remove' | 'add_to_visits';
+		description: string;
+	} | null>(null);
+
 	async function removeMember(person: CollectionSharingPerson) {
 		const data = await request(
 			`/api/collections/${collection.id}/members/${person.uuid}/`,
@@ -249,6 +258,67 @@
 			await loadSharing();
 			syncCollaborators();
 		}
+	}
+
+	/** Previews what removing a member does, so the owner confirms with the real counts. */
+	async function askRemoveMember(person: CollectionSharingPerson) {
+		const preview = (await request(
+			`/api/collections/${collection.id}/members/${person.uuid}/?dry_run=1`,
+			'DELETE'
+		)) as { locations?: number; others_uploads?: number } | null;
+		if (!preview) return;
+		const name = displayName(person);
+		const parts = [$t('share.remove_member_confirm', { values: { name } })];
+		if (preview.locations) {
+			parts.push($t('share.remove_member_keeps', { values: { name, count: preview.locations } }));
+		}
+		if (preview.others_uploads) {
+			parts.push(
+				$t('share.remove_member_uploads', { values: { name, count: preview.others_uploads } })
+			);
+		}
+		pendingAction = { person, kind: 'remove', description: parts.join(' ') };
+	}
+
+	/** Counts the visits that would gain this person; nothing is added until the owner agrees. */
+	async function askAddToVisits(person: CollectionSharingPerson) {
+		const name = displayName(person);
+		const preview = (await request(
+			`/api/collections/${collection.id}/add-travelers/?dry_run=1`,
+			'POST',
+			{ user_uuids: [person.uuid] }
+		)) as { visits?: number; locations?: number } | null;
+		if (!preview) return;
+		if (!preview.visits) {
+			addToast('info', $t('share.add_to_visits_none', { values: { name } }));
+			return;
+		}
+		pendingAction = {
+			person,
+			kind: 'add_to_visits',
+			description: $t('share.add_to_visits_confirm', {
+				values: { name, visits: preview.visits, locations: preview.locations ?? 0 }
+			})
+		};
+	}
+
+	async function addToVisits(person: CollectionSharingPerson) {
+		const data = (await request(`/api/collections/${collection.id}/add-travelers/`, 'POST', {
+			user_uuids: [person.uuid]
+		})) as { visits?: number } | null;
+		if (data) {
+			addToast(
+				'success',
+				$t('share.add_to_visits_done', {
+					values: { name: displayName(person), visits: data.visits ?? 0 }
+				})
+			);
+		}
+	}
+
+	function confirmPending(action: NonNullable<typeof pendingAction>) {
+		if (action.kind === 'remove') removeMember(action.person);
+		else addToVisits(action.person);
 	}
 
 	async function revokeInvite(person: CollectionSharingPerson) {
@@ -582,9 +652,19 @@
 											values: { name: displayName(person) }
 										})}
 										title={$t('share.remove')}
-										onclick={() => removeMember(person)}
+										onclick={() => askRemoveMember(person)}
 									>
 										<TrashCanOutline class="h-4 w-4" />
+									</button>
+									<button
+										type="button"
+										class="btn btn-ghost btn-sm btn-square"
+										disabled={busy}
+										aria-label={$t('share.add_to_visits')}
+										title={$t('share.add_to_visits')}
+										onclick={() => askAddToVisits(person)}
+									>
+										<MapMarkerCheck class="h-4 w-4" />
 									</button>
 								</li>
 							{/each}
@@ -978,3 +1058,19 @@
 	<button type="button" class="modal-backdrop" aria-label={$t('about.close')} onclick={onClose}
 	></button>
 </dialog>
+
+{#if pendingAction}
+	{@const action = pendingAction}
+	<DeleteWarning
+		title={pendingAction.kind === 'remove'
+			? $t('share.remove_person', { values: { name: displayName(pendingAction.person) } })
+			: $t('share.add_to_visits_title')}
+		button_text={pendingAction.kind === 'remove'
+			? $t('share.remove')
+			: $t('share.add_to_visits_title')}
+		description={pendingAction.description}
+		is_warning={pendingAction.kind === 'remove'}
+		on:close={() => (pendingAction = null)}
+		on:confirm={() => confirmPending(action)}
+	/>
+{/if}
