@@ -192,3 +192,59 @@ def remove_or_delete(visit, user, for_everyone=False):
         visit.delete()
         return 'deleted'
     return 'deleted' if leave(visit, user) else 'detached'
+
+
+def trip_visits(collection):
+    """
+    The visits that belong to a trip: the ones its itinerary logged, plus, when the trip has
+    dates, visits to its locations that started on those days (inclusive, by date). An undated
+    trip owns only the visits it logged, so an earlier visit to the same place stays out.
+    """
+    from django.db.models import Q
+
+    from adventures.models import Visit
+
+    belongs = Q(pk__in=collection.itinerary_items.filter(logged_visit__isnull=False).values('logged_visit_id'))
+    if collection.start_date and collection.end_date:
+        belongs |= Q(
+            location__collections=collection,
+            start_date__date__gte=collection.start_date,
+            start_date__date__lte=collection.end_date,
+        )
+    return Visit.objects.filter(belongs).distinct()
+
+
+def add_to_trip(collection, users, dry_run=False, actor=None):
+    """
+    Add ``users`` to the trip's visits (see ``trip_visits``). Each must be the owner or a member
+    of the trip, or ``ValidationError`` is raised and nothing changes.
+
+    Returns ``{'visits': n, 'locations': n}``: the visits that gained someone and their distinct
+    locations. A visit that already has all of them counts for nothing. A dry run only counts.
+    Otherwise a ``CollectionActivity`` is recorded when anything changed.
+    """
+    from django.db import transaction
+    from rest_framework.exceptions import ValidationError
+
+    wanted = {user.pk: user for user in users}
+    allowed = {collection.user_id, *collection.shared_with.values_list('pk', flat=True)}
+    if any(pk not in allowed for pk in wanted):
+        raise ValidationError({'user_uuids': 'Everyone must be the owner or a member of this collection.'})
+
+    visits = list(trip_visits(collection).select_related('location').prefetch_related('travelers'))
+    gaining = [v for v in visits if not wanted.keys() <= {t.pk for t in v.travelers.all()}]
+    result = {'visits': len(gaining), 'locations': len({v.location_id for v in gaining})}
+    if dry_run or not gaining:
+        return result
+    with transaction.atomic():
+        for visit in gaining:
+            add_travelers(visit, wanted.values())
+        if actor is not None:
+            from adventures.models import CollectionActivity
+            from adventures.services.activity_log import record_activity
+
+            record_activity(
+                collection, actor, CollectionActivity.Verb.TRAVELERS_ADDED,
+                usernames=sorted(user.username for user in wanted.values()), **result,
+            )
+    return result

@@ -55,6 +55,7 @@ class CollectionActivity(models.Model):
         COMMENT_ADDED = 'comment_added', 'Comment added'
         MEMBER_ADDED = 'member_added', 'Member added'
         MEMBER_REMOVED = 'member_removed', 'Member removed'
+        TRAVELERS_ADDED = 'travelers_added', 'Travelers added'
 
     # Membership changes are shown to the owner only.
     OWNER_ONLY_VERBS = (Verb.MEMBER_ADDED, Verb.MEMBER_REMOVED)

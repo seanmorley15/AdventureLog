@@ -5,17 +5,20 @@ from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_sche
 from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from django.utils import timezone
 from rest_framework import status
 from django.conf import settings
+from adventures.services import travelers
 import logging
 from adventures.models import CollectionActivity, CollectionGuestLink, CollectionMember
 from adventures.services.activity_log import record_activity
 from adventures.models import Collection, CollectionInvite, Location
 from adventures.serializers import _build_profile_pic_url
 from adventures.serializers import CollectionInviteSerializer, UltraSlimCollectionSerializer
+from adventures.access.audience import can_edit, is_member
 from adventures.serializers.sharing import (
+    AddTravelersSerializer,
     GuestLinkCreateSerializer,
     InviteCreateSerializer,
     MemberRoleSerializer,
@@ -333,6 +336,39 @@ class SharingActionsMixin:
             collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=request.user.username, left=True
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # -- Travelers -----------------------------------------------------------------------
+
+    @extend_schema(
+        tags=['Sharing'],
+        parameters=[OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')],
+        request=AddTravelersSerializer,
+        responses={
+            200: inline_serializer(
+                'AddedTravelers',
+                {'visits': serializers.IntegerField(), 'locations': serializers.IntegerField()},
+            ),
+            400: OpenApiResponse(description='Someone is not the owner or a member of this collection.'),
+        },
+    )
+    @action(detail=True, methods=['post'], url_path='add-travelers')
+    def add_travelers(self, request, pk=None):
+        """
+        Add people to this trip's visits
+
+        Owner and editors. For a trip logged before someone joined. Adds the people to the visits
+        the trip logged and, when the trip has dates, to visits to its locations that started on
+        those days (inclusive). Visits on other days are never touched. Returns how many visits
+        gained someone and at what locations; with `?dry_run=1` it only counts.
+        """
+        collection = Collection.objects.filter(pk=pk).first()
+        if collection is None or not request.user.is_authenticated or not is_member(request.user, collection):
+            raise NotFound('Collection not found.')
+        if not can_edit(request.user, collection):
+            raise PermissionDenied('You do not have permission to change this collection.')
+        users = validated(AddTravelersSerializer, request.data)['user_uuids']
+        dry_run = request.query_params.get('dry_run', '').lower() in ('1', 'true')
+        return Response(travelers.add_to_trip(collection, users, dry_run=dry_run, actor=request))
 
     # -- Guest links ---------------------------------------------------------------------
 

@@ -24,6 +24,23 @@ class GuestLinkCreateSerializer(serializers.Serializer):
     )
 
 
+class AddTravelersSerializer(serializers.Serializer):
+    user_uuids = serializers.ListField(
+        child=serializers.UUIDField(),
+        help_text='The people to add. Each must be the owner or a member of the collection.',
+    )
+
+    def validate_user_uuids(self, value):
+        """Turn the uuids into users, ignoring repeats."""
+        from django.contrib.auth import get_user_model
+
+        wanted = set(value)
+        users = list(get_user_model().objects.filter(uuid__in=wanted))
+        if len(users) != len(wanted):
+            raise serializers.ValidationError('Unknown user.')
+        return users
+
+
 class _PersonSerializer(serializers.Serializer):
     uuid = serializers.UUIDField()
     username = serializers.CharField()
