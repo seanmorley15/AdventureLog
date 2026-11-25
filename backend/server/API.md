@@ -90,7 +90,7 @@ How to raise one:
 - In a view: `raise APIError('Collection not found.', code='not_found', status=404)` (`core.exceptions`), or a
   DRF exception (`NotFound`, `PermissionDenied`, `ValidationError`). Never `return Response({'error': ...})`.
 - In a service: raise a subclass of `core.errors.ServiceError` (`DayPlanError`, `QuickAddError`, `BackupError`,
-  `IntegrationError`, `MediaQuotaExceeded`, ...). It carries `message`, `code`, `status` and `extra`; services do
+  `IntegrationError`, `MediaQuotaExceeded`, `TravelerError`, ...). It carries `message`, `code`, `status` and `extra`; services do
   not import DRF.
 - An `IntegrityError` becomes `409 conflict` (the day plan names it `order_conflict`).
 
@@ -109,6 +109,7 @@ Codes clients rely on (keep them stable):
 | `immich.*`, `strava.*`, `endurain.*`, `wanderer.*`                                                                                       | Integrations.                                                                                             |
 | `upstream_error`, `upstream_timeout`, `not_configured`                                                                                   | Place lookups, recommendations and image fetching.                                                        |
 | `location_not_found`                                                                                                                     | `GET /api/recommendations/` could not find the `location` to search around.                               |
+| `traveler_not_allowed`, `traveler_required`, `location_already_yours`, `no_visits_to_take`                                                  | Travelers (`TravelerError`, 400): someone who may not be named, nobody left, `take_my_visits` refused.     |
 
 ### Lists
 

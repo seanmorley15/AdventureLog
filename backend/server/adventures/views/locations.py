@@ -57,6 +57,7 @@ from adventures.utils.query_optimization import optimize_locations
 from adventures.views.mixins import PaginatedResponseMixin
 from core.visibility import can_read_published
 from core import pagination
+from core.errors import ServiceError
 from core.exceptions import APIError
 from core.geo import point_to_lat_lon
 from core.parsing import as_uuid, is_dry_run
@@ -355,7 +356,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
                 new_location = take_my_visits(original, request.user, collection=collection)
             else:
                 new_location = copy_location(original, request.user, collection)
-        except APIException:
+        except (APIException, ServiceError):
             raise
         except Exception:
             logger.exception('Failed to duplicate location %s', pk)

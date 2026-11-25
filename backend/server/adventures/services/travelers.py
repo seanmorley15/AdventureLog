@@ -3,8 +3,28 @@ Who travelled on a visit.
 
 Every visit lists at least one traveler: a new visit without any gets the
 location's owner, and the last traveler leaving deletes the visit.
+
+Refusals are ``TravelerError``s with a stable ``code`` (see API.md); this module does not import DRF.
 """
 from adventures.services import notifications
+from core.errors import ServiceError
+
+
+class TravelerError(ServiceError):
+    """A traveler change that cannot be made. ``code`` says why, ``status`` is the HTTP status."""
+
+
+def _locked(visit):
+    """
+    The visit row, locked until the surrounding transaction ends, so two people leaving or joining at
+    once see each other. Re-read, so a stale instance does not decide. Gone already: ``not_found``.
+    """
+    from adventures.models import Visit
+
+    locked = Visit.objects.select_for_update().select_related('location').filter(pk=visit.pk).first()
+    if locked is None:
+        raise TravelerError('This visit no longer exists.', code='not_found', status=404)
+    return locked
 
 
 def ensure_default_traveler(visit):
@@ -124,21 +144,19 @@ def set_travelers(visit, users, actor, fresh=False, collection=None):
     says the visit was just created, so the owner default it starts with does not count as
     someone already there.
 
-    Everyone added must be a candidate, or ``ValidationError`` is raised. Travelers who are no
+    Everyone added must be a candidate (``traveler_not_allowed``). Travelers who are no
     longer candidates (they left the trip) stay on the visit: only they can remove themselves.
-    A visit always keeps at least one traveler: a result with nobody is refused.
+    A visit always keeps at least one traveler: a result with nobody is ``traveler_required``.
     """
-    from rest_framework.exceptions import ValidationError
-
     wanted = {user.pk: user for user in users}
     existing = {user.pk: user for user in visit.travelers.all()}
     allowed = set(candidates(visit.location).values_list('pk', flat=True))
     if any(pk not in allowed and pk not in existing for pk in wanted):
-        raise ValidationError({'traveler_uuids': 'Travelers must be the owner or members of the location.'})
+        raise TravelerError('Travelers must be the owner or members of the location.', code='traveler_not_allowed')
     keep = {pk: user for pk, user in existing.items() if pk not in allowed}
     final = [*wanted.values(), *keep.values()]
     if not final:
-        raise ValidationError({'traveler_uuids': 'A visit needs at least one traveler.'})
+        raise TravelerError('A visit needs at least one traveler.', code='traveler_required')
     already = set() if fresh else set(existing)
     visit.travelers.set(final)
     mark_regions_for_travelers(visit.location)
@@ -150,12 +168,10 @@ def add_travelers(visit, users, actor=None, collection=None):
     Add ``users`` to the visit's travelers, keeping the ones already there. Each must be a candidate.
     Those who were not there and are not ``actor`` are told; without an ``actor`` nobody is.
     """
-    from rest_framework.exceptions import ValidationError
-
     wanted = {user.pk: user for user in users}
     allowed = set(candidates(visit.location).values_list('pk', flat=True))
     if any(pk not in allowed for pk in wanted):
-        raise ValidationError({'traveler_uuids': 'Travelers must be the owner or members of the location.'})
+        raise TravelerError('Travelers must be the owner or members of the location.', code='traveler_not_allowed')
     if wanted:
         already = set(visit.travelers.filter(pk__in=wanted).values_list('pk', flat=True))
         visit.travelers.add(*wanted.values())
@@ -166,13 +182,15 @@ def add_travelers(visit, users, actor=None, collection=None):
 
 
 def join(visit, user):
-    """Add the user as a traveler. Only candidates may join."""
-    from rest_framework.exceptions import PermissionDenied
+    """Add the user as a traveler. Only candidates may join (403 ``permission_denied``)."""
+    from django.db import transaction
 
     if not candidates(visit.location).filter(pk=user.pk).exists():
-        raise PermissionDenied('You cannot join this visit.')
-    visit.travelers.add(user)
-    mark_regions_for_travelers(visit.location)
+        raise TravelerError('You cannot join this visit.', code='permission_denied', status=403)
+    with transaction.atomic():
+        visit = _locked(visit)
+        visit.travelers.add(user)
+        mark_regions_for_travelers(visit.location)
 
 
 def leave(visit, user):
@@ -180,37 +198,45 @@ def leave(visit, user):
     Remove the user as a traveler. Deletes the visit and returns True when nobody is left.
     Someone who was not a traveler changes nothing.
     """
-    if not visit.travelers.filter(pk=user.pk).exists():
-        return False
-    visit.travelers.remove(user)
-    if visit.travelers.exists():
-        return False
-    visit.delete()
-    return True
+    from django.db import transaction
+
+    with transaction.atomic():
+        visit = _locked(visit)
+        if not visit.travelers.filter(pk=user.pk).exists():
+            return False
+        visit.travelers.remove(user)
+        if visit.travelers.exists():
+            return False
+        visit.delete()
+        return True
 
 
 def remove_or_delete(visit, user, for_everyone=False):
     """
     Delete a visit on behalf of ``user``. Returns ``'deleted'`` or ``'detached'``.
 
-    Only the location's owner may delete for everyone (anyone else gets ``PermissionDenied``).
+    Only the location's owner may delete for everyone (anyone else gets a 403 ``permission_denied``).
     Otherwise the user is removed from the visit, and the visit goes with them when they were
     the last traveler. Someone who was not a traveler changes nothing and gets ``'detached'``:
     a visit others travelled on is theirs to keep. Activities and photos stay with a visit that
     is only detached from. The owner deleting a visit with no travelers at all deletes it.
     """
-    from rest_framework.exceptions import PermissionDenied
+    from django.db import transaction
 
-    if not visit.travelers.exists() and user.pk == visit.location.user_id:
-        # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
-        visit.delete()
-        return 'deleted'
-    if for_everyone:
-        if user.pk != visit.location.user_id:
-            raise PermissionDenied('Only the location owner can delete a visit for everyone.')
-        visit.delete()
-        return 'deleted'
-    return 'deleted' if leave(visit, user) else 'detached'
+    with transaction.atomic():
+        visit = _locked(visit)
+        if not visit.travelers.exists() and user.pk == visit.location.user_id:
+            # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
+            visit.delete()
+            return 'deleted'
+        if for_everyone:
+            if user.pk != visit.location.user_id:
+                raise TravelerError(
+                    'Only the location owner can delete a visit for everyone.', code='permission_denied', status=403
+                )
+            visit.delete()
+            return 'deleted'
+        return 'deleted' if leave(visit, user) else 'detached'
 
 
 def trip_visits(collection):
@@ -236,19 +262,18 @@ def trip_visits(collection):
 def add_to_trip(collection, users, dry_run=False, actor=None):
     """
     Add ``users`` to the trip's visits (see ``trip_visits``). Each must be the owner or a member
-    of the trip, or ``ValidationError`` is raised and nothing changes.
+    of the trip, or ``traveler_not_allowed`` is raised and nothing changes.
 
     Returns ``{'visits': n, 'locations': n}``: the visits that gained someone and their distinct
     locations. A visit that already has all of them counts for nothing. A dry run only counts.
     Otherwise a ``CollectionActivity`` is recorded when anything changed.
     """
     from django.db import transaction
-    from rest_framework.exceptions import ValidationError
 
     wanted = {user.pk: user for user in users}
     allowed = {collection.user_id, *collection.shared_with.values_list('pk', flat=True)}
     if any(pk not in allowed for pk in wanted):
-        raise ValidationError({'user_uuids': 'Everyone must be the owner or a member of this collection.'})
+        raise TravelerError('Everyone must be the owner or a member of this collection.', code='traveler_not_allowed')
 
     visits = list(trip_visits(collection).select_related('location').prefetch_related('travelers'))
     gaining = [v for v in visits if not wanted.keys() <= {t.pk for t in v.travelers.all()}]
@@ -279,18 +304,19 @@ def take_my_visits(original, user, collection=None):
     activities they added to those visits are copied too (``copy_visit_uploads``), with their
     own files; other people's stay behind. The originals are left as they are. With
     ``collection`` the copy goes in that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
-    ``ValidationError``: it is already theirs.
+    ``location_already_yours``: it is already theirs. Someone on none of its visits gets ``no_visits_to_take``.
     """
     from django.db import transaction
-    from rest_framework.exceptions import ValidationError
 
     from adventures.models import Visit
     from adventures.services.locations import copy as copying
 
     if original.user_id == user.pk:
-        raise ValidationError({'take_my_visits': 'This location is already yours.'})
+        raise TravelerError('This location is already yours.', code='location_already_yours')
     with transaction.atomic():
         mine = list(original.visits.filter(travelers=user).order_by('start_date', 'created_at'))
+        if not mine:
+            raise TravelerError('You are not a traveler on any visit to this location.', code='no_visits_to_take')
         copy = copying.copy_location(original, user, collection=collection, name=original.name, skip_unreadable=True)
         for visit in mine:
             moved = Visit.objects.create(

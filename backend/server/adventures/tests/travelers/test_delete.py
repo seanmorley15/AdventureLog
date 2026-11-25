@@ -1,7 +1,6 @@
-from rest_framework.exceptions import PermissionDenied
-
 from adventures.models import Visit
 from adventures.services import travelers
+from adventures.services.travelers import TravelerError
 from adventures.tests.base import AudienceTestBase
 
 
@@ -62,7 +61,7 @@ class DeleteSharedVisitTests(AudienceTestBase):
         self.assertEqual(travelers.remove_or_delete(shared, self.editor), 'detached')
         self.assertEqual(travelers.remove_or_delete(shared, self.owner), 'deleted')
         again = self._visit([self.owner, self.editor])
-        with self.assertRaises(PermissionDenied):
+        with self.assertRaises(TravelerError):
             travelers.remove_or_delete(again, self.editor, for_everyone=True)
         self.assertEqual(travelers.remove_or_delete(again, self.owner, for_everyone=True), 'deleted')
 
