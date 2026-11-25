@@ -93,7 +93,7 @@ def _nights(collection: Collection, days: Optional[int]) -> Optional[int]:
     return max(days - 1, 0) if days else None
 
 
-def build_trip_book(collection: Collection, options: PdfOptions, story: bool = False) -> bytes:
+def build_trip_book(collection: Collection, options: PdfOptions, story: bool = False, viewer=None) -> bytes:
     styles = build_styles()
     media = MediaCache(enabled=options.photos)
     maps = MapRenderer()
@@ -107,7 +107,7 @@ def build_trip_book(collection: Collection, options: PdfOptions, story: bool = F
 
     def make_story(refs: Dict[str, int], total: int) -> List:
         ctx = Ctx(collection=collection, options=options, story=story, styles=styles,
-                  width=width - 80, media=media, maps=maps, refs=refs, total_pages=total)
+                  width=width - 80, media=media, maps=maps, refs=refs, total_pages=total, viewer=viewer)
         out: List = []
         out.extend(_cover(ctx, day_groups))
         numbering: Dict[str, List[int]] = defaultdict(list)

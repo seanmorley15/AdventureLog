@@ -128,6 +128,14 @@ class CountingTests(AudienceTestBase):
         pdf = build_collection_pdf(collection, options=PdfOptions(), viewer=self.editor)
         self.assertTrue(pdf.startswith(b'%PDF'))
 
+    def test_pdf_last_visit_comes_from_the_viewers_own_visits(self):
+        later = Visit.objects.create(location=self.hut, start_date=_past() + timedelta(days=3))
+        later.travelers.set([self.owner])
+        hut = Location.objects.prefetch_related('visits__travelers').get(pk=self.hut.pk)
+        self.assertEqual(visit_info(hut, self.editor)[1], _past().date())
+        self.assertEqual(visit_info(hut, self.owner)[1], later.start_date.date())
+        self.assertEqual(visit_info(hut)[1], later.start_date.date())
+
 
 class ListQueryCountTests(AudienceTestBase):
     def _add(self, count):

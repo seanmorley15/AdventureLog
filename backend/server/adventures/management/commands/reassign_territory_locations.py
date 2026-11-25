@@ -3,9 +3,9 @@ from django.db import transaction
 
 from adventures.models import Location
 from adventures.services.geocoding.matching import find_region_for_point
+from adventures.services.travelers import mark_regions_for_travelers
 from core.geo import point_to_lat_lon
 from worldtravel.models import City, VisitedCity, VisitedRegion
-from worldtravel.services import mark_cities_visited, mark_regions_visited
 
 
 class Command(BaseCommand):
@@ -72,11 +72,9 @@ class Command(BaseCommand):
             Location.objects.filter(pk=location.pk).update(
                 country=territory, region=new_region, city=new_city
             )
-            if location.is_visited_status():
-                if new_region:
-                    mark_regions_visited(location.user_id, [new_region.id])
-                if new_city:
-                    mark_cities_visited(location.user_id, [new_city.id])
+            # The location row still holds the old region and city; reload it for the new ones.
+            location.refresh_from_db()
+            mark_regions_for_travelers(location)
 
         # A visited row for the parent's region goes only when the user had a place moved out of
         # it and has none left there. One the user never had a place in may be a manual mark.

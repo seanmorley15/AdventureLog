@@ -301,12 +301,19 @@ def travelers(collection: Collection) -> List[str]:
 
 
 def visit_info(location: Location, user=None) -> Tuple[bool, Optional[date]]:
-    """Whether the person (the place's owner by default) has visited the place, and the date of its latest visit, from the loaded visits."""
+    """
+    Whether the person (the place's owner by default) has visited the place, and the date of its
+    latest visit, from the loaded visits. With a person given, only visits they travelled on count.
+    """
     if getattr(location, '_story_hide_visits', False):
         return False, None
     visited = location.is_visited_status(user)
     today = timezone.now().date()
-    dates = [v.start_date.date() for v in location.visits.all() if v.start_date and v.start_date.date() <= today]
+    dates = [
+        v.start_date.date() for v in location.visits.all()
+        if v.start_date and v.start_date.date() <= today
+        and (user is None or any(t.pk == user.pk for t in v.travelers.all()))
+    ]
     return visited, max(dates) if dates else None
 
 

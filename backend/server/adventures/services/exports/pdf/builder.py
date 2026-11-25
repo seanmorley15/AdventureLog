@@ -25,7 +25,7 @@ def build_collection_pdf(collection: Collection, story: bool = False, options: O
     if story:
         apply_story_groups(collection)
     if collection.type == Collection.Type.TRIP:
-        return build_trip_book(collection, options, story)
+        return build_trip_book(collection, options, story, viewer)
     return build_field_guide(collection, options, story, viewer)
 
 
