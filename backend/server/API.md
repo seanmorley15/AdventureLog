@@ -495,6 +495,12 @@ people added to visits you are the only traveler on.
 A visit whose only traveler leaves is deleted, together with everything other people added to it (their photos,
 files and activities). That is true whether or not copies are kept; `others_uploads` is how to warn about it first.
 
+A place can also stop being reachable without anyone leaving: taking it out of a collection (`DELETE
+/api/locations/{id}/collections/{cid}/` or `PATCH` with `collections`) or deleting the collection. Anyone who
+travelled there, does not own it and is not the owner or a member of another collection holding it is treated like
+a removed member: they come off its visits and get their own copy with their visits. Travelers who still reach
+the place through another collection are untouched, and so is the place owner. The response shape does not change.
+
 The collection activity feed has a new verb, `travelers_added`.
 
 ### Fixed along the way

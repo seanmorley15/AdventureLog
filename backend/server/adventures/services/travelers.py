@@ -357,3 +357,40 @@ def release_member(collection, user, keep_copies):
                 for visit in list(Visit.objects.filter(location=location, travelers=user)):
                     remove_or_delete(visit, user)
     return copied
+
+
+def lost_access_users(location, ignoring=()):
+    """
+    People on ``location``'s visits who don't own it and, leaving out the collections in
+    ``ignoring``, neither own nor belong to any collection that holds it.
+    """
+    from django.contrib.auth import get_user_model
+    from django.db.models import Exists, OuterRef, Q
+
+    from adventures.models import Collection
+
+    reachable = Collection.objects.filter(locations=location).exclude(pk__in=[c.pk for c in ignoring]).filter(
+        Q(user=OuterRef('pk')) | Q(shared_with=OuterRef('pk'))
+    )
+    return (
+        get_user_model().objects.filter(visits_traveled__location=location)
+        .exclude(pk=location.user_id)
+        .exclude(Exists(reachable))
+        .distinct()
+    )
+
+
+def release_lost_access(location, ignoring=()):
+    """
+    Treat everyone who can no longer reach ``location`` as removed from its trip: they come off
+    its visits and get their own copy with their visits (``take_my_visits``). Call it when the
+    place is about to leave, or has left, the collections in ``ignoring``. Safe to repeat: once
+    released nobody is left on the visits. Returns how many people were released.
+    """
+    from django.db import transaction
+
+    with transaction.atomic():
+        users = list(lost_access_users(location, ignoring).order_by('pk'))
+        for user in users:
+            take_my_visits(location, user)
+    return len(users)

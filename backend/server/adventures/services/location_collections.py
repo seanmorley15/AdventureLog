@@ -34,11 +34,15 @@ def link_location(location, collection):
 def unlink_location(location, collection):
     """
     Remove the membership and every plan placement of the place in that
-    collection, together. Returns how many placements were removed.
+    collection, together. Travelers who can no longer reach the place get their own copy
+    (``travelers.release_lost_access``). Returns how many placements were removed.
     """
+    from adventures.services import travelers
+
     with transaction.atomic():
         placements = _placements_qs(location, collection)
         removed = placements.count()
         placements.delete()
         location.collections.remove(collection)
+        travelers.release_lost_access(location)
     return removed

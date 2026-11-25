@@ -146,7 +146,12 @@ class Collection(models.Model):
     def delete(self, *args, **kwargs):
         from adventures.services.day_plan.files import purge_collection_day_files
 
+        from adventures.services import travelers
+
         with transaction.atomic():
+            # Places that only this collection gave someone access to become theirs as copies.
+            for location in self.locations.all():
+                travelers.release_lost_access(location, ignoring=[self])
             purge_collection_day_files(self)
             return super().delete(*args, **kwargs)
 
