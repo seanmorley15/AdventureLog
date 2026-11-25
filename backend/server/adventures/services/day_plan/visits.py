@@ -36,14 +36,15 @@ def log_visited(item, visit_date=None, travelers=None, actor=None):
     projected date; ``visit_date`` is required when the trip has no anchor or the
     placement is in Ideas. Both visit bounds are always set.
 
-    The people who travelled are ``actor`` plus ``travelers``. A new visit lists exactly
-    them; a visit that already existed gains them ("I was there too"). A guest link has no
-    account, so it is never a traveler: with nobody named the visit keeps its default, the owner.
+    The people who travelled are exactly ``travelers`` when a list is given (the actor may
+    leave themselves off), else just ``actor``. A new visit lists exactly them; a visit that
+    already existed gains them ("I was there too"). A guest link has no account, so it is never
+    a traveler: with nobody named the visit keeps its default, the owner.
     """
     from adventures.models import Visit
     from adventures.services import travelers as traveler_rules
 
-    named = [actor, *(travelers or [])]
+    named = [actor] if travelers is None else travelers
     people = list({user.pk: user for user in named if user is not None and user.is_authenticated}.values())
 
     if item_kind(item) != 'location':
@@ -89,7 +90,7 @@ def log_day(collection, day, visit_date=None, travelers=None, actor=None):
     Log every non-optional location stop on ``day`` that has no logged visit.
 
     Day activities are copied onto the visit when the day has one location stop.
-    The day activity stays on the day. Every stop gets the same travelers.
+    The day activity stays on the day. Every stop gets the same travelers: the list given, or just the actor.
     """
     from adventures.models import CollectionItineraryItem
     from .files import promote_ready_activities

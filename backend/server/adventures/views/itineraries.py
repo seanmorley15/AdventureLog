@@ -353,7 +353,7 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
             201: OpenApiResponse(LogItemResultSerializer, description='A visit was created.'),
             200: OpenApiResponse(
                 LogItemResultSerializer,
-                description='The stop had already logged its visit; you and the people you named were added to it.',
+                description='The stop had already logged its visit; the people you named (you, when none) were added to it.',
             ),
             400: OpenApiResponse(description='`date_required` when the trip has no dates, or invalid input.'),
         },
@@ -364,7 +364,7 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
         Log a stop as visited
 
         Creates one visit to the location for this stop's day, or returns the one it already
-        logged. You and the people you name are its travelers; on an existing visit they are added.
+        logged. The people you name are its travelers (you, when you name nobody; you may leave yourself off); on an existing visit they are added.
         """
         item = self.get_object()
         self.get_editable_collection()
@@ -489,7 +489,8 @@ class CollectionDayViewSet(_DayPlanViewMixin, mixins.ListModelMixin, viewsets.Ge
         """
         Log a day as visited
 
-        Logs every non-optional location stop on the day that has no visit yet.
+        Logs every non-optional location stop on the day that has no visit yet. The people you name are the
+        travelers (you, when you name nobody).
         """
         collection = self.get_editable_collection()
         day = day_plan.get_day(collection, pk)

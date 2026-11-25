@@ -120,7 +120,7 @@ Known ones:
 ### UI (frontend)
 - **Location page visits** (`lib/components/locations/LocationVisits.svelte`): traveler avatars on each visit. Editors get a picker (from candidates). Members not on a visit get an "I was there too" button, and travelers get "I wasn't there".
 - **Workspace stop row and Log day** (`lib/components/collections/DayPlanRow.svelte`, `TripDayPlanner.svelte:609,979`):
-  - **Log visit** opens a small "Who went with you?" checklist of the trip's collaborators. You're always included.
+  - **Log visit** opens a small "Who went with you?" checklist of the trip's collaborators. You are pre-checked but may uncheck yourself (2026-11-25), as long as someone is checked.
   - The checklist remembers your last picks for this trip in the browser, so logging a whole trip together is one click per stop. *(My call.)*
   - After logging, the row shows the avatars of who it was logged for.
   - If the stop is logged but the viewer isn't on it, the button reads **"I was there too"**.
@@ -147,7 +147,7 @@ Known ones:
   - backfill migration
   - per-user visited
   - candidates and permissions (an editor sets travelers; a viewer can only join or leave themselves; a non-member is refused)
-  - log visit with ticked collaborators (the clicker is always included; non-collaborators are refused), and the "I was there too" path
+  - log visit with ticked collaborators (the clicker is pre-checked but may be unchecked; see the 2026-11-25 note below; non-collaborators are refused), and the "I was there too" path
   - add-travelers: only this trip's visits, with dry-run counts
   - leave with and without `keep_copies` (no double counting, detached from the originals, no access to the owner's places afterwards)
   - owner removal always copies
@@ -162,3 +162,5 @@ Known ones:
   4. Owner logs a new stop with the second account ticked, and both get the credit. The second account logs a stop alone, and only they get it.
   5. A viewer uses "I was there too".
   6. Leave with "keep copies": the copies are owned by the second account and stats are unchanged (no double count). The owner's place no longer lists them.
+
+> **Changed 2026-11-25:** "the clicker is always included" no longer holds. Log visit and Log day pre-check you but you may uncheck yourself to record a visit for someone else. The only rule is at least one traveler: an explicit `traveler_uuids` list is exactly who is credited (an empty list is a 400), and an omitted list means you alone.

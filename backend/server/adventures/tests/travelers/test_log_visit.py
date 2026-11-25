@@ -17,12 +17,23 @@ class LogVisitTravelersTests(AudienceTestBase):
     def _travelers(self, response):
         return set(Visit.objects.get(pk=response.data['visit']['id']).travelers.values_list('username', flat=True))
 
-    def test_log_visit_credits_clicker_and_ticked(self):
-        response = self._log(self.editor, [self.owner])
+    def test_log_visit_credits_exactly_the_list(self):
+        response = self._log(self.editor, [self.editor, self.owner])
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(self._travelers(response), {'editor', 'owner'})
 
-    def test_log_visit_alone_credits_only_clicker(self):
+    def test_log_visit_list_without_the_actor_leaves_them_off(self):
+        response = self._log(self.editor, [self.owner])
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(self._travelers(response), {'owner'})
+
+    def test_log_visit_empty_list_is_400(self):
+        response = self._log(self.editor, [])
+        self.assertEqual(response.status_code, 400, response.data)
+        self.assertIn('at least one traveler', str(response.data))
+        self.assertFalse(Visit.objects.filter(location=self.hut).exists())
+
+    def test_log_visit_omitted_list_credits_only_the_actor(self):
         response = self._log(self.editor)
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(self._travelers(response), {'editor'})
@@ -32,6 +43,12 @@ class LogVisitTravelersTests(AudienceTestBase):
         self.assertEqual(response.status_code, 400, response.data)
         self.assertFalse(Visit.objects.filter(location=self.hut).exists())
 
+    def test_logged_stop_with_a_list_without_the_actor(self):
+        self._log(self.owner)
+        second = self._log(self.editor, [self.viewer])
+        self.assertEqual(second.status_code, 200, second.data)
+        self.assertEqual(self._travelers(second), {'owner', 'viewer'})
+
     def test_logged_stop_adds_clicker(self):
         first = self._log(self.owner)
         self.assertEqual(first.status_code, 201)
@@ -40,6 +57,17 @@ class LogVisitTravelersTests(AudienceTestBase):
         self.assertEqual(second.data['visit']['id'], first.data['visit']['id'])
         self.assertEqual(self._travelers(second), {'owner', 'editor'})
         self.assertEqual(Visit.objects.filter(location=self.hut).count(), 1)
+
+    def test_log_day_with_a_list_excluding_the_actor(self):
+        self.as_user(self.editor)
+        day = get_day_by_index(self.trip, 1)
+        url = f'/api/collections/{self.trip.id}/days/{day.id}/log-visit/'
+        empty = self.client.post(url, {'traveler_uuids': []}, format='json')
+        self.assertEqual(empty.status_code, 400, empty.data)
+        response = self.client.post(url, {'traveler_uuids': [str(self.owner.uuid)]}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        visit = Visit.objects.get(pk=response.data['visits'][0]['id'])
+        self.assertEqual(set(visit.travelers.values_list('username', flat=True)), {'owner'})
 
     def test_existing_visit_on_same_dates_gains_clicker(self):
         visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z', end_date='2026-06-01T23:59:59Z')
@@ -66,7 +94,7 @@ class LogVisitTravelersTests(AudienceTestBase):
         for visit in response.data['visits']:
             self.assertEqual(
                 set(Visit.objects.get(pk=visit['id']).travelers.values_list('username', flat=True)),
-                {'editor', 'viewer'},
+                {'viewer'},
             )
 
     def test_log_visit_dedupes_travelers(self):

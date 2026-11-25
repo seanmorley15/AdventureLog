@@ -101,11 +101,14 @@ class LogVisitSerializer(serializers.Serializer):
     date = DayDateField(required=False, allow_null=True, help_text='Needed when the trip has no dates.')
     traveler_uuids = serializers.ListField(
         child=serializers.UUIDField(), required=False,
-        help_text='Others who came along. You are always included. Each must be the owner or a member of the trip.',
+        help_text='Who was there. Leave it out to log the visit for yourself only. You may leave yourself off to log '
+        'it for someone else, but at least one person is needed. Each must be the owner or a member of the trip.',
     )
 
     def validate_traveler_uuids(self, value):
         """Turn the uuids into users."""
+        if not value:
+            raise serializers.ValidationError('A visit needs at least one traveler.')
         users = list(get_user_model().objects.filter(uuid__in=value))
         if len(users) != len(set(value)):
             raise serializers.ValidationError('Unknown user.')
