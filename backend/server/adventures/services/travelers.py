@@ -261,28 +261,59 @@ def remove_or_delete(visit, user, for_everyone=False):
     """
     Delete a visit on behalf of ``user``. Returns ``'deleted'`` or ``'detached'``.
 
-    Only the location's owner may delete for everyone (anyone else gets a 403 ``permission_denied``).
-    Otherwise the user is removed from the visit, and the visit goes with them when they were
-    the last traveler. Someone who was not a traveler changes nothing and gets ``'detached'``:
-    a visit others travelled on is theirs to keep. Activities and photos stay with a visit that
-    is only detached from. The owner deleting a visit with no travelers at all deletes it.
+    - A traveler is taken off the visit, and the visit goes with them when they were the last
+      traveler (``'deleted'``), else it stays for the others (``'detached'``). Activities and
+      photos stay with a visit that is only detached from.
+    - ``for_everyone``: the location's owner deletes it for everyone. Anyone else gets a 403
+      ``permission_denied``.
+    - The location's owner who is not on it deletes a visit nobody travelled on; one that others
+      travelled on is a 409 ``visit_has_travelers`` (use ``for_everyone``).
+    - Anyone else who is not on it gets a 403 ``not_a_traveler``: a visit others travelled on is
+      theirs to keep.
     """
     from django.db import transaction
 
     with transaction.atomic():
         visit = _locked(visit)
-        if not visit.travelers.exists() and user.pk == visit.location.user_id:
-            # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
-            visit.delete()
-            return 'deleted'
+        is_owner = user.pk == visit.location.user_id
         if for_everyone:
-            if user.pk != visit.location.user_id:
+            if not is_owner:
                 raise TravelerError(
                     'Only the location owner can delete a visit for everyone.', code='permission_denied', status=403
                 )
             visit.delete()
             return 'deleted'
-        return 'deleted' if leave(visit, user) else 'detached'
+        if visit.travelers.filter(pk=user.pk).exists():
+            return 'deleted' if leave(visit, user) else 'detached'
+        if is_owner and not visit.travelers.exists():
+            # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
+            visit.delete()
+            return 'deleted'
+        if is_owner:
+            raise TravelerError(
+                'Other people travelled on this visit. Delete it for everyone (for_everyone=1) to remove it.',
+                code='visit_has_travelers', status=409,
+            )
+        raise TravelerError(
+            'Only the location owner or someone who travelled can remove this visit.',
+            code='not_a_traveler', status=403,
+        )
+
+
+def detach_if_traveler(visit, user):
+    """
+    ``remove_or_delete`` for someone who may not be on the visit, where that is no reason to refuse
+    (removing a stop, saving a location's visit list): a visit they are not on is left as it is
+    (``'kept'``). The location's owner still clears a visit nobody travelled on.
+    """
+    from django.db import transaction
+
+    with transaction.atomic():
+        visit = _locked(visit)
+        on_it = visit.travelers.filter(pk=user.pk).exists()
+        if on_it or (user.pk == visit.location.user_id and not visit.travelers.exists()):
+            return remove_or_delete(visit, user)
+        return 'kept'
 
 
 def trip_visits(collection):

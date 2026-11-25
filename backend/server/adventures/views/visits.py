@@ -19,15 +19,22 @@ from core.sync import ClientIdsMixin, ConditionalWritesMixin
 class VisitDeleteQuerySerializer(serializers.Serializer):
     for_everyone = serializers.BooleanField(
         default=False,
-        help_text='Delete the visit for every traveler. Only the location owner may. Otherwise only you are removed from it.',
+        help_text='Delete the visit for every traveler. Only the location owner may. Otherwise only you are '
+        'removed from it.',
     )
 
 
 @extend_schema_view(
     destroy=extend_schema(
-        description='Removes you from the visit. The visit is deleted when you were its last traveler, '
-        'or with `for_everyone` by the location owner. Answers 204 either way.',
+        description='A traveler is removed from the visit, which is deleted when they were its last traveler. '
+        'The location owner deletes it for everyone with `for_everyone`, and without it deletes a visit nobody '
+        'travelled on. 204 when something changed. The location owner not on a visit others travelled on gets '
+        '409 `visit_has_travelers`; anyone else not on it gets 403 `not_a_traveler`.',
         parameters=[VisitDeleteQuerySerializer],
+        responses={
+            204: OpenApiResponse(description='You were removed, or the visit was deleted.'),
+            409: OpenApiResponse(description='`visit_has_travelers`: others travelled on it; use `for_everyone`.'),
+        },
     ),
     list=extend_schema(description='Visits to locations you own or that are in collections you belong to.'),
     create=extend_schema(

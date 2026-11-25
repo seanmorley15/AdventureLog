@@ -366,8 +366,9 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
         Make the place's visits match ``visits_data``. A visit sent with the id of one of
         this place's visits is updated; the rest are created; visits left out are deleted
         one by one so their photos and files go with them, except that a visit others travelled
-        on only loses ``user`` (see ``travelers.remove_or_delete``). An id that does not belong to
-        this place is ignored, never adopted.
+        on only loses ``user``, and one ``user`` is not on stays as it is (see
+        ``travelers.detach_if_traveler``). An id that does not belong to this place is ignored,
+        never adopted.
         """
         existing = {visit.id: visit for visit in location.visits.all()}
         kept = set()
@@ -385,7 +386,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             kept.add(visit.id)
         for visit_id, visit in existing.items():
             if visit_id not in kept:
-                travelers.remove_or_delete(visit, user)
+                travelers.detach_if_traveler(visit, user)
 
 
 class MapPinSerializer(CoordinateSerializerMixin, serializers.ModelSerializer):

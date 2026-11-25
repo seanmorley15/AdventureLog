@@ -40,13 +40,32 @@ class DeleteSharedVisitTests(AudienceTestBase):
         self.assertEqual(self.client.delete(f'/api/visits/{visit.id}/').status_code, 204)
         self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
 
-    def test_non_traveler_editor_delete_changes_nothing(self):
+    def test_non_traveler_editor_delete_is_403(self):
         visit = self._visit([self.owner])
         self.as_user(self.editor)
-        self.assertEqual(self.client.delete(f'/api/visits/{visit.id}/').status_code, 204)
+        response = self.client.delete(f'/api/visits/{visit.id}/')
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.data['code'], 'not_a_traveler')
         self.assertEqual([u.pk for u in visit.travelers.all()], [self.owner.pk])
-        self.assertEqual(travelers.remove_or_delete(visit, self.editor), 'detached')
+        with self.assertRaises(TravelerError):
+            travelers.remove_or_delete(visit, self.editor)
         self.assertTrue(Visit.objects.filter(pk=visit.pk).exists())
+
+    def test_owner_not_on_a_visit_others_travelled_on_gets_409(self):
+        visit = self._visit([self.editor])
+        self.as_user(self.owner)
+        response = self.client.delete(f'/api/visits/{visit.id}/')
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.data['code'], 'visit_has_travelers')
+        self.assertEqual([u.pk for u in visit.travelers.all()], [self.editor.pk])
+        self.assertEqual(self.client.delete(f'/api/visits/{visit.id}/?for_everyone=1').status_code, 204)
+        self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
+
+    def test_owner_on_a_shared_visit_is_only_taken_off(self):
+        visit = self._visit([self.owner, self.editor])
+        self.as_user(self.owner)
+        self.assertEqual(self.client.delete(f'/api/visits/{visit.id}/').status_code, 204)
+        self.assertEqual([u.pk for u in visit.travelers.all()], [self.editor.pk])
 
     def test_detach_keeps_the_visit_activities(self):
         from adventures.models import Activity
@@ -79,6 +98,23 @@ class DeleteSharedVisitTests(AudienceTestBase):
         self.as_user(self.editor)
         response = self.client.delete(self._stop_url('?confirm_delete_visits=true'))
         self.assertEqual(response.status_code, 204, response.content)
+        self.assertEqual([u.pk for u in visit.travelers.all()], [self.owner.pk])
+
+    def test_stop_delete_confirm_visits_leaves_a_visit_you_are_not_on(self):
+        visit = self._visit([self.owner])
+        self.stop.logged_visit = visit
+        self.stop.save()
+        self.as_user(self.editor)
+        response = self.client.delete(self._stop_url('?confirm_delete_visits=true'))
+        self.assertEqual(response.status_code, 204, response.content)
+        self.assertEqual([u.pk for u in visit.travelers.all()], [self.owner.pk])
+        self.assertFalse(type(self.stop).objects.filter(pk=self.stop.pk).exists())
+
+    def test_saving_location_without_a_visit_you_are_not_on_keeps_it(self):
+        visit = self._visit([self.owner])
+        self.as_user(self.editor)
+        response = self.client.patch(f'/api/locations/{self.hut.id}/', {'visits': []}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual([u.pk for u in visit.travelers.all()], [self.owner.pk])
 
     def test_stop_delete_confirm_visits_deletes_when_alone(self):

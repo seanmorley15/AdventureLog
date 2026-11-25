@@ -3525,7 +3525,9 @@ paths:
         schema:
           type: boolean
           default: false
-        description: Also delete the visit this item logged.
+        description: Also take you off the visit this item logged; it is deleted when
+          you were its only traveler (or, for the location owner, when nobody travelled
+          on it). A visit you are not on is left as it is.
       - in: path
         name: id
         schema:
@@ -12085,9 +12087,11 @@ paths:
             `current` is the record now.
     delete:
       operationId: visits_destroy
-      description: Removes you from the visit. The visit is deleted when you were
-        its last traveler, or with `for_everyone` by the location owner. Answers 204
-        either way.
+      description: A traveler is removed from the visit, which is deleted when they
+        were its last traveler. The location owner deletes it for everyone with `for_everyone`,
+        and without it deletes a visit nobody travelled on. 204 when something changed.
+        The location owner not on a visit others travelled on gets 409 `visit_has_travelers`;
+        anyone else not on it gets 403 `not_a_traveler`.
       summary: Delete a visit
       parameters:
       - in: header
@@ -12120,7 +12124,7 @@ paths:
       - cookieAuth: []
       responses:
         '204':
-          description: No response body
+          description: You were removed, or the visit was deleted.
         '401':
           content:
             application/json:
@@ -12140,6 +12144,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+        '409':
+          description: '`visit_has_travelers`: others travelled on it; use `for_everyone`.'
         '412':
           content:
             application/json:

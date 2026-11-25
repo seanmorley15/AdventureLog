@@ -73,7 +73,9 @@ class ItineraryItemResultSerializer(CollectionItineraryItemSerializer):
 
 class ItemDeleteQuerySerializer(serializers.Serializer):
     confirm_delete_visits = serializers.BooleanField(
-        default=False, help_text='Also delete the visit this item logged.'
+        default=False,
+        help_text='Also take you off the visit this item logged; it is deleted when you were its only traveler '
+        '(or, for the location owner, when nobody travelled on it). A visit you are not on is left as it is.',
     )
 
 

@@ -3486,7 +3486,7 @@ export interface paths {
         post?: never;
         /**
          * Delete a visit
-         * @description Removes you from the visit. The visit is deleted when you were its last traveler, or with `for_everyone` by the location owner. Answers 204 either way.
+         * @description A traveler is removed from the visit, which is deleted when they were its last traveler. The location owner deletes it for everyone with `for_everyone`, and without it deletes a visit nobody travelled on. 204 when something changed. The location owner not on a visit others travelled on gets 409 `visit_has_travelers`; anyone else not on it gets 403 `not_a_traveler`.
          */
         delete: operations["visits_destroy"];
         options?: never;
@@ -11730,7 +11730,7 @@ export interface operations {
     collections_itinerary_items_destroy: {
         parameters: {
             query?: {
-                /** @description Also delete the visit this item logged. */
+                /** @description Also take you off the visit this item logged; it is deleted when you were its only traveler (or, for the location owner, when nobody travelled on it). A visit you are not on is left as it is. */
                 confirm_delete_visits?: boolean;
             };
             header?: never;
@@ -20357,7 +20357,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description No response body */
+            /** @description You were removed, or the visit was deleted. */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -20390,6 +20390,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Error"];
                 };
+            };
+            /** @description `visit_has_travelers`: others travelled on it; use `for_everyone`. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
             412: {

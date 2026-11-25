@@ -339,7 +339,7 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
         if validated(ItemDeleteQuerySerializer, request.query_params)['confirm_delete_visits'] and instance.logged_visit_id:
             visit = instance.logged_visit
             if IsOwnerOrSharedWithFullAccess().has_object_permission(request, self, visit):
-                travelers.remove_or_delete(visit, request.user)
+                travelers.detach_if_traveler(visit, request.user)
         collection = instance.collection
         bucket = (instance.day_id, instance.is_global)
         instance.delete()
