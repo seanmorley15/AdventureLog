@@ -37,7 +37,7 @@
 		indexedDays,
 		initialPlanDay,
 		recordedVisitId,
-		rememberedTravelers,
+		initialTravelers,
 		rememberTravelers,
 		tripToday,
 		objectsOfType,
@@ -951,16 +951,14 @@
 	);
 	const hasCompany = $derived(collaborators.some((person) => person.uuid !== currentUserUuid));
 
-	/** Everyone ticked except the current user, who the server always adds. */
-	function otherTravelers(picked: string[]): string[] {
-		return picked.filter((uuid) => uuid !== currentUserUuid);
-	}
-
 	/** Open the day's prompt with the last picks that are still on the trip. */
 	function askLogDay(day: CollectionItineraryDay, dateRequired = false) {
 		logDayDateRequired = dateRequired;
-		const here = new Set(collaborators.map((person) => person.uuid));
-		logDayTravelers = rememberedTravelers(collection.id).filter((uuid) => here.has(uuid));
+		logDayTravelers = initialTravelers(
+			collection.id,
+			collaborators.map((person) => person.uuid),
+			currentUserUuid
+		);
 		logDayPromptFor = day.id;
 	}
 
@@ -996,6 +994,8 @@
 	}
 
 	async function logDay(day: CollectionItineraryDay, date?: string, travelerUuids?: string[]) {
+		// A visit needs someone on it.
+		if (travelerUuids && !travelerUuids.length) return;
 		if ((!anchored && !date) || (hasCompany && !travelerUuids)) {
 			askLogDay(day);
 			return;
@@ -1793,7 +1793,7 @@
 								void logDay(
 									day,
 									anchored && !logDayDateRequired ? undefined : logDayDate,
-									hasCompany ? otherTravelers(logDayTravelers) : undefined
+									hasCompany ? logDayTravelers : undefined
 								);
 							}}
 						>
@@ -1803,7 +1803,6 @@
 									<TravelerPicker
 										candidates={collaborators}
 										bind:selected={logDayTravelers}
-										lockedUuid={currentUserUuid ?? undefined}
 										hideLegend
 									/>
 								</div>
@@ -1823,7 +1822,7 @@
 								<button
 									type="submit"
 									class="btn btn-sm btn-primary join-item"
-									disabled={loggingDay === day.id}
+									disabled={loggingDay === day.id || (hasCompany && logDayTravelers.length === 0)}
 								>
 									{$t('itinerary.log_day')}
 								</button>

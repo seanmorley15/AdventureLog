@@ -5,6 +5,7 @@ import {
 	dayLink,
 	initialPlanDay,
 	recordedVisit,
+	initialTravelers,
 	rememberedTravelers,
 	rememberTravelers,
 	tripToday
@@ -101,7 +102,7 @@ describe('remembered travelers', () => {
 	it('round-trips the picks for a trip', () => {
 		rememberTravelers('c1', ['a']);
 		expect(rememberedTravelers('c1')).toEqual(['a']);
-		expect(store.has('trip-travelers:c1')).toBe(true);
+		expect(store.has('trip-travelers:v2:c1')).toBe(true);
 	});
 
 	it('is empty for a trip with no picks', () => {
@@ -109,10 +110,22 @@ describe('remembered travelers', () => {
 	});
 
 	it('is empty when the stored value is not a list of uuids', () => {
-		store.set('trip-travelers:c1', '{not json');
+		store.set('trip-travelers:v2:c1', '{not json');
 		expect(rememberedTravelers('c1')).toEqual([]);
-		store.set('trip-travelers:c1', '{"a":1}');
+		store.set('trip-travelers:v2:c1', '{"a":1}');
 		expect(rememberedTravelers('c1')).toEqual([]);
+	});
+
+	it('starts from the current user when nothing is remembered', () => {
+		expect(initialTravelers('c1', ['me', 'sam'], 'me')).toEqual(['me']);
+		expect(initialTravelers('c1', ['sam'], null)).toEqual([]);
+	});
+
+	it('starts from picks that leave the current user off, dropping people who left', () => {
+		rememberTravelers('c1', ['sam', 'gone']);
+		expect(initialTravelers('c1', ['me', 'sam'], 'me')).toEqual(['sam']);
+		rememberTravelers('c1', ['gone']);
+		expect(initialTravelers('c1', ['me', 'sam'], 'me')).toEqual(['me']);
 	});
 
 	it('is empty without storage', () => {

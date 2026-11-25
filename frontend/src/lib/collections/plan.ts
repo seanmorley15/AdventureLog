@@ -320,7 +320,8 @@ export function recordedVisit(
 	return (location?.visits ?? []).find((visit) => visit.id === id) ?? null;
 }
 
-const travelersKey = (collectionId: string) => `trip-travelers:${collectionId}`;
+// v2: the picks now include the person logging (before, only the others were kept).
+const travelersKey = (collectionId: string) => `trip-travelers:v2:${collectionId}`;
 
 /** The people picked last time on this device for Log visit, or none. */
 export function rememberedTravelers(collectionId: string): string[] {
@@ -331,6 +332,21 @@ export function rememberedTravelers(collectionId: string): string[] {
 	} catch {
 		return [];
 	}
+}
+
+/**
+ * Who Log visit starts with: the last picks that are still on the trip, else just the current
+ * user. The picks may leave the current user off.
+ */
+export function initialTravelers(
+	collectionId: string,
+	collaboratorUuids: string[],
+	currentUserUuid: string | null
+): string[] {
+	const here = new Set(collaboratorUuids);
+	const remembered = rememberedTravelers(collectionId).filter((uuid) => here.has(uuid));
+	if (remembered.length) return remembered;
+	return currentUserUuid ? [currentUserUuid] : [];
 }
 
 /** Keep the picks so the next Log visit on this trip starts from them. */

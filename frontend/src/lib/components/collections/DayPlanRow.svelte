@@ -9,7 +9,7 @@
 		clockValue,
 		recordedVisit as findRecordedVisit,
 		recordedVisitId,
-		rememberedTravelers,
+		initialTravelers,
 		rememberTravelers,
 		type LogVisitResult,
 		type PlanRow
@@ -45,7 +45,7 @@
 		draggable?: boolean;
 		readMode?: boolean;
 		collection?: Collection;
-		/** The signed-in user, who is always on a visit they log. */
+		/** The signed-in user, who is pre-checked when logging a visit but may uncheck themselves. */
 		currentUserUuid?: string | null;
 		onLogVisit?: (row: PlanRow, date?: string, travelerUuids?: string[]) => Promise<LogVisitResult>;
 		/** "I was there too": add the current user to the stop's visit. */
@@ -154,6 +154,8 @@
 	const collaborators = $derived(collection?.collaborators ?? []);
 	const hasCompany = $derived(collaborators.some((person) => person.uuid !== currentUserUuid));
 	// Without a date to ask for or people to pick, Log visit just logs.
+	// A visit needs someone on it: the prompt cannot be submitted with nobody checked.
+	const noTravelers = $derived(collaborators.length > 0 && picked.length === 0);
 	const needsPrompt = $derived(hasCompany || !hasProjectedDate);
 
 	const travelers = $derived(
@@ -183,14 +185,16 @@
 		if (!onLogVisit || logging) return;
 		logging = true;
 		try {
-			const others = hasCompany ? picked.filter((uuid) => uuid !== currentUserUuid) : undefined;
-			const result = await onLogVisit(row, date, others);
+			// Exactly who is checked (the current user may be off); nothing sent means just you.
+			const people = hasCompany ? picked : undefined;
+			if (askingDate && noTravelers) return;
+			const result = await onLogVisit(row, date, people);
 			if (result === 'date_required') {
 				openPrompt(true);
 			} else if (result === 'ok') {
 				askingDate = false;
 				dateRequired = false;
-				if (others && collection) rememberTravelers(collection.id, others);
+				if (people && collection) rememberTravelers(collection.id, people);
 			}
 		} finally {
 			logging = false;
@@ -200,8 +204,13 @@
 	/** Open the prompt with the last picks that are still on the trip. */
 	function openPrompt(required = false) {
 		dateRequired = required;
-		const here = new Set(collaborators.map((person) => person.uuid));
-		picked = collection ? rememberedTravelers(collection.id).filter((uuid) => here.has(uuid)) : [];
+		picked = collection
+			? initialTravelers(
+					collection.id,
+					collaborators.map((person) => person.uuid),
+					currentUserUuid ?? null
+				)
+			: [];
 		askingDate = true;
 	}
 
@@ -390,12 +399,7 @@
 						onsubmit={confirmDate}
 					>
 						<p class="text-sm font-medium">{$t('itinerary.who_went')}</p>
-						<TravelerPicker
-							candidates={collaborators}
-							bind:selected={picked}
-							lockedUuid={currentUserUuid ?? undefined}
-							hideLegend
-						/>
+						<TravelerPicker candidates={collaborators} bind:selected={picked} hideLegend />
 						{#if !hasProjectedDate || dateRequired}
 							<input
 								type="date"
@@ -416,7 +420,11 @@
 							>
 								{$t('about.close')}
 							</button>
-							<button type="submit" class="btn btn-sm btn-primary" disabled={logging}>
+							<button
+								type="submit"
+								class="btn btn-sm btn-primary"
+								disabled={logging || noTravelers}
+							>
 								{#if logging}
 									<span class="loading loading-spinner loading-xs"></span>
 								{/if}

@@ -14,16 +14,6 @@ const candidates = [
 ];
 
 describe('TravelerPicker', () => {
-	it('keeps the locked person checked', async () => {
-		render(TravelerPicker, { candidates, selected: ['me'], lockedUuid: 'me' });
-		const mia = page.getByRole('checkbox').first();
-		await expect.element(mia).toBeChecked();
-		await expect.element(mia).toHaveAttribute('aria-disabled', 'true');
-		await expect.element(mia).not.toHaveAttribute('disabled');
-		(mia.element() as HTMLInputElement).click();
-		await expect.element(mia).toBeChecked();
-	});
-
 	it('hides the legend visually but keeps it for screen readers', async () => {
 		render(TravelerPicker, { candidates, selected: ['me'], hideLegend: true });
 		await expect.element(page.getByText('Who was there')).toHaveClass('sr-only');
@@ -34,28 +24,36 @@ describe('TravelerPicker', () => {
 		await expect.element(page.getByText('Who was there')).not.toHaveClass('sr-only');
 	});
 
-	it('checks and unchecks the others, but never the last person', async () => {
-		render(TravelerPicker, { candidates, selected: ['me'] });
+	it('lets anyone be unchecked, including the current user, and shows no warning while someone is', async () => {
+		render(TravelerPicker, { candidates, selected: ['me', 'sam'] });
 		const [mia, sam] = [page.getByRole('checkbox').first(), page.getByRole('checkbox').nth(1)];
-		await expect.element(mia).toHaveAttribute('aria-disabled', 'true'); // the only one on the visit
-		await sam.click();
-		await expect.element(sam).toBeChecked();
-		await expect.element(mia).not.toHaveAttribute('aria-disabled');
 		await mia.click();
 		await expect.element(mia).not.toBeChecked();
-		await expect.element(sam).toHaveAttribute('aria-disabled', 'true'); // now the last one
+		await expect.element(sam).toBeChecked();
+		await expect.element(sam).not.toHaveAttribute('aria-invalid');
+		await expect.element(page.getByRole('alert')).not.toBeInTheDocument();
 	});
 
-	it('keeps the locked person checked while others are toggled', async () => {
-		render(TravelerPicker, { candidates, selected: ['me', 'sam'], lockedUuid: 'me' });
+	it('is invalid when nobody is checked and says so', async () => {
+		render(TravelerPicker, { candidates, selected: [] });
+		await expect.element(page.getByRole('alert')).toHaveTextContent('Pick at least one person');
+		await expect
+			.element(page.getByRole('checkbox').first())
+			.toHaveAttribute('aria-invalid', 'true');
+		await expect.element(page.getByRole('checkbox').nth(1)).toHaveAttribute('aria-invalid', 'true');
+	});
+
+	it('allows toggling the last person off and then shows invalid', async () => {
+		render(TravelerPicker, { candidates, selected: ['me'] });
 		const [mia, sam] = [page.getByRole('checkbox').first(), page.getByRole('checkbox').nth(1)];
-		await expect.element(mia).toBeChecked();
-		await expect.element(mia).toHaveAttribute('aria-disabled', 'true');
-		await expect.element(sam).not.toHaveAttribute('aria-disabled');
-		await sam.click();
-		await expect.element(sam).not.toBeChecked();
-		await expect.element(mia).toBeChecked();
+		await expect.element(page.getByRole('alert')).not.toBeInTheDocument();
+		await mia.click();
+		await expect.element(mia).not.toBeChecked();
+		await expect.element(page.getByRole('alert')).toBeInTheDocument();
+		await expect.element(sam).toHaveAttribute('aria-invalid', 'true');
 		await sam.click();
 		await expect.element(sam).toBeChecked();
+		await expect.element(page.getByRole('alert')).not.toBeInTheDocument();
+		await expect.element(sam).not.toHaveAttribute('aria-invalid');
 	});
 });

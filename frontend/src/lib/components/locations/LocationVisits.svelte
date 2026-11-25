@@ -94,6 +94,8 @@
 	let showTravelerPicker = $derived(
 		travelerCandidates.some((person) => person.uuid !== currentUserUuid)
 	);
+	// A visit needs someone on it: saving waits while the picker has nobody checked.
+	let travelersMissing = $derived(showTravelerPicker && selectedTravelers.length === 0);
 	// A visit waiting on the delete confirmation because other people were on it.
 	let pendingDelete: Visit | null = $state(null);
 	let isDeletingVisit = $state(false);
@@ -288,6 +290,8 @@
 	}
 
 	async function addVisit(isAuto: boolean = false): Promise<boolean> {
+		// Never send a visit nobody was on.
+		if (travelersMissing) return false;
 		isSavingVisit = true;
 		try {
 			// If editing an existing visit, patch instead of creating new
@@ -697,11 +701,7 @@
 					</div>
 
 					{#if showTravelerPicker}
-						<TravelerPicker
-							candidates={travelerCandidates}
-							bind:selected={selectedTravelers}
-							lockedUuid={visitIdEditing ? undefined : (currentUserUuid ?? undefined)}
-						/>
+						<TravelerPicker candidates={travelerCandidates} bind:selected={selectedTravelers} />
 					{/if}
 
 					<div>
@@ -729,7 +729,7 @@
 						<button
 							class="btn btn-primary btn-sm gap-2"
 							type="button"
-							disabled={!localStartDate || !isDateValid || isSavingVisit}
+							disabled={!localStartDate || !isDateValid || isSavingVisit || travelersMissing}
 							onclick={() => addVisit(false)}
 						>
 							{#if isSavingVisit}
@@ -772,7 +772,7 @@
 							<button
 								type="button"
 								class="btn btn-primary btn-sm gap-2"
-								disabled={todayCovered || isSavingVisit}
+								disabled={todayCovered || isSavingVisit || travelersMissing}
 								title={todayCovered
 									? $t('adventures.visited_today')
 									: $t('adventures.add_today_visit')}
@@ -816,7 +816,7 @@
 							<button
 								type="button"
 								class="btn btn-primary btn-sm gap-2"
-								disabled={todayCovered || isSavingVisit}
+								disabled={todayCovered || isSavingVisit || travelersMissing}
 								onclick={() => addTodayVisit()}
 							>
 								<CalendarTodayIcon class="w-4 h-4" />

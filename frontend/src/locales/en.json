@@ -2007,7 +2007,7 @@
 		"you": "You",
 		"join_failed": "Could not add you to this visit.",
 		"leave_failed": "Could not remove you from this visit.",
-		"keep_one_traveler": "A visit needs at least one person."
+		"pick_one_traveler": "Pick at least one person"
 	},
 	"locations": {
 		"location": "Location",
