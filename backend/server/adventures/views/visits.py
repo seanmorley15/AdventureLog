@@ -38,6 +38,10 @@ class VisitDeleteQuerySerializer(serializers.Serializer):
         parameters=[VisitDeleteQuerySerializer],
         responses={
             204: OpenApiResponse(description='You were removed, or the visit was deleted.'),
+            403: OpenApiResponse(
+                description='`not_a_traveler`: you are neither on the visit nor the location owner; '
+                '`permission_denied`: `for_everyone` from someone other than the location owner, or a viewer.'
+            ),
             409: OpenApiResponse(description='`visit_has_travelers`: others travelled on it; use `for_everyone`.'),
         },
     ),

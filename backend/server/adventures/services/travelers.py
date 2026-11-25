@@ -14,15 +14,19 @@ class TravelerError(ServiceError):
     """A traveler change that cannot be made. ``code`` says why, ``status`` is the HTTP status."""
 
 
-def _locked(visit):
+def _locked(visit, missing_ok=False):
     """
     The visit row, locked until the surrounding transaction ends, so two people leaving or joining at
-    once see each other. Re-read, so a stale instance does not decide. Gone already: ``not_found``.
+    once see each other. Re-read, so a stale instance does not decide. Only the visit row is locked
+    (``of=('self',)``), never its location: saving a location locks it first and then its visits, so
+    locking both here would invert that order. Gone already: ``not_found``, or None with ``missing_ok``.
     """
     from adventures.models import Visit
 
-    locked = Visit.objects.select_for_update().select_related('location').filter(pk=visit.pk).first()
-    if locked is None:
+    locked = (
+        Visit.objects.select_for_update(of=('self',)).select_related('location').filter(pk=visit.pk).first()
+    )
+    if locked is None and not missing_ok:
         raise TravelerError('This visit no longer exists.', code='not_found', status=404)
     return locked
 
@@ -247,14 +251,18 @@ def leave(visit, user):
     from django.db import transaction
 
     with transaction.atomic():
-        visit = _locked(visit)
-        if not visit.travelers.filter(pk=user.pk).exists():
-            return False
-        visit.travelers.remove(user)
-        if visit.travelers.exists():
-            return False
-        visit.delete()
-        return True
+        return _leave_locked(_locked(visit), user)
+
+
+def _leave_locked(visit, user):
+    """``leave`` on a visit row this transaction has already locked."""
+    if not visit.travelers.filter(pk=user.pk).exists():
+        return False
+    visit.travelers.remove(user)
+    if visit.travelers.exists():
+        return False
+    visit.delete()
+    return True
 
 
 def remove_or_delete(visit, user, for_everyone=False):
@@ -274,45 +282,53 @@ def remove_or_delete(visit, user, for_everyone=False):
     from django.db import transaction
 
     with transaction.atomic():
-        visit = _locked(visit)
-        is_owner = user.pk == visit.location.user_id
-        if for_everyone:
-            if not is_owner:
-                raise TravelerError(
-                    'Only the location owner can delete a visit for everyone.', code='permission_denied', status=403
-                )
-            visit.delete()
-            return 'deleted'
-        if visit.travelers.filter(pk=user.pk).exists():
-            return 'deleted' if leave(visit, user) else 'detached'
-        if is_owner and not visit.travelers.exists():
-            # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
-            visit.delete()
-            return 'deleted'
-        if is_owner:
+        return _remove_or_delete_locked(_locked(visit), user, for_everyone)
+
+
+def _remove_or_delete_locked(visit, user, for_everyone=False):
+    """``remove_or_delete`` on a visit row this transaction has already locked."""
+    is_owner = user.pk == visit.location.user_id
+    if for_everyone:
+        if not is_owner:
             raise TravelerError(
-                'Other people travelled on this visit. Delete it for everyone (for_everyone=1) to remove it.',
-                code='visit_has_travelers', status=409,
+                'Only the location owner can delete a visit for everyone.', code='permission_denied', status=403
             )
+        visit.delete()
+        return 'deleted'
+    if visit.travelers.filter(pk=user.pk).exists():
+        return 'deleted' if _leave_locked(visit, user) else 'detached'
+    if is_owner and not visit.travelers.exists():
+        # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
+        visit.delete()
+        return 'deleted'
+    if is_owner:
         raise TravelerError(
-            'Only the location owner or someone who travelled can remove this visit.',
-            code='not_a_traveler', status=403,
+            'Other people travelled on this visit. Delete it for everyone (for_everyone=1) to remove it.',
+            code='visit_has_travelers', status=409,
         )
+    raise TravelerError(
+        'Only the location owner or someone who travelled can remove this visit.',
+        code='not_a_traveler', status=403,
+    )
 
 
 def detach_if_traveler(visit, user):
     """
     ``remove_or_delete`` for someone who may not be on the visit, where that is no reason to refuse
-    (removing a stop, saving a location's visit list): a visit they are not on is left as it is
-    (``'kept'``). The location's owner still clears a visit nobody travelled on.
+    (removing a stop, saving a location's visit list, and the internal paths that take someone off
+    visits they read earlier: copies, leaving, account deletion). A visit they are not on (any more)
+    is left as it is (``'kept'``), and one already deleted counts as done (``'deleted'``). The
+    location's owner still clears a visit nobody travelled on. Locks the row once.
     """
     from django.db import transaction
 
     with transaction.atomic():
-        visit = _locked(visit)
+        visit = _locked(visit, missing_ok=True)
+        if visit is None:
+            return 'deleted'
         on_it = visit.travelers.filter(pk=user.pk).exists()
         if on_it or (user.pk == visit.location.user_id and not visit.travelers.exists()):
-            return remove_or_delete(visit, user)
+            return _remove_or_delete_locked(visit, user)
         return 'kept'
 
 
@@ -378,7 +394,7 @@ def take_my_visits(original, user, collection=None):
 
     The copy keeps the original's name and gets a copy of each visit they travelled on (dates,
     timezone and notes), with them as its only traveler. They are then removed from the original
-    visits (see ``remove_or_delete``), so nothing is counted twice. The photos, attachments and
+    visits (see ``detach_if_traveler``), so nothing is counted twice. The photos, attachments and
     activities they added to those visits are copied too (``copy_visit_uploads``), with their
     own files; other people's stay behind. The originals are left as they are. With
     ``collection`` the copy goes in that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
@@ -404,7 +420,8 @@ def take_my_visits(original, user, collection=None):
             moved.travelers.set([user])
             copying.copy_visit_uploads(visit, moved, user)
         for visit in mine:
-            remove_or_delete(visit, user)
+            # Read before the copy was made: someone may have taken them off meanwhile.
+            detach_if_traveler(visit, user)
         mark_regions_for_travelers(copy)
     return copy
 
@@ -528,7 +545,7 @@ def release_member_all(collections, user, keep_copies):
                 copied += 1
             else:
                 for visit in list(Visit.objects.filter(location=location, travelers=user)):
-                    remove_or_delete(visit, user)
+                    detach_if_traveler(visit, user)
     return copied
 
 

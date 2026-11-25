@@ -81,13 +81,21 @@ class VisitLockTests(AudienceTestBase):
     def _locks(self, call):
         with CaptureQueriesContext(connection) as queries:
             call()
-        return [q['sql'] for q in queries if 'FOR UPDATE' in q['sql'] and 'adventures_visit' in q['sql']]
+        locks = [q['sql'] for q in queries if 'FOR UPDATE' in q['sql']]
+        # Only the visit row: locking its location too would invert the order a location save takes.
+        self.assertTrue(all('FOR UPDATE OF "adventures_visit"' in sql for sql in locks), locks)
+        return locks
 
     def test_leave_join_and_delete_lock_the_visit(self):
         visit = self._visit([self.owner, self.editor])
         self.assertTrue(self._locks(lambda: travelers.leave(visit, self.editor)))
         self.assertTrue(self._locks(lambda: travelers.join(visit, self.viewer)))
         self.assertTrue(self._locks(lambda: travelers.remove_or_delete(visit, self.viewer)))
+
+    def test_the_lenient_path_locks_the_visit_once(self):
+        visit = self._visit([self.owner, self.editor])
+        self.assertEqual(len(self._locks(lambda: travelers.detach_if_traveler(visit, self.editor))), 1)
+        self.assertEqual(len(self._locks(lambda: travelers.remove_or_delete(visit, self.owner))), 1)
 
     def test_join_a_visit_deleted_meanwhile_is_404_not_a_database_error(self):
         visit = self._visit([self.editor])

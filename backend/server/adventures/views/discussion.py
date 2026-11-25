@@ -27,7 +27,7 @@ from adventures.serializers.discussion import (
     ThreadQuerySerializer,
     UnreadCountSerializer,
 )
-from adventures.services.activity_log import record_activity, visible_activity
+from adventures.services.activity_log import activity_data, record_activity, visible_activity
 from adventures.access.audience import audience_for_request
 from adventures.services.discussion import (
     author_fields,
@@ -279,7 +279,7 @@ class CollectionActivityViewSet(CollectionScopedMixin, viewsets.ViewSet):
                 'verb': event.verb,
                 'actor_name': event.actor_name,
                 'actor': person_summary(event.actor_user, request.user),
-                'data': event.data,
+                'data': activity_data(event),
                 'created_at': event.created_at,
             }
             for event in events

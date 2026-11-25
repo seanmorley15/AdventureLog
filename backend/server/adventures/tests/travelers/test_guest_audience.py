@@ -53,3 +53,14 @@ class GuestAudienceTests(AudienceTestBase):
         self.assertEqual(response.status_code, 200, response.data)
         self.assertEqual(Notification.objects.get(user=self.viewer).actor_name, 'Grandma')
         self.assertEqual(sorted(visit.travelers.values_list('username', flat=True)), ['owner', 'viewer'])
+
+    def test_legacy_rows_with_usernames_are_read_without_them(self):
+        CollectionActivity.objects.create(
+            collection=self.trip, verb=CollectionActivity.Verb.TRAVELERS_ADDED, actor_user=self.owner,
+            actor_name='owner', data={'usernames': ['editor', 'viewer'], 'visits': 2, 'locations': 1},
+        )
+        self.as_anonymous()
+        feed = self.client.get(f'/api/collections/{self.trip.id}/activity/', HTTP_X_GUEST_TOKEN=self.link.token)
+        self.assertEqual(feed.status_code, 200, feed.content)
+        event = next(e for e in feed.json() if e['verb'] == 'travelers_added')
+        self.assertEqual(event['data'], {'visits': 2, 'locations': 1, 'people': 2})

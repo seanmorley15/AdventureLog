@@ -7,9 +7,11 @@ copies made when someone leaves, joining yourself, the owner default, restores a
 
 Wrap a request that adds people to many visits in ``batch()`` and each person gets one notification
 with a count instead of one per visit. The same actor adding the same person to the same visit again
-within ``REPEAT_SECONDS`` (say, after removing them) sends no second e-mail; the in-app notification,
-which went when they were removed, comes back, so there is never more than one. That memory lives in
-the cache, so a server without a shared cache only forgets sooner. Writing never breaks the change it describes, and the e-mail
+within ``REPEAT_SECONDS`` (say, after removing them) sends no second e-mail. The in-app notification
+is still written: a single-visit one went when they were removed (``clear_visit_notifications``), so
+there is only ever one of those per visit; summary ones are not removed, so repeating Log day or
+add-travelers adds another. That memory lives in the cache, so a server without a shared cache only
+forgets sooner. Writing never breaks the change it describes, and the e-mail
 (only when the server has SMTP) is queued in the same transaction, after the notification, so a queue
 error loses the e-mail and not the notification.
 """

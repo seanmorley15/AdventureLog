@@ -291,7 +291,8 @@ Lists of people are bounded: `traveler_uuids` and `user_uuids` take at most 100,
 at most 1000 `ids`. More is a `400`.
 
 The collection activity feed has a verb for it, `travelers_added`. Its `data` holds counts only (`people`, `visits`,
-`locations`), never names, because editor guest links read the feed.
+`locations`), never names, because editor guest links read the feed (older rows that stored `usernames` are read as
+`people`).
 
 ### Telling people they were added
 
@@ -306,11 +307,14 @@ They get a notification in the app and, when the server has SMTP set up and they
   ("added you to 5 visits on Euro Trip"); adding someone to a single visit sends the single form. Notifications
   are written in the same transaction as the change; a failure to notify never fails the change.
 - **What they hold.** The display name of who did it (an editor guest link that logs a visit is named by its
-  label), the place, the trip and the dates, nothing about the other travelers. The place and trip names are checked again when you read them: after you lose access they are empty.
+  label), the place, the trip and the dates, nothing about the other travelers. The place and trip names are
+  checked again when you read them: after you lose access they are empty.
 - **E-mail.** Queued as `adventures.send_traveler_added_email` only when `smtp_configured()`, one per notification,
   with a link to the place (or the trip for the summary form). It retries like the mention e-mail. The same person
   adding the same traveler to the same visit again within 10 minutes (after taking them off, say) sends no second
-  e-mail; the in-app notification, deleted when they were taken off, comes back, so there is only ever one.
+  e-mail. The in-app notification comes back: a single-visit one is deleted when they are taken off, so there is
+  only ever one of those per visit. Summary notifications (Log day, `add-travelers`) are not deleted on removal, so
+  repeating the action adds another.
 
 | Endpoint                                  | What it does                                                                                                                                                                    |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

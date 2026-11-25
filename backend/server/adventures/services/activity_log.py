@@ -46,6 +46,20 @@ def record_activity(collection, request_or_user, verb, **data):
         logger.exception('Could not record %s for collection %s', verb, getattr(collection, 'pk', None))
 
 
+def activity_data(event):
+    """
+    An activity's ``data`` as the feed shows it. ``travelers_added`` rows written before it stored
+    counts only held ``usernames``: they are read as a count, so no name reaches an editor guest link.
+    """
+    from adventures.models import CollectionActivity
+
+    data = dict(event.data or {})
+    if event.verb == CollectionActivity.Verb.TRAVELERS_ADDED and 'usernames' in data:
+        usernames = data.pop('usernames') or []
+        data.setdefault('people', len(usernames))
+    return data
+
+
 def visible_activity(collection, audience):
     """The feed an audience may read: none for viewers and readers, no membership for editors."""
     from adventures.models import CollectionActivity

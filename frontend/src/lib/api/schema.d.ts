@@ -20393,14 +20393,12 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
-            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            /** @description `not_a_traveler`: you are neither on the visit nor the location owner; `permission_denied`: `for_everyone` from someone other than the location owner, or a viewer. */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Error"];
-                };
+                content?: never;
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {

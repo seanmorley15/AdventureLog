@@ -12145,11 +12145,9 @@ paths:
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
         '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: You can see this resource but may not do this to it (`permission_denied`).
+          description: '`not_a_traveler`: you are neither on the visit nor the location
+            owner; `permission_denied`: `for_everyone` from someone other than the
+            location owner, or a viewer.'
         '404':
           content:
             application/json:

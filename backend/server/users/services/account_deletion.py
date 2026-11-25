@@ -63,7 +63,7 @@ def _detach_sharing(user) -> None:
 
     # A visit they were the last traveler on goes with them; their own locations are cleared separately.
     for visit in Visit.objects.filter(travelers=user).exclude(location__user=user).select_related('location'):
-        travelers.remove_or_delete(visit, user)
+        travelers.detach_if_traveler(visit, user)
     for collection in Collection.objects.filter(shared_with=user):
         collection.shared_with.remove(user)
     CollectionInvite.objects.filter(invited_user=user).delete()
