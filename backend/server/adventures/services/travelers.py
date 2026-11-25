@@ -80,3 +80,73 @@ def mark_regions_for_travelers(location):
             mark_regions_visited(user_id, [location.region_id])
         if location.city_id:
             mark_cities_visited(user_id, [location.city_id])
+
+
+def candidates(location):
+    """People who can be named as travelers: the location's owner, plus the owner and members of each collection holding it."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+
+    return get_user_model().objects.filter(
+        Q(pk=location.user_id)
+        | Q(shared_with__locations=location)
+        | Q(collection__locations=location)
+    ).distinct().order_by('username')
+
+
+def can_see_travelers(request, visit):
+    """
+    Whether this request may see who travelled on the visit: the location's owner, a member
+    of a collection holding the location, or a traveler. Never anonymous, and never a guest
+    link (a guest link is not an account, so it is not treated as membership here).
+    """
+    from adventures.access.audience import is_member
+
+    user = getattr(request, 'user', None)
+    if user is None or not getattr(user, 'is_authenticated', False):
+        return False
+    location = visit.location
+    if user.pk == location.user_id:
+        return True
+    if any(t.pk == user.pk for t in visit.travelers.all()):
+        return True
+    # Pass the user, not the request, so a guest token never counts as membership.
+    return any(is_member(user, collection) for collection in location.collections.all())
+
+
+def set_travelers(visit, users, actor):
+    """
+    Make ``users`` the visit's travelers.
+
+    Everyone added must be a candidate, or ``ValidationError`` is raised. Travelers who are no
+    longer candidates (they left the trip) stay on the visit: only they can remove themselves.
+    """
+    from rest_framework.exceptions import ValidationError
+
+    wanted = {user.pk: user for user in users}
+    existing = {user.pk: user for user in visit.travelers.all()}
+    allowed = set(candidates(visit.location).values_list('pk', flat=True))
+    if any(pk not in allowed and pk not in existing for pk in wanted):
+        raise ValidationError({'traveler_uuids': 'Travelers must be the owner or members of the location.'})
+    keep = {pk: user for pk, user in existing.items() if pk not in allowed}
+    visit.travelers.set([*wanted.values(), *keep.values()])
+    mark_regions_for_travelers(visit.location)
+
+
+def join(visit, user):
+    """Add the user as a traveler. Only candidates may join."""
+    from rest_framework.exceptions import PermissionDenied
+
+    if not candidates(visit.location).filter(pk=user.pk).exists():
+        raise PermissionDenied('You cannot join this visit.')
+    visit.travelers.add(user)
+    mark_regions_for_travelers(visit.location)
+
+
+def leave(visit, user):
+    """Remove the user as a traveler. Deletes the visit and returns True when nobody is left."""
+    visit.travelers.remove(user)
+    if visit.travelers.exists():
+        return False
+    visit.delete()
+    return True

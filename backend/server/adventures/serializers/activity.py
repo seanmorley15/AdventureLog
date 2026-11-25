@@ -1,6 +1,9 @@
 """Trails, activities, and visits."""
 
 import logging
+from django.contrib.auth import get_user_model
+from adventures.serializers.common import _build_profile_pic_url
+from adventures.services.travelers import can_see_travelers
 from adventures.models import Visit, Trail, Activity
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
@@ -397,14 +400,53 @@ class ActivityAnalysisSerializer(serializers.Serializer):
     geojson = serializers.JSONField(allow_null=True, help_text='The track as GeoJSON, with elevation as the third coordinate.')
 
 
+class TravelerSerializer(serializers.Serializer):
+    """A person who travelled on a visit, or who could be named as one."""
+
+    uuid = serializers.UUIDField()
+    username = serializers.CharField()
+    first_name = serializers.CharField(allow_blank=True)
+    last_name = serializers.CharField(allow_blank=True)
+    profile_pic = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_profile_pic(self, obj):
+        return _build_profile_pic_url(obj)
+
+
 class VisitSerializer(serializers.ModelSerializer):
 
     activities = ActivitySerializer(many=True, read_only=True, required=False)
+    travelers = TravelerSerializer(
+        many=True, read_only=True,
+        help_text='Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled.',
+    )
+    traveler_uuids = serializers.ListField(
+        child=serializers.UUIDField(), write_only=True, required=False,
+        help_text='Replace the travelers. Each must be the owner or a member of a collection holding the location. '
+        'A new visit defaults to you.',
+    )
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
+        fields = [
+            'id', 'start_date', 'end_date', 'timezone', 'notes', 'activities', 'location',
+            'travelers', 'traveler_uuids', 'created_at', 'updated_at',
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_traveler_uuids(self, value):
+        """Turn the uuids into users."""
+        users = list(get_user_model().objects.filter(uuid__in=value))
+        if len(users) != len(set(value)):
+            raise serializers.ValidationError('Unknown user.')
+        return users
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not can_see_travelers(self.context.get('request'), instance):
+            data.pop('travelers', None)
+        return data
 
     def validate(self, attrs):
         for field in ('start_date', 'end_date'):
@@ -424,9 +466,14 @@ class VisitSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        validated_data.pop('traveler_uuids', None)  # the view applies them after saving
         if not validated_data.get('end_date') and validated_data.get('start_date'):
             validated_data['end_date'] = validated_data['start_date']
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop('traveler_uuids', None)
+        return super().update(instance, validated_data)
 
 
 class LocationVisitSerializer(VisitSerializer):
@@ -439,4 +486,6 @@ class LocationVisitSerializer(VisitSerializer):
     id = serializers.UUIDField(required=False)
 
     class Meta(VisitSerializer.Meta):
+        # Travelers are not changed by saving a location, so they are read only here.
+        fields = [name for name in VisitSerializer.Meta.fields if name != 'traveler_uuids']
         read_only_fields = ['location', 'created_at', 'updated_at']

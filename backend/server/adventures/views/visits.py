@@ -1,11 +1,16 @@
+from django.db import transaction
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets
+from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from adventures.models import Visit
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import VisitSerializer
+from adventures.services import travelers
 from adventures.services.geocoding.assignment import geocode_and_assign_location
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
@@ -38,6 +43,7 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         - The owner of the location
         - The location is in a collection that is shared with the user
         - The location is in a collection that the user owns
+        - The user is a traveler on the visit (so they can leave it after leaving the trip)
         """
         if getattr(self, 'swagger_fake_view', False):
             return Visit.objects.none()
@@ -53,6 +59,9 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         
         # Location is in collections (many-to-many) that user owns
         location_filter |= Q(location__collections__user=user)
+
+        # The user travelled on the visit
+        location_filter |= Q(travelers=user)
         
         return Visit.objects.filter(location_filter).distinct()
 
@@ -65,7 +74,11 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
             raise PermissionDenied("You do not have permission to add a visit to this location.")
 
-        serializer.save()
+        # A visit nobody can be named on is refused whole: nothing is saved.
+        with transaction.atomic():
+            visit = serializer.save()
+            people = serializer.validated_data.get('traveler_uuids')
+            travelers.set_travelers(visit, people if people is not None else [self.request.user], self.request.user)
 
         # This will update any visited regions or cities based on if it's now visited
         geocode_and_assign_location(str(location.id))
@@ -82,7 +95,11 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, instance.location):
             raise PermissionDenied("You do not have permission to update this visit.")
 
-        serializer.save()
+        with transaction.atomic():
+            visit = serializer.save()
+            people = serializer.validated_data.get('traveler_uuids')
+            if people is not None:
+                travelers.set_travelers(visit, people, self.request.user)
 
         geocode_and_assign_location(str(instance.location.id))
 
@@ -91,3 +108,38 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
             raise PermissionDenied("You do not have permission to delete this visit.")
 
         instance.delete()
+
+    @extend_schema(
+        request=None,
+        responses={200: VisitSerializer, 403: OpenApiResponse(description='You cannot join this visit.')},
+    )
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def join(self, request, pk=None):
+        """
+        Join a visit
+
+        Adds you as a traveler. Any member of a collection holding the location may join,
+        viewers included. People who cannot see the visit get a 404.
+        """
+        visit = self.get_object()
+        travelers.join(visit, request.user)
+        return Response(self.get_serializer(visit).data)
+
+    @extend_schema(
+        request=None,
+        responses={
+            200: VisitSerializer,
+            204: OpenApiResponse(description='You were the last traveler, so the visit was deleted.'),
+        },
+    )
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def leave(self, request, pk=None):
+        """
+        Leave a visit
+
+        Removes you as a traveler. When nobody is left the visit is deleted.
+        """
+        visit = self.get_object()
+        if travelers.leave(visit, request.user):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(self.get_serializer(visit).data)

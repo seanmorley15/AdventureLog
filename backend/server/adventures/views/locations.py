@@ -17,6 +17,7 @@ from adventures.access.audience import can_edit, is_member, member_collections_q
 from adventures.access.location import can_read_location
 from adventures.models import Collection, ContentImage, Location
 from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_add_to_collections
+from adventures.serializers.activity import TravelerSerializer
 from adventures.serializers import LocationListSerializer, LocationSerializer, MapPinSerializer, add_quick_add_extras
 from adventures.serializers.location import (
     CollectionLinkResultSerializer,
@@ -45,7 +46,7 @@ from adventures.services.locations.center import collection_center
 from adventures.services.locations.copy import copy_location
 from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
-from adventures.services.travelers import visited_by, where_ive_been_q
+from adventures.services.travelers import candidates, visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
 from adventures.utils.language import resolve_request_language
@@ -306,6 +307,20 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             exclude_id=params.get('exclude_id'),
         )
         return Response({'matches': [match.to_dict() for match in matches]})
+
+    @extend_schema(responses=TravelerSerializer(many=True))
+    @action(detail=True, methods=['get'], url_path='traveler-candidates')
+    def traveler_candidates(self, request, pk=None):
+        """
+        List who can be a traveler
+
+        The location's owner and the owner and members of each collection holding it: the
+        people a visit here can name as travelers.
+        """
+        location = self.get_object()
+        if not can_read_location(request, location):
+            raise NotFound('Location not found.')
+        return Response(TravelerSerializer(candidates(location), many=True, context={'request': request}).data)
 
     @extend_schema(request=LocationDuplicateRequestSerializer, responses={201: LocationSerializer})
     @action(detail=True, methods=['post'])
