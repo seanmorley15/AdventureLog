@@ -9,6 +9,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 
 from adventures.models import CollectionInvite
+from adventures.views.mixins import preview_response
 from adventures.services.discussion import unread_comment_count
 from adventures.services.notifications import unread_notification_count
 from adventures.services.media_quota import (
@@ -149,7 +150,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         their own copy of your places they travelled to, and visits you leave behind.
         """
         data = account_impact.deletion_preview(request.user)
-        return Response(DeletionPreviewSerializer(data, context={'request': request}).data)
+        return preview_response(DeletionPreviewSerializer(data, context={'request': request}).data)
 
     @extend_schema(responses=PrivacyPreviewSerializer)
     @action(detail=False, methods=['get'], url_path='privacy-preview', throttle_classes=[AccountPreviewThrottle])
@@ -160,7 +161,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         What `profile_visibility: private` would do, changing nothing: how many shared trips you
         would leave, how many places you keep as copies, and what would go.
         """
-        return Response(PrivacyPreviewSerializer(account_impact.privacy_preview(request.user)).data)
+        return preview_response(PrivacyPreviewSerializer(account_impact.privacy_preview(request.user)).data)
 
     @extend_schema(responses=MediaUsageSerializer)
     @action(detail=False, methods=['get'], url_path='media-usage')

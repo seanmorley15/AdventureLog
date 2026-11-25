@@ -58,12 +58,19 @@ class LogVisitTravelersTests(AudienceTestBase):
         self.assertEqual(self._travelers(second), {'owner', 'editor'})
         self.assertEqual(Visit.objects.filter(location=self.hut).count(), 1)
 
+    def test_log_visit_with_an_empty_list_is_traveler_required(self):
+        self.as_user(self.editor)
+        response = self.client.post(self._url(), {'traveler_uuids': []}, format='json')
+        self.assertEqual(response.status_code, 400, response.data)
+        self.assertEqual(response.data['code'], 'traveler_required')
+
     def test_log_day_with_a_list_excluding_the_actor(self):
         self.as_user(self.editor)
         day = get_day_by_index(self.trip, 1)
         url = f'/api/collections/{self.trip.id}/days/{day.id}/log-visit/'
         empty = self.client.post(url, {'traveler_uuids': []}, format='json')
         self.assertEqual(empty.status_code, 400, empty.data)
+        self.assertEqual(empty.data['code'], 'traveler_required')
         response = self.client.post(url, {'traveler_uuids': [str(self.owner.uuid)]}, format='json')
         self.assertEqual(response.status_code, 200, response.data)
         visit = Visit.objects.get(pk=response.data['visits'][0]['id'])

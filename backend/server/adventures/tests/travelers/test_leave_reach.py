@@ -68,6 +68,14 @@ class LeaveKeepsPlacesStillReachedTests(AudienceTestBase):
         self.assertEqual(list(self.shared.travelers.values_list('username', flat=True)), ['owner'])
         self.assertFalse(Visit.objects.filter(pk=self.alone.pk).exists())
 
+    def test_kept_copies_is_what_the_release_returned(self):
+        from unittest import mock
+
+        self.as_user(self.editor)
+        with mock.patch('users.serializers.travelers.release_member_all', return_value=7):
+            body = self.client.patch('/api/account/', {'profile_visibility': 'private'}, format='json').json()
+        self.assertEqual(body['kept_copies'], 7)
+
     def test_going_private_keeps_a_place_held_by_a_collection_they_own(self):
         own = Collection.objects.create(user=self.editor, name='Mine')
         self.hut.collections.add(own)

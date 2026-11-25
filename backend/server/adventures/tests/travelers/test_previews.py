@@ -250,6 +250,8 @@ class PreviewCacheTests(PreviewBase):
             (self.owner, f'{trip}/members/{self.editor.uuid}/removal-preview/'),
             (self.owner, f'{trip}/add-travelers-preview/?user_uuids={self.editor.uuid}'),
             (self.editor, f'{trip}/leave-preview/'),
+            (self.owner, '/api/account/deletion-preview/'),
+            (self.owner, '/api/account/privacy-preview/'),
         ]:
             with self.subTest(url=url):
                 self.as_user(user)

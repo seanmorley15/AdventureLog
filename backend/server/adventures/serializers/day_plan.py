@@ -111,7 +111,9 @@ class LogVisitSerializer(serializers.Serializer):
     def validate_traveler_uuids(self, value):
         """Turn the uuids into users."""
         if not value:
-            raise serializers.ValidationError('A visit needs at least one traveler.')
+            from adventures.services.travelers import TravelerError
+
+            raise TravelerError('A visit needs at least one traveler.', code='traveler_required')
         users = list(get_user_model().objects.filter(uuid__in=value))
         if len(users) != len(set(value)):
             raise serializers.ValidationError('Unknown user.')

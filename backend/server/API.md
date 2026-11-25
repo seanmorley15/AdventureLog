@@ -161,6 +161,10 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
   on these fields; delete the row. An update that replaces a file (an attachment's `file`, an activity's
   `gpx_file`) queues the old name the same way once it commits (`adventures.services.stored_files`).
 - `/media/` grants a shared file when any row using it allows the requester.
+- Known narrow limitation: the check cannot see a copy that has not committed yet. If a release or a duplicate has
+  inserted copy rows pointing at a stored file but not committed, and the owner's delete of the original commits in
+  that same moment, the file is deleted and the copy points at a missing file. It renders as a broken photo, like
+  any other missing file. The window is the length of one transaction.
 
 ### Previews
 
