@@ -62,3 +62,49 @@ describe('DayPlanRow Log visit', () => {
 		expect(onLogVisit).not.toHaveBeenCalled();
 	});
 });
+
+describe('DayPlanRow Remove from collection', () => {
+	function menu(currentUserUuid: string, role: string) {
+		const row: any = {
+			id: 'row1',
+			item: { id: 'row1', day_index: 1, span_end_index: 1, logged_visit: null, is_optional: false },
+			type: 'location',
+			objectId: 'loc1',
+			object: {
+				id: 'loc1',
+				name: 'Hut',
+				visits: [],
+				user: { uuid: 'owner' },
+				created_by: { uuid: 'me' }
+			}
+		};
+		render(DayPlanRow as any, {
+			row,
+			canModify: true,
+			dateFormat: '24h',
+			hasProjectedDate: true,
+			collection: {
+				id: 'c1',
+				user: 'owner',
+				collaborators: [{ uuid: 'me', username: 'me', is_owner: false, role }],
+				itinerary: [row.item],
+				locations: [row.object]
+			},
+			currentUserUuid
+		});
+	}
+
+	it('is offered to an editor who added the place', async () => {
+		menu('me', 'editor');
+		await expect
+			.element(page.getByRole('menuitem', { name: 'Remove from Collection' }))
+			.toBeInTheDocument();
+	});
+
+	it('is not offered once that person is a viewer', async () => {
+		menu('me', 'viewer');
+		await expect
+			.element(page.getByRole('menuitem', { name: 'Remove from Collection' }))
+			.not.toBeInTheDocument();
+	});
+});

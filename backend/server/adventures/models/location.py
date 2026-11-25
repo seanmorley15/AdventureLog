@@ -72,6 +72,11 @@ class Visit(models.Model):
 class Location(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
+    # Who added the place. A collaborator's addition to a trip belongs to the trip owner, so
+    # this is what lets them take it out again. Unset for places from before it was recorded.
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+', editable=False
+    )
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True, null=True)

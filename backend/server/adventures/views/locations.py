@@ -15,7 +15,7 @@ from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from adventures.access.audience import can_edit, is_member, member_collections_q, member_role, readable_collections_q
+from adventures.access.audience import EDITOR, can_edit, is_member, member_collections_q, member_role, readable_collections_q
 from adventures.access.location import can_read_location
 from adventures.models import Collection, ContentImage, Location
 from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_add_to_collections
@@ -219,7 +219,10 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         ensure_can_add_to_collections(self.request, collections, 'location')
         # A place created inside a collection belongs to the collection owner,
         # including when a collaborator creates it. Their own map does not gain the pin.
-        serializer.save(user=collections[0].user if collections else self.request.user)
+        serializer.save(
+            user=collections[0].user if collections else self.request.user,
+            created_by=self.request.user,
+        )
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -546,7 +549,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         )},
         summary='Remove the location from a collection',
         description='Idempotent. Also removes its placements from the day plan, and says how many. '
-                    'Only the collection owner or the place owner may call it. People who travelled to the '
+                    'Only the collection owner, the place owner, or the person who added the place (while an editor) may call it. People who travelled to the '
                     'place and can no longer reach it through another collection come off its visits and '
                     'get their own copy with their visits. With `?dry_run=1` it changes nothing and '
                     'returns who that would be (`people_released`) and what would go with it.',
@@ -573,7 +576,8 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
 
         if not self._may_unlink(request, location, collection):
             raise PermissionDenied(
-                'Only the collection owner or the place owner can remove a place from a collection. '
+                'Only the collection owner, the place owner, or the person who added it can remove a place '
+                'from a collection. '
                 'You can remove it from the plan instead.'
             )
         if is_dry_run(request):
@@ -593,8 +597,17 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
 
     @staticmethod
     def _may_unlink(request, location, collection):
-        """Only the collection owner or the place owner may take a place out of a collection."""
-        return request.user.id in (collection.user_id, location.user_id)
+        """
+        The collection owner, the place owner, or whoever added the place may take it out of a
+        collection. The one who added it must still be an editor of that collection.
+        """
+        if request.user.id in (collection.user_id, location.user_id):
+            return True
+        return (
+            location.created_by_id is not None
+            and location.created_by_id == request.user.id
+            and member_role(collection, request.user) == EDITOR
+        )
 
     def _validate_collection_update_permissions(self, instance, new_collections):
         """Check collection permissions for an update. Returns the collections being removed."""

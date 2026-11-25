@@ -173,3 +173,117 @@ class LocationCollectionMembershipTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(self.location.collections.filter(pk=self.trip_a.pk).exists())
         self.assertFalse(CollectionItineraryItem.objects.filter(collection=self.trip_a).exists())
+
+
+class CreatorUnlinkTests(APITestCase):
+    """A collaborator may take out of a trip what they added to it."""
+
+    def setUp(self):
+        self.owner = make_user('cu-owner')
+        self.editor = make_user('cu-editor')
+        self.other_editor = make_user('cu-other')
+        self.trip = Collection.objects.create(user=self.owner, name='Trip')
+        self.trip.shared_with.add(self.editor, self.other_editor)
+
+    def create_in_trip(self, user, name='Added'):
+        self.client.force_authenticate(user=user)
+        response = self.client.post(
+            '/api/locations/', {'name': name, 'collections': [str(self.trip.id)]}, format='json'
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        return Location.objects.get(pk=response.json()['id'])
+
+    def unlink(self, location, user):
+        self.client.force_authenticate(user=user)
+        return self.client.delete(f'/api/locations/{location.id}/collections/{self.trip.id}/')
+
+    def test_created_by_is_set_on_create_inside_a_collection(self):
+        location = self.create_in_trip(self.editor)
+        self.assertEqual(location.user_id, self.owner.id)
+        self.assertEqual(location.created_by_id, self.editor.id)
+
+    def test_created_by_is_set_on_create_outside_a_collection(self):
+        self.client.force_authenticate(user=self.editor)
+        response = self.client.post('/api/locations/', {'name': 'Solo'}, format='json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Location.objects.get(pk=response.json()['id']).created_by_id, self.editor.id)
+
+    def test_creator_editor_can_unlink_their_addition(self):
+        location = self.create_in_trip(self.editor)
+        self.assertEqual(self.unlink(location, self.editor).status_code, 200)
+        self.assertFalse(location.collections.filter(pk=self.trip.pk).exists())
+
+    def test_creator_cannot_unlink_someone_elses_place(self):
+        theirs = self.create_in_trip(self.other_editor, 'Theirs')
+        mine = self.create_in_trip(self.editor, 'Mine')
+        self.assertEqual(self.unlink(theirs, self.editor).status_code, 403)
+        self.assertTrue(theirs.collections.filter(pk=self.trip.pk).exists())
+        self.assertEqual(self.unlink(mine, self.editor).status_code, 200)
+
+    def test_creator_who_is_now_a_viewer_cannot_unlink(self):
+        location = self.create_in_trip(self.editor)
+        CollectionMember.objects.filter(collection=self.trip, user=self.editor).update(role='viewer')
+        self.assertEqual(self.unlink(location, self.editor).status_code, 403)
+        self.assertTrue(location.collections.filter(pk=self.trip.pk).exists())
+
+    def test_creator_who_was_removed_from_the_trip_cannot_unlink(self):
+        location = self.create_in_trip(self.editor)
+        self.trip.shared_with.remove(self.editor)
+        self.assertIn(self.unlink(location, self.editor).status_code, (403, 404))
+        self.assertTrue(location.collections.filter(pk=self.trip.pk).exists())
+
+    def test_owner_and_place_owner_are_unchanged(self):
+        location = self.create_in_trip(self.editor)
+        self.assertEqual(self.unlink(location, self.owner).status_code, 200)
+        own = Location.objects.create(user=self.other_editor, name='Own')
+        own.collections.add(self.trip)
+        self.assertEqual(self.unlink(own, self.other_editor).status_code, 200)
+
+    def test_can_unlink_in_the_list_follows_the_creator_rule(self):
+        mine = self.create_in_trip(self.editor, 'Mine')
+        theirs = self.create_in_trip(self.other_editor, 'Theirs')
+        self.client.force_authenticate(user=self.editor)
+
+        def row(location):
+            rows = self.client.get(f'/api/locations/{location.id}/collections/').json()
+            return next(r for r in rows if r['name'] == 'Trip')
+
+        self.assertTrue(row(mine)['can_unlink'])
+        self.assertFalse(row(theirs)['can_unlink'])
+
+    def test_patch_dropping_the_collection_follows_the_creator_rule(self):
+        mine = self.create_in_trip(self.editor, 'Mine')
+        theirs = self.create_in_trip(self.other_editor, 'Theirs')
+        self.client.force_authenticate(user=self.editor)
+        self.assertEqual(
+            self.client.patch(f'/api/locations/{theirs.id}/', {'collections': []}, format='json').status_code, 403
+        )
+        self.assertEqual(
+            self.client.patch(f'/api/locations/{mine.id}/', {'collections': []}, format='json').status_code, 200
+        )
+        self.assertFalse(mine.collections.exists())
+
+    def test_created_by_is_not_writable_and_is_shown_without_an_email(self):
+        location = self.create_in_trip(self.editor)
+        self.client.force_authenticate(user=self.owner)
+        response = self.client.patch(
+            f'/api/locations/{location.id}/', {'created_by': str(self.other_editor.uuid)}, format='json'
+        )
+        self.assertEqual(response.status_code, 200)
+        location.refresh_from_db()
+        self.assertEqual(location.created_by_id, self.editor.id)
+        body = self.client.get(f'/api/locations/{location.id}/').json()
+        self.assertEqual(body['created_by']['uuid'], str(self.editor.uuid))
+        self.assertEqual(body['created_by']['username'], self.editor.username)
+        self.assertNotIn('email', body['created_by'])
+
+    def test_created_by_is_null_for_old_places(self):
+        old = Location.objects.create(user=self.owner, name='Old')
+        self.client.force_authenticate(user=self.owner)
+        self.assertIsNone(self.client.get(f'/api/locations/{old.id}/').json()['created_by'])
+
+    def test_a_copy_has_no_creator_unless_the_copier_made_it(self):
+        from adventures.services.locations.copy import copy_location
+
+        location = self.create_in_trip(self.editor)
+        self.assertIsNone(copy_location(location, self.other_editor).created_by_id)

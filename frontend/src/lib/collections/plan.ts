@@ -26,17 +26,22 @@ export type PlanRow = {
 };
 
 /**
- * Only the collection owner or the place owner may take a place out of a collection.
- * An editor who owns neither can still remove it from the plan.
+ * The collection owner, the place owner, or the person who added the place may take it out of a
+ * collection; the one who added it must still be an editor there. Anyone else can still remove it
+ * from the plan.
  */
 export function canUnlinkPlace(
-	collection: Pick<Collection, 'user'> | null | undefined,
+	collection: Pick<Collection, 'user' | 'collaborators' | 'audience'> | null | undefined,
 	row: Pick<PlanRow, 'object'>,
 	currentUserUuid: string | null | undefined
 ): boolean {
 	if (!currentUserUuid) return false;
-	const placeOwner = (row.object as Location | null)?.user?.uuid;
-	return collection?.user === currentUserUuid || placeOwner === currentUserUuid;
+	const place = row.object as Location | null;
+	if (collection?.user === currentUserUuid || place?.user?.uuid === currentUserUuid) return true;
+	if (place?.created_by?.uuid !== currentUserUuid) return false;
+	const member = collection?.collaborators?.find((person) => person.uuid === currentUserUuid);
+	const role = member ? member.role : collection?.audience?.role;
+	return role === 'editor';
 }
 
 export type LogVisitResult = 'ok' | 'date_required' | 'error';

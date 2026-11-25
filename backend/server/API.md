@@ -141,9 +141,10 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
   (`users.middleware.DisableCSRFForHeaderCredentialsMiddleware`).
 - Who may read or change a record is decided in `adventures/access/` and `adventures/permissions.py`.
 - Taking a place out of a collection (`DELETE /api/locations/{id}/collections/{collection_id}/`, or a `PATCH`
-  `collections` list that drops it) is for the collection owner or the place owner only; an editor who owns
-  neither gets 403. Editors can still remove the placement from the plan
-  (`DELETE /api/collections/{id}/itinerary-items/{item_id}/`), which leaves the place in the collection as an
+  `collections` list that drops it) is for the collection owner, the place owner, or `created_by` (the person
+  who added the place, recorded on create and never writable) while they are still an editor of that
+  collection; anyone else gets 403. A copy made by `copy_location` has no `created_by`. Editors can still remove the
+  placement from the plan (`DELETE /api/collections/{id}/itinerary-items/{item_id}/`), which leaves the place in the collection as an
   unscheduled stop. The list endpoint's `can_unlink` follows the same rule.
 
 ## Mobile app sign-in

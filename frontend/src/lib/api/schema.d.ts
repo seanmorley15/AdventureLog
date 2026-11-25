@@ -2447,7 +2447,7 @@ export interface paths {
         post: operations["locations_collection_membership_post"];
         /**
          * Remove the location from a collection
-         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner or the place owner may call it. People who travelled to the place and can no longer reach it through another collection come off its visits and get their own copy with their visits. With `?dry_run=1` it changes nothing and returns who that would be (`people_released`) and what would go with it.
+         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner, the place owner, or the person who added the place (while an editor) may call it. People who travelled to the place and can no longer reach it through another collection come off its visits and get their own copy with their visits. With `?dry_run=1` it changes nothing and returns who that would be (`people_released`) and what would go with it.
          */
         delete: operations["locations_collection_membership_delete"];
         options?: never;
@@ -5684,6 +5684,8 @@ export interface components {
             readonly attachments: components["schemas"]["Attachment"][];
             /** @description The owner. The owner themselves also sees their account fields. */
             readonly user: components["schemas"]["PublicProfile"] | null;
+            /** @description Who added the place, if known. Never writable. */
+            readonly created_by: unknown;
             readonly city: components["schemas"]["City"] | null;
             readonly country: components["schemas"]["Country"] | null;
             readonly region: components["schemas"]["Region"] | null;
@@ -5756,6 +5758,8 @@ export interface components {
             readonly category: unknown;
             /** @description The owner. */
             readonly user: unknown;
+            /** @description Who added the place, if known. */
+            readonly created_by: unknown;
             /** Format: decimal */
             readonly price: string | null;
             readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -5788,6 +5792,8 @@ export interface components {
             readonly attachments: components["schemas"]["Attachment"][];
             /** @description The owner. The owner themselves also sees their account fields. */
             readonly user: components["schemas"]["PublicProfile"] | null;
+            /** @description Who added the place, if known. Never writable. */
+            readonly created_by: unknown;
             readonly city: components["schemas"]["City"] | null;
             readonly country: components["schemas"]["Country"] | null;
             readonly region: components["schemas"]["Region"] | null;

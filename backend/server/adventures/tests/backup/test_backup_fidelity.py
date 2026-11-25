@@ -57,6 +57,21 @@ class BackupFidelityTests(APITestCase):
         drive_b = Transportation.objects.get(name='Drive B')
         self.assertNotEqual(drive_a.collection_id, drive_b.collection_id)
 
+    def test_a_place_with_a_creator_still_round_trips_and_the_import_names_no_creator(self):
+        helper = CustomUser.objects.create_user(
+            username='fid-helper', email='fid-helper@example.com', password='testpassword123'
+        )
+        Location.objects.create(user=self.owner, created_by=helper, name='Added by a helper')
+
+        data, content = self.export_data()
+        self.assertNotIn('fid-helper@example.com', json.dumps(data))
+        Location.objects.all().delete()
+        self.restore(content)
+
+        restored = Location.objects.get(name='Added by a helper')
+        self.assertEqual(restored.user_id, self.owner.id)
+        self.assertIsNone(restored.created_by_id)
+
     def test_zero_values_are_kept_not_turned_into_missing(self):
         trip = Collection.objects.create(user=self.owner, name='Flat day')
         Activity.objects.create(
