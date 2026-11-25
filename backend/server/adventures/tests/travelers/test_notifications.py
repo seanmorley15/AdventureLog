@@ -387,3 +387,63 @@ class ApiTests(NotificationTestBase):
         with override_settings(SMTP_CONFIGURED=True):
             notifications.send_traveler_added_email(note)
         self.assertTrue(mail.outbox[-1].body.startswith('Someone added you'))
+
+
+class CleanupTests(NotificationTestBase):
+    """A notification goes when the person is off the visit, however that came about."""
+
+    def setUp(self):
+        super().setUp()
+        self.visit = self._visit([self.owner])
+        travelers.add_travelers(self.visit, [self.editor, self.viewer], self.owner)
+        self.other = self._visit([self.owner], at(2026, 6, 3))
+        travelers.add_travelers(self.other, [self.editor], self.owner)
+
+    def _visit_ids(self, user):
+        return {n.data['visit_id'] for n in self._notes(user)}
+
+    def test_leave_endpoint_removes_that_visits_notification_only(self):
+        self.as_user(self.editor)
+        self.assertEqual(self.client.post(f'/api/visits/{self.visit.id}/leave/').status_code, 200)
+        self.assertEqual(self._visit_ids(self.editor), {str(self.other.id)})
+        self.assertEqual(self._visit_ids(self.viewer), {str(self.visit.id)})
+
+    def test_editing_travelers_out_removes_it(self):
+        self.as_user(self.owner)
+        response = self.client.patch(f'/api/visits/{self.visit.id}/', {
+            'traveler_uuids': [str(self.owner.uuid), str(self.viewer.uuid)]}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(self._visit_ids(self.editor), {str(self.other.id)})
+        self.assertEqual(self._visit_ids(self.viewer), {str(self.visit.id)})
+
+    def test_remove_or_delete_removes_it(self):
+        travelers.remove_or_delete(self.visit, self.viewer)
+        self.assertFalse(self._notes(self.viewer).exists())
+        self.assertEqual(len(self._visit_ids(self.editor)), 2)
+
+    def test_deleting_the_visit_removes_it_for_everyone(self):
+        self.as_user(self.owner)
+        self.assertEqual(self.client.delete(f'/api/visits/{self.visit.id}/?for_everyone=1').status_code, 204)
+        self.assertFalse(self._notes(self.viewer).exists())
+        self.assertEqual(self._visit_ids(self.editor), {str(self.other.id)})
+
+    def test_detaching_by_release_removes_it(self):
+        travelers.take_my_visits(self.hut, self.viewer)
+        self.assertFalse(self._notes(self.viewer).exists())
+
+    def test_summary_notifications_stay(self):
+        self._visit([self.owner], at(2026, 6, 1))
+        self.as_user(self.owner)
+        self.client.post(f'/api/collections/{self.trip.id}/add-travelers/',
+                         {'user_uuids': [str(self.viewer.uuid)]}, format='json')
+        summary = self._notes(self.viewer).get(data__count__gt=1)
+        self.as_user(self.viewer)
+        self.client.post(f'/api/visits/{self.visit.id}/leave/')
+        self.assertTrue(self._notes(self.viewer).filter(pk=summary.pk).exists())
+
+    def test_a_failing_cleanup_does_not_break_leaving(self):
+        self.as_user(self.editor)
+        with patch.object(Notification.objects, 'filter', side_effect=RuntimeError('boom')):
+            response = self.client.post(f'/api/visits/{self.visit.id}/leave/')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.visit.travelers.filter(pk=self.editor.pk).exists())

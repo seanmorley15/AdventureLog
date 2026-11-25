@@ -101,3 +101,26 @@ def default_visit_traveler(sender, instance, created, raw=False, **kwargs):
     from adventures.services.travelers import ensure_default_traveler
 
     ensure_default_traveler(instance)
+
+
+@receiver(m2m_changed, sender=Visit.travelers.through)
+def clear_notifications_when_a_traveler_leaves(sender, instance, action, reverse=False, pk_set=None, **kwargs):
+    """Someone no longer on a visit has nothing left to be told about it."""
+    from adventures.services.notifications import clear_visit_notifications
+
+    if action == 'pre_clear' and not reverse:
+        clear_visit_notifications([instance.pk], instance.travelers.values_list('pk', flat=True))
+    elif action == 'pre_clear':
+        clear_visit_notifications(instance.visits_traveled.values_list('pk', flat=True), [instance.pk])
+    elif action == 'post_remove' and pk_set:
+        if reverse:
+            clear_visit_notifications(pk_set, [instance.pk])
+        else:
+            clear_visit_notifications([instance.pk], pk_set)
+
+
+@receiver(post_delete, sender=Visit)
+def clear_notifications_of_a_deleted_visit(sender, instance, **kwargs):
+    from adventures.services.notifications import clear_visit_notifications
+
+    clear_visit_notifications([instance.pk])

@@ -47,16 +47,20 @@ describe('NotificationRow', () => {
 	it('leaves the visit and hides the button afterwards', async () => {
 		const fetchSpy = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
 		vi.stubGlobal('fetch', fetchSpy);
-		render(NotificationRow, { item: single });
+		const onremoved = vi.fn();
+		render(NotificationRow, { item: single, onremoved });
 		await page.getByRole('button', { name: en.notifications.remove_me }).click();
+		expect(onremoved).toHaveBeenCalledWith(single);
 		expect(fetchSpy).toHaveBeenCalledWith('/api/visits/v1/leave/', { method: 'POST' });
 		await vi.waitFor(() => expect(page.getByRole('button').elements()).toHaveLength(0));
 	});
 
 	it('keeps the button when leaving fails', async () => {
 		vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 500 })));
-		render(NotificationRow, { item: single });
+		const onremoved = vi.fn();
+		render(NotificationRow, { item: single, onremoved });
 		await page.getByRole('button', { name: en.notifications.remove_me }).click();
+		expect(onremoved).not.toHaveBeenCalled();
 		await expect
 			.element(page.getByRole('button', { name: en.notifications.remove_me }))
 			.toBeVisible();

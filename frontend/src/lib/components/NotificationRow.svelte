@@ -8,9 +8,11 @@
 		item: NotificationItem;
 		/** Called when the row's link is followed, so the inbox can close. */
 		onnavigate?: () => void;
+		/** Called once you are off the visit, so the inbox can drop this row. */
+		onremoved?: (item: NotificationItem) => void;
 	}
 
-	let { item, onnavigate }: Props = $props();
+	let { item, onnavigate, onremoved }: Props = $props();
 
 	let busy = $state(false);
 	let removed = $state(false);
@@ -85,6 +87,7 @@
 			// 204: you were the last traveler, so the visit is gone. 200: the visit lost you.
 			if (response.status === 204 || response.ok) {
 				removed = true;
+				onremoved?.(item);
 				addToast('success', $t('notifications.removed'));
 			} else {
 				addToast('error', $t('notifications.remove_failed'));
