@@ -25,6 +25,20 @@ export type PlanRow = {
 	object: PlanObject | null;
 };
 
+/**
+ * Only the collection owner or the place owner may take a place out of a collection.
+ * An editor who owns neither can still remove it from the plan.
+ */
+export function canUnlinkPlace(
+	collection: Pick<Collection, 'user'> | null | undefined,
+	row: Pick<PlanRow, 'object'>,
+	currentUserUuid: string | null | undefined
+): boolean {
+	if (!currentUserUuid) return false;
+	const placeOwner = (row.object as Location | null)?.user?.uuid;
+	return collection?.user === currentUserUuid || placeOwner === currentUserUuid;
+}
+
 export type LogVisitResult = 'ok' | 'date_required' | 'error';
 
 export type PlacementPayload = {

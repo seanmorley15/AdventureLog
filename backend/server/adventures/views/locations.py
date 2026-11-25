@@ -507,7 +507,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
                 'role': member_role(collection, request.user),
                 'is_linked': is_linked,
                 'can_link': editable and self._location_owner_fits(location, collection),
-                'can_unlink': editable or location.user_id == request.user.id,
+                'can_unlink': self._may_unlink(request, location, collection),
                 'placements': placements_for(location, collection) if is_linked else [],
             })
         rows.sort(key=lambda r: (not r['is_linked'], r['is_shared'], (r['name'] or '').lower()))
@@ -522,7 +522,8 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
     @extend_schema(
         methods=['DELETE'], request=None, responses={200: CollectionLinkResultSerializer},
         summary='Remove the location from a collection',
-        description='Idempotent. Also removes its placements from the day plan, and says how many.',
+        description='Idempotent. Also removes its placements from the day plan, and says how many. '
+                    'Only the collection owner or the place owner may call it.',
         parameters=[OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.')],
     )
     @action(detail=True, methods=['post', 'delete'], url_path=r'collections/(?P<collection_id>[^/.]+)')
@@ -541,12 +542,20 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             link_location(location, collection)
             return Response({'linked': True})
 
-        if not (can_edit(request, collection) or location.user_id == request.user.id):
-            raise PermissionDenied("You don't have permission to remove this location from the collection.")
+        if not self._may_unlink(request, location, collection):
+            raise PermissionDenied(
+                'Only the collection owner or the place owner can remove a place from a collection. '
+                'You can remove it from the plan instead.'
+            )
         removed = unlink_location(location, collection)
         return Response({'linked': False, 'removed_placements': removed})
 
     # ==================== HELPERS ====================
+
+    @staticmethod
+    def _may_unlink(request, location, collection):
+        """Only the collection owner or the place owner may take a place out of a collection."""
+        return request.user.id in (collection.user_id, location.user_id)
 
     def _validate_collection_update_permissions(self, instance, new_collections):
         """Check collection permissions for an update. Returns the collections being removed."""
@@ -557,11 +566,10 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             if not can_edit(self.request, collection):
                 raise PermissionDenied(f"You don't have permission to add location to collection '{collection.name}'")
 
-        # A collection can be removed by the place owner, the collection owner, or an editor.
+        # A collection can be removed by the place owner or the collection owner only.
         collections_to_remove = current_collections - new_collections_set
         for collection in collections_to_remove:
-            owns = instance.user == self.request.user or collection.user == self.request.user
-            if not owns and not can_edit(self.request, collection):
+            if not self._may_unlink(self.request, instance, collection):
                 raise PermissionDenied(
                     "You don't have permission to remove this location from one of the collections it's linked to."
                 )

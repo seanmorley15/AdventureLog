@@ -8207,7 +8207,7 @@ paths:
     delete:
       operationId: locations_collection_membership_delete
       description: Idempotent. Also removes its placements from the day plan, and
-        says how many.
+        says how many. Only the collection owner or the place owner may call it.
       summary: Remove the location from a collection
       parameters:
       - in: header

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { CollectionItineraryDay } from '#lib/types.js';
 import {
+	canUnlinkPlace,
 	dayLink,
 	initialPlanDay,
 	recordedVisit,
@@ -133,5 +134,23 @@ describe('recordedVisit', () => {
 
 	it('is null when the stop is not logged', () => {
 		expect(recordedVisit(collection, { object_id: 'L1' } as any)).toBeNull();
+	});
+});
+
+describe('canUnlinkPlace', () => {
+	const collection = { user: 'owner-uuid' };
+	const row = (uuid: string) => ({ object: { user: { uuid } } }) as never;
+
+	it("lets the collection owner unlink anyone's place", () => {
+		expect(canUnlinkPlace(collection, row('someone-else'), 'owner-uuid')).toBe(true);
+	});
+
+	it("lets the place owner unlink their own place from another person's collection", () => {
+		expect(canUnlinkPlace(collection, row('editor-uuid'), 'editor-uuid')).toBe(true);
+	});
+
+	it('refuses an editor who owns neither', () => {
+		expect(canUnlinkPlace(collection, row('someone-else'), 'editor-uuid')).toBe(false);
+		expect(canUnlinkPlace(collection, row('someone-else'), null)).toBe(false);
 	});
 });

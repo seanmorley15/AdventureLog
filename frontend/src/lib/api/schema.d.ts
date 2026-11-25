@@ -2403,7 +2403,7 @@ export interface paths {
         post: operations["locations_collection_membership_post"];
         /**
          * Remove the location from a collection
-         * @description Idempotent. Also removes its placements from the day plan, and says how many.
+         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner or the place owner may call it.
          */
         delete: operations["locations_collection_membership_delete"];
         options?: never;

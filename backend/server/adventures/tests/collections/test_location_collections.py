@@ -65,12 +65,41 @@ class LocationCollectionMembershipTests(APITestCase):
         self.assertEqual(self.client.post(self.url(self.trip_b)).status_code, 200)
         self.assertEqual(self.location.collections.count(), 2)
 
-    def test_editor_unlink_removes_plan_rows(self):
+    def test_editor_who_does_not_own_the_place_cannot_unlink(self):
         self.client.force_authenticate(user=self.editor)
         self.place(self.trip_a)
         response = self.client.delete(self.url(self.trip_a))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(self.location.collections.filter(pk=self.trip_a.pk).exists())
+        self.assertTrue(CollectionItineraryItem.objects.filter(collection=self.trip_a).exists())
+
+    def test_place_owner_who_is_an_editor_can_unlink_their_own_place(self):
+        own = Location.objects.create(user=self.editor, name='Mine')
+        own.collections.add(self.trip_a)
+        self.client.force_authenticate(user=self.editor)
+        response = self.client.delete(f'/api/locations/{own.id}/collections/{self.trip_a.id}/')
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(CollectionItineraryItem.objects.filter(collection=self.trip_a).exists())
+        self.assertFalse(own.collections.filter(pk=self.trip_a.pk).exists())
+
+    def test_editor_can_still_remove_the_placement_only(self):
+        item = self.place(self.trip_a)
+        self.client.force_authenticate(user=self.editor)
+        response = self.client.delete(f'/api/collections/{self.trip_a.id}/itinerary-items/{item.id}/')
+        self.assertIn(response.status_code, (200, 204))
+        self.assertFalse(CollectionItineraryItem.objects.filter(pk=item.pk).exists())
+        self.assertTrue(self.location.collections.filter(pk=self.trip_a.pk).exists())
+
+    def test_can_unlink_is_owner_only_in_the_list(self):
+        own = Location.objects.create(user=self.editor, name='Mine')
+        own.collections.add(self.trip_a)
+        self.client.force_authenticate(user=self.editor)
+        row = next(r for r in self.client.get(self.url()).json() if r['name'] == 'Trip A')
+        self.assertFalse(row['can_unlink'])
+        own_rows = self.client.get(f'/api/locations/{own.id}/collections/').json()
+        self.assertTrue(next(r for r in own_rows if r['name'] == 'Trip A')['can_unlink'])
+        self.client.force_authenticate(user=self.owner)
+        row = next(r for r in self.client.get(self.url()).json() if r['name'] == 'Trip A')
+        self.assertTrue(row['can_unlink'])
 
     def test_viewer_cannot_unlink(self):
         self.client.force_authenticate(user=self.viewer)
@@ -125,8 +154,18 @@ class LocationCollectionMembershipTests(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(self.location.collections.filter(pk=self.trip_b.pk).exists())
 
-    def test_patch_unlink_by_editor_removes_plan_rows(self):
+    def test_patch_unlink_by_non_owner_editor_is_refused(self):
         self.client.force_authenticate(user=self.editor)
+        self.place(self.trip_a)
+        response = self.client.patch(
+            f'/api/locations/{self.location.id}/', {'collections': []}, format='json'
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(self.location.collections.filter(pk=self.trip_a.pk).exists())
+        self.assertTrue(CollectionItineraryItem.objects.filter(collection=self.trip_a).exists())
+
+    def test_patch_unlink_by_collection_owner_removes_plan_rows(self):
+        self.client.force_authenticate(user=self.owner)
         self.place(self.trip_a)
         response = self.client.patch(
             f'/api/locations/{self.location.id}/', {'collections': []}, format='json'

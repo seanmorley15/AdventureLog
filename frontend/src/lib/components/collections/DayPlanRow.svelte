@@ -5,6 +5,7 @@
 	import { formatDisplayTime, type DateFormatPreference } from '#lib/dateFormat.js';
 	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 	import {
+		canUnlinkPlace,
 		clockValue,
 		recordedVisit as findRecordedVisit,
 		recordedVisitId,
@@ -490,7 +491,7 @@
 								{$t('itinerary.remove_from_plan')}
 							</button>
 						</li>
-						{#if row.type === 'location'}
+						{#if row.type === 'location' && canUnlinkPlace(collection, row, currentUserUuid)}
 							<li>
 								<button
 									type="button"
