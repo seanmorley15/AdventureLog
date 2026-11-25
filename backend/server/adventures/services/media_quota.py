@@ -118,3 +118,23 @@ def ensure_media_storage_available(user, incoming_bytes, exclude_names=None):
     if not allowed:
         raise MediaQuotaExceeded('Media storage limit exceeded.', extra=details)
 
+
+
+def incoming_bytes_for_names(user, names):
+    """
+    What sharing the stored files ``names`` with ``user`` would add to their usage: the sizes of
+    the names their photos and attachments don't use yet, each counted once. A missing file adds 0.
+    """
+    return _sum_storage_sizes(set(filter(None, names)) - user_content_media_names(user))
+
+
+def ensure_room_for_names(user, names):
+    """
+    Raise ``MediaQuotaExceeded`` when sharing the stored files ``names`` with ``user`` would take
+    them over their limit. Files they already hold add nothing, and a copy that adds nothing is never refused.
+    """
+    if not get_media_storage_limit_bytes():
+        return
+    incoming = incoming_bytes_for_names(user, names)
+    if incoming:
+        ensure_media_storage_available(user, incoming)

@@ -47,8 +47,9 @@ from adventures.services.exports.share_image import (
 from adventures.services.geocoding.assignment import apply_reverse_geocode_result
 from adventures.services.location_collections import link_location, placements_for, unlink_location
 from adventures.services.locations.center import collection_center
-from adventures.services.locations.copy import copy_location
+from adventures.services.locations.copy import copy_location, shared_file_names
 from adventures.services.locations.matching import find_duplicate_locations
+from adventures.services.media_quota import ensure_room_for_names
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
 from adventures.services.travelers import candidates, lost_access_plan, release_preview, take_my_visits, visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
@@ -340,7 +341,16 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             people = candidates(location, request.user)
         return Response(TravelerSerializer(people, many=True, context={'request': request}).data)
 
-    @extend_schema(request=LocationDuplicateRequestSerializer, responses={201: LocationSerializer})
+    @extend_schema(
+        request=LocationDuplicateRequestSerializer,
+        responses={
+            201: LocationSerializer,
+            413: OpenApiResponse(
+                description="The copy's photos would take you over your media storage limit (`media_quota_exceeded`). "
+                'Never for `take_my_visits`.'
+            ),
+        },
+    )
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
         """
@@ -352,6 +362,10 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         the copy in a collection. With `take_my_visits`, for a location you travelled to but
         don't own (say, before leaving its trip), the copy keeps the original name, your visits
         move onto it, and you are taken off the original's visits.
+
+        A copy you choose to make counts toward your media storage limit: photo files you don't
+        already hold are counted once, and over the limit the copy is refused. `take_my_visits`
+        is keeping your own history, so it is never refused.
         """
         original = self.get_object()
         if not can_read_location(request, original):
@@ -367,6 +381,8 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             if not can_edit(request, collection):
                 raise PermissionDenied('You do not have permission to add locations to this collection.')
 
+        if not params['take_my_visits']:
+            ensure_room_for_names(request.user, shared_file_names(original))
         try:
             if params['take_my_visits']:
                 new_location = take_my_visits(original, request.user, collection=collection)

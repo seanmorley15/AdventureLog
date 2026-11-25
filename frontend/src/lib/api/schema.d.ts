@@ -2472,6 +2472,10 @@ export interface paths {
          *     the copy in a collection. With `take_my_visits`, for a location you travelled to but
          *     don't own (say, before leaving its trip), the copy keeps the original name, your visits
          *     move onto it, and you are taken off the original's visits.
+         *
+         *     A copy you choose to make counts toward your media storage limit: photo files you don't
+         *     already hold are counted once, and over the limit the copy is refused. `take_my_visits`
+         *     is keeping your own history, so it is never refused.
          */
         post: operations["locations_duplicate"];
         delete?: never;
@@ -16916,6 +16920,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Error"];
                 };
+            };
+            /** @description The copy's photos would take you over your media storage limit (`media_quota_exceeded`). Never for `take_my_visits`. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

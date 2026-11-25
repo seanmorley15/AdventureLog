@@ -39,6 +39,11 @@ def _copy_photos(photos, user, content_type, target_for):
     return ContentImage.objects.bulk_create([copy for copy in copies if copy is not None])
 
 
+def shared_file_names(original):
+    """The stored files a copy of ``original`` (``copy_location``) would share: its photos' files."""
+    return list(original.images.exclude(image__isnull=True).exclude(image='').values_list('image', flat=True))
+
+
 @transaction.atomic
 def copy_location(original, user, collection=None, name=None):
     """
