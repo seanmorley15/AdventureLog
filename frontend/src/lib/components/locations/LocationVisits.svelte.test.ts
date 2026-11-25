@@ -58,3 +58,44 @@ describe('LocationVisits creating a visit', () => {
 		expect((await addTodaysVisit(spy)).traveler_uuids).toEqual(['me']);
 	});
 });
+
+describe('LocationVisits editing a visit', () => {
+	const unseen = {
+		id: 'v9',
+		location: 'L1',
+		start_date: '2026-06-01T00:00:00Z',
+		end_date: '2026-06-02T00:00:00Z',
+		timezone: 'UTC',
+		notes: 'old',
+		activities: [],
+		travelers: [],
+		created_at: '2026-06-01T00:00:00Z',
+		updated_at: '2026-06-01T00:00:00Z'
+	};
+
+	function stubPatch() {
+		const spy = vi.fn(async (url: string, init?: RequestInit) => {
+			if (url.includes('/traveler-candidates/')) return Response.json([me, sam]);
+			if (url === '/api/visits/v9/' && init?.method === 'PATCH')
+				return Response.json({ ...unseen, ...JSON.parse(init.body as string) });
+			return Response.json({});
+		});
+		vi.stubGlobal('fetch', spy);
+		return spy;
+	}
+
+	it('saves a visit whose travelers are all hidden, without sending travelers', async () => {
+		const spy = stubPatch();
+		render(LocationVisits, { objectId: 'L1', visits: [unseen] });
+		await expect.element(page.getByText('Sam')).toBeVisible();
+		await page.getByTitle(en.adventures.edit_visit).click();
+		const save = page.getByRole('button', { name: en.adventures.update_visit });
+		await expect.element(save).toBeEnabled();
+		await save.click();
+		await vi.waitFor(() =>
+			expect(spy.mock.calls.some(([, i]) => i?.method === 'PATCH')).toBe(true)
+		);
+		const [, init] = spy.mock.calls.find(([, i]) => i?.method === 'PATCH')!;
+		expect(JSON.parse(init!.body as string)).not.toHaveProperty('traveler_uuids');
+	});
+});

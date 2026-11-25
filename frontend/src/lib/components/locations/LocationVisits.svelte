@@ -96,7 +96,7 @@
 		travelerCandidates.some((person) => person.uuid !== currentUserUuid)
 	);
 	// A visit needs someone on it: saving waits while the picker has nobody checked.
-	let travelersMissing = $derived(showTravelerPicker && selectedTravelers.length === 0);
+	// (travelersMissing is defined below, after visitIdEditing.)
 	// A visit waiting on the delete confirmation because other people were on it.
 	let pendingDelete: Visit | null = $state(null);
 	let isDeletingVisit = $state(false);
@@ -141,6 +141,17 @@
 	let constrainDates: boolean = $state(false);
 	let isEditing = $state(false);
 	let visitIdEditing: string | null = $state(null);
+	// An existing visit none of whose travelers you can see (they are all on another trip) saves
+	// without any, and the server leaves its travelers alone; only a new visit needs one picked.
+	const editingUnseenTravelers = $derived(
+		Boolean(
+			visitIdEditing &&
+			(visits?.find((visit) => visit.id === visitIdEditing)?.travelers ?? []).length === 0
+		)
+	);
+	let travelersMissing = $derived(
+		showTravelerPicker && selectedTravelers.length === 0 && !editingUnseenTravelers
+	);
 
 	// The visit whose activity composer is open, and the saved activity it edits (none when adding).
 	let activityComposer: { visitId: string; activity: Activity | null } | null = $state(null);

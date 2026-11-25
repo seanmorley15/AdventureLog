@@ -264,7 +264,7 @@
 				})
 			);
 		}
-		// What the server says it copied, not what the preview expected.
+		// What the server says it copied (what the release returned), not what the preview expected.
 		if ((form.kept_copies ?? 0) > 0) {
 			messages.push(
 				$t('settings.public_profile_kept_copies', { values: { count: form.kept_copies ?? 0 } })
