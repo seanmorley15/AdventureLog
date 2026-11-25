@@ -9,10 +9,33 @@ from rest_framework.response import Response
 
 from adventures.models import Collection
 from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_change_collection
-from adventures.access.audience import audience_for_request, can_edit, member_collections_q
+from adventures.access.audience import audience_for_request, can_edit, has_guest_token, member_collections_q
 from core.exceptions import APIError
 from core.serializers import validated
 from core.visibility import can_read_published
+
+
+def refuse_anonymous_preview(request, *, guest_reaches_lookup=False):
+    """
+    Refuse a signed-out caller of a ``GET …-preview/`` exactly as its action refuses them: ``401``,
+    or ``404`` when the action lets a guest link through to a lookup that finds nothing for it.
+    A preview is a GET, so the viewset's read permissions alone would let more through.
+    """
+    if request.user.is_authenticated:
+        return
+    if guest_reaches_lookup and has_guest_token(request):
+        raise NotFound()
+    raise NotAuthenticated()
+
+
+def preview_response(data):
+    """
+    The answer of a ``GET …-preview/``: it names travelers and counts what would go, so no shared
+    cache or browser may keep it (``Cache-Control: private, no-store``).
+    """
+    response = Response(data)
+    response['Cache-Control'] = 'private, no-store'
+    return response
 
 
 class CollectionFilterSerializer(serializers.Serializer):

@@ -11567,7 +11567,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -12050,7 +12050,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -12702,13 +12702,13 @@ export interface operations {
                     "application/json": components["schemas"]["AddedTravelers"];
                 };
             };
-            /** @description `traveler_not_allowed`: someone is not the owner or a member of this collection. */
+            /** @description `traveler_not_allowed`: someone is not the owner or a member of this collection; or invalid input (`validation_error`, with `fields`). */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -12763,13 +12763,13 @@ export interface operations {
                     "application/json": components["schemas"]["AddedTravelers"];
                 };
             };
-            /** @description `traveler_not_allowed`: someone is not the owner or a member. */
+            /** @description `traveler_not_allowed`: someone is not the owner or a member; or invalid input (`validation_error`, with `fields`). */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Error"];
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -17152,12 +17152,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description No response body */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CollectionLinkResult"];
+                };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
             401: {

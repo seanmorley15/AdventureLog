@@ -176,4 +176,24 @@ describe('CommentInbox marking notifications read', () => {
 		expect(JSON.parse(init?.body as string)).toEqual({});
 		await vi.waitFor(() => expect(page.getByText('5', { exact: true }).elements()).toHaveLength(0));
 	});
+
+	it('Mark all read survives a network failure and keeps what did succeed', async () => {
+		const spy = vi.fn(async (url: string, _init?: RequestInit) => {
+			if (url.startsWith('/api/notifications/?')) {
+				return Response.json({ results: [{ ...note, read: true }], unread_count: 2 });
+			}
+			if (url.startsWith('/api/comments/inbox/?')) {
+				return Response.json({ unread_count: 3, comments: [] });
+			}
+			if (url === '/api/comments/inbox/mark-seen/') throw new TypeError('Failed to fetch');
+			return Response.json({ unread_count: 0 });
+		});
+		vi.stubGlobal('fetch', spy);
+		render(CommentInbox, { initialUnread: 0 });
+		await page.getByRole('button', { name: en.comments.inbox_title }).click();
+		await expect.element(page.getByText('5', { exact: true })).toBeVisible();
+		await page.getByRole('button', { name: en.comments.mark_read }).click();
+		// The notifications were marked; the 3 comments still count.
+		await expect.element(page.getByText('3', { exact: true })).toBeVisible();
+	});
 });

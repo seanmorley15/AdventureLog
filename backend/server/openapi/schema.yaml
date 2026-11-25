@@ -3129,7 +3129,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ValidationError'
           description: '`date_required` when the trip has no dates; `traveler_not_allowed`
             or `traveler_required` for the people named; or invalid input (with `fields`).'
         '401':
@@ -3634,7 +3634,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ValidationError'
           description: '`date_required` when the trip has no dates; `traveler_not_allowed`
             or `traveler_required` for the people named; or invalid input (with `fields`).'
         '401':
@@ -4304,9 +4304,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ValidationError'
           description: '`traveler_not_allowed`: someone is not the owner or a member
-            of this collection.'
+            of this collection; or invalid input (`validation_error`, with `fields`).'
         '401':
           content:
             application/json:
@@ -4371,8 +4371,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-          description: '`traveler_not_allowed`: someone is not the owner or a member.'
+                $ref: '#/components/schemas/ValidationError'
+          description: '`traveler_not_allowed`: someone is not the owner or a member;
+            or invalid input (`validation_error`, with `fields`).'
         '401':
           content:
             application/json:
@@ -8541,8 +8542,12 @@ paths:
       - SessionTokenAuth: []
       - cookieAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionLinkResult'
+          description: ''
         '401':
           content:
             application/json:

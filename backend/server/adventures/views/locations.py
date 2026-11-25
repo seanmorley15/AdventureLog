@@ -56,7 +56,7 @@ from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle, SharingPreviewThrottle
 from adventures.utils.language import resolve_request_language
 from adventures.utils.query_optimization import optimize_locations
-from adventures.views.mixins import PaginatedResponseMixin
+from adventures.views.mixins import PaginatedResponseMixin, preview_response, refuse_anonymous_preview
 from core.visibility import can_read_published
 from core import pagination
 from core.errors import ServiceError
@@ -566,7 +566,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
     )
     @extend_schema(
         methods=['DELETE'], request=None,
-        responses=CollectionLinkResultSerializer,
+        responses={200: CollectionLinkResultSerializer},
         summary='Remove the location from a collection',
         description='Idempotent. Also removes its placements from the day plan, and says how many. '
                     'Only the collection owner, the place owner, or the person who added the place (while an '
@@ -605,14 +605,13 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         who would get their own copy (`people_released`), the visits and uploads that would go with
         the original, and the plan placements removed. The same people may ask as may remove it.
         """
-        if not request.user.is_authenticated:
-            raise NotFound('Location not found.')
+        refuse_anonymous_preview(request, guest_reaches_lookup=True)
         location = self.get_object()
         collection = self._readable_collection(request, collection_id)
         self._check_may_unlink(request, location, collection)
         summary = release_summary(lost_access_plan([location], ignoring=[collection]), request.user)
         summary['removed_placements'] = len(placements_for(location, collection))
-        return Response(UnlinkPreviewSerializer(summary, context={'request': request}).data)
+        return preview_response(UnlinkPreviewSerializer(summary, context={'request': request}).data)
 
     # ==================== HELPERS ====================
 

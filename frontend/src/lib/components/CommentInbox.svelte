@@ -90,20 +90,21 @@
 
 	/** "Mark all read": every comment and every notification, also those beyond the first page. */
 	async function markRead() {
+		// Each request stands alone: one failing (or the network) leaves the other's result in place.
 		const [comments, notes] = await Promise.all([
-			fetch('/api/comments/inbox/mark-seen/', { method: 'POST' }),
+			fetch('/api/comments/inbox/mark-seen/', { method: 'POST' }).catch(() => null),
 			// Leaving `ids` out marks all of them: what this button promises.
 			fetch('/api/notifications/mark-read/', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({} satisfies Schemas['MarkNotificationsReadRequest'])
-			})
+			}).catch(() => null)
 		]);
-		if (comments.ok) {
+		if (comments?.ok) {
 			commentUnread = 0;
 			items = (items ?? []).map((item) => ({ ...item, unread: false }));
 		}
-		if (notes.ok) {
+		if (notes?.ok) {
 			notificationUnread = 0;
 			notifications = notifications.map((item) => ({ ...item, read: true }));
 		}

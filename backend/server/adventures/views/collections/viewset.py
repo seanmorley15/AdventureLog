@@ -29,7 +29,7 @@ from adventures.models import (
 )
 from adventures.permissions import CollectionShared
 from adventures.services.collections.duplicate import duplicate_collection
-from adventures.views.mixins import PaginatedResponseMixin
+from adventures.views.mixins import PaginatedResponseMixin, preview_response, refuse_anonymous_preview
 from adventures.access.audience import audience_for_request, readable_collections_q
 from adventures.utils.query_optimization import media_prefetches, optimize_locations
 from adventures.services.story import build_story_payload
@@ -103,9 +103,10 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
         What `DELETE /api/collections/{id}/` would do, changing nothing: who would get their own
         copy of which places, and what would go with the original places. Owner only.
         """
+        refuse_anonymous_preview(request)
         collection = self.get_object()
         summary = travelers.release_summary(travelers.collections_release_plan([collection]), request.user)
-        return Response(CollectionDeletePreviewSerializer(summary, context={'request': request}).data)
+        return preview_response(CollectionDeletePreviewSerializer(summary, context={'request': request}).data)
 
     def get_permissions(self):
         # Listing is about your own collections. The other actions also serve guest links.

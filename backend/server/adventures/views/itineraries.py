@@ -63,7 +63,7 @@ from adventures.services.day_plan.files import location_stops_on_day, serialize_
 from adventures.services.day_plan.legacy import auto_generate_itinerary, reorder_itinerary_items
 from adventures.views.mixins import COLLECTION_ID_PARAMETER, CollectionScopedMixin
 from core.exceptions import APIError
-from core.openapi import ErrorSerializer
+from core.openapi import ValidationErrorSerializer
 from core.serializers import validated
 
 CONTENT_MODELS = {
@@ -357,7 +357,7 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
                 description='The stop had already logged its visit; the people you named (you, when none) were added to it.',
             ),
             400: OpenApiResponse(
-                response=ErrorSerializer,
+                response=ValidationErrorSerializer,
                 description='`date_required` when the trip has no dates; `traveler_not_allowed` or '
                 '`traveler_required` for the people named; or invalid input (with `fields`).',
             ),
@@ -494,7 +494,7 @@ class CollectionDayViewSet(_DayPlanViewMixin, mixins.ListModelMixin, viewsets.Ge
         responses={
             200: LogDayResultSerializer,
             400: OpenApiResponse(
-                response=ErrorSerializer,
+                response=ValidationErrorSerializer,
                 description='`date_required` when the trip has no dates; `traveler_not_allowed` or '
                 '`traveler_required` for the people named; or invalid input (with `fields`).',
             ),

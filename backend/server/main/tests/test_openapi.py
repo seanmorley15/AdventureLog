@@ -196,6 +196,21 @@ class ResponseContractTests(ContractTestCase):
         removed = self.client.delete(f'/api/collections/{self.trip.id}/members/{self.friend.uuid}/')
         self.assertEqual(removed.status_code, 204)
 
+    def test_unlinking_a_location_and_its_preview(self):
+        path = '/api/locations/{id}/collections/{collection_id}/'
+        url = f'/api/locations/{self.place.id}/collections/{self.trip.id}/'
+        preview = self.client.get(url + 'unlink-preview/')
+        self.assertEqual(preview.status_code, 200, preview.content)
+        self.assertMatchesSchema(preview, path + 'unlink-preview/', 'get')
+        # The DELETE answers 200 with a body, and the schema must say so (not a bare 204).
+        responses = generated_schema()['paths'][path]['delete']['responses']
+        self.assertNotIn('204', responses)
+        self.assertIn('application/json', responses['200'].get('content', {}))
+        removed = self.client.delete(url)
+        self.assertEqual(removed.status_code, 200, removed.content)
+        self.assertEqual(removed.json(), {'linked': False, 'removed_placements': 0})
+        self.assertMatchesSchema(removed, path, 'delete')
+
     def test_the_account(self):
         self.assertMatchesSchema(self.client.get('/api/account/'), '/api/account/', 'get')
         self.assertMatchesSchema(self.client.get('/api/account/media-usage/'), '/api/account/media-usage/', 'get')

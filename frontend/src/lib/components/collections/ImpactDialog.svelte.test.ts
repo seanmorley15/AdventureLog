@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import { addMessages, init } from 'svelte-i18n';
 import en from '../../../locales/en.json';
 import ImpactDialog from './ImpactDialog.svelte';
+import { PreviewError } from '#lib/traveler-impact.js';
 
 addMessages('en', en);
 init({ fallbackLocale: 'en', initialLocale: 'en' });
@@ -59,12 +60,26 @@ describe('ImpactDialog (collection delete)', () => {
 			title: 'Delete Collection',
 			confirmLabel: 'Delete',
 			load: async () => {
-				throw new Error('Request was throttled.');
+				throw new PreviewError('Request was throttled.');
 			},
 			onconfirm: async () => true,
 			onclose: vi.fn()
 		});
 		await expect.element(page.getByText('Request was throttled.')).toBeVisible();
 		await expect.element(page.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled();
+	});
+
+	it('says the translated message, not the raw error, when the request itself fails', async () => {
+		render(ImpactDialog, {
+			title: 'Delete Collection',
+			confirmLabel: 'Delete',
+			load: async () => {
+				throw new TypeError('Failed to fetch');
+			},
+			onconfirm: async () => true,
+			onclose: vi.fn()
+		});
+		await expect.element(page.getByText(en.traveler_impact.preview_failed)).toBeVisible();
+		expect(page.getByText('Failed to fetch').elements()).toHaveLength(0);
 	});
 });

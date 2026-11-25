@@ -73,7 +73,8 @@ def _delete_profile_pic(user) -> None:
     """Remove the picture file once the deletion commits; a rolled-back deletion keeps it."""
     if user.profile_pic and user.profile_pic.name:
         storage, name = user.profile_pic.storage, user.profile_pic.name
-        transaction.on_commit(lambda: storage.delete(name))
+        # robust: the account is already gone; a storage error must not turn that into a 500.
+        transaction.on_commit(lambda: storage.delete(name), robust=True)
 
 
 @transaction.atomic

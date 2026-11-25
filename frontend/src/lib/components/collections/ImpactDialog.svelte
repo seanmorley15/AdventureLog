@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { ReleasePreview } from '#lib/traveler-impact.js';
+	import { PreviewError, type ReleasePreview } from '#lib/traveler-impact.js';
 
 	/** The part of a preview every dialog needs, plus whatever it adds. */
 	export type ImpactPreview = ReleasePreview & { places?: number; removed_placements?: number };
@@ -60,7 +60,8 @@
 		try {
 			preview = await load();
 		} catch (error) {
-			previewError = error instanceof Error ? error.message : '';
+			// Only the server's own words; a network failure gets the translated message.
+			previewError = error instanceof PreviewError ? error.message : '';
 			phase = 'error';
 			if (!dialog.open) dialog.showModal();
 			return;

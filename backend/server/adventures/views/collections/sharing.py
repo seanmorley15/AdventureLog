@@ -16,6 +16,7 @@ from adventures.models import CollectionActivity, CollectionGuestLink, Collectio
 from adventures.services.activity_log import record_activity
 from adventures.models import Collection, CollectionInvite, Location
 from adventures.serializers import _build_profile_pic_url
+from adventures.views.mixins import preview_response, refuse_anonymous_preview
 from adventures.serializers import CollectionInviteSerializer, UltraSlimCollectionSerializer
 from adventures.access.audience import can_edit, is_member
 from adventures.serializers.sharing import (
@@ -30,7 +31,7 @@ from adventures.serializers.sharing import (
     SharingStateSerializer,
 )
 from core.exceptions import APIError
-from core.openapi import ErrorSerializer
+from core.openapi import ValidationErrorSerializer
 from adventures.throttling import SharingPreviewThrottle
 from core.parsing import as_uuid
 from core.serializers import validated
@@ -337,8 +338,6 @@ class SharingActionsMixin:
 
     def _member_leaving(self, request, pk):
         """The collection ``request.user`` is a member (not the owner) of, as leaving needs it."""
-        if not request.user.is_authenticated:
-            raise NotFound('Collection not found.')
         collection = self.get_object()
         if request.user == collection.user:
             raise APIError('The owner cannot leave their own collection.', code='invalid')
@@ -393,8 +392,9 @@ class SharingActionsMixin:
         responses={
             200: _ADDED_TRAVELERS,
             400: OpenApiResponse(
-                response=ErrorSerializer,
-                description='`traveler_not_allowed`: someone is not the owner or a member of this collection.',
+                response=ValidationErrorSerializer,
+                description='`traveler_not_allowed`: someone is not the owner or a member of this collection; '
+                'or invalid input (`validation_error`, with `fields`).',
             ),
         },
     )
@@ -424,8 +424,9 @@ class SharingActionsMixin:
         (each copied when you keep copies) and how many photos, files and activities other people
         added to visits you are the only traveler on, which go with those visits. Members only.
         """
+        refuse_anonymous_preview(request)
         collection = self._member_leaving(request, pk)
-        return Response(LeavePreviewSerializer(travelers.leave_preview(collection, request.user)).data)
+        return preview_response(LeavePreviewSerializer(travelers.leave_preview(collection, request.user)).data)
 
     @extend_schema(tags=['Sharing'], parameters=[USER_PARAMETER], responses=LeavePreviewSerializer)
     @action(
@@ -439,12 +440,13 @@ class SharingActionsMixin:
         What `DELETE …/members/{user_uuid}/` would do, changing nothing: the same counts as
         leaving, for them (removal always keeps copies). Owner only.
         """
+        refuse_anonymous_preview(request)
         collection = self._owned_collection(request, pk)
         user_uuid = as_uuid(user_uuid)
         user = collection.shared_with.filter(uuid=user_uuid).first() if user_uuid else None
         if user is None:
             raise NotFound('That person is not a member of this collection.')
-        return Response(LeavePreviewSerializer(travelers.leave_preview(collection, user)).data)
+        return preview_response(LeavePreviewSerializer(travelers.leave_preview(collection, user)).data)
 
     @extend_schema(
         tags=['Sharing'],
@@ -452,7 +454,9 @@ class SharingActionsMixin:
         responses={
             200: _ADDED_TRAVELERS,
             400: OpenApiResponse(
-                response=ErrorSerializer, description='`traveler_not_allowed`: someone is not the owner or a member.',
+                response=ValidationErrorSerializer,
+                description='`traveler_not_allowed`: someone is not the owner or a member; or invalid input '
+                '(`validation_error`, with `fields`).',
             ),
         },
     )
@@ -467,9 +471,10 @@ class SharingActionsMixin:
         visits would gain someone, at how many locations. Repeat `user_uuids` for each person
         (`?user_uuids=…&user_uuids=…`). Owner and editors.
         """
+        refuse_anonymous_preview(request)
         collection = self._editable_trip(request, pk)
         users = validated(AddTravelersSerializer, request.query_params)['user_uuids']
-        return Response(travelers.add_to_trip_preview(collection, users))
+        return preview_response(travelers.add_to_trip_preview(collection, users))
 
     # -- Guest links ---------------------------------------------------------------------
 

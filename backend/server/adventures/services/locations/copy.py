@@ -53,9 +53,9 @@ def copy_location(original, user, collection=None, name=None):
     trails. Photos share the original's stored files (``_photo_copy``): deleting either place
     never removes a file the other still shows. Someone else's copy leaves out Immich photos,
     which only the original owner's Immich account can show (if the cover was one, another photo
-    becomes the cover). The user's own category of the
-    same name is reused, or created from the original's. With ``collection`` the copy is
-    linked to that collection alone, instead of inheriting the original's.
+    becomes the cover). The user's own category of the same name is reused, or created from the
+    original's. With ``collection`` the copy is linked to that collection alone, instead of
+    inheriting the original's.
     """
     copy = Location(
         user=user,

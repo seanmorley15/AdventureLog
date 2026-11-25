@@ -243,3 +243,15 @@ class DeleteAccountProfilePicTestCase(APITestCase):
             delete_user_account(self.user)
         self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
         self.assertFalse(self._exists())
+
+    def test_a_storage_error_after_the_deletion_does_not_fail_it(self):
+        from django.core.files.storage import FileSystemStorage
+
+        from users.services.account_deletion import delete_user_account
+
+        # The error is logged (``robust``), not raised.
+        with patch.object(FileSystemStorage, 'delete', side_effect=OSError('disk gone')) as delete:
+            with self.captureOnCommitCallbacks(execute=True):
+                delete_user_account(self.user)
+        delete.assert_called_once_with(self.name)
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())

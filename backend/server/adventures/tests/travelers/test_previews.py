@@ -90,14 +90,8 @@ class UnlinkPreviewTests(PreviewBase):
         self.assertEqual(self._preview(user=self.editor).status_code, 403)
         self.assertEqual(self._preview(user=self.viewer).status_code, 403)
 
-    def test_strangers_and_anonymous_get_nothing(self):
+    def test_a_stranger_gets_404(self):
         self.assertEqual(self._preview(user=self.stranger).status_code, 404)
-        self.hut.is_public = True
-        self.hut.save()
-        self.as_anonymous()
-        response = self.client.get(f'/api/locations/{self.hut.id}/collections/{self.trip.id}/unlink-preview/')
-        self.assertIn(response.status_code, (401, 403, 404))
-        self.assertNotIn('people_released', response.json())
 
     def test_a_collection_you_cannot_read_is_404(self):
         theirs = Collection.objects.create(user=self.stranger, name='Theirs')
@@ -140,23 +134,7 @@ class CollectionDeletePreviewTests(PreviewBase):
         for user in (self.editor, self.viewer, self.stranger):
             self.assertEqual(self._preview(user=user).status_code, 404, user.username)
             self.assertEqual(self.client.delete(f'/api/collections/{self.trip.id}/').status_code, 404)
-        self.as_anonymous()
-        self.assertIn(self.client.get(f'/api/collections/{self.trip.id}/deletion-preview/').status_code, (401, 403, 404))
         self.assertTrue(Collection.objects.filter(pk=self.trip.pk).exists())
-
-    def test_a_guest_link_cannot_ask(self):
-        from adventures.models import CollectionGuestLink
-
-        link = CollectionGuestLink.objects.create(collection=self.trip, role='editor')
-        self.as_anonymous()
-        trip = f'/api/collections/{self.trip.id}'
-        self.assertEqual(self.client.get(f'{trip}/', HTTP_X_GUEST_TOKEN=link.token).status_code, 200)
-        response = self.client.get(f'{trip}/deletion-preview/', HTTP_X_GUEST_TOKEN=link.token)
-        self.assertIn(response.status_code, (401, 403, 404))
-        for path in ('leave-preview/', f'members/{self.editor.uuid}/removal-preview/',
-                     f'add-travelers-preview/?user_uuids={self.editor.uuid}'):
-            response = self.client.get(f'{trip}/{path}', HTTP_X_GUEST_TOKEN=link.token)
-            self.assertIn(response.status_code, (401, 403, 404), path)
 
     def test_an_archived_collection_can_be_previewed(self):
         Collection.objects.filter(pk=self.trip.pk).update(is_archived=True)
@@ -216,6 +194,68 @@ class AccountPreviewTests(PreviewBase):
         self.assertEqual(response.status_code, 200, response.content)
         body = response.json()
         self.assertEqual((body['left_shared_collections'], body['kept_copies']), (1, 1))
+
+
+class SignedOutPreviewTests(PreviewBase):
+    """Signed out, with or without an editor guest link, each preview is refused exactly as its action is."""
+
+    # (name, real method, real path, preview path, status signed out, status with a guest link)
+    def _pairs(self):
+        trip = f'/api/collections/{self.trip.id}'
+        unlink = f'/api/locations/{self.hut.id}/collections/{self.trip.id}/'
+        member = f'{trip}/members/{self.editor.uuid}/'
+        return [
+            ('unlink', 'delete', unlink, f'{unlink}unlink-preview/', 401, 404),
+            ('delete', 'delete', f'{trip}/', f'{trip}/deletion-preview/', 401, 401),
+            ('leave', 'post', f'{trip}/leave/', f'{trip}/leave-preview/', 401, 401),
+            ('removal', 'delete', member, f'{member}removal-preview/', 401, 401),
+            ('add', 'post', f'{trip}/add-travelers/', f'{trip}/add-travelers-preview/?user_uuids={self.editor.uuid}',
+             401, 401),
+        ]
+
+    def _check(self, headers, column):
+        self.hut.is_public = True
+        self.hut.save()
+        before = (self._state(), self.trip.shared_with.count())
+        self.as_anonymous()
+        for name, method, real, preview, *expected in self._pairs():
+            with self.subTest(name=name):
+                answer = self.client.get(preview, **headers)
+                self.assertEqual(answer.status_code, expected[column], answer.content)
+                for key in ('people_released', 'locations', 'visits', 'others_uploads'):
+                    self.assertNotIn(key, answer.json())
+                body = {'user_uuids': [str(self.editor.uuid)]} if name == 'add' else None
+                acted = getattr(self.client, method)(real, body, format='json', **headers)
+                self.assertEqual(acted.status_code, expected[column], acted.content)
+        self.assertEqual((self._state(), self.trip.shared_with.count()), before)
+
+    def test_signed_out(self):
+        self._check({}, 0)
+
+    def test_with_an_editor_guest_link(self):
+        from adventures.models import CollectionGuestLink
+
+        link = CollectionGuestLink.objects.create(collection=self.trip, role='editor')
+        self.as_anonymous()
+        self.assertEqual(self.client.get(f'/api/collections/{self.trip.id}/', HTTP_X_GUEST_TOKEN=link.token).status_code, 200)
+        self._check({'HTTP_X_GUEST_TOKEN': link.token}, 1)
+
+
+class PreviewCacheTests(PreviewBase):
+    def test_no_preview_may_be_cached(self):
+        trip = f'/api/collections/{self.trip.id}'
+        for user, url in [
+            (self.owner, f'/api/locations/{self.hut.id}/collections/{self.trip.id}/unlink-preview/'),
+            (self.owner, f'{trip}/deletion-preview/'),
+            (self.owner, f'{trip}/members/{self.editor.uuid}/removal-preview/'),
+            (self.owner, f'{trip}/add-travelers-preview/?user_uuids={self.editor.uuid}'),
+            (self.editor, f'{trip}/leave-preview/'),
+        ]:
+            with self.subTest(url=url):
+                self.as_user(user)
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200, response.content)
+                self.assertEqual(response['Cache-Control'], 'private, no-store')
 
 
 class SharingPreviewThrottleTests(PreviewBase):

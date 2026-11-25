@@ -166,7 +166,8 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
 
 An action that takes things away from people has a read-only `GET …-preview/` next to it. It changes nothing,
 answers what the action would do with the same input, and is allowed for exactly the people the action is (others
-get the same `403`/`404`). A client asks it before the confirm dialog. The actions themselves take no preview flag.
+get the same `401`/`403`/`404`). A client asks it before the confirm dialog. The actions themselves take no preview
+flag. Previews answer with `Cache-Control: private, no-store`.
 `people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
 
 | Preview                                                          | Previews                                         | Returns                                                                                                                                     |
