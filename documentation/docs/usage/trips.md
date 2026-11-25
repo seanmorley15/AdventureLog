@@ -42,6 +42,10 @@ Open a running trip and it jumps to **today**. Use **Log visit** on a stop, or *
 
 The **Recommendations** tab finds places near your trip by category, such as attractions, nature and parks, or cafés. Search near a city or the current map area, sort by best match, distance, or rating, and add a result to a day or to Ideas.
 
+## Being added to a visit
+
+When someone adds you to a visit (by logging a visit with you, using **Log day**, or adding people to a trip's visits), you get a notification in the **Inbox** in the top bar, with a badge for what is new. It says who added you, where and when, and links to the place or trip. If you were not there, choose **Remove me** to take yourself off the visit. If the server can send email, you also get one message with the same link. Notifications never list the other people on the visit.
+
 ## The calendar
 
 The Calendar page shows every trip, with its stops, transport, and lodging laid out by day. **Download Calendar** saves it as a file you can add to your own calendar app.
