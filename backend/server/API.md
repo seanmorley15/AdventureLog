@@ -204,6 +204,11 @@ ignored on creation; the response includes their generated ids and parent. Retry
 client-chosen id returns the stored place and visits without creating them again. The standalone
 `POST /api/visits/` endpoint still requires `location`.
 
+A new nested visit names the person saving as its only traveler, as `POST /api/visits/` does (nested visits take no
+`traveler_uuids`; travelers are changed through `/api/visits/`). On `PATCH`, `visits` is the full set: a visit left
+out is left by you (it is deleted when you were its only traveler, and stays for the others otherwise), and one you
+are not on stays as it is. The location owner clears a visit nobody travelled on.
+
 ## Background jobs
 
 Slow work (exports, restores, imports, PDFs) can run in a worker process instead of the request, so it is not cut off by

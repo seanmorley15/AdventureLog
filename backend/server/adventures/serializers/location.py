@@ -364,7 +364,8 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
     def _sync_visits(location, visits_data, user):
         """
         Make the place's visits match ``visits_data``. A visit sent with the id of one of
-        this place's visits is updated; the rest are created; visits left out are deleted
+        this place's visits is updated; the rest are created, with ``user`` (the person saving)
+        as their traveler, as ``POST /api/visits/`` does; visits left out are deleted
         one by one so their photos and files go with them, except that a visit others travelled
         on only loses ``user``, and one ``user`` is not on stays as it is (see
         ``travelers.detach_if_traveler``). An id that does not belong to this place is ignored,
@@ -378,7 +379,10 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             visit_data.pop('location', None)
             visit = existing.get(visit_id)
             if visit is None:
-                Visit.objects.create(location=location, **visit_data)
+                visit = Visit.objects.create(location=location, **visit_data)
+                # The owner default covers a guest link, which has no account to name.
+                if getattr(user, 'is_authenticated', False) and user.pk != location.user_id:
+                    travelers.set_travelers(visit, [user], user, fresh=True)
                 continue
             for attr, value in visit_data.items():
                 setattr(visit, attr, value)
