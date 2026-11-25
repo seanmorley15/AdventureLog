@@ -144,7 +144,12 @@ def join(visit, user):
 
 
 def leave(visit, user):
-    """Remove the user as a traveler. Deletes the visit and returns True when nobody is left."""
+    """
+    Remove the user as a traveler. Deletes the visit and returns True when nobody is left.
+    Someone who was not a traveler changes nothing.
+    """
+    if not visit.travelers.filter(pk=user.pk).exists():
+        return False
     visit.travelers.remove(user)
     if visit.travelers.exists():
         return False

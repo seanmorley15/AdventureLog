@@ -135,3 +135,21 @@ class VisitTravelersApiTests(AudienceTestBase):
         response = self.client.post(f'/api/visits/{visit.id}/leave/')
         self.assertEqual(response.status_code, 204)
         self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
+
+    def test_leave_by_non_traveler_is_a_no_op(self):
+        visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z')
+        visit.travelers.clear()
+        self.as_user(self.viewer)
+        response = self.client.post(f'/api/visits/{visit.id}/leave/')
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertTrue(Visit.objects.filter(pk=visit.pk).exists())
+
+    def test_candidates_hidden_from_guest_link(self):
+        from adventures.models import CollectionGuestLink
+
+        link = CollectionGuestLink.objects.create(collection=self.trip, role='viewer')
+        self.as_anonymous()
+        response = self.client.get(
+            f'/api/locations/{self.hut.id}/traveler-candidates/', HTTP_X_GUEST_TOKEN=link.token
+        )
+        self.assertEqual(response.status_code, 404)
