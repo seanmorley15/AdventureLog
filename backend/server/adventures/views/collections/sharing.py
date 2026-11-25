@@ -396,7 +396,8 @@ class SharingActionsMixin:
         those days (inclusive). Visits on other days are never touched. Returns how many visits
         gained someone and at what locations; with `?dry_run=1` it only counts.
         """
-        collection = Collection.objects.filter(pk=pk).first()
+        collection_id = as_uuid(pk)
+        collection = Collection.objects.filter(pk=collection_id).first() if collection_id else None
         if collection is None or not request.user.is_authenticated or not is_member(request.user, collection):
             raise NotFound('Collection not found.')
         if not can_edit(request.user, collection):

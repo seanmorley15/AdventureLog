@@ -91,3 +91,11 @@ class AddToTripTests(AudienceTestBase):
         self._visit(self.hut, at(2026, 6, 2), [self.owner])
         self._visit(other, at(2026, 6, 2), [self.owner])
         self.assertEqual(self._post(self.owner, [self.editor]).json(), {'visits': 3, 'locations': 2})
+
+
+class AddTravelersBadIdTests(AudienceTestBase):
+    def test_malformed_collection_id_is_404(self):
+        self.as_user(self.owner)
+        for path in ('add-travelers/', 'leave/', 'leave/?dry_run=1'):
+            response = self.client.post(f'/api/collections/not-a-uuid/{path}', {}, format='json')
+            self.assertEqual(response.status_code, 404, (path, response.content))
