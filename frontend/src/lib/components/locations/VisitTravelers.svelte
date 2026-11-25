@@ -20,6 +20,12 @@
 		Boolean(currentUserUuid && visit.travelers?.some((person) => person.uuid === currentUserUuid))
 	);
 
+	// Leaving a visit you are alone on would only delete it, which the delete button is for.
+	let hasOthers = $derived(
+		Boolean(visit.travelers?.some((person) => person.uuid !== currentUserUuid))
+	);
+	let canAct = $derived(Boolean(currentUserUuid) && (!isTraveler || hasOthers));
+
 	async function send(action: 'join' | 'leave') {
 		busy = true;
 		try {
@@ -54,7 +60,7 @@
 				)
 				.join(', ')}
 		</span>
-		{#if currentUserUuid}
+		{#if canAct}
 			<button
 				type="button"
 				class="btn btn-ghost btn-xs"
