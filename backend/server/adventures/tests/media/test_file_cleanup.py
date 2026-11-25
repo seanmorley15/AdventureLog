@@ -258,3 +258,79 @@ class ItineraryItemCleanupTests(TestCase):
             if r[0][1] is None and getattr(r[1](), '__module__', '') == signals.__name__
         ]
         self.assertEqual(unscoped, [])
+
+
+class SharedTrackCleanupTests(TestCase):
+    """
+    Rows can share one stored file (a copy keeps the original's name). Deleting a row never
+    removes the file directly: the refcounted clean-up job does, once no row uses it.
+    """
+
+    def setUp(self):
+        media_root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media_root, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media_root)
+        override.enable()
+        self.addCleanup(override.disable)
+
+        self.owner = CustomUser.objects.create_user(
+            username='track-owner', email='track-owner@example.com', password='testpassword123'
+        )
+        self.other = CustomUser.objects.create_user(
+            username='track-other', email='track-other@example.com', password='testpassword123'
+        )
+        self.activity = self.add_activity(self.owner)
+        self.name = self.activity.gpx_file.name
+        # The other user's copy points at the same stored file.
+        self.copy = self.add_activity(self.other, name=self.name)
+
+    def add_activity(self, user, name=None):
+        visit = Visit.objects.create(location=Location.objects.create(user=user, name='Ridge'))
+        activity = Activity(user=user, visit=visit, name='Walk')
+        if name is None:
+            activity.gpx_file.save('walk.gpx', ContentFile(b'<gpx/>'), save=True)
+        else:
+            activity.gpx_file = name
+            activity.save()
+        return activity
+
+    def test_destroying_an_activity_keeps_a_track_another_activity_uses(self):
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        client.force_authenticate(self.owner)
+        response = client.delete(f'/api/activities/{self.activity.pk}/')
+        self.assertEqual(response.status_code, 204, response.content)
+        self.assertTrue(default_storage.exists(self.name))
+        run_pending_jobs('adventures.delete_stored_file')
+        self.assertTrue(default_storage.exists(self.name))
+
+        client.force_authenticate(self.other)
+        response = client.delete(f'/api/activities/{self.copy.pk}/')
+        self.assertEqual(response.status_code, 204, response.content)
+        run_pending_jobs('adventures.delete_stored_file')
+        self.assertFalse(default_storage.exists(self.name))
+
+    def test_account_deletion_keeps_a_track_another_user_uses(self):
+        from users.services.account_deletion import delete_user_account
+
+        delete_user_account(self.owner)
+        self.assertTrue(default_storage.exists(self.name))
+        run_pending_jobs('adventures.delete_stored_file')
+        self.assertTrue(default_storage.exists(self.name))
+        self.assertTrue(Activity.objects.filter(pk=self.copy.pk).exists())
+
+    def test_rolled_back_account_data_clearing_keeps_the_track(self):
+        from adventures.services.account_data import clear_user_adventure_data
+
+        self.copy.delete()  # the owner's row is the only one left
+        run_pending_jobs('adventures.delete_stored_file')
+        try:
+            with transaction.atomic():
+                clear_user_adventure_data(self.owner)
+                raise RuntimeError('roll back')
+        except RuntimeError:
+            pass
+        run_pending_jobs('adventures.delete_stored_file')
+        self.assertTrue(default_storage.exists(self.name))
+        self.assertTrue(Activity.objects.filter(pk=self.activity.pk).exists())

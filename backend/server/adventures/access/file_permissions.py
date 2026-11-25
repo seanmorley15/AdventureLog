@@ -110,15 +110,13 @@ def check_file_permission(fileId, user, mediaType, request=None):
         # Grant access if ANY associated content object permits it.
         return any(can_read_content_image(content_image, user, request) for content_image in content_images)
     elif mediaType == 'attachments/':
-        try:
-            attachment_path = f"attachments/{fileId}"
-            content_attachment = ContentAttachment.objects.get(file=attachment_path)
-            content_object = content_attachment.content_object
-            if not content_object:
-                return False
-            return _check_content_object_permission(content_object, user, request, story_group='attachments')
-        except ContentAttachment.DoesNotExist:
-            return False
+        # Several attachments can share one file (a copy keeps the original's), like images.
+        attachments = ContentAttachment.objects.filter(file=f"attachments/{fileId}")
+        return any(
+            attachment.content_object is not None
+            and _check_content_object_permission(attachment.content_object, user, request, story_group='attachments')
+            for attachment in attachments
+        )
     elif mediaType == 'activities/':
         activity_path = f"activities/{fileId}"
         activities = list(Activity.objects.filter(gpx_file=activity_path).select_related('visit'))

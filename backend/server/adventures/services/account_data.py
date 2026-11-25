@@ -15,10 +15,8 @@ def clear_user_adventure_data(user) -> None:
     travelers.release_collections_travelers(Collection.objects.filter(user=user), exclude=user)
     CollectionItineraryItem.objects.filter(collection__user=user).delete()
 
-    for activity in Activity.objects.filter(user=user):
-        if activity.gpx_file:
-            activity.gpx_file.delete(save=False)
-
+    # Files are never deleted here directly: each row delete queues the refcounted clean-up
+    # (adventures.signals), which keeps a file another row still uses and runs only on commit.
     for image in ContentImage.objects.filter(user=user):
         image.delete()
 

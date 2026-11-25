@@ -240,8 +240,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
             if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
                 raise PermissionDenied("You do not have permission to delete this activity.")
 
-        if instance.gpx_file:
-            instance.gpx_file.delete(save=False)
+        # The track goes with the row (adventures.signals): another activity may share the file.
         for image in instance.images.all():
             image.delete()
         instance.delete()

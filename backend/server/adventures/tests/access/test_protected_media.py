@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from adventures.models import Activity, Location, Visit
+from adventures.models import Activity, ContentAttachment, Location, Visit
 
 User = get_user_model()
 
@@ -97,3 +97,23 @@ class ProtectedMediaTestCase(TestCase):
         response = self.client.get(f'/media/{public_gpx_path}')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self._response_body(response), b'PUBLIC_GPX_DATA')
+
+    def test_an_attachment_file_shared_by_two_rows_is_readable_by_each_owner_only(self):
+        path = 'attachments/shared-permit.txt'
+        self._write_media_file(path, b'PERMIT')
+        ContentAttachment.objects.create(user=self.owner, file=path, name='permit', content_object=self.location)
+        their_place = Location.objects.create(user=self.other, name='Their copy', is_public=False)
+        ContentAttachment.objects.create(user=self.other, file=path, name='permit', content_object=their_place)
+        stranger = User.objects.create_user(
+            username='media-stranger', email='media-stranger@example.com', password='testpassword123',
+        )
+
+        for user in (self.owner, self.other):
+            self.client.force_login(user)
+            response = self.client.get(f'/media/{path}')
+            self.assertEqual(response.status_code, 200, user.username)
+            self.assertEqual(self._response_body(response), b'PERMIT')
+        self.client.force_login(stranger)
+        self.assertEqual(self.client.get(f'/media/{path}').status_code, 403)
+        self.client.logout()
+        self.assertEqual(self.client.get(f'/media/{path}').status_code, 403)

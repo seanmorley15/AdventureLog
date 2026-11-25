@@ -67,7 +67,8 @@ for _model in (Location, Visit, Lodging, Transportation, Note, Checklist):
 def _delete_file_when_unreferenced(model, field_name, file):
     """
     Remove a stored file once no row of ``model`` uses it, after the delete commits.
-    Rows can share one file (a duplicated place), so the file stays while any remains.
+    Rows can share one file (a duplicated place, a traveler's copy), so the file stays while any
+    remains. Never call ``FieldFile.delete`` on these fields: delete the row and let this run.
     """
     if not file or not file.name:
         return
