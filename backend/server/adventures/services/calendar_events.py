@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 from typing import Iterable
 
-from django.db.models import Prefetch, Q, prefetch_related_objects
+from django.db.models import Exists, OuterRef, Prefetch, Q, prefetch_related_objects
 from icalendar import Calendar, Event, vCalAddress, vText
 from django.utils import timezone
 
@@ -20,6 +20,7 @@ from adventures.models import (
 )
 from core.dates import is_midnight_utc
 from core.parsing import parse_iso_date
+from adventures.services.travelers import where_ive_been_q
 from adventures.services.day_plan import local_date, projected_date, span_bounds
 
 CALENDAR_EVENT_COLORS = {
@@ -179,15 +180,15 @@ def _visit_events(
     range_end: date | None,
 ) -> list[dict]:
     events: list[dict] = []
-    # A visit stays on the place: only the place's owner sees it, on its own dates.
+    # A person sees the visits they travelled on, for places they own or share through a collection.
     locations = (
-        Location.objects.filter(user=user.id)
-        .filter(visits__isnull=False)
+        Location.objects.filter(where_ive_been_q(user))
+        .filter(Exists(Visit.objects.filter(location_id=OuterRef('pk'), travelers=user)))
         .select_related('category')
         .prefetch_related(
             Prefetch(
                 'visits',
-                queryset=Visit.objects.only(
+                queryset=Visit.objects.filter(travelers=user).only(
                     'id', 'location_id', 'start_date', 'end_date', 'timezone', 'notes'
                 ),
             ),

@@ -45,6 +45,7 @@ from adventures.services.locations.center import collection_center
 from adventures.services.locations.copy import copy_location
 from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
+from adventures.services.travelers import visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
 from adventures.utils.language import resolve_request_language
@@ -155,21 +156,25 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         """
         List your locations
 
-        The places you own, a page at a time, in a light form (no trails, files or GPS
-        tracks). Filter by category, visited status and whether they are in a collection.
-        Places in collections shared with you are listed with the collection.
+        The places you own and the ones you travelled to in a collection you belong to, a page
+        at a time, in a light form (no trails, files or GPS tracks). Filter by category,
+        visited status and whether they are in a collection. A place counts as visited when you
+        were a traveler on a visit that has started.
         """
         params = validated(LocationListQuerySerializer, request.query_params)
-        now = timezone.now()
         queryset = (
-            Location.objects.filter(user=request.user)
-            .annotate(annotated_is_visited=Exists(Visit.objects.filter(location_id=OuterRef('pk'), start_date__lte=now)))
+            Location.objects.filter(where_ive_been_q(request.user))
+            .distinct()
+            .annotate(annotated_is_visited=visited_by(request.user, timezone.now()))
             .select_related('category', 'user')
             .prefetch_related(Prefetch('images', queryset=ContentImage.objects.select_related('user')), 'collections')
         )
         if params.get('category'):
             names = [name.strip() for name in params['category'].split(',') if name.strip()]
-            queryset = queryset.filter(category__name__in=names, category__user=request.user)
+            # Someone else's category is matched by name; your own only when it is yours.
+            queryset = queryset.filter(
+                Q(category__name__in=names) & (Q(category__user=request.user) | ~Q(user=request.user))
+            )
         if params['is_visited'] is not None:
             queryset = queryset.filter(annotated_is_visited=params['is_visited'])
         if params['in_collection'] is not None:
@@ -386,10 +391,15 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         """
         List map pins
 
-        Every location you own with just what a map needs: name, coordinates, category and
-        whether you have visited it.
+        Every location you own or travelled to in a collection you belong to, with just what a
+        map needs: name, coordinates, category and whether you have visited it.
         """
-        locations = Location.objects.filter(user=request.user).select_related('category__user').prefetch_related('visits')
+        locations = (
+            Location.objects.filter(where_ive_been_q(request.user))
+            .distinct()
+            .select_related('category__user', 'user')
+            .prefetch_related('visits__travelers', 'collections__shared_with')
+        )
         return Response(MapPinSerializer(locations, many=True, context={'request': request}).data)
 
     @extend_schema(parameters=[LocationSuggestQuerySerializer], responses=LocationSuggestResponseSerializer)
@@ -425,7 +435,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         offset, limit = params['offset'], params['limit']
         return Response({
             'count': count,
-            'results': MapPinSerializer(locations[offset:offset + limit], many=True).data,
+            'results': MapPinSerializer(locations[offset:offset + limit], many=True, context={'request': request}).data,
             'anchored': center is not None,
         })
 

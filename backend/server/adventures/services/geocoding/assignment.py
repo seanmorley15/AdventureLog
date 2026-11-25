@@ -6,7 +6,7 @@ from adventures.models import Location
 from adventures.services.geocoding.reverse import UNAVAILABLE_MESSAGE, reverse_geocode as reverse_geocode_service
 from core.geo import has_coordinates, point_to_lat_lon
 from worldtravel.models import City, Country, Region
-from worldtravel.services import mark_cities_visited, mark_regions_visited
+from adventures.services import travelers
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ def geocode_and_assign_location(location_id: str, raise_if_unavailable: bool = F
             return
 
         latitude, longitude = point_to_lat_lon(location.coordinates)
-        is_visited = location.is_visited_status()
         selection = reverse_geocode_service(latitude, longitude, location.user)
         result = selection.data
         if raise_if_unavailable and result.get('error') == UNAVAILABLE_MESSAGE:
@@ -39,15 +38,11 @@ def geocode_and_assign_location(location_id: str, raise_if_unavailable: bool = F
             region = Region.objects.filter(id=result['region_id']).first()
             if region:
                 location.region = region
-                if is_visited:
-                    mark_regions_visited(location.user_id, [region.id])
 
         if 'city_id' in result:
             city = City.objects.filter(id=result['city_id']).first()
             if city:
                 location.city = city
-                if is_visited:
-                    mark_cities_visited(location.user_id, [city.id])
 
         if 'country_id' in result:
             country = Country.objects.filter(country_code=result['country_id']).first()
@@ -64,6 +59,7 @@ def geocode_and_assign_location(location_id: str, raise_if_unavailable: bool = F
 
         # Save updated location info, without queueing another geocode
         location.save(update_fields=fields, _skip_geocode=True)
+        travelers.mark_regions_for_travelers(location)
 
     except GeocodeUnavailable:
         raise

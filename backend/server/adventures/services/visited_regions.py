@@ -1,20 +1,29 @@
 """Marking the regions and cities of a user's visited places as visited."""
 
+from django.db.models import Q
+
 from adventures.models import Location
+from adventures.services.travelers import where_ive_been_q
 from worldtravel.models import City, Region
 from worldtravel.services import mark_cities_visited, mark_regions_visited
 
 
 def sync_visited_regions(user):
     """
-    Mark every region and city that holds one of the user's visited locations as visited.
+    Mark every region and city that holds a location the user travelled to as visited.
 
     Uses the region and city already stored on each location, so no geocoding happens.
     Returns the newly marked ones: ``{new_regions, regions: {id: name}, new_cities, cities}``.
     """
     region_ids, city_ids = set(), set()
-    for location in Location.objects.filter(user=user).select_related('region', 'city'):
-        if not location.is_visited_status():
+    locations = (
+        Location.objects.filter(where_ive_been_q(user))
+        .distinct()
+        .select_related('region', 'city')
+        .prefetch_related('visits__travelers')
+    )
+    for location in locations:
+        if not location.is_visited_status(user):
             continue
         if location.region_id:
             region_ids.add(location.region_id)

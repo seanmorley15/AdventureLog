@@ -121,7 +121,7 @@ def collection_pdf_export(job):
 
     collection = get_collection_for_pdf(job.params['collection_id'])
     options = PdfOptions.from_params(job.params.get('options'), user=job.user, collection=collection)
-    pdf = build_collection_pdf(collection, story=bool(job.params.get('story')), options=options)
+    pdf = build_collection_pdf(collection, story=bool(job.params.get('story')), options=options, viewer=job.user)
     save_result_file(job, pdf, pdf_filename_for_collection(collection), 'application/pdf')
 
 

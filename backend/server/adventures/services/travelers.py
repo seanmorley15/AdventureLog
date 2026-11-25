@@ -36,14 +36,16 @@ def perspective_user(request, location):
     The requester when they own the location, belong to a collection holding
     it, or travelled on one of its visits. Everyone else sees the owner's.
     """
-    from adventures.access.audience import is_member
-
     user = getattr(request, 'user', None)
     if user is None or not getattr(user, 'is_authenticated', False):
         return location.user
     if user.pk == location.user_id:
         return user
-    if any(is_member(user, collection) for collection in location.collections.all()):
+    # Read from the loaded collections and their members, so a list of rows does not query per row.
+    if any(
+        collection.user_id == user.pk or any(m.pk == user.pk for m in collection.shared_with.all())
+        for collection in location.collections.all()
+    ):
         return user
     if any(t.pk == user.pk for visit in location.visits.all() for t in visit.travelers.all()):
         return user
@@ -57,3 +59,24 @@ def where_ive_been_q(user):
     return Q(user=user) | (
         Q(visits__travelers=user) & (Q(collections__shared_with=user) | Q(collections__user=user))
     )
+
+
+def mark_regions_for_travelers(location):
+    """Mark the location's region and city as visited for everyone who travelled on a started visit."""
+    from django.utils import timezone
+
+    from adventures.models import Visit
+    from worldtravel.services import mark_cities_visited, mark_regions_visited
+
+    if not (location.region_id or location.city_id):
+        return
+    user_ids = set(
+        Visit.objects.filter(location_id=location.pk, start_date__lte=timezone.now())
+        .values_list('travelers', flat=True)
+    )
+    user_ids.discard(None)
+    for user_id in user_ids:
+        if location.region_id:
+            mark_regions_visited(user_id, [location.region_id])
+        if location.city_id:
+            mark_cities_visited(user_id, [location.city_id])

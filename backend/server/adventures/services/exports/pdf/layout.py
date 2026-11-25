@@ -5,7 +5,7 @@ from __future__ import annotations
 import io
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
@@ -40,6 +40,8 @@ class Ctx:
     # Page numbers found by the previous pass (anchor key -> page) and the book's length.
     refs: Dict[str, int] = field(default_factory=dict)
     total_pages: int = 0
+    # The person exporting: their own visits mark places as visited. None means each place's owner.
+    viewer: Any = None
 
     @property
     def show_visits(self) -> bool:

@@ -13,19 +13,20 @@ from .options import PdfOptions
 from .trip import build_trip_book
 
 
-def build_collection_pdf(collection: Collection, story: bool = False, options: Optional[PdfOptions] = None) -> bytes:
+def build_collection_pdf(collection: Collection, story: bool = False, options: Optional[PdfOptions] = None, viewer=None) -> bytes:
     """
     Return PDF bytes for the given collection.
 
     Members get the full plan, including prices and confirmation numbers.
     ``story=True`` is the public reader's copy and follows the story groups.
+    ``viewer`` is the person exporting: places they travelled to are marked visited.
     """
     options = options or PdfOptions.from_params(None, collection=collection)
     if story:
         apply_story_groups(collection)
     if collection.type == Collection.Type.TRIP:
         return build_trip_book(collection, options, story)
-    return build_field_guide(collection, options, story)
+    return build_field_guide(collection, options, story, viewer)
 
 
 def pdf_filename_for_collection(collection: Collection) -> str:

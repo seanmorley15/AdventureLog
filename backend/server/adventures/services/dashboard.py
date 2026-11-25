@@ -5,6 +5,7 @@ from django.db.models import Count, Q
 from adventures.models import Collection, CollectionInvite, Location
 from adventures.serializers import LocationSerializer, UltraSlimCollectionSerializer
 from adventures.services.calendar_events import get_calendar_events_for_user
+from adventures.services.travelers import visited_by, where_ive_been_q
 from adventures.services.user_stats import UserStatsService
 from adventures.utils.query_optimization import optimize_locations
 
@@ -43,7 +44,10 @@ def build_dashboard_data(user, request_user, *, events_days=30, request=None):
     end_date = today + timedelta(days=events_days)
 
     recent_locations_qs = optimize_locations(
-        Location.objects.filter(user=user).filter(visits__start_date__lte=today).distinct()
+        Location.objects.filter(where_ive_been_q(user))
+        .annotate(traveled=visited_by(user))
+        .filter(traveled=True)
+        .distinct()
     ).order_by('-updated_at')[:MAX_RECENT_LOCATIONS]
     recent_locations = LocationSerializer(
         recent_locations_qs,

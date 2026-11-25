@@ -71,7 +71,7 @@ def group_places(locations: List[Any]) -> List[Group]:
     return [Group('Places', '', CATEGORY_COLORS[0], sorted(locations, key=lambda l: (l.name or '').lower()))]
 
 
-def build_field_guide(collection: Collection, options: PdfOptions, story: bool = False) -> bytes:
+def build_field_guide(collection: Collection, options: PdfOptions, story: bool = False, viewer=None) -> bytes:
     styles = build_styles()
     media = MediaCache(enabled=options.photos)
     maps = MapRenderer()
@@ -88,7 +88,7 @@ def build_field_guide(collection: Collection, options: PdfOptions, story: bool =
 
     def make_story(refs: Dict[str, int], total: int) -> List:
         ctx = Ctx(collection=collection, options=options, story=story, styles=styles,
-                  width=width - 80, media=media, maps=maps, refs=refs, total_pages=total)
+                  width=width - 80, media=media, maps=maps, refs=refs, total_pages=total, viewer=viewer)
         out: List = []
         out.extend(_cover(ctx, groups))
         out.extend(_overview(ctx, groups, numbers))
@@ -116,7 +116,7 @@ def build_field_guide(collection: Collection, options: PdfOptions, story: bool =
 def _cover(ctx: Ctx, groups: List[Group]) -> List:
     c, s = ctx.collection, ctx.styles
     places = [loc for g in groups for loc in g.places]
-    visited = sum(1 for loc in places if visit_info(loc)[0]) if ctx.show_visits else 0
+    visited = sum(1 for loc in places if visit_info(loc, ctx.viewer)[0]) if ctx.show_visits else 0
     countries = []
     for loc in places:
         if loc.country and loc.country.name not in countries:
@@ -183,7 +183,7 @@ def _overview(ctx: Ctx, groups: List[Group], numbers: Dict[str, Tuple[int, Group
     rows = []
     for loc in places:
         number, group = numbers[str(loc.id)]
-        visited, _ = visit_info(loc)
+        visited, _ = visit_info(loc, ctx.viewer)
         page = f'<link href="#place-{loc.id}" color="#0f766e">p. {ctx.page_of(f"place-{loc.id}")}</link>'
         rows.append([
             Checkbox(10, checked=visited),
@@ -223,7 +223,7 @@ def _write_strip(ctx: Ctx, loc: Any, visited: bool, last_visit) -> Table:
 
 
 def _place_entry(ctx: Ctx, loc: Any, number: int, group: Group, lead: List) -> List:
-    visited, last_visit = visit_info(loc)
+    visited, last_visit = visit_info(loc, ctx.viewer)
     text = place_text(ctx, loc, description_max=DESCRIPTION_MAX, category=False, visits=False)
     side = side_column(ctx, 'location', loc, SIDE_WIDTH)
     badge = [Marker(str(number), group.color, 22), Spacer(1, 8), Checkbox(14, checked=visited, color=hex_color(group.color))]

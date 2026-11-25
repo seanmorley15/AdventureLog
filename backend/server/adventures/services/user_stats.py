@@ -17,13 +17,13 @@ class UserStatsService:
 
     def get_visited_locations_count(self, user):
         """
-        Places with a visit that has started, by the UTC date (the rule in
+        Places with a visit that has started and the person travelled on, by the UTC date (the rule in
         ``is_location_visited``), counted in the database.
         """
         tomorrow = timezone.now().date() + timedelta(days=1)
         cutoff = datetime.combine(tomorrow, time.min, tzinfo=dt_timezone.utc)
         return (
-            Visit.objects.filter(location__user=user, start_date__lt=cutoff)
+            Visit.objects.filter(travelers=user, start_date__lt=cutoff)
             .values('location_id')
             .distinct()
             .count()

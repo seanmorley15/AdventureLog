@@ -35,8 +35,13 @@ class VisitedPerPersonTests(AudienceTestBase):
 
     def test_perspective_member_sees_own(self):
         self._visit([self.editor])
-        request = type('R', (), {'user': self.editor})()
-        self.assertEqual(travelers.perspective_user(request, self.hut), self.editor)
+        request = type('R', (), {'user': self.viewer})()
+        self.assertEqual(travelers.perspective_user(request, self.hut), self.viewer)
+
+    def test_empty_traveler_list_counts_for_nobody(self):
+        self._visit([])
+        for user in (self.owner, self.editor, self.viewer):
+            self.assertFalse(is_location_visited(self.hut, user))
 
     def test_perspective_traveler_without_membership(self):
         self._visit([self.stranger])

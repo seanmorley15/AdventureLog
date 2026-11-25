@@ -100,7 +100,8 @@ class ExportActionsMixin:
         )
         try:
             collection = get_collection_for_pdf(collection.id)
-            pdf_bytes = build_collection_pdf(collection, story=audience.is_public_reader, options=options)
+            pdf_bytes = build_collection_pdf(collection, story=audience.is_public_reader, options=options,
+                                         viewer=request.user if request.user.is_authenticated else None)
         except Exception:
             logger.exception('Failed to generate PDF for collection %s', collection.id)
             raise APIError('The PDF could not be made. Please try again later.', code='server_error', status=500)

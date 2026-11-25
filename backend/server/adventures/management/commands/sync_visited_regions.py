@@ -14,6 +14,7 @@ Usage:
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from adventures.models import Location
+from adventures.services.travelers import where_ive_been_q
 from worldtravel.services import mark_cities_visited, mark_regions_visited
 import logging
 
@@ -143,8 +144,8 @@ class Command(BaseCommand):
         """
         # Get all visited locations with their region and city data in a single query
         visited_locations = Location.objects.filter(
-            user_id=user_id
-        ).select_related('region', 'city')
+            where_ive_been_q(user_id)
+        ).distinct().select_related('region', 'city').prefetch_related('visits__travelers')
         
         # Collect unique regions and cities from visited locations
         regions_to_mark = set()
@@ -152,7 +153,7 @@ class Command(BaseCommand):
         
         for location in visited_locations:
             # Only process locations that are marked as visited
-            if not location.is_visited_status():
+            if not location.is_visited_status(user_id):
                 continue
             
             if location.region_id:

@@ -23,7 +23,7 @@ def get_collection_for_pdf(collection_id) -> Collection:
                 'locations',
                 queryset=Location.objects.select_related(
                     'category', 'country', 'region', 'city'
-                ).prefetch_related('visits', 'images', 'trails'),
+                ).prefetch_related('visits__travelers', 'images', 'trails'),
             ),
             'transportation_set',
             'note_set',
@@ -300,11 +300,11 @@ def travelers(collection: Collection) -> List[str]:
     return names
 
 
-def visit_info(location: Location) -> Tuple[bool, Optional[date]]:
-    """Whether the place has been visited and the date of the latest visit, from the loaded visits."""
+def visit_info(location: Location, user=None) -> Tuple[bool, Optional[date]]:
+    """Whether the person (the place's owner by default) has visited the place, and the date of its latest visit, from the loaded visits."""
     if getattr(location, '_story_hide_visits', False):
         return False, None
-    visited = location.is_visited_status()
+    visited = location.is_visited_status(user)
     today = timezone.now().date()
     dates = [v.start_date.date() for v in location.visits.all() if v.start_date and v.start_date.date() <= today]
     return visited, max(dates) if dates else None

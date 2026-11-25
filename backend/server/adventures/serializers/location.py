@@ -8,6 +8,7 @@ from core.serializers import CustomModelSerializer, memoized_count
 from users.serializers import CustomUserDetailsSerializer, PublicProfileSerializer, without_private_fields
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from adventures.serializers.geo_fields import CoordinateSerializerMixin
+from adventures.services.travelers import perspective_user
 from .activity import LocationVisitSerializer, TrailSerializer
 from .common import _build_profile_pic_url
 from .media import AttachmentSerializer, MediaFieldsMixin
@@ -88,7 +89,7 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
         annotated = getattr(obj, 'annotated_is_visited', None)
         if annotated is not None:
             return bool(annotated)
-        return obj.is_visited_status()
+        return obj.is_visited_status(perspective_user(self.context.get('request'), obj))
 
     @extend_schema_field(serializers.JSONField(allow_null=True, help_text='The owner.'))
     def get_user(self, obj):
@@ -297,7 +298,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
     
     @extend_schema_field(serializers.BooleanField())
     def get_is_visited(self, obj):
-        return obj.is_visited_status()
+        return obj.is_visited_status(perspective_user(self.context.get('request'), obj))
 
     def create(self, validated_data):
         validated_data = self._pop_lat_lon(validated_data)
@@ -396,7 +397,7 @@ class MapPinSerializer(CoordinateSerializerMixin, serializers.ModelSerializer):
     
     @extend_schema_field(serializers.BooleanField())
     def get_is_visited(self, obj):
-        return obj.is_visited_status()
+        return obj.is_visited_status(perspective_user(self.context.get('request'), obj))
 
 
 # --- Requests and responses of the location endpoints ------------------------------------
