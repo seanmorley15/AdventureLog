@@ -166,11 +166,10 @@ class CreationTests(NotificationTestBase):
         self.assertEqual(note.data['visit_id'], str(visit.id))
         self.assertEqual(note.data['count'], 1)
 
-    def test_dry_run_notifies_nobody(self):
+    def test_preview_notifies_nobody(self):
         self._visit([self.owner])
         self.as_user(self.owner)
-        self.client.post(f'/api/collections/{self.trip.id}/add-travelers/?dry_run=1',
-                         {'user_uuids': [str(self.editor.uuid)]}, format='json')
+        self.client.get(f'/api/collections/{self.trip.id}/add-travelers-preview/?user_uuids={self.editor.uuid}')
         self.assertFalse(Notification.objects.exists())
 
     def test_log_day_sends_one_notification_per_person(self):

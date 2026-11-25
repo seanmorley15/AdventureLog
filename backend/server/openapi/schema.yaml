@@ -4198,8 +4198,8 @@ paths:
       operationId: collections_destroy
       description: Owner only. Deletes the collection; records in it that belong to
         you stay. People who travelled to a place in it and can no longer reach it
-        get their own copy with their visits. With `?dry_run=1` it changes nothing
-        and returns who that would be and what would go with it.
+        get their own copy with their visits. `GET /api/collections/{id}/deletion-preview/`
+        says who that would be and what would go with it.
       summary: Delete a collection
       parameters:
       - in: header
@@ -4209,11 +4209,6 @@ paths:
         description: The `ETag` of the version this change is based on, or `*`. When
           the record has changed since, nothing is changed and the answer is `412
           precondition_failed`. Leave it out to change the record regardless.
-      - in: query
-        name: dry_run
-        schema:
-          type: boolean
-        description: Only say what would happen; change nothing.
       - in: path
         name: id
         schema:
@@ -4229,12 +4224,6 @@ paths:
       - SessionTokenAuth: []
       - cookieAuth: []
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CollectionDeletePreview'
-          description: ''
         '204':
           description: Deleted.
         '401':
@@ -4270,14 +4259,9 @@ paths:
         Owner and editors. For a trip logged before someone joined. Adds the people to the visits
         the trip logged and, when the trip has both a start and an end date, to visits to its locations that started on
         those days (inclusive). Visits on other days are never touched. Returns how many visits
-        gained someone and at what locations; with `?dry_run=1` it only counts.
+        gained someone and at what locations. `GET …/add-travelers-preview/` counts them first.
       summary: Add people to this trip's visits
       parameters:
-      - in: query
-        name: dry_run
-        schema:
-          type: boolean
-        description: Only count; change nothing.
       - in: path
         name: id
         schema:
@@ -4312,7 +4296,12 @@ paths:
                 $ref: '#/components/schemas/AddedTravelers'
           description: ''
         '400':
-          description: Someone is not the owner or a member of this collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`traveler_not_allowed`: someone is not the owner or a member
+            of this collection.'
         '401':
           content:
             application/json:
@@ -4332,6 +4321,78 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/collections/{id}/add-travelers-preview/:
+    get:
+      operationId: collections_add_travelers_preview
+      description: |-
+        What `POST …/add-travelers/` would do with the same people, changing nothing: how many
+        visits would gain someone, at how many locations. Repeat `user_uuids` for each person
+        (`?user_uuids=…&user_uuids=…`). Owner and editors.
+      summary: Preview adding people to this trip's visits
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      - in: query
+        name: user_uuids
+        schema:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 100
+        description: The people to add. Each must be the owner or a member of the
+          collection.
+        required: true
+      tags:
+      - Sharing
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddedTravelers'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`traveler_not_allowed`: someone is not the owner or a member.'
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/collections/{id}/archive/:
     get:
       operationId: collections_archive
@@ -4441,6 +4502,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/collections/{id}/deletion-preview/:
+    get:
+      operationId: collections_deletion_preview
+      description: |-
+        What `DELETE /api/collections/{id}/` would do, changing nothing: who would get their own
+        copy of which places, and what would go with the original places. Owner only.
+      summary: Preview deleting a collection
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      tags:
+      - Collections
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionDeletePreview'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/collections/{id}/duplicate/:
     post:
       operationId: collections_duplicate
@@ -4867,15 +4982,10 @@ paths:
         at places you still reach through another collection. You are taken off every visit at the
         other locations in it; with `keep_copies` (the default) each of those you travelled to is
         first copied to your account, under its own name, with your visits.
-        A visit you were the only traveler on is deleted, with what others added to it. With
-        `?dry_run=1` it returns how many locations and such uploads that is and changes nothing.
+        A visit you were the only traveler on is deleted, with what others added to it.
+        `GET …/leave-preview/` says how many locations and such uploads that is.
       summary: Leave a collection
       parameters:
-      - in: query
-        name: dry_run
-        schema:
-          type: boolean
-        description: Only count; change nothing.
       - in: path
         name: id
         schema:
@@ -4902,12 +5012,6 @@ paths:
       - SessionTokenAuth: []
       - cookieAuth: []
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LeavePreview'
-          description: ''
         '204':
           description: Done. No body.
         '400':
@@ -4936,6 +5040,61 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/collections/{id}/leave-preview/:
+    get:
+      operationId: collections_leave_preview
+      description: |-
+        What `POST …/leave/` would do, changing nothing: how many locations it takes from you
+        (each copied when you keep copies) and how many photos, files and activities other people
+        added to visits you are the only traveler on, which go with those visits. Members only.
+      summary: Preview leaving a collection
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      tags:
+      - Sharing
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeavePreview'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/collections/{id}/make-locations-private/:
     post:
       operationId: collections_make_locations_private
@@ -5083,8 +5242,8 @@ paths:
         owner and stay. They keep their history: each location in it they travelled
         to, do not own and reach through no other collection is copied to their account
         with their visits, and they are taken off the original visits. A visit they
-        were the only traveler on is deleted, with what others added to it. With `?dry_run=1`
-        it returns what removing them would do and changes nothing.'
+        were the only traveler on is deleted, with what others added to it. `GET …/members/{user_uuid}/removal-preview/`
+        says what that would be.'
       summary: Remove a member
       parameters:
       - in: header
@@ -5094,11 +5253,6 @@ paths:
         description: The `ETag` of the version this change is based on, or `*`. When
           the record has changed since, nothing is changed and the answer is `412
           precondition_failed`. Leave it out to change the record regardless.
-      - in: query
-        name: dry_run
-        schema:
-          type: boolean
-        description: Only count; change nothing.
       - in: path
         name: id
         schema:
@@ -5121,12 +5275,6 @@ paths:
       - SessionTokenAuth: []
       - cookieAuth: []
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LeavePreview'
-          description: ''
         '204':
           description: Done. No body.
         '401':
@@ -5155,6 +5303,67 @@ paths:
                 $ref: '#/components/schemas/PreconditionFailed'
           description: The record changed since the `If-Match` version (`precondition_failed`).
             `current` is the record now.
+  /api/collections/{id}/members/{user_uuid}/removal-preview/:
+    get:
+      operationId: collections_removal_preview
+      description: |-
+        What `DELETE …/members/{user_uuid}/` would do, changing nothing: the same counts as
+        leaving, for them (removal always keeps copies). Owner only.
+      summary: Preview removing a member
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this collection.
+        required: true
+      - in: path
+        name: user_uuid
+        schema:
+          type: string
+          format: uuid
+        description: The user's `uuid`.
+        required: true
+      tags:
+      - Sharing
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeavePreview'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/collections/{id}/pdf/:
     get:
       operationId: collections_pdf
@@ -8295,8 +8504,8 @@ paths:
         says how many. Only the collection owner, the place owner, or the person who
         added the place (while an editor) may call it. People who travelled to the
         place and can no longer reach it through another collection come off its visits
-        and get their own copy with their visits. With `?dry_run=1` it changes nothing
-        and returns who that would be (`people_released`) and what would go with it.
+        and get their own copy with their visits. `GET …/collections/{collection_id}/unlink-preview/`
+        says who that would be.
       summary: Remove the location from a collection
       parameters:
       - in: header
@@ -8312,11 +8521,6 @@ paths:
           type: string
         description: The collection id.
         required: true
-      - in: query
-        name: dry_run
-        schema:
-          type: boolean
-        description: Only say what would happen; change nothing.
       - in: path
         name: id
         schema:
@@ -8332,12 +8536,8 @@ paths:
       - SessionTokenAuth: []
       - cookieAuth: []
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CollectionUnlinkResult'
-          description: ''
+        '204':
+          description: No response body
         '401':
           content:
             application/json:
@@ -8364,6 +8564,67 @@ paths:
                 $ref: '#/components/schemas/PreconditionFailed'
           description: The record changed since the `If-Match` version (`precondition_failed`).
             `current` is the record now.
+  /api/locations/{id}/collections/{collection_id}/unlink-preview/:
+    get:
+      operationId: locations_unlink_preview
+      description: |-
+        What `DELETE /api/locations/{id}/collections/{collection_id}/` would do, changing nothing:
+        who would get their own copy (`people_released`), the visits and uploads that would go with
+        the original, and the plan placements removed. The same people may ask as may remove it.
+      summary: Preview removing the location from a collection
+      parameters:
+      - in: path
+        name: collection_id
+        schema:
+          type: string
+        description: The collection id.
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this location.
+        required: true
+      tags:
+      - Locations
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlinkPreview'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The resource does not exist, or you cannot see it (`not_found`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/locations/{id}/duplicate/:
     post:
       operationId: locations_duplicate
@@ -14802,10 +15063,6 @@ components:
       description: |-
         * `folder` - Folder
         * `trip` - Trip
-    CollectionUnlinkResult:
-      oneOf:
-      - $ref: '#/components/schemas/CollectionLinkResult'
-      - $ref: '#/components/schemas/UnlinkPreview'
     CollectionVisibilityEnum:
       enum:
       - private

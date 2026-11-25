@@ -1135,7 +1135,7 @@ export interface paths {
         post?: never;
         /**
          * Delete a collection
-         * @description Owner only. Deletes the collection; records in it that belong to you stay. People who travelled to a place in it and can no longer reach it get their own copy with their visits. With `?dry_run=1` it changes nothing and returns who that would be and what would go with it.
+         * @description Owner only. Deletes the collection; records in it that belong to you stay. People who travelled to a place in it and can no longer reach it get their own copy with their visits. `GET /api/collections/{id}/deletion-preview/` says who that would be and what would go with it.
          */
         delete: operations["collections_destroy"];
         options?: never;
@@ -1161,9 +1161,31 @@ export interface paths {
          * @description Owner and editors. For a trip logged before someone joined. Adds the people to the visits
          *     the trip logged and, when the trip has both a start and an end date, to visits to its locations that started on
          *     those days (inclusive). Visits on other days are never touched. Returns how many visits
-         *     gained someone and at what locations; with `?dry_run=1` it only counts.
+         *     gained someone and at what locations. `GET …/add-travelers-preview/` counts them first.
          */
         post: operations["collections_add_travelers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/collections/{id}/add-travelers-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview adding people to this trip's visits
+         * @description What `POST …/add-travelers/` would do with the same people, changing nothing: how many
+         *     visits would gain someone, at how many locations. Repeat `user_uuids` for each person
+         *     (`?user_uuids=…&user_uuids=…`). Owner and editors.
+         */
+        get: operations["collections_add_travelers_preview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1196,6 +1218,27 @@ export interface paths {
          *     `GET /api/jobs/{id}/` and download the file from its `download_url`.
          */
         post: operations["collections_archive_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/collections/{id}/deletion-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview deleting a collection
+         * @description What `DELETE /api/collections/{id}/` would do, changing nothing: who would get their own
+         *     copy of which places, and what would go with the original places. Owner only.
+         */
+        get: operations["collections_deletion_preview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1356,10 +1399,32 @@ export interface paths {
          *     at places you still reach through another collection. You are taken off every visit at the
          *     other locations in it; with `keep_copies` (the default) each of those you travelled to is
          *     first copied to your account, under its own name, with your visits.
-         *     A visit you were the only traveler on is deleted, with what others added to it. With
-         *     `?dry_run=1` it returns how many locations and such uploads that is and changes nothing.
+         *     A visit you were the only traveler on is deleted, with what others added to it.
+         *     `GET …/leave-preview/` says how many locations and such uploads that is.
          */
         post: operations["collections_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/collections/{id}/leave-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview leaving a collection
+         * @description What `POST …/leave/` would do, changing nothing: how many locations it takes from you
+         *     (each copied when you keep copies) and how many photos, files and activities other people
+         *     added to visits you are the only traveler on, which go with those visits. Members only.
+         */
+        get: operations["collections_leave_preview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1399,7 +1464,7 @@ export interface paths {
         post?: never;
         /**
          * Remove a member
-         * @description Owner only. Places they created in the collection belong to the owner and stay. They keep their history: each location in it they travelled to, do not own and reach through no other collection is copied to their account with their visits, and they are taken off the original visits. A visit they were the only traveler on is deleted, with what others added to it. With `?dry_run=1` it returns what removing them would do and changes nothing.
+         * @description Owner only. Places they created in the collection belong to the owner and stay. They keep their history: each location in it they travelled to, do not own and reach through no other collection is copied to their account with their visits, and they are taken off the original visits. A visit they were the only traveler on is deleted, with what others added to it. `GET …/members/{user_uuid}/removal-preview/` says what that would be.
          */
         delete: operations["collections_member_delete"];
         options?: never;
@@ -1409,6 +1474,27 @@ export interface paths {
          * @description Owner only. Also changes the role of an invite that has not been answered yet.
          */
         patch: operations["collections_member_patch"];
+        trace?: never;
+    };
+    "/api/collections/{id}/members/{user_uuid}/removal-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview removing a member
+         * @description What `DELETE …/members/{user_uuid}/` would do, changing nothing: the same counts as
+         *     leaving, for them (removal always keeps copies). Owner only.
+         */
+        get: operations["collections_removal_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/collections/{id}/pdf/": {
@@ -2447,9 +2533,31 @@ export interface paths {
         post: operations["locations_collection_membership_post"];
         /**
          * Remove the location from a collection
-         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner, the place owner, or the person who added the place (while an editor) may call it. People who travelled to the place and can no longer reach it through another collection come off its visits and get their own copy with their visits. With `?dry_run=1` it changes nothing and returns who that would be (`people_released`) and what would go with it.
+         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner, the place owner, or the person who added the place (while an editor) may call it. People who travelled to the place and can no longer reach it through another collection come off its visits and get their own copy with their visits. `GET …/collections/{collection_id}/unlink-preview/` says who that would be.
          */
         delete: operations["locations_collection_membership_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/locations/{id}/collections/{collection_id}/unlink-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview removing the location from a collection
+         * @description What `DELETE /api/locations/{id}/collections/{collection_id}/` would do, changing nothing:
+         *     who would get their own copy (`people_released`), the visits and uploads that would go with
+         *     the original, and the plan placements removed. The same people may ask as may remove it.
+         */
+        get: operations["locations_unlink_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4774,7 +4882,6 @@ export interface components {
          * @enum {string}
          */
         CollectionTypeEnum: "folder" | "trip";
-        CollectionUnlinkResult: components["schemas"]["CollectionLinkResult"] | components["schemas"]["UnlinkPreview"];
         /**
          * @description * `private` - Private
          *     * `signed_in` - Everyone signed in
@@ -12412,10 +12519,7 @@ export interface operations {
     };
     collections_destroy: {
         parameters: {
-            query?: {
-                /** @description Only say what would happen; change nothing. */
-                dry_run?: boolean;
-            };
+            query?: never;
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -12428,14 +12532,6 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CollectionDeletePreview"];
-                };
-            };
             /** @description Deleted. */
             204: {
                 headers: {
@@ -12559,10 +12655,7 @@ export interface operations {
     };
     collections_add_travelers: {
         parameters: {
-            query?: {
-                /** @description Only count; change nothing. */
-                dry_run?: boolean;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description A UUID string identifying this collection. */
@@ -12586,12 +12679,14 @@ export interface operations {
                     "application/json": components["schemas"]["AddedTravelers"];
                 };
             };
-            /** @description Someone is not the owner or a member of this collection. */
+            /** @description `traveler_not_allowed`: someone is not the owner or a member of this collection. */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
             401: {
@@ -12613,6 +12708,76 @@ export interface operations {
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    collections_add_travelers_preview: {
+        parameters: {
+            query: {
+                /** @description The people to add. Each must be the owner or a member of the collection. */
+                user_uuids: string[];
+            };
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddedTravelers"];
+                };
+            };
+            /** @description `traveler_not_allowed`: someone is not the owner or a member. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12722,6 +12887,64 @@ export interface operations {
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    collections_deletion_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionDeletePreview"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13158,10 +13381,7 @@ export interface operations {
     };
     collections_leave: {
         parameters: {
-            query?: {
-                /** @description Only count; change nothing. */
-                dry_run?: boolean;
-            };
+            query?: never;
             header?: never;
             path: {
                 /** @description A UUID string identifying this collection. */
@@ -13177,14 +13397,6 @@ export interface operations {
             };
         };
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LeavePreview"];
-                };
-            };
             /** @description Done. No body. */
             204: {
                 headers: {
@@ -13221,6 +13433,64 @@ export interface operations {
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    collections_leave_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeavePreview"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -13290,10 +13560,7 @@ export interface operations {
     };
     collections_member_delete: {
         parameters: {
-            query?: {
-                /** @description Only count; change nothing. */
-                dry_run?: boolean;
-            };
+            query?: never;
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -13308,14 +13575,6 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LeavePreview"];
-                };
-            };
             /** @description Done. No body. */
             204: {
                 headers: {
@@ -13435,6 +13694,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
+        };
+    };
+    collections_removal_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+                /** @description The user's `uuid`. */
+                user_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeavePreview"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };
@@ -16795,10 +17114,7 @@ export interface operations {
     };
     locations_collection_membership_delete: {
         parameters: {
-            query?: {
-                /** @description Only say what would happen; change nothing. */
-                dry_run?: boolean;
-            };
+            query?: never;
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -16813,13 +17129,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
+            /** @description No response body */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["CollectionUnlinkResult"];
-                };
+                content?: never;
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
             401: {
@@ -16855,6 +17170,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
+        };
+    };
+    locations_unlink_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The collection id. */
+                collection_id: string;
+                /** @description A UUID string identifying this location. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnlinkPreview"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

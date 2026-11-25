@@ -7,7 +7,7 @@ from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import (
-    OpenApiParameter, OpenApiResponse, PolymorphicProxySerializer, extend_schema, extend_schema_view,
+    OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view,
 )
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -51,9 +51,9 @@ from adventures.services.locations.copy import copy_location, shared_file_names
 from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.media_quota import ensure_room_for_names
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
-from adventures.services.travelers import candidates, lost_access_plan, release_preview, take_my_visits, visited_by, where_ive_been_q
+from adventures.services.travelers import candidates, lost_access_plan, release_summary, take_my_visits, visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
-from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
+from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle, SharingPreviewThrottle
 from adventures.utils.language import resolve_request_language
 from adventures.utils.query_optimization import optimize_locations
 from adventures.views.mixins import PaginatedResponseMixin
@@ -62,7 +62,7 @@ from core import pagination
 from core.errors import ServiceError
 from core.exceptions import APIError
 from core.geo import point_to_lat_lon
-from core.parsing import as_uuid, is_dry_run
+from core.parsing import as_uuid
 from core.serializers import validated
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
@@ -79,6 +79,9 @@ OWNER_ONLY_LOCATION_FIELDS = (
 ASPECT_PARAMETER = OpenApiParameter(
     'aspect', str, OpenApiParameter.PATH, enum=['square', 'story', 'landscape'],
     description='`square` (1080×1080), `story` (1080×1920) or `landscape` (1200×630).',
+)
+COLLECTION_ID_PARAMETER = OpenApiParameter(
+    'collection_id', str, OpenApiParameter.PATH, description='The collection id.',
 )
 PNG_RESPONSE = {(200, 'image/png'): OpenApiResponse(response=bytes, description='A PNG image.')}
 
@@ -557,32 +560,23 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         methods=['POST'], request=None, responses=CollectionLinkResultSerializer,
         summary='Add the location to a collection',
         description='Idempotent. The place owner must own the collection or be a member of it.',
-        parameters=[OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.')],
+        parameters=[COLLECTION_ID_PARAMETER],
     )
     @extend_schema(
-        methods=['DELETE'], request=None, responses={200: PolymorphicProxySerializer(
-            component_name='CollectionUnlinkResult',
-            serializers=[CollectionLinkResultSerializer, UnlinkPreviewSerializer],
-            resource_type_field_name=None,
-        )},
+        methods=['DELETE'], request=None,
+        responses=CollectionLinkResultSerializer,
         summary='Remove the location from a collection',
         description='Idempotent. Also removes its placements from the day plan, and says how many. '
-                    'Only the collection owner, the place owner, or the person who added the place (while an editor) may call it. People who travelled to the '
-                    'place and can no longer reach it through another collection come off its visits and '
-                    'get their own copy with their visits. With `?dry_run=1` it changes nothing and '
-                    'returns who that would be (`people_released`) and what would go with it.',
-        parameters=[
-            OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.'),
-            OpenApiParameter('dry_run', bool, description='Only say what would happen; change nothing.'),
-        ],
+                    'Only the collection owner, the place owner, or the person who added the place (while an '
+                    'editor) may call it. People who travelled to the place and can no longer reach it through '
+                    'another collection come off its visits and get their own copy with their visits. '
+                    '`GET …/collections/{collection_id}/unlink-preview/` says who that would be.',
+        parameters=[COLLECTION_ID_PARAMETER],
     )
     @action(detail=True, methods=['post', 'delete'], url_path=r'collections/(?P<collection_id>[^/.]+)')
     def collection_membership(self, request, pk=None, collection_id=None):
         location = self.get_object()
-        collection = Collection.objects.filter(pk=collection_id).filter(readable_collections_q(request)).first() \
-            if as_uuid(collection_id) else None
-        if collection is None:
-            raise NotFound('Collection not found.')
+        collection = self._readable_collection(request, collection_id)
 
         if request.method == 'POST':
             if not can_edit(request, collection):
@@ -592,26 +586,50 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
             link_location(location, collection)
             return Response({'linked': True})
 
+        self._check_may_unlink(request, location, collection)
+        removed = unlink_location(location, collection)
+        return Response({'linked': False, 'removed_placements': removed})
+
+    @extend_schema(responses=UnlinkPreviewSerializer, parameters=[COLLECTION_ID_PARAMETER])
+    @action(
+        detail=True, methods=['get'], url_path=r'collections/(?P<collection_id>[^/.]+)/unlink-preview',
+        throttle_classes=[SharingPreviewThrottle],
+    )
+    def unlink_preview(self, request, pk=None, collection_id=None):
+        """
+        Preview removing the location from a collection
+
+        What `DELETE /api/locations/{id}/collections/{collection_id}/` would do, changing nothing:
+        who would get their own copy (`people_released`), the visits and uploads that would go with
+        the original, and the plan placements removed. The same people may ask as may remove it.
+        """
+        if not request.user.is_authenticated:
+            raise NotFound('Location not found.')
+        location = self.get_object()
+        collection = self._readable_collection(request, collection_id)
+        self._check_may_unlink(request, location, collection)
+        summary = release_summary(lost_access_plan([location], ignoring=[collection]), request.user)
+        summary['removed_placements'] = len(placements_for(location, collection))
+        return Response(UnlinkPreviewSerializer(summary, context={'request': request}).data)
+
+    # ==================== HELPERS ====================
+
+    @staticmethod
+    def _readable_collection(request, collection_id):
+        """The collection ``collection_id`` names, when the requester can read it; 404 otherwise."""
+        collection = Collection.objects.filter(pk=collection_id).filter(readable_collections_q(request)).first() \
+            if as_uuid(collection_id) else None
+        if collection is None:
+            raise NotFound('Collection not found.')
+        return collection
+
+    def _check_may_unlink(self, request, location, collection):
         if not self._may_unlink(request, location, collection):
             raise PermissionDenied(
                 'Only the collection owner, the place owner, or the person who added it can remove a place '
                 'from a collection. '
                 'You can remove it from the plan instead.'
             )
-        if is_dry_run(request):
-            plan = lost_access_plan([location], ignoring=[collection])
-            preview = release_preview(plan)
-            return Response(UnlinkPreviewSerializer({
-                'people_released': preview['people'],
-                'includes_you': any(user.pk == request.user.pk for user in preview['people']),
-                'visits_deleted': preview['visits_deleted'],
-                'others_uploads': preview['others_uploads'],
-                'removed_placements': len(placements_for(location, collection)),
-            }, context={'request': request}).data)
-        removed = unlink_location(location, collection)
-        return Response({'linked': False, 'removed_placements': removed})
-
-    # ==================== HELPERS ====================
 
     @staticmethod
     def _may_unlink(request, location, collection):

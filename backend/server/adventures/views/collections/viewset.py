@@ -47,10 +47,10 @@ from adventures.serializers.collection_detail import (
 from django.contrib.auth import get_user_model
 from core import pagination
 from core.exceptions import APIError
-from core.parsing import is_dry_run
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 from core.serializers import validated
 from adventures.services import day_plan, travelers
+from adventures.throttling import SharingPreviewThrottle
 from adventures.serializers.sharing import CollectionDeletePreviewSerializer
 
 User = get_user_model()
@@ -74,10 +74,9 @@ from .sharing import SharingActionsMixin
     partial_update=extend_schema(description='Owner only. Like PUT, for the fields you send.'),
     destroy=extend_schema(
         description='Owner only. Deletes the collection; records in it that belong to you stay. People who travelled '
-        'to a place in it and can no longer reach it get their own copy with their visits. With `?dry_run=1` '
-        'it changes nothing and returns who that would be and what would go with it.',
-        parameters=[OpenApiParameter('dry_run', bool, description='Only say what would happen; change nothing.')],
-        responses={200: CollectionDeletePreviewSerializer, 204: OpenApiResponse(description='Deleted.')},
+        'to a place in it and can no longer reach it get their own copy with their visits. '
+        '`GET /api/collections/{id}/deletion-preview/` says who that would be and what would go with it.',
+        responses={204: OpenApiResponse(description='Deleted.')},
     ),
 )
 class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMixin, ExportActionsMixin, PaginatedResponseMixin, viewsets.ModelViewSet):
@@ -95,18 +94,18 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
     permission_classes = [CollectionShared]
     pagination_class = pagination.StandardResultsSetPagination
 
-    def destroy(self, request, *args, **kwargs):
+    @extend_schema(responses=CollectionDeletePreviewSerializer)
+    @action(detail=True, methods=['get'], url_path='deletion-preview', throttle_classes=[SharingPreviewThrottle])
+    def deletion_preview(self, request, pk=None):
+        """
+        Preview deleting a collection
+
+        What `DELETE /api/collections/{id}/` would do, changing nothing: who would get their own
+        copy of which places, and what would go with the original places. Owner only.
+        """
         collection = self.get_object()
-        if is_dry_run(request):
-            preview = travelers.release_preview(travelers.collections_release_plan([collection]))
-            return Response(CollectionDeletePreviewSerializer({
-                'people_released': preview['people'],
-                'includes_you': any(user.pk == request.user.pk for user in preview['people']),
-                'visits_deleted': preview['visits_deleted'],
-                'others_uploads': preview['others_uploads'],
-                'places': preview['places'],
-            }, context={'request': request}).data)
-        return super().destroy(request, *args, **kwargs)
+        summary = travelers.release_summary(travelers.collections_release_plan([collection]), request.user)
+        return Response(CollectionDeletePreviewSerializer(summary, context={'request': request}).data)
 
     def get_permissions(self):
         # Listing is about your own collections. The other actions also serve guest links.
@@ -168,11 +167,11 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
 
     def get_base_queryset(self):
         """Base queryset logic extracted for reuse"""
-        if self.action == 'destroy':
+        if self.action in ('destroy', 'deletion_preview'):
             queryset = Collection.objects.filter(user=self.request.user.id)
         elif self.action in ['update', 'partial_update']:
             queryset = Collection.objects.filter(user=self.request.user.id)
-        elif self.action == 'leave':
+        elif self.action in ('leave', 'leave_preview'):
             queryset = Collection.objects.filter(
                 Q(user=self.request.user.id) | Q(shared_with=self.request.user)
             ).distinct()

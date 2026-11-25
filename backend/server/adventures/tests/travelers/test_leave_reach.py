@@ -30,13 +30,13 @@ class LeaveKeepsPlacesStillReachedTests(AudienceTestBase):
 
     def test_leaving_one_trip_keeps_visits_at_a_place_another_trip_still_holds(self):
         self.as_user(self.editor)
-        preview = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', format='json')
+        preview = self.client.get(f'/api/collections/{self.trip.id}/leave-preview/')
         self.assertEqual(preview.json(), {'locations': 0, 'others_uploads': 0})
         response = self.client.post(f'/api/collections/{self.trip.id}/leave/', {'keep_copies': True}, format='json')
         self.assertEqual(response.status_code, 204)
         self._untouched()
         # Leaving the second trip too now takes the place.
-        preview = self.client.post(f'/api/collections/{self.weekend.id}/leave/?dry_run=1', format='json')
+        preview = self.client.get(f'/api/collections/{self.weekend.id}/leave-preview/')
         self.assertEqual(preview.json()['locations'], 1)
         self.client.post(f'/api/collections/{self.weekend.id}/leave/', {'keep_copies': True}, format='json')
         self.assertEqual(Location.objects.filter(user=self.editor, name='Hut').count(), 1)
@@ -45,7 +45,7 @@ class LeaveKeepsPlacesStillReachedTests(AudienceTestBase):
     def test_owner_removal_keeps_visits_at_a_place_another_trip_still_holds(self):
         self.as_user(self.owner)
         url = f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/'
-        self.assertEqual(self.client.delete(f'{url}?dry_run=1').json(), {'locations': 0, 'others_uploads': 0})
+        self.assertEqual(self.client.get(f'{url}removal-preview/').json(), {'locations': 0, 'others_uploads': 0})
         self.assertEqual(self.client.delete(url).status_code, 204)
         self._untouched()
 

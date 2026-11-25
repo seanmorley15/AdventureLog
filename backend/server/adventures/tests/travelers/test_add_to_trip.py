@@ -9,12 +9,17 @@ def at(y, m, d, hour=12):
 
 
 class AddToTripTests(AudienceTestBase):
-    def _url(self, dry_run=False):
-        return f'/api/collections/{self.trip.id}/add-travelers/' + ('?dry_run=1' if dry_run else '')
+    def _url(self):
+        return f'/api/collections/{self.trip.id}/add-travelers/'
 
-    def _post(self, user, who, dry_run=False):
+    def _post(self, user, who):
         self.as_user(user)
-        return self.client.post(self._url(dry_run), {'user_uuids': [str(u.uuid) for u in who]}, format='json')
+        return self.client.post(self._url(), {'user_uuids': [str(u.uuid) for u in who]}, format='json')
+
+    def _preview(self, user, who):
+        self.as_user(user)
+        query = '&'.join(f'user_uuids={u.uuid}' for u in who)
+        return self.client.get(f'/api/collections/{self.trip.id}/add-travelers-preview/?{query}')
 
     def _travelers(self, visit):
         return set(visit.travelers.values_list('username', flat=True))
@@ -58,12 +63,28 @@ class AddToTripTests(AudienceTestBase):
         self.assertEqual(self._travelers(logged), {'owner', 'editor'})
         self.assertEqual(self._travelers(unlogged), {'owner'})
 
-    def test_dry_run_changes_nothing(self):
+    def test_preview_changes_nothing(self):
         visit = self._visit(self.hut, at(2026, 6, 2), [self.owner])
-        response = self._post(self.owner, [self.editor], dry_run=True)
+        response = self._preview(self.owner, [self.editor])
+        self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), {'visits': 1, 'locations': 1})
         self.assertEqual(self._travelers(visit), {'owner'})
         self.assertFalse(CollectionActivity.objects.filter(verb=CollectionActivity.Verb.TRAVELERS_ADDED).exists())
+
+    def test_preview_counts_several_people_and_follows_the_same_rules(self):
+        self._visit(self.hut, at(2026, 6, 2), [self.owner, self.editor])
+        self.assertEqual(self._preview(self.owner, [self.editor]).json(), {'visits': 0, 'locations': 0})
+        self.assertEqual(self._preview(self.editor, [self.editor, self.viewer]).json(), {'visits': 1, 'locations': 1})
+        self.assertEqual(self._preview(self.viewer, [self.viewer]).status_code, 403)
+        self.assertEqual(self._preview(self.stranger, [self.stranger]).status_code, 404)
+        refused = self._preview(self.owner, [self.stranger])
+        self.assertEqual((refused.status_code, refused.json()['code']), (400, 'traveler_not_allowed'))
+
+    def test_preview_needs_someone(self):
+        self.as_user(self.owner)
+        response = self.client.get(f'/api/collections/{self.trip.id}/add-travelers-preview/')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('user_uuids', response.json()['fields'])
 
     def test_viewer_forbidden(self):
         self.assertEqual(self._post(self.viewer, [self.viewer]).status_code, 403)
@@ -96,6 +117,9 @@ class AddToTripTests(AudienceTestBase):
 class AddTravelersBadIdTests(AudienceTestBase):
     def test_malformed_collection_id_is_404(self):
         self.as_user(self.owner)
-        for path in ('add-travelers/', 'leave/', 'leave/?dry_run=1'):
+        for path in ('add-travelers/', 'leave/'):
             response = self.client.post(f'/api/collections/not-a-uuid/{path}', {}, format='json')
+            self.assertEqual(response.status_code, 404, (path, response.content))
+        for path in ('add-travelers-preview/', 'leave-preview/'):
+            response = self.client.get(f'/api/collections/not-a-uuid/{path}')
             self.assertEqual(response.status_code, 404, (path, response.content))

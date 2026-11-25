@@ -106,7 +106,7 @@ class LeaveKeepsHistoryTests(AudienceTestBase):
             collection=self.trip, verb=CollectionActivity.Verb.MEMBER_REMOVED,
         ).exists())
 
-    def test_leave_dry_run_count(self):
+    def test_leave_preview_count(self):
         lake = Location.objects.create(user=self.owner, name='Lake')
         lake.collections.add(self.trip)
         Visit.objects.create(location=lake, start_date=_past(2)).travelers.set([self.editor])
@@ -115,7 +115,7 @@ class LeaveKeepsHistoryTests(AudienceTestBase):
         Visit.objects.create(location=quay, start_date=_past(2)).travelers.set([self.owner])
 
         self.as_user(self.editor)
-        response = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', {}, format='json')
+        response = self.client.get(f'/api/collections/{self.trip.id}/leave-preview/')
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), {'locations': 2, 'others_uploads': 0})
         self.assertTrue(self.trip.shared_with.filter(pk=self.editor.pk).exists())
@@ -422,7 +422,7 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
             Visit.objects.count(), Location.objects.count(), self.trip.shared_with.count(),
         )
 
-    def test_dry_run_counts_others_uploads_on_visits_that_would_go(self):
+    def test_preview_counts_others_uploads_on_visits_that_would_go(self):
         alone = self._visit([self.editor])
         self._photo(self.editor, alone, name='mine.png')
         self._photo(self.owner, alone, name='theirs.png')
@@ -436,27 +436,27 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
         before = self._rows()
 
         self.as_user(self.editor)
-        response = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', {}, format='json')
+        response = self.client.get(f'/api/collections/{self.trip.id}/leave-preview/')
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 4})
         self.assertEqual(self._rows(), before)
 
-    def test_dry_run_with_only_own_uploads(self):
+    def test_preview_with_only_own_uploads(self):
         alone = self._visit([self.editor])
         self._photo(self.editor, alone)
         self._activity(self.editor, alone)
 
         self.as_user(self.editor)
-        response = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', {}, format='json')
+        response = self.client.get(f'/api/collections/{self.trip.id}/leave-preview/')
         self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 0})
 
-    def test_member_delete_dry_run_previews(self):
+    def test_member_removal_preview(self):
         alone = self._visit([self.editor])
         self._photo(self.owner, alone)
         before = self._rows()
 
         self.as_user(self.owner)
-        response = self.client.delete(f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/?dry_run=1')
+        response = self.client.get(f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/removal-preview/')
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 1})
         self.assertEqual(self._rows(), before)

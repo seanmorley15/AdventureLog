@@ -352,28 +352,43 @@ def trip_visits(collection):
     return Visit.objects.filter(belongs).distinct()
 
 
-def add_to_trip(collection, users, dry_run=False, actor=None):
+def _trip_gains(collection, users):
     """
-    Add ``users`` to the trip's visits (see ``trip_visits``). Each must be the owner or a member
-    of the trip, or ``traveler_not_allowed`` is raised and nothing changes.
-
-    Returns ``{'visits': n, 'locations': n}``: the visits that gained someone and their distinct
-    locations. A visit that already has all of them counts for nothing. A dry run only counts.
-    Otherwise a ``CollectionActivity`` is recorded when anything changed. It holds counts only
-    (``people``, ``visits``, ``locations``), never names: editor guest links read the feed.
+    The visits of the trip (``trip_visits``) that would gain someone in ``users``, and the
+    ``{'visits': n, 'locations': n}`` count of them. Each of ``users`` must be the owner or a
+    member of the trip, or ``traveler_not_allowed`` is raised.
     """
-    from django.db import transaction
-
-    wanted = {user.pk: user for user in users}
+    wanted = {user.pk for user in users}
     allowed = {collection.user_id, *collection.shared_with.values_list('pk', flat=True)}
     if any(pk not in allowed for pk in wanted):
         raise TravelerError('Everyone must be the owner or a member of this collection.', code='traveler_not_allowed')
 
     visits = list(trip_visits(collection).select_related('location').prefetch_related('travelers'))
-    gaining = [v for v in visits if not wanted.keys() <= {t.pk for t in v.travelers.all()}]
-    result = {'visits': len(gaining), 'locations': len({v.location_id for v in gaining})}
-    if dry_run or not gaining:
+    gaining = [v for v in visits if not wanted <= {t.pk for t in v.travelers.all()}]
+    return gaining, {'visits': len(gaining), 'locations': len({v.location_id for v in gaining})}
+
+
+def add_to_trip_preview(collection, users):
+    """What ``add_to_trip`` would do, changing nothing: ``{'visits': n, 'locations': n}``."""
+    return _trip_gains(collection, users)[1]
+
+
+def add_to_trip(collection, users, actor=None):
+    """
+    Add ``users`` to the trip's visits (see ``trip_visits``). Each must be the owner or a member
+    of the trip, or ``traveler_not_allowed`` is raised and nothing changes.
+
+    Returns ``{'visits': n, 'locations': n}``: the visits that gained someone and their distinct
+    locations. A visit that already has all of them counts for nothing. A ``CollectionActivity``
+    is recorded when anything changed. It holds counts only (``people``, ``visits``,
+    ``locations``), never names: editor guest links read the feed.
+    """
+    from django.db import transaction
+
+    gaining, result = _trip_gains(collection, users)
+    if not gaining:
         return result
+    wanted = {user.pk: user for user in users}
     with transaction.atomic(), notifications.batch(actor, collection):
         for visit in gaining:
             add_travelers(visit, wanted.values(), actor, collection)
@@ -642,6 +657,22 @@ def release_preview(plan):
         'places': places,
         'visits_deleted': visits_deleted,
         'others_uploads': others_uploads,
+    }
+
+
+def release_summary(plan, viewer):
+    """
+    ``release_preview`` as the unlink and collection-deletion previews answer it: the people
+    released (``people_released``), whether ``viewer`` is one of them (``includes_you``), and
+    ``visits_deleted``, ``others_uploads`` and ``places``.
+    """
+    preview = release_preview(plan)
+    return {
+        'people_released': preview['people'],
+        'includes_you': any(user.pk == viewer.pk for user in preview['people']),
+        'visits_deleted': preview['visits_deleted'],
+        'others_uploads': preview['others_uploads'],
+        'places': preview['places'],
     }
 
 

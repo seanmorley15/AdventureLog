@@ -50,7 +50,7 @@ Paths and their non-standard names come from `main/api_urls.py`, `adventures/url
 | GET    | Read.                                                                                                                                                                |
 | POST   | Create (`201` with the resource), or a named state change at `POST …/{verb}/`: `duplicate`, `join`, `leave`, `add-travelers`, `invitation/accept`, `log-visit`, `mark-read`, `reorder`, `sync`, `connect`. |
 | PATCH  | Partial update. PUT only on model viewsets.                                                                                                                          |
-| DELETE | Remove (`204`, no body). Never `POST …/delete/` or `…/revoke/`. Day-plan deletes answer `200` with the new plan, so the planner can redraw. A few deletes take `?dry_run=1` and answer `200` with a preview (see [Previews](#previews)). |
+| DELETE | Remove (`204`, no body). Never `POST …/delete/` or `…/revoke/`. Day-plan deletes answer `200` with the new plan, so the planner can redraw. |
 
 | Status          | When                                                                                                                          |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -255,7 +255,7 @@ Visits say who was there. A visit has `travelers` (people: `uuid`, `username`, n
 | `POST /api/visits/{id}/leave/`                                      | Removes you. 200 with the visit; 204 when nobody was left, so the visit was deleted, or when you can no longer read its location (a traveler who lost access can leave, but not read). Not being a traveler is a 200 and changes nothing.                                                                                                    |
 | `DELETE /api/visits/{id}/`                                          | A traveler: removes you (the visit goes with you when you were the last traveler). The location owner: `?for_everyone=1` deletes it for everyone (from anyone else that is 403, not a plain remove-me); a plain DELETE deletes a visit nobody travelled on, and is 409 `visit_has_travelers` on one others travelled on. Anyone else not on the visit: 403 `not_a_traveler`. A viewer's DELETE is 403 too (viewers use `leave`). 204 on success. |
 | `POST …/itinerary-items/{id}/log-visit/`, `…/days/{day}/log-visit/` | `traveler_uuids` names who was there: leave it out to log for yourself only, or list people (you may leave yourself off to log for someone else). An empty list or someone who is not a collaborator is a `400`. A stop already logged adds them to its visit (200).                                                        |
-| `POST /api/collections/{id}/add-travelers/` `{user_uuids}`          | Owner and editors. Adds people to the visits the trip logged and, when it has both a start and an end date, to visits to its locations on those days. Returns `{visits, locations}`; `?dry_run=1` only counts. Records a `travelers_added` activity.              |
+| `POST /api/collections/{id}/add-travelers/` `{user_uuids}`          | Owner and editors. Adds people to the visits the trip logged and, when it has both a start and an end date, to visits to its locations on those days. Returns `{visits, locations}`; `GET …/add-travelers-preview/` counts first. Records a `travelers_added` activity. |
 | `POST /api/collections/{id}/leave/` `{keep_copies}`                 | Members. Takes you off every visit at locations in the trip that you do not own and reach through no other collection you own or belong to (the rule unlinking uses). `keep_copies` (default `true`) first copies each of those into your account, with your visits and the photos, files and activities you added. |
 | `DELETE /api/collections/{id}/members/{uuid}/`                      | Owner. The same places as leaving; always copies, as `keep_copies` does. Making your profile private leaves every shared trip at once, each place judged against all of them.                                                                                                                                                                                               |
 | `POST /api/locations/{id}/duplicate/` `{take_my_visits}`            | With `take_my_visits`, the copy keeps the original name, your visits move onto it and you are taken off the original's. Without it the copy counts toward your media storage limit: photo files you don't already hold are counted once, and over the limit it is `413 media_quota_exceeded` with nothing created. `take_my_visits` and the copies made by leaving, removal, unlinking, collection or account deletion and going private are never refused; they count toward your usage from then on. |
@@ -267,9 +267,9 @@ is left as it is. So does saving a location with its `visits` list (see
 Account backups carry only the visits to locations you own, and travelers are not exported. On restore every visit
 gets the location's owner (you) as its only traveler.
 
-Both leave endpoints and the member `DELETE` take `?dry_run=1`, which changes nothing and returns
-`{locations, others_uploads}`: how many locations would be taken, and how many photos, files and activities other
-people added to visits you are the only traveler on.
+`GET /api/collections/{id}/leave-preview/` and `GET /api/collections/{id}/members/{uuid}/removal-preview/` change
+nothing and return `{locations, others_uploads}`: how many locations would be taken, and how many photos, files and
+activities other people added to visits the member is the only traveler on (see [Previews](#previews)).
 
 A visit whose only traveler leaves is deleted, together with everything other people added to it (their photos,
 files and activities). That is true whether or not copies are kept; `others_uploads` is how to warn about it first.
@@ -297,20 +297,26 @@ not count what is left out.
 
 ### Previews
 
-Each of these changes nothing and returns what the matching action would do, so a client can say so first.
+An action that takes things away from people has a read-only `GET …-preview/` next to it. It changes nothing,
+answers what the action would do with the same input, and is allowed for exactly the people the action is (others
+get the same `403`/`404`). A client asks it before the confirm dialog. The actions themselves take no preview flag.
 `people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
 
-| Endpoint                                                  | Returns                                                                                                                                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `DELETE /api/locations/{id}/collections/{cid}/?dry_run=1` | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. Same permission as the real call: the collection owner or the place owner. |
-| `DELETE /api/collections/{id}/?dry_run=1`                 | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                                   |
-| `GET /api/account/deletion-preview/`                      | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.                          |
-| `GET /api/account/privacy-preview/`                       | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`: what `profile_visibility: private` would do.                |
+| Preview                                                          | Previews                                         | Returns                                                                                                                                     |
+| ---------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/locations/{id}/collections/{cid}/unlink-preview/`      | `DELETE /api/locations/{id}/collections/{cid}/`  | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. The collection owner, the place owner, or who added it while an editor. |
+| `GET /api/collections/{id}/deletion-preview/`                    | `DELETE /api/collections/{id}/`                  | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                  |
+| `GET /api/collections/{id}/leave-preview/`                       | `POST /api/collections/{id}/leave/`              | `{locations, others_uploads}`. Members.                                                                                                     |
+| `GET /api/collections/{id}/members/{uuid}/removal-preview/`      | `DELETE /api/collections/{id}/members/{uuid}/`   | `{locations, others_uploads}` for that member. Owner only.                                                                                  |
+| `GET /api/collections/{id}/add-travelers-preview/?user_uuids=…`  | `POST /api/collections/{id}/add-travelers/`      | `{visits, locations}`. Repeat `user_uuids` per person. Owner and editors.                                                                   |
+| `GET /api/account/deletion-preview/`                             | `DELETE /api/account/`                           | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.        |
+| `GET /api/account/privacy-preview/`                              | `PATCH /api/account/` with `profile_visibility: private` | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`.                                     |
 
 `PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
 
-The two account previews walk every shared trip, so when rate limits are on they have their own limit
-(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute per user); the rest of `/api/account/` has none.
+When rate limits are on, previews have their own per-user limits: the two account previews walk every shared trip
+(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute; the rest of `/api/account/` has none), and the collection and location
+previews walk the places and visits involved (`RATE_LIMIT_SHARING_PREVIEW`, 60 a minute).
 
 Lists of people are bounded: `traveler_uuids` and `user_uuids` take at most 100, `POST /api/notifications/mark-read/`
 at most 1000 `ids`. More is a `400`.

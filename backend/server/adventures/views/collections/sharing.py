@@ -30,19 +30,15 @@ from adventures.serializers.sharing import (
     SharingStateSerializer,
 )
 from core.exceptions import APIError
-from core.parsing import as_uuid, is_dry_run
+from core.openapi import ErrorSerializer
+from adventures.throttling import SharingPreviewThrottle
+from core.parsing import as_uuid
 from core.serializers import validated
 from django.contrib.auth import get_user_model
 from core.visibility import public_access_allowed, shareable_profiles_q
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
-
-
-_DRY_RUN = OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')
-
-
-_is_dry_run = is_dry_run
 
 
 def _sharing_state(collection, request):
@@ -107,6 +103,10 @@ def _sharing_state(collection, request):
 USER_PARAMETER = OpenApiParameter('user_uuid', OpenApiTypes.UUID, OpenApiParameter.PATH, description='The user\'s `uuid`.')
 LINK_PARAMETER = OpenApiParameter('link_id', OpenApiTypes.UUID, OpenApiParameter.PATH, description='The guest link id.')
 _DELETED = OpenApiResponse(description='Done. No body.')
+_ADDED_TRAVELERS = inline_serializer(
+    'AddedTravelers',
+    {'visits': serializers.IntegerField(), 'locations': serializers.IntegerField()},
+)
 
 
 class SharingActionsMixin:
@@ -295,16 +295,15 @@ class SharingActionsMixin:
         description='Owner only. Also changes the role of an invite that has not been answered yet.',
     )
     @extend_schema(
-        methods=['DELETE'], tags=['Sharing'], parameters=[USER_PARAMETER, _DRY_RUN], request=None,
-        responses={200: LeavePreviewSerializer, 204: _DELETED},
+        methods=['DELETE'], tags=['Sharing'], parameters=[USER_PARAMETER], request=None,
+        responses={204: _DELETED},
         summary='Remove a member',
         description=(
             'Owner only. Places they created in the collection belong to the owner and stay. They keep '
             'their history: each location in it they travelled to, do not own and reach through no other '
             'collection is copied to their account with their visits, and they are taken off the original '
-            'visits. A visit they were '
-            'the only traveler on is deleted, with what others added to it. With `?dry_run=1` it '
-            'returns what removing them would do and changes nothing.'
+            'visits. A visit they were the only traveler on is deleted, with what others added to it. '
+            '`GET …/members/{user_uuid}/removal-preview/` says what that would be.'
         ),
     )
     @action(detail=True, methods=['patch', 'delete'], url_path=r'members/(?P<user_uuid>[^/.]+)')
@@ -316,8 +315,6 @@ class SharingActionsMixin:
         if request.method == 'DELETE':
             if user is None:
                 raise NotFound('That person is not a member of this collection.')
-            if _is_dry_run(request):
-                return Response(travelers.leave_preview(collection, user))
             with transaction.atomic():
                 # They never chose to go, so they always keep copies of where they travelled.
                 travelers.release_member(collection, user, keep_copies=True)
@@ -338,11 +335,21 @@ class SharingActionsMixin:
             CollectionMember.objects.update_or_create(collection=collection, user=user, defaults={'role': role})
         return self._sharing_response(collection, request)
 
+    def _member_leaving(self, request, pk):
+        """The collection ``request.user`` is a member (not the owner) of, as leaving needs it."""
+        if not request.user.is_authenticated:
+            raise NotFound('Collection not found.')
+        collection = self.get_object()
+        if request.user == collection.user:
+            raise APIError('The owner cannot leave their own collection.', code='invalid')
+        if not collection.shared_with.filter(id=request.user.id).exists():
+            raise APIError('You are not a member of this collection.', code='invalid')
+        return collection
+
     @extend_schema(
         tags=['Sharing'],
-        parameters=[_DRY_RUN],
         request=LeaveCollectionSerializer,
-        responses={200: LeavePreviewSerializer, 204: _DELETED},
+        responses={204: _DELETED},
     )
     @action(detail=True, methods=['post'], url_path='leave')
     def leave(self, request, pk=None):
@@ -353,17 +360,11 @@ class SharingActionsMixin:
         at places you still reach through another collection. You are taken off every visit at the
         other locations in it; with `keep_copies` (the default) each of those you travelled to is
         first copied to your account, under its own name, with your visits.
-        A visit you were the only traveler on is deleted, with what others added to it. With
-        `?dry_run=1` it returns how many locations and such uploads that is and changes nothing.
+        A visit you were the only traveler on is deleted, with what others added to it.
+        `GET …/leave-preview/` says how many locations and such uploads that is.
         """
-        collection = self.get_object()
-        if request.user == collection.user:
-            raise APIError('The owner cannot leave their own collection.', code='invalid')
-        if not collection.shared_with.filter(id=request.user.id).exists():
-            raise APIError('You are not a member of this collection.', code='invalid')
+        collection = self._member_leaving(request, pk)
         keep_copies = validated(LeaveCollectionSerializer, request.data)['keep_copies']
-        if _is_dry_run(request):
-            return Response(travelers.leave_preview(collection, request.user))
         with transaction.atomic():
             travelers.release_member(collection, request.user, keep_copies)
             collection.shared_with.remove(request.user)
@@ -375,16 +376,26 @@ class SharingActionsMixin:
 
     # -- Travelers -----------------------------------------------------------------------
 
+    @staticmethod
+    def _editable_trip(request, pk):
+        """The collection, for its owner and editors. 404 for anyone who is not a member."""
+        collection_id = as_uuid(pk)
+        collection = Collection.objects.filter(pk=collection_id).first() if collection_id else None
+        if collection is None or not request.user.is_authenticated or not is_member(request.user, collection):
+            raise NotFound('Collection not found.')
+        if not can_edit(request.user, collection):
+            raise PermissionDenied('You do not have permission to change this collection.')
+        return collection
+
     @extend_schema(
         tags=['Sharing'],
-        parameters=[OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')],
         request=AddTravelersSerializer,
         responses={
-            200: inline_serializer(
-                'AddedTravelers',
-                {'visits': serializers.IntegerField(), 'locations': serializers.IntegerField()},
+            200: _ADDED_TRAVELERS,
+            400: OpenApiResponse(
+                response=ErrorSerializer,
+                description='`traveler_not_allowed`: someone is not the owner or a member of this collection.',
             ),
-            400: OpenApiResponse(description='Someone is not the owner or a member of this collection.'),
         },
     )
     @action(detail=True, methods=['post'], url_path='add-travelers')
@@ -395,17 +406,70 @@ class SharingActionsMixin:
         Owner and editors. For a trip logged before someone joined. Adds the people to the visits
         the trip logged and, when the trip has both a start and an end date, to visits to its locations that started on
         those days (inclusive). Visits on other days are never touched. Returns how many visits
-        gained someone and at what locations; with `?dry_run=1` it only counts.
+        gained someone and at what locations. `GET …/add-travelers-preview/` counts them first.
         """
-        collection_id = as_uuid(pk)
-        collection = Collection.objects.filter(pk=collection_id).first() if collection_id else None
-        if collection is None or not request.user.is_authenticated or not is_member(request.user, collection):
-            raise NotFound('Collection not found.')
-        if not can_edit(request.user, collection):
-            raise PermissionDenied('You do not have permission to change this collection.')
+        collection = self._editable_trip(request, pk)
         users = validated(AddTravelersSerializer, request.data)['user_uuids']
-        dry_run = is_dry_run(request)
-        return Response(travelers.add_to_trip(collection, users, dry_run=dry_run, actor=request))
+        return Response(travelers.add_to_trip(collection, users, actor=request))
+
+    # -- Previews ------------------------------------------------------------------------
+
+    @extend_schema(tags=['Sharing'], responses=LeavePreviewSerializer)
+    @action(detail=True, methods=['get'], url_path='leave-preview', throttle_classes=[SharingPreviewThrottle])
+    def leave_preview(self, request, pk=None):
+        """
+        Preview leaving a collection
+
+        What `POST …/leave/` would do, changing nothing: how many locations it takes from you
+        (each copied when you keep copies) and how many photos, files and activities other people
+        added to visits you are the only traveler on, which go with those visits. Members only.
+        """
+        collection = self._member_leaving(request, pk)
+        return Response(LeavePreviewSerializer(travelers.leave_preview(collection, request.user)).data)
+
+    @extend_schema(tags=['Sharing'], parameters=[USER_PARAMETER], responses=LeavePreviewSerializer)
+    @action(
+        detail=True, methods=['get'], url_path=r'members/(?P<user_uuid>[^/.]+)/removal-preview',
+        throttle_classes=[SharingPreviewThrottle],
+    )
+    def removal_preview(self, request, pk=None, user_uuid=None):
+        """
+        Preview removing a member
+
+        What `DELETE …/members/{user_uuid}/` would do, changing nothing: the same counts as
+        leaving, for them (removal always keeps copies). Owner only.
+        """
+        collection = self._owned_collection(request, pk)
+        user_uuid = as_uuid(user_uuid)
+        user = collection.shared_with.filter(uuid=user_uuid).first() if user_uuid else None
+        if user is None:
+            raise NotFound('That person is not a member of this collection.')
+        return Response(LeavePreviewSerializer(travelers.leave_preview(collection, user)).data)
+
+    @extend_schema(
+        tags=['Sharing'],
+        parameters=[AddTravelersSerializer],
+        responses={
+            200: _ADDED_TRAVELERS,
+            400: OpenApiResponse(
+                response=ErrorSerializer, description='`traveler_not_allowed`: someone is not the owner or a member.',
+            ),
+        },
+    )
+    @action(
+        detail=True, methods=['get'], url_path='add-travelers-preview', throttle_classes=[SharingPreviewThrottle],
+    )
+    def add_travelers_preview(self, request, pk=None):
+        """
+        Preview adding people to this trip's visits
+
+        What `POST …/add-travelers/` would do with the same people, changing nothing: how many
+        visits would gain someone, at how many locations. Repeat `user_uuids` for each person
+        (`?user_uuids=…&user_uuids=…`). Owner and editors.
+        """
+        collection = self._editable_trip(request, pk)
+        users = validated(AddTravelersSerializer, request.query_params)['user_uuids']
+        return Response(travelers.add_to_trip_preview(collection, users))
 
     # -- Guest links ---------------------------------------------------------------------
 

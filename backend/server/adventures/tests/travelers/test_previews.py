@@ -1,8 +1,9 @@
-"""Dry runs that say who would get a copy, and what would go, before a place or a collection goes."""
+"""The GET previews that say who would get a copy, and what would go, before a place or a collection goes."""
 import shutil
 import tempfile
 from datetime import datetime, timezone as dt_timezone
 
+from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.test import override_settings
 
@@ -44,7 +45,7 @@ class UnlinkPreviewTests(PreviewBase):
     def _preview(self, user=None, location=None, collection=None):
         self.as_user(user or self.owner)
         location = location or self.hut
-        return self.client.delete(f'/api/locations/{location.id}/collections/{(collection or self.trip).id}/?dry_run=1')
+        return self.client.get(f'/api/locations/{location.id}/collections/{(collection or self.trip).id}/unlink-preview/')
 
     def test_lists_who_would_get_a_copy_and_changes_nothing(self):
         before = self._state()
@@ -89,6 +90,19 @@ class UnlinkPreviewTests(PreviewBase):
         self.assertEqual(self._preview(user=self.editor).status_code, 403)
         self.assertEqual(self._preview(user=self.viewer).status_code, 403)
 
+    def test_strangers_and_anonymous_get_nothing(self):
+        self.assertEqual(self._preview(user=self.stranger).status_code, 404)
+        self.hut.is_public = True
+        self.hut.save()
+        self.as_anonymous()
+        response = self.client.get(f'/api/locations/{self.hut.id}/collections/{self.trip.id}/unlink-preview/')
+        self.assertIn(response.status_code, (401, 403, 404))
+        self.assertNotIn('people_released', response.json())
+
+    def test_a_collection_you_cannot_read_is_404(self):
+        theirs = Collection.objects.create(user=self.stranger, name='Theirs')
+        self.assertEqual(self._preview(collection=theirs).status_code, 404)
+
     def test_the_real_delete_keeps_its_shape(self):
         self.as_user(self.owner)
         response = self.client.delete(f'/api/locations/{self.hut.id}/collections/{self.trip.id}/')
@@ -98,7 +112,7 @@ class UnlinkPreviewTests(PreviewBase):
 class CollectionDeletePreviewTests(PreviewBase):
     def _preview(self, user=None):
         self.as_user(user or self.owner)
-        return self.client.delete(f'/api/collections/{self.trip.id}/?dry_run=1')
+        return self.client.get(f'/api/collections/{self.trip.id}/deletion-preview/')
 
     def test_aggregates_over_its_places_and_changes_nothing(self):
         lake = Location.objects.create(user=self.owner, name='Lake')
@@ -122,8 +136,31 @@ class CollectionDeletePreviewTests(PreviewBase):
         self.assertEqual((body['people_released'], body['places']), ([], 0))
 
     def test_only_the_owner_may_ask(self):
-        self.assertIn(self._preview(user=self.editor).status_code, (403, 404))
+        # As for the real DELETE, the collection is not found for anyone but its owner.
+        for user in (self.editor, self.viewer, self.stranger):
+            self.assertEqual(self._preview(user=user).status_code, 404, user.username)
+            self.assertEqual(self.client.delete(f'/api/collections/{self.trip.id}/').status_code, 404)
+        self.as_anonymous()
+        self.assertIn(self.client.get(f'/api/collections/{self.trip.id}/deletion-preview/').status_code, (401, 403, 404))
         self.assertTrue(Collection.objects.filter(pk=self.trip.pk).exists())
+
+    def test_a_guest_link_cannot_ask(self):
+        from adventures.models import CollectionGuestLink
+
+        link = CollectionGuestLink.objects.create(collection=self.trip, role='editor')
+        self.as_anonymous()
+        trip = f'/api/collections/{self.trip.id}'
+        self.assertEqual(self.client.get(f'{trip}/', HTTP_X_GUEST_TOKEN=link.token).status_code, 200)
+        response = self.client.get(f'{trip}/deletion-preview/', HTTP_X_GUEST_TOKEN=link.token)
+        self.assertIn(response.status_code, (401, 403, 404))
+        for path in ('leave-preview/', f'members/{self.editor.uuid}/removal-preview/',
+                     f'add-travelers-preview/?user_uuids={self.editor.uuid}'):
+            response = self.client.get(f'{trip}/{path}', HTTP_X_GUEST_TOKEN=link.token)
+            self.assertIn(response.status_code, (401, 403, 404), path)
+
+    def test_an_archived_collection_can_be_previewed(self):
+        Collection.objects.filter(pk=self.trip.pk).update(is_archived=True)
+        self.assertEqual(self._preview().status_code, 200)
 
     def test_the_real_delete_still_deletes(self):
         self.as_user(self.owner)
@@ -181,35 +218,34 @@ class AccountPreviewTests(PreviewBase):
         self.assertEqual((body['left_shared_collections'], body['kept_copies']), (1, 1))
 
 
-class DryRunFlagTests(PreviewBase):
-    YES = ['1', 'true', 'True', 'yes', 'on', 't', 'y', '']
-    NO = ['0', 'false', 'no', 'off']
+class SharingPreviewThrottleTests(PreviewBase):
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        self.addCleanup(cache.clear)
 
-    def _unlink(self, value):
-        self.as_user(self.owner)
-        query = 'dry_run' if value == '' else f'dry_run={value}'
-        return self.client.delete(f'/api/locations/{self.hut.id}/collections/{self.trip.id}/?{query}')
+    def _previews(self):
+        trip = f'/api/collections/{self.trip.id}'
+        return [
+            (self.owner, f'/api/locations/{self.hut.id}/collections/{self.trip.id}/unlink-preview/'),
+            (self.owner, f'{trip}/deletion-preview/'),
+            (self.owner, f'{trip}/members/{self.editor.uuid}/removal-preview/'),
+            (self.owner, f'{trip}/add-travelers-preview/?user_uuids={self.editor.uuid}'),
+            (self.editor, f'{trip}/leave-preview/'),
+        ]
 
-    def _delete(self, value):
-        self.as_user(self.owner)
-        query = 'dry_run' if value == '' else f'dry_run={value}'
-        return self.client.delete(f'/api/collections/{self.trip.id}/?{query}')
+    @override_settings(ENABLE_RATE_LIMITS=True, RATE_LIMIT_RATES={'sharing_preview': '2/minute', 'user': '1000/minute'})
+    def test_each_preview_is_rate_limited(self):
+        for user, url in self._previews():
+            with self.subTest(url=url):
+                cache.clear()
+                self.as_user(user)
+                self.assertEqual([self.client.get(url).status_code for _ in range(3)], [200, 200, 429])
 
-    def test_anything_but_an_explicit_false_is_a_dry_run(self):
-        before = self._state()
-        for value in self.YES:
-            with self.subTest(value=value):
-                self.assertIn('people_released', self._unlink(value).json())
-                self.assertIn('people_released', self._delete(value).json())
-                self.assertEqual(self._state(), before)
-
-    def test_an_explicit_false_does_the_real_thing(self):
-        for value in self.NO:
-            with self.subTest(value=value):
-                self.assertEqual(self._unlink(value).json().get('linked'), False)
-                self.hut.collections.add(self.trip)
-        self.assertEqual(self._delete('false').status_code, 204)
-        self.assertFalse(Collection.objects.filter(pk=self.trip.pk).exists())
+    def test_no_limit_unless_rate_limits_are_on(self):
+        for user, url in self._previews():
+            self.as_user(user)
+            self.assertEqual({self.client.get(url).status_code for _ in range(4)}, {200}, url)
 
 
 class PreviewMatchesRealOutcomeTests(PreviewBase):
@@ -234,17 +270,46 @@ class PreviewMatchesRealOutcomeTests(PreviewBase):
     def test_unlink(self):
         self.as_user(self.owner)
         url = f'/api/locations/{self.hut.id}/collections/{self.trip.id}/'
-        preview = self.client.delete(url + '?dry_run=1').json()
+        preview = self.client.get(url + 'unlink-preview/').json()
         self.client.delete(url)
         self._assert_matches(preview, ['editor'])
 
     def test_collection_delete(self):
         self.as_user(self.owner)
         url = f'/api/collections/{self.trip.id}/'
-        preview = self.client.delete(url + '?dry_run=1').json()
+        preview = self.client.get(url + 'deletion-preview/').json()
         self.assertEqual(self.client.delete(url).status_code, 204)
         self._assert_matches(preview, ['editor'])
         self.assertEqual(preview['places'], 1)
+
+    def _assert_leave_matches(self, preview):
+        self.assertEqual(preview, {'locations': 1, 'others_uploads': 1})
+        self.assertFalse(Visit.objects.filter(pk=self.alone.pk).exists())
+        self.assertEqual(ContentImage.objects.count(), self.images - preview['others_uploads'])
+        self.assertEqual(Location.objects.filter(user=self.editor, name='Hut').count(), preview['locations'])
+
+    def test_leave(self):
+        self.as_user(self.editor)
+        url = f'/api/collections/{self.trip.id}/'
+        preview = self.client.get(url + 'leave-preview/').json()
+        self.assertEqual(self.client.post(url + 'leave/', {'keep_copies': True}, format='json').status_code, 204)
+        self._assert_leave_matches(preview)
+
+    def test_member_removal(self):
+        self.as_user(self.owner)
+        url = f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/'
+        preview = self.client.get(url + 'removal-preview/').json()
+        self.assertEqual(self.client.delete(url).status_code, 204)
+        self._assert_leave_matches(preview)
+
+    def test_add_travelers(self):
+        self.as_user(self.owner)
+        url = f'/api/collections/{self.trip.id}/'
+        Visit.objects.create(location=self.hut, start_date=_past(3)).travelers.set([self.owner])
+        preview = self.client.get(url + f'add-travelers-preview/?user_uuids={self.viewer.uuid}').json()
+        body = self.client.post(url + 'add-travelers/', {'user_uuids': [str(self.viewer.uuid)]}, format='json').json()
+        self.assertEqual(preview, body)
+        self.assertEqual(Visit.objects.filter(travelers=self.viewer).count(), preview['visits'])
 
     def test_account_deletion(self):
         from users.services.account_deletion import delete_user_account
