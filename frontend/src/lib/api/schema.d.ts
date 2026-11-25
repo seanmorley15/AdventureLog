@@ -957,7 +957,7 @@ export interface paths {
         /**
          * Log a stop as visited
          * @description Creates one visit to the location for this stop's day, or returns the one it already
-         *     logged.
+         *     logged. You and the people you name are its travelers; on an existing visit they are added.
          */
         post: operations["itinerary_items_log_visit"];
         delete?: never;
@@ -1102,6 +1102,29 @@ export interface paths {
          * @description Owner only. Like PUT, for the fields you send.
          */
         patch: operations["collections_partial_update"];
+        trace?: never;
+    };
+    "/api/collections/{id}/add-travelers/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add people to this trip's visits
+         * @description Owner and editors. For a trip logged before someone joined. Adds the people to the visits
+         *     the trip logged and, when the trip has dates, to visits to its locations that started on
+         *     those days (inclusive). Visits on other days are never touched. Returns how many visits
+         *     gained someone and at what locations; with `?dry_run=1` it only counts.
+         */
+        post: operations["collections_add_travelers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/collections/{id}/archive/": {
@@ -1286,7 +1309,11 @@ export interface paths {
         put?: never;
         /**
          * Leave a collection
-         * @description For members. Places you own that are in it stay yours and stay linked.
+         * @description For members. Places you own that are in it stay yours and stay linked. You are taken off
+         *     every visit at the other locations in it; with `keep_copies` (the default) each of those
+         *     you travelled to is first copied to your account, under its own name, with your visits.
+         *     A visit you were the only traveler on is deleted, with what others added to it. With
+         *     `?dry_run=1` it returns how many locations and such uploads that is and changes nothing.
          */
         post: operations["collections_leave"];
         delete?: never;
@@ -1328,7 +1355,7 @@ export interface paths {
         post?: never;
         /**
          * Remove a member
-         * @description Owner only. Places they created in the collection belong to the owner and stay.
+         * @description Owner only. Places they created in the collection belong to the owner and stay. They keep their history: each location in it they travelled to but do not own is copied to their account with their visits, and they are taken off the original visits. A visit they were the only traveler on is deleted, with what others added to it. With `?dry_run=1` it returns what removing them would do and changes nothing.
          */
         delete: operations["collections_member_delete"];
         options?: never;
@@ -2289,9 +2316,10 @@ export interface paths {
         };
         /**
          * List your locations
-         * @description The places you own, a page at a time, in a light form (no trails, files or GPS
-         *     tracks). Filter by category, visited status and whether they are in a collection.
-         *     Places in collections shared with you are listed with the collection.
+         * @description The places you own and the ones you travelled to in a collection you belong to, a page
+         *     at a time, in a light form (no trails, files or GPS tracks). Filter by category,
+         *     visited status and whether they are in a collection. A place counts as visited when you
+         *     were a traveler on a visit that has started.
          */
         get: operations["locations_list"];
         put?: never;
@@ -2395,7 +2423,9 @@ export interface paths {
         /**
          * Copy a location
          * @description Copies a place you can see into your own account, with its photos, files and trails
-         *     but not its visits. Optionally puts the copy in a collection.
+         *     but not its visits. Optionally puts the copy in a collection. With `take_my_visits`, for
+         *     a location you travelled to but don't own (say, before leaving its trip), the copy keeps
+         *     the original name, your visits move onto it, and you are taken off the original's visits.
          */
         post: operations["locations_duplicate"];
         delete?: never;
@@ -2445,6 +2475,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/locations/{id}/traveler-candidates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List who can be a traveler
+         * @description The location's owner and the owner and members of each collection holding it: the
+         *     people a visit here can name as travelers.
+         */
+        get: operations["locations_traveler_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/check-duplicates/": {
         parameters: {
             query?: never;
@@ -2475,8 +2526,8 @@ export interface paths {
         };
         /**
          * List map pins
-         * @description Every location you own with just what a map needs: name, coordinates, category and
-         *     whether you have visited it.
+         * @description Every location you own or travelled to in a collection you belong to, with just what a
+         *     map needs: name, coordinates, category and whether you have visited it.
          */
         get: operations["locations_pins"];
         put?: never;
@@ -3347,9 +3398,7 @@ export interface paths {
         post?: never;
         /**
          * Delete a visit
-         * @description Visits: the dates you were at a location, with notes and a time zone.
-         *
-         *     Owners and editors of a collection the location is in can add and change its visits.
+         * @description Removes you from the visit. The visit is deleted when you were its last traveler, or with `for_everyone` by the location owner. Answers 204 either way.
          */
         delete: operations["visits_destroy"];
         options?: never;
@@ -3359,6 +3408,47 @@ export interface paths {
          * @description The location of a visit cannot be changed.
          */
         patch: operations["visits_partial_update"];
+        trace?: never;
+    };
+    "/api/visits/{id}/join/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join a visit
+         * @description Adds you as a traveler. Any member of a collection holding the location may join,
+         *     viewers included. People who cannot see the visit get a 404.
+         */
+        post: operations["visits_join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/visits/{id}/leave/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Leave a visit
+         * @description Removes you as a traveler. When nobody is left the visit is deleted.
+         */
+        post: operations["visits_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/auth/browser/v1/config": {
@@ -3958,6 +4048,14 @@ export interface components {
             end_lng?: number | null;
             external_service_id?: string | null;
             source_attribution?: string | null;
+        };
+        AddTravelersRequest: {
+            /** @description The people to add. Each must be the owner or a member of the collection. */
+            user_uuids: string[];
+        };
+        AddedTravelers: {
+            visits: number;
+            locations: number;
         };
         /** @description A model serializer that shows the owning ``user`` by uuid. */
         Attachment: {
@@ -5421,6 +5519,19 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        LeaveCollectionRequest: {
+            /**
+             * @description Keep your own copies of the locations you visited on this trip, with your visits.
+             * @default true
+             */
+            keep_copies: boolean;
+        };
+        LeavePreview: {
+            /** @description Locations in the collection the member travelled to but does not own: copied when kept. */
+            locations: number;
+            /** @description Photos, attachments and activities other people added to visits the member is the only traveler on. Those visits are deleted, so these go too. */
+            others_uploads: number;
+        };
         /** @description The ``images`` and ``attachments`` fields of records that carry photos and files. */
         Location: {
             /** Format: uuid */
@@ -5484,6 +5595,11 @@ export interface components {
              * @description Put the copy in this collection (you must be able to edit it).
              */
             collection?: string | null;
+            /**
+             * @description Move your visits to the copy, which keeps the original name, and take you off the original's visits. Not for a location you own.
+             * @default false
+             */
+            take_my_visits: boolean;
         };
         /**
          * @description Lightweight serializer for location list endpoints (e.g. /filtered/).
@@ -5603,6 +5719,8 @@ export interface components {
             readonly activities: components["schemas"]["Activity"][];
             /** Format: uuid */
             readonly location: string;
+            /** @description Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled. */
+            readonly travelers: components["schemas"]["Traveler"][];
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -5767,6 +5885,8 @@ export interface components {
              * @description Needed when the trip has no dates.
              */
             date?: string | null;
+            /** @description Others who came along. You are always included. Each must be the owner or a member of the trip. */
+            traveler_uuids?: string[];
         };
         MadeLocationsPrivate: {
             updated: number;
@@ -6233,6 +6353,8 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             location?: string;
+            /** @description Replace the travelers. Each must be the owner or a member of a collection holding the location. A new visit defaults to you. */
+            traveler_uuids?: string[];
         };
         PatchedWandererIntegrationRequest: {
             server_url?: string;
@@ -7706,6 +7828,23 @@ export interface components {
          * @enum {string}
          */
         TransportationTypeEnum: "car" | "motorcycle" | "plane" | "train" | "bus" | "boat" | "bike" | "walking" | "other";
+        /** @description A person who travelled on a visit, or who could be named as one. */
+        Traveler: {
+            /** Format: uuid */
+            uuid: string;
+            username: string;
+            first_name: string;
+            last_name: string;
+            readonly profile_pic: string | null;
+        };
+        /** @description A person who travelled on a visit, or who could be named as one. */
+        TravelerRequest: {
+            /** Format: uuid */
+            uuid: string;
+            username: string;
+            first_name: string;
+            last_name: string;
+        };
         /**
          * @description * `upcoming` - upcoming
          *     * `in_progress` - in_progress
@@ -7810,6 +7949,8 @@ export interface components {
             readonly activities: components["schemas"]["Activity"][];
             /** Format: uuid */
             location: string;
+            /** @description Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled. */
+            readonly travelers: components["schemas"]["Traveler"][];
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -7824,6 +7965,8 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             location: string;
+            /** @description Replace the travelers. Each must be the owner or a member of a collection holding the location. A new visit defaults to you. */
+            traveler_uuids?: string[];
         };
         /** @description A model serializer that shows the owning ``user`` by uuid. */
         VisitedCity: {
@@ -11459,7 +11602,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The stop had already logged its visit. */
+            /** @description The stop had already logged its visit; you and the people you named were added to it. */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -12107,6 +12250,71 @@ export interface operations {
             };
         };
     };
+    collections_add_travelers: {
+        parameters: {
+            query?: {
+                /** @description Only count; change nothing. */
+                dry_run?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this collection. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddTravelersRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AddTravelersRequest"];
+                "multipart/form-data": components["schemas"]["AddTravelersRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddedTravelers"];
+                };
+            };
+            /** @description Someone is not the owner or a member of this collection. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     collections_archive: {
         parameters: {
             query?: never;
@@ -12643,7 +12851,10 @@ export interface operations {
     };
     collections_leave: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only count; change nothing. */
+                dry_run?: boolean;
+            };
             header?: never;
             path: {
                 /** @description A UUID string identifying this collection. */
@@ -12651,8 +12862,22 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LeaveCollectionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LeaveCollectionRequest"];
+                "multipart/form-data": components["schemas"]["LeaveCollectionRequest"];
+            };
+        };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeavePreview"];
+                };
+            };
             /** @description Done. No body. */
             204: {
                 headers: {
@@ -12758,7 +12983,10 @@ export interface operations {
     };
     collections_member_delete: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only count; change nothing. */
+                dry_run?: boolean;
+            };
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -12773,6 +13001,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeavePreview"];
+                };
+            };
             /** @description Done. No body. */
             204: {
                 headers: {
@@ -16509,6 +16745,55 @@ export interface operations {
             };
         };
     };
+    locations_traveler_candidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this location. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Traveler"][];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     locations_check_duplicates: {
         parameters: {
             query?: never;
@@ -19670,7 +19955,10 @@ export interface operations {
     };
     visits_destroy: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Delete the visit for every traveler. Only the location owner may. Otherwise only you are removed from it. */
+                for_everyone?: boolean;
+            };
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -19800,6 +20088,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
+        };
+    };
+    visits_join: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this visit. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Visit"];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You cannot join this visit. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    visits_leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A UUID string identifying this visit. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Visit"];
+                };
+            };
+            /** @description You were the last traveler, so the visit was deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

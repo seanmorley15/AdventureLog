@@ -454,6 +454,41 @@ Each integration is one resource per user at its own path:
 The Stripe webhook (`/api/billing/webhooks/stripe/`) and the Strava callback (`/api/integrations/strava/callback/`)
 kept their paths, because they are configured outside AdventureLog.
 
+### Travelers
+
+Visits say who was there. A visit has `travelers` (people: `uuid`, `username`, names, avatar) and a write-only
+`traveler_uuids` (a list of user uuids that replaces them).
+
+- **Who sees them.** `travelers` is left out unless you are the location's owner, a member of a collection holding
+  the location, or a traveler on that visit. Anonymous requests and guest links never get it.
+- **Who can be named.** The location's owner and the owner and members of each collection holding it. Anyone else is
+  a `400`. `GET /api/locations/{id}/traveler-candidates/` lists them.
+- **Never empty.** A create without `traveler_uuids` names the requester. An edit that would leave nobody is a `400`.
+- **Visited is per person.** A location is visited for you when a visit that has started lists you as a traveler.
+  Lists, the map, stats, the dashboard, the calendar and regions count locations you travelled to as well as your own,
+  but only while you are the owner or a member of a collection holding them.
+
+| Endpoint                                                            | What it does                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/locations/{id}/traveler-candidates/`                      | The people a visit here can name.                                                                                                                                                                                                          |
+| `POST /api/visits/{id}/join/`                                       | Adds you (any member of a collection holding the location, viewers too). 200 with the visit.                                                                                                                                               |
+| `POST /api/visits/{id}/leave/`                                      | Removes you. 200 with the visit; 204 when nobody was left, so the visit was deleted. Not being a traveler is a 200 and changes nothing.                                                                                                    |
+| `DELETE /api/visits/{id}/`                                          | Removes you from the visit (the visit goes with you when you were the last traveler). `?for_everyone=1`, location owner only, deletes it for everyone. 204 either way.                                                                     |
+| `POST …/itinerary-items/{id}/log-visit/`, `…/days/{day}/log-visit/` | `traveler_uuids` names who else was there; the person logging is always included. A stop already logged adds them to its visit (200). Someone who is not a collaborator is a `400`.                                                        |
+| `POST /api/collections/{id}/add-travelers/` `{user_uuids}`          | Owner and editors. Adds people to the visits the trip logged and, when it has dates, to visits to its locations on those days. Returns `{visits, locations}`; `?dry_run=1` only counts. Records a `travelers_added` activity.              |
+| `POST /api/collections/{id}/leave/` `{keep_copies}`                 | Members. Takes you off every visit at locations you do not own in the trip. `keep_copies` (default `true`) first copies each of those you travelled to into your account, with your visits and the photos, files and activities you added. |
+| `DELETE /api/collections/{id}/members/{uuid}/`                      | Owner. Always copies, as `keep_copies` does.                                                                                                                                                                                               |
+| `POST /api/locations/{id}/duplicate/` `{take_my_visits}`            | With `take_my_visits`, the copy keeps the original name, your visits move onto it and you are taken off the original's.                                                                                                                    |
+
+Both leave endpoints and the member `DELETE` take `?dry_run=1`, which changes nothing and returns
+`{locations, others_uploads}`: how many locations would be taken, and how many photos, files and activities other
+people added to visits you are the only traveler on.
+
+A visit whose only traveler leaves is deleted, together with everything other people added to it (their photos,
+files and activities). That is true whether or not copies are kept; `others_uploads` is how to warn about it first.
+
+The collection activity feed has a new verb, `travelers_added`.
+
 ### Fixed along the way
 
 - `PATCH` on the Immich integration crashed.
