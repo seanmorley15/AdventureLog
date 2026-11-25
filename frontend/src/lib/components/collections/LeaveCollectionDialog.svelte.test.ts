@@ -34,7 +34,13 @@ describe('LeaveCollectionDialog', () => {
 			.toBeVisible();
 
 		await keep.click();
-		await expect.element(page.getByText('These locations will leave your map.')).toBeVisible();
+		await expect
+			.element(
+				page.getByText(
+					/These locations will leave your map, along with the photos, files and activities you added to them/
+				)
+			)
+			.toBeVisible();
 		await page.getByRole('button', { name: 'Leave', exact: true }).click();
 
 		await vi.waitFor(() => expect(onleft).toHaveBeenCalledWith('c1'));
