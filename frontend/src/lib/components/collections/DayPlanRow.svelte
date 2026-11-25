@@ -185,10 +185,10 @@
 			const others = hasCompany ? picked.filter((uuid) => uuid !== currentUserUuid) : undefined;
 			const result = await onLogVisit(row, date, others);
 			if (result === 'date_required') {
-				dateRequired = true;
-				openPrompt();
+				openPrompt(true);
 			} else if (result === 'ok') {
 				askingDate = false;
+				dateRequired = false;
 				if (others && collection) rememberTravelers(collection.id, others);
 			}
 		} finally {
@@ -197,7 +197,8 @@
 	}
 
 	/** Open the prompt with the last picks that are still on the trip. */
-	function openPrompt() {
+	function openPrompt(required = false) {
+		dateRequired = required;
 		const here = new Set(collaborators.map((person) => person.uuid));
 		picked = collection ? rememberedTravelers(collection.id).filter((uuid) => here.has(uuid)) : [];
 		askingDate = true;
@@ -361,7 +362,10 @@
 					type="button"
 					class="btn btn-sm btn-ghost join-item"
 					aria-label={$t('about.close')}
-					onclick={() => (askingDate = false)}
+					onclick={() => {
+						askingDate = false;
+						dateRequired = false;
+					}}
 				>
 					<Close class="h-4 w-4" />
 				</button>
@@ -403,7 +407,10 @@
 							<button
 								type="button"
 								class="btn btn-sm btn-ghost"
-								onclick={() => (askingDate = false)}
+								onclick={() => {
+									askingDate = false;
+									dateRequired = false;
+								}}
 							>
 								{$t('about.close')}
 							</button>

@@ -953,6 +953,8 @@
 	let logDayDate = $state(today);
 	let loggingDay = $state<string | null>(null);
 	let logDayTravelers = $state<string[]>([]);
+	/** The server wanted a date even though the trip seemed to have one. */
+	let logDayDateRequired = $state(false);
 
 	const collaborators = $derived(collection.collaborators ?? []);
 	const currentUserUuid = $derived<string | null>(
@@ -966,7 +968,8 @@
 	}
 
 	/** Open the day's prompt with the last picks that are still on the trip. */
-	function askLogDay(day: CollectionItineraryDay) {
+	function askLogDay(day: CollectionItineraryDay, dateRequired = false) {
+		logDayDateRequired = dateRequired;
 		const here = new Set(collaborators.map((person) => person.uuid));
 		logDayTravelers = rememberedTravelers(collection.id).filter((uuid) => here.has(uuid));
 		logDayPromptFor = day.id;
@@ -1030,6 +1033,7 @@
 				addVisits(res.data.visits);
 				if (res.data.day_activities) collection.day_activities = res.data.day_activities;
 				logDayPromptFor = null;
+				logDayDateRequired = false;
 				if (res.data.activities_need_stop?.length) {
 					addToast('info', $t('itinerary.activity_needs_stop'));
 				}
@@ -1040,7 +1044,7 @@
 						: $t('itinerary.nothing_to_log')
 				);
 			} else if (res.data?.code === 'date_required') {
-				askLogDay(day);
+				askLogDay(day, true);
 			} else if (res.status !== 409) {
 				addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
 			}
@@ -1799,7 +1803,7 @@
 								e.preventDefault();
 								void logDay(
 									day,
-									anchored ? undefined : logDayDate,
+									anchored && !logDayDateRequired ? undefined : logDayDate,
 									hasCompany ? otherTravelers(logDayTravelers) : undefined
 								);
 							}}
@@ -1814,11 +1818,11 @@
 									/>
 								</div>
 							{/if}
-							{#if !anchored}
+							{#if !anchored || logDayDateRequired}
 								<span class="text-sm">{$t('itinerary.visit_date')}</span>
 							{/if}
 							<div class="join">
-								{#if !anchored}
+								{#if !anchored || logDayDateRequired}
 									<input
 										type="date"
 										class="input input-sm join-item"
@@ -1837,7 +1841,10 @@
 									type="button"
 									class="btn btn-sm btn-ghost join-item"
 									aria-label={$t('about.close')}
-									onclick={() => (logDayPromptFor = null)}
+									onclick={() => {
+										logDayPromptFor = null;
+										logDayDateRequired = false;
+									}}
 								>
 									<Close class="h-4 w-4" />
 								</button>
