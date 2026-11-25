@@ -11561,13 +11561,13 @@ export interface operations {
                     "application/json": components["schemas"]["LogDayResult"];
                 };
             };
-            /** @description The request was not valid. `fields` lists the problems for each input. */
+            /** @description `date_required` when the trip has no dates; `traveler_not_allowed` or `traveler_required` for the people named; or invalid input (with `fields`). */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ValidationError"];
+                    "application/json": components["schemas"]["Error"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
@@ -12044,12 +12044,14 @@ export interface operations {
                     "application/json": components["schemas"]["LogItemResult"];
                 };
             };
-            /** @description `date_required` when the trip has no dates, or invalid input. */
+            /** @description `date_required` when the trip has no dates; `traveler_not_allowed` or `traveler_required` for the people named; or invalid input (with `fields`). */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
             401: {
@@ -17322,7 +17324,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
             };
         };
     };
@@ -20813,7 +20817,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {
@@ -20829,7 +20835,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
             };
             /** @description The record changed since the `If-Match` version (`precondition_failed`). `current` is the record now. */
             412: {
@@ -20961,7 +20969,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {

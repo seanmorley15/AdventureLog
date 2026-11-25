@@ -61,6 +61,7 @@ from core.visibility import can_read_published
 from core import pagination
 from core.errors import ServiceError
 from core.exceptions import APIError
+from core.openapi import ErrorSerializer
 from core.geo import point_to_lat_lon
 from core.parsing import as_uuid
 from core.serializers import validated
@@ -349,6 +350,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         responses={
             201: LocationSerializer,
             413: OpenApiResponse(
+                response=ErrorSerializer,
                 description="The copy's photos would take you over your media storage limit (`media_quota_exceeded`). "
                 'Never for `take_my_visits`.'
             ),

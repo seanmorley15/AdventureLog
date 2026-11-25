@@ -12,6 +12,7 @@ from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import VisitSerializer
 from adventures.services import travelers
 from adventures.services.geocoding.assignment import geocode_and_assign_location
+from core.openapi import ErrorSerializer
 from core.serializers import validated
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
@@ -39,10 +40,14 @@ class VisitDeleteQuerySerializer(serializers.Serializer):
         responses={
             204: OpenApiResponse(description='You were removed, or the visit was deleted.'),
             403: OpenApiResponse(
+                response=ErrorSerializer,
                 description='`not_a_traveler`: you are neither on the visit nor the location owner; '
                 '`permission_denied`: `for_everyone` from someone other than the location owner, or a viewer.'
             ),
-            409: OpenApiResponse(description='`visit_has_travelers`: others travelled on it; use `for_everyone`.'),
+            409: OpenApiResponse(
+                response=ErrorSerializer,
+                description='`visit_has_travelers`: others travelled on it; use `for_everyone`.',
+            ),
         },
     ),
     list=extend_schema(description='Visits to locations you own or that are in collections you own or belong to.'),
@@ -133,7 +138,10 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
 
     @extend_schema(
         request=None,
-        responses={200: VisitSerializer, 403: OpenApiResponse(description='You cannot join this visit.')},
+        responses={
+            200: VisitSerializer,
+            403: OpenApiResponse(response=ErrorSerializer, description='You cannot join this visit.'),
+        },
     )
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def join(self, request, pk=None):

@@ -63,6 +63,7 @@ from adventures.services.day_plan.files import location_stops_on_day, serialize_
 from adventures.services.day_plan.legacy import auto_generate_itinerary, reorder_itinerary_items
 from adventures.views.mixins import COLLECTION_ID_PARAMETER, CollectionScopedMixin
 from core.exceptions import APIError
+from core.openapi import ErrorSerializer
 from core.serializers import validated
 
 CONTENT_MODELS = {
@@ -355,7 +356,11 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
                 LogItemResultSerializer,
                 description='The stop had already logged its visit; the people you named (you, when none) were added to it.',
             ),
-            400: OpenApiResponse(description='`date_required` when the trip has no dates, or invalid input.'),
+            400: OpenApiResponse(
+                response=ErrorSerializer,
+                description='`date_required` when the trip has no dates; `traveler_not_allowed` or '
+                '`traveler_required` for the people named; or invalid input (with `fields`).',
+            ),
         },
     )
     @action(detail=True, methods=['post'], url_path='log-visit')
@@ -483,7 +488,18 @@ class CollectionDayViewSet(_DayPlanViewMixin, mixins.ListModelMixin, viewsets.Ge
             )
         return self._state_response(collection)
 
-    @extend_schema(parameters=[DAY_PATH_PARAMETER], request=LogVisitSerializer, responses=LogDayResultSerializer)
+    @extend_schema(
+        parameters=[DAY_PATH_PARAMETER],
+        request=LogVisitSerializer,
+        responses={
+            200: LogDayResultSerializer,
+            400: OpenApiResponse(
+                response=ErrorSerializer,
+                description='`date_required` when the trip has no dates; `traveler_not_allowed` or '
+                '`traveler_required` for the people named; or invalid input (with `fields`).',
+            ),
+        },
+    )
     @action(detail=True, methods=['post'], url_path='log-visit')
     def log_visit(self, request, collection_id=None, pk=None):
         """

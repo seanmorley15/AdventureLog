@@ -3129,9 +3129,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationError'
-          description: The request was not valid. `fields` lists the problems for
-            each input.
+                $ref: '#/components/schemas/Error'
+          description: '`date_required` when the trip has no dates; `traveler_not_allowed`
+            or `traveler_required` for the people named; or invalid input (with `fields`).'
         '401':
           content:
             application/json:
@@ -3631,7 +3631,12 @@ paths:
                 $ref: '#/components/schemas/LogItemResult'
           description: A visit was created.
         '400':
-          description: '`date_required` when the trip has no dates, or invalid input.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: '`date_required` when the trip has no dates; `traveler_not_allowed`
+            or `traveler_required` for the people named; or invalid input (with `fields`).'
         '401':
           content:
             application/json:
@@ -8700,6 +8705,10 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
         '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: The copy's photos would take you over your media storage limit
             (`media_quota_exceeded`). Never for `take_my_visits`.
   /api/locations/{id}/share-image/{aspect}/:
@@ -12415,6 +12424,10 @@ paths:
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
         '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: '`not_a_traveler`: you are neither on the visit nor the location
             owner; `permission_denied`: `for_everyone` from someone other than the
             location owner, or a viewer.'
@@ -12425,6 +12438,10 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
         '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: '`visit_has_travelers`: others travelled on it; use `for_everyone`.'
         '412':
           content:
@@ -12477,6 +12494,10 @@ paths:
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
         '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: You cannot join this visit.
         '404':
           content:

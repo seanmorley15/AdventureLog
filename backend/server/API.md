@@ -47,7 +47,7 @@ Paths and their non-standard names come from `main/api_urls.py`, `adventures/url
 
 | Method | Use                                                                                                                                                                  |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | Read.                                                                                                                                                                |
+| GET    | Read. An action that takes things away from people has a `GET …-preview/` beside it that says what it would do (see [Previews](#previews)). |
 | POST   | Create (`201` with the resource), or a named state change at `POST …/{verb}/`: `duplicate`, `join`, `leave`, `add-travelers`, `invitation/accept`, `log-visit`, `mark-read`, `reorder`, `sync`, `connect`. |
 | PATCH  | Partial update. PUT only on model viewsets.                                                                                                                          |
 | DELETE | Remove (`204`, no body). Never `POST …/delete/` or `…/revoke/`. Day-plan deletes answer `200` with the new plan, so the planner can redraw. |
@@ -161,6 +161,29 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
   on these fields; delete the row.
 - `/media/` grants a shared file when any row using it allows the requester.
 
+### Previews
+
+An action that takes things away from people has a read-only `GET …-preview/` next to it. It changes nothing,
+answers what the action would do with the same input, and is allowed for exactly the people the action is (others
+get the same `403`/`404`). A client asks it before the confirm dialog. The actions themselves take no preview flag.
+`people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
+
+| Preview                                                          | Previews                                         | Returns                                                                                                                                     |
+| ---------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/locations/{id}/collections/{cid}/unlink-preview/`      | `DELETE /api/locations/{id}/collections/{cid}/`  | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. The collection owner, the place owner, or who added it while an editor. |
+| `GET /api/collections/{id}/deletion-preview/`                    | `DELETE /api/collections/{id}/`                  | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                  |
+| `GET /api/collections/{id}/leave-preview/`                       | `POST /api/collections/{id}/leave/`              | `{locations, others_uploads}`. Members.                                                                                                     |
+| `GET /api/collections/{id}/members/{uuid}/removal-preview/`      | `DELETE /api/collections/{id}/members/{uuid}/`   | `{locations, others_uploads}` for that member. Owner only.                                                                                  |
+| `GET /api/collections/{id}/add-travelers-preview/?user_uuids=…`  | `POST /api/collections/{id}/add-travelers/`      | `{visits, locations}`. Repeat `user_uuids` per person. Owner and editors.                                                                   |
+| `GET /api/account/deletion-preview/`                             | `DELETE /api/account/`                           | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.        |
+| `GET /api/account/privacy-preview/`                              | `PATCH /api/account/` with `profile_visibility: private` | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`.                                     |
+
+`PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
+
+When rate limits are on, previews have their own per-user limits: the two account previews walk every shared trip
+(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute; the rest of `/api/account/` has none), and the collection and location
+previews walk the places and visits involved (`RATE_LIMIT_SHARING_PREVIEW`, 60 a minute).
+
 ## Mobile app sign-in
 
 The mobile app signs in as the user, not with a pasted key, and keeps the `X-Session-Token` it is given.
@@ -269,7 +292,8 @@ gets the location's owner (you) as its only traveler.
 
 `GET /api/collections/{id}/leave-preview/` and `GET /api/collections/{id}/members/{uuid}/removal-preview/` change
 nothing and return `{locations, others_uploads}`: how many locations would be taken, and how many photos, files and
-activities other people added to visits the member is the only traveler on (see [Previews](#previews)).
+activities other people added to visits the member is the only traveler on (see [Previews](#previews), which also
+lists the unlink, collection deletion and add-travelers previews).
 
 A visit whose only traveler leaves is deleted, together with everything other people added to it (their photos,
 files and activities). That is true whether or not copies are kept; `others_uploads` is how to warn about it first.
@@ -294,29 +318,6 @@ linked from the owner's Immich library (`immich_id`; they resolve through that o
 never copied, Wanderer ones included, and an activity copy drops its `trail`. Your own copies keep everything: the
 Immich photos you added to your visits come with them, and so does a `duplicate` of a place you own. The previews do
 not count what is left out.
-
-### Previews
-
-An action that takes things away from people has a read-only `GET …-preview/` next to it. It changes nothing,
-answers what the action would do with the same input, and is allowed for exactly the people the action is (others
-get the same `403`/`404`). A client asks it before the confirm dialog. The actions themselves take no preview flag.
-`people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
-
-| Preview                                                          | Previews                                         | Returns                                                                                                                                     |
-| ---------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /api/locations/{id}/collections/{cid}/unlink-preview/`      | `DELETE /api/locations/{id}/collections/{cid}/`  | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. The collection owner, the place owner, or who added it while an editor. |
-| `GET /api/collections/{id}/deletion-preview/`                    | `DELETE /api/collections/{id}/`                  | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                  |
-| `GET /api/collections/{id}/leave-preview/`                       | `POST /api/collections/{id}/leave/`              | `{locations, others_uploads}`. Members.                                                                                                     |
-| `GET /api/collections/{id}/members/{uuid}/removal-preview/`      | `DELETE /api/collections/{id}/members/{uuid}/`   | `{locations, others_uploads}` for that member. Owner only.                                                                                  |
-| `GET /api/collections/{id}/add-travelers-preview/?user_uuids=…`  | `POST /api/collections/{id}/add-travelers/`      | `{visits, locations}`. Repeat `user_uuids` per person. Owner and editors.                                                                   |
-| `GET /api/account/deletion-preview/`                             | `DELETE /api/account/`                           | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.        |
-| `GET /api/account/privacy-preview/`                              | `PATCH /api/account/` with `profile_visibility: private` | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`.                                     |
-
-`PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
-
-When rate limits are on, previews have their own per-user limits: the two account previews walk every shared trip
-(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute; the rest of `/api/account/` has none), and the collection and location
-previews walk the places and visits involved (`RATE_LIMIT_SHARING_PREVIEW`, 60 a minute).
 
 Lists of people are bounded: `traveler_uuids` and `user_uuids` take at most 100, `POST /api/notifications/mark-read/`
 at most 1000 `ids`. More is a `400`.
@@ -442,6 +443,11 @@ return accepted(start_job(request.user, 'account_export', params={...}, upload=N
 
    The standard 400/401/403/404/429 responses are added automatically by `core.openapi.AutoSchema`; document
    only the others (201, 409, 413, 502...). File downloads use `{(200, 'application/pdf'): OpenApiResponse(response=bytes)}`.
+   An error you document with its codes takes the error body too:
+   `OpenApiResponse(response=ErrorSerializer, description=...)` (`core.openapi`), naming the codes.
+   An action that takes things away from people gets a `GET …-preview/` action beside it (see [Previews](#previews)):
+   the same permission, the same input as query parameters, `SharingPreviewThrottle`, and a parity test that the
+   real action then does what the preview said.
    A `get_queryset` that reads the request starts with `if getattr(self, 'swagger_fake_view', False): return
 Model.objects.none()`.
 
