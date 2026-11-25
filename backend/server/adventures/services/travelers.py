@@ -4,6 +4,7 @@ Who travelled on a visit.
 Every visit lists at least one traveler: a new visit without any gets the
 location's owner, and the last traveler leaving deletes the visit.
 """
+from adventures.services import notifications
 
 
 def ensure_default_traveler(visit):
@@ -115,9 +116,13 @@ def can_see_travelers(request, visit):
     )
 
 
-def set_travelers(visit, users, actor):
+def set_travelers(visit, users, actor, fresh=False, collection=None):
     """
     Make ``users`` the visit's travelers.
+
+    Everyone newly added who is not ``actor`` is told (see ``services/notifications``). ``fresh``
+    says the visit was just created, so the owner default it starts with does not count as
+    someone already there.
 
     Everyone added must be a candidate, or ``ValidationError`` is raised. Travelers who are no
     longer candidates (they left the trip) stay on the visit: only they can remove themselves.
@@ -134,12 +139,17 @@ def set_travelers(visit, users, actor):
     final = [*wanted.values(), *keep.values()]
     if not final:
         raise ValidationError({'traveler_uuids': 'A visit needs at least one traveler.'})
+    already = set() if fresh else set(existing)
     visit.travelers.set(final)
     mark_regions_for_travelers(visit.location)
+    notifications.travelers_added(visit, [u for pk, u in wanted.items() if pk not in already], actor, collection)
 
 
-def add_travelers(visit, users):
-    """Add ``users`` to the visit's travelers, keeping the ones already there. Each must be a candidate."""
+def add_travelers(visit, users, actor=None, collection=None):
+    """
+    Add ``users`` to the visit's travelers, keeping the ones already there. Each must be a candidate.
+    Those who were not there and are not ``actor`` are told; without an ``actor`` nobody is.
+    """
     from rest_framework.exceptions import ValidationError
 
     wanted = {user.pk: user for user in users}
@@ -147,8 +157,12 @@ def add_travelers(visit, users):
     if any(pk not in allowed for pk in wanted):
         raise ValidationError({'traveler_uuids': 'Travelers must be the owner or members of the location.'})
     if wanted:
+        already = set(visit.travelers.filter(pk__in=wanted).values_list('pk', flat=True))
         visit.travelers.add(*wanted.values())
         mark_regions_for_travelers(visit.location)
+        notifications.travelers_added(
+            visit, [u for pk, u in wanted.items() if pk not in already], actor, collection
+        )
 
 
 def join(visit, user):
@@ -241,9 +255,9 @@ def add_to_trip(collection, users, dry_run=False, actor=None):
     result = {'visits': len(gaining), 'locations': len({v.location_id for v in gaining})}
     if dry_run or not gaining:
         return result
-    with transaction.atomic():
+    with transaction.atomic(), notifications.batch(actor, collection):
         for visit in gaining:
-            add_travelers(visit, wanted.values())
+            add_travelers(visit, wanted.values(), actor, collection)
         if actor is not None:
             from adventures.models import CollectionActivity
             from adventures.services.activity_log import record_activity
@@ -396,20 +410,17 @@ def release_lost_access(location, ignoring=()):
     return len(users)
 
 
-def release_collections_travelers(collections):
+def release_collection_travelers(collection):
     """
-    Before ``collections`` are all deleted, give the lost-access travelers of their places
-    their copies (``release_lost_access`` with every one of them ignored at once, so a place
-    held by two of them is judged once, against the collections that remain). Only places
-    that someone other than the owner travelled to are looked at. Returns how many people
-    were released.
+    Before ``collection`` is deleted, give its places' lost-access travelers their copies
+    (``release_lost_access`` with the collection ignored). Only places that someone other
+    than the owner travelled to are looked at. Returns how many people were released.
     """
     from django.db import transaction
     from django.db.models import Exists, OuterRef
 
-    from adventures.models import Location, Visit
+    from adventures.models import Visit
 
-    collections = list(collections)
     through = Visit.travelers.through
     user_field = Visit.travelers.field.m2m_reverse_name()
     others = through.objects.filter(visit__location=OuterRef('pk')).exclude(
@@ -417,12 +428,6 @@ def release_collections_travelers(collections):
     )
     released = 0
     with transaction.atomic():
-        places = Location.objects.filter(collections__in=collections).filter(Exists(others)).distinct()
-        for location in places:
-            released += release_lost_access(location, ignoring=collections)
+        for location in collection.locations.filter(Exists(others)).distinct():
+            released += release_lost_access(location, ignoring=[collection])
     return released
-
-
-def release_collection_travelers(collection):
-    """``release_collections_travelers`` for one collection about to be deleted."""
-    return release_collections_travelers([collection])

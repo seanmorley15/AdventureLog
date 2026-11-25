@@ -340,6 +340,7 @@ class AccountSerializer(serializers.Serializer):
     user = CustomUserDetailsSerializer()
     pending_invite_count = serializers.IntegerField(help_text='Collection invites waiting for an answer.')
     unread_comment_count = serializers.IntegerField(help_text='Comments in your inbox you have not seen.')
+    unread_notification_count = serializers.IntegerField(help_text='Notifications you have not read.')
 
 
 class UserStatsSerializer(serializers.Serializer):

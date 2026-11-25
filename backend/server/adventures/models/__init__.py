@@ -18,6 +18,7 @@ from .collection import (
     generate_share_secret,
 )
 from .discussion import CollectionActivity, CollectionComment, CommentInboxState
+from .notification import Notification
 from .logistics import Checklist, ChecklistItem, Lodging, Note, Transportation
 from .activity import Activity, Trail
 from .itinerary import CollectionItineraryDay, CollectionItineraryItem
@@ -26,7 +27,7 @@ __all__ = [
     'ADVENTURE_TYPES', 'Activity', 'Category', 'Checklist', 'ChecklistItem', 'Collection',
     'CollectionActivity', 'CollectionComment', 'CollectionGuestLink', 'CollectionInvite',
     'CollectionItineraryDay', 'CollectionItineraryItem', 'CollectionMember', 'CommentInboxState',
-    'ContentAttachment', 'ContentImage', 'LODGING_TYPES', 'Location', 'Lodging', 'Note',
+    'ContentAttachment', 'ContentImage', 'LODGING_TYPES', 'Location', 'Lodging', 'Note', 'Notification',
     'PathAndRename', 'TRANSPORTATION_TYPES', 'Trail', 'Transportation', 'User', 'Visit',
     'default_story_groups', 'default_user', 'generate_guest_token', 'generate_share_secret',
     'validate_file_extension',

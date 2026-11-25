@@ -60,6 +60,23 @@ def send_mention_email_task(comment_id, user_id, page_url=None):
 
 
 @app.task(
+    name='adventures.send_traveler_added_email',
+    queue='default',
+    priority=SMALL_TASK_PRIORITY,
+    retry=RetryStrategy(max_attempts=5, wait=60, linear_wait=60, retry_exceptions={SMTPException, OSError}),
+)
+def send_traveler_added_email_task(notification_id, page_url=None):
+    """E-mail someone that they were added to a visit. A mail server that is down is retried."""
+    from adventures.models import Notification
+    from adventures.services.notifications import send_traveler_added_email
+
+    note = Notification.objects.select_related('user').filter(pk=notification_id).first()
+    if note is None or not note.user.email:
+        return  # deleted since it was queued
+    send_traveler_added_email(note, page_url, fail_silently=False)
+
+
+@app.task(
     name='adventures.delete_stored_file',
     queue='default',
     priority=SMALL_TASK_PRIORITY,

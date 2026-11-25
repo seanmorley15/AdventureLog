@@ -49,7 +49,7 @@ def log_visited(item, visit_date=None, travelers=None, actor=None):
     if item_kind(item) != 'location':
         raise DayPlanError('Only location stops can be logged as visited.')
     if item.logged_visit_id:
-        traveler_rules.add_travelers(item.logged_visit, people)
+        traveler_rules.add_travelers(item.logged_visit, people, actor, item.collection)
         return item.logged_visit, False
 
     with transaction.atomic():
@@ -68,7 +68,7 @@ def log_visited(item, visit_date=None, travelers=None, actor=None):
         if existing is not None:
             item.logged_visit = existing
             item.save(update_fields=['logged_visit', 'updated_at'])
-            traveler_rules.add_travelers(existing, people)
+            traveler_rules.add_travelers(existing, people, actor, item.collection)
             return existing, False
 
         visit = Visit.objects.create(
@@ -79,7 +79,7 @@ def log_visited(item, visit_date=None, travelers=None, actor=None):
         )
         if people:
             # Replaces the owner default: someone logging alone is the only traveler.
-            traveler_rules.set_travelers(visit, people, actor)
+            traveler_rules.set_travelers(visit, people, actor, fresh=True, collection=item.collection)
         item.logged_visit = visit
         item.save(update_fields=['logged_visit', 'updated_at'])
         return visit, True
@@ -109,8 +109,11 @@ def log_day(collection, day, visit_date=None, travelers=None, actor=None):
         return []
     if collection.start_date is None and visit_date is None and (items or pending_activities):
         raise DayPlanError('Choose the date you visited.', code='date_required')
+    from adventures.services import notifications
+
     logged = []
-    with transaction.atomic():
+    # One notification per person for the whole day, not one per stop.
+    with transaction.atomic(), notifications.batch(actor, collection):
         for item in items:
             visit, _ = log_visited(item, visit_date, travelers, actor)
             logged.append(item)

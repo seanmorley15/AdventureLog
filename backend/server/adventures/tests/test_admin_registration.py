@@ -9,7 +9,7 @@ from adventures.tests.factories import build_rich_account
 from core.testing import make_user
 
 # Models that deliberately have no admin page.
-NOT_REGISTERED = {'CollectionMember', 'CollectionGuestLink', 'CollectionComment', 'CollectionActivity', 'CommentInboxState'}
+NOT_REGISTERED = {'CollectionMember', 'CollectionGuestLink', 'CollectionComment', 'CollectionActivity', 'CommentInboxState', 'Notification'}
 
 
 class AdminRegistrationTests(SimpleTestCase):

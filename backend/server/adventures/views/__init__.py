@@ -14,6 +14,7 @@ from .itineraries import CollectionDayViewSet, ItineraryItemViewSet, ItineraryVi
 from .locations import LocationViewSet
 from .lodging import LodgingViewSet
 from .notes import NoteViewSet
+from .notifications import NotificationViewSet
 from .places import PlacesViewSet
 from .recommendations import RecommendationsViewSet
 from .search import SearchViewSet
@@ -42,6 +43,7 @@ __all__ = [
     'LocationViewSet',
     'LodgingViewSet',
     'NoteViewSet',
+    'NotificationViewSet',
     'PlacesViewSet',
     'RecommendationsViewSet',
     'SearchViewSet',

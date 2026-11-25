@@ -114,6 +114,7 @@ TAGS = [
     {'name': 'Collections', 'description': 'Folders and trips that group places and plans.'},
     {'name': 'Sharing', 'description': 'Invites, members and their roles, and guest links for a collection.'},
     {'name': 'Comments', 'description': "Discussion on a collection's plan or story, and your comment inbox."},
+    {'name': 'Notifications', 'description': 'Things that happened to you, such as being added to a visit.'},
     {'name': 'Day plan', 'description': 'The days of a trip and the items placed on them.'},
     {'name': 'Trip items', 'description': 'Lodging, transportation, notes and checklists.'},
     {'name': 'Media', 'description': 'Images and file attachments on any record.'},

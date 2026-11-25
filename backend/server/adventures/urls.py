@@ -28,6 +28,7 @@ from adventures.views import (
     LocationViewSet,
     LodgingViewSet,
     NoteViewSet,
+    NotificationViewSet,
     PlacesViewSet,
     RecommendationsViewSet,
     SearchViewSet,
@@ -55,6 +56,7 @@ router.register(rf'{IN_COLLECTION}/days', CollectionDayViewSet, basename='collec
 router.register(rf'{IN_COLLECTION}/comments', CollectionCommentViewSet, basename='collection-comments')
 router.register(rf'{IN_COLLECTION}/activity', CollectionActivityViewSet, basename='collection-activity')
 router.register(r'comments', CommentViewSet, basename='comments')
+router.register(r'notifications', NotificationViewSet, basename='notifications')
 # Records that can be on their own or in a collection
 router.register(r'lodgings', LodgingViewSet, basename='lodgings')
 router.register(r'transportations', TransportationViewSet, basename='transportations')

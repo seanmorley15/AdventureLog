@@ -12,7 +12,12 @@ from procrastinate.contrib.django import app
 
 from adventures.models import Collection, CollectionComment, ContentImage, Location
 from adventures.services.geocoding.assignment import GeocodeUnavailable
-from adventures.tasks import delete_stored_file, geocode_location, send_mention_email_task
+from adventures.tasks import (
+    delete_stored_file,
+    geocode_location,
+    send_mention_email_task,
+    send_traveler_added_email_task,
+)
 from core.testing import make_user
 
 
@@ -40,6 +45,11 @@ class RetryPolicyTests(TestCase):
         self.assertIsNone(decision(send_mention_email_task, KeyError('bug'), 1))
         self.assertIsNone(decision(send_mention_email_task, SMTPException('down'), 5))
 
+    def test_the_traveler_added_email_retries_like_the_mention_email(self):
+        self.assertIsNotNone(decision(send_traveler_added_email_task, SMTPException('down'), 1))
+        self.assertIsNone(decision(send_traveler_added_email_task, KeyError('bug'), 1))
+        self.assertIsNone(decision(send_traveler_added_email_task, SMTPException('down'), 5))
+
     def test_a_failing_storage_is_retried_three_times(self):
         self.assertIsNotNone(decision(delete_stored_file, OSError('disk'), 2))
         self.assertIsNone(decision(delete_stored_file, OSError('disk'), 3))
@@ -59,6 +69,11 @@ class MentionEmailTaskTests(TestCase):
 
         send_mention_email_task.func(comment_id=comment_id, user_id=str(person.pk))  # comment is gone
         send_mention_email_task.func(comment_id=comment_id, user_id='0')  # and so is the person
+
+
+class TravelerAddedEmailTaskTests(TestCase):
+    def test_a_notification_deleted_since_it_was_queued_is_skipped(self):
+        send_traveler_added_email_task.func(notification_id='00000000-0000-0000-0000-000000000000')
 
 
 class DeleteStoredFileTaskTests(TestCase):

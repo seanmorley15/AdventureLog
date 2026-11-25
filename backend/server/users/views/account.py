@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from adventures.models import CollectionInvite
 from adventures.services.discussion import unread_comment_count
+from adventures.services.notifications import unread_notification_count
 from adventures.services.media_quota import (
     ensure_media_storage_available,
     get_media_storage_limit_bytes,
@@ -70,7 +71,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         Get your account
 
         Your profile plus what the app's header shows: how many collection invites are waiting
-        and how many comments you have not read. On hosted servers the subscription is included.
+        how many comments you have not read and how many notifications. On hosted servers the subscription is included.
         """
         user = request.user
         user_data = CustomUserDetailsSerializer(user, context={'request': request}).data
@@ -82,6 +83,7 @@ class AccountViewSet(viewsets.GenericViewSet):
             'user': user_data,
             'pending_invite_count': pending_invites,
             'unread_comment_count': unread_comment_count(user),
+            'unread_notification_count': unread_notification_count(user),
             **self.account_extras(user),
         })
 

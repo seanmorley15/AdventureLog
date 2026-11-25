@@ -91,7 +91,9 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         with transaction.atomic():
             visit = serializer.save()
             people = serializer.validated_data.get('traveler_uuids')
-            travelers.set_travelers(visit, people if people is not None else [self.request.user], self.request.user)
+            travelers.set_travelers(
+                visit, people if people is not None else [self.request.user], self.request.user, fresh=True
+            )
 
         # This will update any visited regions or cities based on if it's now visited
         geocode_and_assign_location(str(location.id))

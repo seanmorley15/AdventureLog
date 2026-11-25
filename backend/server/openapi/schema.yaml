@@ -104,7 +104,7 @@ paths:
       operationId: account_retrieve
       description: |-
         Your profile plus what the app's header shows: how many collection invites are waiting
-        and how many comments you have not read. On hosted servers the subscription is included.
+        how many comments you have not read and how many notifications. On hosted servers the subscription is included.
       summary: Get your account
       tags:
       - Account
@@ -9526,6 +9526,112 @@ paths:
                 $ref: '#/components/schemas/PreconditionFailed'
           description: The record changed since the `If-Match` version (`precondition_failed`).
             `current` is the record now.
+  /api/notifications/:
+    get:
+      operationId: notifications_list
+      description: |-
+        Newest first. `unread_count` counts all your unread notifications, whatever the page or filter.
+        `?unread=1` leaves out the ones you have read.
+      summary: List your notifications
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: unread
+        schema:
+          type: boolean
+          default: false
+        description: Only notifications you have not read.
+      tags:
+      - Notifications
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+  /api/notifications/mark-read/:
+    post:
+      operationId: notifications_mark_read
+      description: |-
+        Send `ids` to mark those, or nothing to mark all of yours. Ids that are not yours are ignored.
+        Answers with how many are still unread.
+      summary: Mark notifications read
+      tags:
+      - Notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkNotificationsReadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarkNotificationsReadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarkNotificationsReadRequest'
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCount'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
   /api/places/description/:
     get:
       operationId: places_describe
@@ -15674,6 +15780,9 @@ components:
         unread_comment_count:
           type: integer
           description: Comments in your inbox you have not seen.
+        unread_notification_count:
+          type: integer
+          description: Notifications you have not read.
         subscription:
           allOf:
           - $ref: '#/components/schemas/Subscription'
@@ -15692,6 +15801,7 @@ components:
       - pending_invite_count
       - subscription
       - unread_comment_count
+      - unread_notification_count
       - user
     ImageContentTypeEnum:
       enum:
@@ -17370,6 +17480,15 @@ components:
         * `esri-oceans` - Oceans
         * `osm-france` - France Style
         * `openfreemap-liberty` - OpenFreeMap Liberty
+    MarkNotificationsReadRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Only these. Leave it out to mark every notification read.
     MeasurementSystemEnum:
       enum:
       - metric
@@ -17522,6 +17641,75 @@ components:
           nullable: true
       required:
       - name
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          description: What happened. Today only `visit_traveler_added`.
+        actor:
+          type: object
+          additionalProperties: {}
+          description: 'Who did it: `{name, username, uuid, profile_pic, can_view_profile}`.'
+        visit_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The visit, when it was one visit. `POST /api/visits/{id}/leave/`
+            removes you.
+        location_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The place, when it was one place and you can still read it.
+        location_name:
+          type: string
+          description: Empty when you can no longer read the place.
+        collection_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The trip, while you are still a member.
+        collection_name:
+          type: string
+          description: Empty when you are no longer a member of the trip.
+        count:
+          type: integer
+          description: How many visits. More than 1 is the summary form.
+        locations:
+          type: integer
+          description: How many places those visits were at.
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+      required:
+      - actor
+      - collection_id
+      - collection_name
+      - count
+      - created_at
+      - end_date
+      - id
+      - kind
+      - location_id
+      - location_name
+      - locations
+      - read
+      - start_date
+      - visit_id
     NullEnum:
       enum:
       - null
@@ -17570,6 +17758,33 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LocationList'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      - unread_count
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        unread_count:
+          type: integer
+          example: 2
     PaginatedRegionList:
       type: object
       required:
@@ -22358,6 +22573,8 @@ tags:
   description: Invites, members and their roles, and guest links for a collection.
 - name: Comments
   description: Discussion on a collection's plan or story, and your comment inbox.
+- name: Notifications
+  description: Things that happened to you, such as being added to a visit.
 - name: Day plan
   description: The days of a trip and the items placed on them.
 - name: Trip items

@@ -503,6 +503,29 @@ the place through another collection are untouched, and so is the place owner. T
 
 The collection activity feed has a new verb, `travelers_added`.
 
+#### Telling people they were added
+
+Someone put on a visit by somebody else is told, so they can take themselves off it (`POST /api/visits/{id}/leave/`).
+They get a notification in the app and, when the server has SMTP set up and they have an address, one e-mail.
+
+- **Who is told.** Each person newly added by someone else: through `traveler_uuids` on `POST`/`PATCH /api/visits/`,
+  Log visit (a new visit or a stop already logged), Log day and `add-travelers`. Never the person who did it, and
+  never for joining yourself, the owner default on a visit the owner created, the copies made when a member leaves
+  or a place leaves its collections, or backups and imports. People already on the visit are not told again.
+- **One per person per action.** Log day and `add-travelers` send each person one notification with a count
+  ("added you to 5 visits on Euro Trip"); adding someone to a single visit sends the single form. Notifications
+  are written in the same transaction as the change; a failure to notify never fails the change.
+- **What they hold.** The person's display name, the place, the trip and the dates, nothing about the other
+  travelers. The place and trip names are checked again when you read them: after you lose access they are empty.
+- **E-mail.** Queued as `adventures.send_traveler_added_email` only when `smtp_configured()`, one per notification,
+  with a link to the place (or the trip for the summary form). It retries like the mention e-mail.
+
+| Endpoint                                  | What it does                                                                                                                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/notifications/`                 | Your notifications, newest first, paginated like other lists, plus `unread_count` (all of yours). `?unread=1` leaves out the read ones. Each has `visit_id` (single form), `location_id`, `collection_id`, `count` (more than 1 is the summary form) and the dates. |
+| `POST /api/notifications/mark-read/`      | `{ids: []}` marks those, an empty body marks all of yours. Answers `{unread_count}`. Ids that are not yours are ignored.                                                        |
+| `GET /api/account/`                       | Also carries `unread_notification_count`, next to `unread_comment_count`, so the header badge needs no extra request.                                                           |
+
 ### Fixed along the way
 
 - `PATCH` on the Immich integration crashed.
