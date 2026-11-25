@@ -210,6 +210,15 @@ class CalendarTests(DayPlanTestBase):
         self.assertEqual(self.ids(self.user, 'stop-'), set())
         self.assertEqual(len(self.ids(self.friend, 'stop-')), 1)
 
+    def test_collaborator_who_travelled_sees_the_visit_not_a_duplicate_stop(self):
+        visit = Visit.objects.create(location=self.museum, start_date=utc(2026, 6, 2), end_date=utc(2026, 6, 2))
+        visit.travelers.set([self.friend])
+        self.assertEqual(len(self.ids(self.friend, 'visit-')), 1)
+        self.assertEqual(self.ids(self.friend, 'stop-'), set())
+        # The owner was not on it, so their calendar still shows the planned stop and no visit.
+        self.assertEqual(self.ids(self.user, 'visit-'), set())
+        self.assertEqual(len(self.ids(self.user, 'stop-')), 1)
+
     def test_archived_and_unanchored_trips_are_absent(self):
         self.assertTrue(self.ids(self.user, 'collection-'))
         self.trip.is_archived = True

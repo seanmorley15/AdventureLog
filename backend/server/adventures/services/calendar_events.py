@@ -427,10 +427,10 @@ def _plan_clock(day, clock, tz_name):
 
 
 def _owner_visit_days(user, location_ids) -> set[tuple[str, date]]:
-    """(location, date) pairs already on this user's calendar through a visit."""
+    """(location, date) pairs already on this user's calendar through a visit they travelled on."""
     covered = set()
     visits = Visit.objects.filter(
-        location__user=user.id, location_id__in=location_ids, start_date__isnull=False
+        travelers=user, location_id__in=location_ids, start_date__isnull=False
     ).select_related('location')
     for visit in visits:
         start = local_date(visit.start_date, visit.timezone)
