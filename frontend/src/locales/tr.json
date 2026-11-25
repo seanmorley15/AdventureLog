@@ -1500,7 +1500,7 @@
 	},
 	"itinerary": {
 		"add_description": "Açıklama ekle",
-		"add_to_day": "Güne ekle",
+		"add_to_day": "{n}. güne ekle",
 		"add_to_trip_context": "Gezi bağlamı ekle",
 		"added_to_trip_context": "Gezi bağlamına eklendi",
 		"auto_generate": "Otomatik Oluştur",

@@ -768,7 +768,7 @@
 		"public_profile_desc": "De Profil visibel fir aner Benotzer maachen",
 		"public_profile_sharing_warning": "Du gëss momentan vun {count} Kollektioun(en) gedeelt. Du verschwënns aus deene Kollektiounen wann däi Profil op privat agestallt gëtt.",
 		"public_profile_invite_warning": "Du hues {count} opstoend Kollektiouns-Invitatiounen. Déi verschwanne wann däi Profil op privat agestallt gëtt.",
-		"public_profile_private_confirm": "Däi Profil op privat astellen léisst dech vun {count} gedeelte Kollektioune an {invites} opstoend Invitatioune verschwannen. Weiderfueren?",
+		"public_profile_private_confirm": "Däi Profil op privat astellen léisst dech vun {shared} gedeelte Kollektioune an {invites} opstoend Invitatioune verschwannen. Weiderfueren?",
 		"public_profile_left_collections": "Däi Profil ass lo privat. Du bass aus {count} gedeelte(r) Kollektioun(en) verschwonnen.",
 		"public_profile_revoked_invites": "{count} opstoend Kollektiouns-Invitatiounen ofgebrach.",
 		"pass_change_desc": "Update däin Compte-Passwuert fir méi Sécherheet",

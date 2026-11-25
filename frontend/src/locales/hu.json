@@ -1500,7 +1500,7 @@
 	},
 	"itinerary": {
 		"add_description": "Leírás hozzáadása",
-		"add_to_day": "Add hozzá a naphoz",
+		"add_to_day": "Add hozzá a(z) {n}. naphoz",
 		"add_to_trip_context": "Utazási kontextus hozzáadása",
 		"added_to_trip_context": "Hozzáadva az utazás kontextusához",
 		"auto_generate": "Automatikus generálás",
