@@ -38,20 +38,26 @@ def _copy_image(image, user, target):
     return copy
 
 
+def copy_attachment(attachment, user, target):
+    """A new attachment of ``target`` from an existing one, with its own copy of the file."""
+    file_name = (attachment.file.name or '').split('/')[-1] or 'attachment'
+    copy = ContentAttachment(
+        user=user,
+        file=ContentFile(_read_file(attachment.file), name=file_name),
+        name=attachment.name,
+    )
+    copy.content_object = target
+    copy.save()
+    return copy
+
+
 def _copy_media(source, target, user):
     """Photos and attachments of one record, for another."""
     for image in source.images.all():
         _copy_image(image, user, target)
 
     for attachment in source.attachments.all():
-        file_name = (attachment.file.name or '').split('/')[-1] or 'attachment'
-        copy = ContentAttachment(
-            user=user,
-            file=ContentFile(_read_file(attachment.file), name=file_name),
-            name=attachment.name,
-        )
-        copy.content_object = target
-        copy.save()
+        copy_attachment(attachment, user, target)
 
 
 def _copy_records(original, copy, user):

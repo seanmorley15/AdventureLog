@@ -256,10 +256,10 @@ def take_my_visits(original, user, collection=None):
 
     The copy keeps the original's name and gets a copy of each visit they travelled on (dates,
     timezone and notes), with them as its only traveler. They are then removed from the original
-    visits (see ``remove_or_delete``), so nothing is counted twice. Photos, files and activities
-    on those visits are not copied: they stay with the original visit, and go with it when it
-    is deleted. With ``collection`` the copy goes in
-    that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
+    visits (see ``remove_or_delete``), so nothing is counted twice. The photos, attachments and
+    activities they added to those visits are copied too (``copy_visit_uploads``), with their
+    own files; other people's stay behind. The originals are left as they are. With
+    ``collection`` the copy goes in that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
     ``ValidationError``: it is already theirs.
     """
     from django.db import transaction
@@ -279,6 +279,7 @@ def take_my_visits(original, user, collection=None):
                 timezone=visit.timezone, notes=visit.notes,
             )
             moved.travelers.set([user])
+            copying.copy_visit_uploads(visit, moved, user)
         for visit in mine:
             remove_or_delete(visit, user)
         mark_regions_for_travelers(copy)

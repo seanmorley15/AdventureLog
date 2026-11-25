@@ -1,10 +1,16 @@
+import shutil
+import tempfile
 from datetime import datetime, timedelta, timezone as dt_timezone
 from unittest.mock import patch
 
-from adventures.models import Collection, CollectionActivity, Location, Visit
+from django.core.files.base import ContentFile
+from django.test import override_settings
+
+from adventures.models import Activity, Collection, CollectionActivity, ContentAttachment, ContentImage, Location, Visit
 from adventures.services import travelers
 from adventures.services.user_stats import UserStatsService
 from adventures.tests.base import AudienceTestBase
+from adventures.tests.factories import GPX, PNG
 from core.geo import make_point
 from worldtravel.models import Country, Region, VisitedRegion
 
@@ -233,3 +239,137 @@ class LeaveKeepsHistoryTests(AudienceTestBase):
         self.assertEqual(response.status_code, 400, response.content)
         self.assertEqual(Location.objects.filter(user=self.owner).count(), 1)
         self.assertEqual(self._travelers(self.visit), sorted([self.owner.pk, self.editor.pk]))
+
+
+class LeaveCopiesUploadsTests(AudienceTestBase):
+    """What the leaver added to their visits comes with their copy; nobody else's does."""
+
+    def setUp(self):
+        super().setUp()
+        media_root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media_root, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media_root)
+        override.enable()
+        self.addCleanup(override.disable)
+
+    def _visit(self, who, day=1):
+        visit = Visit.objects.create(location=self.hut, start_date=_past(day))
+        visit.travelers.set(who)
+        return visit
+
+    def _photo(self, user, target, name='photo.png'):
+        return ContentImage.objects.create(user=user, image=ContentFile(PNG, name=name), content_object=target)
+
+    def _attachment(self, user, target, name='permit'):
+        return ContentAttachment.objects.create(
+            user=user, file=ContentFile(b'permit 42', name=f'{name}.txt'), name=name, content_object=target
+        )
+
+    def _activity(self, user, visit, name='Ridge hike'):
+        return Activity.objects.create(
+            user=user, visit=visit, name=name, sport_type='Hike', distance=5400.0,
+            gpx_file=ContentFile(GPX, name='ridge.gpx'),
+        )
+
+    def _leave(self, **body):
+        self.as_user(self.editor)
+        response = self.client.post(f'/api/collections/{self.trip.id}/leave/', body, format='json')
+        self.assertEqual(response.status_code, 204, response.content)
+
+    def _copy_visit(self):
+        copy = Location.objects.get(user=self.editor, name='Hut')
+        return copy.visits.get()
+
+    @staticmethod
+    def _read(field):
+        field.open('rb')
+        try:
+            return field.read()
+        finally:
+            field.close()
+
+    def test_sole_traveler_uploads_are_copied_and_original_deleted(self):
+        alone = self._visit([self.editor])
+        photo = self._photo(self.editor, alone)
+        attachment = self._attachment(self.editor, alone)
+        activity = self._activity(self.editor, alone)
+        self._photo(self.editor, activity, name='summit.png')
+        self._activity(self.owner, alone, name="Owner's run")
+        originals = {'photo': photo.image.name, 'attachment': attachment.file.name, 'gpx': activity.gpx_file.name}
+        photo_bytes = self._read(photo.image)
+
+        self._leave()
+        self.assertFalse(Visit.objects.filter(pk=alone.pk).exists())
+        visit = self._copy_visit()
+
+        [new_photo] = visit.images.all()
+        self.assertEqual(new_photo.user, self.editor)
+        self.assertNotEqual(new_photo.image.name, originals['photo'])
+        self.assertEqual(self._read(new_photo.image), photo_bytes)
+
+        [new_attachment] = visit.attachments.all()
+        self.assertEqual((new_attachment.user, new_attachment.name), (self.editor, 'permit'))
+        self.assertNotEqual(new_attachment.file.name, originals['attachment'])
+        self.assertEqual(self._read(new_attachment.file), b'permit 42')
+
+        [new_activity] = visit.activities.all()
+        self.assertEqual(
+            (new_activity.user, new_activity.name, new_activity.sport_type, new_activity.distance),
+            (self.editor, 'Ridge hike', 'Hike', 5400.0),
+        )
+        self.assertEqual((new_activity.day_id, new_activity.collection_id, new_activity.trail_id), (None, None, None))
+        self.assertIsNone(new_activity.promoted_activity_id)
+        self.assertNotEqual(new_activity.gpx_file.name, originals['gpx'])
+        self.assertEqual(self._read(new_activity.gpx_file), GPX)
+        self.assertEqual([p.user for p in new_activity.images.all()], [self.editor])
+
+    def test_shared_visit_copies_only_the_leavers_uploads(self):
+        shared = self._visit([self.owner, self.editor])
+        mine = self._photo(self.editor, shared, name='mine.png')
+        theirs = self._photo(self.owner, shared, name='theirs.png')
+        my_note = self._attachment(self.editor, shared, name='mine')
+        their_note = self._attachment(self.owner, shared, name='theirs')
+        my_run = self._activity(self.editor, shared, name='My run')
+        their_run = self._activity(self.owner, shared, name='Their run')
+
+        self._leave()
+        visit = self._copy_visit()
+        self.assertEqual([p.user for p in visit.images.all()], [self.editor])
+        self.assertEqual([a.name for a in visit.attachments.all()], ['mine'])
+        self.assertEqual([a.name for a in visit.activities.all()], ['My run'])
+
+        # The original visit keeps everything, the leaver's uploads included.
+        self.assertEqual({p.pk for p in shared.images.all()}, {mine.pk, theirs.pk})
+        self.assertEqual({a.pk for a in shared.attachments.all()}, {my_note.pk, their_note.pk})
+        self.assertEqual({a.pk for a in shared.activities.all()}, {my_run.pk, their_run.pk})
+        my_run.refresh_from_db()
+        self.assertEqual((my_run.visit_id, self._read(my_run.gpx_file)), (shared.pk, GPX))
+
+    def test_leaving_without_copies_copies_nothing(self):
+        shared = self._visit([self.owner, self.editor])
+        self._photo(self.editor, shared)
+        self._attachment(self.editor, shared)
+        self._activity(self.editor, shared)
+        before = (ContentImage.objects.count(), ContentAttachment.objects.count(), Activity.objects.count())
+
+        self._leave(keep_copies=False)
+        self.assertFalse(Location.objects.filter(user=self.editor).exists())
+        self.assertEqual(
+            (ContentImage.objects.count(), ContentAttachment.objects.count(), Activity.objects.count()), before
+        )
+
+    def test_duplicate_take_my_visits_copies_uploads(self):
+        shared = self._visit([self.owner, self.editor])
+        self._photo(self.editor, shared, name='mine.png')
+        self._photo(self.owner, shared, name='theirs.png')
+        self._activity(self.editor, shared, name='My run')
+
+        self.as_user(self.editor)
+        response = self.client.post(
+            f'/api/locations/{self.hut.id}/duplicate/', {'take_my_visits': True}, format='json'
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        visit = self._copy_visit()
+        self.assertEqual([p.user for p in visit.images.all()], [self.editor])
+        self.assertEqual([a.name for a in visit.activities.all()], ['My run'])
+        self.assertEqual(shared.images.count(), 2)

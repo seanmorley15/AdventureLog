@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.db import transaction
 
-from adventures.models import Category, Location
+from adventures.models import Activity, Category, Location, Visit
 from adventures.services.images.metadata import create_content_image
 
 
@@ -87,3 +87,47 @@ def copy_location(original, user, collection=None, name=None):
     for photo in photos:
         _copy_photo(photo, user, location_type, copy)
     return copy
+
+
+# Links an activity copy does not keep: its parent is the new visit, and a trail, a trip day or
+# the day activity it was promoted from belong to someone else's records.
+_ACTIVITY_SKIP = {'id', 'user', 'visit', 'day', 'collection', 'trail', 'promoted_activity', 'gpx_file'}
+
+
+def _copy_activity(activity, user, visit):
+    """Copy one activity onto ``visit`` for ``user``, with its own copy of the track and of the user's photos of it."""
+    copy = Activity(
+        user=user,
+        visit=visit,
+        **{
+            field.attname: getattr(activity, field.attname)
+            for field in Activity._meta.concrete_fields
+            if field.name not in _ACTIVITY_SKIP
+        },
+    )
+    if activity.gpx_file:
+        file_name = (activity.gpx_file.name or '').split('/')[-1] or 'track.gpx'
+        copy.gpx_file = ContentFile(_read_file(activity.gpx_file), name=file_name)
+    copy.save()
+    activity_type = ContentType.objects.get_for_model(Activity)
+    for photo in activity.images.filter(user=user):
+        _copy_photo(photo, user, activity_type, copy)
+    return copy
+
+
+@transaction.atomic
+def copy_visit_uploads(visit, target, user):
+    """
+    Copy what ``user`` added to ``visit`` onto ``target``: their photos, attachments and
+    activities (with tracks and their photos of them), each with its own files. Things other
+    people added are left out, and ``visit`` is not changed.
+    """
+    from adventures.services.collections.duplicate import copy_attachment
+
+    visit_type = ContentType.objects.get_for_model(Visit)
+    for photo in visit.images.filter(user=user):
+        _copy_photo(photo, user, visit_type, target)
+    for attachment in visit.attachments.filter(user=user):
+        copy_attachment(attachment, user, target)
+    for activity in visit.activities.filter(user=user):
+        _copy_activity(activity, user, target)
