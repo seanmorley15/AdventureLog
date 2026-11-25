@@ -280,22 +280,25 @@ def serialize_notification(note, user):
 
 def clear_visit_notifications(visit_ids, user_ids=None):
     """
-    Delete the single-visit "added you" notifications for these visits (for these people, or
-    everyone), because they are off the visit or it is gone. Summary notifications name no visit
-    and stay. Never raises: it must not break the change that triggered it.
+    Delete the single-visit "added you" notifications for these visits and these people, because
+    they are off the visit or it is gone. Always pass ``user_ids`` so the recipient index is used
+    (``None`` means everyone and scans the table). Summary notifications name no visit and stay.
+    Never raises: it must not break the change that triggered it.
     """
     from adventures.models import Notification
 
     try:
         ids = [str(pk) for pk in visit_ids]
-        if not ids:
+        if user_ids is not None:
+            user_ids = list(user_ids)
+        if not ids or user_ids == []:
             return
         with transaction.atomic():
             qs = Notification.objects.filter(
                 kind=Notification.Kind.VISIT_TRAVELER_ADDED, data__visit_id__in=ids
             )
             if user_ids is not None:
-                qs = qs.filter(user_id__in=list(user_ids))
+                qs = qs.filter(user_id__in=user_ids)
             qs.delete()
     except Exception:
         logger.exception('Could not clear notifications for visits %s', visit_ids)

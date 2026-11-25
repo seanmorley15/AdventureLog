@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import m2m_changed, post_delete, post_save
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 
@@ -119,8 +119,19 @@ def clear_notifications_when_a_traveler_leaves(sender, instance, action, reverse
             clear_visit_notifications([instance.pk], pk_set)
 
 
+@receiver(pre_delete, sender=Visit)
+def remember_travelers_of_a_visit_being_deleted(sender, instance, **kwargs):
+    """Read who travelled while the rows still exist, so the cleanup can look them up by recipient."""
+    try:
+        instance._traveler_ids_for_cleanup = list(instance.travelers.values_list('pk', flat=True))
+    except Exception:  # pragma: no cover - never break a delete
+        logger.exception('Could not read travelers of visit %s', instance.pk)
+        instance._traveler_ids_for_cleanup = []
+
+
 @receiver(post_delete, sender=Visit)
 def clear_notifications_of_a_deleted_visit(sender, instance, **kwargs):
+    """Notifications are only sent to people who were travelers, so those are the only recipients to look at."""
     from adventures.services.notifications import clear_visit_notifications
 
-    clear_visit_notifications([instance.pk])
+    clear_visit_notifications([instance.pk], getattr(instance, '_traveler_ids_for_cleanup', []))

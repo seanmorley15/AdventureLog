@@ -442,8 +442,51 @@ class CleanupTests(NotificationTestBase):
         self.assertTrue(self._notes(self.viewer).filter(pk=summary.pk).exists())
 
     def test_a_failing_cleanup_does_not_break_leaving(self):
+        from django.db import transaction
+
         self.as_user(self.editor)
-        with patch.object(Notification.objects, 'filter', side_effect=RuntimeError('boom')):
-            response = self.client.post(f'/api/visits/{self.visit.id}/leave/')
-        self.assertEqual(response.status_code, 200)
+        with transaction.atomic():
+            with patch.object(Notification.objects, 'filter', side_effect=RuntimeError('boom')):
+                self.visit.travelers.remove(self.editor)
+            # The surrounding transaction is still usable after the swallowed error.
+            Notification.objects.create(user=self.editor, kind=Notification.Kind.VISIT_TRAVELER_ADDED, data={})
         self.assertFalse(self.visit.travelers.filter(pk=self.editor.pk).exists())
+        self.assertTrue(Notification.objects.filter(user=self.editor, data={}).exists())
+
+    def test_reverse_remove_clears_only_that_visit(self):
+        self.editor.visits_traveled.remove(self.visit)
+        self.assertEqual(self._visit_ids(self.editor), {str(self.other.id)})
+        self.assertEqual(self._visit_ids(self.viewer), {str(self.visit.id)})
+
+    def test_reverse_clear_clears_all_of_that_persons(self):
+        self.editor.visits_traveled.clear()
+        self.assertFalse(self._notes(self.editor).exists())
+        self.assertEqual(self._visit_ids(self.viewer), {str(self.visit.id)})
+
+    def test_forward_clear_clears_every_recipient_of_the_visit(self):
+        self.visit.travelers.clear()
+        self.assertFalse(self._notes(self.viewer).exists())
+        self.assertEqual(self._visit_ids(self.editor), {str(self.other.id)})
+
+    def test_adding_never_deletes(self):
+        before = Notification.objects.count()
+        self.visit.travelers.add(self.stranger)
+        self.assertEqual(Notification.objects.count(), before)
+
+    def test_deleting_the_location_clears_everyone(self):
+        self.hut.delete()
+        self.assertFalse(Notification.objects.exists())
+
+    def test_deleting_an_account_clears_its_places_visit_notifications(self):
+        self.owner.delete()
+        self.assertFalse(Notification.objects.exists())
+
+    def test_the_deleted_visit_cleanup_looks_up_by_recipient(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as queries:
+            self.visit.delete()
+        deletes = [q['sql'] for q in queries if 'adventures_notification' in q['sql'] and 'visit_id' in q['sql']]
+        self.assertTrue(deletes)
+        self.assertTrue(all('"user_id" IN' in sql for sql in deletes), deletes)
