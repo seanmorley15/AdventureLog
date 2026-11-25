@@ -263,24 +263,48 @@ class CreatorUnlinkTests(APITestCase):
         )
         self.assertFalse(mine.collections.exists())
 
-    def test_created_by_is_not_writable_and_is_shown_without_an_email(self):
+    def test_created_by_is_not_writable(self):
         location = self.create_in_trip(self.editor)
         self.client.force_authenticate(user=self.owner)
-        response = self.client.patch(
-            f'/api/locations/{location.id}/', {'created_by': str(self.other_editor.uuid)}, format='json'
-        )
-        self.assertEqual(response.status_code, 200)
+        for field in ('created_by', 'created_by_you'):
+            response = self.client.patch(
+                f'/api/locations/{location.id}/', {field: str(self.other_editor.uuid)}, format='json'
+            )
+            self.assertEqual(response.status_code, 200)
         location.refresh_from_db()
         self.assertEqual(location.created_by_id, self.editor.id)
-        body = self.client.get(f'/api/locations/{location.id}/').json()
-        self.assertEqual(body['created_by']['uuid'], str(self.editor.uuid))
-        self.assertEqual(body['created_by']['username'], self.editor.username)
-        self.assertNotIn('email', body['created_by'])
+
+    def test_created_by_you_is_true_only_for_the_creator(self):
+        location = self.create_in_trip(self.editor)
+        for user, expected in ((self.editor, True), (self.owner, False), (self.other_editor, False)):
+            self.client.force_authenticate(user=user)
+            body = self.client.get(f'/api/locations/{location.id}/').json()
+            self.assertIs(body['created_by_you'], expected)
+            self.assertNotIn('created_by', body)
+        self.client.force_authenticate(user=self.owner)
+        listed = self.client.get('/api/locations/').json()
+        rows = listed['results'] if isinstance(listed, dict) else listed
+        row = next(r for r in rows if r['id'] == str(location.id))
+        self.assertNotIn('created_by', row)
+
+    def test_a_public_view_never_reveals_who_created_it(self):
+        location = self.create_in_trip(self.editor)
+        Location.objects.filter(pk=location.pk).update(is_public=True)
+        self.trip.is_public = True
+        self.trip.save()
+        for user in (None, self.other_editor):
+            self.client.force_authenticate(user=user)
+            response = self.client.get(f'/api/locations/{location.id}/')
+            self.assertEqual(response.status_code, 200)
+            body = response.json()
+            self.assertNotIn('created_by', body)
+            self.assertIs(body['created_by_you'], False)
+            self.assertNotIn(self.editor.username, str(body.get('created_by', '')))
 
     def test_created_by_is_null_for_old_places(self):
         old = Location.objects.create(user=self.owner, name='Old')
         self.client.force_authenticate(user=self.owner)
-        self.assertIsNone(self.client.get(f'/api/locations/{old.id}/').json()['created_by'])
+        self.assertIs(self.client.get(f'/api/locations/{old.id}/').json()['created_by_you'], False)
 
     def test_a_copy_has_no_creator_unless_the_copier_made_it(self):
         from adventures.services.locations.copy import copy_location

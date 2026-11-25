@@ -262,8 +262,8 @@ export type Location = {
 	category: Category | null;
 	attachments: Attachment[];
 	user: User | null;
-	/** Who added the place; null for places from before this was recorded. */
-	created_by?: Pick<User, 'uuid' | 'username' | 'first_name' | 'last_name' | 'profile_pic'> | null;
+	/** True when the signed-in user added the place; who did is never sent. */
+	created_by_you?: boolean;
 	city?: City | null;
 	region?: Region | null;
 	country?: Country | null;

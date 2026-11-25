@@ -22,7 +22,7 @@ function setup(role: string, createdBy: string | null) {
 		tags: [],
 		collections: ['c1'],
 		user: { uuid: 'owner', username: 'owner' },
-		created_by: createdBy ? { uuid: createdBy, username: createdBy } : null
+		created_by_you: createdBy === 'me'
 	};
 	const collection: any = {
 		id: 'c1',

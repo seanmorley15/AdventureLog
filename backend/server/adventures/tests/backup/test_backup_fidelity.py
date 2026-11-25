@@ -64,7 +64,8 @@ class BackupFidelityTests(APITestCase):
         Location.objects.create(user=self.owner, created_by=helper, name='Added by a helper')
 
         data, content = self.export_data()
-        self.assertNotIn('fid-helper@example.com', json.dumps(data))
+        self.assertNotIn('fid-helper', json.dumps(data))
+        self.assertNotIn('created_by', json.dumps(data))
         Location.objects.all().delete()
         self.restore(content)
 

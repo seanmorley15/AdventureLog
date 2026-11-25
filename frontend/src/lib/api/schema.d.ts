@@ -5684,8 +5684,8 @@ export interface components {
             readonly attachments: components["schemas"]["Attachment"][];
             /** @description The owner. The owner themselves also sees their account fields. */
             readonly user: components["schemas"]["PublicProfile"] | null;
-            /** @description Who added the place, if known. Never writable. */
-            readonly created_by: unknown;
+            /** @description Whether you added the place. Who did is never shown to others. */
+            readonly created_by_you: boolean;
             readonly city: components["schemas"]["City"] | null;
             readonly country: components["schemas"]["Country"] | null;
             readonly region: components["schemas"]["Region"] | null;
@@ -5758,8 +5758,8 @@ export interface components {
             readonly category: unknown;
             /** @description The owner. */
             readonly user: unknown;
-            /** @description Who added the place, if known. */
-            readonly created_by: unknown;
+            /** @description Whether you added the place. */
+            readonly created_by_you: boolean;
             /** Format: decimal */
             readonly price: string | null;
             readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -5792,8 +5792,8 @@ export interface components {
             readonly attachments: components["schemas"]["Attachment"][];
             /** @description The owner. The owner themselves also sees their account fields. */
             readonly user: components["schemas"]["PublicProfile"] | null;
-            /** @description Who added the place, if known. Never writable. */
-            readonly created_by: unknown;
+            /** @description Whether you added the place. Who did is never shown to others. */
+            readonly created_by_you: boolean;
             readonly city: components["schemas"]["City"] | null;
             readonly country: components["schemas"]["Country"] | null;
             readonly region: components["schemas"]["Region"] | null;

@@ -53,20 +53,10 @@ class CategorySerializer(serializers.ModelSerializer):
         return memoized_count(self, 'category_counts', obj.user_id, counts).get(obj.pk, 0)
 
 
-
-def created_by_summary(user):
-    """Who added a place: enough to show a name and match it to the signed-in user, no email."""
-    if user is None:
-        return None
-    return {
-        'uuid': str(user.uuid),
-        'username': user.username,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
-        'profile_pic': _build_profile_pic_url(user),
-        'public_profile': bool(getattr(user, 'public_profile', False)),
-        'profile_visibility': getattr(user, 'profile_visibility', 'private'),
-    }
+def is_created_by_viewer(serializer, obj):
+    """True only for the signed-in person who added the place. The creator is never named to anyone else."""
+    viewer = getattr(serializer.context.get('request'), 'user', None)
+    return bool(viewer and viewer.is_authenticated and obj.created_by_id == viewer.id)
 
 
 class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serializers.ModelSerializer):
@@ -79,7 +69,7 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
     category = serializers.SerializerMethodField()
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
-    created_by = serializers.SerializerMethodField()
+    created_by_you = serializers.SerializerMethodField()
     collections = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
@@ -87,7 +77,7 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
         fields = [
             'id', 'name', 'rating', 'tags', 'location', 'is_public', 'collections',
             'created_at', 'updated_at', 'images', 'link', 'longitude', 'latitude',
-            'is_visited', 'category', 'user', 'created_by', 'price', 'price_currency',
+            'is_visited', 'category', 'user', 'created_by_you', 'price', 'price_currency',
         ]
         read_only_fields = fields
 
@@ -109,9 +99,9 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
             return bool(annotated)
         return obj.is_visited_status(perspective_user(self.context.get('request'), obj))
 
-    @extend_schema_field(serializers.JSONField(allow_null=True, help_text='Who added the place, if known.'))
-    def get_created_by(self, obj):
-        return created_by_summary(obj.created_by)
+    @extend_schema_field(serializers.BooleanField(help_text='Whether you added the place.'))
+    def get_created_by_you(self, obj):
+        return is_created_by_viewer(self, obj)
 
     @extend_schema_field(serializers.JSONField(allow_null=True, help_text='The owner.'))
     def get_user(self, obj):
@@ -154,21 +144,21 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
     )
     trails = TrailSerializer(many=True, read_only=True, required=False)
     user = serializers.SerializerMethodField(help_text='The owner. The owner themselves also sees their account fields.')
-    created_by = serializers.SerializerMethodField(help_text='Who added the place, if known. Never writable.')
+    created_by_you = serializers.SerializerMethodField(help_text='Whether you added the place. Who did is never shown to others.')
 
     class Meta:
         model = Location
         fields = [
             'id', 'name', 'description', 'rating', 'tags', 'location', 
             'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'created_by', 'city', 'country', 'region', 'trails',
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'created_by_you', 'city', 'country', 'region', 'trails',
             'price', 'price_currency'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'created_by', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'created_by_you', 'is_visited']
 
-    @extend_schema_field(serializers.JSONField(allow_null=True, help_text='`{uuid, username, first_name, last_name, profile_pic, public_profile, profile_visibility}`'))
-    def get_created_by(self, instance):
-        return created_by_summary(instance.created_by)
+    @extend_schema_field(serializers.BooleanField())
+    def get_created_by_you(self, instance):
+        return is_created_by_viewer(self, instance)
 
     @extend_schema_field(PublicProfileSerializer(allow_null=True))
     def get_user(self, instance):
@@ -198,7 +188,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             # Slim representation for nested contexts, but keep allowed fields
             fields_to_remove = [
                 'visits', 'attachments', 'trails', 'collections',
-                'user', 'created_by', 'city', 'country', 'region'
+                'user', 'created_by_you', 'city', 'country', 'region'
             ]
             for field in fields_to_remove:
                 # Keep field if explicitly allowed for nested mode

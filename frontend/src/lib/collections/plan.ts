@@ -38,7 +38,7 @@ export function canUnlinkPlace(
 	if (!currentUserUuid) return false;
 	const place = row.object as Location | null;
 	if (collection?.user === currentUserUuid || place?.user?.uuid === currentUserUuid) return true;
-	if (place?.created_by?.uuid !== currentUserUuid) return false;
+	if (!place?.created_by_you) return false;
 	const member = collection?.collaborators?.find((person) => person.uuid === currentUserUuid);
 	const role = member ? member.role : collection?.audience?.role;
 	return role === 'editor';

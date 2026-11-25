@@ -16682,10 +16682,10 @@ components:
           nullable: true
           readOnly: true
           description: The owner. The owner themselves also sees their account fields.
-        created_by:
-          nullable: true
-          description: Who added the place, if known. Never writable.
+        created_by_you:
+          type: boolean
           readOnly: true
+          description: Whether you added the place. Who did is never shown to others.
         city:
           allOf:
           - $ref: '#/components/schemas/City'
@@ -16722,7 +16722,7 @@ components:
       - city
       - country
       - created_at
-      - created_by
+      - created_by_you
       - id
       - images
       - is_visited
@@ -16867,9 +16867,9 @@ components:
           nullable: true
           description: The owner.
           readOnly: true
-        created_by:
-          nullable: true
-          description: Who added the place, if known.
+        created_by_you:
+          type: boolean
+          description: Whether you added the place.
           readOnly: true
         price:
           type: string
@@ -16887,7 +16887,7 @@ components:
       - category
       - collections
       - created_at
-      - created_by
+      - created_by_you
       - id
       - images
       - is_public
@@ -16986,10 +16986,10 @@ components:
           nullable: true
           readOnly: true
           description: The owner. The owner themselves also sees their account fields.
-        created_by:
-          nullable: true
-          description: Who added the place, if known. Never writable.
+        created_by_you:
+          type: boolean
           readOnly: true
+          description: Whether you added the place. Who did is never shown to others.
         city:
           allOf:
           - $ref: '#/components/schemas/City'
@@ -17034,7 +17034,7 @@ components:
       - city
       - country
       - created_at
-      - created_by
+      - created_by_you
       - id
       - images
       - is_visited

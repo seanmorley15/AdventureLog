@@ -75,7 +75,7 @@ describe('DayPlanRow Remove from collection', () => {
 				name: 'Hut',
 				visits: [],
 				user: { uuid: 'owner' },
-				created_by: { uuid: 'me' }
+				created_by_you: true
 			}
 		};
 		render(DayPlanRow as any, {

@@ -1959,7 +1959,7 @@
 	"traveler_impact": {
 		"checking": "Checking who this affects…",
 		"preview_failed": "Could not check what this would change. Try again.",
-		"unlink_intro": "This place will no longer be part of {name}.",
+		"unlink_intro": "This place will no longer be part of {name}. If it was added by a collaborator, it stays on the trip owner's map and list.",
 		"plan_stops": "{count, plural, one {It also leaves # stop on the plan of {name}.} other {It also leaves # stops on the plan of {name}.}}",
 		"you_copy": "You will get your own copy of it, with your visits.",
 		"people_copy": "{count, plural, one {# person who traveled there will get their own copy, with their visits.} other {# people who traveled there will get their own copy, with their visits.}}",

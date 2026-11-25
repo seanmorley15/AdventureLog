@@ -192,29 +192,26 @@ describe('canUnlinkPlace for the person who added the place', () => {
 			{ uuid: 'viewer-uuid', is_owner: false, role: 'viewer' }
 		]
 	} as never;
-	const row = (createdBy: string | null) =>
-		({
-			object: { user: { uuid: 'owner-uuid' }, created_by: createdBy ? { uuid: createdBy } : null }
-		}) as never;
+	const row = (you: boolean) =>
+		({ object: { user: { uuid: 'owner-uuid' }, created_by_you: you } }) as never;
 
 	it('lets an editor who added the place take it out', () => {
-		expect(canUnlinkPlace(collection, row('editor-uuid'), 'editor-uuid')).toBe(true);
+		expect(canUnlinkPlace(collection, row(true), 'editor-uuid')).toBe(true);
 	});
 
-	it("refuses an editor for someone else's addition or an unknown creator", () => {
-		expect(canUnlinkPlace(collection, row('other-uuid'), 'editor-uuid')).toBe(false);
-		expect(canUnlinkPlace(collection, row(null), 'editor-uuid')).toBe(false);
+	it("refuses an editor for someone else's addition", () => {
+		expect(canUnlinkPlace(collection, row(false), 'editor-uuid')).toBe(false);
 	});
 
 	it('refuses a creator who is now a viewer or no longer on the trip', () => {
-		expect(canUnlinkPlace(collection, row('viewer-uuid'), 'viewer-uuid')).toBe(false);
-		expect(canUnlinkPlace(collection, row('gone-uuid'), 'gone-uuid')).toBe(false);
+		expect(canUnlinkPlace(collection, row(true), 'viewer-uuid')).toBe(false);
+		expect(canUnlinkPlace(collection, row(true), 'gone-uuid')).toBe(false);
 	});
 
 	it('reads the role from the audience when the collaborators are not loaded', () => {
 		const bare = { user: 'owner-uuid', audience: { role: 'editor' } } as never;
-		expect(canUnlinkPlace(bare, row('editor-uuid'), 'editor-uuid')).toBe(true);
+		expect(canUnlinkPlace(bare, row(true), 'editor-uuid')).toBe(true);
 		const viewer = { user: 'owner-uuid', audience: { role: 'viewer' } } as never;
-		expect(canUnlinkPlace(viewer, row('editor-uuid'), 'editor-uuid')).toBe(false);
+		expect(canUnlinkPlace(viewer, row(true), 'editor-uuid')).toBe(false);
 	});
 });
