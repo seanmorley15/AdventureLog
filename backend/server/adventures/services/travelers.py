@@ -316,6 +316,41 @@ def member_locations(collection, user):
     )
 
 
+def _uploads_on(visits, mine):
+    """Photos, attachments and activities on ``visits`` (a queryset of pks) added by anyone not in ``mine``, with the photos on those activities."""
+    from django.contrib.contenttypes.models import ContentType
+
+    from adventures.models import Activity, ContentAttachment, ContentImage
+
+    activities = Activity.objects.filter(visit__in=visits)
+    visit_type = ContentType.objects.get_for_model(visits.model)
+    activity_type = ContentType.objects.get_for_model(Activity)
+    return (
+        ContentImage.objects.filter(content_type=visit_type, object_id__in=visits).exclude(user__in=mine).count()
+        + ContentAttachment.objects.filter(content_type=visit_type, object_id__in=visits).exclude(user__in=mine).count()
+        + activities.exclude(user__in=mine).count()
+        + ContentImage.objects.filter(content_type=activity_type, object_id__in=activities.values('pk'))
+        .exclude(user__in=mine).count()
+    )
+
+
+def _visits_that_would_go(locations, leaving):
+    """Visits at ``locations`` that only people in ``leaving`` (user pks) travelled on: taking them off deletes the visit."""
+    from django.contrib.auth import get_user_model
+
+    from adventures.models import Visit
+
+    staying = get_user_model().objects.exclude(pk__in=leaving)
+    shared = Visit.objects.filter(travelers__in=staying).values('pk')
+    return Visit.objects.filter(location__in=locations, travelers__in=leaving).exclude(pk__in=shared).distinct()
+
+
+def _leave_impact(locations, user):
+    """``{locations, others_uploads}`` for ``user`` being taken off visits at ``locations``."""
+    doomed = _visits_that_would_go(locations, [user.pk]).values('pk')
+    return {'locations': locations.count(), 'visits_deleted': doomed.count(), 'others_uploads': _uploads_on(doomed, [user])}
+
+
 def leave_preview(collection, user):
     """
     What leaving (or being removed from) the collection would do, without changing anything.
@@ -325,26 +360,24 @@ def leave_preview(collection, user):
     that other people added to visits ``user`` is the only traveler on. Those visits are
     deleted either way, so these go with them, as do other people's photos of activities on them.
     """
-    from django.contrib.auth import get_user_model
-    from django.contrib.contenttypes.models import ContentType
+    impact = _leave_impact(member_locations(collection, user), user)
+    return {'locations': impact['locations'], 'others_uploads': impact['others_uploads']}
 
-    from adventures.models import Activity, ContentAttachment, ContentImage, Visit
 
-    locations = member_locations(collection, user)
-    others = get_user_model().objects.exclude(pk=user.pk)
-    shared = Visit.objects.filter(travelers__in=others).values('pk')
-    doomed = Visit.objects.filter(location__in=locations, travelers=user).exclude(pk__in=shared).values('pk')
-    activities = Activity.objects.filter(visit__in=doomed)
-    visit_type = ContentType.objects.get_for_model(Visit)
-    activity_type = ContentType.objects.get_for_model(Activity)
-    others_uploads = (
-        ContentImage.objects.filter(content_type=visit_type, object_id__in=doomed).exclude(user=user).count()
-        + ContentAttachment.objects.filter(content_type=visit_type, object_id__in=doomed).exclude(user=user).count()
-        + activities.exclude(user=user).count()
-        + ContentImage.objects.filter(content_type=activity_type, object_id__in=activities.values('pk'))
-        .exclude(user=user).count()
+def leave_preview_all(collections, user):
+    """``leave_preview`` over several collections at once, counting a place held by more than one a single time. Also says ``visits_deleted``."""
+    from adventures.models import Location
+
+    places = (
+        Location.objects.filter(collections__in=collections, visits__travelers=user)
+        .exclude(user=user).distinct()
     )
-    return {'locations': locations.count(), 'others_uploads': others_uploads}
+    return _leave_impact(places, user)
+
+
+def leave_preview_all_places(locations, user):
+    """``{locations, visits_deleted, others_uploads}`` for ``user`` coming off the visits at ``locations``."""
+    return _leave_impact(locations, user)
 
 
 def release_member(collection, user, keep_copies):
@@ -410,15 +443,22 @@ def release_lost_access(location, ignoring=()):
     return len(users)
 
 
-def release_collections_travelers(collections):
+def lost_access_plan(locations, ignoring=()):
+    """``[(location, [users])]``: who ``lost_access_users`` finds at each of ``locations``, leaving out places where it is nobody."""
+    plan = []
+    for location in locations:
+        users = list(lost_access_users(location, ignoring).order_by('pk'))
+        if users:
+            plan.append((location, users))
+    return plan
+
+
+def collections_release_plan(collections):
     """
-    Before ``collections`` are all deleted, give the lost-access travelers of their places
-    their copies (``release_lost_access`` with every one of them ignored at once, so a place
-    held by two of them is judged once, against the collections that remain). Only places
-    that someone other than the owner travelled to are looked at. Returns how many people
-    were released.
+    ``lost_access_plan`` for the places of ``collections`` that are about to go with all of
+    them at once, so a place held by two of them is judged once, against the collections that
+    remain. Only places that someone other than the owner travelled to are looked at.
     """
-    from django.db import transaction
     from django.db.models import Exists, OuterRef
 
     from adventures.models import Location, Visit
@@ -429,11 +469,49 @@ def release_collections_travelers(collections):
     others = through.objects.filter(visit__location=OuterRef('pk')).exclude(
         **{user_field: OuterRef('user_id')}
     )
+    places = Location.objects.filter(collections__in=collections).filter(Exists(others)).distinct()
+    return lost_access_plan(places, ignoring=collections)
+
+
+def release_preview(plan):
+    """
+    What carrying out a ``lost_access_plan`` would do, without changing anything.
+
+    ``people``: everyone who would get a copy. ``places``: the places that would be copied.
+    ``visits_deleted``: visits only released people travelled on, which go with the original
+    place. ``others_uploads``: what people who are not released added to those visits.
+    """
+    people, places, visits_deleted, others_uploads = {}, 0, 0, 0
+    for location, users in plan:
+        places += 1
+        people.update({user.pk: user for user in users})
+        doomed = _visits_that_would_go([location], [user.pk for user in users]).values('pk')
+        visits_deleted += doomed.count()
+        others_uploads += _uploads_on(doomed, users)
+    return {
+        'people': sorted(people.values(), key=lambda user: user.username),
+        'places': places,
+        'visits_deleted': visits_deleted,
+        'others_uploads': others_uploads,
+    }
+
+
+def release_collections_travelers(collections):
+    """
+    Before ``collections`` are all deleted, give the lost-access travelers of their places
+    their copies (``release_lost_access`` with every one of them ignored at once, so a place
+    held by two of them is judged once, against the collections that remain). Only places
+    that someone other than the owner travelled to are looked at. Returns how many people
+    were released.
+    """
+    from django.db import transaction
+
     released = 0
     with transaction.atomic():
-        places = Location.objects.filter(collections__in=collections).filter(Exists(others)).distinct()
-        for location in places:
-            released += release_lost_access(location, ignoring=collections)
+        for location, users in collections_release_plan(collections):
+            for user in users:
+                take_my_visits(location, user)
+            released += len(users)
     return released
 
 

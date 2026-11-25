@@ -85,6 +85,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         if self.resulting_profile_visibility(instance, validated_data) == ProfileVisibility.PRIVATE:
             shared_collections = list(Collection.objects.filter(shared_with=instance))
             left_count = len(shared_collections)
+            kept_copies = travelers.leave_preview_all(shared_collections, instance)['locations']
             with transaction.atomic():
                 for collection in shared_collections:
                     # They did not pick this the way leaving does, so they keep copies of where they travelled.
@@ -97,6 +98,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
             self._sharing_impact = {
                 'left_shared_collections': left_count,
+                'kept_copies': kept_copies,
                 'revoked_collection_invites': invite_count,
             }
         else:

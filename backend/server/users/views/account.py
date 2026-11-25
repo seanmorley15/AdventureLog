@@ -18,6 +18,7 @@ from adventures.services.media_quota import (
     get_user_media_usage,
 )
 from core.exceptions import APIError
+from users.impact_serializers import DeletionPreviewSerializer, PrivacyPreviewSerializer
 from users.serializers import (
     AccountSerializer,
     CustomUserDetailsSerializer,
@@ -25,6 +26,7 @@ from users.serializers import (
     MediaUsageSerializer,
     PasswordLoginSerializer,
 )
+from users.services import account_impact
 from users.services.account_deletion import AccountDeletionError, delete_user_account
 
 
@@ -38,7 +40,7 @@ from users.services.account_deletion import AccountDeletionError, delete_user_ac
             'you) or `public`; the older `public_profile` switch is kept in step with it. Making your '
             'profile private also removes you from collections other people shared with you '
             'and cancels invites you have not answered. The response then includes '
-            '`left_shared_collections` and `revoked_collection_invites` with how many were affected.'
+            '`left_shared_collections`, `revoked_collection_invites` and `kept_copies` (places you travelled to there that you now hold as your own copies) with how many were affected. `GET /api/account/privacy-preview/` says the same beforehand.'
         ),
         request=CustomUserDetailsSerializer,
         responses={
@@ -134,6 +136,29 @@ class AccountViewSet(viewsets.GenericViewSet):
             ) from exc
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(responses=DeletionPreviewSerializer)
+    @action(detail=False, methods=['get'], url_path='deletion-preview')
+    def deletion_preview(self, request):
+        """
+        Preview deleting your account
+
+        What deleting the account would do, changing nothing: what you own that goes, who gets
+        their own copy of your places they travelled to, and visits you leave behind.
+        """
+        data = account_impact.deletion_preview(request.user)
+        return Response(DeletionPreviewSerializer(data, context={'request': request}).data)
+
+    @extend_schema(responses=PrivacyPreviewSerializer)
+    @action(detail=False, methods=['get'], url_path='privacy-preview')
+    def privacy_preview(self, request):
+        """
+        Preview making your profile private
+
+        What `profile_visibility: private` would do, changing nothing: how many shared trips you
+        would leave, how many places you keep as copies, and what would go.
+        """
+        return Response(PrivacyPreviewSerializer(account_impact.privacy_preview(request.user)).data)
 
     @extend_schema(responses=MediaUsageSerializer)
     @action(detail=False, methods=['get'], url_path='media-usage')

@@ -6,7 +6,9 @@ from django.db.models import Count, F, Max, Prefetch, Q
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
+from drf_spectacular.utils import (
+    OpenApiParameter, OpenApiResponse, PolymorphicProxySerializer, extend_schema, extend_schema_view,
+)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
@@ -33,6 +35,7 @@ from adventures.serializers.location import (
     SunTimesQuerySerializer,
     SunTimesSerializer,
 )
+from adventures.serializers.sharing import UnlinkPreviewSerializer
 from adventures.serializers.quick_add import LocationQuickAddResultSerializer, QuickAddSerializer
 from adventures.services.exports.share_image import (
     build_share_image,
@@ -46,7 +49,7 @@ from adventures.services.locations.center import collection_center
 from adventures.services.locations.copy import copy_location
 from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
-from adventures.services.travelers import candidates, take_my_visits, visited_by, where_ive_been_q
+from adventures.services.travelers import candidates, lost_access_plan, release_preview, take_my_visits, visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
 from adventures.utils.language import resolve_request_language
@@ -520,11 +523,21 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         parameters=[OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.')],
     )
     @extend_schema(
-        methods=['DELETE'], request=None, responses={200: CollectionLinkResultSerializer},
+        methods=['DELETE'], request=None, responses={200: PolymorphicProxySerializer(
+            component_name='CollectionUnlinkResult',
+            serializers=[CollectionLinkResultSerializer, UnlinkPreviewSerializer],
+            resource_type_field_name=None,
+        )},
         summary='Remove the location from a collection',
         description='Idempotent. Also removes its placements from the day plan, and says how many. '
-                    'Only the collection owner or the place owner may call it.',
-        parameters=[OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.')],
+                    'Only the collection owner or the place owner may call it. People who travelled to the '
+                    'place and can no longer reach it through another collection come off its visits and '
+                    'get their own copy with their visits. With `?dry_run=1` it changes nothing and '
+                    'returns who that would be (`people_released`) and what would go with it.',
+        parameters=[
+            OpenApiParameter('collection_id', str, OpenApiParameter.PATH, description='The collection id.'),
+            OpenApiParameter('dry_run', bool, description='Only say what would happen; change nothing.'),
+        ],
     )
     @action(detail=True, methods=['post', 'delete'], url_path=r'collections/(?P<collection_id>[^/.]+)')
     def collection_membership(self, request, pk=None, collection_id=None):
@@ -547,6 +560,16 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
                 'Only the collection owner or the place owner can remove a place from a collection. '
                 'You can remove it from the plan instead.'
             )
+        if request.query_params.get('dry_run', '').lower() in ('1', 'true'):
+            plan = lost_access_plan([location], ignoring=[collection])
+            preview = release_preview(plan)
+            return Response(UnlinkPreviewSerializer({
+                'people_released': preview['people'],
+                'includes_you': any(user.pk == request.user.pk for user in preview['people']),
+                'visits_deleted': preview['visits_deleted'],
+                'others_uploads': preview['others_uploads'],
+                'removed_placements': len(placements_for(location, collection)),
+            }, context={'request': request}).data)
         removed = unlink_location(location, collection)
         return Response({'linked': False, 'removed_placements': removed})
 

@@ -7,7 +7,8 @@ copies made when someone leaves, joining yourself, the owner default, restores a
 
 Wrap a request that adds people to many visits in ``batch()`` and each person gets one notification
 with a count instead of one per visit. Writing never breaks the change it describes, and the e-mail
-(only when the server has SMTP) is queued in the same transaction as the notification.
+(only when the server has SMTP) is queued in the same transaction, after the notification, so a queue
+error loses the e-mail and not the notification.
 """
 from __future__ import annotations
 
@@ -106,9 +107,15 @@ def _create(user, actor_user, actor_name, visits, collection):
                 actor_name=actor_name[:150],
                 data=_visit_data(visits, collection),
             )
-            _queue_email(note, user)
     except Exception:
         logger.exception('Could not notify user %s', getattr(user, 'pk', None))
+        return
+    # Its own savepoint, after the row exists: a queue error loses the e-mail, not the notification.
+    try:
+        with transaction.atomic():
+            _queue_email(note, user)
+    except Exception:
+        logger.exception('Could not queue the e-mail for notification %s', note.pk)
 
 
 def _day(value, tz_name):
@@ -187,6 +194,8 @@ def send_traveler_added_email(note, page_url=None, fail_silently=True):
         target = f'a visit at {place}'
         subject = f'You were added to a visit at {place}'
         first = f'{who} added you to {target}' + (f' ({when}).' if when else '.')
+    # A name with a line break would make the subject a bad header.
+    subject = ' '.join(subject.split())
     lines = [first]
     if count > 1 and when:
         lines.append(f'Dates: {when}.')

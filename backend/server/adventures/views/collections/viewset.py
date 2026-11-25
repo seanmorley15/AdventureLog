@@ -2,6 +2,7 @@ from django.db.models import Count, F, Q, Prefetch
 from django.db.models.functions import Lower
 from django.db import transaction
 from drf_spectacular.utils import (
+    OpenApiResponse,
     OpenApiParameter,
     PolymorphicProxySerializer,
     extend_schema,
@@ -48,7 +49,8 @@ from core import pagination
 from core.exceptions import APIError
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 from core.serializers import validated
-from adventures.services import day_plan
+from adventures.services import day_plan, travelers
+from adventures.serializers.sharing import CollectionDeletePreviewSerializer
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -69,7 +71,13 @@ from .sharing import SharingActionsMixin
         'Changing `visibility` does not change the records inside.',
     ),
     partial_update=extend_schema(description='Owner only. Like PUT, for the fields you send.'),
-    destroy=extend_schema(description='Owner only. Deletes the collection; records in it that belong to you stay.'),
+    destroy=extend_schema(
+        description='Owner only. Deletes the collection; records in it that belong to you stay. People who travelled '
+        'to a place in it and can no longer reach it get their own copy with their visits. With `?dry_run=1` '
+        'it changes nothing and returns who that would be and what would go with it.',
+        parameters=[OpenApiParameter('dry_run', bool, description='Only say what would happen; change nothing.')],
+        responses={200: CollectionDeletePreviewSerializer, 204: OpenApiResponse(description='Deleted.')},
+    ),
 )
 class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMixin, ExportActionsMixin, PaginatedResponseMixin, viewsets.ModelViewSet):
     """
@@ -85,6 +93,19 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
     serializer_class = CollectionSerializer
     permission_classes = [CollectionShared]
     pagination_class = pagination.StandardResultsSetPagination
+
+    def destroy(self, request, *args, **kwargs):
+        collection = self.get_object()
+        if request.query_params.get('dry_run', '').lower() in ('1', 'true'):
+            preview = travelers.release_preview(travelers.collections_release_plan([collection]))
+            return Response(CollectionDeletePreviewSerializer({
+                'people_released': preview['people'],
+                'includes_you': any(user.pk == request.user.pk for user in preview['people']),
+                'visits_deleted': preview['visits_deleted'],
+                'others_uploads': preview['others_uploads'],
+                'places': preview['places'],
+            }, context={'request': request}).data)
+        return super().destroy(request, *args, **kwargs)
 
     def get_permissions(self):
         # Listing is about your own collections. The other actions also serve guest links.

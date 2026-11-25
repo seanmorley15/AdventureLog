@@ -106,11 +106,38 @@ class CreationTests(NotificationTestBase):
         self.assertFalse(Notification.objects.exists())
 
     def test_leave_copies_notify_nobody(self):
+        from adventures.services.location_collections import unlink_location
+        from users.services.account_deletion import delete_user_account
+
+        def copies_of(user, name):
+            return Location.objects.filter(user=user, name=name).exclude(pk__in=[self.hut.pk]).count()
+
+        # take_my_visits
         visit = self._visit([self.owner, self.editor])
         travelers.take_my_visits(self.hut, self.editor)
-        travelers.release_member(self.trip, self.viewer, keep_copies=True)
+        self.assertEqual(copies_of(self.editor, 'Hut'), 1)
+        self.assertEqual([t.pk for t in visit.travelers.all()], [self.owner.pk])
         self.assertFalse(Notification.objects.exists())
-        self.assertTrue(visit.pk)
+
+        # release_member (leaving or being removed)
+        self._visit([self.owner, self.viewer], at(2026, 6, 3))
+        travelers.release_member(self.trip, self.viewer, keep_copies=True)
+        self.assertEqual(copies_of(self.viewer, 'Hut'), 1)
+        self.assertFalse(Notification.objects.exists())
+
+        # release_lost_access (a place leaving its trip)
+        pier = self._second_stop()
+        self._visit([self.owner, self.editor], at(2026, 6, 2), location=pier)
+        unlink_location(pier, self.trip)
+        self.assertEqual(copies_of(self.editor, 'Pier'), 1)
+        self.assertFalse(Notification.objects.exists())
+
+        # account deletion releasing co-members
+        self.trip.shared_with.add(self.stranger)
+        self._visit([self.owner, self.stranger], at(2026, 6, 4))
+        delete_user_account(self.owner)
+        self.assertEqual(copies_of(self.stranger, 'Hut'), 1)
+        self.assertFalse(Notification.objects.exists())
 
     def test_add_travelers_sends_one_summary_per_person_with_the_count(self):
         self._visit([self.owner], at(2026, 6, 1))
@@ -207,6 +234,24 @@ class EmailTests(NotificationTestBase):
         self.assertIn('remove yourself', message.body)
         self.assertNotIn('viewer', message.body)
         self.assertTrue(visit.pk)
+
+    @override_settings(SMTP_CONFIGURED=True)
+    def test_a_failure_to_queue_the_email_keeps_the_notification(self):
+        with patch('adventures.tasks.send_traveler_added_email_task.defer', side_effect=RuntimeError('queue down')):
+            self._add_editor()
+        self.assertEqual(self._notes(self.editor).count(), 1)
+
+    @override_settings(SMTP_CONFIGURED=True)
+    def test_line_breaks_in_a_place_name_do_not_break_the_subject(self):
+        self.hut.name = 'Hut\r\nBcc: someone@example.com'
+        self.hut.save()
+        self._add_editor()
+        run_pending_jobs()
+        self.assertEqual(len(mail.outbox), 1)
+        subject = mail.outbox[0].subject
+        self.assertNotIn('\n', subject)
+        self.assertNotIn('\r', subject)
+        self.assertIn('Hut', subject)
 
     @override_settings(SMTP_CONFIGURED=False)
     def test_no_email_without_smtp(self):
@@ -320,7 +365,25 @@ class ApiTests(NotificationTestBase):
         self.client.post('/api/notifications/mark-read/', {}, format='json')
         self.assertEqual(self.client.get('/api/account/').json()['unread_notification_count'], 0)
 
-    def test_guest_actor_is_never_treated_as_a_user(self):
-        visit = self._visit([self.owner])
-        notifications.travelers_added(visit, [self.editor], actor=None, collection=self.trip)
-        self.assertFalse(Notification.objects.exists())
+    def test_a_guest_link_naming_a_member_notifies_them_as_someone_and_never_the_guest(self):
+        from adventures.models import CollectionGuestLink
+
+        link = CollectionGuestLink.objects.create(collection=self.trip, role='editor', label='Camp friend')
+        self.as_anonymous()
+        response = self.client.post(
+            f'/api/collections/{self.trip.id}/itinerary-items/{self.stop.id}/log-visit/',
+            {'traveler_uuids': [str(self.editor.uuid)]}, format='json', HTTP_X_GUEST_TOKEN=link.token,
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+        note = self._notes(self.editor).get()
+        self.assertIsNone(note.actor_user)
+        # A guest link has no account and the log-visit endpoints hand over no request, so nobody is named.
+        self.assertEqual(note.actor_name, '')
+        self.assertEqual(Notification.objects.count(), 1)  # the guest is not a person, and the owner default is silent
+        self.as_user(self.editor)
+        row = self.client.get('/api/notifications/').json()['results'][0]
+        self.assertEqual(row['actor']['name'], '')
+        self.assertIsNone(row['actor']['uuid'])
+        with override_settings(SMTP_CONFIGURED=True):
+            notifications.send_traveler_added_email(note)
+        self.assertTrue(mail.outbox[-1].body.startswith('Someone added you'))

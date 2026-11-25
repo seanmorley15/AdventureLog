@@ -132,7 +132,7 @@ paths:
       description: |-
         Change your profile and preferences. Send JSON, or `multipart/form-data` to upload a new `profile_pic`.
 
-        `profile_visibility` is `private`, `signed_in` (shown to signed-in users, who can also invite you) or `public`; the older `public_profile` switch is kept in step with it. Making your profile private also removes you from collections other people shared with you and cancels invites you have not answered. The response then includes `left_shared_collections` and `revoked_collection_invites` with how many were affected.
+        `profile_visibility` is `private`, `signed_in` (shown to signed-in users, who can also invite you) or `public`; the older `public_profile` switch is kept in step with it. Making your profile private also removes you from collections other people shared with you and cancels invites you have not answered. The response then includes `left_shared_collections`, `revoked_collection_invites` and `kept_copies` (places you travelled to there that you now hold as your own copies) with how many were affected. `GET /api/account/privacy-preview/` says the same beforehand.
       summary: Update your profile
       tags:
       - Account
@@ -332,6 +332,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/account/deletion-preview/:
+    get:
+      operationId: account_deletion_preview
+      description: |-
+        What deleting the account would do, changing nothing: what you own that goes, who gets
+        their own copy of your places they travelled to, and visits you leave behind.
+      summary: Preview deleting your account
+      tags:
+      - Account
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionPreview'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
   /api/account/media-usage/:
     get:
       operationId: account_media_usage
@@ -439,6 +467,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: You can see this resource but may not do this to it (`permission_denied`).
+  /api/account/privacy-preview/:
+    get:
+      operationId: account_privacy_preview
+      description: |-
+        What `profile_visibility: private` would do, changing nothing: how many shared trips you
+        would leave, how many places you keep as copies, and what would go.
+      summary: Preview making your profile private
+      tags:
+      - Account
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyPreview'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
   /api/activities/:
     get:
       operationId: activities_list
@@ -4126,7 +4182,9 @@ paths:
     delete:
       operationId: collections_destroy
       description: Owner only. Deletes the collection; records in it that belong to
-        you stay.
+        you stay. People who travelled to a place in it and can no longer reach it
+        get their own copy with their visits. With `?dry_run=1` it changes nothing
+        and returns who that would be and what would go with it.
       summary: Delete a collection
       parameters:
       - in: header
@@ -4136,6 +4194,11 @@ paths:
         description: The `ETag` of the version this change is based on, or `*`. When
           the record has changed since, nothing is changed and the answer is `412
           precondition_failed`. Leave it out to change the record regardless.
+      - in: query
+        name: dry_run
+        schema:
+          type: boolean
+        description: Only say what would happen; change nothing.
       - in: path
         name: id
         schema:
@@ -4151,8 +4214,14 @@ paths:
       - SessionTokenAuth: []
       - cookieAuth: []
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionDeletePreview'
+          description: ''
         '204':
-          description: No response body
+          description: Deleted.
         '401':
           content:
             application/json:
@@ -8207,7 +8276,11 @@ paths:
     delete:
       operationId: locations_collection_membership_delete
       description: Idempotent. Also removes its placements from the day plan, and
-        says how many. Only the collection owner or the place owner may call it.
+        says how many. Only the collection owner or the place owner may call it. People
+        who travelled to the place and can no longer reach it through another collection
+        come off its visits and get their own copy with their visits. With `?dry_run=1`
+        it changes nothing and returns who that would be (`people_released`) and what
+        would go with it.
       summary: Remove the location from a collection
       parameters:
       - in: header
@@ -8223,6 +8296,11 @@ paths:
           type: string
         description: The collection id.
         required: true
+      - in: query
+        name: dry_run
+        schema:
+          type: boolean
+        description: Only say what would happen; change nothing.
       - in: path
         name: id
         schema:
@@ -8242,7 +8320,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CollectionLinkResult'
+                $ref: '#/components/schemas/CollectionUnlinkResult'
           description: ''
         '401':
           content:
@@ -13891,6 +13969,38 @@ components:
       - transportations
       - updated_at
       - user
+    CollectionDeletePreview:
+      type: object
+      description: What taking a place away from the people who travelled there would
+        do.
+      properties:
+        people_released:
+          type: array
+          items:
+            $ref: '#/components/schemas/Traveler'
+          description: People who travelled to the place, do not own it and could
+            no longer reach it. Each would get their own copy of it with their visits,
+            and come off the original visits.
+        includes_you:
+          type: boolean
+          description: Whether you are one of `people_released`.
+        visits_deleted:
+          type: integer
+          description: Visits that only people being released travelled on. They go
+            with the original place.
+        others_uploads:
+          type: integer
+          description: Photos, attachments and activities that people who are not
+            released added to those visits. They go too.
+        places:
+          type: integer
+          description: Places in the collection that someone would get a copy of.
+      required:
+      - includes_you
+      - others_uploads
+      - people_released
+      - places
+      - visits_deleted
     CollectionDetail:
       type: object
       description: A collection with its day plan, for members.
@@ -14643,6 +14753,10 @@ components:
       description: |-
         * `folder` - Folder
         * `trip` - Trip
+    CollectionUnlinkResult:
+      oneOf:
+      - $ref: '#/components/schemas/CollectionLinkResult'
+      - $ref: '#/components/schemas/UnlinkPreview'
     CollectionVisibilityEnum:
       enum:
       - private
@@ -15430,6 +15544,48 @@ components:
         * `XPF` - CFP Franc
         * `YER` - Yemeni Rial
         * `ZMW` - Zambian Kwacha
+    DeletionPreview:
+      type: object
+      properties:
+        people_released:
+          type: array
+          items:
+            $ref: '#/components/schemas/Traveler'
+          description: People who would get their own copy of the places of yours
+            they travelled to.
+        places_copied:
+          type: integer
+          description: Places of yours that someone would get a copy of.
+        locations:
+          type: integer
+          description: Places you own. All deleted.
+        collections:
+          type: integer
+          description: Collections you own. All deleted.
+        shared_collections_left:
+          type: integer
+          description: Trips shared with you that you would leave.
+        visits_detached:
+          type: integer
+          description: Visits at other people's places that others also travelled
+            on. They stay, without you.
+        visits_deleted:
+          type: integer
+          description: Visits at other people's places that only you travelled on.
+            They go.
+        others_uploads:
+          type: integer
+          description: Photos, attachments and activities other people added to those
+            visits. They go too.
+      required:
+      - collections
+      - locations
+      - others_uploads
+      - people_released
+      - places_copied
+      - shared_collections_left
+      - visits_deleted
+      - visits_detached
     Description:
       type: object
       properties:
@@ -19469,6 +19625,32 @@ components:
         * `ZWD` - Zimbabwean Dollar (1980–2008)
         * `ZWR` - Zimbabwean Dollar (2008)
         * `ZWL` - Zimbabwean Dollar (2009–2024)
+    PrivacyPreview:
+      type: object
+      properties:
+        left_shared_collections:
+          type: integer
+          description: Trips shared with you that you would leave.
+        revoked_collection_invites:
+          type: integer
+          description: Invites you have not answered, which would be cancelled.
+        copies:
+          type: integer
+          description: Places you travelled to there that you would keep as your own
+            copies.
+        visits_deleted:
+          type: integer
+          description: Visits only you travelled on. They go with the original place.
+        others_uploads:
+          type: integer
+          description: Photos, attachments and activities other people added to those
+            visits. They go too.
+      required:
+      - copies
+      - left_shared_collections
+      - others_uploads
+      - revoked_collection_invites
+      - visits_deleted
     ProfileVisibilityEnum:
       enum:
       - private
@@ -21973,6 +22155,38 @@ components:
       - updated_at
       - user
       - visibility
+    UnlinkPreview:
+      type: object
+      description: What taking a place away from the people who travelled there would
+        do.
+      properties:
+        people_released:
+          type: array
+          items:
+            $ref: '#/components/schemas/Traveler'
+          description: People who travelled to the place, do not own it and could
+            no longer reach it. Each would get their own copy of it with their visits,
+            and come off the original visits.
+        includes_you:
+          type: boolean
+          description: Whether you are one of `people_released`.
+        visits_deleted:
+          type: integer
+          description: Visits that only people being released travelled on. They go
+            with the original place.
+        others_uploads:
+          type: integer
+          description: Photos, attachments and activities that people who are not
+            released added to those visits. They go too.
+        removed_placements:
+          type: integer
+          description: Plan placements of the place in the collection that would go.
+      required:
+      - includes_you
+      - others_uploads
+      - people_released
+      - removed_placements
+      - visits_deleted
     UnreadCount:
       type: object
       properties:

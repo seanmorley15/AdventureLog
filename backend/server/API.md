@@ -501,6 +501,25 @@ travelled there, does not own it and is not the owner or a member of another col
 a removed member: they come off its visits and get their own copy with their visits. Travelers who still reach
 the place through another collection are untouched, and so is the place owner. The response shape does not change.
 
+A collection owner who travelled to a member-owned place counts as losing access when it is unlinked or the
+collection is deleted, and gets their own copy; account deletion releases co-members the same way. The place owner
+is never released. When a released person was the only traveler on a visit, that visit goes with the original place,
+and the photos, files and activities other people added to it go with it.
+
+#### Previews
+
+Each of these changes nothing and returns what the matching action would do, so a client can say so first.
+`people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
+
+| Endpoint                                                  | Returns                                                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DELETE /api/locations/{id}/collections/{cid}/?dry_run=1` | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. Same permission as the real call: the collection owner or the place owner. |
+| `DELETE /api/collections/{id}/?dry_run=1`                 | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                                   |
+| `GET /api/account/deletion-preview/`                      | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.                          |
+| `GET /api/account/privacy-preview/`                       | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`: what `profile_visibility: private` would do.                |
+
+`PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
+
 The collection activity feed has a new verb, `travelers_added`.
 
 #### Telling people they were added

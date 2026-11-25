@@ -4,6 +4,8 @@ from rest_framework import serializers
 
 from adventures.models import Collection, CollectionMember
 
+from .activity import TravelerSerializer
+
 ROLES = CollectionMember.Role.choices
 
 
@@ -41,6 +43,31 @@ class LeavePreviewSerializer(serializers.Serializer):
             'traveler on. Those visits are deleted, so these go too.'
         ),
     )
+
+
+class ReleasePreviewSerializer(serializers.Serializer):
+    """What taking a place away from the people who travelled there would do."""
+
+    people_released = TravelerSerializer(
+        many=True,
+        help_text='People who travelled to the place, do not own it and could no longer reach it. '
+        'Each would get their own copy of it with their visits, and come off the original visits.',
+    )
+    includes_you = serializers.BooleanField(help_text='Whether you are one of `people_released`.')
+    visits_deleted = serializers.IntegerField(
+        help_text='Visits that only people being released travelled on. They go with the original place.'
+    )
+    others_uploads = serializers.IntegerField(
+        help_text='Photos, attachments and activities that people who are not released added to those visits. They go too.'
+    )
+
+
+class UnlinkPreviewSerializer(ReleasePreviewSerializer):
+    removed_placements = serializers.IntegerField(help_text='Plan placements of the place in the collection that would go.')
+
+
+class CollectionDeletePreviewSerializer(ReleasePreviewSerializer):
+    places = serializers.IntegerField(help_text='Places in the collection that someone would get a copy of.')
 
 
 class AddTravelersSerializer(serializers.Serializer):
