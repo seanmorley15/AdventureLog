@@ -1,6 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { CollectionItineraryDay } from '#lib/types.js';
-import { dayLink, initialPlanDay, tripToday } from './plan';
+import {
+	dayLink,
+	initialPlanDay,
+	recordedVisit,
+	rememberedTravelers,
+	rememberTravelers,
+	tripToday
+} from './plan';
 
 function day(index: number, date: string | null): CollectionItineraryDay {
 	return { id: `d${index}`, index, date } as unknown as CollectionItineraryDay;
@@ -76,5 +83,55 @@ describe('tripToday', () => {
 		const local = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 		expect(tripToday('UTC', now)).toBe(local);
 		expect(tripToday(null, now)).toBe(local);
+	});
+});
+
+describe('remembered travelers', () => {
+	const store = new Map<string, string>();
+	beforeEach(() => {
+		store.clear();
+		(globalThis as any).localStorage = {
+			getItem: (key: string) => store.get(key) ?? null,
+			setItem: (key: string, value: string) => void store.set(key, value),
+			removeItem: (key: string) => void store.delete(key)
+		};
+	});
+
+	it('round-trips the picks for a trip', () => {
+		rememberTravelers('c1', ['a']);
+		expect(rememberedTravelers('c1')).toEqual(['a']);
+		expect(store.has('trip-travelers:c1')).toBe(true);
+	});
+
+	it('is empty for a trip with no picks', () => {
+		expect(rememberedTravelers('missing')).toEqual([]);
+	});
+
+	it('is empty when the stored value is not a list of uuids', () => {
+		store.set('trip-travelers:c1', '{not json');
+		expect(rememberedTravelers('c1')).toEqual([]);
+		store.set('trip-travelers:c1', '{"a":1}');
+		expect(rememberedTravelers('c1')).toEqual([]);
+	});
+
+	it('is empty without storage', () => {
+		delete (globalThis as any).localStorage;
+		expect(rememberedTravelers('c1')).toEqual([]);
+		expect(() => rememberTravelers('c1', ['a'])).not.toThrow();
+	});
+});
+
+describe('recordedVisit', () => {
+	const collection = {
+		locations: [{ id: 'L1', visits: [{ id: 'v1', start_date: '2026-10-28', travelers: [] }] }]
+	} as any;
+
+	it('finds the visit object behind a logged stop', () => {
+		const item = { object_id: 'L1', logged_visit: 'v1' } as any;
+		expect(recordedVisit(collection, item)?.id).toBe('v1');
+	});
+
+	it('is null when the stop is not logged', () => {
+		expect(recordedVisit(collection, { object_id: 'L1' } as any)).toBeNull();
 	});
 });

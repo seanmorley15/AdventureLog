@@ -27,7 +27,8 @@
 		anchor_changed: CalendarArrowRight,
 		comment_added: CommentOutline,
 		member_added: AccountPlus,
-		member_removed: AccountMinus
+		member_removed: AccountMinus,
+		travelers_added: AccountPlus
 	};
 
 	$effect(() => {
@@ -71,6 +72,10 @@
 			case 'member_added':
 				return $t('activity.member_added', {
 					values: { who: d.username ?? who, role: d.role ?? '' }
+				});
+			case 'travelers_added':
+				return $t('activity.travelers_added', {
+					values: { who, people: ((d.usernames as string[] | undefined) ?? []).join(', ') }
 				});
 			case 'member_removed':
 				return d.left

@@ -1479,6 +1479,7 @@
 		"plan_comment": "{who} commented on the plan",
 		"story_comment": "{who} commented on the story",
 		"member_added": "{who} joined as {role}",
+		"travelers_added": "{who} added {people} to the trip's visits",
 		"member_left": "{who} left the trip",
 		"member_removed": "{who} removed {name}"
 	},
@@ -2066,6 +2067,9 @@
 		"optional": "Optional",
 		"visited": "Visited",
 		"log_visit": "Log visit",
+		"who_went": "Who went with you?",
+		"was_there_too": "I was there too",
+		"went_with": "Who was there",
 		"log_day": "Log day",
 		"visit_date": "Visit date",
 		"log": "Log",

@@ -9,7 +9,8 @@ import type {
 	Location,
 	Lodging,
 	Note,
-	Transportation
+	Transportation,
+	Visit
 } from '#lib/types.js';
 
 export type PlanObjectType = 'location' | 'lodging' | 'transportation' | 'note' | 'checklist';
@@ -290,6 +291,42 @@ export function recordedVisitId(
 		if (!match || start < match.start) match = { id: visit.id, start };
 	}
 	return match?.id ?? null;
+}
+
+/** The visit behind a logged stop, when the collection carries it. */
+export function recordedVisit(
+	collection: Collection,
+	item: CollectionItineraryItem | null | undefined
+): Visit | null {
+	const id = recordedVisitId(collection, item);
+	if (!id || !item) return null;
+	const location = (collection.locations ?? []).find(
+		(entry) => String(entry.id) === String(item.object_id)
+	);
+	return (location?.visits ?? []).find((visit) => visit.id === id) ?? null;
+}
+
+const travelersKey = (collectionId: string) => `trip-travelers:${collectionId}`;
+
+/** The people picked last time on this device for Log visit, or none. */
+export function rememberedTravelers(collectionId: string): string[] {
+	try {
+		if (typeof localStorage === 'undefined') return [];
+		const parsed = JSON.parse(localStorage.getItem(travelersKey(collectionId)) ?? 'null');
+		return Array.isArray(parsed) ? parsed.filter((uuid) => typeof uuid === 'string') : [];
+	} catch {
+		return [];
+	}
+}
+
+/** Keep the picks so the next Log visit on this trip starts from them. */
+export function rememberTravelers(collectionId: string, uuids: string[]): void {
+	try {
+		if (typeof localStorage === 'undefined') return;
+		localStorage.setItem(travelersKey(collectionId), JSON.stringify(uuids));
+	} catch {
+		// Storage can be blocked; the picks just are not remembered.
+	}
 }
 
 /** HH:MM from an API time (HH:MM:SS) or an empty string. */

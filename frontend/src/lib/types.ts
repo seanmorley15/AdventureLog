@@ -131,7 +131,8 @@ export type CollectionActivityEvent = {
 		| 'anchor_changed'
 		| 'comment_added'
 		| 'member_added'
-		| 'member_removed';
+		| 'member_removed'
+		| 'travelers_added';
 	actor_name: string;
 	actor?: {
 		username: string | null;

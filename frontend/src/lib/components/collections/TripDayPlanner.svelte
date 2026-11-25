@@ -37,6 +37,8 @@
 		indexedDays,
 		initialPlanDay,
 		recordedVisitId,
+		rememberedTravelers,
+		rememberTravelers,
 		tripToday,
 		objectsOfType,
 		placementType,
@@ -51,6 +53,7 @@
 		type PlanRow
 	} from '#lib/collections/plan.js';
 	import DayPlanRow from './DayPlanRow.svelte';
+	import TravelerPicker from '#lib/components/locations/TravelerPicker.svelte';
 	import DayFileDialog from './DayFileDialog.svelte';
 	import DayFileRows from './DayFileRows.svelte';
 	import DayPlacementModal from './DayPlacementModal.svelte';
@@ -606,11 +609,18 @@
 
 	// ---------------------------------------------------------------- rows
 
-	async function logVisit(row: PlanRow, date?: string): Promise<LogVisitResult> {
+	async function logVisit(
+		row: PlanRow,
+		date?: string,
+		travelerUuids?: string[]
+	): Promise<LogVisitResult> {
 		const res = await send<{ item: CollectionItineraryItem; visit: Visit }>(
 			`/api/collections/${collection.id}/itinerary-items/${row.id}/log-visit/`,
 			'POST',
-			date ? { date } : {},
+			{
+				...(date ? { date } : {}),
+				...(travelerUuids?.length ? { traveler_uuids: travelerUuids } : {})
+			},
 			true
 		);
 		if (res.ok) {
@@ -622,6 +632,17 @@
 		if (res.data?.code === 'date_required') return 'date_required';
 		if (res.status !== 409) addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
 		return 'error';
+	}
+
+	/** "I was there too": add the current user to a stop that is already logged. */
+	async function joinVisit(visitId: string): Promise<boolean> {
+		const res = await send<Visit>(`/api/visits/${visitId}/join/`, 'POST', undefined, true);
+		if (res.ok) {
+			addVisits([res.data]);
+			return true;
+		}
+		addToast('error', errorMessage(res.data, $t('visits.join_failed')));
+		return false;
 	}
 
 	async function toggleOptional(row: PlanRow) {
@@ -931,6 +952,25 @@
 	let logDayPromptFor = $state<string | null>(null);
 	let logDayDate = $state(today);
 	let loggingDay = $state<string | null>(null);
+	let logDayTravelers = $state<string[]>([]);
+
+	const collaborators = $derived(collection.collaborators ?? []);
+	const currentUserUuid = $derived<string | null>(
+		user?.uuid ?? collaborators.find((person) => person.is_current_user)?.uuid ?? null
+	);
+	const hasCompany = $derived(collaborators.some((person) => person.uuid !== currentUserUuid));
+
+	/** Everyone ticked except the current user, who the server always adds. */
+	function otherTravelers(picked: string[]): string[] {
+		return picked.filter((uuid) => uuid !== currentUserUuid);
+	}
+
+	/** Open the day's prompt with the last picks that are still on the trip. */
+	function askLogDay(day: CollectionItineraryDay) {
+		const here = new Set(collaborators.map((person) => person.uuid));
+		logDayTravelers = rememberedTravelers(collection.id).filter((uuid) => here.has(uuid));
+		logDayPromptFor = day.id;
+	}
 
 	function locationStops(day: CollectionItineraryDay) {
 		return (collection.itinerary ?? []).filter((item) => {
@@ -963,9 +1003,9 @@
 		return unloggedStops + unloggedActivities;
 	}
 
-	async function logDay(day: CollectionItineraryDay, date?: string) {
-		if (!anchored && !date) {
-			logDayPromptFor = day.id;
+	async function logDay(day: CollectionItineraryDay, date?: string, travelerUuids?: string[]) {
+		if ((!anchored && !date) || (hasCompany && !travelerUuids)) {
+			askLogDay(day);
 			return;
 		}
 		loggingDay = day.id;
@@ -978,10 +1018,14 @@
 			}>(
 				`/api/collections/${collection.id}/days/${day.id}/log-visit/`,
 				'POST',
-				date ? { date } : {},
+				{
+					...(date ? { date } : {}),
+					...(travelerUuids?.length ? { traveler_uuids: travelerUuids } : {})
+				},
 				true
 			);
 			if (res.ok) {
+				if (travelerUuids) rememberTravelers(collection.id, travelerUuids);
 				upsertItems(res.data.items);
 				addVisits(res.data.visits);
 				if (res.data.day_activities) collection.day_activities = res.data.day_activities;
@@ -996,7 +1040,7 @@
 						: $t('itinerary.nothing_to_log')
 				);
 			} else if (res.data?.code === 'date_required') {
-				logDayPromptFor = day.id;
+				askLogDay(day);
 			} else if (res.status !== 409) {
 				addToast('error', errorMessage(res.data, $t('itinerary.save_failed')));
 			}
@@ -1285,6 +1329,8 @@
 		{readMode}
 		{collection}
 		onLogVisit={logVisit}
+		onJoinVisit={joinVisit}
+		{currentUserUuid}
 		onEditObject={editObject}
 		onViewObject={viewObject}
 		onEditPlacement={(target) =>
@@ -1751,17 +1797,35 @@
 							class="flex flex-wrap items-center gap-2"
 							onsubmit={(e) => {
 								e.preventDefault();
-								void logDay(day, logDayDate);
+								void logDay(
+									day,
+									anchored ? undefined : logDayDate,
+									hasCompany ? otherTravelers(logDayTravelers) : undefined
+								);
 							}}
 						>
-							<span class="text-sm">{$t('itinerary.visit_date')}</span>
+							{#if hasCompany}
+								<div class="w-full">
+									<p class="mb-1 text-sm font-medium">{$t('itinerary.who_went')}</p>
+									<TravelerPicker
+										candidates={collaborators}
+										bind:selected={logDayTravelers}
+										lockedUuid={currentUserUuid ?? undefined}
+									/>
+								</div>
+							{/if}
+							{#if !anchored}
+								<span class="text-sm">{$t('itinerary.visit_date')}</span>
+							{/if}
 							<div class="join">
-								<input
-									type="date"
-									class="input input-sm join-item"
-									bind:value={logDayDate}
-									required
-								/>
+								{#if !anchored}
+									<input
+										type="date"
+										class="input input-sm join-item"
+										bind:value={logDayDate}
+										required
+									/>
+								{/if}
 								<button
 									type="submit"
 									class="btn btn-sm btn-primary join-item"

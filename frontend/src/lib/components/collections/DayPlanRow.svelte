@@ -6,7 +6,10 @@
 	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
 	import {
 		clockValue,
+		recordedVisit as findRecordedVisit,
 		recordedVisitId,
+		rememberedTravelers,
+		rememberTravelers,
 		type LogVisitResult,
 		type PlanRow
 	} from '#lib/collections/plan.js';
@@ -26,6 +29,9 @@
 	import CheckCircle from '~icons/mdi/check-circle';
 	import Close from '~icons/mdi/close';
 	import Plus from '~icons/mdi/plus';
+	import PersonAvatar from '#lib/components/collections/discussion/PersonAvatar.svelte';
+	import TravelerPicker from '#lib/components/locations/TravelerPicker.svelte';
+	import { travelerName, travelerPerson } from '#lib/travelers.js';
 
 	interface Props {
 		row: PlanRow;
@@ -38,7 +44,11 @@
 		draggable?: boolean;
 		readMode?: boolean;
 		collection?: Collection;
-		onLogVisit?: (row: PlanRow, date?: string) => Promise<LogVisitResult>;
+		/** The signed-in user, who is always on a visit they log. */
+		currentUserUuid?: string | null;
+		onLogVisit?: (row: PlanRow, date?: string, travelerUuids?: string[]) => Promise<LogVisitResult>;
+		/** "I was there too": add the current user to the stop's visit. */
+		onJoinVisit?: (visitId: string) => Promise<boolean>;
 		onEditObject?: (row: PlanRow) => void;
 		onViewObject?: (row: PlanRow) => void;
 		onEditPlacement?: (row: PlanRow) => void;
@@ -58,7 +68,9 @@
 		draggable = false,
 		readMode = false,
 		collection,
+		currentUserUuid = null,
 		onLogVisit,
+		onJoinVisit,
 		onEditObject,
 		onViewObject,
 		onEditPlacement,
@@ -72,6 +84,10 @@
 	let askingDate = $state(false);
 	let visitDate = $state(new Date().toISOString().slice(0, 10));
 	let logging = $state(false);
+	let joining = $state(false);
+	/** The server wanted a date even though the trip seemed to have one. */
+	let dateRequired = $state(false);
+	let picked = $state<string[]>([]);
 
 	const item = $derived(row.item);
 	const name = $derived(
@@ -134,32 +150,71 @@
 	);
 	const isVisited = $derived(row.type === 'location' && Boolean(recordedVisit));
 
+	const collaborators = $derived(collection?.collaborators ?? []);
+	const hasCompany = $derived(collaborators.some((person) => person.uuid !== currentUserUuid));
+	// Without a date to ask for or people to pick, Log visit just logs.
+	const needsPrompt = $derived(hasCompany || !hasProjectedDate);
+
+	const travelers = $derived(
+		row.type === 'location' && collection
+			? (findRecordedVisit(collection, item)?.travelers ?? [])
+			: []
+	);
+	const canJoin = $derived(
+		isVisited &&
+			!continuation &&
+			Boolean(currentUserUuid && onJoinVisit) &&
+			travelers.length > 0 &&
+			!travelers.some((person) => person.uuid === currentUserUuid)
+	);
+
+	async function joinVisit() {
+		if (!onJoinVisit || !recordedVisit || joining) return;
+		joining = true;
+		try {
+			await onJoinVisit(recordedVisit);
+		} finally {
+			joining = false;
+		}
+	}
+
 	async function logVisit(date?: string) {
 		if (!onLogVisit || logging) return;
 		logging = true;
 		try {
-			const result = await onLogVisit(row, date);
+			const others = hasCompany ? picked.filter((uuid) => uuid !== currentUserUuid) : undefined;
+			const result = await onLogVisit(row, date, others);
 			if (result === 'date_required') {
-				askingDate = true;
+				dateRequired = true;
+				openPrompt();
 			} else if (result === 'ok') {
 				askingDate = false;
+				if (others && collection) rememberTravelers(collection.id, others);
 			}
 		} finally {
 			logging = false;
 		}
 	}
 
+	/** Open the prompt with the last picks that are still on the trip. */
+	function openPrompt() {
+		const here = new Set(collaborators.map((person) => person.uuid));
+		picked = collection ? rememberedTravelers(collection.id).filter((uuid) => here.has(uuid)) : [];
+		askingDate = true;
+	}
+
 	function handleLogClick() {
-		if (hasProjectedDate) {
-			void logVisit();
+		if (needsPrompt) {
+			openPrompt();
 		} else {
-			askingDate = true;
+			void logVisit();
 		}
 	}
 
 	function confirmDate(event: SubmitEvent) {
 		event.preventDefault();
-		if (visitDate) void logVisit(visitDate);
+		if (hasProjectedDate && !dateRequired) void logVisit();
+		else if (visitDate) void logVisit(visitDate);
 	}
 </script>
 
@@ -270,7 +325,24 @@
 				<CheckCircle class="h-3.5 w-3.5" />
 				{$t('itinerary.visited')}
 			</a>
-		{:else if canLog && askingDate}
+			{#if travelers.length}
+				<span class="flex -space-x-1.5" aria-label={$t('itinerary.went_with')}>
+					{#each travelers as person (person.uuid)}
+						<span title={travelerName(person)}>
+							<PersonAvatar person={travelerPerson(person)} size="xs" linked={false} />
+						</span>
+					{/each}
+				</span>
+			{/if}
+			{#if canJoin}
+				<button type="button" class="btn btn-sm btn-ghost" disabled={joining} onclick={joinVisit}>
+					{#if joining}
+						<span class="loading loading-spinner loading-xs"></span>
+					{/if}
+					{$t('itinerary.was_there_too')}
+				</button>
+			{/if}
+		{:else if canLog && askingDate && !hasCompany}
 			<form class="join" onsubmit={confirmDate}>
 				<input
 					type="date"
@@ -295,17 +367,56 @@
 				</button>
 			</form>
 		{:else if canLog}
-			<button
-				type="button"
-				class="btn btn-sm btn-ghost"
-				disabled={logging}
-				onclick={handleLogClick}
-			>
-				{#if logging}
-					<span class="loading loading-spinner loading-xs"></span>
+			<div class="relative">
+				<button
+					type="button"
+					class="btn btn-sm btn-ghost"
+					disabled={logging}
+					onclick={handleLogClick}
+				>
+					{#if logging}
+						<span class="loading loading-spinner loading-xs"></span>
+					{/if}
+					{$t('itinerary.log_visit')}
+				</button>
+				{#if askingDate}
+					<form
+						class="absolute right-0 top-full z-50 mt-1 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
+						onsubmit={confirmDate}
+					>
+						<p class="text-sm font-medium">{$t('itinerary.who_went')}</p>
+						<TravelerPicker
+							candidates={collaborators}
+							bind:selected={picked}
+							lockedUuid={currentUserUuid ?? undefined}
+						/>
+						{#if !hasProjectedDate || dateRequired}
+							<input
+								type="date"
+								class="input input-sm w-full"
+								bind:value={visitDate}
+								aria-label={$t('itinerary.visit_date')}
+								required
+							/>
+						{/if}
+						<div class="flex justify-end gap-2">
+							<button
+								type="button"
+								class="btn btn-sm btn-ghost"
+								onclick={() => (askingDate = false)}
+							>
+								{$t('about.close')}
+							</button>
+							<button type="submit" class="btn btn-sm btn-primary" disabled={logging}>
+								{#if logging}
+									<span class="loading loading-spinner loading-xs"></span>
+								{/if}
+								{$t('itinerary.log')}
+							</button>
+						</div>
+					</form>
 				{/if}
-				{$t('itinerary.log_visit')}
-			</button>
+			</div>
 		{/if}
 
 		{#if canModify && !readMode && !item && onAddToPlan}
