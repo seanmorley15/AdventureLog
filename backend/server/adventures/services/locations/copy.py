@@ -6,18 +6,21 @@ from django.db import transaction
 from adventures.models import Activity, Category, ContentAttachment, ContentImage, Location, Visit
 
 
-def _copy_photo(photo, user, content_type, target):
+def _photo_copy(photo, user, content_type, target):
     """
-    Copy one photo onto ``target`` for ``user``. A stored file is shared, not copied: the copy
-    keeps the same storage name, and the file stays until the last row using it is deleted
-    (``adventures.signals``). Nothing is read, so a missing file is carried over as it is.
+    An unsaved copy of one photo onto ``target`` for ``user``. A stored file is shared, not copied:
+    the copy keeps the same storage name, and the file stays until the last row using it is
+    deleted (``adventures.signals``). Nothing is read, so a missing file is carried over as it is.
 
     An Immich photo is shown through its owner's Immich account, so it is copied only for that
     owner; anyone else gets nothing for it (returns None).
+
+    The copies are inserted in bulk, so ``save()`` and its ``full_clean`` don't run. A photo is
+    already valid, and the copy keeps exactly one of its file and its Immich id.
     """
     if not photo.image and photo.user_id != user.pk:
         return None
-    copy = ContentImage(
+    return ContentImage(
         user=user,
         content_type=content_type,
         object_id=target.pk,
@@ -28,16 +31,12 @@ def _copy_photo(photo, user, content_type, target):
         source_url=photo.source_url,
         coordinates=photo.coordinates,
     )
-    copy.save()
-    return copy
 
 
-def _copy_attachment(attachment, user, target):
-    """Copy one attachment onto ``target`` for ``user``, sharing its stored file (see ``_copy_photo``)."""
-    copy = ContentAttachment(user=user, file=attachment.file.name, name=attachment.name)
-    copy.content_object = target
-    copy.save()
-    return copy
+def _copy_photos(photos, user, content_type, target_for):
+    """Insert copies of ``photos`` in one query; ``target_for(photo)`` names where each one goes."""
+    copies = [_photo_copy(photo, user, content_type, target_for(photo)) for photo in photos]
+    return ContentImage.objects.bulk_create([copy for copy in copies if copy is not None])
 
 
 @transaction.atomic
@@ -46,7 +45,7 @@ def copy_location(original, user, collection=None, name=None):
     Copy a place for ``user`` as a private place, named ``name`` or "Copy of ..." by default.
 
     Everything about the place comes along except its collections, visits, attachments and
-    trails. Photos share the original's stored files (``_copy_photo``): deleting either place
+    trails. Photos share the original's stored files (``_photo_copy``): deleting either place
     never removes a file the other still shows. Someone else's copy leaves out Immich photos,
     which only the original owner's Immich account can show. The user's own category of the
     same name is reused, or created from the original's. With ``collection`` the copy is
@@ -86,38 +85,31 @@ def copy_location(original, user, collection=None, name=None):
     if collection is not None:
         copy.collections.set([collection])
 
-    location_type = ContentType.objects.get_for_model(Location)
-    for photo in photos:
-        _copy_photo(photo, user, location_type, copy)
+    _copy_photos(photos, user, ContentType.objects.get_for_model(Location), lambda photo: copy)
     return copy
 
 
 # Links an activity copy does not keep: its parent is the new visit, and a trail (a Wanderer one
 # resolves through its owner's integration), a trip day or the day activity it was promoted from
-# belong to someone else's records. The track is shared, not copied (``_copy_activity``).
+# belong to someone else's records. The track is shared, not copied (``_activity_copy``).
 _ACTIVITY_SKIP = {'id', 'user', 'visit', 'day', 'collection', 'trail', 'promoted_activity', 'gpx_file'}
 
 
-def _copy_activity(activity, user, visit):
+def _activity_copy(activity, user, visit):
     """
-    Copy one activity onto ``visit`` for ``user``, with the user's photos of it. The track file is
-    shared with the original (see ``_copy_photo``), so nothing is read or written.
+    An unsaved copy of one activity onto ``visit`` for ``user``. The track file is shared with the
+    original (see ``_photo_copy``), so nothing is read or written.
     """
-    copy = Activity(
+    return Activity(
         user=user,
         visit=visit,
+        gpx_file=activity.gpx_file.name or None,
         **{
             field.attname: getattr(activity, field.attname)
             for field in Activity._meta.concrete_fields
             if field.name not in _ACTIVITY_SKIP
         },
     )
-    copy.gpx_file = activity.gpx_file.name or None
-    copy.save()
-    activity_type = ContentType.objects.get_for_model(Activity)
-    for photo in activity.images.filter(user=user):
-        _copy_photo(photo, user, activity_type, copy)
-    return copy
 
 
 @transaction.atomic
@@ -126,12 +118,23 @@ def copy_visit_uploads(visit, target, user):
     Copy what ``user`` added to ``visit`` onto ``target``: their photos, attachments and
     activities (with tracks and their photos of them), sharing the stored files. Things other
     people added are left out, and ``visit`` is not changed. Nothing is read, so a missing file
-    never blocks a leave: it is carried over as it is.
+    never blocks a leave: it is carried over as it is. Each kind of row is inserted in one query,
+    however many there are. Bulk inserts skip ``ContentImage.save``'s ``full_clean`` (see
+    ``_photo_copy``); none of these models has a post_save receiver.
     """
     visit_type = ContentType.objects.get_for_model(Visit)
-    for photo in visit.images.filter(user=user):
-        _copy_photo(photo, user, visit_type, target)
-    for attachment in visit.attachments.filter(user=user):
-        _copy_attachment(attachment, user, target)
-    for activity in visit.activities.filter(user=user):
-        _copy_activity(activity, user, target)
+    _copy_photos(visit.images.filter(user=user), user, visit_type, lambda photo: target)
+    ContentAttachment.objects.bulk_create([
+        ContentAttachment(
+            user=user, content_type=visit_type, object_id=target.pk,
+            file=attachment.file.name, name=attachment.name,
+        )
+        for attachment in visit.attachments.filter(user=user)
+    ])
+
+    activities = list(visit.activities.filter(user=user))
+    copies = {activity.pk: _activity_copy(activity, user, target) for activity in activities}
+    Activity.objects.bulk_create(copies.values())
+    activity_type = ContentType.objects.get_for_model(Activity)
+    photos = ContentImage.objects.filter(content_type=activity_type, object_id__in=list(copies), user=user)
+    _copy_photos(photos, user, activity_type, lambda photo: copies[photo.object_id])
