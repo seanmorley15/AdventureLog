@@ -1,6 +1,6 @@
 import logging
 
-from django.db.models.signals import m2m_changed, post_delete
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 
@@ -91,3 +91,13 @@ def _delete_attachment_file(sender, instance, **kwargs):
 @receiver(post_delete, sender=Activity)
 def _delete_activity_gpx_file(sender, instance, **kwargs):
     _delete_file_when_unreferenced(Activity, 'gpx_file', instance.gpx_file)
+
+
+@receiver(post_save, sender=Visit)
+def default_visit_traveler(sender, instance, created, raw=False, **kwargs):
+    """A new visit counts for the location owner until travelers are set explicitly."""
+    if not created or raw:
+        return
+    from adventures.services.travelers import ensure_default_traveler
+
+    ensure_default_traveler(instance)

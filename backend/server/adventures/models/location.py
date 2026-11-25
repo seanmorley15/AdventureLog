@@ -54,6 +54,7 @@ class Visit(models.Model):
     end_date = models.DateTimeField(null=True, blank=True)
     timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
+    travelers = models.ManyToManyField(User, related_name='visits_traveled', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
