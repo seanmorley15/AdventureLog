@@ -37,12 +37,14 @@ def log_visited(item, visit_date=None, travelers=None, actor=None):
     placement is in Ideas. Both visit bounds are always set.
 
     The people who travelled are ``actor`` plus ``travelers``. A new visit lists exactly
-    them; a visit that already existed gains them ("I was there too").
+    them; a visit that already existed gains them ("I was there too"). A guest link has no
+    account, so it is never a traveler: with nobody named the visit keeps its default, the owner.
     """
     from adventures.models import Visit
     from adventures.services import travelers as traveler_rules
 
-    people = list({user.pk: user for user in [actor, *(travelers or [])] if user is not None}.values())
+    named = [actor, *(travelers or [])]
+    people = list({user.pk: user for user in named if user is not None and user.is_authenticated}.values())
 
     if item_kind(item) != 'location':
         raise DayPlanError('Only location stops can be logged as visited.')

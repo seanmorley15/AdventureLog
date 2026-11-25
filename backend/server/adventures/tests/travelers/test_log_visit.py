@@ -73,3 +73,41 @@ class LogVisitTravelersTests(AudienceTestBase):
         response = self._log(self.editor, [self.editor, self.owner, self.owner])
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(self._travelers(response), {'editor', 'owner'})
+
+
+class GuestEditorLogVisitTests(AudienceTestBase):
+    def setUp(self):
+        super().setUp()
+        from adventures.models import CollectionGuestLink
+
+        self.link = CollectionGuestLink.objects.create(collection=self.trip, role='editor')
+        self.as_anonymous()
+
+    def _post(self, url):
+        return self.client.post(url, {}, format='json', HTTP_X_GUEST_TOKEN=self.link.token)
+
+    def test_guest_editor_logs_a_stop_for_the_owner(self):
+        response = self._post(f'/api/collections/{self.trip.id}/itinerary-items/{self.stop.id}/log-visit/')
+        self.assertEqual(response.status_code, 201, response.data)
+        visit = Visit.objects.get(pk=response.data['visit']['id'])
+        self.assertEqual(list(visit.travelers.values_list('username', flat=True)), ['owner'])
+
+    def test_guest_editor_logs_an_already_logged_stop(self):
+        first = self._post(f'/api/collections/{self.trip.id}/itinerary-items/{self.stop.id}/log-visit/')
+        self.assertEqual(first.status_code, 201, first.data)
+        second = self._post(f'/api/collections/{self.trip.id}/itinerary-items/{self.stop.id}/log-visit/')
+        self.assertEqual(second.status_code, 200, second.data)
+        visit = Visit.objects.get(pk=second.data['visit']['id'])
+        self.assertEqual(list(visit.travelers.values_list('username', flat=True)), ['owner'])
+
+    def test_log_day_with_an_anonymous_actor_credits_the_owner(self):
+        # The day endpoint itself needs an account, but the service takes whatever actor it is given.
+        from django.contrib.auth.models import AnonymousUser
+
+        from adventures.services.day_plan import log_day
+
+        day = get_day_by_index(self.trip, 1)
+        logged = log_day(self.trip, day, None, None, AnonymousUser())
+        self.assertEqual(len(logged), 1)
+        visit = Visit.objects.get(location=self.hut)
+        self.assertEqual(list(visit.travelers.values_list('username', flat=True)), ['owner'])
