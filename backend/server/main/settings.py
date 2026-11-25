@@ -423,6 +423,8 @@ RATE_LIMIT_RATES = {
     'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
     'external_wikipedia': getenv('RATE_LIMIT_EXTERNAL_WIKIPEDIA', '60/minute'),
     'external_sunrise_sunset': getenv('RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET', '30/minute'),
+    # GET /api/account/deletion-preview/ and privacy-preview/ (see AccountPreviewThrottle).
+    'account_preview': getenv('RATE_LIMIT_ACCOUNT_PREVIEW', '30/minute'),
     # Always applied on Endurain connect/MFA (see EndurainAuthThrottle).
     'endurain_auth': getenv('RATE_LIMIT_ENDURAIN_AUTH', '10/minute'),
     # Always applied on the mobile app's sign-in code exchange (see MobileAuthThrottle).

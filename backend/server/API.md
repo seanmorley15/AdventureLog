@@ -532,6 +532,12 @@ Each of these changes nothing and returns what the matching action would do, so 
 
 `PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
 
+The two account previews walk every shared trip, so when rate limits are on they have their own limit
+(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute per user); the rest of `/api/account/` has none.
+
+Lists of people are bounded: `traveler_uuids` and `user_uuids` take at most 100, `POST /api/notifications/mark-read/`
+at most 1000 `ids`. More is a `400`.
+
 The collection activity feed has a new verb, `travelers_added`. Its `data` holds counts only (`people`, `visits`,
 `locations`), never names, because editor guest links read the feed.
 
@@ -550,7 +556,9 @@ They get a notification in the app and, when the server has SMTP set up and they
 - **What they hold.** The display name of who did it (an editor guest link that logs a visit is named by its label), the place, the trip and the dates, nothing about the other
   travelers. The place and trip names are checked again when you read them: after you lose access they are empty.
 - **E-mail.** Queued as `adventures.send_traveler_added_email` only when `smtp_configured()`, one per notification,
-  with a link to the place (or the trip for the summary form). It retries like the mention e-mail.
+  with a link to the place (or the trip for the summary form). It retries like the mention e-mail. The same person
+  adding the same traveler to the same visit again within 10 minutes (after taking them off, say) sends no second
+  e-mail; the in-app notification, deleted when they were taken off, comes back, so there is only ever one.
 
 | Endpoint                                  | What it does                                                                                                                                                                    |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

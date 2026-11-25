@@ -30,6 +30,6 @@ class NotificationSerializer(serializers.Serializer):
 
 class MarkNotificationsReadSerializer(serializers.Serializer):
     ids = serializers.ListField(
-        child=serializers.UUIDField(), required=False, allow_empty=True,
+        child=serializers.UUIDField(), required=False, allow_empty=True, max_length=1000,
         help_text='Only these. Leave it out to mark every notification read.',
     )

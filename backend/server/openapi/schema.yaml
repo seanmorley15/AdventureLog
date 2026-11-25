@@ -360,6 +360,12 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/account/media-usage/:
     get:
       operationId: account_media_usage
@@ -495,6 +501,12 @@ paths:
                 $ref: '#/components/schemas/Error'
           description: No valid credentials were sent (`not_authenticated`), or an
             API key was rejected (`authentication_failed`).
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Too many requests (`throttled`). Wait and retry.
   /api/activities/:
     get:
       operationId: activities_list
@@ -13325,6 +13337,7 @@ components:
             format: uuid
           description: The people to add. Each must be the owner or a member of the
             collection.
+          maxItems: 100
       required:
       - user_uuids
     AddedTravelers:
@@ -17563,6 +17576,7 @@ components:
             You may leave yourself off to log it for someone else, but at least one
             person is needed. Each must be the location owner, or the owner or a member
             of this trip (`traveler-candidates?collection=`).
+          maxItems: 100
     MadeLocationsPrivate:
       type: object
       properties:
@@ -17674,6 +17688,7 @@ components:
             type: string
             format: uuid
           description: Only these. Leave it out to mark every notification read.
+          maxItems: 1000
     MeasurementSystemEnum:
       enum:
       - metric
@@ -18725,6 +18740,7 @@ components:
           description: Replace the travelers you can see. Each must be the location
             owner or share a collection holding the location with you (see `traveler-candidates`).
             Travelers you cannot see are kept. A new visit defaults to you.
+          maxItems: 100
     PatchedWandererIntegrationRequest:
       type: object
       properties:
@@ -22393,6 +22409,7 @@ components:
           description: Replace the travelers you can see. Each must be the location
             owner or share a collection holding the location with you (see `traveler-candidates`).
             Travelers you cannot see are kept. A new visit defaults to you.
+          maxItems: 100
       required:
       - location
     VisitedCity:

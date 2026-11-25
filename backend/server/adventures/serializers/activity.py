@@ -424,7 +424,7 @@ class VisitSerializer(serializers.ModelSerializer):
         'collection holding the location with.',
     )
     traveler_uuids = serializers.ListField(
-        child=serializers.UUIDField(), write_only=True, required=False,
+        child=serializers.UUIDField(), write_only=True, required=False, max_length=100,
         help_text='Replace the travelers you can see. Each must be the location owner or share a collection '
         'holding the location with you (see `traveler-candidates`). Travelers you cannot see are kept. '
         'A new visit defaults to you.',

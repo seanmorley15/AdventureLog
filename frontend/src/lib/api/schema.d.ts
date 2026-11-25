@@ -8664,6 +8664,15 @@ export interface operations {
                     "application/json": components["schemas"]["Error"];
                 };
             };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     account_media_usage: {
@@ -8805,6 +8814,15 @@ export interface operations {
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Too many requests (`throttled`). Wait and retry. */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -72,7 +72,7 @@ class CollectionDeletePreviewSerializer(ReleasePreviewSerializer):
 
 class AddTravelersSerializer(serializers.Serializer):
     user_uuids = serializers.ListField(
-        child=serializers.UUIDField(),
+        child=serializers.UUIDField(), max_length=100,
         help_text='The people to add. Each must be the owner or a member of the collection.',
     )
 

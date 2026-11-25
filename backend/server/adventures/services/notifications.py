@@ -6,7 +6,10 @@ rules in ``services/travelers.py`` with an explicit ``actor``; no actor means no
 copies made when someone leaves, joining yourself, the owner default, restores and imports stay silent.
 
 Wrap a request that adds people to many visits in ``batch()`` and each person gets one notification
-with a count instead of one per visit. Writing never breaks the change it describes, and the e-mail
+with a count instead of one per visit. The same actor adding the same person to the same visit again
+within ``REPEAT_SECONDS`` (say, after removing them) sends no second e-mail; the in-app notification,
+which went when they were removed, comes back, so there is never more than one. That memory lives in
+the cache, so a server without a shared cache only forgets sooner. Writing never breaks the change it describes, and the e-mail
 (only when the server has SMTP) is queued in the same transaction, after the notification, so a queue
 error loses the e-mail and not the notification.
 """
@@ -17,6 +20,7 @@ import contextvars
 import logging
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
@@ -26,6 +30,9 @@ from adventures.services.discussion import smtp_configured
 logger = logging.getLogger(__name__)
 
 _batch = contextvars.ContextVar('notification_batch', default=None)
+
+# How long the same actor adding the same person to the same visit stays a repeat.
+REPEAT_SECONDS = 10 * 60
 
 
 class _Batch:
@@ -79,22 +86,62 @@ def _flush(current):
 
     try:
         actor_user, actor_name = actor_for(current.actor)
+        actor_key = f'user:{actor_user.pk}' if actor_user is not None else None
         if actor_user is None and hasattr(current.actor, 'META'):
             from adventures.services.activity_log import guest_actor
 
             link = guest_actor(current.actor, current.collection) if current.collection else None
             if link is not None:
                 actor_name = link.label or 'Guest'
+                actor_key = f'link:{link.pk}'
     except Exception:  # pragma: no cover
         logger.exception('Could not name the actor of a notification')
         return
     for user, visits in current.added.values():
         if actor_user is not None and user.pk == actor_user.pk:
             continue
-        _create(user, actor_user, actor_name, list(visits.values()), current.collection)
+        visits = list(visits.values())
+        fresh, keys = _not_repeats(actor_key, user, visits)
+        if _create(user, actor_user, actor_name, visits, current.collection, email=bool(fresh)):
+            _remember(keys)
 
 
-def _create(user, actor_user, actor_name, visits, collection):
+def _repeat_key(actor_key, user, visit):
+    return f'traveler-added:{actor_key}:{user.pk}:{visit.pk}'
+
+
+def _not_repeats(actor_key, user, visits):
+    """
+    The visits ``user`` was not e-mailed about by this actor in the last ``REPEAT_SECONDS``, and the
+    cache keys to remember them by. Without a known actor, or when the cache fails, every visit is new.
+    """
+    if actor_key is None:
+        return visits, {}
+    keys = {visit.pk: _repeat_key(actor_key, user, visit) for visit in visits}
+    try:
+        told = cache.get_many(list(keys.values()))
+    except Exception:  # pragma: no cover - a cache outage must not silence anyone
+        logger.exception('Could not read the notification repeat cache')
+        told = {}
+    fresh = [visit for visit in visits if keys[visit.pk] not in told]
+    return fresh, {keys[visit.pk]: True for visit in fresh}
+
+
+def _remember(keys):
+    """Remember who was e-mailed once the change is committed (a rolled-back change told nobody)."""
+    if not keys:
+        return
+
+    def store():
+        try:
+            cache.set_many(keys, REPEAT_SECONDS)
+        except Exception:  # pragma: no cover
+            logger.exception('Could not write the notification repeat cache')
+
+    transaction.on_commit(store)
+
+
+def _create(user, actor_user, actor_name, visits, collection, email=True):
     from adventures.models import Notification
 
     try:
@@ -109,13 +156,16 @@ def _create(user, actor_user, actor_name, visits, collection):
             )
     except Exception:
         logger.exception('Could not notify user %s', getattr(user, 'pk', None))
-        return
+        return False
+    if not email:
+        return True
     # Its own savepoint, after the row exists: a queue error loses the e-mail, not the notification.
     try:
         with transaction.atomic():
             _queue_email(note, user)
     except Exception:
         logger.exception('Could not queue the e-mail for notification %s', note.pk)
+    return True
 
 
 def _day(value, tz_name):

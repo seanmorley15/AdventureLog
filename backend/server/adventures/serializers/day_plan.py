@@ -102,7 +102,7 @@ class ReorderResultSerializer(serializers.Serializer):
 class LogVisitSerializer(serializers.Serializer):
     date = DayDateField(required=False, allow_null=True, help_text='Needed when the trip has no dates.')
     traveler_uuids = serializers.ListField(
-        child=serializers.UUIDField(), required=False,
+        child=serializers.UUIDField(), required=False, max_length=100,
         help_text='Who was there. Leave it out to log the visit for yourself only. You may leave yourself off to log '
         'it for someone else, but at least one person is needed. Each must be the location owner, or the owner or a '
         'member of this trip (`traveler-candidates?collection=`).',

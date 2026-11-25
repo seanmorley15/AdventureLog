@@ -28,6 +28,7 @@ from users.serializers import (
 )
 from users.services import account_impact
 from users.services.account_deletion import AccountDeletionError, delete_user_account
+from users.throttling import AccountPreviewThrottle
 
 
 @extend_schema_view(
@@ -60,7 +61,8 @@ class AccountViewSet(viewsets.GenericViewSet):
     openapi_tags = ['Account']
     serializer_class = CustomUserDetailsSerializer
     parser_classes = [JSONParser, MultiPartParser, FormParser]
-    # The app loads the account on every page; a global rate limit would sign people out.
+    # The app loads the account on every page; a global rate limit would sign people out. The two
+    # previews, which walk every shared trip, have their own limit (AccountPreviewThrottle).
     throttle_classes = []
 
     def account_extras(self, user):
@@ -138,7 +140,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @extend_schema(responses=DeletionPreviewSerializer)
-    @action(detail=False, methods=['get'], url_path='deletion-preview')
+    @action(detail=False, methods=['get'], url_path='deletion-preview', throttle_classes=[AccountPreviewThrottle])
     def deletion_preview(self, request):
         """
         Preview deleting your account
@@ -150,7 +152,7 @@ class AccountViewSet(viewsets.GenericViewSet):
         return Response(DeletionPreviewSerializer(data, context={'request': request}).data)
 
     @extend_schema(responses=PrivacyPreviewSerializer)
-    @action(detail=False, methods=['get'], url_path='privacy-preview')
+    @action(detail=False, methods=['get'], url_path='privacy-preview', throttle_classes=[AccountPreviewThrottle])
     def privacy_preview(self, request):
         """
         Preview making your profile private
