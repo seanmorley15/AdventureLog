@@ -26,11 +26,7 @@
 	async function loadPreview() {
 		previewState = 'loading';
 		try {
-			const res = await fetch(`/api/collections/${collectionId}/leave/?dry_run=1`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({})
-			});
+			const res = await fetch(`/api/collections/${collectionId}/leave-preview/`);
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok) {
 				previewError = apiErrorMessage(data, $t('share.update_failed'));

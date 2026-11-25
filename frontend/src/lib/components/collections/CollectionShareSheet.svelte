@@ -4,6 +4,7 @@
 
 <script lang="ts">
 	import { apiErrorMessage } from '#lib/api/index.js';
+	import type { AddTravelersPreview, LeavePreview } from '#lib/traveler-impact.js';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type {
@@ -270,9 +271,9 @@
 	/** Previews what removing a member does, so the owner confirms with the real counts. */
 	async function askRemoveMember(person: CollectionSharingPerson) {
 		const preview = (await request(
-			`/api/collections/${collection.id}/members/${person.uuid}/?dry_run=1`,
-			'DELETE'
-		)) as { locations?: number; others_uploads?: number } | null;
+			`/api/collections/${collection.id}/members/${person.uuid}/removal-preview/`,
+			'GET'
+		)) as LeavePreview | null;
 		if (!preview) return;
 		const name = displayName(person);
 		const parts = [$t('share.remove_member_confirm', { values: { name } })];
@@ -290,11 +291,11 @@
 	/** Counts the visits that would gain this person; nothing is added until the owner agrees. */
 	async function askAddToVisits(person: CollectionSharingPerson) {
 		const name = displayName(person);
+		const query = new URLSearchParams({ user_uuids: person.uuid });
 		const preview = (await request(
-			`/api/collections/${collection.id}/add-travelers/?dry_run=1`,
-			'POST',
-			{ user_uuids: [person.uuid] }
-		)) as { visits?: number; locations?: number } | null;
+			`/api/collections/${collection.id}/add-travelers-preview/?${query}`,
+			'GET'
+		)) as AddTravelersPreview | null;
 		if (!preview) return;
 		if (!preview.visits) {
 			addToast('info', $t('share.add_to_visits_none', { values: { name } }));

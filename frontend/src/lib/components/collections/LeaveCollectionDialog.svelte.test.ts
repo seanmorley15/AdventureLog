@@ -10,7 +10,7 @@ init({ fallbackLocale: 'en', initialLocale: 'en' });
 
 function mockFetch(preview: { locations: number; others_uploads: number }) {
 	const fetchMock = vi.fn(async (_url: string, init?: RequestInit) =>
-		_url.includes('dry_run')
+		_url.includes('-preview/')
 			? new Response(JSON.stringify(preview), { status: 200 })
 			: new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } })
 	);
@@ -44,7 +44,9 @@ describe('LeaveCollectionDialog', () => {
 		await page.getByRole('button', { name: 'Leave', exact: true }).click();
 
 		await vi.waitFor(() => expect(onleft).toHaveBeenCalledWith('c1'));
-		const post = fetchMock.mock.calls.find(([url]) => !String(url).includes('dry_run'))!;
+		expect(String(fetchMock.mock.calls[0][0])).toBe('/api/collections/c1/leave-preview/');
+		expect(fetchMock.mock.calls[0][1]?.method ?? 'GET').toBe('GET');
+		const post = fetchMock.mock.calls.find(([url]) => !String(url).includes('-preview/'))!;
 		expect(JSON.parse(post[1]!.body as string)).toEqual({ keep_copies: false });
 	});
 
@@ -95,7 +97,7 @@ describe('LeaveCollectionDialog', () => {
 		el.click();
 		el.click();
 		await vi.waitFor(() =>
-			expect(fetchMock.mock.calls.filter(([u]) => !String(u).includes('dry_run'))).toHaveLength(1)
+			expect(fetchMock.mock.calls.filter(([u]) => !String(u).includes('-preview/'))).toHaveLength(1)
 		);
 	});
 });

@@ -19,7 +19,7 @@ const quietPreview = {
 
 function mockFetch(preview: object = quietPreview) {
 	const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
-		if (String(url).includes('dry_run'))
+		if (String(url).includes('-preview/'))
 			return new Response(JSON.stringify(preview), { status: 200 });
 		return new Response(JSON.stringify({ linked: false, removed_placements: 2 }), {
 			status: 200,
@@ -33,7 +33,7 @@ function mockFetch(preview: object = quietPreview) {
 const real = (fetchMock: ReturnType<typeof vi.fn>) =>
 	fetchMock.mock.calls.filter(
 		([u, i]) =>
-			!String(u).includes('dry_run') && (i as RequestInit | undefined)?.method === 'DELETE'
+			!String(u).includes('-preview/') && (i as RequestInit | undefined)?.method === 'DELETE'
 	);
 
 const props = () => ({
@@ -47,7 +47,7 @@ const props = () => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe('UnlinkPlaceDialog', () => {
-	it('fetches the dry run first and sends the real DELETE only after Remove', async () => {
+	it('fetches the preview first and sends the real DELETE only after Remove', async () => {
 		const fetchMock = mockFetch({
 			...quietPreview,
 			people_released: [sam],
@@ -67,7 +67,10 @@ describe('UnlinkPlaceDialog', () => {
 		await expect
 			.element(page.getByText('It also leaves 2 stops on the plan of Lofoten.'))
 			.toBeVisible();
-		expect(String(fetchMock.mock.calls[0][0])).toBe('/api/locations/L1/collections/C1/?dry_run=1');
+		expect(String(fetchMock.mock.calls[0][0])).toBe(
+			'/api/locations/L1/collections/C1/unlink-preview/'
+		);
+		expect((fetchMock.mock.calls[0][1] as RequestInit | undefined)?.method ?? 'GET').toBe('GET');
 		expect(real(fetchMock)).toHaveLength(0);
 
 		await page.getByRole('button', { name: 'Remove', exact: true }).click();
@@ -101,7 +104,7 @@ describe('UnlinkPlaceDialog', () => {
 	it('blocks Remove when the preview fails, and retry loads it', async () => {
 		let calls = 0;
 		const fetchMock = vi.fn(async (url: string) => {
-			if (!String(url).includes('dry_run')) return new Response('{}', { status: 200 });
+			if (!String(url).includes('-preview/')) return new Response('{}', { status: 200 });
 			calls += 1;
 			return calls === 1
 				? new Response('{}', { status: 500 })
@@ -140,7 +143,7 @@ describe('UnlinkPlaceDialog', () => {
 
 	it('stays open with the button usable again when the real DELETE fails', async () => {
 		const fetchMock = vi.fn(async (url: string) =>
-			String(url).includes('dry_run')
+			String(url).includes('-preview/')
 				? new Response(JSON.stringify({ ...quietPreview, people_released: [sam] }), { status: 200 })
 				: new Response('{}', { status: 403 })
 		);

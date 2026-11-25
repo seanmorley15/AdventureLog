@@ -30,7 +30,7 @@ function mockFetch() {
 				status: 200,
 				headers: { 'Content-Type': 'application/json' }
 			});
-		if (String(url).includes('dry_run'))
+		if (String(url).includes('-preview/'))
 			return json({
 				people_released: [sam],
 				includes_you: false,
@@ -48,7 +48,7 @@ function mockFetch() {
 const realDeletes = (fetchMock: ReturnType<typeof vi.fn>) =>
 	fetchMock.mock.calls.filter(
 		([u, i]) =>
-			!String(u).includes('dry_run') && (i as RequestInit | undefined)?.method === 'DELETE'
+			!String(u).includes('-preview/') && (i as RequestInit | undefined)?.method === 'DELETE'
 	);
 
 afterEach(() => vi.unstubAllGlobals());
@@ -62,7 +62,7 @@ describe('LocationCollectionChips remove flow', () => {
 		await expect.element(page.getByText(/will get their own copy/)).toBeVisible();
 		expect(
 			fetchMock.mock.calls.some(
-				([u]) => String(u) === '/api/locations/L1/collections/C1/?dry_run=1'
+				([u]) => String(u) === '/api/locations/L1/collections/C1/unlink-preview/'
 			)
 		).toBe(true);
 		expect(realDeletes(fetchMock)).toHaveLength(0);

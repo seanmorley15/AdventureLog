@@ -32,11 +32,10 @@ function mockFetch() {
 				headers: { 'Content-Type': 'application/json' }
 			});
 		if (url.endsWith('/sharing/')) return json(sharing);
-		if (url.includes('add-travelers') && url.includes('dry_run'))
+		if (url.includes('add-travelers') && url.includes('-preview/'))
 			return json({ visits: 2, locations: 1 });
 		if (url.includes('add-travelers')) return json({ visits: 2, locations: 1 });
-		if (method === 'DELETE' && url.includes('dry_run'))
-			return json({ locations: 1, others_uploads: 0 });
+		if (url.includes('/removal-preview/')) return json({ locations: 1, others_uploads: 0 });
 		if (method === 'DELETE') return new Response(null, { status: 204 });
 		return json({});
 	});
@@ -48,7 +47,7 @@ const real = (calls: unknown[][], method: string, part: string) =>
 	calls.filter(
 		([u, i]) =>
 			String(u).includes(part) &&
-			!String(u).includes('dry_run') &&
+			!String(u).includes('-preview/') &&
 			(i as RequestInit | undefined)?.method === method
 	);
 
@@ -74,6 +73,11 @@ describe('CollectionShareSheet confirms', () => {
 		await vi.waitFor(() =>
 			expect(real(fetchMock.mock.calls, 'POST', '/add-travelers/')).toHaveLength(1)
 		);
+		const preview = fetchMock.mock.calls.find(([u]) =>
+			String(u).includes('add-travelers-preview')
+		)!;
+		expect(preview[0]).toBe('/api/collections/c1/add-travelers-preview/?user_uuids=m1');
+		expect(preview[1]?.method).toBe('GET');
 	});
 
 	it('removes the member after the confirm', async () => {
@@ -93,5 +97,8 @@ describe('CollectionShareSheet confirms', () => {
 		await vi.waitFor(() =>
 			expect(real(fetchMock.mock.calls, 'DELETE', '/members/m1/')).toHaveLength(1)
 		);
+		const preview = fetchMock.mock.calls.find(([u]) => String(u).includes('removal-preview'))!;
+		expect(preview[0]).toBe('/api/collections/c1/members/m1/removal-preview/');
+		expect(preview[1]?.method).toBe('GET');
 	});
 });

@@ -12,7 +12,7 @@
 	import AlertTriangle from '~icons/mdi/alert';
 
 	/**
-	 * A confirm dialog that asks the server what would happen first (a dry run), then says so:
+	 * A confirm dialog that asks the server what would happen first (a `…-preview/` request), then says so:
 	 * who keeps a copy, what others keep, what is deleted. Confirm waits for the preview, and an
 	 * error blocks it with a retry. When nothing would be released or deleted and ``quiet`` says
 	 * the rest is light, it never opens: the action just runs.
