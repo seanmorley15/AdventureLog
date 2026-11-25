@@ -155,3 +155,23 @@ def leave(visit, user):
         return False
     visit.delete()
     return True
+
+
+def remove_or_delete(visit, user, for_everyone=False):
+    """
+    Delete a visit on behalf of ``user``. Returns ``'deleted'`` or ``'detached'``.
+
+    Only the location's owner may delete for everyone (anyone else gets ``PermissionDenied``).
+    Otherwise the user is removed from the visit, and the visit goes with them when they were
+    the last traveler. Someone who was not a traveler changes nothing and gets ``'detached'``:
+    a visit others travelled on is theirs to keep. Activities and photos stay with a visit that
+    is only detached from.
+    """
+    from rest_framework.exceptions import PermissionDenied
+
+    if for_everyone:
+        if user.pk != visit.location.user_id:
+            raise PermissionDenied('Only the location owner can delete a visit for everyone.')
+        visit.delete()
+        return 'deleted'
+    return 'deleted' if leave(visit, user) else 'detached'

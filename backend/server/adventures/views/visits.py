@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -12,10 +12,23 @@ from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import VisitSerializer
 from adventures.services import travelers
 from adventures.services.geocoding.assignment import geocode_and_assign_location
+from core.serializers import validated
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
 
+class VisitDeleteQuerySerializer(serializers.Serializer):
+    for_everyone = serializers.BooleanField(
+        default=False,
+        help_text='Delete the visit for every traveler. Only the location owner may. Otherwise only you are removed from it.',
+    )
+
+
 @extend_schema_view(
+    destroy=extend_schema(
+        description='Removes you from the visit. The visit is deleted when you were its last traveler, '
+        'or with `for_everyone` by the location owner. Answers 204 either way.',
+        parameters=[VisitDeleteQuerySerializer],
+    ),
     list=extend_schema(description='Visits to locations you own or that are in collections you belong to.'),
     create=extend_schema(
         description='Send `location`. A visit in the past makes the location visited, which also marks its '
@@ -107,7 +120,8 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, instance.location):
             raise PermissionDenied("You do not have permission to delete this visit.")
 
-        instance.delete()
+        params = validated(VisitDeleteQuerySerializer, self.request.query_params)
+        travelers.remove_or_delete(instance, self.request.user, params['for_everyone'])
 
     @extend_schema(
         request=None,

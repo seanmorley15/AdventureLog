@@ -8,6 +8,7 @@ from core.serializers import CustomModelSerializer, memoized_count
 from users.serializers import CustomUserDetailsSerializer, PublicProfileSerializer, without_private_fields
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from adventures.serializers.geo_fields import CoordinateSerializerMixin
+from adventures.services import travelers
 from adventures.services.travelers import perspective_user
 from .activity import LocationVisitSerializer, TrailSerializer
 from .common import _build_profile_pic_url
@@ -319,7 +320,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             
         location.save()
         if visits_data:
-            self._sync_visits(location, visits_data)
+            self._sync_visits(location, visits_data, self.context['request'].user)
 
         return location
 
@@ -355,16 +356,17 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
 
         # Handle visits - the list sent is the full set for this place
         if visits_data is not None:
-            self._sync_visits(instance, visits_data)
+            self._sync_visits(instance, visits_data, user)
 
         return instance
 
     @staticmethod
-    def _sync_visits(location, visits_data):
+    def _sync_visits(location, visits_data, user):
         """
         Make the place's visits match ``visits_data``. A visit sent with the id of one of
         this place's visits is updated; the rest are created; visits left out are deleted
-        one by one so their photos and files go with them. An id that does not belong to
+        one by one so their photos and files go with them, except that a visit others travelled
+        on only loses ``user`` (see ``travelers.remove_or_delete``). An id that does not belong to
         this place is ignored, never adopted.
         """
         existing = {visit.id: visit for visit in location.visits.all()}
@@ -383,7 +385,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             kept.add(visit.id)
         for visit_id, visit in existing.items():
             if visit_id not in kept:
-                visit.delete()
+                travelers.remove_or_delete(visit, user)
 
 
 class MapPinSerializer(CoordinateSerializerMixin, serializers.ModelSerializer):

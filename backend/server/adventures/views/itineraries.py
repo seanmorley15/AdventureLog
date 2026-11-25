@@ -57,7 +57,7 @@ from adventures.serializers.day_plan import (
     ReorderSerializer,
     ShiftSerializer,
 )
-from adventures.services import day_plan
+from adventures.services import day_plan, travelers
 from adventures.services.activity_log import record_activity
 from adventures.services.day_plan.files import location_stops_on_day, serialize_day_files
 from adventures.services.day_plan.legacy import auto_generate_itinerary, reorder_itinerary_items
@@ -339,7 +339,7 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
         if validated(ItemDeleteQuerySerializer, request.query_params)['confirm_delete_visits'] and instance.logged_visit_id:
             visit = instance.logged_visit
             if IsOwnerOrSharedWithFullAccess().has_object_permission(request, self, visit):
-                visit.delete()
+                travelers.remove_or_delete(visit, request.user)
         collection = instance.collection
         bucket = (instance.day_id, instance.is_global)
         instance.delete()
