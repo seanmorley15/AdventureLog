@@ -25,7 +25,7 @@
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import CollectionPicker from '../collections/CollectionPicker.svelte';
 	import { canUnlinkPlace } from '#lib/collections/plan.js';
-	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
+	import UnlinkPlaceDialog from '../collections/UnlinkPlaceDialog.svelte';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
 	import CardActionsMenu from './parts/CardActionsMenu.svelte';
@@ -172,32 +172,15 @@
 		}
 	}
 
-	// Placements of this place on the open collection's plan, for the unlink warning.
-	let planPlacements = $derived(
-		collection
-			? (collection.itinerary ?? []).filter(
-					(item) => String(item.object_id) === String(adventure.id)
-				).length
-			: 0
-	);
+	// The open trip, while the dialog asks who losing this place would affect.
+	let isUnlinking = $state(false);
 
-	async function removeFromThisCollection() {
+	function removeFromThisCollection() {
+		if (collection?.id) isUnlinking = true;
+	}
+
+	function unlinked() {
 		if (!collection?.id) return;
-		if (
-			planPlacements > 0 &&
-			!confirm(
-				$t('collection.unlink_plan_warning', {
-					values: { days: String(planPlacements), name: collection.name }
-				})
-			)
-		) {
-			return;
-		}
-		const removed = await unlinkLocationFromCollection(adventure.id, collection.id);
-		if (removed === null) {
-			addToast('error', `${$t('adventures.collection_remove_location_error')}`);
-			return;
-		}
 		adventure.collections = (adventure.collections ?? []).filter(
 			(c) => String(c) !== String(collection.id)
 		);
@@ -270,11 +253,23 @@
 	<CollectionPicker
 		locationId={adventure.id}
 		locationName={adventure.name}
+		meUuid={user?.uuid ?? null}
 		onchange={(ids) => {
 			adventure.collections = ids;
 			if (collection?.id && !ids.includes(String(collection.id))) dispatch('unlink', adventure);
 		}}
 		onclose={() => (isCollectionModalOpen = false)}
+	/>
+{/if}
+
+{#if isUnlinking && collection?.id}
+	<UnlinkPlaceDialog
+		locationId={adventure.id}
+		collectionId={collection.id}
+		collectionName={collection.name}
+		meUuid={user?.uuid ?? null}
+		onunlinked={unlinked}
+		onclose={() => (isUnlinking = false)}
 	/>
 {/if}
 

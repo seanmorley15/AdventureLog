@@ -33,7 +33,8 @@
 	import ImageOutline from '~icons/mdi/image-outline';
 	import ImageMultipleOutline from '~icons/mdi/image-multiple-outline';
 
-	import DeleteWarning from '../DeleteWarning.svelte';
+	import ImpactDialog from '../collections/ImpactDialog.svelte';
+	import { fetchCollectionDeletePreview } from '#lib/traveler-impact.js';
 	import CollectionShareSheet from '../collections/CollectionShareSheet.svelte';
 	import SocialShareModal from '../SocialShareModal.svelte';
 	import CollectionPdfDialog from '../collections/CollectionPdfDialog.svelte';
@@ -168,16 +169,15 @@
 		'location_count' in collection ? collection.location_count : collection.locations.length
 	);
 
-	async function deleteCollection() {
-		let res = await fetch(`/api/collections/${collection.id}`, {
-			method: 'DELETE'
-		});
-		if (res.ok) {
-			addToast('info', $t('adventures.delete_collection_success'));
-			dispatch('delete', collection.id);
-		} else {
-			console.log('Error deleting collection');
+	async function deleteCollection(): Promise<boolean> {
+		const res = await fetch(`/api/collections/${collection.id}`, { method: 'DELETE' });
+		if (!res.ok) {
+			addToast('error', $t('adventures.delete_collection_error'));
+			return false;
 		}
+		addToast('info', $t('adventures.delete_collection_success'));
+		dispatch('delete', collection.id);
+		return true;
 	}
 
 	let isWarningModalOpen: boolean = $state(false);
@@ -233,13 +233,15 @@
 </script>
 
 {#if isWarningModalOpen}
-	<DeleteWarning
+	<ImpactDialog
 		title={$t('adventures.delete_collection')}
-		button_text={$t('adventures.delete')}
 		description={$t('adventures.delete_collection_warning')}
-		is_warning={true}
-		on:close={() => (isWarningModalOpen = false)}
-		on:confirm={deleteCollection}
+		confirmLabel={$t('adventures.delete')}
+		meUuid={user?.uuid ?? null}
+		danger
+		load={() => fetchCollectionDeletePreview(collection.id)}
+		onconfirm={deleteCollection}
+		onclose={() => (isWarningModalOpen = false)}
 	/>
 {/if}
 

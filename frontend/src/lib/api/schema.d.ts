@@ -32,7 +32,7 @@ export interface paths {
          * Update your profile
          * @description Change your profile and preferences. Send JSON, or `multipart/form-data` to upload a new `profile_pic`.
          *
-         *     `profile_visibility` is `private`, `signed_in` (shown to signed-in users, who can also invite you) or `public`; the older `public_profile` switch is kept in step with it. Making your profile private also removes you from collections other people shared with you and cancels invites you have not answered. The response then includes `left_shared_collections` and `revoked_collection_invites` with how many were affected.
+         *     `profile_visibility` is `private`, `signed_in` (shown to signed-in users, who can also invite you) or `public`; the older `public_profile` switch is kept in step with it. Making your profile private also removes you from collections other people shared with you and cancels invites you have not answered. The response then includes `left_shared_collections`, `revoked_collection_invites` and `kept_copies` (places you travelled to there that you now hold as your own copies) with how many were affected. `GET /api/account/privacy-preview/` says the same beforehand.
          */
         patch: operations["account_partial_update"];
         trace?: never;
@@ -75,6 +75,27 @@ export interface paths {
         post?: never;
         /** Revoke an API key */
         delete: operations["account_api_keys_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/account/deletion-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview deleting your account
+         * @description What deleting the account would do, changing nothing: what you own that goes, who gets
+         *     their own copy of your places they travelled to, and visits you leave behind.
+         */
+        get: operations["account_deletion_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -133,6 +154,27 @@ export interface paths {
         put?: never;
         /** Turn password sign-in back on */
         post: operations["account_enable_password_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/account/privacy-preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview making your profile private
+         * @description What `profile_visibility: private` would do, changing nothing: how many shared trips you
+         *     would leave, how many places you keep as copies, and what would go.
+         */
+        get: operations["account_privacy_preview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1092,7 +1134,7 @@ export interface paths {
         post?: never;
         /**
          * Delete a collection
-         * @description Owner only. Deletes the collection; records in it that belong to you stay.
+         * @description Owner only. Deletes the collection; records in it that belong to you stay. People who travelled to a place in it and can no longer reach it get their own copy with their visits. With `?dry_run=1` it changes nothing and returns who that would be and what would go with it.
          */
         delete: operations["collections_destroy"];
         options?: never;
@@ -2403,7 +2445,7 @@ export interface paths {
         post: operations["locations_collection_membership_post"];
         /**
          * Remove the location from a collection
-         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner or the place owner may call it.
+         * @description Idempotent. Also removes its placements from the day plan, and says how many. Only the collection owner or the place owner may call it. People who travelled to the place and can no longer reach it through another collection come off its visits and get their own copy with their visits. With `?dry_run=1` it changes nothing and returns who that would be (`people_released`) and what would go with it.
          */
         delete: operations["locations_collection_membership_delete"];
         options?: never;
@@ -4393,6 +4435,19 @@ export interface components {
             readonly days_until_start: number | null;
             readonly primary_image: components["schemas"]["ContentImage"] | null;
         };
+        /** @description What taking a place away from the people who travelled there would do. */
+        CollectionDeletePreview: {
+            /** @description People who travelled to the place, do not own it and could no longer reach it. Each would get their own copy of it with their visits, and come off the original visits. */
+            people_released: components["schemas"]["Traveler"][];
+            /** @description Whether you are one of `people_released`. */
+            includes_you: boolean;
+            /** @description Visits that only people being released travelled on. They go with the original place. */
+            visits_deleted: number;
+            /** @description Photos, attachments and activities that people who are not released added to those visits. They go too. */
+            others_uploads: number;
+            /** @description Places in the collection that someone would get a copy of. */
+            places: number;
+        };
         /** @description A collection with its day plan, for members. */
         CollectionDetail: {
             /** Format: uuid */
@@ -4707,6 +4762,7 @@ export interface components {
          * @enum {string}
          */
         CollectionTypeEnum: "folder" | "trip";
+        CollectionUnlinkResult: components["schemas"]["CollectionLinkResult"] | components["schemas"]["UnlinkPreview"];
         /**
          * @description * `private` - Private
          *     * `signed_in` - Everyone signed in
@@ -5093,6 +5149,24 @@ export interface components {
          * @enum {string}
          */
         DefaultCurrencyEnum: "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "CNY" | "HKD" | "SGD" | "SEK" | "NOK" | "DKK" | "NZD" | "INR" | "MXN" | "BRL" | "ZAR" | "AED" | "TRY" | "AFN" | "ALL" | "AMD" | "AOA" | "ARS" | "AWG" | "AZN" | "BAM" | "BBD" | "BDT" | "BGN" | "BHD" | "BIF" | "BMD" | "BND" | "BOB" | "BSD" | "BTN" | "BWP" | "BYN" | "BZD" | "CDF" | "CLP" | "COP" | "CRC" | "CUP" | "CVE" | "CZK" | "DJF" | "DOP" | "DZD" | "EGP" | "ERN" | "ETB" | "FJD" | "FKP" | "GEL" | "GHS" | "GIP" | "GMD" | "GNF" | "GTQ" | "GYD" | "HNL" | "HTG" | "HUF" | "IDR" | "ILS" | "IQD" | "IRR" | "ISK" | "JMD" | "JOD" | "KES" | "KGS" | "KHR" | "KMF" | "KPW" | "KRW" | "KWD" | "KYD" | "KZT" | "LAK" | "LBP" | "LKR" | "LRD" | "LSL" | "LYD" | "MAD" | "MDL" | "MGA" | "MKD" | "MMK" | "MNT" | "MOP" | "MRU" | "MUR" | "MVR" | "MWK" | "MYR" | "MZN" | "NAD" | "NGN" | "NIO" | "NPR" | "OMR" | "PAB" | "PEN" | "PGK" | "PHP" | "PKR" | "PLN" | "PYG" | "QAR" | "RON" | "RSD" | "RUB" | "RWF" | "SAR" | "SBD" | "SCR" | "SDG" | "SHP" | "SLE" | "SOS" | "SRD" | "SSP" | "STN" | "SVC" | "SYP" | "SZL" | "THB" | "TJS" | "TMT" | "TND" | "TOP" | "TTD" | "TWD" | "TZS" | "UAH" | "UGX" | "UYU" | "UZS" | "VES" | "VND" | "VUV" | "WST" | "XAF" | "XCD" | "XOF" | "XPF" | "YER" | "ZMW";
+        DeletionPreview: {
+            /** @description People who would get their own copy of the places of yours they travelled to. */
+            people_released: components["schemas"]["Traveler"][];
+            /** @description Places of yours that someone would get a copy of. */
+            places_copied: number;
+            /** @description Places you own. All deleted. */
+            locations: number;
+            /** @description Collections you own. All deleted. */
+            collections: number;
+            /** @description Trips shared with you that you would leave. */
+            shared_collections_left: number;
+            /** @description Visits at other people's places that others also travelled on. They stay, without you. */
+            visits_detached: number;
+            /** @description Visits at other people's places that only you travelled on. They go. */
+            visits_deleted: number;
+            /** @description Photos, attachments and activities other people added to those visits. They go too. */
+            others_uploads: number;
+        };
         Description: {
             title: string | null;
             /** @description Plain-text description. */
@@ -6882,6 +6956,18 @@ export interface components {
          * @enum {string}
          */
         PriceCurrencyEnum: "XUA" | "AFN" | "AFA" | "ALL" | "ALK" | "DZD" | "ADP" | "AOA" | "AOK" | "AON" | "AOR" | "ARA" | "ARS" | "ARM" | "ARP" | "ARL" | "AMD" | "AWG" | "AUD" | "ATS" | "AZN" | "AZM" | "BSD" | "BHD" | "BDT" | "BBD" | "BYN" | "BYB" | "BYR" | "BEF" | "BEC" | "BEL" | "BZD" | "BMD" | "BTN" | "BOB" | "BOL" | "BOV" | "BOP" | "VED" | "BAM" | "BAD" | "BAN" | "BWP" | "BRC" | "BRZ" | "BRE" | "BRR" | "BRN" | "BRB" | "BRL" | "GBP" | "BND" | "BGL" | "BGN" | "BGO" | "BGM" | "BUK" | "BIF" | "XPF" | "KHR" | "CAD" | "CVE" | "KYD" | "XAF" | "CLE" | "CLP" | "CLF" | "CNX" | "CNY" | "CNH" | "COP" | "COU" | "KMF" | "CDF" | "CRC" | "HRD" | "HRK" | "CUC" | "CUP" | "CYP" | "CZK" | "CSK" | "DKK" | "DJF" | "DOP" | "NLG" | "XCD" | "DDM" | "ECS" | "ECV" | "EGP" | "GQE" | "ERN" | "EEK" | "ETB" | "EUR" | "XBA" | "XEU" | "XBB" | "XBC" | "XBD" | "FKP" | "FJD" | "FIM" | "FRF" | "XFO" | "XFU" | "GMD" | "GEK" | "GEL" | "DEM" | "GHS" | "GHC" | "GIP" | "XAU" | "GRD" | "GTQ" | "GWP" | "GNF" | "GNS" | "GYD" | "HTG" | "HNL" | "HKD" | "HUF" | "IMP" | "ISK" | "ISJ" | "INR" | "IDR" | "IRR" | "IQD" | "IEP" | "ILS" | "ILP" | "ILR" | "ITL" | "JMD" | "JPY" | "JOD" | "KZT" | "KES" | "KWD" | "KGS" | "LAK" | "LVL" | "LVR" | "LBP" | "LSL" | "LRD" | "LYD" | "LTL" | "LTT" | "LUL" | "LUC" | "LUF" | "MOP" | "MKD" | "MKN" | "MGA" | "MGF" | "MWK" | "MYR" | "MVR" | "MVP" | "MLF" | "MTL" | "MTP" | "MRU" | "MRO" | "MUR" | "MXV" | "MXN" | "MXP" | "MDC" | "MDL" | "MCF" | "MNT" | "MAD" | "MAF" | "MZE" | "MZN" | "MZM" | "MMK" | "NAD" | "NPR" | "ANG" | "TWD" | "NZD" | "NIO" | "NIC" | "NGN" | "KPW" | "NOK" | "OMR" | "PKR" | "XPD" | "PAB" | "PGK" | "PYG" | "PEI" | "PEN" | "PES" | "PHP" | "XPT" | "PLN" | "PLZ" | "PTE" | "GWE" | "QAR" | "XRE" | "RHD" | "RON" | "ROL" | "RUB" | "RUR" | "RWF" | "SVC" | "WST" | "SAR" | "RSD" | "CSD" | "SCR" | "SLE" | "SLL" | "XAG" | "SGD" | "SKK" | "SIT" | "SBD" | "SOS" | "ZAR" | "ZAL" | "KRH" | "KRW" | "KRO" | "SSP" | "SUR" | "ESP" | "ESA" | "ESB" | "XDR" | "LKR" | "SHP" | "XSU" | "SDD" | "SDG" | "SDP" | "SRD" | "SRG" | "SZL" | "SEK" | "CHF" | "SYP" | "STN" | "STD" | "TVD" | "TJR" | "TJS" | "TZS" | "XTS" | "THB" | "TPE" | "TOP" | "TTD" | "TND" | "TRY" | "TRL" | "TMT" | "TMM" | "USD" | "USN" | "USS" | "UGX" | "UGS" | "UAH" | "UAK" | "AED" | "UYW" | "UYU" | "UYP" | "UYI" | "UZS" | "VUV" | "VES" | "VEB" | "VEF" | "VND" | "VNN" | "CHE" | "CHW" | "XOF" | "YDD" | "YER" | "YUN" | "YUD" | "YUM" | "YUR" | "ZWN" | "ZRN" | "ZRZ" | "ZMW" | "ZMK" | "ZWD" | "ZWR" | "ZWL";
+        PrivacyPreview: {
+            /** @description Trips shared with you that you would leave. */
+            left_shared_collections: number;
+            /** @description Invites you have not answered, which would be cancelled. */
+            revoked_collection_invites: number;
+            /** @description Places you travelled to there that you would keep as your own copies. */
+            copies: number;
+            /** @description Visits only you travelled on. They go with the original place. */
+            visits_deleted: number;
+            /** @description Photos, attachments and activities other people added to those visits. They go too. */
+            others_uploads: number;
+        };
         /**
          * @description * `private` - Private
          *     * `signed_in` - Signed-in users
@@ -7995,6 +8081,19 @@ export interface components {
             readonly days_until_start: number | null;
             readonly primary_image: components["schemas"]["ContentImage"] | null;
         };
+        /** @description What taking a place away from the people who travelled there would do. */
+        UnlinkPreview: {
+            /** @description People who travelled to the place, do not own it and could no longer reach it. Each would get their own copy of it with their visits, and come off the original visits. */
+            people_released: components["schemas"]["Traveler"][];
+            /** @description Whether you are one of `people_released`. */
+            includes_you: boolean;
+            /** @description Visits that only people being released travelled on. They go with the original place. */
+            visits_deleted: number;
+            /** @description Photos, attachments and activities that people who are not released added to those visits. They go too. */
+            others_uploads: number;
+            /** @description Plan placements of the place in the collection that would go. */
+            removed_placements: number;
+        };
         UnreadCount: {
             unread_count: number;
         };
@@ -8535,6 +8634,34 @@ export interface operations {
             };
         };
     };
+    account_deletion_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionPreview"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
     account_media_usage: {
         parameters: {
             query?: never;
@@ -8646,6 +8773,34 @@ export interface operations {
             };
             /** @description You can see this resource but may not do this to it (`permission_denied`). */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    account_privacy_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrivacyPreview"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12221,7 +12376,10 @@ export interface operations {
     };
     collections_destroy: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only say what would happen; change nothing. */
+                dry_run?: boolean;
+            };
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -12234,7 +12392,15 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionDeletePreview"];
+                };
+            };
+            /** @description Deleted. */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -16593,7 +16759,10 @@ export interface operations {
     };
     locations_collection_membership_delete: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only say what would happen; change nothing. */
+                dry_run?: boolean;
+            };
             header?: {
                 /** @description The `ETag` of the version this change is based on, or `*`. When the record has changed since, nothing is changed and the answer is `412 precondition_failed`. Leave it out to change the record regardless. */
                 "If-Match"?: string;
@@ -16613,7 +16782,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CollectionLinkResult"];
+                    "application/json": components["schemas"]["CollectionUnlinkResult"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */

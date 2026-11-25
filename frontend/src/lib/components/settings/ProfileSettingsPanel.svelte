@@ -11,6 +11,7 @@
 	} from '#lib/dateFormat.js';
 	import { getBasemapOptions } from '#lib';
 	import type { ProfileVisibility, User } from '#lib/types.js';
+	import type { PrivacyPreview } from '#lib/traveler-impact.js';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 	import SettingsSubsection from './SettingsSubsection.svelte';
@@ -19,11 +20,18 @@
 		user: User;
 		/** Returns false to keep the current choice (the user backed out). */
 		onProfileVisibilityChange: (next: ProfileVisibility) => boolean;
+		/** What going private would do to shared trips, when the server has said. */
+		privacyPreview?: PrivacyPreview | null;
 		/** False when the server is for signed-in users only (`ALLOW_PUBLIC_ACCESS`). */
 		allowPublicAccess?: boolean;
 	}
 
-	let { user = $bindable(), onProfileVisibilityChange, allowPublicAccess = true }: Props = $props();
+	let {
+		user = $bindable(),
+		onProfileVisibilityChange,
+		privacyPreview = null,
+		allowPublicAccess = true
+	}: Props = $props();
 	let usaFlash = $state(false);
 
 	// Who can see the profile, narrowest first (#1226).
@@ -184,6 +192,12 @@
 					{$t('settings.public_profile_sharing_warning', {
 						values: { count: user.shared_collection_count ?? 0 }
 					})}
+				</p>
+			{/if}
+			{#if profileVisibility !== 'private' && (privacyPreview?.copies ?? 0) > 0}
+				<p class="text-sm text-warning mt-2">
+					{$t('traveler_impact.privacy_copies', { values: { count: privacyPreview?.copies ?? 0 } })}
+					{$t('traveler_impact.others_keep_visits')}
 				</p>
 			{/if}
 			{#if profileVisibility !== 'private' && (user.pending_collection_invite_count ?? 0) > 0}

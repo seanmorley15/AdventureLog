@@ -3,6 +3,8 @@
 	import { page } from '$app/state';
 	import { t } from 'svelte-i18n';
 	import type { User } from '#lib/types.js';
+	import type { DeletionPreview } from '#lib/traveler-impact.js';
+	import TravelerImpact from '#lib/components/collections/TravelerImpact.svelte';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
 
@@ -13,6 +15,8 @@
 		isDeletingAccount: boolean;
 		canDeleteAccount: boolean;
 		onDeleteSubmit: () => boolean;
+		/** What deleting would do to shared trips, when the server has said. */
+		deletionPreview?: DeletionPreview | null;
 	}
 
 	let {
@@ -21,7 +25,8 @@
 		deletePassword = $bindable(),
 		isDeletingAccount = $bindable(),
 		canDeleteAccount,
-		onDeleteSubmit
+		onDeleteSubmit,
+		deletionPreview = null
 	}: Props = $props();
 
 	let accountDeletionBlocked = $derived(user.is_staff);
@@ -49,6 +54,50 @@
 				<p class="text-sm mt-1">{$t('settings.delete_account_warning')}</p>
 				<p class="text-sm mt-1">{$t('settings.delete_account_stripe_warning')}</p>
 			</div>
+		</div>
+	{/if}
+
+	{#if !accountDeletionBlocked && deletionPreview}
+		<div class="rounded-lg border border-base-300 bg-base-200/60 p-4 mb-6 space-y-2 text-sm">
+			<p class="font-semibold">{$t('traveler_impact.account_title')}</p>
+			<p>
+				{$t('traveler_impact.account_deleted', {
+					values: { locations: deletionPreview.locations, collections: deletionPreview.collections }
+				})}
+			</p>
+			{#if deletionPreview.shared_collections_left > 0}
+				<p>
+					{$t('traveler_impact.account_left', {
+						values: { count: deletionPreview.shared_collections_left }
+					})}
+				</p>
+			{/if}
+			{#if deletionPreview.visits_detached > 0}
+				<p>
+					{$t('traveler_impact.account_detached', {
+						values: { count: deletionPreview.visits_detached }
+					})}
+				</p>
+			{/if}
+			{#if deletionPreview.visits_deleted > 0}
+				<p>
+					{$t('traveler_impact.account_visits_deleted', {
+						values: { count: deletionPreview.visits_deleted }
+					})}
+				</p>
+			{/if}
+			{#if deletionPreview.others_uploads > 0}
+				<p>
+					{$t('traveler_impact.others_uploads', {
+						values: { count: deletionPreview.others_uploads }
+					})}
+				</p>
+			{/if}
+			<TravelerImpact
+				people={deletionPreview.people_released}
+				places={deletionPreview.places_copied}
+				othersKeep={false}
+			/>
 		</div>
 	{/if}
 

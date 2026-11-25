@@ -2,12 +2,9 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '#lib/toasts.js';
-	import {
-		fetchMembership,
-		unlinkLocationFromCollection,
-		type CollectionMembership
-	} from '#lib/collection-membership.js';
+	import { fetchMembership, type CollectionMembership } from '#lib/collection-membership.js';
 	import CollectionPicker from './CollectionPicker.svelte';
+	import UnlinkPlaceDialog from './UnlinkPlaceDialog.svelte';
 	import Folder from '~icons/mdi/folder-outline';
 	import Close from '~icons/mdi/close';
 	import Plus from '~icons/mdi/plus';
@@ -17,9 +14,11 @@
 		locationName?: string;
 		/** Shows the add chip and the picker. */
 		canManage?: boolean;
+		/** Your uuid, so the unlink dialog says "you" for your own copy. */
+		meUuid?: string | null;
 	}
 
-	let { locationId, locationName = '', canManage = false }: Props = $props();
+	let { locationId, locationName = '', canManage = false, meUuid = null }: Props = $props();
 
 	let rows: CollectionMembership[] = $state([]);
 	let pickerOpen = $state(false);
@@ -35,22 +34,10 @@
 
 	onMount(load);
 
-	async function remove(row: CollectionMembership) {
-		if (
-			row.placements.length > 0 &&
-			!confirm(
-				$t('collection.unlink_plan_warning', {
-					values: { days: String(row.placements.length), name: row.name }
-				})
-			)
-		) {
-			return;
-		}
-		const removed = await unlinkLocationFromCollection(locationId, row.id);
-		if (removed === null) {
-			addToast('error', $t('adventures.collection_remove_location_error'));
-			return;
-		}
+	// The row being taken out. The dialog asks the server what that would change first.
+	let removing: CollectionMembership | null = $state(null);
+
+	async function removed() {
 		addToast('info', $t('adventures.collection_remove_location_success'));
 		await load();
 	}
@@ -67,7 +54,7 @@
 						type="button"
 						class="btn btn-ghost btn-xs btn-circle h-5 min-h-0 w-5"
 						aria-label={$t('collection.remove_from_named', { values: { name: row.name } })}
-						onclick={() => remove(row)}
+						onclick={() => (removing = row)}
 					>
 						<Close class="h-3 w-3" />
 					</button>
@@ -91,7 +78,19 @@
 	<CollectionPicker
 		{locationId}
 		{locationName}
+		{meUuid}
 		onchange={load}
 		onclose={() => (pickerOpen = false)}
+	/>
+{/if}
+
+{#if removing}
+	<UnlinkPlaceDialog
+		{locationId}
+		collectionId={removing.id}
+		collectionName={removing.name}
+		{meUuid}
+		onunlinked={removed}
+		onclose={() => (removing = null)}
 	/>
 {/if}

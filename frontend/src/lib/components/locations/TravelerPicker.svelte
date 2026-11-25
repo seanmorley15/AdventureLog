@@ -68,4 +68,7 @@
 			</label>
 		{/each}
 	</div>
+	{#if candidates.some((person) => person.uuid !== lockedUuid)}
+		<p class="text-xs text-base-content/60">{$t('traveler_impact.picker_hint')}</p>
+	{/if}
 </fieldset>

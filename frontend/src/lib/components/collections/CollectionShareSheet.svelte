@@ -647,6 +647,9 @@
 				<div class="card border border-base-300 bg-base-100">
 					<div class="card-body gap-3 p-4 md:p-6">
 						{@render sectionHeading(AccountMultiple, $t('share.has_access'))}
+						<p class="text-xs text-base-content/60" data-testid="traveler-copy-note">
+							{$t('traveler_impact.share_note')}
+						</p>
 						<ul class="divide-y divide-base-300">
 							<li class="flex items-center gap-3 py-2.5">
 								<UserAvatar

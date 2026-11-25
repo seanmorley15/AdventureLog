@@ -6,9 +6,10 @@
 		fetchMembership,
 		linkLocationToCollection,
 		placementDays,
-		unlinkLocationFromCollection,
 		type CollectionMembership
 	} from '#lib/collection-membership.js';
+
+	import UnlinkPlaceDialog from './UnlinkPlaceDialog.svelte';
 
 	import Collections from '~icons/mdi/folder-multiple';
 	import Search from '~icons/mdi/magnify';
@@ -20,9 +21,11 @@
 		locationName?: string;
 		onchange?: (collectionIds: string[]) => void;
 		onclose: () => void;
+		/** Your uuid, so the unlink dialog says "you" for your own copy. */
+		meUuid?: string | null;
 	}
 
-	let { locationId, locationName = '', onchange, onclose }: Props = $props();
+	let { locationId, locationName = '', onchange, onclose, meUuid = null }: Props = $props();
 
 	let dialog: HTMLDialogElement | undefined = $state();
 	let rows: CollectionMembership[] = $state([]);
@@ -73,37 +76,32 @@
 		onchange?.(rows.filter((r) => r.is_linked).map((r) => r.id));
 	}
 
+	// The linked row being taken out. The dialog asks the server what that would change first.
+	let removing: CollectionMembership | null = $state(null);
+
+	function unlinked(row: CollectionMembership) {
+		row.is_linked = false;
+		row.placements = [];
+		addToast('info', $t('adventures.collection_remove_location_success'));
+		emit();
+	}
+
 	async function toggle(row: CollectionMembership) {
 		if (busy[row.id]) return;
-		const unlinking = row.is_linked;
-		if (unlinking && row.placements.length > 0) {
-			const ok = confirm(
-				$t('collection.unlink_plan_warning', { values: { days: days(row), name: row.name } })
-			);
-			if (!ok) return;
+		if (row.is_linked) {
+			removing = row;
+			return;
 		}
 		busy[row.id] = true;
 		const wasPlacements = row.placements;
-		if (unlinking) {
-			const removed = await unlinkLocationFromCollection(locationId, row.id);
-			if (removed === null) {
-				addToast('error', $t('adventures.collection_remove_location_error'));
-			} else {
-				row.is_linked = false;
-				row.placements = [];
-				addToast('info', $t('adventures.collection_remove_location_success'));
-				emit();
-			}
+		const ok = await linkLocationToCollection(locationId, row.id);
+		if (!ok) {
+			addToast('error', $t('adventures.collection_link_location_error'));
+			row.placements = wasPlacements;
 		} else {
-			const ok = await linkLocationToCollection(locationId, row.id);
-			if (!ok) {
-				addToast('error', $t('adventures.collection_link_location_error'));
-				row.placements = wasPlacements;
-			} else {
-				row.is_linked = true;
-				addToast('info', $t('adventures.collection_link_location_success'));
-				emit();
-			}
+			row.is_linked = true;
+			addToast('info', $t('adventures.collection_link_location_success'));
+			emit();
 		}
 		busy[row.id] = false;
 	}
@@ -237,3 +235,15 @@
 	</div>
 	<form method="dialog" class="modal-backdrop"><button>close</button></form>
 </dialog>
+
+{#if removing}
+	{@const row = removing}
+	<UnlinkPlaceDialog
+		{locationId}
+		collectionId={row.id}
+		collectionName={row.name}
+		{meUuid}
+		onunlinked={() => unlinked(row)}
+		onclose={() => (removing = null)}
+	/>
+{/if}

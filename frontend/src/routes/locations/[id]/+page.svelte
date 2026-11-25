@@ -955,6 +955,7 @@
 									locationId={adventure.id}
 									locationName={adventure.name}
 									canManage={isOwner}
+									meUuid={data.user?.uuid ?? null}
 								/>
 							</DetailFact>
 						{/if}

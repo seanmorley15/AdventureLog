@@ -29,6 +29,7 @@
 	import DangerZoneSettingsPanel from '#lib/components/settings/DangerZoneSettingsPanel.svelte';
 	import AboutSettingsPanel from '#lib/components/settings/AboutSettingsPanel.svelte';
 	import AdminSettingsPanel from '#lib/components/settings/AdminSettingsPanel.svelte';
+	import type { DeletionPreview, PrivacyPreview } from '#lib/traveler-impact.js';
 	import { isReauthRequired, reauthenticateWithPassword } from '#lib/reauthenticate.js';
 
 	let { data = $bindable() } = $props();
@@ -199,6 +200,41 @@
 		}
 	}
 
+	// What going private would do (trips left, copies kept, what is deleted), asked of the server once.
+	let privacyPreview = $state<PrivacyPreview | null>(null);
+	// What deleting the account would do to shared trips, asked once the danger zone opens.
+	let deletionPreview = $state<DeletionPreview | null>(null);
+
+	async function loadPreview<T>(url: string): Promise<T | null> {
+		try {
+			const res = await fetch(url);
+			return res.ok ? ((await res.json()) as T) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	/** The native prompt for going private: the same lines the settings page shows, then the question. */
+	function privacyConfirmText(): string {
+		const shared = privacyPreview?.left_shared_collections ?? user.shared_collection_count ?? 0;
+		const invites =
+			privacyPreview?.revoked_collection_invites ?? user.pending_collection_invite_count ?? 0;
+		const lines = [$t('traveler_impact.privacy_confirm')];
+		if (shared > 0) lines.push($t('traveler_impact.privacy_left', { values: { count: shared } }));
+		const copies = privacyPreview?.copies ?? 0;
+		if (copies > 0) lines.push($t('traveler_impact.privacy_copies', { values: { count: copies } }));
+		const deleted = privacyPreview?.visits_deleted ?? 0;
+		if (deleted > 0)
+			lines.push($t('traveler_impact.privacy_visits_deleted', { values: { count: deleted } }));
+		const uploads = privacyPreview?.others_uploads ?? 0;
+		if (uploads > 0)
+			lines.push($t('traveler_impact.others_uploads', { values: { count: uploads } }));
+		if (shared > 0) lines.push($t('traveler_impact.others_keep_visits'));
+		if (invites > 0)
+			lines.push($t('traveler_impact.privacy_invites', { values: { count: invites } }));
+		return lines.join('\n');
+	}
+
 	/** Returns false when the user backs out of leaving their shared collections. */
 	function handleProfileVisibilityChange(next: ProfileVisibility): boolean {
 		const current = user.profile_visibility ?? (user.public_profile ? 'public' : 'private');
@@ -206,14 +242,7 @@
 			current !== 'private' &&
 			next === 'private' &&
 			profileSharingImpact > 0 &&
-			!confirm(
-				$t('settings.public_profile_private_confirm', {
-					values: {
-						shared: user.shared_collection_count ?? 0,
-						invites: user.pending_collection_invite_count ?? 0
-					}
-				})
-			)
+			!confirm(privacyConfirmText())
 		) {
 			return false;
 		}
@@ -244,8 +273,21 @@
 		return messages.join(' ');
 	}
 
+	$effect(() => {
+		if (browser && activeSection === 'danger' && !deletionPreview) {
+			loadPreview<DeletionPreview>('/api/account/deletion-preview/').then(
+				(preview) => (deletionPreview = preview)
+			);
+		}
+	});
+
 	onMount(() => {
 		if (!browser) return;
+		if (profileSharingImpact > 0) {
+			loadPreview<PrivacyPreview>('/api/account/privacy-preview/').then(
+				(preview) => (privacyPreview = preview)
+			);
+		}
 		activeSection = normalizeSection(page.url.searchParams.get('tab'));
 		if (page.url.searchParams.get('page') === 'success') {
 			addToast('success', $t('settings.update_success'));
@@ -583,6 +625,7 @@
 					<ProfileSettingsPanel
 						{user}
 						onProfileVisibilityChange={handleProfileVisibilityChange}
+						{privacyPreview}
 						allowPublicAccess={data.props.allowPublicAccess}
 					/>
 				{:else if activeSection === 'emails'}
@@ -666,6 +709,7 @@
 						{isDeletingAccount}
 						{canDeleteAccount}
 						onDeleteSubmit={confirmDeleteAccount}
+						{deletionPreview}
 					/>
 				{:else if activeSection === 'about'}
 					<AboutSettingsPanel {user} />

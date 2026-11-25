@@ -22,7 +22,7 @@
 		Visit
 	} from '#lib/types.js';
 	import { addToast } from '#lib/toasts.js';
-	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
+	import UnlinkPlaceDialog from './UnlinkPlaceDialog.svelte';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
 	import { defaultTimezone } from '#lib/dateUtils.js';
 	import { applyDropdownFlip } from '#lib/utils/flipDropdown.js';
@@ -665,25 +665,14 @@
 		if (res.ok) removeItem(row.id);
 	}
 
-	async function removeFromCollection(row: PlanRow) {
-		const placements = (collection.itinerary ?? []).filter(
-			(item) => String(item.object_id) === String(row.objectId)
-		).length;
-		if (
-			placements > 1 &&
-			!confirm(
-				$t('collection.unlink_plan_warning', {
-					values: { days: String(placements), name: collection.name }
-				})
-			)
-		) {
-			return;
-		}
-		const removed = await unlinkLocationFromCollection(row.objectId, collection.id);
-		if (removed === null) {
-			addToast('error', $t('adventures.collection_remove_location_error'));
-			return;
-		}
+	// The place being taken out of the trip. The dialog asks who that affects first.
+	let unlinking = $state<PlanRow | null>(null);
+
+	function removeFromCollection(row: PlanRow) {
+		unlinking = row;
+	}
+
+	function unlinked(row: PlanRow) {
 		collection = {
 			...collection,
 			locations: (collection.locations ?? []).filter(
@@ -1997,6 +1986,19 @@
 			</form>
 		</div>
 	</div>
+{/if}
+
+{#if unlinking}
+	{@const row = unlinking}
+	<UnlinkPlaceDialog
+		locationId={row.objectId}
+		collectionId={collection.id}
+		collectionName={collection.name}
+		meUuid={currentUserUuid}
+		quietPlacements={1}
+		onunlinked={() => unlinked(row)}
+		onclose={() => (unlinking = null)}
+	/>
 {/if}
 
 {#if placementEdit}

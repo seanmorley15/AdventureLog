@@ -46,6 +46,25 @@ The **Recommendations** tab finds places near your trip by category, such as att
 
 When someone adds you to a visit (by logging a visit with you, using **Log day**, or adding people to a trip's visits), you get a notification in the **Inbox** in the top bar, with a badge for what is new. It says who added you, where and when, and links to the place or trip. If you were not there, choose **Remove me** to take yourself off the visit. If the server can send email, you also get one message with the same link. Notifications never list the other people on the visit.
 
+## What happens when you stop being part of a trip
+
+Visits record who was there. When someone stops having a way to reach a place, they keep their own history of it, and nothing is taken from people who are still on the trip. The rules are the same everywhere:
+
+- **They get a copy.** Each place they traveled to and do not own is copied into their account, under the same name, with their visits and the photos, files and activities they added. They come off the original visits.
+- **Everyone else keeps the place.** Other travelers stay on their visits, and the place owner keeps the place as it is. Someone who still reaches the place through another trip is not affected.
+- **Some things are deleted.** A visit that only the person leaving was on goes with the original place, and so do the photos, files and activities other people added to it. AdventureLog tells you how many before you confirm.
+
+| When | Who is affected | What happens |
+| --- | --- | --- |
+| You **leave** a trip | You | You choose whether to keep copies of the places you traveled to. Places you own stay yours. |
+| The owner **removes** you from a trip | You | You always get your copies. |
+| A place is **taken out of a trip** | People who traveled there and cannot reach it another way, including the trip owner when the place is a member's | They get their own copy with their visits. The place owner is never affected. Only the trip owner or the place owner can take a place out. |
+| A trip is **deleted** | The same people, for every place in it | They get their own copy of each place. Places the owner owns stay in their account. |
+| An account is **deleted** | People who traveled to its places, and the trips it was a member of | Co-members get copies of the deleted person's places. The deleted person comes off the visits they were on at other people's places. |
+| A profile is made **private** | That person | They leave the trips shared with them and keep copies of the places they traveled to there. |
+
+Each of these shows a summary first: who will get a copy, how many visits and uploads would be deleted, and what stays. Deleting a place you own is different: it is deleted for everyone, with its visits, and nobody gets a copy.
+
 ## The calendar
 
 The Calendar page shows every trip, with its stops, transport, and lodging laid out by day. **Download Calendar** saves it as a file you can add to your own calendar app.

@@ -24,6 +24,8 @@
 	let commentUnread = $state(untrack(() => initialUnread));
 	let items = $state<CommentInboxItem[] | null>(null);
 	let notifications = $state<NotificationItem[]>([]);
+	// The last unread notification count the server gave, kept when a later request for them fails.
+	let notificationUnread = 0;
 	let root: HTMLDivElement | undefined = $state();
 
 	async function load() {
@@ -33,7 +35,6 @@
 				fetch('/api/comments/inbox/?limit=20'),
 				fetch('/api/notifications/?page_size=20')
 			]);
-			let notificationUnread = 0;
 			if (notificationsRes.ok) {
 				const data = await notificationsRes.json();
 				notifications = data.results ?? [];
@@ -45,7 +46,8 @@
 				items = data.comments ?? [];
 			}
 			unread = commentUnread + notificationUnread;
-			return notificationUnread;
+			// Only a list that loaded may be marked as seen.
+			return notificationsRes.ok ? notificationUnread : 0;
 		} catch {
 			// The inbox is a convenience; a failed load leaves the last state.
 		}
@@ -55,7 +57,10 @@
 	async function markNotificationsRead() {
 		try {
 			const res = await fetch('/api/notifications/mark-read/', { method: 'POST' });
-			if (res.ok) unread = commentUnread;
+			if (res.ok) {
+				notificationUnread = 0;
+				unread = commentUnread;
+			}
 		} catch {
 			// Still unread; the next open tries again.
 		}
@@ -66,6 +71,7 @@
 		if (res.ok) {
 			unread = 0;
 			commentUnread = 0;
+			notificationUnread = 0;
 			items = (items ?? []).map((item) => ({ ...item, unread: false }));
 			notifications = notifications.map((item) => ({ ...item, read: true }));
 		}
