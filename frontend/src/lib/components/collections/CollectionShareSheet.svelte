@@ -52,11 +52,18 @@
 	interface Props {
 		collection: ShareTarget;
 		onClose: () => void;
+		/** Called after people are added to the trip's visits, so the page can reload them. */
+		onTravelersAdded?: () => void;
 		/** Opens on this tab, e.g. Story from a Publish button. */
 		initialTab?: ShareSheetTab;
 	}
 
-	let { collection = $bindable(), onClose, initialTab = 'people' }: Props = $props();
+	let {
+		collection = $bindable(),
+		onClose,
+		onTravelersAdded,
+		initialTab = 'people'
+	}: Props = $props();
 
 	const STORY_GROUPS = STORY_GROUP_NAMES;
 	// The story switches, grouped by what a reader would see.
@@ -313,12 +320,25 @@
 					values: { name: displayName(person), visits: data.visits ?? 0 }
 				})
 			);
+			await loadSharing();
+			syncCollaborators();
+			onTravelersAdded?.();
 		}
 	}
 
-	function confirmPending(action: NonNullable<typeof pendingAction>) {
-		if (action.kind === 'remove') removeMember(action.person);
-		else addToVisits(action.person);
+	// The confirm dialog fires after a short delay, so a quick second click would otherwise
+	// start the same change twice.
+	let confirming = false;
+
+	async function confirmPending(action: NonNullable<typeof pendingAction>) {
+		if (confirming) return;
+		confirming = true;
+		try {
+			if (action.kind === 'remove') await removeMember(action.person);
+			else await addToVisits(action.person);
+		} finally {
+			confirming = false;
+		}
 	}
 
 	async function revokeInvite(person: CollectionSharingPerson) {

@@ -310,6 +310,20 @@
 		}
 	}
 
+	// Re-reads the trip after the sharing sheet changes who is on its visits.
+	async function refreshCollectionTravelers() {
+		const id = collection?.id;
+		if (!id) return;
+		try {
+			const res = await fetch(`/api/collections/${id}/`);
+			if (res.ok && collection?.id === id) {
+				collection = { ...collection, ...((await res.json()) as Collection) };
+			}
+		} catch (e) {
+			console.warn('Unable to refresh collection after adding travelers', e);
+		}
+	}
+
 	function resetCollectionPageUiState() {
 		isCollectionModalOpen = false;
 		currentSlide = 0;
@@ -971,6 +985,7 @@
 	<CollectionShareSheet
 		bind:collection
 		initialTab={shareSheetTab}
+		onTravelersAdded={refreshCollectionTravelers}
 		onClose={() => (isShareSheetOpen = false)}
 	/>
 {/if}

@@ -367,6 +367,7 @@
 		"leave_collection": "Leave Collection",
 		"leave": "Leave",
 		"leave_keep_copies": "Keep your own copies of the {count, plural, one {# location} other {# locations}} you visited",
+		"leave_retry": "Try again",
 		"leave_copies_off": "These locations will leave your map.",
 		"leave_others_uploads": "{count, plural, one {# photo, file or activity} other {# photos, files or activities}} added by other people will be deleted with the visits you were the only one on.",
 		"location_delete_travelers": "{names} visited this too and will lose it from their map.",

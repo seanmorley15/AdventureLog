@@ -18,27 +18,42 @@
 	let othersUploads = $state(0);
 	let keepCopies = $state(true);
 	let busy = $state(false);
+	// Leaving waits for the preview, so the copies choice and warning are always seen.
+	let previewState = $state<'loading' | 'ready' | 'error'>('loading');
+	let previewError = $state('');
+	let leaving = false;
 
-	// What leaving would do, so the person can choose before anything changes.
-	onMount(async () => {
-		dialog?.showModal();
+	async function loadPreview() {
+		previewState = 'loading';
 		try {
 			const res = await fetch(`/api/collections/${collectionId}/leave/?dry_run=1`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({})
 			});
-			if (res.ok) {
-				const data = await res.json();
-				locations = data.locations ?? 0;
-				othersUploads = data.others_uploads ?? 0;
+			const data = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				previewError = apiErrorMessage(data, $t('share.update_failed'));
+				previewState = 'error';
+				return;
 			}
+			locations = data.locations ?? 0;
+			othersUploads = data.others_uploads ?? 0;
+			previewState = 'ready';
 		} catch {
-			// The preview is a courtesy; leaving still works without it.
+			previewError = $t('share.update_failed');
+			previewState = 'error';
 		}
+	}
+
+	onMount(() => {
+		dialog?.showModal();
+		loadPreview();
 	});
 
 	async function leave() {
+		if (leaving || previewState !== 'ready') return;
+		leaving = true;
 		busy = true;
 		try {
 			const res = await fetch(`/api/collections/${collectionId}/leave/`, {
@@ -55,6 +70,7 @@
 				addToast('error', apiErrorMessage(data, $t('share.update_failed')));
 			}
 		} finally {
+			leaving = false;
 			busy = false;
 		}
 	}
@@ -67,6 +83,13 @@
 			{$t('adventures.leave_collection')}
 		</h3>
 		<p class="py-3 text-base-content/70">{$t('adventures.leave_collection_warning')}</p>
+
+		{#if previewState === 'error'}
+			<div role="alert" class="alert alert-error alert-soft mt-3 text-sm">
+				<span>{previewError}</span>
+				<button class="btn btn-sm" onclick={loadPreview}>{$t('adventures.leave_retry')}</button>
+			</div>
+		{/if}
 
 		{#if locations > 0}
 			<label class="label cursor-pointer justify-start gap-3">
@@ -90,7 +113,7 @@
 			<form method="dialog">
 				<button class="btn btn-ghost" disabled={busy}>{$t('adventures.cancel')}</button>
 			</form>
-			<button class="btn btn-warning" disabled={busy} onclick={leave}>
+			<button class="btn btn-warning" disabled={busy || previewState !== 'ready'} onclick={leave}>
 				{$t('adventures.leave')}
 			</button>
 		</div>

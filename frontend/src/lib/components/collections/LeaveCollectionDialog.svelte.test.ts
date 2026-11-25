@@ -48,4 +48,48 @@ describe('LeaveCollectionDialog', () => {
 		await expect.element(page.getByRole('button', { name: 'Leave', exact: true })).toBeVisible();
 		await expect.element(page.getByRole('checkbox')).not.toBeInTheDocument();
 	});
+
+	it('keeps Leave disabled until the preview loads', async () => {
+		let release: (r: Response) => void = () => {};
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(() => new Promise<Response>((resolve) => (release = resolve)))
+		);
+		render(LeaveCollectionDialog, { collectionId: 'c1', onclose: vi.fn(), onleft: vi.fn() });
+		await expect.element(page.getByRole('button', { name: 'Leave', exact: true })).toBeDisabled();
+		release(new Response(JSON.stringify({ locations: 1, others_uploads: 0 }), { status: 200 }));
+		await expect.element(page.getByRole('button', { name: 'Leave', exact: true })).toBeEnabled();
+	});
+
+	it('shows an error when the preview fails and retry reloads it', async () => {
+		let calls = 0;
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => {
+				calls += 1;
+				return calls === 1
+					? new Response(JSON.stringify({ detail: 'Nope' }), { status: 500 })
+					: new Response(JSON.stringify({ locations: 2, others_uploads: 0 }), { status: 200 });
+			})
+		);
+		render(LeaveCollectionDialog, { collectionId: 'c1', onclose: vi.fn(), onleft: vi.fn() });
+		await expect.element(page.getByRole('alert')).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Leave', exact: true })).toBeDisabled();
+		await page.getByRole('button', { name: 'Try again' }).click();
+		await expect.element(page.getByRole('checkbox')).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Leave', exact: true })).toBeEnabled();
+	});
+
+	it('sends only one POST on a double click', async () => {
+		const fetchMock = mockFetch({ locations: 1, others_uploads: 0 });
+		render(LeaveCollectionDialog, { collectionId: 'c1', onclose: vi.fn(), onleft: vi.fn() });
+		const leave = page.getByRole('button', { name: 'Leave', exact: true });
+		await expect.element(leave).toBeEnabled();
+		const el = (await leave.element()) as HTMLButtonElement;
+		el.click();
+		el.click();
+		await vi.waitFor(() =>
+			expect(fetchMock.mock.calls.filter(([u]) => !String(u).includes('dry_run'))).toHaveLength(1)
+		);
+	});
 });
