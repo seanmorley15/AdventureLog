@@ -198,3 +198,48 @@ class DeleteAccountReleasesTravelersTestCase(APITestCase):
         delete_user_account(owner)
         self.assertEqual(sorted(u.pk for u in visit.travelers.all()), sorted([member.pk, third.pk]))
         self.assertFalse(Location.objects.filter(user=third).exists())
+
+
+class DeleteAccountProfilePicTestCase(APITestCase):
+    """The profile picture file goes only once the deletion has committed."""
+
+    def setUp(self):
+        import shutil
+        import tempfile
+
+        media_root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, media_root, ignore_errors=True)
+        override = override_settings(MEDIA_ROOT=media_root)
+        override.enable()
+        self.addCleanup(override.disable)
+        self.user = User.objects.create_user(username='picuser', email='pic@example.com', password='pw')
+        from django.core.files.base import ContentFile
+
+        from adventures.tests.factories import PNG
+
+        self.user.profile_pic.save('me.png', ContentFile(PNG), save=True)
+        self.name = self.user.profile_pic.name
+
+    def _exists(self):
+        from django.core.files.storage import default_storage
+
+        return default_storage.exists(self.name)
+
+    def test_a_rolled_back_deletion_keeps_the_picture(self):
+        from users.services import account_deletion
+
+        with self.captureOnCommitCallbacks(execute=True):
+            # Fails after the picture was handled, so everything before it rolls back.
+            with patch.object(User, 'delete', side_effect=RuntimeError('boom')):
+                with self.assertRaises(RuntimeError):
+                    account_deletion.delete_user_account(self.user)
+        self.assertTrue(User.objects.filter(pk=self.user.pk).exists())
+        self.assertTrue(self._exists())
+
+    def test_a_committed_deletion_removes_the_picture(self):
+        from users.services.account_deletion import delete_user_account
+
+        with self.captureOnCommitCallbacks(execute=True):
+            delete_user_account(self.user)
+        self.assertFalse(User.objects.filter(pk=self.user.pk).exists())
+        self.assertFalse(self._exists())

@@ -52,7 +52,8 @@ def copy_location(original, user, collection=None, name=None):
     Everything about the place comes along except its collections, visits, attachments and
     trails. Photos share the original's stored files (``_photo_copy``): deleting either place
     never removes a file the other still shows. Someone else's copy leaves out Immich photos,
-    which only the original owner's Immich account can show. The user's own category of the
+    which only the original owner's Immich account can show (if the cover was one, another photo
+    becomes the cover). The user's own category of the
     same name is reused, or created from the original's. With ``collection`` the copy is
     linked to that collection alone, instead of inheriting the original's.
     """
@@ -90,7 +91,13 @@ def copy_location(original, user, collection=None, name=None):
     if collection is not None:
         copy.collections.set([collection])
 
-    _copy_photos(photos, user, ContentType.objects.get_for_model(Location), lambda photo: copy)
+    location_type = ContentType.objects.get_for_model(Location)
+    copies = [c for c in (_photo_copy(photo, user, location_type, copy) for photo in photos) if c is not None]
+    # Someone else's copy leaves out the owner's Immich photos. When the cover was one of them,
+    # the first photo that came along becomes the cover, so the copy still has one.
+    if copies and not any(c.is_primary for c in copies) and any(photo.is_primary for photo in photos):
+        copies[0].is_primary = True
+    ContentImage.objects.bulk_create(copies)
     return copy
 
 

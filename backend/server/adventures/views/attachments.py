@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import viewsets
@@ -9,6 +10,7 @@ from adventures.permissions import ContentImagePermission
 from adventures.serializers import AttachmentSerializer
 from adventures.serializers.media import AttachmentTargetSerializer, AttachmentUploadSerializer
 from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
+from adventures.services.stored_files import delete_replaced_file
 from adventures.views.mixins import ContentObjectMixin
 from core.serializers import validated
 
@@ -135,13 +137,17 @@ class AttachmentViewSet(ContentObjectMixin, viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         upload_file = serializer.validated_data.get('file')
+        old_name = None
         if upload_file:
             # The new file replaces the old one, so the old one stops counting.
             old_name = serializer.instance.file.name if serializer.instance.file else None
             ensure_media_storage_available(
                 serializer.instance.user, get_uploaded_file_size(upload_file), exclude_names=[old_name]
             )
-        serializer.save()
+        with transaction.atomic():
+            serializer.save()
+            if old_name and old_name != serializer.instance.file.name:
+                delete_replaced_file(ContentAttachment, 'file', old_name)
 
     def _get_attachment_user(self, content_object):
         """

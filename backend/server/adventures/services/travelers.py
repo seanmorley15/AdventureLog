@@ -38,7 +38,10 @@ def ensure_default_traveler(visit):
 
 
 def visited_by(user, now=None):
-    """Subquery for ``Location.annotate(...)``: a visit that has started (by date, like ``is_location_visited``) with this person among its travelers."""
+    """
+    Subquery for ``Location.annotate(...)``: a visit that has started (by date, like
+    ``is_location_visited``) with this person among its travelers.
+    """
     from django.db.models import Exists, OuterRef
     from django.utils import timezone
 
@@ -411,9 +414,10 @@ def take_my_visits(original, user, collection=None):
     timezone and notes), with them as its only traveler. They are then removed from the original
     visits (see ``detach_if_traveler``), so nothing is counted twice. The photos, attachments and
     activities they added to those visits are copied too (``copy_visit_uploads``), sharing the
-    stored files, so deleting either side never removes the other's; other people's stay behind. The originals are left as they are. With
-    ``collection`` the copy goes in that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
-    ``location_already_yours``: it is already theirs. Someone on none of its visits gets ``no_visits_to_take``.
+    stored files, so deleting either side never removes the other's; other people's stay behind.
+    The originals are left as they are. With ``collection`` the copy goes in that collection, as
+    ``copy_location`` does. All or nothing. The owner of the location gets ``location_already_yours``:
+    it is already theirs. Someone on none of its visits gets ``no_visits_to_take``.
     """
     from django.db import transaction
 
@@ -471,7 +475,10 @@ def member_locations(collection, user):
 
 
 def _uploads_on(visits, mine):
-    """Photos, attachments and activities on ``visits`` (a queryset of pks) added by anyone not in ``mine``, with the photos on those activities."""
+    """
+    Photos, attachments and activities on ``visits`` (a queryset of pks) added by anyone not in
+    ``mine``, with the photos on those activities.
+    """
     from django.contrib.contenttypes.models import ContentType
 
     from adventures.models import Activity, ContentAttachment, ContentImage
@@ -489,7 +496,10 @@ def _uploads_on(visits, mine):
 
 
 def _visits_that_would_go(locations, leaving):
-    """Visits at ``locations`` that only people in ``leaving`` (user pks) travelled on: taking them off deletes the visit."""
+    """
+    Visits at ``locations`` that only people in ``leaving`` (user pks) travelled on: taking them
+    off deletes the visit.
+    """
     from django.contrib.auth import get_user_model
 
     from adventures.models import Visit
@@ -502,7 +512,11 @@ def _visits_that_would_go(locations, leaving):
 def _leave_impact(locations, user):
     """``{locations, others_uploads}`` for ``user`` being taken off visits at ``locations``."""
     doomed = _visits_that_would_go(locations, [user.pk]).values('pk')
-    return {'locations': locations.count(), 'visits_deleted': doomed.count(), 'others_uploads': _uploads_on(doomed, [user])}
+    return {
+        'locations': locations.count(),
+        'visits_deleted': doomed.count(),
+        'others_uploads': _uploads_on(doomed, [user]),
+    }
 
 
 def leave_preview(collection, user):

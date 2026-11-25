@@ -23,19 +23,9 @@ from adventures.services.day_plan import DayPlanError
 from adventures.services.day_plan.files import activity_collection, promote_day_activity
 from adventures.utils.geojson import gpx_bytes_to_geojson
 from adventures.services.media_quota import ensure_media_storage_available, get_uploaded_file_size
+from adventures.services.stored_files import delete_replaced_file
 from core.exceptions import APIError
 from core.serializers import validated
-
-
-def delete_replaced_gpx(gpx_file):
-    """Queue removal of a track file an update replaced, once the update commits."""
-    from adventures.tasks import delete_stored_file
-
-    transaction.on_commit(
-        lambda: delete_stored_file.defer(
-            model_label=Activity._meta.label, field_name='gpx_file', name=gpx_file.name
-        )
-    )
 
 
 class ActivityLogVisitSerializer(serializers.Serializer):
@@ -194,7 +184,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
             serializer.save()
             if replaced_file is not None:
                 # The old track is no longer referenced once the new one is saved.
-                delete_replaced_gpx(replaced_file)
+                delete_replaced_file(Activity, 'gpx_file', replaced_file.name)
 
     @extend_schema(
         request={'multipart/form-data': ActivityAnalyzeRequestSerializer},

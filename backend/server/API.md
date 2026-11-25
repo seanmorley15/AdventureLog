@@ -158,7 +158,8 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
 - A file is deleted only when the last row using it goes: each row delete queues `adventures.delete_stored_file`
   from a `post_delete` signal (`adventures/signals.py`), which runs after the delete commits and keeps the file
   while any `ContentImage`, `ContentAttachment` or `Activity` row still names it. Never call `FieldFile.delete()`
-  on these fields; delete the row.
+  on these fields; delete the row. An update that replaces a file (an attachment's `file`, an activity's
+  `gpx_file`) queues the old name the same way once it commits (`adventures.services.stored_files`).
 - `/media/` grants a shared file when any row using it allows the requester.
 
 ### Previews

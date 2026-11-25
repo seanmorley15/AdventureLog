@@ -203,3 +203,44 @@ class DuplicateIntegrationPhotosTests(SharedFilesBase):
             sorted(_rows(copy.images.all()), key=str),
             sorted([(self.hut_photo.image.name, None), (None, IMMICH_ID)], key=str),
         )
+
+
+class CopyKeepsACoverTests(SharedFilesBase):
+    """Someone else's copy leaves out the owner's Immich photos; when one was the cover, the copy still gets one."""
+
+    def _copy_for(self, user):
+        from adventures.services.locations.copy import copy_location
+
+        return copy_location(self.hut, user)
+
+    def test_the_first_photo_copied_becomes_the_cover_when_the_immich_cover_is_left_out(self):
+        ContentImage.objects.create(
+            user=self.owner, immich_id=IMMICH_ID, source='immich', content_object=self.hut, is_primary=True,
+        )
+        names = {self._photo(self.owner, self.hut, name=n).image.name for n in ('a.png', 'b.png')}
+        copy = self._copy_for(self.editor)
+        covers = [p.image.name for p in copy.images.filter(is_primary=True)]
+        # Photos have no order of their own; one of the copied ones, and only one, is the cover.
+        self.assertEqual(len(covers), 1)
+        self.assertIn(covers[0], names)
+        self.assertEqual(copy.images.count(), 2)
+
+    def test_a_copied_cover_stays_the_only_cover(self):
+        self._photo(self.owner, self.hut, name='a.png')
+        cover = self._photo(self.owner, self.hut, name='b.png')
+        ContentImage.objects.filter(pk=cover.pk).update(is_primary=True)
+        copy = self._copy_for(self.editor)
+        self.assertEqual([p.image.name for p in copy.images.filter(is_primary=True)], [cover.image.name])
+
+    def test_no_cover_is_made_up_when_the_original_had_none(self):
+        self._photo(self.owner, self.hut, name='a.png')
+        copy = self._copy_for(self.editor)
+        self.assertFalse(copy.images.filter(is_primary=True).exists())
+
+    def test_the_owner_keeps_their_immich_cover(self):
+        ContentImage.objects.create(
+            user=self.owner, immich_id=IMMICH_ID, source='immich', content_object=self.hut, is_primary=True,
+        )
+        self._photo(self.owner, self.hut, name='a.png')
+        copy = self._copy_for(self.owner)
+        self.assertEqual([p.immich_id for p in copy.images.filter(is_primary=True)], [IMMICH_ID])

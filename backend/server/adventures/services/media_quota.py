@@ -119,7 +119,6 @@ def ensure_media_storage_available(user, incoming_bytes, exclude_names=None):
         raise MediaQuotaExceeded('Media storage limit exceeded.', extra=details)
 
 
-
 def incoming_bytes_for_names(user, names):
     """
     What sharing the stored files ``names`` with ``user`` would add to their usage: the sizes of

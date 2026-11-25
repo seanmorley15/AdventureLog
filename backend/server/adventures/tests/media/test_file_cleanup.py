@@ -334,3 +334,55 @@ class SharedTrackCleanupTests(TestCase):
         run_pending_jobs('adventures.delete_stored_file')
         self.assertTrue(default_storage.exists(self.name))
         self.assertTrue(Activity.objects.filter(pk=self.activity.pk).exists())
+
+
+class ReplacedAttachmentCleanupTests(TestCase):
+    """A new file on an attachment queues the old one's removal, once the change commits."""
+
+    setUp = StoredFileCleanupTests.setUp
+    add_attachment = StoredFileCleanupTests.add_attachment
+
+    def _replace(self, attachment):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from rest_framework.test import APIClient
+
+        client = APIClient()
+        client.force_authenticate(user=self.user)
+        with self.captureOnCommitCallbacks(execute=True):
+            response = client.patch(
+                f'/api/attachments/{attachment.id}/',
+                {'file': SimpleUploadedFile('new.txt', b'new contents')},
+                format='multipart',
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        attachment.refresh_from_db()
+        return attachment.file.name
+
+    def test_the_old_file_goes_when_the_worker_runs(self):
+        attachment = self.add_attachment()
+        old_name = attachment.file.name
+        new_name = self._replace(attachment)
+        self.assertNotEqual(new_name, old_name)
+        run_pending_jobs('adventures.delete_stored_file')
+        self.assertFalse(default_storage.exists(old_name))
+        self.assertTrue(default_storage.exists(new_name))
+
+    def test_an_old_file_another_row_shares_stays(self):
+        attachment = self.add_attachment()
+        old_name = attachment.file.name
+        ContentAttachment.objects.create(
+            user=self.user, content_type=self.location_ct, object_id=self.location.id, name='copy', file=old_name,
+        )
+        self._replace(attachment)
+        run_pending_jobs('adventures.delete_stored_file')
+        self.assertTrue(default_storage.exists(old_name))
+
+    def test_renaming_without_a_file_queues_nothing(self):
+        from rest_framework.test import APIClient
+
+        attachment = self.add_attachment()
+        client = APIClient()
+        client.force_authenticate(user=self.user)
+        with self.captureOnCommitCallbacks(execute=True):
+            client.patch(f'/api/attachments/{attachment.id}/', {'name': 'renamed'}, format='json')
+        self.assertFalse(queued_jobs('adventures.delete_stored_file').exists())

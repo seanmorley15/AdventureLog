@@ -70,8 +70,10 @@ def _detach_sharing(user) -> None:
 
 
 def _delete_profile_pic(user) -> None:
-    if user.profile_pic:
-        user.profile_pic.delete(save=False)
+    """Remove the picture file once the deletion commits; a rolled-back deletion keeps it."""
+    if user.profile_pic and user.profile_pic.name:
+        storage, name = user.profile_pic.storage, user.profile_pic.name
+        transaction.on_commit(lambda: storage.delete(name))
 
 
 @transaction.atomic
