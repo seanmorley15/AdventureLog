@@ -24,6 +24,7 @@
 	import { copyToClipboard } from '#lib/index.js';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import CollectionPicker from '../collections/CollectionPicker.svelte';
+	import { canUnlinkPlace } from '#lib/collections/plan.js';
 	import { unlinkLocationFromCollection } from '#lib/collection-membership.js';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
@@ -380,7 +381,7 @@
 										</button>
 									</li>
 								{/if}
-								{#if collection}
+								{#if collection && canUnlinkPlace(collection, { object: adventure }, user?.uuid)}
 									<li>
 										<button
 											onclick={() => {

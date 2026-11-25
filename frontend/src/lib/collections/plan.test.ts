@@ -153,4 +153,11 @@ describe('canUnlinkPlace', () => {
 		expect(canUnlinkPlace(collection, row('someone-else'), 'editor-uuid')).toBe(false);
 		expect(canUnlinkPlace(collection, row('someone-else'), null)).toBe(false);
 	});
+
+	it('works on a location card (the object is the location itself)', () => {
+		const card = { object: { user: { uuid: 'someone-else' } } } as never;
+		expect(canUnlinkPlace(collection, card, 'editor-uuid')).toBe(false);
+		expect(canUnlinkPlace(collection, card, 'owner-uuid')).toBe(true);
+		expect(canUnlinkPlace(collection, card, 'someone-else')).toBe(true);
+	});
 });
