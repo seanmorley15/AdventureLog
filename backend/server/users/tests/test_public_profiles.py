@@ -93,6 +93,22 @@ class PublicProfileListingTests(APITestCase):
         names = [r['name'] for r in response.json()['results']]
         self.assertEqual(names, sorted(names))
 
+    def _only_someone_else_visited(self):
+        from adventures.models import Location, Visit
+
+        visit = Visit.objects.create(
+            location=Location.objects.get(user=self.person, name='Public 0'), start_date='2026-01-01T00:00:00Z'
+        )
+        visit.travelers.set([self.viewer])
+
+    def test_visited_on_the_profile_means_the_owner_went(self):
+        self._only_someone_else_visited()
+
+        listed = self.client.get(f'/api/users/{self.person.username}/locations/').json()['results']
+        self.assertFalse(any(row['is_visited'] for row in listed))
+        pins = self.client.get(f'/api/users/{self.person.username}/pins/').json()
+        self.assertFalse(any(pin['is_visited'] for pin in pins))
+
     def test_pins_skip_private_and_coordinate_less_locations(self):
         response = self.client.get(f'/api/users/{self.person.username}/pins/')
 

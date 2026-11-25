@@ -1,7 +1,7 @@
 """Public profiles: who can be found, and what is shown about them."""
 
 from django.contrib.auth import get_user_model
-from django.db.models import Exists, OuterRef, Prefetch
+from django.db.models import Prefetch
 from django.http import Http404
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -11,9 +11,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from adventures.models import Collection, ContentImage, Location, Visit
+from adventures.models import Collection, ContentImage, Location
 from adventures.serializers import LocationListSerializer, LocationSerializer, UltraSlimCollectionSerializer
 from adventures.views.mixins import PaginatedResponseMixin
+from adventures.services.travelers import visited_by
 from adventures.services.user_stats import UserStatsService
 from core.pagination import StandardResultsSetPagination
 from core.visibility import can_see_profile, visible_profiles_q
@@ -139,7 +140,7 @@ class PublicUserLocationsView(APIView, PaginatedResponseMixin):
         now = timezone.now()
         queryset = (
             _shown_locations(user)
-            .annotate(annotated_is_visited=Exists(Visit.objects.filter(location_id=OuterRef('pk'), start_date__lte=now)))
+            .annotate(annotated_is_visited=visited_by(user, now))
             .select_related('category', 'user')
             .prefetch_related(Prefetch('images', queryset=ContentImage.objects.select_related('user')), 'collections')
         )
@@ -183,7 +184,7 @@ class PublicUserPinsView(APIView):
         rows = (
             _shown_locations(user)
             .exclude(coordinates__isnull=True)
-            .annotate(is_visited=Exists(Visit.objects.filter(location_id=OuterRef('pk'), start_date__lte=now)))
+            .annotate(is_visited=visited_by(user, now))
             .values('id', 'name', 'coordinates', 'category__icon', 'category__display_name', 'is_visited')
         )
         return Response([
