@@ -1,4 +1,4 @@
-from adventures.models import CollectionMember, Visit
+from adventures.models import CollectionMember, Location, Visit
 from adventures.tests.base import AudienceTestBase
 
 
@@ -164,3 +164,29 @@ class VisitTravelersApiTests(AudienceTestBase):
             f'/api/locations/{self.hut.id}/traveler-candidates/', HTTP_X_GUEST_TOKEN=link.token
         )
         self.assertEqual(response.status_code, 404)
+
+
+class CollectionQueryCountTests(AudienceTestBase):
+    def _more_locations(self, count):
+        for n in range(count):
+            place = Location.objects.create(user=self.owner, name=f'Extra {n}', is_public=False)
+            place.collections.add(self.trip)
+            visit = Visit.objects.create(location=place, start_date='2026-06-01T00:00:00Z')
+            visit.travelers.set([self.owner])
+
+    def _editor_queries(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        self.as_user(self.editor)
+        with CaptureQueriesContext(connection) as queries:
+            response = self.client.get(f'/api/collections/{self.trip.id}/')
+        self.assertEqual(response.status_code, 200)
+        return len(queries)
+
+    def test_editor_query_count_does_not_grow_with_locations(self):
+        self._more_locations(4)
+        few = self._editor_queries()
+        self._more_locations(20)
+        many = self._editor_queries()
+        self.assertLessEqual(many, few + 2, f'{few} queries at 5 locations, {many} at 25')

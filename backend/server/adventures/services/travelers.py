@@ -100,8 +100,6 @@ def can_see_travelers(request, visit):
     of a collection holding the location, or a traveler. Never anonymous, and never a guest
     link (a guest link is not an account, so it is not treated as membership here).
     """
-    from adventures.access.audience import is_member
-
     user = getattr(request, 'user', None)
     if user is None or not getattr(user, 'is_authenticated', False):
         return False
@@ -110,8 +108,12 @@ def can_see_travelers(request, visit):
         return True
     if any(t.pk == user.pk for t in visit.travelers.all()):
         return True
-    # Pass the user, not the request, so a guest token never counts as membership.
-    return any(is_member(user, collection) for collection in location.collections.all())
+    # Judge the account itself, not the request, so a guest token never counts as membership.
+    # Read from the loaded collections and their members, so a list of rows does not query per row.
+    return any(
+        collection.user_id == user.pk or any(m.pk == user.pk for m in collection.shared_with.all())
+        for collection in location.collections.all()
+    )
 
 
 def set_travelers(visit, users, actor):
