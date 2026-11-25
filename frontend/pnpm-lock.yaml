@@ -46,8 +46,8 @@ importers:
         specifier: ^6.16.0
         version: 6.16.0
       marked:
-        specifier: ^15.0.11
-        version: 15.0.12
+        specifier: ^18.2.1
+        version: 18.2.1
       psl:
         specifier: ^1.15.0
         version: 1.15.0
@@ -1685,9 +1685,9 @@ packages:
     resolution: {integrity: sha512-gApO66EMtoDZuio680RUBvskR7ahFd/NNhLN4tBAs+Y7FeT4gQV8zVFgYVMRmFxQznOEzecW19w6xOd9XjZjiA==}
     engines: {node: '>=16.14.0', npm: '>=8.1.0'}
 
-  marked@15.0.12:
-    resolution: {integrity: sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==}
-    engines: {node: '>= 18'}
+  marked@18.2.1:
+    resolution: {integrity: sha512-ii4bxCTCqqwpT86XZWgJNs+ZnAIZksmLGYMViWA7PDIXYIeNo1x6cDdX3JOip9NM/cI6p8z57FxliACboTruMA==}
+    engines: {node: '>= 20'}
     hasBin: true
 
   memoize@10.2.0:
@@ -3685,7 +3685,7 @@ snapshots:
       quickselect: 3.0.0
       tinyqueue: 3.0.0
 
-  marked@15.0.12: {}
+  marked@18.2.1: {}
 
   memoize@10.2.0:
     dependencies:
