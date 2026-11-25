@@ -2,6 +2,7 @@
 	import { t } from 'svelte-i18n';
 	import type { NotificationItem } from '#lib/types.js';
 	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import PersonAvatar from './collections/discussion/PersonAvatar.svelte';
 
 	interface Props {
@@ -90,7 +91,8 @@
 				onremoved?.(item);
 				addToast('success', $t('notifications.removed'));
 			} else {
-				addToast('error', $t('notifications.remove_failed'));
+				const data = await response.json().catch(() => null);
+				addToast('error', apiErrorMessage(data, $t('notifications.remove_failed')));
 			}
 		} catch {
 			addToast('error', $t('notifications.remove_failed'));

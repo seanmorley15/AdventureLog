@@ -8,6 +8,7 @@ import {
 	initialTravelers,
 	rememberedTravelers,
 	rememberTravelers,
+	travelersToSend,
 	tripToday
 } from './plan';
 
@@ -213,5 +214,19 @@ describe('canUnlinkPlace for the person who added the place', () => {
 		expect(canUnlinkPlace(bare, row(true), 'editor-uuid')).toBe(true);
 		const viewer = { user: 'owner-uuid', audience: { role: 'viewer' } } as never;
 		expect(canUnlinkPlace(viewer, row(true), 'editor-uuid')).toBe(false);
+	});
+});
+
+describe('travelersToSend', () => {
+	it('sends the people picked, even when you are not one of them', () => {
+		expect(travelersToSend(['sam'], 'me')).toEqual(['sam']);
+	});
+
+	it('names you when nobody was asked', () => {
+		expect(travelersToSend(undefined, 'me')).toEqual(['me']);
+	});
+
+	it('names nobody for a guest link', () => {
+		expect(travelersToSend(undefined, null)).toBeUndefined();
 	});
 });

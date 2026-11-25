@@ -53,4 +53,18 @@ describe('ImpactDialog (collection delete)', () => {
 		release(preview);
 		await expect.element(page.getByRole('button', { name: 'Delete', exact: true })).toBeEnabled();
 	});
+
+	it("shows the server's message when the preview is refused", async () => {
+		render(ImpactDialog, {
+			title: 'Delete Collection',
+			confirmLabel: 'Delete',
+			load: async () => {
+				throw new Error('Request was throttled.');
+			},
+			onconfirm: async () => true,
+			onclose: vi.fn()
+		});
+		await expect.element(page.getByText('Request was throttled.')).toBeVisible();
+		await expect.element(page.getByRole('button', { name: 'Delete', exact: true })).toBeDisabled();
+	});
 });

@@ -509,6 +509,11 @@ class CollectionMembershipQuerySerializer(serializers.Serializer):
     q = serializers.CharField(required=False, allow_blank=True, default='', help_text='Filter collections by name.')
 
 
+class PlacementSerializer(serializers.Serializer):
+    day_index = serializers.IntegerField(allow_null=True, help_text='The day it is on, or null for ideas and trip-wide.')
+    is_global = serializers.BooleanField(help_text='Placed for the whole trip.')
+
+
 class CollectionMembershipSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     name = serializers.CharField()
@@ -520,7 +525,7 @@ class CollectionMembershipSerializer(serializers.Serializer):
     is_linked = serializers.BooleanField(help_text='Whether the place is in the collection.')
     can_link = serializers.BooleanField()
     can_unlink = serializers.BooleanField()
-    placements = serializers.ListField(child=serializers.DictField(), help_text='Where it sits in the day plan.')
+    placements = PlacementSerializer(many=True, help_text='Where it sits in the day plan.')
 
 
 class CollectionLinkResultSerializer(serializers.Serializer):

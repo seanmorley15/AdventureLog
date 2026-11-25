@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import {
 		fetchMembership,
 		linkLocationToCollection,
@@ -94,9 +95,12 @@
 		}
 		busy[row.id] = true;
 		const wasPlacements = row.placements;
-		const ok = await linkLocationToCollection(locationId, row.id);
-		if (!ok) {
-			addToast('error', $t('adventures.collection_link_location_error'));
+		const change = await linkLocationToCollection(locationId, row.id);
+		if (!change.ok) {
+			addToast(
+				'error',
+				apiErrorMessage(change.error, $t('adventures.collection_link_location_error'))
+			);
 			row.placements = wasPlacements;
 		} else {
 			row.is_linked = true;

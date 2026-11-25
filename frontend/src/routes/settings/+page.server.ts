@@ -250,7 +250,8 @@ export const actions: Actions = {
 			return {
 				success: true,
 				left_shared_collections: response.left_shared_collections ?? 0,
-				revoked_collection_invites: response.revoked_collection_invites ?? 0
+				revoked_collection_invites: response.revoked_collection_invites ?? 0,
+				kept_copies: response.kept_copies ?? 0
 			};
 		} catch (error) {
 			console.error('Error:', error);

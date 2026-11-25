@@ -4772,9 +4772,7 @@ export interface components {
             can_link: boolean;
             can_unlink: boolean;
             /** @description Where it sits in the day plan. */
-            placements: {
-                [key: string]: unknown;
-            }[];
+            placements: components["schemas"]["Placement"][];
         };
         /** @description What to put in the PDF. Anything left out takes a default that suits the collection and the person. */
         CollectionPdfOptionsRequest: {
@@ -6252,12 +6250,14 @@ export interface components {
         Notification: {
             /** Format: uuid */
             id: string;
-            /** @description What happened. Today only `visit_traveler_added`. */
-            kind: string;
-            /** @description Who did it: `{name, username, uuid, profile_pic, can_view_profile}`. */
-            actor: {
-                [key: string]: unknown;
-            };
+            /**
+             * @description What happened.
+             *
+             *     * `visit_traveler_added` - Added to a visit
+             */
+            kind: components["schemas"]["NotificationKindEnum"];
+            /** @description Who did it. */
+            actor: components["schemas"]["NotificationActor"];
             /**
              * Format: uuid
              * @description The visit, when it was one visit. `POST /api/visits/{id}/leave/` removes you.
@@ -6289,6 +6289,21 @@ export interface components {
             created_at: string;
             read: boolean;
         };
+        NotificationActor: {
+            /** @description How to name them: their name, a guest link label, or empty. */
+            name: string;
+            username: string | null;
+            /** Format: uuid */
+            uuid: string | null;
+            profile_pic: string | null;
+            /** @description Whether their profile page opens for you. */
+            can_view_profile: boolean;
+        };
+        /**
+         * @description * `visit_traveler_added` - Added to a visit
+         * @enum {string}
+         */
+        NotificationKindEnum: "visit_traveler_added";
         /** @enum {unknown} */
         NullEnum: null;
         PaginatedImmichAssetList: {
@@ -6727,6 +6742,12 @@ export interface components {
          * @enum {string}
          */
         PlaceableContentTypeEnum: "location" | "lodging" | "transportation" | "note" | "checklist" | "visit";
+        Placement: {
+            /** @description The day it is on, or null for ideas and trip-wide. */
+            day_index: number | null;
+            /** @description Placed for the whole trip. */
+            is_global: boolean;
+        };
         PlanByDaysRequest: {
             /** @description Default: the number of days between the dates. */
             day_count?: number | null;

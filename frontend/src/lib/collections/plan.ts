@@ -357,6 +357,19 @@ export function initialTravelers(
 	return currentUserUuid ? [currentUserUuid] : [];
 }
 
+/**
+ * Who to name on a logged visit: the people picked, or, when nobody was asked (a trip with no one
+ * else on it), just you. Only a guest link, which has no account, names nobody and leaves it to
+ * the server.
+ */
+export function travelersToSend(
+	picked: string[] | undefined,
+	currentUserUuid: string | null
+): string[] | undefined {
+	if (picked) return picked;
+	return currentUserUuid ? [currentUserUuid] : undefined;
+}
+
 /** Keep the picks so this user's next Log visit on this trip starts from them. */
 export function rememberTravelers(
 	collectionId: string,

@@ -1,16 +1,7 @@
-export type CollectionMembership = {
-	id: string;
-	name: string;
-	start_date: string | null;
-	end_date: string | null;
-	is_shared: boolean;
-	owner_name: string;
-	role: string | null;
-	is_linked: boolean;
-	can_link: boolean;
-	can_unlink: boolean;
-	placements: { day_index: number | null; is_global: boolean }[];
-};
+import type { Schemas } from '#lib/api/index.js';
+
+/** `GET /api/locations/{id}/collections/`: one collection and where the location sits in it. */
+export type CollectionMembership = Schemas['CollectionMembership'];
 
 export async function fetchMembership(
 	locationId: string,
@@ -22,27 +13,43 @@ export async function fetchMembership(
 	return res.json();
 }
 
+/** A membership change: the result, or the error body to show with `apiErrorMessage`. */
+export type MembershipChange<T> = ({ ok: true } & T) | { ok: false; error: unknown };
+
+async function membershipRequest(
+	locationId: string,
+	collectionId: string,
+	method: 'POST' | 'DELETE'
+): Promise<MembershipChange<{ result: Schemas['CollectionLinkResult'] }>> {
+	try {
+		const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}/`, {
+			method
+		});
+		const data = await res.json().catch(() => null);
+		if (!res.ok) return { ok: false, error: data };
+		return {
+			ok: true,
+			result: (data ?? { linked: method === 'POST' }) as Schemas['CollectionLinkResult']
+		};
+	} catch {
+		return { ok: false, error: null };
+	}
+}
+
 export async function linkLocationToCollection(
 	locationId: string,
 	collectionId: string
-): Promise<boolean> {
-	const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}/`, {
-		method: 'POST'
-	});
-	return res.ok;
+): Promise<MembershipChange<object>> {
+	return membershipRequest(locationId, collectionId, 'POST');
 }
 
-/** Returns the number of plan placements removed, or null on failure. */
+/** On success, `removed` is how many plan placements went with the place. */
 export async function unlinkLocationFromCollection(
 	locationId: string,
 	collectionId: string
-): Promise<number | null> {
-	const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}/`, {
-		method: 'DELETE'
-	});
-	if (!res.ok) return null;
-	const data = await res.json().catch(() => ({}));
-	return data.removed_placements ?? 0;
+): Promise<MembershipChange<{ removed: number }>> {
+	const change = await membershipRequest(locationId, collectionId, 'DELETE');
+	return change.ok ? { ok: true, removed: change.result.removed_placements ?? 0 } : change;
 }
 
 /** "Day 2, Day 4" style summary of where a place sits on a plan. */

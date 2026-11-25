@@ -2,11 +2,11 @@
 	import { t } from 'svelte-i18n';
 	import PersonAvatar from '#lib/components/collections/discussion/PersonAvatar.svelte';
 	import { travelerName, travelerPerson } from '#lib/travelers.js';
-	import type { TravelerSummary } from '#lib/types.js';
+	import type { TravelerLike } from '#lib/types.js';
 
 	interface Props {
 		/** The people a visit here can name. */
-		candidates: TravelerSummary[];
+		candidates: TravelerLike[];
 		/** The uuids of the people who were there. A visit needs at least one. */
 		selected?: string[];
 		/** Hide the legend visually (still read by screen readers) when a title already sits above. */

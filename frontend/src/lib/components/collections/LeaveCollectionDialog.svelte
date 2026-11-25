@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { apiErrorMessage } from '#lib/api/index.js';
+	import type { LeavePreview } from '#lib/traveler-impact.js';
 	import { addToast } from '#lib/toasts.js';
 	import AlertTriangle from '~icons/mdi/alert';
 
@@ -33,8 +34,9 @@
 				previewState = 'error';
 				return;
 			}
-			locations = data.locations ?? 0;
-			othersUploads = data.others_uploads ?? 0;
+			const preview = data as LeavePreview;
+			locations = preview.locations;
+			othersUploads = preview.others_uploads;
 			previewState = 'ready';
 		} catch {
 			previewError = $t('share.update_failed');

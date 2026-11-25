@@ -2,6 +2,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import type { CommentInboxItem, NotificationItem } from '#lib/types.js';
+	import type { Schemas } from '#lib/api/index.js';
 	import NotificationRow from './NotificationRow.svelte';
 	import CommentTextMultiple from '~icons/mdi/comment-text-multiple-outline';
 	import PersonAvatar from './collections/discussion/PersonAvatar.svelte';
@@ -36,7 +37,7 @@
 				fetch('/api/notifications/?page_size=20')
 			]);
 			if (notificationsRes.ok) {
-				const data = await notificationsRes.json();
+				const data = (await notificationsRes.json()) as Schemas['PaginatedNotificationList'];
 				notifications = data.results ?? [];
 				notificationUnread = data.unread_count ?? 0;
 			}
@@ -53,13 +54,24 @@
 		}
 	}
 
-	/** Opening the inbox is seeing the notifications: they stay marked in the list until the next open. */
+	/**
+	 * Opening the inbox is seeing the notifications it shows: those are marked read by id, so one
+	 * that arrives meanwhile, or sits beyond the first page, stays unread. They stay marked in the
+	 * list until the next open.
+	 */
 	async function markNotificationsRead() {
+		const ids = notifications.filter((item) => !item.read).map((item) => item.id);
+		if (!ids.length) return;
 		try {
-			const res = await fetch('/api/notifications/mark-read/', { method: 'POST' });
+			const res = await fetch('/api/notifications/mark-read/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ids } satisfies Schemas['MarkNotificationsReadRequest'])
+			});
 			if (res.ok) {
-				notificationUnread = 0;
-				unread = commentUnread;
+				const data = (await res.json()) as Schemas['UnreadCount'];
+				notificationUnread = data.unread_count;
+				unread = commentUnread + notificationUnread;
 			}
 		} catch {
 			// Still unread; the next open tries again.
@@ -76,15 +88,26 @@
 		}
 	}
 
+	/** "Mark all read": every comment and every notification, also those beyond the first page. */
 	async function markRead() {
-		const res = await fetch('/api/comments/inbox/mark-seen/', { method: 'POST' });
-		if (res.ok) {
-			unread = 0;
+		const [comments, notes] = await Promise.all([
+			fetch('/api/comments/inbox/mark-seen/', { method: 'POST' }),
+			// Leaving `ids` out marks all of them: what this button promises.
+			fetch('/api/notifications/mark-read/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({} satisfies Schemas['MarkNotificationsReadRequest'])
+			})
+		]);
+		if (comments.ok) {
 			commentUnread = 0;
-			notificationUnread = 0;
 			items = (items ?? []).map((item) => ({ ...item, unread: false }));
+		}
+		if (notes.ok) {
+			notificationUnread = 0;
 			notifications = notifications.map((item) => ({ ...item, read: true }));
 		}
+		unread = commentUnread + notificationUnread;
 	}
 
 	async function toggle() {

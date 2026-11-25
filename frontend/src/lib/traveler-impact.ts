@@ -1,4 +1,4 @@
-import type { Schemas } from '#lib/api/index.js';
+import { apiErrorMessage, type Schemas } from '#lib/api/index.js';
 
 /** What taking a place away from the people who travelled there would do. See "Travelers" in API.md. */
 export type UnlinkPreview = Schemas['UnlinkPreview'];
@@ -18,9 +18,12 @@ export function hasTravelerImpact(
 	);
 }
 
+/** Thrown when a preview cannot be had; `message` is the server's, or empty when it gave none. */
+export class PreviewError extends Error {}
+
 async function readPreview<T>(res: Response): Promise<T> {
 	const data = await res.json().catch(() => null);
-	if (!res.ok || !data) throw new Error('preview failed');
+	if (!res.ok || !data) throw new PreviewError(apiErrorMessage(data, ''));
 	return data as T;
 }
 

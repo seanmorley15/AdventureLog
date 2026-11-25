@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import type { Location, Collection, User, SlimCollection, ContentImage } from '#lib/types.js';
 	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { t } from 'svelte-i18n';
 	import { jobErrorMessage, runExport } from '#lib/jobs.js';
 	import { copyToClipboard } from '#lib/index.js';
@@ -170,9 +171,10 @@
 	);
 
 	async function deleteCollection(): Promise<boolean> {
-		const res = await fetch(`/api/collections/${collection.id}`, { method: 'DELETE' });
+		const res = await fetch(`/api/collections/${collection.id}/`, { method: 'DELETE' });
 		if (!res.ok) {
-			addToast('error', $t('adventures.delete_collection_error'));
+			const data = await res.json().catch(() => null);
+			addToast('error', apiErrorMessage(data, $t('adventures.delete_collection_error')));
 			return false;
 		}
 		addToast('info', $t('adventures.delete_collection_success'));

@@ -591,6 +591,7 @@ SPECTACULAR_SETTINGS = {
         'ImageSourceEnum': 'adventures.models.media.ContentImage.Source',
         'ItineraryContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist'],
         'PlaceableContentTypeEnum': ['location', 'lodging', 'transportation', 'note', 'checklist', 'visit'],
+        'NotificationKindEnum': 'adventures.models.notification.Notification.Kind',
         'ImageContentTypeEnum': [
             'location', 'transportation', 'note', 'lodging', 'visit', 'collectionitineraryday', 'activity', 'trail',
         ],

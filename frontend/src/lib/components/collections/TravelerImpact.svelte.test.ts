@@ -9,8 +9,8 @@ addMessages('en', en);
 init({ fallbackLocale: 'en', initialLocale: 'en' });
 
 const sam = { uuid: 's', username: 'sam', first_name: 'Sam', last_name: 'Lee', profile_pic: null };
-const kim = { uuid: 'k', username: 'kim', first_name: null, last_name: null, profile_pic: null };
-const me = { uuid: 'me', username: 'me', first_name: 'Me', last_name: null, profile_pic: null };
+const kim = { uuid: 'k', username: 'kim', first_name: '', last_name: '', profile_pic: null };
+const me = { uuid: 'me', username: 'me', first_name: 'Me', last_name: '', profile_pic: null };
 
 describe('TravelerImpact', () => {
 	it('says who gets a copy, what others keep and what is deleted', async () => {

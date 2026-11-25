@@ -41,7 +41,13 @@ describe('CommentInbox', () => {
 const note = {
 	id: 'n1',
 	kind: 'visit_traveler_added',
-	actor: { name: 'Mia Lee', username: null, profile_pic: null, can_view_profile: false },
+	actor: {
+		name: 'Mia Lee',
+		username: null,
+		uuid: null,
+		profile_pic: null,
+		can_view_profile: false
+	},
 	visit_id: 'v1',
 	location_id: 'l1',
 	location_name: 'Hut',
@@ -119,5 +125,55 @@ describe('CommentInbox notifications', () => {
 		await page.getByRole('button', { name: en.notifications.remove_me }).click();
 		await expect.element(page.getByText('Mia Lee added you to a visit at Hut')).toBeVisible();
 		await expect.element(page.getByText('3', { exact: true })).toBeVisible();
+	});
+});
+
+describe('CommentInbox marking notifications read', () => {
+	it('marks only the unread rows it showed, by id, and keeps the rest counted', async () => {
+		const rows = [note, { ...note, id: 'n2', read: true }, { ...note, id: 'n3' }];
+		const spy = vi.fn(async (url: string, _init?: RequestInit) => {
+			if (url.startsWith('/api/notifications/?')) {
+				return Response.json({ results: rows, unread_count: 5 });
+			}
+			if (url.startsWith('/api/comments/inbox/?')) {
+				return Response.json({ unread_count: 0, comments: [] });
+			}
+			if (url === '/api/notifications/mark-read/') return Response.json({ unread_count: 3 });
+			return new Response(null, { status: 404 });
+		});
+		vi.stubGlobal('fetch', spy);
+		render(CommentInbox, { initialUnread: 0 });
+		await page.getByRole('button', { name: en.comments.inbox_title }).click();
+		await vi.waitFor(() =>
+			expect(spy.mock.calls.some(([u]) => u === '/api/notifications/mark-read/')).toBe(true)
+		);
+		const [, init] = spy.mock.calls.find(([u]) => u === '/api/notifications/mark-read/')!;
+		expect(init?.method).toBe('POST');
+		expect(JSON.parse(init?.body as string)).toEqual({ ids: ['n1', 'n3'] });
+		// Two unread notifications beyond the first page are still counted.
+		await expect.element(page.getByText('3', { exact: true })).toBeVisible();
+	});
+
+	it('Mark all read marks every notification on the server, not only the shown ones', async () => {
+		const spy = vi.fn(async (url: string, _init?: RequestInit) => {
+			if (url.startsWith('/api/notifications/?')) {
+				return Response.json({ results: [{ ...note, read: true }], unread_count: 4 });
+			}
+			if (url.startsWith('/api/comments/inbox/?')) {
+				return Response.json({ unread_count: 1, comments: [] });
+			}
+			if (url === '/api/notifications/mark-read/') return Response.json({ unread_count: 0 });
+			return Response.json({ unread_count: 0 });
+		});
+		vi.stubGlobal('fetch', spy);
+		render(CommentInbox, { initialUnread: 0 });
+		await page.getByRole('button', { name: en.comments.inbox_title }).click();
+		await page.getByRole('button', { name: en.comments.mark_read }).click();
+		await vi.waitFor(() =>
+			expect(spy.mock.calls.filter(([u]) => u === '/api/notifications/mark-read/')).toHaveLength(1)
+		);
+		const [, init] = spy.mock.calls.find(([u]) => u === '/api/notifications/mark-read/')!;
+		expect(JSON.parse(init?.body as string)).toEqual({});
+		await vi.waitFor(() => expect(page.getByText('5', { exact: true }).elements()).toHaveLength(0));
 	});
 });

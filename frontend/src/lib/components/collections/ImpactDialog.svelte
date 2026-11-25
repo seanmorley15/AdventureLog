@@ -50,6 +50,8 @@
 	let dialog: HTMLDialogElement;
 	let preview = $state<ImpactPreview | null>(null);
 	let phase = $state<'loading' | 'ready' | 'error'>('loading');
+	// What the server said when the preview failed (a 403, a rate limit), if anything.
+	let previewError = $state('');
 	let acting = false;
 	let busy = $state(false);
 
@@ -57,7 +59,8 @@
 		phase = 'loading';
 		try {
 			preview = await load();
-		} catch {
+		} catch (error) {
+			previewError = error instanceof Error ? error.message : '';
 			phase = 'error';
 			if (!dialog.open) dialog.showModal();
 			return;
@@ -116,7 +119,7 @@
 			</p>
 		{:else if phase === 'error'}
 			<div role="alert" class="alert alert-error alert-soft mt-3 text-sm">
-				<span>{$t('traveler_impact.preview_failed')}</span>
+				<span>{previewError || $t('traveler_impact.preview_failed')}</span>
 				<button class="btn btn-sm" onclick={loadPreview}>{$t('adventures.leave_retry')}</button>
 			</div>
 		{:else if preview}

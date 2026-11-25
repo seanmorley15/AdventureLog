@@ -2,15 +2,25 @@
 
 from rest_framework import serializers
 
+from adventures.models import Notification
+
 
 class NotificationQuerySerializer(serializers.Serializer):
     unread = serializers.BooleanField(default=False, help_text='Only notifications you have not read.')
 
 
+class NotificationActorSerializer(serializers.Serializer):
+    name = serializers.CharField(help_text='How to name them: their name, a guest link label, or empty.')
+    username = serializers.CharField(allow_null=True)
+    uuid = serializers.UUIDField(allow_null=True)
+    profile_pic = serializers.CharField(allow_null=True)
+    can_view_profile = serializers.BooleanField(help_text='Whether their profile page opens for you.')
+
+
 class NotificationSerializer(serializers.Serializer):
     id = serializers.UUIDField()
-    kind = serializers.CharField(help_text='What happened. Today only `visit_traveler_added`.')
-    actor = serializers.DictField(help_text='Who did it: `{name, username, uuid, profile_pic, can_view_profile}`.')
+    kind = serializers.ChoiceField(choices=Notification.Kind.choices, help_text='What happened.')
+    actor = NotificationActorSerializer(help_text='Who did it.')
     visit_id = serializers.UUIDField(
         allow_null=True, help_text='The visit, when it was one visit. `POST /api/visits/{id}/leave/` removes you.'
     )

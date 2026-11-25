@@ -39,6 +39,7 @@
 		recordedVisitId,
 		initialTravelers,
 		rememberTravelers,
+		travelersToSend,
 		tripToday,
 		objectsOfType,
 		placementType,
@@ -616,12 +617,13 @@
 	): Promise<LogVisitResult> {
 		// A visit needs someone on it; an empty pick is never "just me".
 		if (travelerUuids && !travelerUuids.length) return 'error';
+		const who = travelersToSend(travelerUuids, currentUserUuid);
 		const res = await send<{ item: CollectionItineraryItem; visit: Visit }>(
 			`/api/collections/${collection.id}/itinerary-items/${row.id}/log-visit/`,
 			'POST',
 			{
 				...(date ? { date } : {}),
-				...(travelerUuids ? { traveler_uuids: travelerUuids } : {})
+				...(who ? { traveler_uuids: who } : {})
 			},
 			true
 		);
@@ -1003,6 +1005,7 @@
 			return;
 		}
 		loggingDay = day.id;
+		const who = travelersToSend(travelerUuids, currentUserUuid);
 		try {
 			const res = await send<{
 				items: CollectionItineraryItem[];
@@ -1014,7 +1017,7 @@
 				'POST',
 				{
 					...(date ? { date } : {}),
-					...(travelerUuids ? { traveler_uuids: travelerUuids } : {})
+					...(who ? { traveler_uuids: who } : {})
 				},
 				true
 			);

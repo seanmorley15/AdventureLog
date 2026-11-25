@@ -1,5 +1,6 @@
 import { VALID_TIMEZONES } from './dateUtils';
 import type { CalendarApiEvent } from '#lib/calendar/types.js';
+import type { Schemas } from '#lib/api/index.js';
 
 export type MoneyValue = {
 	amount: number | null;
@@ -105,28 +106,8 @@ export type CommentThreadResponse = {
 	comments: CollectionComment[];
 };
 
-export type NotificationItem = {
-	id: string;
-	kind: 'visit_traveler_added';
-	actor: {
-		name: string;
-		username: string | null;
-		profile_pic: string | null;
-		can_view_profile: boolean;
-	};
-	visit_id: string | null;
-	location_id: string | null;
-	location_name: string;
-	collection_id: string | null;
-	collection_name: string;
-	/** More than 1 is the summary form: "added you to 5 visits". */
-	count: number;
-	locations: number;
-	start_date: string | null;
-	end_date: string | null;
-	created_at: string;
-	read: boolean;
-};
+/** `GET /api/notifications/`: one row of the inbox. */
+export type NotificationItem = Schemas['Notification'];
 
 export type CommentInboxItem = {
 	id: string;
@@ -799,12 +780,13 @@ export type ActivityAnalysis = {
 	geojson: any | null;
 };
 
-/** A person who was on a visit, or who could be named as one. */
-export type TravelerSummary = {
-	uuid: string;
-	username: string;
-	first_name: string | null;
-	last_name: string | null;
+/** A person who was on a visit, or who could be named as one, as the API sends them. */
+export type TravelerSummary = Schemas['Traveler'];
+
+/** Anyone shown or picked as a traveler: a traveler, a candidate, or a trip collaborator. */
+export type TravelerLike = Pick<TravelerSummary, 'uuid' | 'username'> & {
+	first_name?: string | null;
+	last_name?: string | null;
 	profile_pic?: string | null;
 };
 

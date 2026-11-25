@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { canOpenProfile } from '#lib/profiles.js';
+	import { duplicateErrorMessage } from '#lib/location-duplicate.js';
 	import { tick, untrack } from 'svelte';
 
 	import { createEmptyLocation } from '#lib/location-draft.js';
@@ -267,7 +268,8 @@
 		try {
 			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({})
 			});
 			if (res.ok) {
 				const newLocation = await res.json();
@@ -278,7 +280,14 @@
 					goto(`/locations/${newLocation.id}`);
 				}
 			} else {
-				addToast('error', $t('adventures.location_duplicate_error'));
+				const data = await res.json().catch(() => null);
+				addToast(
+					'error',
+					duplicateErrorMessage(data, {
+						quota: $t('adventures.location_duplicate_quota'),
+						fallback: $t('adventures.location_duplicate_error')
+					})
+				);
 			}
 		} catch (e) {
 			addToast('error', $t('adventures.location_duplicate_error'));

@@ -14844,8 +14844,7 @@ components:
         placements:
           type: array
           items:
-            type: object
-            additionalProperties: {}
+            $ref: '#/components/schemas/Placement'
           description: Where it sits in the day plan.
       required:
       - can_link
@@ -18131,12 +18130,16 @@ components:
           type: string
           format: uuid
         kind:
-          type: string
-          description: What happened. Today only `visit_traveler_added`.
+          allOf:
+          - $ref: '#/components/schemas/NotificationKindEnum'
+          description: |-
+            What happened.
+
+            * `visit_traveler_added` - Added to a visit
         actor:
-          type: object
-          additionalProperties: {}
-          description: 'Who did it: `{name, username, uuid, profile_pic, can_view_profile}`.'
+          allOf:
+          - $ref: '#/components/schemas/NotificationActor'
+          description: Who did it.
         visit_id:
           type: string
           format: uuid
@@ -18193,6 +18196,36 @@ components:
       - read
       - start_date
       - visit_id
+    NotificationActor:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 'How to name them: their name, a guest link label, or empty.'
+        username:
+          type: string
+          nullable: true
+        uuid:
+          type: string
+          format: uuid
+          nullable: true
+        profile_pic:
+          type: string
+          nullable: true
+        can_view_profile:
+          type: boolean
+          description: Whether their profile page opens for you.
+      required:
+      - can_view_profile
+      - name
+      - profile_pic
+      - username
+      - uuid
+    NotificationKindEnum:
+      enum:
+      - visit_traveler_added
+      type: string
+      description: '* `visit_traveler_added` - Added to a visit'
     NullEnum:
       enum:
       - null
@@ -19218,6 +19251,19 @@ components:
         * `note` - note
         * `checklist` - checklist
         * `visit` - visit
+    Placement:
+      type: object
+      properties:
+        day_index:
+          type: integer
+          nullable: true
+          description: The day it is on, or null for ideas and trip-wide.
+        is_global:
+          type: boolean
+          description: Placed for the whole trip.
+      required:
+      - day_index
+      - is_global
     PlanByDaysRequest:
       type: object
       properties:

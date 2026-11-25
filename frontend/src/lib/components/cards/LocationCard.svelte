@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { duplicateErrorMessage } from '#lib/location-duplicate.js';
 	import { openLocationDrawer } from '#lib/location-drawer.svelte.js';
 	import type { Location, Collection, User, CollectionItineraryItem } from '#lib/types.js';
 	const dispatch = createEventDispatcher();
@@ -216,7 +217,14 @@
 				addToast('success', $t('adventures.location_duplicate_success'));
 				dispatch('duplicate', newLocation);
 			} else {
-				addToast('error', $t('adventures.location_duplicate_error'));
+				const data = await res.json().catch(() => null);
+				addToast(
+					'error',
+					duplicateErrorMessage(data, {
+						quota: $t('adventures.location_duplicate_quota'),
+						fallback: $t('adventures.location_duplicate_error')
+					})
+				);
 			}
 		} catch (e) {
 			addToast('error', $t('adventures.location_duplicate_error'));

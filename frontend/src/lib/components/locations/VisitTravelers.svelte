@@ -3,6 +3,7 @@
 	import PersonAvatar from '#lib/components/collections/discussion/PersonAvatar.svelte';
 	import { travelerName, travelerPerson } from '#lib/travelers.js';
 	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import type { Visit } from '#lib/types.js';
 
 	interface Props {
@@ -35,7 +36,14 @@
 			} else if (response.ok) {
 				onchange?.((await response.json()) as Visit);
 			} else {
-				addToast('error', $t(action === 'join' ? 'visits.join_failed' : 'visits.leave_failed'));
+				const data = await response.json().catch(() => null);
+				addToast(
+					'error',
+					apiErrorMessage(
+						data,
+						$t(action === 'join' ? 'visits.join_failed' : 'visits.leave_failed')
+					)
+				);
 			}
 		} catch {
 			addToast('error', $t(action === 'join' ? 'visits.join_failed' : 'visits.leave_failed'));

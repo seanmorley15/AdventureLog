@@ -75,6 +75,7 @@
 	import CollectionModal from '#lib/components/collections/CollectionModal.svelte';
 	import EyeOutline from '~icons/mdi/eye-outline';
 	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import { linkLocationToCollection } from '#lib/collection-membership.js';
 	import NoteModal from '#lib/components/NoteModal.svelte';
 	import ChecklistModal from '#lib/components/ChecklistModal.svelte';
@@ -544,8 +545,14 @@
 		if ((collection.locations ?? []).some((item) => String(item.id) === String(locationId)))
 			return true;
 		const loaded = await fetch(`/api/locations/${locationId}/`);
-		if (!loaded.ok || !(await linkLocationToCollection(locationId, collection.id))) {
-			addToast('error', $t('adventures.collection_link_location_error'));
+		const change = loaded.ok
+			? await linkLocationToCollection(locationId, collection.id)
+			: { ok: false as const, error: await loaded.json().catch(() => null) };
+		if (!change.ok) {
+			addToast(
+				'error',
+				apiErrorMessage(change.error, $t('adventures.collection_link_location_error'))
+			);
 			return false;
 		}
 		const location = (await loaded.json()) as Location;

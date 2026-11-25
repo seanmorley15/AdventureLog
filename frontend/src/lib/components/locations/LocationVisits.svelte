@@ -342,8 +342,8 @@
 					addToast('success', $t('adventures.visit_updated'));
 					visitIdEditing = null;
 				} else {
-					const errorText = await response.text();
-					addToast('error', $t('adventures.visit_update_failed') || errorText);
+					const data = await response.json().catch(() => null);
+					addToast('error', apiErrorMessage(data, $t('adventures.visit_update_failed')));
 					return false;
 				}
 			} else {
@@ -360,9 +360,8 @@
 						notes: note,
 						timezone: selectedStartTimezone,
 						location: objectId,
-						...(showTravelerPicker && selectedTravelers.length
-							? { traveler_uuids: selectedTravelers }
-							: {})
+						// Always say who was there; without a picker that is you.
+						...(selectedTravelers.length ? { traveler_uuids: selectedTravelers } : {})
 					})
 				});
 
@@ -374,8 +373,8 @@
 						addToast('success', $t('adventures.visit_added'));
 					}
 				} else {
-					const errorText = await response.text();
-					addToast('error', $t('adventures.visit_add_failed') || errorText);
+					const data = await response.json().catch(() => null);
+					addToast('error', apiErrorMessage(data, $t('adventures.visit_add_failed')));
 					return false;
 				}
 			}
