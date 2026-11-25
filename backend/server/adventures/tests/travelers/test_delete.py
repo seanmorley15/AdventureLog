@@ -89,3 +89,31 @@ class DeleteSharedVisitTests(AudienceTestBase):
         self.as_user(self.editor)
         self.assertEqual(self.client.delete(self._stop_url('?confirm_delete_visits=true')).status_code, 204)
         self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
+
+
+class VisitWithNoTravelersTests(AudienceTestBase):
+    def test_owner_delete_removes_a_visit_nobody_travelled_on(self):
+        visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z')
+        visit.travelers.clear()
+        self.as_user(self.owner)
+        self.assertEqual(self.client.delete(f'/api/visits/{visit.id}/').status_code, 204)
+        self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
+
+
+class AccountDeletionVisitTests(AudienceTestBase):
+    def _delete_editor(self):
+        from users.services.account_deletion import delete_user_account
+
+        delete_user_account(self.editor)
+
+    def test_visit_only_the_deleted_person_travelled_on_goes_with_them(self):
+        visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z')
+        visit.travelers.set([self.editor])
+        self._delete_editor()
+        self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
+
+    def test_shared_visit_stays_with_the_others(self):
+        visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z')
+        visit.travelers.set([self.owner, self.editor])
+        self._delete_editor()
+        self.assertEqual([u.pk for u in Visit.objects.get(pk=visit.pk).travelers.all()], [self.owner.pk])

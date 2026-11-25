@@ -182,10 +182,14 @@ def remove_or_delete(visit, user, for_everyone=False):
     Otherwise the user is removed from the visit, and the visit goes with them when they were
     the last traveler. Someone who was not a traveler changes nothing and gets ``'detached'``:
     a visit others travelled on is theirs to keep. Activities and photos stay with a visit that
-    is only detached from.
+    is only detached from. The owner deleting a visit with no travelers at all deletes it.
     """
     from rest_framework.exceptions import PermissionDenied
 
+    if not visit.travelers.exists() and user.pk == visit.location.user_id:
+        # A visit nobody travelled on (left over from before this rule) is the owner's to clear.
+        visit.delete()
+        return 'deleted'
     if for_everyone:
         if user.pk != visit.location.user_id:
             raise PermissionDenied('Only the location owner can delete a visit for everyone.')
