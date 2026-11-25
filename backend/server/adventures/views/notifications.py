@@ -12,7 +12,7 @@ from adventures.serializers.notification import (
     NotificationQuerySerializer,
     NotificationSerializer,
 )
-from adventures.services.notifications import mark_read, serialize_notification, unread_notification_count
+from adventures.services.notifications import mark_read, serialize_notifications, unread_notification_count
 from core.pagination import StandardResultsSetPagination
 from core.serializers import validated
 
@@ -62,7 +62,7 @@ class NotificationViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         paginator = self.paginator
         paginator.unread_count = unread_notification_count(request.user)
         page = paginator.paginate_queryset(queryset, request, view=self)
-        data = [serialize_notification(note, request.user) for note in page]
+        data = serialize_notifications(page, request.user)
         return paginator.get_paginated_response(data)
 
     @extend_schema(request=MarkNotificationsReadSerializer, responses=UnreadCountSerializer)

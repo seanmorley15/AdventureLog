@@ -458,7 +458,11 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
                 raise NotFound('Collection not found.')
             center = collection_center(collection)
 
-        locations = Location.objects.filter(user=request.user).select_related('category')
+        # MapPinSerializer reads each place's visits and travelers (perspective_user, is_visited).
+        locations = (
+            Location.objects.filter(user=request.user).select_related('category__user', 'user')
+            .prefetch_related('visits__travelers', 'collections__shared_with')
+        )
         query = params['q'].strip()
         if len(query) >= 2:
             locations = locations.filter(name__icontains=query)

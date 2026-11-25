@@ -75,7 +75,10 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         reach = _readable(user)
         if self.action == 'leave':
             reach |= Q(travelers=user)
-        return Visit.objects.filter(reach).distinct()
+        # What the serializer reads (travelers and who may see them), loaded once for the whole page.
+        return Visit.objects.filter(reach).distinct().select_related('location').prefetch_related(
+            'travelers', 'location__collections__shared_with', 'activities'
+        )
 
     def perform_create(self, serializer):
         """

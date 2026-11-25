@@ -279,53 +279,67 @@ def mark_read(user, ids=None):
     return unread_notification_count(user)
 
 
-def _can_read_location(user, location):
-    """``can_read_location`` for an account rather than a request: public, owned, or in a collection they belong to."""
-    from adventures.access.audience import is_member
-    from core.visibility import can_read_published
-
-    return (
-        (location.is_public and can_read_published(user))
-        or location.user_id == user.pk
-        or any(is_member(user, collection) for collection in location.collections.all())
-    )
-
-
-def serialize_notification(note, user):
+def serialize_notifications(notes, user):
     """
-    A notification as its recipient sees it. The place and trip names are read again now:
-    when the recipient can no longer read the place (or the trip), they are left out.
+    Notifications as their recipient sees them. The place and trip names are read again now:
+    when the recipient can no longer read the place (public, theirs, or in a collection they own
+    or belong to) or is no longer a member of the trip, they are left out. The places and
+    memberships are read once for the whole page, so each row costs nothing more.
     """
-    from adventures.access.audience import is_member
+    from django.db.models import Q
+
     from adventures.models import Collection, Location
     from adventures.services.discussion import person_summary
+    from core.visibility import can_read_published
 
-    data = note.data
-    location = collection = None
-    if data.get('location_id'):
-        location = Location.objects.filter(pk=data['location_id']).prefetch_related('collections').first()
-        if location is not None and not _can_read_location(user, location):
-            location = None
-    if data.get('collection_id'):
-        collection = Collection.objects.filter(pk=data['collection_id']).first()
-        if collection is not None and not is_member(user, collection):
-            collection = None
-    return {
-        'id': str(note.pk),
-        'kind': note.kind,
-        'actor': {'name': note.actor_name, **person_summary(note.actor_user, user)},
-        'visit_id': data.get('visit_id'),  # kept so they can still remove themselves
-        'location_id': str(location.pk) if location is not None else None,
-        'location_name': location.name if location is not None else '',
-        'collection_id': str(collection.pk) if collection is not None else None,
-        'collection_name': collection.name if collection is not None else '',
-        'count': data.get('count', 1),
-        'locations': data.get('locations', 1),
-        'start_date': data.get('start_date'),
-        'end_date': data.get('end_date'),
-        'created_at': note.created_at,
-        'read': note.read_at is not None,
+    notes = list(notes)
+    location_ids = {n.data['location_id'] for n in notes if n.data.get('location_id')}
+    locations = {
+        str(location.pk): location
+        for location in Location.objects.filter(pk__in=location_ids).prefetch_related('collections')
     }
+    collection_ids = {n.data['collection_id'] for n in notes if n.data.get('collection_id')}
+    collection_ids |= {str(c.pk) for location in locations.values() for c in location.collections.all()}
+    collections = {str(c.pk): c for c in Collection.objects.filter(pk__in=collection_ids)}
+    mine = {
+        str(pk) for pk in Collection.objects.filter(pk__in=collection_ids)
+        .filter(Q(user=user) | Q(shared_with=user)).values_list('pk', flat=True)
+    }
+    public_ok = can_read_published(user)
+
+    def readable(location):
+        return (
+            (location.is_public and public_ok)
+            or location.user_id == user.pk
+            or any(str(c.pk) in mine for c in location.collections.all())
+        )
+
+    rows = []
+    for note in notes:
+        data = note.data
+        location = locations.get(str(data.get('location_id')))
+        if location is not None and not readable(location):
+            location = None
+        collection = collections.get(str(data.get('collection_id')))
+        if collection is not None and str(collection.pk) not in mine:
+            collection = None
+        rows.append({
+            'id': str(note.pk),
+            'kind': note.kind,
+            'actor': {'name': note.actor_name, **person_summary(note.actor_user, user)},
+            'visit_id': data.get('visit_id'),  # kept so they can still remove themselves
+            'location_id': str(location.pk) if location is not None else None,
+            'location_name': location.name if location is not None else '',
+            'collection_id': str(collection.pk) if collection is not None else None,
+            'collection_name': collection.name if collection is not None else '',
+            'count': data.get('count', 1),
+            'locations': data.get('locations', 1),
+            'start_date': data.get('start_date'),
+            'end_date': data.get('end_date'),
+            'created_at': note.created_at,
+            'read': note.read_at is not None,
+        })
+    return rows
 
 
 def clear_visit_notifications(visit_ids, user_ids=None):
