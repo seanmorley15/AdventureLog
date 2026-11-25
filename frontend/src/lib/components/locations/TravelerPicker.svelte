@@ -11,9 +11,11 @@
 		selected?: string[];
 		/** A person who is always checked, e.g. the current user. */
 		lockedUuid?: string;
+		/** Hide the legend visually (still read by screen readers) when a title already sits above. */
+		hideLegend?: boolean;
 	}
 
-	let { candidates, selected = $bindable([]), lockedUuid }: Props = $props();
+	let { candidates, selected = $bindable([]), lockedUuid, hideLegend = false }: Props = $props();
 
 	// The locked person is always on the visit.
 	$effect(() => {
@@ -35,7 +37,7 @@
 </script>
 
 <fieldset class="space-y-2">
-	<legend class="field-label">{$t('visits.who_was_there')}</legend>
+	<legend class={hideLegend ? 'sr-only' : 'field-label'}>{$t('visits.who_was_there')}</legend>
 	<div class="flex flex-wrap gap-2">
 		{#each candidates as person (person.uuid)}
 			{@const checked = person.uuid === lockedUuid || selected.includes(person.uuid)}
@@ -48,10 +50,18 @@
 			>
 				<input
 					type="checkbox"
-					class="checkbox checkbox-primary checkbox-xs"
+					class="checkbox checkbox-primary checkbox-xs {fixed && checked
+						? 'pointer-events-none'
+						: ''}"
 					{checked}
-					disabled={fixed && checked}
-					onchange={(event) => toggle(person.uuid, event.currentTarget.checked)}
+					aria-disabled={fixed && checked ? 'true' : undefined}
+					data-locked={fixed && checked ? 'true' : undefined}
+					onchange={(event) => {
+						toggle(person.uuid, event.currentTarget.checked);
+						// Keep the DOM in step when a change was refused.
+						event.currentTarget.checked =
+							person.uuid === lockedUuid || selected.includes(person.uuid);
+					}}
 				/>
 				<PersonAvatar person={travelerPerson(person)} size="xs" linked={false} />
 				<span>{travelerName(person)}</span>

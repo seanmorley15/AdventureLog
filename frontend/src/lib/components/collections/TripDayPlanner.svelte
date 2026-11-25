@@ -1815,6 +1815,7 @@
 										candidates={collaborators}
 										bind:selected={logDayTravelers}
 										lockedUuid={currentUserUuid ?? undefined}
+										hideLegend
 									/>
 								</div>
 							{/if}

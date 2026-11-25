@@ -18,27 +18,40 @@ describe('TravelerPicker', () => {
 		render(TravelerPicker, { candidates, selected: ['me'], lockedUuid: 'me' });
 		const mia = page.getByRole('checkbox').first();
 		await expect.element(mia).toBeChecked();
-		await expect.element(mia).toBeDisabled();
+		await expect.element(mia).toHaveAttribute('aria-disabled', 'true');
+		await expect.element(mia).not.toHaveAttribute('disabled');
+		await page.getByText('Mia Lee').click();
+		await expect.element(mia).toBeChecked();
+	});
+
+	it('hides the legend visually but keeps it for screen readers', async () => {
+		render(TravelerPicker, { candidates, selected: ['me'], hideLegend: true });
+		await expect.element(page.getByText('Who was there')).toHaveClass('sr-only');
+	});
+
+	it('shows the legend by default', async () => {
+		render(TravelerPicker, { candidates, selected: ['me'] });
+		await expect.element(page.getByText('Who was there')).not.toHaveClass('sr-only');
 	});
 
 	it('checks and unchecks the others, but never the last person', async () => {
 		render(TravelerPicker, { candidates, selected: ['me'] });
 		const [mia, sam] = [page.getByRole('checkbox').first(), page.getByRole('checkbox').nth(1)];
-		await expect.element(mia).toBeDisabled(); // the only one on the visit
+		await expect.element(mia).toHaveAttribute('aria-disabled', 'true'); // the only one on the visit
 		await sam.click();
 		await expect.element(sam).toBeChecked();
-		await expect.element(mia).toBeEnabled();
+		await expect.element(mia).not.toHaveAttribute('aria-disabled');
 		await mia.click();
 		await expect.element(mia).not.toBeChecked();
-		await expect.element(sam).toBeDisabled(); // now the last one
+		await expect.element(sam).toHaveAttribute('aria-disabled', 'true'); // now the last one
 	});
 
 	it('keeps the locked person checked while others are toggled', async () => {
 		render(TravelerPicker, { candidates, selected: ['me', 'sam'], lockedUuid: 'me' });
 		const [mia, sam] = [page.getByRole('checkbox').first(), page.getByRole('checkbox').nth(1)];
 		await expect.element(mia).toBeChecked();
-		await expect.element(mia).toBeDisabled();
-		await expect.element(sam).toBeEnabled();
+		await expect.element(mia).toHaveAttribute('aria-disabled', 'true');
+		await expect.element(sam).not.toHaveAttribute('aria-disabled');
 		await sam.click();
 		await expect.element(sam).not.toBeChecked();
 		await expect.element(mia).toBeChecked();

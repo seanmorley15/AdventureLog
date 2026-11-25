@@ -386,7 +386,7 @@
 				</button>
 				{#if askingDate}
 					<form
-						class="absolute right-0 top-full z-50 mt-1 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
+						class="absolute right-0 top-full z-[250] mt-1 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
 						onsubmit={confirmDate}
 					>
 						<p class="text-sm font-medium">{$t('itinerary.who_went')}</p>
@@ -394,11 +394,12 @@
 							candidates={collaborators}
 							bind:selected={picked}
 							lockedUuid={currentUserUuid ?? undefined}
+							hideLegend
 						/>
 						{#if !hasProjectedDate || dateRequired}
 							<input
 								type="date"
-								class="input input-sm w-full"
+								class="input input-sm w-full pr-3"
 								bind:value={visitDate}
 								aria-label={$t('itinerary.visit_date')}
 								required
