@@ -32,4 +32,17 @@ describe('TravelerPicker', () => {
 		await expect.element(mia).not.toBeChecked();
 		await expect.element(sam).toBeDisabled(); // now the last one
 	});
+
+	it('keeps the locked person checked while others are toggled', async () => {
+		render(TravelerPicker, { candidates, selected: ['me', 'sam'], lockedUuid: 'me' });
+		const [mia, sam] = [page.getByRole('checkbox').first(), page.getByRole('checkbox').nth(1)];
+		await expect.element(mia).toBeChecked();
+		await expect.element(mia).toBeDisabled();
+		await expect.element(sam).toBeEnabled();
+		await sam.click();
+		await expect.element(sam).not.toBeChecked();
+		await expect.element(mia).toBeChecked();
+		await sam.click();
+		await expect.element(sam).toBeChecked();
+	});
 });

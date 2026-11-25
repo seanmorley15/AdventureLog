@@ -697,7 +697,11 @@
 					</div>
 
 					{#if showTravelerPicker}
-						<TravelerPicker candidates={travelerCandidates} bind:selected={selectedTravelers} />
+						<TravelerPicker
+							candidates={travelerCandidates}
+							bind:selected={selectedTravelers}
+							lockedUuid={visitIdEditing ? undefined : (currentUserUuid ?? undefined)}
+						/>
 					{/if}
 
 					<div>
