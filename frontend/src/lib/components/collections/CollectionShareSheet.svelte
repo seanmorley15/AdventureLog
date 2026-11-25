@@ -284,7 +284,7 @@
 				$t('share.remove_member_uploads', { values: { name, count: preview.others_uploads } })
 			);
 		}
-		pendingAction = { person, kind: 'remove', description: parts.join(' ') };
+		openPending({ person, kind: 'remove', description: parts.join(' ') });
 	}
 
 	/** Counts the visits that would gain this person; nothing is added until the owner agrees. */
@@ -300,13 +300,13 @@
 			addToast('info', $t('share.add_to_visits_none', { values: { name } }));
 			return;
 		}
-		pendingAction = {
+		openPending({
 			person,
 			kind: 'add_to_visits',
 			description: $t('share.add_to_visits_confirm', {
 				values: { name, visits: preview.visits, locations: preview.locations ?? 0 }
 			})
-		};
+		});
 	}
 
 	async function addToVisits(person: CollectionSharingPerson) {
@@ -326,12 +326,22 @@
 		}
 	}
 
+	// DeleteWarning dispatches `close` and then `confirm`, so by the time the confirm arrives
+	// `pendingAction` has been cleared. The confirm acts on the action remembered here.
+	let confirmTarget: NonNullable<typeof pendingAction> | null = null;
+
+	function openPending(action: NonNullable<typeof pendingAction>) {
+		confirmTarget = action;
+		pendingAction = action;
+	}
+
 	// The confirm dialog fires after a short delay, so a quick second click would otherwise
 	// start the same change twice.
 	let confirming = false;
 
-	async function confirmPending(action: NonNullable<typeof pendingAction>) {
-		if (confirming) return;
+	async function confirmPending() {
+		const action = confirmTarget;
+		if (!action || confirming) return;
 		confirming = true;
 		try {
 			if (action.kind === 'remove') await removeMember(action.person);
@@ -1080,7 +1090,6 @@
 </dialog>
 
 {#if pendingAction}
-	{@const action = pendingAction}
 	<DeleteWarning
 		title={pendingAction.kind === 'remove'
 			? $t('share.remove_person', { values: { name: displayName(pendingAction.person) } })
@@ -1091,6 +1100,6 @@
 		description={pendingAction.description}
 		is_warning={pendingAction.kind === 'remove'}
 		on:close={() => (pendingAction = null)}
-		on:confirm={() => confirmPending(action)}
+		on:confirm={confirmPending}
 	/>
 {/if}
