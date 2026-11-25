@@ -20,7 +20,7 @@ describe('TravelerPicker', () => {
 		await expect.element(mia).toBeChecked();
 		await expect.element(mia).toHaveAttribute('aria-disabled', 'true');
 		await expect.element(mia).not.toHaveAttribute('disabled');
-		await page.getByText('Mia Lee').click();
+		(mia.element() as HTMLInputElement).click();
 		await expect.element(mia).toBeChecked();
 	});
 
