@@ -1485,7 +1485,7 @@
 		"plan_comment": "{who} commented on the plan",
 		"story_comment": "{who} commented on the story",
 		"member_added": "{who} joined as {role}",
-		"travelers_added": "{who} added {people} to the trip's visits",
+		"travelers_added": "{who} added {count, plural, one {# person} other {# people}} to the trip's visits",
 		"member_left": "{who} left the trip",
 		"member_removed": "{who} removed {name}"
 	},
@@ -2007,7 +2007,10 @@
 		"you": "You",
 		"join_failed": "Could not add you to this visit.",
 		"leave_failed": "Could not remove you from this visit.",
-		"pick_one_traveler": "Pick at least one person"
+		"pick_one_traveler": "Pick at least one person",
+		"remove_failed": "Could not remove this visit.",
+		"not_on_visit_owner": "You were not on this visit. {names} travelled on it; deleting it for everyone is the only way to remove it.",
+		"only_travelers_remove": "Only the location owner or someone who was there can remove this visit"
 	},
 	"locations": {
 		"location": "Location",

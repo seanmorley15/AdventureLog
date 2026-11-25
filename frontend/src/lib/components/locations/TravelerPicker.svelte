@@ -11,12 +11,17 @@
 		selected?: string[];
 		/** Hide the legend visually (still read by screen readers) when a title already sits above. */
 		hideLegend?: boolean;
+		/** The id of the "pick someone" message, for controls elsewhere that it explains. */
+		messageId?: string;
 	}
 
-	let { candidates, selected = $bindable([]), hideLegend = false }: Props = $props();
-
 	const uid = $props.id();
-	const messageId = `traveler-picker-${uid}`;
+	let {
+		candidates,
+		selected = $bindable([]),
+		hideLegend = false,
+		messageId = `traveler-picker-${uid}`
+	}: Props = $props();
 	// Nobody checked is invalid, not locked: whoever uses the picker disables saving while it is.
 	const invalid = $derived(selected.length === 0);
 

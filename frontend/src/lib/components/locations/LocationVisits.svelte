@@ -48,6 +48,7 @@
 	import ActivityCard from '../cards/ActivityCard.svelte';
 	import DateInput from '../shared/DateInput.svelte';
 	import { addToast } from '#lib/toasts.js';
+	import { apiErrorMessage } from '#lib/api/index.js';
 	import CalendarTodayIcon from '~icons/mdi/calendar-today';
 
 	interface Props {
@@ -115,6 +116,20 @@
 
 	function othersOn(visit: Visit): TravelerSummary[] {
 		return (visit.travelers ?? []).filter((person) => person.uuid !== currentUserUuid);
+	}
+
+	const isLocationOwner = $derived(Boolean(currentUserUuid && ownerUuid === currentUserUuid));
+	// Ties the "Today" buttons to the picker's message while it has nobody checked.
+	const uid = $props.id();
+	const pickerMessageId = `visit-travelers-${uid}`;
+
+	function onVisit(visit: Visit): boolean {
+		return (visit.travelers ?? []).some((person) => person.uuid === currentUserUuid);
+	}
+
+	/** The server lets the location owner or a traveler remove a visit; anyone else is refused. */
+	function canRemove(visit: Visit): boolean {
+		return isLocationOwner || onVisit(visit);
 	}
 
 	// Component state
@@ -526,9 +541,10 @@
 			method: 'DELETE'
 		});
 		if (!response.ok) {
-			console.error('Error deleting visit:', response.statusText);
 			visits = previousVisits;
-			addToast('error', $t('adventures.visit_add_failed'));
+			// 403 not_a_traveler, 409 visit_has_travelers: the server says why.
+			const body = await response.json().catch(() => null);
+			addToast('error', apiErrorMessage(body, $t('visits.remove_failed')));
 			return;
 		}
 		dispatch('visitRemoved', visitId);
@@ -701,7 +717,11 @@
 					</div>
 
 					{#if showTravelerPicker}
-						<TravelerPicker candidates={travelerCandidates} bind:selected={selectedTravelers} />
+						<TravelerPicker
+							candidates={travelerCandidates}
+							bind:selected={selectedTravelers}
+							messageId={pickerMessageId}
+						/>
 					{/if}
 
 					<div>
@@ -775,7 +795,10 @@
 								disabled={todayCovered || isSavingVisit || travelersMissing}
 								title={todayCovered
 									? $t('adventures.visited_today')
-									: $t('adventures.add_today_visit')}
+									: travelersMissing
+										? $t('visits.pick_one_traveler')
+										: $t('adventures.add_today_visit')}
+								aria-describedby={travelersMissing ? pickerMessageId : undefined}
 								onclick={() => addTodayVisit()}
 							>
 								{#if isSavingVisit && localStartDate === getTodayDate()}
@@ -817,6 +840,8 @@
 								type="button"
 								class="btn btn-primary btn-sm gap-2"
 								disabled={todayCovered || isSavingVisit || travelersMissing}
+								title={travelersMissing ? $t('visits.pick_one_traveler') : undefined}
+								aria-describedby={travelersMissing ? pickerMessageId : undefined}
 								onclick={() => addTodayVisit()}
 							>
 								<CalendarTodayIcon class="w-4 h-4" />
@@ -901,13 +926,15 @@
 													>
 														<EditIcon class="w-4 h-4" />
 													</button>
-													<button
-														class="btn btn-ghost btn-sm btn-square text-error"
-														title={$t('adventures.remove_visit')}
-														onclick={() => requestRemoveVisit(visit)}
-													>
-														<TrashIcon class="w-4 h-4" />
-													</button>
+													{#if canRemove(visit)}
+														<button
+															class="btn btn-ghost btn-sm btn-square text-error"
+															title={$t('adventures.remove_visit')}
+															onclick={() => requestRemoveVisit(visit)}
+														>
+															<TrashIcon class="w-4 h-4" />
+														</button>
+													{/if}
 												</div>
 												<div class="flex flex-wrap justify-end gap-1">
 													{@render visitActivityActions(visit)}
@@ -982,12 +1009,15 @@
 	{#if pendingDelete}
 		{@const others = othersOn(pendingDelete)}
 		{@const names = others.map(travelerName).join(', ')}
-		{@const isOwner = Boolean(currentUserUuid && ownerUuid === currentUserUuid)}
+		{@const isOwner = isLocationOwner}
+		{@const mine = onVisit(pendingDelete)}
 		<dialog class="modal modal-open" aria-labelledby="delete-visit-title">
 			<div class="modal-box max-w-md">
 				<h3 id="delete-visit-title" class="text-lg font-bold">{$t('visits.delete_visit_title')}</h3>
 				<p class="py-3 text-sm text-base-content/70">
-					{$t('visits.stays_for_others', { values: { names } })}
+					{mine
+						? $t('visits.stays_for_others', { values: { names } })
+						: $t('visits.not_on_visit_owner', { values: { names } })}
 				</p>
 				<div class="modal-action flex-wrap">
 					<button
@@ -1013,14 +1043,16 @@
 							</span>
 						</div>
 					{/if}
-					<button
-						type="button"
-						class="btn btn-primary"
-						disabled={isDeletingVisit}
-						onclick={() => confirmRemoveVisit(false)}
-					>
-						{$t('visits.remove_me_from_visit')}
-					</button>
+					{#if mine}
+						<button
+							type="button"
+							class="btn btn-primary"
+							disabled={isDeletingVisit}
+							onclick={() => confirmRemoveVisit(false)}
+						>
+							{$t('visits.remove_me_from_visit')}
+						</button>
+					{/if}
 				</div>
 			</div>
 			<button

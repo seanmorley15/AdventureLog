@@ -56,4 +56,12 @@ describe('TravelerPicker', () => {
 		await expect.element(page.getByRole('alert')).not.toBeInTheDocument();
 		await expect.element(sam).not.toHaveAttribute('aria-invalid');
 	});
+
+	it('uses the given message id, so controls elsewhere can point at the message', async () => {
+		render(TravelerPicker, { candidates, selected: [], messageId: 'outside' });
+		await expect.element(page.getByRole('alert')).toHaveAttribute('id', 'outside');
+		await expect
+			.element(page.getByRole('checkbox').first())
+			.toHaveAttribute('aria-describedby', 'outside');
+	});
 });

@@ -614,12 +614,14 @@
 		date?: string,
 		travelerUuids?: string[]
 	): Promise<LogVisitResult> {
+		// A visit needs someone on it; an empty pick is never "just me".
+		if (travelerUuids && !travelerUuids.length) return 'error';
 		const res = await send<{ item: CollectionItineraryItem; visit: Visit }>(
 			`/api/collections/${collection.id}/itinerary-items/${row.id}/log-visit/`,
 			'POST',
 			{
 				...(date ? { date } : {}),
-				...(travelerUuids?.length ? { traveler_uuids: travelerUuids } : {})
+				...(travelerUuids ? { traveler_uuids: travelerUuids } : {})
 			},
 			true
 		);
@@ -1012,12 +1014,12 @@
 				'POST',
 				{
 					...(date ? { date } : {}),
-					...(travelerUuids?.length ? { traveler_uuids: travelerUuids } : {})
+					...(travelerUuids ? { traveler_uuids: travelerUuids } : {})
 				},
 				true
 			);
 			if (res.ok) {
-				if (travelerUuids) rememberTravelers(collection.id, travelerUuids);
+				if (travelerUuids) rememberTravelers(collection.id, currentUserUuid, travelerUuids);
 				upsertItems(res.data.items);
 				addVisits(res.data.visits);
 				if (res.data.day_activities) collection.day_activities = res.data.day_activities;

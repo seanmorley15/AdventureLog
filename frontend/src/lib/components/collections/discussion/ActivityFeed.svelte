@@ -74,8 +74,9 @@
 					values: { who: d.username ?? who, role: d.role ?? '' }
 				});
 			case 'travelers_added':
+				// Counts only: the feed is read by editor guest links, so it names nobody.
 				return $t('activity.travelers_added', {
-					values: { who, people: ((d.usernames as string[] | undefined) ?? []).join(', ') }
+					values: { who, count: Number(d.people ?? 0) }
 				});
 			case 'member_removed':
 				return d.left

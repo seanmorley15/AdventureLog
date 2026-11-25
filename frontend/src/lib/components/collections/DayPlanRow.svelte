@@ -194,7 +194,7 @@
 			} else if (result === 'ok') {
 				askingDate = false;
 				dateRequired = false;
-				if (people && collection) rememberTravelers(collection.id, people);
+				if (people && collection) rememberTravelers(collection.id, currentUserUuid ?? null, people);
 			}
 		} finally {
 			logging = false;

@@ -320,14 +320,15 @@ export function recordedVisit(
 	return (location?.visits ?? []).find((visit) => visit.id === id) ?? null;
 }
 
-// v2: the picks now include the person logging (before, only the others were kept).
-const travelersKey = (collectionId: string) => `trip-travelers:v2:${collectionId}`;
+// Per person as well as per trip, so two accounts on one browser never share their picks.
+const travelersKey = (userUuid: string, collectionId: string) =>
+	`trip-travelers:v3:${userUuid}:${collectionId}`;
 
-/** The people picked last time on this device for Log visit, or none. */
-export function rememberedTravelers(collectionId: string): string[] {
+/** The people this user picked last time on this device for Log visit on this trip, or none. */
+export function rememberedTravelers(collectionId: string, userUuid: string | null): string[] {
 	try {
-		if (typeof localStorage === 'undefined') return [];
-		const parsed = JSON.parse(localStorage.getItem(travelersKey(collectionId)) ?? 'null');
+		if (!userUuid || typeof localStorage === 'undefined') return [];
+		const parsed = JSON.parse(localStorage.getItem(travelersKey(userUuid, collectionId)) ?? 'null');
 		return Array.isArray(parsed) ? parsed.filter((uuid) => typeof uuid === 'string') : [];
 	} catch {
 		return [];
@@ -344,16 +345,22 @@ export function initialTravelers(
 	currentUserUuid: string | null
 ): string[] {
 	const here = new Set(collaboratorUuids);
-	const remembered = rememberedTravelers(collectionId).filter((uuid) => here.has(uuid));
+	const remembered = rememberedTravelers(collectionId, currentUserUuid).filter((uuid) =>
+		here.has(uuid)
+	);
 	if (remembered.length) return remembered;
 	return currentUserUuid ? [currentUserUuid] : [];
 }
 
-/** Keep the picks so the next Log visit on this trip starts from them. */
-export function rememberTravelers(collectionId: string, uuids: string[]): void {
+/** Keep the picks so this user's next Log visit on this trip starts from them. */
+export function rememberTravelers(
+	collectionId: string,
+	userUuid: string | null,
+	uuids: string[]
+): void {
 	try {
-		if (typeof localStorage === 'undefined') return;
-		localStorage.setItem(travelersKey(collectionId), JSON.stringify(uuids));
+		if (!userUuid || typeof localStorage === 'undefined') return;
+		localStorage.setItem(travelersKey(userUuid, collectionId), JSON.stringify(uuids));
 	} catch {
 		// Storage can be blocked; the picks just are not remembered.
 	}

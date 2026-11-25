@@ -99,21 +99,29 @@ describe('remembered travelers', () => {
 		};
 	});
 
-	it('round-trips the picks for a trip', () => {
-		rememberTravelers('c1', ['a']);
-		expect(rememberedTravelers('c1')).toEqual(['a']);
-		expect(store.has('trip-travelers:v2:c1')).toBe(true);
+	it('round-trips the picks for a trip, per person', () => {
+		rememberTravelers('c1', 'me', ['a']);
+		expect(rememberedTravelers('c1', 'me')).toEqual(['a']);
+		expect(store.has('trip-travelers:v3:me:c1')).toBe(true);
+		// Another account on the same browser starts fresh.
+		expect(rememberedTravelers('c1', 'you')).toEqual([]);
+	});
+
+	it('remembers nothing without a signed-in user', () => {
+		rememberTravelers('c1', null, ['a']);
+		expect(store.size).toBe(0);
+		expect(rememberedTravelers('c1', null)).toEqual([]);
 	});
 
 	it('is empty for a trip with no picks', () => {
-		expect(rememberedTravelers('missing')).toEqual([]);
+		expect(rememberedTravelers('missing', 'me')).toEqual([]);
 	});
 
 	it('is empty when the stored value is not a list of uuids', () => {
-		store.set('trip-travelers:v2:c1', '{not json');
-		expect(rememberedTravelers('c1')).toEqual([]);
-		store.set('trip-travelers:v2:c1', '{"a":1}');
-		expect(rememberedTravelers('c1')).toEqual([]);
+		store.set('trip-travelers:v3:me:c1', '{not json');
+		expect(rememberedTravelers('c1', 'me')).toEqual([]);
+		store.set('trip-travelers:v3:me:c1', '{"a":1}');
+		expect(rememberedTravelers('c1', 'me')).toEqual([]);
 	});
 
 	it('starts from the current user when nothing is remembered', () => {
@@ -122,16 +130,16 @@ describe('remembered travelers', () => {
 	});
 
 	it('starts from picks that leave the current user off, dropping people who left', () => {
-		rememberTravelers('c1', ['sam', 'gone']);
+		rememberTravelers('c1', 'me', ['sam', 'gone']);
 		expect(initialTravelers('c1', ['me', 'sam'], 'me')).toEqual(['sam']);
-		rememberTravelers('c1', ['gone']);
+		rememberTravelers('c1', 'me', ['gone']);
 		expect(initialTravelers('c1', ['me', 'sam'], 'me')).toEqual(['me']);
 	});
 
 	it('is empty without storage', () => {
 		delete (globalThis as any).localStorage;
-		expect(rememberedTravelers('c1')).toEqual([]);
-		expect(() => rememberTravelers('c1', ['a'])).not.toThrow();
+		expect(rememberedTravelers('c1', 'me')).toEqual([]);
+		expect(() => rememberTravelers('c1', 'me', ['a'])).not.toThrow();
 	});
 });
 
