@@ -773,6 +773,15 @@ export type ActivityAnalysis = {
 	geojson: any | null;
 };
 
+/** A person who was on a visit, or who could be named as one. */
+export type TravelerSummary = {
+	uuid: string;
+	username: string;
+	first_name: string | null;
+	last_name: string | null;
+	profile_pic?: string | null;
+};
+
 export type Visit = {
 	id: string;
 	start_date: string;
@@ -780,6 +789,8 @@ export type Visit = {
 	notes: string;
 	timezone: string | null;
 	activities: Activity[];
+	/** Left out when the viewer may not see who was there. */
+	travelers?: TravelerSummary[];
 	location: string;
 	created_at: string;
 	updated_at: string;

@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import type { Collection, Trail, Activity, Visit, TransportationVisit } from '#lib/types.js';
+	import type {
+		Collection,
+		Trail,
+		Activity,
+		Visit,
+		TransportationVisit,
+		TravelerSummary
+	} from '#lib/types.js';
+	import { travelerName } from '#lib/travelers.js';
+	import TravelerPicker from './TravelerPicker.svelte';
+	import VisitTravelers from './VisitTravelers.svelte';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import { defaultTimezone } from '#lib/dateUtils.js';
 	import { t } from 'svelte-i18n';
@@ -52,6 +62,8 @@
 		trails?: Trail[];
 		measurementSystem?: 'metric' | 'imperial';
 		initialVisitDate?: string | null; // Used to pre-fill visit date when adding from itinerary planner
+		/** The uuid of the location's owner; only they may delete a visit for everyone. */
+		ownerUuid?: string | null;
 	}
 
 	let {
@@ -64,7 +76,8 @@
 		objectId,
 		trails = $bindable([]),
 		measurementSystem = 'metric',
-		initialVisitDate = $bindable(null)
+		initialVisitDate = $bindable(null),
+		ownerUuid = null
 	}: Props = $props();
 
 	const dateFormat = $derived(dateFormatFromUser(page.data?.user));
@@ -72,6 +85,35 @@
 	const dispatch = createEventDispatcher();
 
 	// Types
+
+	// Who was there. The signed-in user is on a new visit unless the picker says otherwise.
+	const currentUserUuid: string | null = page.data?.user?.uuid ?? null;
+	let travelerCandidates: TravelerSummary[] = $state([]);
+	let selectedTravelers: string[] = $state(currentUserUuid ? [currentUserUuid] : []);
+	// With only the current user to pick, there is nothing to choose.
+	let showTravelerPicker = $derived(
+		travelerCandidates.some((person) => person.uuid !== currentUserUuid)
+	);
+	// A visit waiting on the delete confirmation because other people were on it.
+	let pendingDelete: Visit | null = $state(null);
+	let isDeletingVisit = $state(false);
+
+	async function loadTravelerCandidates() {
+		try {
+			const response = await fetch(`/api/locations/${objectId}/traveler-candidates/`);
+			if (response.ok) travelerCandidates = await response.json();
+		} catch (error) {
+			console.error('Error loading who can be on a visit:', error);
+		}
+	}
+
+	function resetTravelers() {
+		selectedTravelers = currentUserUuid ? [currentUserUuid] : [];
+	}
+
+	function othersOn(visit: Visit): TravelerSummary[] {
+		return (visit.travelers ?? []).filter((person) => person.uuid !== currentUserUuid);
+	}
 
 	// Component state
 	let allDay: boolean = $state(true);
@@ -260,7 +302,11 @@
 						start_date: utcStartDate,
 						end_date: utcEndDate,
 						notes: note,
-						timezone: selectedStartTimezone
+						timezone: selectedStartTimezone,
+						// Only sent when the picker is shown and the visit already lists people.
+						...(showTravelerPicker && selectedTravelers.length
+							? { traveler_uuids: selectedTravelers }
+							: {})
 					})
 				});
 
@@ -294,7 +340,10 @@
 						end_date: utcEndDate,
 						notes: note,
 						timezone: selectedStartTimezone,
-						location: objectId
+						location: objectId,
+						...(showTravelerPicker && selectedTravelers.length
+							? { traveler_uuids: selectedTravelers }
+							: {})
 					})
 				});
 
@@ -320,6 +369,7 @@
 				utcStartDate = null;
 				utcEndDate = null;
 			}
+			resetTravelers();
 			return true;
 		} finally {
 			isSavingVisit = false;
@@ -425,6 +475,7 @@
 			}).localDate;
 		}
 
+		selectedTravelers = visit.travelers?.map((person) => person.uuid) ?? [];
 		note = visit.notes;
 		constrainDates = Boolean(collection?.start_date && collection?.end_date);
 		utcStartDate = visit.start_date;
@@ -437,6 +488,7 @@
 
 	function cancelEditVisit() {
 		visitIdEditing = null;
+		resetTravelers();
 		note = '';
 		localStartDate = '';
 		localEndDate = '';
@@ -444,7 +496,16 @@
 		utcEndDate = null;
 	}
 
-	function removeVisit(visitId: string) {
+	/** Delete asks first when other people were on the visit, since it is theirs too. */
+	function requestRemoveVisit(visit: Visit) {
+		if (othersOn(visit).length > 0) {
+			pendingDelete = visit;
+		} else {
+			removeVisit(visit.id);
+		}
+	}
+
+	async function removeVisit(visitId: string, forEveryone = false) {
 		const previousVisits = visits ? [...visits] : [];
 		if (visits) {
 			visits = visits.filter((v) => v.id !== visitId);
@@ -456,18 +517,43 @@
 			cancelEditVisit();
 		}
 
-		// make the DELETE request
-		fetch(`/api/visits/${visitId}/`, {
+		// Without for_everyone the server only takes the caller off a visit others were on.
+		const response = await fetch(`/api/visits/${visitId}/${forEveryone ? '?for_everyone=1' : ''}`, {
 			method: 'DELETE'
-		}).then((response) => {
-			if (!response.ok) {
-				console.error('Error deleting visit:', response.statusText);
-				visits = previousVisits;
-				addToast('error', $t('adventures.visit_add_failed'));
-			} else {
-				dispatch('visitRemoved', visitId);
-			}
 		});
+		if (!response.ok) {
+			console.error('Error deleting visit:', response.statusText);
+			visits = previousVisits;
+			addToast('error', $t('adventures.visit_add_failed'));
+			return;
+		}
+		dispatch('visitRemoved', visitId);
+		if (!forEveryone) {
+			// The visit may live on for the others, so show what is still there.
+			const locationResponse = await fetch(`/api/locations/${objectId}/`);
+			if (locationResponse.ok) visits = (await locationResponse.json()).visits;
+		}
+	}
+
+	async function confirmRemoveVisit(forEveryone: boolean) {
+		const visit = pendingDelete;
+		if (!visit) return;
+		isDeletingVisit = true;
+		try {
+			await removeVisit(visit.id, forEveryone);
+		} finally {
+			isDeletingVisit = false;
+			pendingDelete = null;
+		}
+	}
+
+	/** A visit changed by joining or leaving it; null means leaving deleted it. */
+	function travelersChanged(visitId: string, updated: Visit | null) {
+		visits = updated
+			? (visits ?? []).map((v) => (v.id === visitId ? updated : v))
+			: (visits ?? []).filter((v) => v.id !== visitId);
+		if (!updated) dispatch('visitRemoved', visitId);
+		else dispatch('visitAdded', updated);
 	}
 
 	function handleBack() {
@@ -480,6 +566,7 @@
 
 	// Lifecycle
 	onMount(async () => {
+		loadTravelerCandidates();
 		localStartDate = updateLocalDate({
 			utcDate: utcStartDate,
 			timezone: selectedStartTimezone
@@ -608,6 +695,10 @@
 							<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 						{/if}
 					</div>
+
+					{#if showTravelerPicker}
+						<TravelerPicker candidates={travelerCandidates} bind:selected={selectedTravelers} />
+					{/if}
 
 					<div>
 						<label class="field-label" for="visit-notes">{$t('adventures.notes')}</label>
@@ -780,6 +871,12 @@
 													</p>
 												{/if}
 
+												<VisitTravelers
+													{visit}
+													{currentUserUuid}
+													onchange={(updated) => travelersChanged(visit.id, updated)}
+												/>
+
 												{#if visit.activities && visit.activities.length > 0}
 													<div class="flex items-center gap-2 mt-2">
 														<RunFastIcon class="w-3.5 h-3.5 text-success" />
@@ -803,7 +900,7 @@
 													<button
 														class="btn btn-ghost btn-sm btn-square text-error"
 														title={$t('adventures.remove_visit')}
-														onclick={() => removeVisit(visit.id)}
+														onclick={() => requestRemoveVisit(visit)}
 													>
 														<TrashIcon class="w-4 h-4" />
 													</button>
@@ -877,6 +974,59 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if pendingDelete}
+		{@const others = othersOn(pendingDelete)}
+		{@const names = others.map(travelerName).join(', ')}
+		{@const isOwner = Boolean(currentUserUuid && ownerUuid === currentUserUuid)}
+		<dialog class="modal modal-open" aria-labelledby="delete-visit-title">
+			<div class="modal-box max-w-md">
+				<h3 id="delete-visit-title" class="text-lg font-bold">{$t('visits.delete_visit_title')}</h3>
+				<p class="py-3 text-sm text-base-content/70">
+					{$t('visits.stays_for_others', { values: { names } })}
+				</p>
+				<div class="modal-action flex-wrap">
+					<button
+						type="button"
+						class="btn btn-ghost"
+						disabled={isDeletingVisit}
+						onclick={() => (pendingDelete = null)}
+					>
+						{$t('adventures.cancel')}
+					</button>
+					{#if isOwner}
+						<div class="flex flex-col items-end gap-1">
+							<button
+								type="button"
+								class="btn btn-error btn-outline"
+								disabled={isDeletingVisit}
+								onclick={() => confirmRemoveVisit(true)}
+							>
+								{$t('visits.delete_for_everyone')}
+							</button>
+							<span class="text-xs text-base-content/60">
+								{$t('visits.others_lose_it', { values: { names } })}
+							</span>
+						</div>
+					{/if}
+					<button
+						type="button"
+						class="btn btn-primary"
+						disabled={isDeletingVisit}
+						onclick={() => confirmRemoveVisit(false)}
+					>
+						{$t('visits.remove_me_from_visit')}
+					</button>
+				</div>
+			</div>
+			<button
+				type="button"
+				class="modal-backdrop"
+				aria-label={$t('adventures.cancel')}
+				onclick={() => (pendingDelete = null)}
+			></button>
+		</dialog>
+	{/if}
 
 	<div
 		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"

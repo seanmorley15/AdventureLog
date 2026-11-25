@@ -496,6 +496,7 @@
 					bind:visits={location.visits}
 					bind:trails={location.trails}
 					objectId={location.id}
+					ownerUuid={location.user?.uuid ?? user?.uuid ?? null}
 					on:back={() => setStep(2)}
 					on:close={() => close()}
 					on:visitAdded={() => {

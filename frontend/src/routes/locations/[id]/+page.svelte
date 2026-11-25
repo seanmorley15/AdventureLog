@@ -69,6 +69,7 @@
 	import DetailVisibilityBadge from '#lib/components/detail/DetailVisibilityBadge.svelte';
 	import DetailNotFound from '#lib/components/detail/DetailNotFound.svelte';
 	import DetailLoading from '#lib/components/detail/DetailLoading.svelte';
+	import VisitTravelers from '#lib/components/locations/VisitTravelers.svelte';
 	import LocationPageHead from '#lib/components/locations/LocationPageHead.svelte';
 
 	interface Props {
@@ -648,6 +649,17 @@
 															<p class="text-sm italic">"{visit.notes}"</p>
 														</div>
 													{/if}
+
+													<VisitTravelers
+														{visit}
+														currentUserUuid={data.user?.uuid}
+														onchange={(updated) => {
+															if (!adventure) return;
+															adventure.visits = updated
+																? adventure.visits.map((v) => (v.id === visit.id ? updated : v))
+																: adventure.visits.filter((v) => v.id !== visit.id);
+														}}
+													/>
 
 													{#if visit.activities && visit.activities.length > 0}
 														<div class="mt-4">

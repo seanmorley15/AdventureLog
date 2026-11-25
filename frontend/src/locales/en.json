@@ -1941,6 +1941,21 @@
 		"export_error": "Could not export calendar.",
 		"more_events": "+{count} more"
 	},
+	"visits": {
+		"who_was_there": "Who was there",
+		"i_was_there_too": "I was there too",
+		"i_wasnt_there": "I wasn't there",
+		"remove_me_from_visit": "Remove me from this visit",
+		"delete_for_everyone": "Delete for everyone",
+		"others_lose_it": "{names} will lose it too",
+		"delete_visit_title": "Delete this visit?",
+		"stays_for_others": "{names} will keep it.",
+		"you": "You",
+		"join_failed": "Could not add you to this visit.",
+		"leave_failed": "Could not remove you from this visit.",
+		"travelers_save_failed": "Could not save who was there.",
+		"keep_one_traveler": "A visit needs at least one person."
+	},
 	"locations": {
 		"location": "Location",
 		"locations": "Locations",
