@@ -74,3 +74,11 @@ class VisitedPerPersonTests(AudienceTestBase):
         self.assertIn(self.hut, mine)
         self.assertNotIn(self.hut, Location.objects.filter(travelers.where_ive_been_q(self.viewer)).distinct())
         self.assertNotIn(self.hut, Location.objects.filter(travelers.where_ive_been_q(self.stranger)).distinct())
+
+    def test_visit_later_today_agrees_with_python(self):
+        now = timezone.now()
+        later = now.replace(hour=23, minute=59, second=0, microsecond=0)
+        self._visit([self.editor], start=later)
+        row = Location.objects.filter(pk=self.hut.pk).annotate(v=travelers.visited_by(self.editor)).get()
+        self.assertEqual(row.v, is_location_visited(self.hut, self.editor))
+        self.assertTrue(row.v)

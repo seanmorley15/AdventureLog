@@ -14,7 +14,7 @@ def ensure_default_traveler(visit):
 
 
 def visited_by(user, now=None):
-    """Subquery for ``Location.annotate(...)``: a started visit with this person among its travelers."""
+    """Subquery for ``Location.annotate(...)``: a visit that has started (by date, like ``is_location_visited``) with this person among its travelers."""
     from django.db.models import Exists, OuterRef
     from django.utils import timezone
 
@@ -23,7 +23,7 @@ def visited_by(user, now=None):
     return Exists(
         Visit.objects.filter(
             location_id=OuterRef('pk'),
-            start_date__lte=now or timezone.now(),
+            start_date__date__lte=(now or timezone.now()).date(),
             travelers=user,
         )
     )
