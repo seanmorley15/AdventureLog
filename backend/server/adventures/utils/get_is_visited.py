@@ -13,25 +13,26 @@ def _visit_date(value):
     return value
 
 
-def is_location_visited(location):
+def is_location_visited(location, user=None):
     """
-    Check if a location has been visited based on its visits.
-    
-    Args:
-        location: Location instance with visits relationship
-        
+    Check if a location has been visited by a person, based on its visits.
+
+    A visit counts when it has started and the person travelled on it.
+    ``user=None`` means the location's owner.
+
     Returns:
-        bool: True if location has been visited, False otherwise
+        bool: True if the person has visited the location, False otherwise
     """
+    if user is None:
+        user = location.user
+    user_id = getattr(user, 'pk', user)
     current_date = timezone.now().date()
-    
+
     for visit in location.visits.all():
         start_date = _visit_date(visit.start_date)
-        end_date = _visit_date(visit.end_date)
-        
-        if start_date and end_date and (start_date <= current_date):
+        if not (start_date and start_date <= current_date):
+            continue
+        if any(traveler.pk == user_id for traveler in visit.travelers.all()):
             return True
-        elif start_date and not end_date and (start_date <= current_date):
-            return True
-            
+
     return False

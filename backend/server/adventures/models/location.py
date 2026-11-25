@@ -95,8 +95,8 @@ class Location(models.Model):
 
     objects = LocationManager()
 
-    def is_visited_status(self):
-        return is_location_visited(self)
+    def is_visited_status(self, user=None):
+        return is_location_visited(self, user)
 
     def clean(self, skip_shared_validation=False):
         """
