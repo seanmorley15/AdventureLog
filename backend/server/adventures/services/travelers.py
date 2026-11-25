@@ -395,8 +395,8 @@ def take_my_visits(original, user, collection=None):
     The copy keeps the original's name and gets a copy of each visit they travelled on (dates,
     timezone and notes), with them as its only traveler. They are then removed from the original
     visits (see ``detach_if_traveler``), so nothing is counted twice. The photos, attachments and
-    activities they added to those visits are copied too (``copy_visit_uploads``), with their
-    own files; other people's stay behind. The originals are left as they are. With
+    activities they added to those visits are copied too (``copy_visit_uploads``), sharing the
+    stored files, so deleting either side never removes the other's; other people's stay behind. The originals are left as they are. With
     ``collection`` the copy goes in that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
     ``location_already_yours``: it is already theirs. Someone on none of its visits gets ``no_visits_to_take``.
     """
@@ -411,7 +411,7 @@ def take_my_visits(original, user, collection=None):
         mine = list(original.visits.filter(travelers=user).order_by('start_date', 'created_at'))
         if not mine:
             raise TravelerError('You are not a traveler on any visit to this location.', code='no_visits_to_take')
-        copy = copying.copy_location(original, user, collection=collection, name=original.name, skip_unreadable=True)
+        copy = copying.copy_location(original, user, collection=collection, name=original.name)
         for visit in mine:
             moved = Visit.objects.create(
                 location=copy, start_date=visit.start_date, end_date=visit.end_date,

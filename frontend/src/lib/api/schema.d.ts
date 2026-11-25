@@ -2466,10 +2466,12 @@ export interface paths {
         put?: never;
         /**
          * Copy a location
-         * @description Copies a place you can see into your own account, with its photos, files and trails
-         *     but not its visits. Optionally puts the copy in a collection. With `take_my_visits`, for
-         *     a location you travelled to but don't own (say, before leaving its trip), the copy keeps
-         *     the original name, your visits move onto it, and you are taken off the original's visits.
+         * @description Copies a place you can see into your own account, with its photos but not its visits,
+         *     attachments or trails. The copy shares the original's stored photo files. A copy of
+         *     someone else's place leaves out photos linked from their Immich library. Optionally puts
+         *     the copy in a collection. With `take_my_visits`, for a location you travelled to but
+         *     don't own (say, before leaving its trip), the copy keeps the original name, your visits
+         *     move onto it, and you are taken off the original's visits.
          */
         post: operations["locations_duplicate"];
         delete?: never;

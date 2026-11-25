@@ -59,18 +59,30 @@ class CopyLocationTests(APITestCase):
         self.assertFalse(Visit.objects.filter(location=new).exists())
         self.assertFalse(ContentAttachment.objects.filter(object_id=new.id).exists())
 
-    def test_photos_are_copied_as_independent_files_and_immich_photos_are_referenced(self):
+    def test_photos_share_the_stored_files_and_immich_photos_are_referenced(self):
         new = Location.objects.get(id=self.copy().json()['id'])
 
         originals = ContentImage.objects.filter(object_id=self.hut.id)
         copies = ContentImage.objects.filter(object_id=new.id)
         self.assertEqual(copies.count(), originals.count())
-        stored = [c for c in copies if c.image]
-        self.assertEqual(len(stored), originals.exclude(image='').exclude(image__isnull=True).count())
-        for photo in stored:
-            self.assertNotIn(photo.image.name, [o.image.name for o in originals if o.image])
+        self.assertEqual(
+            sorted(c.image.name for c in copies if c.image), sorted(o.image.name for o in originals if o.image)
+        )
+        # The owner's own copy: their Immich account shows it, so the reference comes along.
         self.assertEqual([c.immich_id for c in copies if c.immich_id], ['immich-1'])
         self.assertEqual(sorted(c.is_primary for c in copies), sorted(o.is_primary for o in originals))
+
+    def test_someone_elses_copy_leaves_out_immich_photos(self):
+        self.objects['trip'].shared_with.add(self.stranger)
+        new = Location.objects.get(id=self.copy(user=self.stranger).json()['id'])
+
+        originals = ContentImage.objects.filter(object_id=self.hut.id)
+        copies = ContentImage.objects.filter(object_id=new.id)
+        self.assertEqual([c.immich_id for c in copies if c.immich_id], [])
+        self.assertEqual(
+            sorted(c.image.name for c in copies), sorted(o.image.name for o in originals if o.image)
+        )
+        self.assertEqual({c.user for c in copies}, {self.stranger})
 
     def test_the_category_is_reused_or_created_for_the_copier(self):
         self.client.force_authenticate(user=self.owner)

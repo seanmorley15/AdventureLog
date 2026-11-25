@@ -307,12 +307,13 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
 
         [new_photo] = visit.images.all()
         self.assertEqual(new_photo.user, self.editor)
-        self.assertNotEqual(new_photo.image.name, originals['photo'])
+        # The copy shares the stored file: the original's delete leaves it for the copy.
+        self.assertEqual(new_photo.image.name, originals['photo'])
         self.assertEqual(self._read(new_photo.image), photo_bytes)
 
         [new_attachment] = visit.attachments.all()
         self.assertEqual((new_attachment.user, new_attachment.name), (self.editor, 'permit'))
-        self.assertNotEqual(new_attachment.file.name, originals['attachment'])
+        self.assertEqual(new_attachment.file.name, originals['attachment'])
         self.assertEqual(self._read(new_attachment.file), b'permit 42')
 
         [new_activity] = visit.activities.all()
@@ -322,7 +323,7 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
         )
         self.assertEqual((new_activity.day_id, new_activity.collection_id, new_activity.trail_id), (None, None, None))
         self.assertIsNone(new_activity.promoted_activity_id)
-        self.assertNotEqual(new_activity.gpx_file.name, originals['gpx'])
+        self.assertEqual(new_activity.gpx_file.name, originals['gpx'])
         self.assertEqual(self._read(new_activity.gpx_file), GPX)
         self.assertEqual([p.user for p in new_activity.images.all()], [self.editor])
 
@@ -379,7 +380,7 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
 
     # -- Files missing from storage --------------------------------------------------------
 
-    def test_owner_removal_with_missing_attachment_file(self):
+    def test_owner_removal_carries_a_missing_attachment_file_over(self):
         alone = self._visit([self.editor])
         attachment = self._attachment(self.editor, alone)
         attachment.file.storage.delete(attachment.file.name)
@@ -389,25 +390,28 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
         self.assertEqual(response.status_code, 204, response.content)
         self.assertFalse(self.trip.shared_with.filter(pk=self.editor.pk).exists())
         visit = self._copy_visit()
-        self.assertEqual(visit.attachments.count(), 0)
+        # Nothing is read: the copy points at the same missing file, as the original did.
+        self.assertEqual(list(visit.attachments.values_list('file', flat=True)), [attachment.file.name])
 
-    def test_leave_skips_unreadable_photos_and_tracks(self):
+    def test_leave_carries_missing_photos_and_tracks_over(self):
         hut_photo = self._photo(self.owner, self.hut, name='hut.png')
         alone = self._visit([self.editor])
         visit_photo = self._photo(self.editor, alone)
         run = self._activity(self.editor, alone)
         kept = self._attachment(self.editor, alone)
+        missing = {field.name for field in (hut_photo.image, visit_photo.image, run.gpx_file)}
         for field in (hut_photo.image, visit_photo.image, run.gpx_file):
             field.storage.delete(field.name)
 
         self._leave()
+        # Nothing is read or checked: each copy points at the same (missing) file as the original.
         copy = Location.objects.get(user=self.editor, name='Hut')
-        self.assertEqual(copy.images.count(), 0)
         visit = copy.visits.get()
-        self.assertEqual(visit.images.count(), 0)
         [new_run] = visit.activities.all()
         self.assertEqual((new_run.name, new_run.distance), ('Ridge hike', 5400.0))
-        self.assertFalse(new_run.gpx_file)
+        self.assertEqual(
+            {copy.images.get().image.name, visit.images.get().image.name, new_run.gpx_file.name}, missing
+        )
         self.assertEqual([a.name for a in visit.attachments.all()], [kept.name])
 
     # -- Previews ----------------------------------------------------------------------

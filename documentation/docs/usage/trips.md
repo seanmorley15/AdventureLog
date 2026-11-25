@@ -50,7 +50,7 @@ When someone adds you to a visit (by logging a visit with you, using **Log day**
 
 Visits record who was there. When someone stops having a way to reach a place, they keep their own history of it, and nothing is taken from people who are still on the trip. The rules are the same everywhere:
 
-- **They get a copy.** Each place they traveled to and do not own is copied into their account, under the same name, with their visits and the photos, files and activities they added. They come off the original visits.
+- **They get a copy.** Each place they traveled to and do not own is copied into their account, under the same name, with their visits and the photos, files and activities they added. They come off the original visits. The copy shows the same photos and files as the original without storing them twice, and deleting either one never removes them from the other. Photos the place owner linked from their Immich library are not copied, because only the owner's Immich account can show them, and trails are not copied either. Photos stored in AdventureLog, and the Immich photos you added to your own visits, are.
 - **Everyone else keeps the place.** Other travelers stay on their visits, and the place owner keeps the place as it is. Someone who still reaches the place through another trip is not affected.
 - **Some things are deleted.** A visit that only the person leaving was on goes with the original place, and so do the photos, files and activities other people added to it. AdventureLog tells you how many before you confirm.
 

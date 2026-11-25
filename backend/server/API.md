@@ -150,6 +150,17 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
   (`DELETE /api/collections/{id}/itinerary-items/{item_id}/`), which leaves the place in the collection as an
   unscheduled stop. The list endpoint's `can_unlink` follows the same rule.
 
+### Stored files
+
+- Several rows can point at one stored file: a copy of a place, or a traveler's copy of their visits, keeps the
+  original's photo, attachment and track file names instead of copying the bytes. Stored files never change in
+  place (a replaced file gets a new name).
+- A file is deleted only when the last row using it goes: each row delete queues `adventures.delete_stored_file`
+  from a `post_delete` signal (`adventures/signals.py`), which runs after the delete commits and keeps the file
+  while any `ContentImage`, `ContentAttachment` or `Activity` row still names it. Never call `FieldFile.delete()`
+  on these fields; delete the row.
+- `/media/` grants a shared file when any row using it allows the requester.
+
 ## Mobile app sign-in
 
 The mobile app signs in as the user, not with a pasted key, and keeps the `X-Session-Token` it is given.
@@ -273,6 +284,16 @@ A collection owner who travelled to a member-owned place counts as losing access
 collection is deleted, and gets their own copy; account deletion releases co-members the same way. The place owner
 is never released. When a released person was the only traveler on a visit, that visit goes with the original place,
 and the photos, files and activities other people added to it go with it.
+
+Every copy (leaving, removal, unlinking, collection or account deletion, going private, `duplicate`) shares the
+original's stored files (see [Stored files](#stored-files)). Nothing is read or written, so the copy is made in the
+request however many photos it has, and deleting the original or the copy never removes a file the other still
+uses. A file already missing from storage is carried over as it is, showing the same broken image as the original.
+A copy for someone other than the original's owner leaves out what only the owner's integrations can show: photos
+linked from the owner's Immich library (`immich_id`; they resolve through that owner's Immich account). Trails are
+never copied, Wanderer ones included, and an activity copy drops its `trail`. Your own copies keep everything: the
+Immich photos you added to your visits come with them, and so does a `duplicate` of a place you own. The previews do
+not count what is left out.
 
 ### Previews
 
