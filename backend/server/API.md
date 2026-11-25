@@ -532,7 +532,8 @@ Each of these changes nothing and returns what the matching action would do, so 
 
 `PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
 
-The collection activity feed has a new verb, `travelers_added`.
+The collection activity feed has a new verb, `travelers_added`. Its `data` holds counts only (`people`, `visits`,
+`locations`), never names, because editor guest links read the feed.
 
 #### Telling people they were added
 
@@ -546,7 +547,7 @@ They get a notification in the app and, when the server has SMTP set up and they
 - **One per person per action.** Log day and `add-travelers` send each person one notification with a count
   ("added you to 5 visits on Euro Trip"); adding someone to a single visit sends the single form. Notifications
   are written in the same transaction as the change; a failure to notify never fails the change.
-- **What they hold.** The person's display name, the place, the trip and the dates, nothing about the other
+- **What they hold.** The display name of who did it (an editor guest link that logs a visit is named by its label), the place, the trip and the dates, nothing about the other
   travelers. The place and trip names are checked again when you read them: after you lose access they are empty.
 - **E-mail.** Queued as `adventures.send_traveler_added_email` only when `smtp_configured()`, one per notification,
   with a link to the place (or the trip for the summary form). It retries like the mention e-mail.

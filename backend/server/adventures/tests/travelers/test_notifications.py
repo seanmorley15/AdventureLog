@@ -365,7 +365,7 @@ class ApiTests(NotificationTestBase):
         self.client.post('/api/notifications/mark-read/', {}, format='json')
         self.assertEqual(self.client.get('/api/account/').json()['unread_notification_count'], 0)
 
-    def test_a_guest_link_naming_a_member_notifies_them_as_someone_and_never_the_guest(self):
+    def test_a_guest_link_naming_a_member_names_the_link_and_never_the_guest(self):
         from adventures.models import CollectionGuestLink
 
         link = CollectionGuestLink.objects.create(collection=self.trip, role='editor', label='Camp friend')
@@ -377,16 +377,16 @@ class ApiTests(NotificationTestBase):
         self.assertEqual(response.status_code, 201, response.data)
         note = self._notes(self.editor).get()
         self.assertIsNone(note.actor_user)
-        # A guest link has no account and the log-visit endpoints hand over no request, so nobody is named.
-        self.assertEqual(note.actor_name, '')
+        # A guest link has no account; it is named by its label.
+        self.assertEqual(note.actor_name, 'Camp friend')
         self.assertEqual(Notification.objects.count(), 1)  # the guest is not a person, and the owner default is silent
         self.as_user(self.editor)
         row = self.client.get('/api/notifications/').json()['results'][0]
-        self.assertEqual(row['actor']['name'], '')
+        self.assertEqual(row['actor']['name'], 'Camp friend')
         self.assertIsNone(row['actor']['uuid'])
         with override_settings(SMTP_CONFIGURED=True):
             notifications.send_traveler_added_email(note)
-        self.assertTrue(mail.outbox[-1].body.startswith('Someone added you'))
+        self.assertTrue(mail.outbox[-1].body.startswith('Camp friend added you'))
 
 
 class CleanupTests(NotificationTestBase):

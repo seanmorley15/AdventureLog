@@ -38,13 +38,14 @@ def log_visited(item, visit_date=None, travelers=None, actor=None):
 
     The people who travelled are exactly ``travelers`` when a list is given (the actor may
     leave themselves off), else just ``actor``. A new visit lists exactly them; a visit that
-    already existed gains them ("I was there too"). A guest link has no account, so it is never
+    already existed gains them ("I was there too"). ``actor`` is a request (so a guest link is
+    named by its label in notifications) or a user. A guest link has no account, so it is never
     a traveler: with nobody named the visit keeps its default, the owner.
     """
     from adventures.models import Visit
     from adventures.services import travelers as traveler_rules
 
-    named = [actor] if travelers is None else travelers
+    named = [getattr(actor, 'user', actor)] if travelers is None else travelers
     people = list({user.pk: user for user in named if user is not None and user.is_authenticated}.values())
 
     if item_kind(item) != 'location':

@@ -370,7 +370,7 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
         self.get_editable_collection()
         data = validated(LogVisitSerializer, request.data)
         visit, created = day_plan.log_visited(
-            item, data.get('date'), data.get('traveler_uuids'), request.user,
+            item, data.get('date'), data.get('traveler_uuids'), request,
         )
         item.refresh_from_db()
         return Response({
@@ -495,7 +495,7 @@ class CollectionDayViewSet(_DayPlanViewMixin, mixins.ListModelMixin, viewsets.Ge
         collection = self.get_editable_collection()
         day = day_plan.get_day(collection, pk)
         data = validated(LogVisitSerializer, request.data)
-        logged = day_plan.log_day(collection, day, data.get('date'), data.get('traveler_uuids'), request.user)
+        logged = day_plan.log_day(collection, day, data.get('date'), data.get('traveler_uuids'), request)
         refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in logged]) \
             .select_related('day', 'content_type', 'logged_visit').prefetch_related('item')
         needs_stop = []

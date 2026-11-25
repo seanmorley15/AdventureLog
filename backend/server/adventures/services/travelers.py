@@ -343,7 +343,8 @@ def add_to_trip(collection, users, dry_run=False, actor=None):
 
     Returns ``{'visits': n, 'locations': n}``: the visits that gained someone and their distinct
     locations. A visit that already has all of them counts for nothing. A dry run only counts.
-    Otherwise a ``CollectionActivity`` is recorded when anything changed.
+    Otherwise a ``CollectionActivity`` is recorded when anything changed. It holds counts only
+    (``people``, ``visits``, ``locations``), never names: editor guest links read the feed.
     """
     from django.db import transaction
 
@@ -366,7 +367,7 @@ def add_to_trip(collection, users, dry_run=False, actor=None):
 
             record_activity(
                 collection, actor, CollectionActivity.Verb.TRAVELERS_ADDED,
-                usernames=sorted(user.username for user in wanted.values()), **result,
+                people=len(wanted), **result,
             )
     return result
 
