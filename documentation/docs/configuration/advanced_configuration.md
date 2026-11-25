@@ -32,6 +32,7 @@ Per-endpoint overrides (all optional):
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | `30/minute`  | Recommendations                         |
 | `RATE_LIMIT_EXTERNAL_WIKIPEDIA`       | `60/minute`  | Wikipedia lookups                       |
 | `RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET`  | `30/minute`  | Sunrise/sunset API                      |
+| `RATE_LIMIT_ACCOUNT_PREVIEW`          | `30/minute`  | Account deletion and privacy previews   |
 | `RATE_LIMIT_ENDURAIN_AUTH`            | `10/minute`  | Endurain connect and MFA (always on)    |
 | `RATE_LIMIT_MOBILE_AUTH`              | `20/minute`  | Mobile app sign-in exchange (always on) |
 

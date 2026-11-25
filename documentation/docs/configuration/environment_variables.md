@@ -122,6 +122,7 @@ Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_re
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | No       | Recommendations API limit.                                                                | `30/minute`  |
 | `RATE_LIMIT_EXTERNAL_WIKIPEDIA`       | No       | Wikipedia lookup limit.                                                                   | `60/minute`  |
 | `RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET`  | No       | Sunrise/sunset API limit.                                                                 | `30/minute`  |
+| `RATE_LIMIT_ACCOUNT_PREVIEW`          | No       | Account deletion and privacy previews, per user.                                          | `30/minute`  |
 | `RATE_LIMIT_ENDURAIN_AUTH`            | No       | Endurain connect and MFA attempts. Always applied, even when `ENABLE_RATE_LIMITS` is off. | `10/minute`  |
 | `RATE_LIMIT_MOBILE_AUTH`              | No       | The mobile app's sign-in code exchange. Always applied.                                   | `20/minute`  |
 
