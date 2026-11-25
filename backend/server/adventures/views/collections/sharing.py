@@ -392,7 +392,7 @@ class SharingActionsMixin:
         Add people to this trip's visits
 
         Owner and editors. For a trip logged before someone joined. Adds the people to the visits
-        the trip logged and, when the trip has dates, to visits to its locations that started on
+        the trip logged and, when the trip has both a start and an end date, to visits to its locations that started on
         those days (inclusive). Visits on other days are never touched. Returns how many visits
         gained someone and at what locations; with `?dry_run=1` it only counts.
         """

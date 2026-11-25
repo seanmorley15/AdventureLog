@@ -62,7 +62,7 @@ Choose A4 or Letter, include or leave out photos, and add space to write if you 
 A collection can be saved to a ZIP file and added to any AdventureLog account, which is handy for moving a trip to another server or keeping a copy. Open the collection's menu and choose **Export ZIP**. On the Collections page, choose **Import from file**.
 
 - **What the file contains:** the collection and everything in it: locations with their visits, trails, activities, photos and attachments, plus transportation, lodging, notes, checklists, the day-by-day plan, and comments.
-- **What it leaves out:** who the collection is shared with and any guest links, so the file can be passed around without giving anyone access. Comments keep the name of whoever wrote them but are not linked to their accounts. Your world travel visits are not included; use a full backup from Settings for those.
+- **What it leaves out:** who the collection is shared with and any guest links, so the file can be passed around without giving anyone access. Comments keep the name of whoever wrote them but are not linked to their accounts. Who traveled on each visit is not included either: an imported visit lists you as its only traveler. Your world travel visits are not included; use a full backup from Settings for those.
 - **Importing:** the collection is added next to what you already have. If you already have a collection with the same name, the new one is called "Name (1)".
 - **Locations you already have:** with **Use locations I already have** on (the default), a location in the file that matches one in your account is added to the new collection instead of being copied, and its visits and photos in your account are left as they are. Turn it off to create a new copy of every location.
 

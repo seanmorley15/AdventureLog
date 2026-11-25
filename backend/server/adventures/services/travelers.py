@@ -1,9 +1,8 @@
 """
 Who travelled on a visit.
 
-Every visit lists its travelers. A visit with no travelers counts for the
-owner of its location, so existing data and newly created visits keep working
-without any extra input.
+Every visit lists at least one traveler: a new visit without any gets the
+location's owner, and the last traveler leaving deletes the visit.
 """
 
 

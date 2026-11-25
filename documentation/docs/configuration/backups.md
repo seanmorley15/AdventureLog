@@ -10,6 +10,8 @@ There are two kinds of backup, for different jobs:
 | Contains | Every user, the database, all media, the env file | One account: locations, visits, collections, media, and settings |
 | Use it to | Recover the whole server, or move it to another host | Move one account to another server, or keep a personal copy |
 
+An account backup carries only the visits to locations you own, and not who traveled on them. When it is restored, every visit lists you as its only traveler. Visits you logged on someone else's locations stay with their owner.
+
 This page covers server backups. For account backups, see [Account and Settings](../usage/settings.md#data-and-storage).
 
 ::: tip S3 storage
