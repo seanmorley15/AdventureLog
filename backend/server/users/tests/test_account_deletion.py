@@ -160,3 +160,41 @@ class DeleteAccountReleasesTravelersTestCase(APITestCase):
         self.assertEqual([u.pk for u in copy.visits.get().travelers.all()], [third.pk])
         self.assertFalse(Location.objects.filter(name='Mine').exclude(user=third).exists())
         self.assertEqual(Location.objects.filter(user=member, name='Hut').count(), 1)
+
+    def _setup_two(self):
+        from datetime import datetime, timezone as tz
+
+        from adventures.models import Collection, Visit
+
+        owner = User.objects.create_user(username='o2', email='o2@example.com', password='x')
+        member = User.objects.create_user(username='m2', email='m2@example.com', password='x')
+        third = User.objects.create_user(username='t2', email='t2@example.com', password='x')
+        a = Collection.objects.create(user=owner, name='A')
+        b = Collection.objects.create(user=owner, name='B')
+        for c in (a, b):
+            c.shared_with.add(member, third)
+        hut = Location.objects.create(user=member, name='Hut')
+        hut.collections.add(a, b)
+        visit = Visit.objects.create(location=hut, start_date=datetime(2026, 6, 1, tzinfo=tz.utc))
+        visit.travelers.set([member, third])
+        return owner, member, third, hut, visit
+
+    def test_place_in_two_of_the_owners_collections_is_released_once(self):
+        from users.services.account_deletion import delete_user_account
+
+        owner, member, third, hut, visit = self._setup_two()
+        delete_user_account(owner)
+        self.assertEqual([u.pk for u in visit.travelers.all()], [member.pk])
+        self.assertEqual(Location.objects.filter(user=third, name='Hut').count(), 1)
+
+    def test_traveler_reaching_the_place_through_a_third_partys_collection_is_kept(self):
+        from adventures.models import Collection
+        from users.services.account_deletion import delete_user_account
+
+        owner, member, third, hut, visit = self._setup_two()
+        other = Collection.objects.create(user=member, name='Mine')
+        other.shared_with.add(third)
+        hut.collections.add(other)
+        delete_user_account(owner)
+        self.assertEqual(sorted(u.pk for u in visit.travelers.all()), sorted([member.pk, third.pk]))
+        self.assertFalse(Location.objects.filter(user=third).exists())

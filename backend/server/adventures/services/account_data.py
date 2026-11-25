@@ -12,8 +12,7 @@ def clear_user_adventure_data(user) -> None:
     """Remove all adventure and world-travel data owned by the user."""
     # Places other people own, in collections that go away with this user, stay with their
     # travelers as copies. Done first: their own places are deleted below.
-    for collection in Collection.objects.filter(user=user):
-        travelers.release_collection_travelers(collection)
+    travelers.release_collections_travelers(Collection.objects.filter(user=user))
     CollectionItineraryItem.objects.filter(collection__user=user).delete()
 
     for activity in Activity.objects.filter(user=user):
