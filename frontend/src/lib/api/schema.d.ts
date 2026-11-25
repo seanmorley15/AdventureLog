@@ -3447,7 +3447,7 @@ export interface paths {
         };
         /**
          * List visits
-         * @description Visits to locations you own or that are in collections you belong to.
+         * @description Visits to locations you own or that are in collections you own or belong to.
          */
         get: operations["visits_list"];
         put?: never;
@@ -3530,7 +3530,9 @@ export interface paths {
         put?: never;
         /**
          * Leave a visit
-         * @description Removes you as a traveler. When nobody is left the visit is deleted.
+         * @description Removes you as a traveler. When nobody is left the visit is deleted. Answers with the
+         *     visit, or 204 when it was deleted or you can no longer read its location (a traveler
+         *     who has left the trip can still leave, but not read the visit).
          */
         post: operations["visits_leave"];
         delete?: never;
@@ -20579,7 +20581,7 @@ export interface operations {
                     "application/json": components["schemas"]["Visit"];
                 };
             };
-            /** @description You were the last traveler, so the visit was deleted. */
+            /** @description The visit was deleted (you were its last traveler), or you can no longer read it. */
             204: {
                 headers: {
                     [name: string]: unknown;

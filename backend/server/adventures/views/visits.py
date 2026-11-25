@@ -16,6 +16,11 @@ from core.serializers import validated
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
 
+def _readable(user):
+    """Visits to locations ``user`` owns, or that are in a collection they own or belong to."""
+    return Q(location__user=user) | Q(location__collections__shared_with=user) | Q(location__collections__user=user)
+
+
 class VisitDeleteQuerySerializer(serializers.Serializer):
     for_everyone = serializers.BooleanField(
         default=False,
@@ -36,7 +41,7 @@ class VisitDeleteQuerySerializer(serializers.Serializer):
             409: OpenApiResponse(description='`visit_has_travelers`: others travelled on it; use `for_everyone`.'),
         },
     ),
-    list=extend_schema(description='Visits to locations you own or that are in collections you belong to.'),
+    list=extend_schema(description='Visits to locations you own or that are in collections you own or belong to.'),
     create=extend_schema(
         description='Send `location`. A visit in the past makes the location visited, which also marks its '
         'region and city visited.'
@@ -57,33 +62,20 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
 
     def get_queryset(self):
         """
-        Returns visits based on location permissions.
-        Users can only see visits in locations they have access to for editing/updating/deleting.
-        This means they are either:
-        - The owner of the location
-        - The location is in a collection that is shared with the user
-        - The location is in a collection that the user owns
-        - The user is a traveler on the visit (so they can leave it after leaving the trip)
+        Visits to locations you can read: you own the location, or own or belong to a collection
+        holding it. Leaving also finds a visit you travelled on after losing the location, so you
+        can still take yourself off it; nothing else does, so its notes and other people's
+        activities stay out of reach.
         """
         if getattr(self, 'swagger_fake_view', False):
             return Visit.objects.none()
         user = self.request.user
         if not user or not user.is_authenticated:
             raise NotAuthenticated()
-        
-        # Build the filter for accessible locations
-        location_filter = Q(location__user=user)  # User owns the location
-        
-        # Location is in collections (many-to-many) that are shared with user
-        location_filter |= Q(location__collections__shared_with=user)
-        
-        # Location is in collections (many-to-many) that user owns
-        location_filter |= Q(location__collections__user=user)
-
-        # The user travelled on the visit
-        location_filter |= Q(travelers=user)
-        
-        return Visit.objects.filter(location_filter).distinct()
+        reach = _readable(user)
+        if self.action == 'leave':
+            reach |= Q(travelers=user)
+        return Visit.objects.filter(reach).distinct()
 
     def perform_create(self, serializer):
         """
@@ -146,13 +138,15 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         """
         visit = self.get_object()
         travelers.join(visit, request.user)
-        return Response(self.get_serializer(visit).data)
+        return Response(self.get_serializer(self.get_queryset().get(pk=visit.pk)).data)
 
     @extend_schema(
         request=None,
         responses={
             200: VisitSerializer,
-            204: OpenApiResponse(description='You were the last traveler, so the visit was deleted.'),
+            204: OpenApiResponse(
+                description='The visit was deleted (you were its last traveler), or you can no longer read it.'
+            ),
         },
     )
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
@@ -160,9 +154,14 @@ class VisitViewSet(ConditionalWritesMixin, ClientIdsMixin, viewsets.ModelViewSet
         """
         Leave a visit
 
-        Removes you as a traveler. When nobody is left the visit is deleted.
+        Removes you as a traveler. When nobody is left the visit is deleted. Answers with the
+        visit, or 204 when it was deleted or you can no longer read its location (a traveler
+        who has left the trip can still leave, but not read the visit).
         """
         visit = self.get_object()
         if travelers.leave(visit, request.user):
             return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(self.get_serializer(visit).data)
+        still = Visit.objects.filter(_readable(request.user), pk=visit.pk).distinct().first()
+        if still is None:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(self.get_serializer(still).data)

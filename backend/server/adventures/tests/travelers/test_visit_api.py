@@ -90,10 +90,10 @@ class VisitTravelersApiTests(AudienceTestBase):
         )
         self.assertEqual(response.status_code, 200, response.data)
         self.assertEqual(_usernames(response.data), ['editor', 'owner'])
-        # Only the former member can take themselves off.
+        # Only the former member can take themselves off. They can no longer read the visit, so no body.
         self.as_user(self.editor)
         response = self.client.post(f'/api/visits/{visit.id}/leave/')
-        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.status_code, 204, response.data)
         self.assertEqual(list(visit.travelers.all()), [self.owner])
 
     def test_travelers_hidden_from_guest_link_and_public(self):
