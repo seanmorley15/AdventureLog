@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.gis.db.models.functions import Distance
 from django.db import transaction
-from django.db.models import Count, Exists, F, Max, OuterRef, Prefetch, Q
+from django.db.models import Count, F, Max, Prefetch, Q
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.utils import timezone
@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from adventures.access.audience import can_edit, is_member, member_collections_q, member_role, readable_collections_q
 from adventures.access.location import can_read_location
-from adventures.models import Collection, ContentImage, Location, Visit
+from adventures.models import Collection, ContentImage, Location
 from adventures.permissions import IsOwnerOrSharedWithFullAccess, ensure_can_add_to_collections
 from adventures.serializers import LocationListSerializer, LocationSerializer, MapPinSerializer, add_quick_add_extras
 from adventures.serializers.location import (

@@ -75,6 +75,17 @@ class CountingTests(AudienceTestBase):
             self.assertTrue(VisitedCity.objects.filter(user=user, city=self.city).exists())
         self.assertFalse(VisitedRegion.objects.filter(user=self.viewer).exists())
 
+    def test_visit_later_today_marks_region_and_city(self):
+        Location.objects.filter(pk=self.hut.pk).update(region=self.region, city=self.city)
+        self.hut.refresh_from_db()
+        late = datetime.combine(timezone.now().date(), datetime.max.time(), tzinfo=dt_timezone.utc).replace(microsecond=0)
+        self.visit.start_date = late.replace(hour=23, minute=59, second=0)
+        self.visit.save()
+        travelers.mark_regions_for_travelers(self.hut)
+        for user in (self.owner, self.editor):
+            self.assertTrue(VisitedRegion.objects.filter(user=user, region=self.region).exists())
+            self.assertTrue(VisitedCity.objects.filter(user=user, city=self.city).exists())
+
     def test_sync_visited_regions_uses_traveled(self):
         Location.objects.filter(pk=self.hut.pk).update(region=self.region)
         sync_visited_regions(self.editor)

@@ -1,7 +1,5 @@
 """Marking the regions and cities of a user's visited places as visited."""
 
-from django.db.models import Q
-
 from adventures.models import Location
 from adventures.services.travelers import where_ive_been_q
 from worldtravel.models import City, Region

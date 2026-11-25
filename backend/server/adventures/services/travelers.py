@@ -71,7 +71,7 @@ def mark_regions_for_travelers(location):
     if not (location.region_id or location.city_id):
         return
     user_ids = set(
-        Visit.objects.filter(location_id=location.pk, start_date__lte=timezone.now())
+        Visit.objects.filter(location_id=location.pk, start_date__date__lte=timezone.now().date())
         .values_list('travelers', flat=True)
     )
     user_ids.discard(None)
