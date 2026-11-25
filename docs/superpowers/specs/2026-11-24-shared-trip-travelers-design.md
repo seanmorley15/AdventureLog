@@ -164,3 +164,5 @@ Known ones:
   6. Leave with "keep copies": the copies are owned by the second account and stats are unchanged (no double count). The owner's place no longer lists them.
 
 > **Changed 2026-11-25:** "the clicker is always included" no longer holds. Log visit and Log day pre-check you but you may uncheck yourself to record a visit for someone else. The only rule is at least one traveler: an explicit `traveler_uuids` list is exactly who is credited (an empty list is a 400), and an omitted list means you alone.
+
+> **Changed 2026-11-25 (API audit):** candidates and visible travelers are relative to the person asking, not location-wide. The location owner is always a candidate; anyone else can name, and sees, only the owner, themself, and the people they share a collection holding the location with (the location owner: everyone in every collection holding it). Log visit, Log day and add-travelers check against the trip they act in. Replacing a visit's travelers keeps the ones the editor cannot see. Before, someone on a "Family" trip could see, name and notify people on an unrelated "Work" trip to the same place.

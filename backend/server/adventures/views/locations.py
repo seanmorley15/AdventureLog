@@ -34,6 +34,7 @@ from adventures.serializers.location import (
     ShareImageQuerySerializer,
     SunTimesQuerySerializer,
     SunTimesSerializer,
+    TravelerCandidatesQuerySerializer,
 )
 from adventures.serializers.sharing import UnlinkPreviewSerializer
 from adventures.serializers.quick_add import LocationQuickAddResultSerializer, QuickAddSerializer
@@ -312,19 +313,29 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         )
         return Response({'matches': [match.to_dict() for match in matches]})
 
-    @extend_schema(responses=TravelerSerializer(many=True))
+    @extend_schema(parameters=[TravelerCandidatesQuerySerializer], responses=TravelerSerializer(many=True))
     @action(detail=True, methods=['get'], url_path='traveler-candidates')
     def traveler_candidates(self, request, pk=None):
         """
         List who can be a traveler
 
-        The location's owner and the owner and members of each collection holding it: the
-        people a visit here can name as travelers.
+        The people a visit here can name as travelers, as you see them: the location's owner, plus
+        the owner and members of the collections holding it that you own or belong to (the
+        location's owner gets those of every collection holding it). With `collection`, only that
+        trip's people and the location owner.
         """
         location = self.get_object()
         if not can_read_location(request, location):
             raise NotFound('Location not found.')
-        return Response(TravelerSerializer(candidates(location), many=True, context={'request': request}).data)
+        params = validated(TravelerCandidatesQuerySerializer, request.query_params)
+        if params.get('collection'):
+            collection = Collection.objects.filter(pk=params['collection'], locations=location).first()
+            if collection is None or not is_member(request.user, collection):
+                raise NotFound('Collection not found.')
+            people = candidates(location, collection=collection)
+        else:
+            people = candidates(location, request.user)
+        return Response(TravelerSerializer(people, many=True, context={'request': request}).data)
 
     @extend_schema(request=LocationDuplicateRequestSerializer, responses={201: LocationSerializer})
     @action(detail=True, methods=['post'])

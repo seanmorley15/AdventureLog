@@ -2527,8 +2527,10 @@ export interface paths {
         };
         /**
          * List who can be a traveler
-         * @description The location's owner and the owner and members of each collection holding it: the
-         *     people a visit here can name as travelers.
+         * @description The people a visit here can name as travelers, as you see them: the location's owner, plus
+         *     the owner and members of the collections holding it that you own or belong to (the
+         *     location's owner gets those of every collection holding it). With `collection`, only that
+         *     trip's people and the location owner.
          */
         get: operations["locations_traveler_candidates"];
         put?: never;
@@ -5838,7 +5840,7 @@ export interface components {
             readonly activities: components["schemas"]["Activity"][];
             /** Format: uuid */
             readonly location: string;
-            /** @description Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled. */
+            /** @description Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled. Except for the location owner, it lists only the owner, you, and people you share a collection holding the location with. */
             readonly travelers: components["schemas"]["Traveler"][];
             /** Format: date-time */
             readonly created_at: string;
@@ -6004,7 +6006,7 @@ export interface components {
              * @description Needed when the trip has no dates.
              */
             date?: string | null;
-            /** @description Who was there. Leave it out to log the visit for yourself only. You may leave yourself off to log it for someone else, but at least one person is needed. Each must be the owner or a member of the trip. */
+            /** @description Who was there. Leave it out to log the visit for yourself only. You may leave yourself off to log it for someone else, but at least one person is needed. Each must be the location owner, or the owner or a member of this trip (`traveler-candidates?collection=`). */
             traveler_uuids?: string[];
         };
         MadeLocationsPrivate: {
@@ -6533,7 +6535,7 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             location?: string;
-            /** @description Replace the travelers. Each must be the owner or a member of a collection holding the location. A new visit defaults to you. */
+            /** @description Replace the travelers you can see. Each must be the location owner or share a collection holding the location with you (see `traveler-candidates`). Travelers you cannot see are kept. A new visit defaults to you. */
             traveler_uuids?: string[];
         };
         PatchedWandererIntegrationRequest: {
@@ -8154,7 +8156,7 @@ export interface components {
             readonly activities: components["schemas"]["Activity"][];
             /** Format: uuid */
             location: string;
-            /** @description Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled. */
+            /** @description Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled. Except for the location owner, it lists only the owner, you, and people you share a collection holding the location with. */
             readonly travelers: components["schemas"]["Traveler"][];
             /** Format: date-time */
             readonly created_at: string;
@@ -8170,7 +8172,7 @@ export interface components {
             notes?: string | null;
             /** Format: uuid */
             location: string;
-            /** @description Replace the travelers. Each must be the owner or a member of a collection holding the location. A new visit defaults to you. */
+            /** @description Replace the travelers you can see. Each must be the location owner or share a collection holding the location with you (see `traveler-candidates`). Travelers you cannot see are kept. A new visit defaults to you. */
             traveler_uuids?: string[];
         };
         /** @description A model serializer that shows the owning ``user`` by uuid. */
@@ -17022,7 +17024,10 @@ export interface operations {
     };
     locations_traveler_candidates: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Only the people of this trip (its owner and members), plus the location owner: who Log visit can name. It must hold the location and you must be its owner or a member. */
+                collection?: string;
+            };
             header?: never;
             path: {
                 /** @description A UUID string identifying this location. */
@@ -17038,6 +17043,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Traveler"][];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
                 };
             };
             /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */

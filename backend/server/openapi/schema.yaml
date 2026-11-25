@@ -8556,10 +8556,20 @@ paths:
     get:
       operationId: locations_traveler_candidates
       description: |-
-        The location's owner and the owner and members of each collection holding it: the
-        people a visit here can name as travelers.
+        The people a visit here can name as travelers, as you see them: the location's owner, plus
+        the owner and members of the collections holding it that you own or belong to (the
+        location's owner gets those of every collection holding it). With `collection`, only that
+        trip's people and the location owner.
       summary: List who can be a traveler
       parameters:
+      - in: query
+        name: collection
+        schema:
+          type: string
+          format: uuid
+        description: 'Only the people of this trip (its owner and members), plus the
+          location owner: who Log visit can name. It must hold the location and you
+          must be its owner or a member.'
       - in: path
         name: id
         schema:
@@ -8583,6 +8593,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/Traveler'
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+          description: The request was not valid. `fields` lists the problems for
+            each input.
         '401':
           content:
             application/json:
@@ -17111,7 +17128,9 @@ components:
             $ref: '#/components/schemas/Traveler'
           readOnly: true
           description: Who travelled. Left out unless you own the location, belong
-            to a collection holding it, or travelled.
+            to a collection holding it, or travelled. Except for the location owner,
+            it lists only the owner, you, and people you share a collection holding
+            the location with.
         created_at:
           type: string
           format: date-time
@@ -17535,7 +17554,8 @@ components:
             format: uuid
           description: Who was there. Leave it out to log the visit for yourself only.
             You may leave yourself off to log it for someone else, but at least one
-            person is needed. Each must be the owner or a member of the trip.
+            person is needed. Each must be the location owner, or the owner or a member
+            of this trip (`traveler-candidates?collection=`).
     MadeLocationsPrivate:
       type: object
       properties:
@@ -18695,8 +18715,9 @@ components:
             type: string
             format: uuid
           writeOnly: true
-          description: Replace the travelers. Each must be the owner or a member of
-            a collection holding the location. A new visit defaults to you.
+          description: Replace the travelers you can see. Each must be the location
+            owner or share a collection holding the location with you (see `traveler-candidates`).
+            Travelers you cannot see are kept. A new visit defaults to you.
     PatchedWandererIntegrationRequest:
       type: object
       properties:
@@ -22315,7 +22336,9 @@ components:
             $ref: '#/components/schemas/Traveler'
           readOnly: true
           description: Who travelled. Left out unless you own the location, belong
-            to a collection holding it, or travelled.
+            to a collection holding it, or travelled. Except for the location owner,
+            it lists only the owner, you, and people you share a collection holding
+            the location with.
         created_at:
           type: string
           format: date-time
@@ -22360,8 +22383,9 @@ components:
             type: string
             format: uuid
           writeOnly: true
-          description: Replace the travelers. Each must be the owner or a member of
-            a collection holding the location. A new visit defaults to you.
+          description: Replace the travelers you can see. Each must be the location
+            owner or share a collection holding the location with you (see `traveler-candidates`).
+            Travelers you cannot see are kept. A new visit defaults to you.
       required:
       - location
     VisitedCity:

@@ -466,9 +466,16 @@ Visits say who was there. A visit has `travelers` (people: `uuid`, `username`, n
 `traveler_uuids` (a list of user uuids that replaces them).
 
 - **Who sees them.** `travelers` is left out unless you are the location's owner, a member of a collection holding
-  the location, or a traveler on that visit. Anonymous requests and guest links never get it.
-- **Who can be named.** The location's owner and the owner and members of each collection holding it. Anyone else is
-  a `400`. `GET /api/locations/{id}/traveler-candidates/` lists them.
+  the location, or a traveler on that visit. Anonymous requests and guest links never get it. The location's owner
+  sees every traveler; anyone else sees only the owner, themself, and people they share a collection holding the
+  location with. Travelers from a trip you are not on are left out, never named.
+- **Who can be named.** Relative to you: the location's owner, plus the owner and members of the collections holding
+  it that you own or belong to (the location's owner: of every collection holding it). Log visit, Log day and
+  `add-travelers` act in one trip, so there it is the location owner plus that trip's owner and members. Anyone else
+  is a `400` (`traveler_not_allowed`). `GET /api/locations/{id}/traveler-candidates/` lists them;
+  `?collection={id}` lists one trip's. Replacing the list (`traveler_uuids`) keeps the travelers you cannot see.
+  _(Changed 2026-11-25: candidates were everyone in every collection holding the location, so people on one trip
+  could see and name people on another trip to the same place.)_
 - **Never empty.** A create without `traveler_uuids` names the requester. An edit that would leave nobody is a `400`.
 - **Visited is per person.** A location is visited for you when a visit that has started lists you as a traveler.
   Lists, the map, stats, the dashboard, the calendar and regions count locations you travelled to as well as your own,
@@ -476,7 +483,7 @@ Visits say who was there. A visit has `travelers` (people: `uuid`, `username`, n
 
 | Endpoint                                                            | What it does                                                                                                                                                                                                                               |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GET /api/locations/{id}/traveler-candidates/`                      | The people a visit here can name.                                                                                                                                                                                                          |
+| `GET /api/locations/{id}/traveler-candidates/`                      | The people you can name on a visit here (`?collection=` for one trip's).                                                                                                                                                                                                        |
 | `POST /api/visits/{id}/join/`                                       | Adds you (any member of a collection holding the location, viewers too). 200 with the visit.                                                                                                                                               |
 | `POST /api/visits/{id}/leave/`                                      | Removes you. 200 with the visit; 204 when nobody was left, so the visit was deleted. Not being a traveler is a 200 and changes nothing.                                                                                                    |
 | `DELETE /api/visits/{id}/`                                          | Removes you from the visit (the visit goes with you when you were the last traveler). `?for_everyone=1`, location owner only, deletes it for everyone; from anyone else it is 403, not a plain remove-me. A viewer's plain DELETE is 403 too (viewers use `leave`). 204 on success.                                                                     |

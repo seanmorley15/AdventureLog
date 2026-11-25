@@ -3,7 +3,7 @@
 import logging
 from django.contrib.auth import get_user_model
 from adventures.serializers.common import _build_profile_pic_url
-from adventures.services.travelers import can_see_travelers
+from adventures.services.travelers import visible_travelers
 from adventures.models import Visit, Trail, Activity
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
@@ -419,11 +419,14 @@ class VisitSerializer(serializers.ModelSerializer):
     activities = ActivitySerializer(many=True, read_only=True, required=False)
     travelers = TravelerSerializer(
         many=True, read_only=True,
-        help_text='Who travelled. Left out unless you own the location, belong to a collection holding it, or travelled.',
+        help_text='Who travelled. Left out unless you own the location, belong to a collection holding it, or '
+        'travelled. Except for the location owner, it lists only the owner, you, and people you share a '
+        'collection holding the location with.',
     )
     traveler_uuids = serializers.ListField(
         child=serializers.UUIDField(), write_only=True, required=False,
-        help_text='Replace the travelers. Each must be the owner or a member of a collection holding the location. '
+        help_text='Replace the travelers you can see. Each must be the location owner or share a collection '
+        'holding the location with you (see `traveler-candidates`). Travelers you cannot see are kept. '
         'A new visit defaults to you.',
     )
 
@@ -444,8 +447,12 @@ class VisitSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if not can_see_travelers(self.context.get('request'), instance):
+        people = visible_travelers(self.context.get('request'), instance)
+        if people is None:
             data.pop('travelers', None)
+        elif 'travelers' in data:
+            shown = {str(person.uuid) for person in people}
+            data['travelers'] = [person for person in data['travelers'] if str(person['uuid']) in shown]
         return data
 
     def validate(self, attrs):

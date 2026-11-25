@@ -513,6 +513,14 @@ class ShareImageQuerySerializer(serializers.Serializer):
     download = serializers.BooleanField(default=False, help_text='Send as an attachment instead of inline.')
 
 
+class TravelerCandidatesQuerySerializer(serializers.Serializer):
+    collection = serializers.UUIDField(
+        required=False,
+        help_text='Only the people of this trip (its owner and members), plus the location owner: who Log visit '
+        'can name. It must hold the location and you must be its owner or a member.',
+    )
+
+
 class SunTimesQuerySerializer(serializers.Serializer):
     date = serializers.DateField(help_text='YYYY-MM-DD.')
 

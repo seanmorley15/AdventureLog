@@ -102,38 +102,78 @@ def mark_regions_for_travelers(location):
             mark_cities_visited(user_id, [location.city_id])
 
 
-def candidates(location):
-    """People who can be named as travelers: the location's owner, plus the owner and members of each collection holding it."""
+def _account(requester):
+    """The account behind a request or a user, or None (signed out, or a guest link)."""
+    user = getattr(requester, 'user', requester)
+    return user if user is not None and getattr(user, 'is_authenticated', False) else None
+
+
+def candidates(location, requester=None, collection=None):
+    """
+    People who can be named as travelers on a visit to ``location``, as ``requester`` sees it.
+
+    The location's owner always. With ``collection`` (logging from a trip): that trip's owner and
+    members. Otherwise the owner and members of the collections holding the location that the
+    requester owns or belongs to; the location's owner (and no ``requester``) gets those of every
+    collection holding it. So nobody is offered, or can name, someone they share no trip with.
+    """
     from django.contrib.auth import get_user_model
     from django.db.models import Q
 
-    return get_user_model().objects.filter(
-        Q(pk=location.user_id)
-        | Q(shared_with__locations=location)
-        | Q(collection__locations=location)
-    ).distinct().order_by('username')
+    from adventures.models import Collection
+
+    people = Q(pk=location.user_id)
+    if collection is not None:
+        people |= Q(pk=collection.user_id) | Q(shared_with=collection)
+    else:
+        holding = Collection.objects.filter(locations=location)
+        if requester is not None:
+            user = _account(requester)
+            if user is None:
+                holding = holding.none()
+            elif user.pk != location.user_id:
+                holding = holding.filter(Q(user=user) | Q(shared_with=user))
+        holding = holding.values('pk')
+        people |= Q(shared_with__in=holding) | Q(collection__in=holding)
+    return get_user_model().objects.filter(people).distinct().order_by('username')
+
+
+def visible_travelers(request, visit):
+    """
+    The travelers on ``visit`` this request may see, or None when it may see none at all.
+
+    None for anyone signed out and for a guest link (judged by the account, never the link), and
+    for someone who neither owns the location, belongs to a collection holding it, nor travelled
+    on the visit. The location's owner sees everyone. Anyone else sees the owner, themself, and
+    the people they share a collection holding the location with; the rest are left out, so a
+    name never reaches someone who shares no trip with that person.
+
+    Reads the loaded ``travelers`` and ``location.collections`` (with ``shared_with``), so a list
+    of rows does not query per row.
+    """
+    user = _account(request)
+    if user is None:
+        return None
+    location = visit.location
+    people = list(visit.travelers.all())
+    if user.pk == location.user_id:
+        return people
+    mine = [
+        collection for collection in location.collections.all()
+        if collection.user_id == user.pk or any(m.pk == user.pk for m in collection.shared_with.all())
+    ]
+    if not mine and not any(t.pk == user.pk for t in people):
+        return None
+    seen = {location.user_id, user.pk}
+    for collection in mine:
+        seen.add(collection.user_id)
+        seen.update(m.pk for m in collection.shared_with.all())
+    return [t for t in people if t.pk in seen]
 
 
 def can_see_travelers(request, visit):
-    """
-    Whether this request may see who travelled on the visit: the location's owner, a member
-    of a collection holding the location, or a traveler. Never anonymous, and never a guest
-    link (a guest link is not an account, so it is not treated as membership here).
-    """
-    user = getattr(request, 'user', None)
-    if user is None or not getattr(user, 'is_authenticated', False):
-        return False
-    location = visit.location
-    if user.pk == location.user_id:
-        return True
-    if any(t.pk == user.pk for t in visit.travelers.all()):
-        return True
-    # Judge the account itself, not the request, so a guest token never counts as membership.
-    # Read from the loaded collections and their members, so a list of rows does not query per row.
-    return any(
-        collection.user_id == user.pk or any(m.pk == user.pk for m in collection.shared_with.all())
-        for collection in location.collections.all()
-    )
+    """Whether this request may see any of the visit's travelers (see ``visible_travelers``)."""
+    return visible_travelers(request, visit) is not None
 
 
 def set_travelers(visit, users, actor, fresh=False, collection=None):
@@ -144,13 +184,15 @@ def set_travelers(visit, users, actor, fresh=False, collection=None):
     says the visit was just created, so the owner default it starts with does not count as
     someone already there.
 
-    Everyone added must be a candidate (``traveler_not_allowed``). Travelers who are no
-    longer candidates (they left the trip) stay on the visit: only they can remove themselves.
+    Everyone added must be a candidate for ``actor`` (``candidates``; within ``collection`` when
+    logging from a trip), or ``traveler_not_allowed``. Travelers who are not candidates for them
+    (they left the trip, or are on another trip ``actor`` is not on) stay on the visit untouched:
+    only they can remove themselves.
     A visit always keeps at least one traveler: a result with nobody is ``traveler_required``.
     """
     wanted = {user.pk: user for user in users}
     existing = {user.pk: user for user in visit.travelers.all()}
-    allowed = set(candidates(visit.location).values_list('pk', flat=True))
+    allowed = set(candidates(visit.location, actor, collection).values_list('pk', flat=True))
     if any(pk not in allowed and pk not in existing for pk in wanted):
         raise TravelerError('Travelers must be the owner or members of the location.', code='traveler_not_allowed')
     keep = {pk: user for pk, user in existing.items() if pk not in allowed}
@@ -165,11 +207,12 @@ def set_travelers(visit, users, actor, fresh=False, collection=None):
 
 def add_travelers(visit, users, actor=None, collection=None):
     """
-    Add ``users`` to the visit's travelers, keeping the ones already there. Each must be a candidate.
+    Add ``users`` to the visit's travelers, keeping the ones already there. Each must be a candidate
+    for ``actor`` (within ``collection`` when given).
     Those who were not there and are not ``actor`` are told; without an ``actor`` nobody is.
     """
     wanted = {user.pk: user for user in users}
-    allowed = set(candidates(visit.location).values_list('pk', flat=True))
+    allowed = set(candidates(visit.location, actor, collection).values_list('pk', flat=True))
     if any(pk not in allowed for pk in wanted):
         raise TravelerError('Travelers must be the owner or members of the location.', code='traveler_not_allowed')
     if wanted:
@@ -182,10 +225,13 @@ def add_travelers(visit, users, actor=None, collection=None):
 
 
 def join(visit, user):
-    """Add the user as a traveler. Only candidates may join (403 ``permission_denied``)."""
+    """
+    Add the user as a traveler. Only people who reach the location (its owner, or the owner or a
+    member of a collection holding it) may join (403 ``permission_denied``).
+    """
     from django.db import transaction
 
-    if not candidates(visit.location).filter(pk=user.pk).exists():
+    if not candidates(visit.location, user).filter(pk=user.pk).exists():
         raise TravelerError('You cannot join this visit.', code='permission_denied', status=403)
     with transaction.atomic():
         visit = _locked(visit)

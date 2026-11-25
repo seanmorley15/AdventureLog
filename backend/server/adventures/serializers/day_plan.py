@@ -102,7 +102,8 @@ class LogVisitSerializer(serializers.Serializer):
     traveler_uuids = serializers.ListField(
         child=serializers.UUIDField(), required=False,
         help_text='Who was there. Leave it out to log the visit for yourself only. You may leave yourself off to log '
-        'it for someone else, but at least one person is needed. Each must be the owner or a member of the trip.',
+        'it for someone else, but at least one person is needed. Each must be the location owner, or the owner or a '
+        'member of this trip (`traveler-candidates?collection=`).',
     )
 
     def validate_traveler_uuids(self, value):
