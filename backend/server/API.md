@@ -48,9 +48,9 @@ Paths and their non-standard names come from `main/api_urls.py`, `adventures/url
 | Method | Use                                                                                                                                                                  |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GET    | Read.                                                                                                                                                                |
-| POST   | Create (`201` with the resource), or a named state change at `POST …/{verb}/`: `duplicate`, `leave`, `invitation/accept`, `log-visit`, `reorder`, `sync`, `connect`. |
+| POST   | Create (`201` with the resource), or a named state change at `POST …/{verb}/`: `duplicate`, `join`, `leave`, `add-travelers`, `invitation/accept`, `log-visit`, `mark-read`, `reorder`, `sync`, `connect`. |
 | PATCH  | Partial update. PUT only on model viewsets.                                                                                                                          |
-| DELETE | Remove (`204`, no body). Never `POST …/delete/` or `…/revoke/`. Day-plan deletes answer `200` with the new plan, so the planner can redraw.                          |
+| DELETE | Remove (`204`, no body). Never `POST …/delete/` or `…/revoke/`. Day-plan deletes answer `200` with the new plan, so the planner can redraw. A few deletes take `?dry_run=1` and answer `200` with a preview (see [Previews](#previews)). |
 
 | Status          | When                                                                                                                          |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -208,6 +208,115 @@ A new nested visit names the person saving as its only traveler, as `POST /api/v
 `traveler_uuids`; travelers are changed through `/api/visits/`). On `PATCH`, `visits` is the full set: a visit left
 out is left by you (it is deleted when you were its only traveler, and stays for the others otherwise), and one you
 are not on stays as it is. The location owner clears a visit nobody travelled on.
+
+## Travelers
+
+Visits say who was there. A visit has `travelers` (people: `uuid`, `username`, names, avatar) and a write-only
+`traveler_uuids` (a list of user uuids that replaces them).
+
+- **Who sees them.** `travelers` is left out unless you are the location's owner, a member of a collection holding
+  the location, or a traveler on that visit. Anonymous requests and guest links never get it. The location's owner
+  sees every traveler; anyone else sees only the owner, themself, and people they share a collection holding the
+  location with. Travelers from a trip you are not on are left out, never named.
+- **Who can be named.** Relative to you: the location's owner, plus the owner and members of the collections holding
+  it that you own or belong to (the location's owner: of every collection holding it). Log visit, Log day and
+  `add-travelers` act in one trip, so there it is the location owner plus that trip's owner and members. Anyone else
+  is a `400` (`traveler_not_allowed`). `GET /api/locations/{id}/traveler-candidates/` lists them;
+  `?collection={id}` lists one trip's. Replacing the list (`traveler_uuids`) keeps the travelers you cannot see.
+  _(Changed 2026-11-25: candidates were everyone in every collection holding the location, so people on one trip
+  could see and name people on another trip to the same place.)_
+- **Never empty.** A create without `traveler_uuids` names the requester. An edit that would leave nobody is a `400`.
+- **Reading visits.** `GET /api/visits/` (and a single visit) covers locations you own or reach through a collection
+  you own or belong to. Being a traveler alone is not enough: someone left on a visit after losing the location can
+  only `leave` it.
+- **Visited is per person.** A location is visited for you when a visit that has started lists you as a traveler.
+  Lists, the map, stats, the dashboard, the calendar and regions count locations you travelled to as well as your own,
+  but only while you are the owner or a member of a collection holding them.
+
+| Endpoint                                                            | What it does                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/locations/{id}/traveler-candidates/`                      | The people you can name on a visit here (`?collection=` for one trip's).                                                                                                                                                                                                        |
+| `POST /api/visits/{id}/join/`                                       | Adds you (any member of a collection holding the location, viewers too). 200 with the visit.                                                                                                                                               |
+| `POST /api/visits/{id}/leave/`                                      | Removes you. 200 with the visit; 204 when nobody was left, so the visit was deleted, or when you can no longer read its location (a traveler who lost access can leave, but not read). Not being a traveler is a 200 and changes nothing.                                                                                                    |
+| `DELETE /api/visits/{id}/`                                          | A traveler: removes you (the visit goes with you when you were the last traveler). The location owner: `?for_everyone=1` deletes it for everyone (from anyone else that is 403, not a plain remove-me); a plain DELETE deletes a visit nobody travelled on, and is 409 `visit_has_travelers` on one others travelled on. Anyone else not on the visit: 403 `not_a_traveler`. A viewer's DELETE is 403 too (viewers use `leave`). 204 on success. |
+| `POST …/itinerary-items/{id}/log-visit/`, `…/days/{day}/log-visit/` | `traveler_uuids` names who was there: leave it out to log for yourself only, or list people (you may leave yourself off to log for someone else). An empty list or someone who is not a collaborator is a `400`. A stop already logged adds them to its visit (200).                                                        |
+| `POST /api/collections/{id}/add-travelers/` `{user_uuids}`          | Owner and editors. Adds people to the visits the trip logged and, when it has both a start and an end date, to visits to its locations on those days. Returns `{visits, locations}`; `?dry_run=1` only counts. Records a `travelers_added` activity.              |
+| `POST /api/collections/{id}/leave/` `{keep_copies}`                 | Members. Takes you off every visit at locations in the trip that you do not own and reach through no other collection you own or belong to (the rule unlinking uses). `keep_copies` (default `true`) first copies each of those into your account, with your visits and the photos, files and activities you added. |
+| `DELETE /api/collections/{id}/members/{uuid}/`                      | Owner. The same places as leaving; always copies, as `keep_copies` does. Making your profile private leaves every shared trip at once, each place judged against all of them.                                                                                                                                                                                               |
+| `POST /api/locations/{id}/duplicate/` `{take_my_visits}`            | With `take_my_visits`, the copy keeps the original name, your visits move onto it and you are taken off the original's.                                                                                                                    |
+
+`DELETE …/itinerary-items/{id}/?confirm_delete_visits=1` follows the same rule but never refuses: a visit you are not on
+is left as it is. So does saving a location with its `visits` list (see
+[Writing from an offline client](#writing-from-an-offline-client)).
+
+Account backups carry only the visits to locations you own, and travelers are not exported. On restore every visit
+gets the location's owner (you) as its only traveler.
+
+Both leave endpoints and the member `DELETE` take `?dry_run=1`, which changes nothing and returns
+`{locations, others_uploads}`: how many locations would be taken, and how many photos, files and activities other
+people added to visits you are the only traveler on.
+
+A visit whose only traveler leaves is deleted, together with everything other people added to it (their photos,
+files and activities). That is true whether or not copies are kept; `others_uploads` is how to warn about it first.
+
+A place can also stop being reachable without anyone leaving: taking it out of a collection (`DELETE
+/api/locations/{id}/collections/{cid}/` or `PATCH` with `collections`) or deleting the collection. Anyone who
+travelled there, does not own it and is not the owner or a member of another collection holding it is treated like
+a removed member: they come off its visits and get their own copy with their visits. Travelers who still reach
+the place through another collection are untouched, and so is the place owner. The response shape does not change.
+
+A collection owner who travelled to a member-owned place counts as losing access when it is unlinked or the
+collection is deleted, and gets their own copy; account deletion releases co-members the same way. The place owner
+is never released. When a released person was the only traveler on a visit, that visit goes with the original place,
+and the photos, files and activities other people added to it go with it.
+
+### Previews
+
+Each of these changes nothing and returns what the matching action would do, so a client can say so first.
+`people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
+
+| Endpoint                                                  | Returns                                                                                                                                                      |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DELETE /api/locations/{id}/collections/{cid}/?dry_run=1` | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. Same permission as the real call: the collection owner or the place owner. |
+| `DELETE /api/collections/{id}/?dry_run=1`                 | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                                   |
+| `GET /api/account/deletion-preview/`                      | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.                          |
+| `GET /api/account/privacy-preview/`                       | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`: what `profile_visibility: private` would do.                |
+
+`PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
+
+The two account previews walk every shared trip, so when rate limits are on they have their own limit
+(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute per user); the rest of `/api/account/` has none.
+
+Lists of people are bounded: `traveler_uuids` and `user_uuids` take at most 100, `POST /api/notifications/mark-read/`
+at most 1000 `ids`. More is a `400`.
+
+The collection activity feed has a verb for it, `travelers_added`. Its `data` holds counts only (`people`, `visits`,
+`locations`), never names, because editor guest links read the feed.
+
+### Telling people they were added
+
+Someone put on a visit by somebody else is told, so they can take themselves off it (`POST /api/visits/{id}/leave/`).
+They get a notification in the app and, when the server has SMTP set up and they have an address, one e-mail.
+
+- **Who is told.** Each person newly added by someone else: through `traveler_uuids` on `POST`/`PATCH /api/visits/`,
+  Log visit (a new visit or a stop already logged), Log day and `add-travelers`. Never the person who did it, and
+  never for joining yourself, the owner default on a visit the owner created, the copies made when a member leaves
+  or a place leaves its collections, or backups and imports. People already on the visit are not told again.
+- **One per person per action.** Log day and `add-travelers` send each person one notification with a count
+  ("added you to 5 visits on Euro Trip"); adding someone to a single visit sends the single form. Notifications
+  are written in the same transaction as the change; a failure to notify never fails the change.
+- **What they hold.** The display name of who did it (an editor guest link that logs a visit is named by its
+  label), the place, the trip and the dates, nothing about the other travelers. The place and trip names are checked again when you read them: after you lose access they are empty.
+- **E-mail.** Queued as `adventures.send_traveler_added_email` only when `smtp_configured()`, one per notification,
+  with a link to the place (or the trip for the summary form). It retries like the mention e-mail. The same person
+  adding the same traveler to the same visit again within 10 minutes (after taking them off, say) sends no second
+  e-mail; the in-app notification, deleted when they were taken off, comes back, so there is only ever one.
+
+| Endpoint                                  | What it does                                                                                                                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/notifications/`                 | Your notifications, newest first, paginated like other lists, plus `unread_count` (all of yours). `?unread=1` leaves out the read ones. Each has `visit_id` (single form), `location_id`, `collection_id`, `count` (more than 1 is the summary form) and the dates. |
+| `POST /api/notifications/mark-read/`      | `{ids: []}` marks those, an empty body marks all of yours. Answers `{unread_count}`. Ids that are not yours are ignored.                                                        |
+| `GET /api/account/`                       | Also carries `unread_notification_count`, next to `unread_comment_count`, so the header badge needs no extra request.                                                           |
 
 ## Background jobs
 
@@ -466,113 +575,9 @@ Each integration is one resource per user at its own path:
 The Stripe webhook (`/api/billing/webhooks/stripe/`) and the Strava callback (`/api/integrations/strava/callback/`)
 kept their paths, because they are configured outside AdventureLog.
 
-### Travelers
+### Visits and travelers
 
-Visits say who was there. A visit has `travelers` (people: `uuid`, `username`, names, avatar) and a write-only
-`traveler_uuids` (a list of user uuids that replaces them).
-
-- **Who sees them.** `travelers` is left out unless you are the location's owner, a member of a collection holding
-  the location, or a traveler on that visit. Anonymous requests and guest links never get it. The location's owner
-  sees every traveler; anyone else sees only the owner, themself, and people they share a collection holding the
-  location with. Travelers from a trip you are not on are left out, never named.
-- **Who can be named.** Relative to you: the location's owner, plus the owner and members of the collections holding
-  it that you own or belong to (the location's owner: of every collection holding it). Log visit, Log day and
-  `add-travelers` act in one trip, so there it is the location owner plus that trip's owner and members. Anyone else
-  is a `400` (`traveler_not_allowed`). `GET /api/locations/{id}/traveler-candidates/` lists them;
-  `?collection={id}` lists one trip's. Replacing the list (`traveler_uuids`) keeps the travelers you cannot see.
-  _(Changed 2026-11-25: candidates were everyone in every collection holding the location, so people on one trip
-  could see and name people on another trip to the same place.)_
-- **Never empty.** A create without `traveler_uuids` names the requester. An edit that would leave nobody is a `400`.
-- **Reading visits.** `GET /api/visits/` (and a single visit) covers locations you own or reach through a collection
-  you own or belong to. Being a traveler alone is not enough: someone left on a visit after losing the location can
-  only `leave` it.
-- **Visited is per person.** A location is visited for you when a visit that has started lists you as a traveler.
-  Lists, the map, stats, the dashboard, the calendar and regions count locations you travelled to as well as your own,
-  but only while you are the owner or a member of a collection holding them.
-
-| Endpoint                                                            | What it does                                                                                                                                                                                                                               |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `GET /api/locations/{id}/traveler-candidates/`                      | The people you can name on a visit here (`?collection=` for one trip's).                                                                                                                                                                                                        |
-| `POST /api/visits/{id}/join/`                                       | Adds you (any member of a collection holding the location, viewers too). 200 with the visit.                                                                                                                                               |
-| `POST /api/visits/{id}/leave/`                                      | Removes you. 200 with the visit; 204 when nobody was left, so the visit was deleted, or when you can no longer read its location (a traveler who lost access can leave, but not read). Not being a traveler is a 200 and changes nothing.                                                                                                    |
-| `DELETE /api/visits/{id}/`                                          | A traveler: removes you (the visit goes with you when you were the last traveler). The location owner: `?for_everyone=1` deletes it for everyone (from anyone else that is 403, not a plain remove-me); a plain DELETE deletes a visit nobody travelled on, and is 409 `visit_has_travelers` on one others travelled on. Anyone else not on the visit: 403 `not_a_traveler`. A viewer's DELETE is 403 too (viewers use `leave`). 204 on success. |
-| `POST …/itinerary-items/{id}/log-visit/`, `…/days/{day}/log-visit/` | `traveler_uuids` names who was there: leave it out to log for yourself only, or list people (you may leave yourself off to log for someone else). An empty list or someone who is not a collaborator is a `400`. A stop already logged adds them to its visit (200).                                                        |
-| `POST /api/collections/{id}/add-travelers/` `{user_uuids}`          | Owner and editors. Adds people to the visits the trip logged and, when it has both a start and an end date, to visits to its locations on those days. Returns `{visits, locations}`; `?dry_run=1` only counts. Records a `travelers_added` activity.              |
-| `POST /api/collections/{id}/leave/` `{keep_copies}`                 | Members. Takes you off every visit at locations in the trip that you do not own and reach through no other collection you own or belong to (the rule unlinking uses). `keep_copies` (default `true`) first copies each of those into your account, with your visits and the photos, files and activities you added. |
-| `DELETE /api/collections/{id}/members/{uuid}/`                      | Owner. The same places as leaving; always copies, as `keep_copies` does. Making your profile private leaves every shared trip at once, each place judged against all of them.                                                                                                                                                                                               |
-| `POST /api/locations/{id}/duplicate/` `{take_my_visits}`            | With `take_my_visits`, the copy keeps the original name, your visits move onto it and you are taken off the original's.                                                                                                                    |
-
-`DELETE …/itinerary-items/{id}/?confirm_delete_visits=1` follows the same rule but never refuses: a visit you are not on
-is left as it is. So does saving a location with its `visits` list (below).
-
-Account backups carry only the visits to locations you own, and travelers are not exported. On restore every visit
-gets the location's owner (you) as its only traveler.
-
-Both leave endpoints and the member `DELETE` take `?dry_run=1`, which changes nothing and returns
-`{locations, others_uploads}`: how many locations would be taken, and how many photos, files and activities other
-people added to visits you are the only traveler on.
-
-A visit whose only traveler leaves is deleted, together with everything other people added to it (their photos,
-files and activities). That is true whether or not copies are kept; `others_uploads` is how to warn about it first.
-
-A place can also stop being reachable without anyone leaving: taking it out of a collection (`DELETE
-/api/locations/{id}/collections/{cid}/` or `PATCH` with `collections`) or deleting the collection. Anyone who
-travelled there, does not own it and is not the owner or a member of another collection holding it is treated like
-a removed member: they come off its visits and get their own copy with their visits. Travelers who still reach
-the place through another collection are untouched, and so is the place owner. The response shape does not change.
-
-A collection owner who travelled to a member-owned place counts as losing access when it is unlinked or the
-collection is deleted, and gets their own copy; account deletion releases co-members the same way. The place owner
-is never released. When a released person was the only traveler on a visit, that visit goes with the original place,
-and the photos, files and activities other people added to it go with it.
-
-#### Previews
-
-Each of these changes nothing and returns what the matching action would do, so a client can say so first.
-`people_released` lists people the caller can already see as travelers (`uuid`, `username`, names, `profile_pic`).
-
-| Endpoint                                                  | Returns                                                                                                                                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `DELETE /api/locations/{id}/collections/{cid}/?dry_run=1` | `{people_released, includes_you, visits_deleted, others_uploads, removed_placements}`. Same permission as the real call: the collection owner or the place owner. |
-| `DELETE /api/collections/{id}/?dry_run=1`                 | `{people_released, includes_you, visits_deleted, others_uploads, places}`, over every place in the collection. Owner only.                                   |
-| `GET /api/account/deletion-preview/`                      | `{people_released, places_copied, locations, collections, shared_collections_left, visits_detached, visits_deleted, others_uploads}`.                          |
-| `GET /api/account/privacy-preview/`                       | `{left_shared_collections, revoked_collection_invites, copies, visits_deleted, others_uploads}`: what `profile_visibility: private` would do.                |
-
-`PATCH /api/account/` that makes the profile private also answers with `kept_copies`, next to `left_shared_collections`.
-
-The two account previews walk every shared trip, so when rate limits are on they have their own limit
-(`RATE_LIMIT_ACCOUNT_PREVIEW`, 30 a minute per user); the rest of `/api/account/` has none.
-
-Lists of people are bounded: `traveler_uuids` and `user_uuids` take at most 100, `POST /api/notifications/mark-read/`
-at most 1000 `ids`. More is a `400`.
-
-The collection activity feed has a new verb, `travelers_added`. Its `data` holds counts only (`people`, `visits`,
-`locations`), never names, because editor guest links read the feed.
-
-#### Telling people they were added
-
-Someone put on a visit by somebody else is told, so they can take themselves off it (`POST /api/visits/{id}/leave/`).
-They get a notification in the app and, when the server has SMTP set up and they have an address, one e-mail.
-
-- **Who is told.** Each person newly added by someone else: through `traveler_uuids` on `POST`/`PATCH /api/visits/`,
-  Log visit (a new visit or a stop already logged), Log day and `add-travelers`. Never the person who did it, and
-  never for joining yourself, the owner default on a visit the owner created, the copies made when a member leaves
-  or a place leaves its collections, or backups and imports. People already on the visit are not told again.
-- **One per person per action.** Log day and `add-travelers` send each person one notification with a count
-  ("added you to 5 visits on Euro Trip"); adding someone to a single visit sends the single form. Notifications
-  are written in the same transaction as the change; a failure to notify never fails the change.
-- **What they hold.** The display name of who did it (an editor guest link that logs a visit is named by its label), the place, the trip and the dates, nothing about the other
-  travelers. The place and trip names are checked again when you read them: after you lose access they are empty.
-- **E-mail.** Queued as `adventures.send_traveler_added_email` only when `smtp_configured()`, one per notification,
-  with a link to the place (or the trip for the summary form). It retries like the mention e-mail. The same person
-  adding the same traveler to the same visit again within 10 minutes (after taking them off, say) sends no second
-  e-mail; the in-app notification, deleted when they were taken off, comes back, so there is only ever one.
-
-| Endpoint                                  | What it does                                                                                                                                                                    |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /api/notifications/`                 | Your notifications, newest first, paginated like other lists, plus `unread_count` (all of yours). `?unread=1` leaves out the read ones. Each has `visit_id` (single form), `location_id`, `collection_id`, `count` (more than 1 is the summary form) and the dates. |
-| `POST /api/notifications/mark-read/`      | `{ids: []}` marks those, an empty body marks all of yours. Answers `{unread_count}`. Ids that are not yours are ignored.                                                        |
-| `GET /api/account/`                       | Also carries `unread_notification_count`, next to `unread_comment_count`, so the header badge needs no extra request.                                                           |
+Visits say who was there, and people are told when someone adds them. See [Travelers](#travelers).
 
 ### Fixed along the way
 
