@@ -344,7 +344,9 @@
 
 		<!-- New comments on the collections you belong to -->
 		{#if data.user}
-			<CommentInbox initialUnread={data?.unreadCommentCount ?? 0} />
+			<CommentInbox
+				initialUnread={(data?.unreadCommentCount ?? 0) + (data?.unreadNotificationCount ?? 0)}
+			/>
 		{/if}
 
 		<!-- User Avatar -->

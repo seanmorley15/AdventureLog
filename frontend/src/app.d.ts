@@ -41,6 +41,7 @@ declare global {
 			/** Navbar badges, read from /api/account/ with the rest of the session. */
 			pendingInviteCount?: number;
 			unreadCommentCount?: number;
+			unreadNotificationCount?: number;
 			locale: string;
 		}
 		// interface PageData {}

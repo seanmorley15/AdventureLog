@@ -25,6 +25,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 	event.locals.cloudMode = false;
 	event.locals.pendingInviteCount = 0;
 	event.locals.unreadCommentCount = 0;
+	event.locals.unreadNotificationCount = 0;
 
 	try {
 		if (event.url.pathname.startsWith('/immich/')) {
@@ -76,6 +77,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		event.locals.cloudMode = payload.cloud_mode ?? false;
 		event.locals.pendingInviteCount = payload.pending_invite_count ?? 0;
 		event.locals.unreadCommentCount = payload.unread_comment_count ?? 0;
+		event.locals.unreadNotificationCount = payload.unread_notification_count ?? 0;
 		setSessionFromResponse(event, userFetch);
 	} catch (error) {
 		console.error('Error in authHook:', error);

@@ -394,3 +394,26 @@ def release_lost_access(location, ignoring=()):
         for user in users:
             take_my_visits(location, user)
     return len(users)
+
+
+def release_collection_travelers(collection):
+    """
+    Before ``collection`` is deleted, give its places' lost-access travelers their copies
+    (``release_lost_access`` with the collection ignored). Only places that someone other
+    than the owner travelled to are looked at. Returns how many people were released.
+    """
+    from django.db import transaction
+    from django.db.models import Exists, OuterRef
+
+    from adventures.models import Visit
+
+    through = Visit.travelers.through
+    user_field = Visit.travelers.field.m2m_reverse_name()
+    others = through.objects.filter(visit__location=OuterRef('pk')).exclude(
+        **{user_field: OuterRef('user_id')}
+    )
+    released = 0
+    with transaction.atomic():
+        for location in collection.locations.filter(Exists(others)).distinct():
+            released += release_lost_access(location, ignoring=[collection])
+    return released

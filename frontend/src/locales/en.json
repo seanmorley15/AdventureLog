@@ -1461,8 +1461,8 @@
 		"story_read_only": "Comments are open to signed-in readers.",
 		"story_title": "Comments",
 		"story_subtitle": "What readers are saying about this trip.",
-		"inbox_title": "New comments",
-		"inbox_empty": "Nothing new. Comments on your trips show up here.",
+		"inbox_title": "Inbox",
+		"inbox_empty": "Nothing new. Comments on your trips and visits you are added to show up here.",
 		"mark_read": "Mark all as read",
 		"unread": "Unread",
 		"on_story": "on the story",
@@ -1954,6 +1954,19 @@
 		"export_success": "Calendar exported successfully.",
 		"export_error": "Could not export calendar.",
 		"more_events": "+{count} more"
+	},
+	"notifications": {
+		"section_title": "Visits",
+		"comments_title": "Comments",
+		"added_you_to_visit": "{name} added you to a visit",
+		"added_you_to_visit_at": "{name} added you to a visit at {place}",
+		"added_you_to_visits": "{name} added you to {count} visits",
+		"added_you_to_visits_on": "{name} added you to {count} visits on {trip}",
+		"someone": "Someone",
+		"remove_me": "Remove me",
+		"removed": "You are no longer on this visit.",
+		"remove_failed": "Could not remove you from this visit.",
+		"unread": "Unread"
 	},
 	"visits": {
 		"who_was_there": "Who was there",

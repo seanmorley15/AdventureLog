@@ -105,6 +105,29 @@ export type CommentThreadResponse = {
 	comments: CollectionComment[];
 };
 
+export type NotificationItem = {
+	id: string;
+	kind: 'visit_traveler_added';
+	actor: {
+		name: string;
+		username: string | null;
+		profile_pic: string | null;
+		can_view_profile: boolean;
+	};
+	visit_id: string | null;
+	location_id: string | null;
+	location_name: string;
+	collection_id: string | null;
+	collection_name: string;
+	/** More than 1 is the summary form: "added you to 5 visits". */
+	count: number;
+	locations: number;
+	start_date: string | null;
+	end_date: string | null;
+	created_at: string;
+	read: boolean;
+};
+
 export type CommentInboxItem = {
 	id: string;
 	collection: { id: string; name: string };

@@ -14,7 +14,7 @@ export interface paths {
         /**
          * Get your account
          * @description Your profile plus what the app's header shows: how many collection invites are waiting
-         *     and how many comments you have not read. On hosted servers the subscription is included.
+         *     how many comments you have not read and how many notifications. On hosted servers the subscription is included.
          */
         get: operations["account_retrieve"];
         put?: never;
@@ -2741,6 +2741,48 @@ export interface paths {
         patch: operations["notes_partial_update"];
         trace?: never;
     };
+    "/api/notifications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List your notifications
+         * @description Newest first. `unread_count` counts all your unread notifications, whatever the page or filter.
+         *     `?unread=1` leaves out the ones you have read.
+         */
+        get: operations["notifications_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/mark-read/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark notifications read
+         * @description Send `ids` to mark those, or nothing to mark all of yours. Ids that are not yours are ignored.
+         *     Answers with how many are still unread.
+         */
+        post: operations["notifications_mark_read"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/places/description/": {
         parameters: {
             query?: never;
@@ -5220,6 +5262,8 @@ export interface components {
             pending_invite_count: number;
             /** @description Comments in your inbox you have not seen. */
             unread_comment_count: number;
+            /** @description Notifications you have not read. */
+            unread_notification_count: number;
             /** @description The billing state. Self-hosted servers always grant access, whatever it says. */
             subscription: components["schemas"]["Subscription"];
             /** @description False when a hosted server requires a subscription this account does not have. Most endpoints then answer 402. */
@@ -5938,6 +5982,10 @@ export interface components {
          * @enum {string}
          */
         MapStyleEnum: "default" | "terrain-3d" | "satellite-terrain-3d" | "topo-terrain-3d" | "osm-standard" | "satellite" | "satellite-labels" | "usgs-imagery" | "usgs-imagery-topo" | "elevation" | "usgs-topo" | "esri-topo" | "opentopomap" | "carto-light" | "carto-dark" | "carto-positron" | "carto-positron-labels" | "esri-gray" | "carto-voyager" | "osm-humanitarian" | "esri-streets" | "esri-national-geographic" | "esri-oceans" | "osm-france" | "openfreemap-liberty";
+        MarkNotificationsReadRequest: {
+            /** @description Only these. Leave it out to mark every notification read. */
+            ids?: string[];
+        };
         /**
          * @description * `metric` - Metric
          *     * `imperial` - Imperial
@@ -6002,6 +6050,46 @@ export interface components {
             /** Format: uuid */
             collection?: string | null;
         };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            /** @description What happened. Today only `visit_traveler_added`. */
+            kind: string;
+            /** @description Who did it: `{name, username, uuid, profile_pic, can_view_profile}`. */
+            actor: {
+                [key: string]: unknown;
+            };
+            /**
+             * Format: uuid
+             * @description The visit, when it was one visit. `POST /api/visits/{id}/leave/` removes you.
+             */
+            visit_id: string | null;
+            /**
+             * Format: uuid
+             * @description The place, when it was one place and you can still read it.
+             */
+            location_id: string | null;
+            /** @description Empty when you can no longer read the place. */
+            location_name: string;
+            /**
+             * Format: uuid
+             * @description The trip, while you are still a member.
+             */
+            collection_id: string | null;
+            /** @description Empty when you are no longer a member of the trip. */
+            collection_name: string;
+            /** @description How many visits. More than 1 is the summary form. */
+            count: number;
+            /** @description How many places those visits were at. */
+            locations: number;
+            /** Format: date */
+            start_date: string | null;
+            /** Format: date */
+            end_date: string | null;
+            /** Format: date-time */
+            created_at: string;
+            read: boolean;
+        };
         /** @enum {unknown} */
         NullEnum: null;
         PaginatedImmichAssetList: {
@@ -6026,6 +6114,23 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["LocationList"][];
+        };
+        PaginatedNotificationList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next?: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous?: string | null;
+            results: components["schemas"]["Notification"][];
+            /** @example 2 */
+            unread_count: number;
         };
         PaginatedRegionList: {
             /** @example 123 */
@@ -17742,6 +17847,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PreconditionFailed"];
+                };
+            };
+        };
+    };
+    notifications_list: {
+        parameters: {
+            query?: {
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description Only notifications you have not read. */
+                unread?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedNotificationList"];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    notifications_mark_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MarkNotificationsReadRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MarkNotificationsReadRequest"];
+                "multipart/form-data": components["schemas"]["MarkNotificationsReadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCount"];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
                 };
             };
         };

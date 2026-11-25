@@ -69,7 +69,8 @@ describe('authHook', () => {
 				has_access: false,
 				cloud_mode: true,
 				pending_invite_count: 2,
-				unread_comment_count: 5
+				unread_comment_count: 5,
+				unread_notification_count: 3
 			})
 		);
 		const { event } = mockRequestEvent({
@@ -90,7 +91,8 @@ describe('authHook', () => {
 			hasAccess: false,
 			cloudMode: true,
 			pendingInviteCount: 2,
-			unreadCommentCount: 5
+			unreadCommentCount: 5,
+			unreadNotificationCount: 3
 		});
 	});
 

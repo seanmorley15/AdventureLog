@@ -22,6 +22,9 @@ export const load: LayoutServerLoad = async (event) => {
 	// Both badge counts arrive with the session lookup in the auth hook: no extra requests.
 	const pendingInviteCount = event.locals.user ? (event.locals.pendingInviteCount ?? 0) : 0;
 	const unreadCommentCount = event.locals.user ? (event.locals.unreadCommentCount ?? 0) : 0;
+	const unreadNotificationCount = event.locals.user
+		? (event.locals.unreadNotificationCount ?? 0)
+		: 0;
 
 	if (event.locals.user) {
 		return {
@@ -31,7 +34,8 @@ export const load: LayoutServerLoad = async (event) => {
 			cloudMode,
 			locale: event.locals.locale,
 			pendingInviteCount,
-			unreadCommentCount
+			unreadCommentCount,
+			unreadNotificationCount
 		};
 	}
 	return {
@@ -41,6 +45,7 @@ export const load: LayoutServerLoad = async (event) => {
 		cloudMode,
 		locale: event.locals.locale,
 		pendingInviteCount,
-		unreadCommentCount
+		unreadCommentCount,
+		unreadNotificationCount
 	};
 };

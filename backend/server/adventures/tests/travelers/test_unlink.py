@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta, timezone as dt_timezone
 
-from adventures.models import Collection, Location, Visit
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+
+from adventures.models import Collection, CollectionMember, Location, Visit
 from adventures.services import travelers
 from adventures.services.location_collections import unlink_location
 from adventures.services.user_stats import UserStatsService
@@ -113,3 +116,38 @@ class UnlinkReleasesTravelersTests(AudienceTestBase):
         r = self.client.post(f'/api/collections/{self.trip.id}/leave/', {}, format='json')
         self.assertEqual(r.status_code, 204, r.content)
         self.assertEqual(self._copies().count(), 1)
+
+    def test_traveler_who_owns_another_collection_holding_it_is_kept(self):
+        mine = Collection.objects.create(user=self.editor, name='Mine')
+        self.hut.collections.add(mine)
+        unlink_location(self.hut, self.trip)
+        self.assertEqual(self.visit.travelers.count(), 2)
+        self.assertFalse(self._copies().exists())
+
+    def test_viewer_member_traveler_in_another_collection_is_kept(self):
+        self.visit.travelers.add(self.viewer)
+        other = Collection.objects.create(user=self.owner, name='Other')
+        other.shared_with.add(self.viewer)
+        CollectionMember.objects.filter(collection=other, user=self.viewer).update(role='viewer')
+        self.hut.collections.add(other)
+        unlink_location(self.hut, self.trip)
+        self.assertIn(self.viewer, self.visit.travelers.all())
+        self.assertFalse(self._copies(self.viewer).exists())
+
+    def test_collection_owner_who_travelled_to_member_place_gets_a_copy_on_delete(self):
+        place = Location.objects.create(user=self.editor, name='Mine')
+        place.collections.add(self.trip)
+        visit = Visit.objects.create(location=place, start_date=_past())
+        visit.travelers.set([self.editor, self.owner])
+        self.trip.delete()
+        self.assertEqual([u.pk for u in visit.travelers.all()], [self.editor.pk])
+        self.assertEqual(Location.objects.filter(user=self.owner, name='Mine').count(), 1)
+
+    def test_delete_without_traveled_places_costs_a_bounded_number_of_queries(self):
+        folder = Collection.objects.create(user=self.owner, name='Plain')
+        for i in range(6):
+            Location.objects.create(user=self.owner, name=f'P{i}').collections.add(folder)
+        with CaptureQueriesContext(connection) as queries:
+            self.assertEqual(travelers.release_collection_travelers(folder), 0)
+        selects = [q for q in queries.captured_queries if q['sql'].startswith('SELECT')]
+        self.assertEqual(len(selects), 1)

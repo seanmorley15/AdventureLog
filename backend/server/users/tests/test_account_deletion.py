@@ -128,3 +128,35 @@ class DeleteAccountTestCase(APITestCase):
         response = self.client.delete("/api/account/", self._delete_payload(), format="json")
         self.assertEqual(response.status_code, 403)
         self.assertTrue(User.objects.filter(username="deleteuser").exists())
+
+
+class DeleteAccountReleasesTravelersTestCase(APITestCase):
+    def test_co_member_keeps_a_copy_of_a_member_place(self):
+        from datetime import datetime, timezone as tz
+
+        from adventures.models import Collection, Visit
+        from users.services.account_deletion import delete_user_account
+
+        owner = User.objects.create_user(username='downer', email='do@example.com', password='x')
+        member = User.objects.create_user(username='dmember', email='dm@example.com', password='x')
+        third = User.objects.create_user(username='dthird', email='dt@example.com', password='x')
+        trip = Collection.objects.create(user=owner, name='Trip')
+        trip.shared_with.add(member, third)
+        theirs = Location.objects.create(user=member, name='Hut')
+        theirs.collections.add(trip)
+        mine = Location.objects.create(user=owner, name='Mine')
+        mine.collections.add(trip)
+        visit = Visit.objects.create(location=theirs, start_date=datetime(2026, 6, 1, tzinfo=tz.utc))
+        visit.travelers.set([member, owner, third])
+        gone = Visit.objects.create(location=mine, start_date=datetime(2026, 6, 1, tzinfo=tz.utc))
+        gone.travelers.set([owner, third])
+
+        delete_user_account(owner)
+
+        left = sorted(u.pk for u in visit.travelers.all())
+        self.assertEqual(left, [member.pk])
+        self.assertEqual(Location.objects.filter(user=third, name='Hut').count(), 1)
+        copy = Location.objects.get(user=third, name='Hut')
+        self.assertEqual([u.pk for u in copy.visits.get().travelers.all()], [third.pk])
+        self.assertFalse(Location.objects.filter(name='Mine').exclude(user=third).exists())
+        self.assertEqual(Location.objects.filter(user=member, name='Hut').count(), 1)
