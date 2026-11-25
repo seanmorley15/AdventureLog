@@ -87,9 +87,10 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             left_count = len(shared_collections)
             kept_copies = travelers.leave_preview_all(shared_collections, instance)['locations']
             with transaction.atomic():
+                # They did not pick this the way leaving does, so they keep copies of where they travelled.
+                # All at once: a place two of these trips hold is judged against both.
+                travelers.release_member_all(shared_collections, instance, keep_copies=True)
                 for collection in shared_collections:
-                    # They did not pick this the way leaving does, so they keep copies of where they travelled.
-                    travelers.release_member(collection, instance, keep_copies=True)
                     collection.shared_with.remove(instance)
 
             pending_invites = CollectionInvite.objects.filter(invited_user=instance)

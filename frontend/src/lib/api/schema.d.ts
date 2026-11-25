@@ -1352,9 +1352,10 @@ export interface paths {
         put?: never;
         /**
          * Leave a collection
-         * @description For members. Places you own that are in it stay yours and stay linked. You are taken off
-         *     every visit at the other locations in it; with `keep_copies` (the default) each of those
-         *     you travelled to is first copied to your account, under its own name, with your visits.
+         * @description For members. Places you own that are in it stay yours and stay linked, and so do your visits
+         *     at places you still reach through another collection. You are taken off every visit at the
+         *     other locations in it; with `keep_copies` (the default) each of those you travelled to is
+         *     first copied to your account, under its own name, with your visits.
          *     A visit you were the only traveler on is deleted, with what others added to it. With
          *     `?dry_run=1` it returns how many locations and such uploads that is and changes nothing.
          */
@@ -1398,7 +1399,7 @@ export interface paths {
         post?: never;
         /**
          * Remove a member
-         * @description Owner only. Places they created in the collection belong to the owner and stay. They keep their history: each location in it they travelled to but do not own is copied to their account with their visits, and they are taken off the original visits. A visit they were the only traveler on is deleted, with what others added to it. With `?dry_run=1` it returns what removing them would do and changes nothing.
+         * @description Owner only. Places they created in the collection belong to the owner and stay. They keep their history: each location in it they travelled to, do not own and reach through no other collection is copied to their account with their visits, and they are taken off the original visits. A visit they were the only traveler on is deleted, with what others added to it. With `?dry_run=1` it returns what removing them would do and changes nothing.
          */
         delete: operations["collections_member_delete"];
         options?: never;

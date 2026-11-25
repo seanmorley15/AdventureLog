@@ -377,15 +377,33 @@ def take_my_visits(original, user, collection=None):
     return copy
 
 
-def member_locations(collection, user):
-    """Locations in the collection that ``user`` doesn't own and travelled to: what leaving takes from them."""
-    from adventures.models import Location
+def _places_lost(collections, user):
+    """
+    Locations in ``collections`` that ``user`` travelled to and would no longer reach without all
+    of them: not their own, and in no other collection they own or belong to. The same rule as
+    ``lost_access_users``, from the person's side.
+    """
+    from django.db.models import Exists, OuterRef, Q
 
-    return (
-        Location.objects.filter(collections=collection, visits__travelers=user)
-        .exclude(user=user)
-        .distinct()
+    from adventures.models import Collection, Location
+
+    ids = [c.pk for c in collections]
+    reachable = (
+        Collection.objects.filter(locations=OuterRef('pk')).exclude(pk__in=ids)
+        .filter(Q(user=user) | Q(shared_with=user))
     )
+    return (
+        Location.objects.filter(collections__in=ids, visits__travelers=user)
+        .exclude(user=user).exclude(Exists(reachable)).distinct()
+    )
+
+
+def member_locations(collection, user):
+    """
+    Locations in the collection that ``user`` doesn't own, travelled to and reaches through no other
+    collection: what leaving takes from them (``lost_access_users`` with the collection ignored).
+    """
+    return _places_lost([collection], user)
 
 
 def _uploads_on(visits, mine):
@@ -437,14 +455,12 @@ def leave_preview(collection, user):
 
 
 def leave_preview_all(collections, user):
-    """``leave_preview`` over several collections at once, counting a place held by more than one a single time. Also says ``visits_deleted``."""
-    from adventures.models import Location
-
-    places = (
-        Location.objects.filter(collections__in=collections, visits__travelers=user)
-        .exclude(user=user).distinct()
-    )
-    return _leave_impact(places, user)
+    """
+    ``leave_preview`` for leaving several collections at once (going private), judging each place
+    against all of them together and counting a place held by more than one a single time. Also
+    says ``visits_deleted``.
+    """
+    return _leave_impact(_places_lost(list(collections), user), user)
 
 
 def leave_preview_all_places(locations, user):
@@ -459,16 +475,22 @@ def release_member(collection, user, keep_copies):
     With ``keep_copies`` each of those locations is copied to their account with their visits
     (``take_my_visits``); otherwise they are only removed from its visits. Either way they end
     up on none of the location's visits, whichever trip a visit was part of. A visit left with
-    nobody is deleted. Region and city credit already marked for them stays. Locations they own
-    are untouched. All or nothing. Returns the number of locations copied.
+    nobody is deleted. Places they still reach through another collection, and places they own,
+    are untouched. Region and city credit already marked for them stays. All or nothing. Returns
+    the number of locations copied.
     """
+    return release_member_all([collection], user, keep_copies)
+
+
+def release_member_all(collections, user, keep_copies):
+    """``release_member`` for leaving all of ``collections`` at once, each place judged against all of them."""
     from django.db import transaction
 
     from adventures.models import Visit
 
     copied = 0
     with transaction.atomic():
-        for location in list(member_locations(collection, user).order_by('name', 'pk')):
+        for location in list(_places_lost(list(collections), user).order_by('name', 'pk')):
             if keep_copies:
                 take_my_visits(location, user)
                 copied += 1
