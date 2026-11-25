@@ -137,12 +137,23 @@ class VisitTravelersApiTests(AudienceTestBase):
         self.assertFalse(Visit.objects.filter(pk=visit.pk).exists())
 
     def test_leave_by_non_traveler_is_a_no_op(self):
-        visit = Visit.objects.create(location=self.hut, start_date='2026-06-01T00:00:00Z')
-        visit.travelers.clear()
+        visit = self._visit([self.owner])
         self.as_user(self.viewer)
         response = self.client.post(f'/api/visits/{visit.id}/leave/')
         self.assertEqual(response.status_code, 200, response.data)
         self.assertTrue(Visit.objects.filter(pk=visit.pk).exists())
+        self.assertEqual(list(visit.travelers.all()), [self.owner])
+
+    def test_empty_traveler_list_rejected_400(self):
+        visit = self._visit([self.owner])
+        self.as_user(self.editor)
+        response = self.client.patch(f'/api/visits/{visit.id}/', {'traveler_uuids': []}, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(list(visit.travelers.all()), [self.owner])
+        before = Visit.objects.count()
+        response = self.client.post('/api/visits/', self._payload(traveler_uuids=[]), format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Visit.objects.count(), before)
 
     def test_candidates_hidden_from_guest_link(self):
         from adventures.models import CollectionGuestLink

@@ -120,6 +120,7 @@ def set_travelers(visit, users, actor):
 
     Everyone added must be a candidate, or ``ValidationError`` is raised. Travelers who are no
     longer candidates (they left the trip) stay on the visit: only they can remove themselves.
+    A visit always keeps at least one traveler: a result with nobody is refused.
     """
     from rest_framework.exceptions import ValidationError
 
@@ -129,7 +130,10 @@ def set_travelers(visit, users, actor):
     if any(pk not in allowed and pk not in existing for pk in wanted):
         raise ValidationError({'traveler_uuids': 'Travelers must be the owner or members of the location.'})
     keep = {pk: user for pk, user in existing.items() if pk not in allowed}
-    visit.travelers.set([*wanted.values(), *keep.values()])
+    final = [*wanted.values(), *keep.values()]
+    if not final:
+        raise ValidationError({'traveler_uuids': 'A visit needs at least one traveler.'})
+    visit.travelers.set(final)
     mark_regions_for_travelers(visit.location)
 
 

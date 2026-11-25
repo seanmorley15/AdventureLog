@@ -47,7 +47,7 @@ Collection roles (editor/viewer via `CollectionMember`), invites, leave and remo
   - If the request user is the owner, a member of a collection holding the place, or a traveler on it, use the request user.
   - Otherwise (public views, public profile) use the location owner.
   - PDF export uses the exporting user.
-- An empty traveler list is allowed. That visit counts for nobody.
+- Every visit always has at least one traveler. The last traveler leaving deletes the visit, and an edit that would leave nobody is refused with 400.
 
 ### Deleting a shared visit *(decided by Sean)*
 - If a visit has travelers other than the person deleting it, **"Delete" only removes that person** from the visit. The visit and everyone else's credit stay.
