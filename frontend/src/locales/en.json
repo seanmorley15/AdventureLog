@@ -1967,7 +1967,7 @@
 		"visits_deleted": "{count, plural, one {# visit that only the people getting a copy were on is deleted from the original place.} other {# visits that only the people getting a copy were on are deleted from the original place.}}",
 		"others_uploads": "This also deletes {count, plural, one {# photo, file or activity} other {# photos, files or activities}} that other people added to those visits.",
 		"others_keep": "Everyone else keeps the place as it is.",
-		"share_note": "People you add as travelers keep a copy of what they traveled if they leave or lose access.",
+		"share_note": "People you add as travelers get their own copy of what they traveled if they lose access, and can choose to keep copies if they leave.",
 		"picker_hint": "Only people on this place's trips can be added. They are notified and can remove themselves.",
 		"account_title": "What happens to shared trips",
 		"account_deleted": "{locations, plural, one {# location} other {# locations}} and {collections, plural, one {# collection} other {# collections}} you own will be deleted.",

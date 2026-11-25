@@ -59,8 +59,8 @@ Visits record who was there. When someone stops having a way to reach a place, t
 | You **leave** a trip | You | You choose whether to keep copies of the places you traveled to. Places you own stay yours. |
 | The owner **removes** you from a trip | You | You always get your copies. |
 | A place is **taken out of a trip** | People who traveled there and cannot reach it another way, including the trip owner when the place is a member's | They get their own copy with their visits. The place owner is never affected. Only the trip owner or the place owner can take a place out. |
-| A trip is **deleted** | The same people, for every place in it | They get their own copy of each place. Places the owner owns stay in their account. |
-| An account is **deleted** | People who traveled to its places, and the trips it was a member of | Co-members get copies of the deleted person's places. The deleted person comes off the visits they were on at other people's places. |
+| A trip is **deleted** | The same people, for every place in it | They get their own copy of each place they traveled to and can no longer reach. Places the owner owns stay in their account. |
+| An account is **deleted** | People who traveled to its places, and the trips it was a member of | Co-members who traveled to the deleted person's places get their own copy. The deleted person comes off the visits they were on at other people's places. |
 | A profile is made **private** | That person | They leave the trips shared with them and keep copies of the places they traveled to there. |
 
 Each of these shows a summary first: who will get a copy, how many visits and uploads would be deleted, and what stays. Deleting a place you own is different: it is deleted for everyone, with its visits, and nobody gets a copy.
