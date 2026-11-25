@@ -38,12 +38,25 @@ def _copy_image(image, user, target):
     return copy
 
 
-def copy_attachment(attachment, user, target):
-    """A new attachment of ``target`` from an existing one, with its own copy of the file."""
+def copy_attachment(attachment, user, target, skip_unreadable=False):
+    """
+    A new attachment of ``target`` from an existing one, with its own copy of the file.
+
+    With ``skip_unreadable`` an attachment whose file can't be read is left out (returns None)
+    instead of raising.
+    """
+    if skip_unreadable:
+        from adventures.services.locations.copy import read_file_or_none
+
+        content = read_file_or_none(attachment.file, attachment)
+        if content is None:
+            return None
+    else:
+        content = _read_file(attachment.file)
     file_name = (attachment.file.name or '').split('/')[-1] or 'attachment'
     copy = ContentAttachment(
         user=user,
-        file=ContentFile(_read_file(attachment.file), name=file_name),
+        file=ContentFile(content, name=file_name),
         name=attachment.name,
     )
     copy.content_object = target

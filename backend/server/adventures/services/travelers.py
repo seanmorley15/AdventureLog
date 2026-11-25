@@ -272,7 +272,7 @@ def take_my_visits(original, user, collection=None):
         raise ValidationError({'take_my_visits': 'This location is already yours.'})
     with transaction.atomic():
         mine = list(original.visits.filter(travelers=user).order_by('start_date', 'created_at'))
-        copy = copying.copy_location(original, user, collection=collection, name=original.name)
+        copy = copying.copy_location(original, user, collection=collection, name=original.name, skip_unreadable=True)
         for visit in mine:
             moved = Visit.objects.create(
                 location=copy, start_date=visit.start_date, end_date=visit.end_date,
@@ -295,6 +295,37 @@ def member_locations(collection, user):
         .exclude(user=user)
         .distinct()
     )
+
+
+def leave_preview(collection, user):
+    """
+    What leaving (or being removed from) the collection would do, without changing anything.
+
+    ``locations``: the locations it takes from ``user`` (see ``member_locations``), each one
+    copied when copies are kept. ``others_uploads``: the photos, attachments and activities
+    that other people added to visits ``user`` is the only traveler on. Those visits are
+    deleted either way, so these go with them, as do other people's photos of activities on them.
+    """
+    from django.contrib.auth import get_user_model
+    from django.contrib.contenttypes.models import ContentType
+
+    from adventures.models import Activity, ContentAttachment, ContentImage, Visit
+
+    locations = member_locations(collection, user)
+    others = get_user_model().objects.exclude(pk=user.pk)
+    shared = Visit.objects.filter(travelers__in=others).values('pk')
+    doomed = Visit.objects.filter(location__in=locations, travelers=user).exclude(pk__in=shared).values('pk')
+    activities = Activity.objects.filter(visit__in=doomed)
+    visit_type = ContentType.objects.get_for_model(Visit)
+    activity_type = ContentType.objects.get_for_model(Activity)
+    others_uploads = (
+        ContentImage.objects.filter(content_type=visit_type, object_id__in=doomed).exclude(user=user).count()
+        + ContentAttachment.objects.filter(content_type=visit_type, object_id__in=doomed).exclude(user=user).count()
+        + activities.exclude(user=user).count()
+        + ContentImage.objects.filter(content_type=activity_type, object_id__in=activities.values('pk'))
+        .exclude(user=user).count()
+    )
+    return {'locations': locations.count(), 'others_uploads': others_uploads}
 
 
 def release_member(collection, user, keep_copies):

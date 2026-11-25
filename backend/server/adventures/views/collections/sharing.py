@@ -23,6 +23,7 @@ from adventures.serializers.sharing import (
     GuestLinkCreateSerializer,
     InviteCreateSerializer,
     LeaveCollectionSerializer,
+    LeavePreviewSerializer,
     MemberRoleSerializer,
     ShareableUserSerializer,
     ShareableUsersQuerySerializer,
@@ -37,6 +38,12 @@ from core.visibility import public_access_allowed, shareable_profiles_q
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
+
+_DRY_RUN = OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')
+
+
+def _is_dry_run(request):
+    return request.query_params.get('dry_run', '').lower() in ('1', 'true')
 
 
 def _sharing_state(collection, request):
@@ -289,12 +296,15 @@ class SharingActionsMixin:
         description='Owner only. Also changes the role of an invite that has not been answered yet.',
     )
     @extend_schema(
-        methods=['DELETE'], tags=['Sharing'], parameters=[USER_PARAMETER], request=None, responses={204: _DELETED},
+        methods=['DELETE'], tags=['Sharing'], parameters=[USER_PARAMETER, _DRY_RUN], request=None,
+        responses={200: LeavePreviewSerializer, 204: _DELETED},
         summary='Remove a member',
         description=(
             'Owner only. Places they created in the collection belong to the owner and stay. They keep '
             'their history: each location in it they travelled to but do not own is copied to their '
-            'account with their visits, and they are taken off the original visits.'
+            'account with their visits, and they are taken off the original visits. A visit they were '
+            'the only traveler on is deleted, with what others added to it. With `?dry_run=1` it '
+            'returns what removing them would do and changes nothing.'
         ),
     )
     @action(detail=True, methods=['patch', 'delete'], url_path=r'members/(?P<user_uuid>[^/.]+)')
@@ -306,6 +316,8 @@ class SharingActionsMixin:
         if request.method == 'DELETE':
             if user is None:
                 raise NotFound('That person is not a member of this collection.')
+            if _is_dry_run(request):
+                return Response(travelers.leave_preview(collection, user))
             with transaction.atomic():
                 # They never chose to go, so they always keep copies of where they travelled.
                 travelers.release_member(collection, user, keep_copies=True)
@@ -328,12 +340,9 @@ class SharingActionsMixin:
 
     @extend_schema(
         tags=['Sharing'],
-        parameters=[OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')],
+        parameters=[_DRY_RUN],
         request=LeaveCollectionSerializer,
-        responses={
-            200: inline_serializer('LeaveCount', {'locations': serializers.IntegerField()}),
-            204: _DELETED,
-        },
+        responses={200: LeavePreviewSerializer, 204: _DELETED},
     )
     @action(detail=True, methods=['post'], url_path='leave')
     def leave(self, request, pk=None):
@@ -343,7 +352,8 @@ class SharingActionsMixin:
         For members. Places you own that are in it stay yours and stay linked. You are taken off
         every visit at the other locations in it; with `keep_copies` (the default) each of those
         you travelled to is first copied to your account, under its own name, with your visits.
-        With `?dry_run=1` it returns how many locations that is and changes nothing.
+        A visit you were the only traveler on is deleted, with what others added to it. With
+        `?dry_run=1` it returns how many locations and such uploads that is and changes nothing.
         """
         collection = self.get_object()
         if request.user == collection.user:
@@ -351,8 +361,8 @@ class SharingActionsMixin:
         if not collection.shared_with.filter(id=request.user.id).exists():
             raise APIError('You are not a member of this collection.', code='invalid')
         keep_copies = validated(LeaveCollectionSerializer, request.data)['keep_copies']
-        if request.query_params.get('dry_run', '').lower() in ('1', 'true'):
-            return Response({'locations': travelers.member_locations(collection, request.user).count()})
+        if _is_dry_run(request):
+            return Response(travelers.leave_preview(collection, request.user))
         with transaction.atomic():
             travelers.release_member(collection, request.user, keep_copies)
             collection.shared_with.remove(request.user)

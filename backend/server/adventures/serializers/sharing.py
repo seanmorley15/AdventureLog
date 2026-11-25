@@ -31,6 +31,18 @@ class LeaveCollectionSerializer(serializers.Serializer):
     )
 
 
+class LeavePreviewSerializer(serializers.Serializer):
+    locations = serializers.IntegerField(
+        help_text='Locations in the collection the member travelled to but does not own: copied when kept.'
+    )
+    others_uploads = serializers.IntegerField(
+        help_text=(
+            'Photos, attachments and activities other people added to visits the member is the only '
+            'traveler on. Those visits are deleted, so these go too.'
+        ),
+    )
+
+
 class AddTravelersSerializer(serializers.Serializer):
     user_uuids = serializers.ListField(
         child=serializers.UUIDField(),

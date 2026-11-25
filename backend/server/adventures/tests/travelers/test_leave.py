@@ -117,7 +117,7 @@ class LeaveKeepsHistoryTests(AudienceTestBase):
         self.as_user(self.editor)
         response = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', {}, format='json')
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(response.json(), {'locations': 2})
+        self.assertEqual(response.json(), {'locations': 2, 'others_uploads': 0})
         self.assertTrue(self.trip.shared_with.filter(pk=self.editor.pk).exists())
         self.assertFalse(self._copies().exists())
         self.assertEqual(self._travelers(self.visit), sorted([self.owner.pk, self.editor.pk]))
@@ -294,12 +294,15 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
         attachment = self._attachment(self.editor, alone)
         activity = self._activity(self.editor, alone)
         self._photo(self.editor, activity, name='summit.png')
-        self._activity(self.owner, alone, name="Owner's run")
+        owners_run = self._activity(self.owner, alone, name="Owner's run")
         originals = {'photo': photo.image.name, 'attachment': attachment.file.name, 'gpx': activity.gpx_file.name}
         photo_bytes = self._read(photo.image)
 
         self._leave()
         self.assertFalse(Visit.objects.filter(pk=alone.pk).exists())
+        # Intended: a visit nobody travelled on any more goes, with what others added to it
+        # (the dry run counts those as ``others_uploads`` so the dialog can warn).
+        self.assertFalse(Activity.objects.filter(pk=owners_run.pk).exists())
         visit = self._copy_visit()
 
         [new_photo] = visit.images.all()
@@ -373,3 +376,84 @@ class LeaveCopiesUploadsTests(AudienceTestBase):
         self.assertEqual([p.user for p in visit.images.all()], [self.editor])
         self.assertEqual([a.name for a in visit.activities.all()], ['My run'])
         self.assertEqual(shared.images.count(), 2)
+
+    # -- Files missing from storage --------------------------------------------------------
+
+    def test_owner_removal_with_missing_attachment_file(self):
+        alone = self._visit([self.editor])
+        attachment = self._attachment(self.editor, alone)
+        attachment.file.storage.delete(attachment.file.name)
+
+        self.as_user(self.owner)
+        response = self.client.delete(f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/')
+        self.assertEqual(response.status_code, 204, response.content)
+        self.assertFalse(self.trip.shared_with.filter(pk=self.editor.pk).exists())
+        visit = self._copy_visit()
+        self.assertEqual(visit.attachments.count(), 0)
+
+    def test_leave_skips_unreadable_photos_and_tracks(self):
+        hut_photo = self._photo(self.owner, self.hut, name='hut.png')
+        alone = self._visit([self.editor])
+        visit_photo = self._photo(self.editor, alone)
+        run = self._activity(self.editor, alone)
+        kept = self._attachment(self.editor, alone)
+        for field in (hut_photo.image, visit_photo.image, run.gpx_file):
+            field.storage.delete(field.name)
+
+        self._leave()
+        copy = Location.objects.get(user=self.editor, name='Hut')
+        self.assertEqual(copy.images.count(), 0)
+        visit = copy.visits.get()
+        self.assertEqual(visit.images.count(), 0)
+        [new_run] = visit.activities.all()
+        self.assertEqual((new_run.name, new_run.distance), ('Ridge hike', 5400.0))
+        self.assertFalse(new_run.gpx_file)
+        self.assertEqual([a.name for a in visit.attachments.all()], [kept.name])
+
+    # -- Previews ----------------------------------------------------------------------
+
+    def _rows(self):
+        return (
+            ContentImage.objects.count(), ContentAttachment.objects.count(), Activity.objects.count(),
+            Visit.objects.count(), Location.objects.count(), self.trip.shared_with.count(),
+        )
+
+    def test_dry_run_counts_others_uploads_on_visits_that_would_go(self):
+        alone = self._visit([self.editor])
+        self._photo(self.editor, alone, name='mine.png')
+        self._photo(self.owner, alone, name='theirs.png')
+        self._attachment(self.viewer, alone, name='viewers')
+        self._activity(self.owner, alone, name="Owner's run")
+        my_run = self._activity(self.editor, alone, name='My run')
+        self._photo(self.owner, my_run, name='cheer.png')
+        # A visit the owner was also on survives, so nothing on it counts.
+        shared = self._visit([self.owner, self.editor], day=2)
+        self._photo(self.owner, shared, name='shared.png')
+        before = self._rows()
+
+        self.as_user(self.editor)
+        response = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', {}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 4})
+        self.assertEqual(self._rows(), before)
+
+    def test_dry_run_with_only_own_uploads(self):
+        alone = self._visit([self.editor])
+        self._photo(self.editor, alone)
+        self._activity(self.editor, alone)
+
+        self.as_user(self.editor)
+        response = self.client.post(f'/api/collections/{self.trip.id}/leave/?dry_run=1', {}, format='json')
+        self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 0})
+
+    def test_member_delete_dry_run_previews(self):
+        alone = self._visit([self.editor])
+        self._photo(self.owner, alone)
+        before = self._rows()
+
+        self.as_user(self.owner)
+        response = self.client.delete(f'/api/collections/{self.trip.id}/members/{self.editor.uuid}/?dry_run=1')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), {'locations': 1, 'others_uploads': 1})
+        self.assertEqual(self._rows(), before)
+        self.assertTrue(self.trip.shared_with.filter(pk=self.editor.pk).exists())
