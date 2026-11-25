@@ -69,8 +69,11 @@
 	/** The person left the visit, so its notification is gone: drop the row and its share of the badge. */
 	function dropNotification(item: NotificationItem) {
 		notifications = notifications.filter((n) => n.id !== item.id);
-		// Unread ones are still counted in the badge; opening the inbox may already have cleared them.
-		if (!item.read && unread > commentUnread) unread -= 1;
+		// Only a row that was unread and is still counted lowers the badge; opening the inbox may already have cleared it.
+		if (!item.read && notificationUnread > 0) {
+			notificationUnread -= 1;
+			unread = Math.max(0, unread - 1);
+		}
 	}
 
 	async function markRead() {

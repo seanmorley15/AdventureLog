@@ -55,15 +55,16 @@ const note = {
 	read: false
 };
 
-function stubFetch(leaveStatus: number) {
+function stubFetch(leaveStatus: number, row = note, notificationUnread = 2) {
 	const spy = vi.fn(async (url: string) => {
 		if (url.startsWith('/api/notifications/?')) {
-			return Response.json({ results: [note], unread_count: 1 });
+			return Response.json({ results: [row], unread_count: notificationUnread });
 		}
 		if (url.startsWith('/api/comments/inbox/?')) {
-			return Response.json({ unread_count: 0, comments: [] });
+			return Response.json({ unread_count: 1, comments: [] });
 		}
-		if (url === '/api/notifications/mark-read/') return Response.json({ unread_count: 0 });
+		// Fails, so the badge still counts the unread notifications when Remove me is clicked.
+		if (url === '/api/notifications/mark-read/') return new Response(null, { status: 500 });
 		return new Response(null, { status: leaveStatus });
 	});
 	vi.stubGlobal('fetch', spy);
@@ -88,5 +89,35 @@ describe('CommentInbox notifications', () => {
 		await page.getByRole('button', { name: en.comments.inbox_title }).click();
 		await page.getByRole('button', { name: en.notifications.remove_me }).click();
 		await expect.element(page.getByText('Mia Lee added you to a visit at Hut')).toBeVisible();
+	});
+
+	it('lowers the badge by one when an unread row is removed', async () => {
+		stubFetch(204);
+		render(CommentInbox, { initialUnread: 0 });
+		await page.getByRole('button', { name: en.comments.inbox_title }).click();
+		await expect.element(page.getByText('3', { exact: true })).toBeVisible();
+		await page.getByRole('button', { name: en.notifications.remove_me }).click();
+		await expect.element(page.getByText('2', { exact: true })).toBeVisible();
+	});
+
+	it('leaves the badge alone when the removed row was already read', async () => {
+		stubFetch(204, { ...note, read: true }, 0);
+		render(CommentInbox, { initialUnread: 0 });
+		await page.getByRole('button', { name: en.comments.inbox_title }).click();
+		await expect.element(page.getByText('1', { exact: true })).toBeVisible();
+		await page.getByRole('button', { name: en.notifications.remove_me }).click();
+		await vi.waitFor(() =>
+			expect(page.getByText('Mia Lee added you to a visit at Hut').elements()).toHaveLength(0)
+		);
+		await expect.element(page.getByText('1', { exact: true })).toBeVisible();
+	});
+
+	it('leaves the badge alone when Remove me fails', async () => {
+		stubFetch(500);
+		render(CommentInbox, { initialUnread: 0 });
+		await page.getByRole('button', { name: en.comments.inbox_title }).click();
+		await page.getByRole('button', { name: en.notifications.remove_me }).click();
+		await expect.element(page.getByText('Mia Lee added you to a visit at Hut')).toBeVisible();
+		await expect.element(page.getByText('3', { exact: true })).toBeVisible();
 	});
 });
