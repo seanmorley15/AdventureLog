@@ -28,19 +28,26 @@ def _visit_on_dates(location_id, start, end):
             match_start = visit_start
     return match
 
-def log_visited(item, visit_date=None):
+def log_visited(item, visit_date=None, travelers=None, actor=None):
     """
     Create one visit for a location placement, or return one that already covers it.
 
     A visit logged earlier on these dates is linked instead of copied. Uses the
     projected date; ``visit_date`` is required when the trip has no anchor or the
     placement is in Ideas. Both visit bounds are always set.
+
+    The people who travelled are ``actor`` plus ``travelers``. A new visit lists exactly
+    them; a visit that already existed gains them ("I was there too").
     """
     from adventures.models import Visit
+    from adventures.services import travelers as traveler_rules
+
+    people = list({user.pk: user for user in [actor, *(travelers or [])] if user is not None}.values())
 
     if item_kind(item) != 'location':
         raise DayPlanError('Only location stops can be logged as visited.')
     if item.logged_visit_id:
+        traveler_rules.add_travelers(item.logged_visit, people)
         return item.logged_visit, False
 
     with transaction.atomic():
@@ -59,6 +66,7 @@ def log_visited(item, visit_date=None):
         if existing is not None:
             item.logged_visit = existing
             item.save(update_fields=['logged_visit', 'updated_at'])
+            traveler_rules.add_travelers(existing, people)
             return existing, False
 
         visit = Visit.objects.create(
@@ -67,16 +75,19 @@ def log_visited(item, visit_date=None):
             end_date=all_day(end_day or start_day),
             timezone=item.timezone or None,
         )
+        if people:
+            # Replaces the owner default: someone logging alone is the only traveler.
+            traveler_rules.set_travelers(visit, people, actor)
         item.logged_visit = visit
         item.save(update_fields=['logged_visit', 'updated_at'])
         return visit, True
 
-def log_day(collection, day, visit_date=None):
+def log_day(collection, day, visit_date=None, travelers=None, actor=None):
     """
     Log every non-optional location stop on ``day`` that has no logged visit.
 
     Day activities are copied onto the visit when the day has one location stop.
-    The day activity stays on the day.
+    The day activity stays on the day. Every stop gets the same travelers.
     """
     from adventures.models import CollectionItineraryItem
     from .files import promote_ready_activities
@@ -99,7 +110,7 @@ def log_day(collection, day, visit_date=None):
     logged = []
     with transaction.atomic():
         for item in items:
-            visit, _ = log_visited(item, visit_date)
+            visit, _ = log_visited(item, visit_date, travelers, actor)
             logged.append(item)
         promote_ready_activities(day, visit_date)
     return logged

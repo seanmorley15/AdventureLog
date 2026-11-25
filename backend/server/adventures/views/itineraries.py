@@ -351,7 +351,10 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
         request=LogVisitSerializer,
         responses={
             201: OpenApiResponse(LogItemResultSerializer, description='A visit was created.'),
-            200: OpenApiResponse(LogItemResultSerializer, description='The stop had already logged its visit.'),
+            200: OpenApiResponse(
+                LogItemResultSerializer,
+                description='The stop had already logged its visit; you and the people you named were added to it.',
+            ),
             400: OpenApiResponse(description='`date_required` when the trip has no dates, or invalid input.'),
         },
     )
@@ -361,11 +364,14 @@ class ItineraryItemViewSet(_DayPlanViewMixin, viewsets.ModelViewSet):
         Log a stop as visited
 
         Creates one visit to the location for this stop's day, or returns the one it already
-        logged.
+        logged. You and the people you name are its travelers; on an existing visit they are added.
         """
         item = self.get_object()
         self.get_editable_collection()
-        visit, created = day_plan.log_visited(item, validated(LogVisitSerializer, request.data).get('date'))
+        data = validated(LogVisitSerializer, request.data)
+        visit, created = day_plan.log_visited(
+            item, data.get('date'), data.get('traveler_uuids'), request.user,
+        )
         item.refresh_from_db()
         return Response({
             'item': self.get_serializer(item).data,
@@ -487,7 +493,8 @@ class CollectionDayViewSet(_DayPlanViewMixin, mixins.ListModelMixin, viewsets.Ge
         """
         collection = self.get_editable_collection()
         day = day_plan.get_day(collection, pk)
-        logged = day_plan.log_day(collection, day, validated(LogVisitSerializer, request.data).get('date'))
+        data = validated(LogVisitSerializer, request.data)
+        logged = day_plan.log_day(collection, day, data.get('date'), data.get('traveler_uuids'), request.user)
         refreshed = CollectionItineraryItem.objects.filter(pk__in=[i.pk for i in logged]) \
             .select_related('day', 'content_type', 'logged_visit').prefetch_related('item')
         needs_stop = []

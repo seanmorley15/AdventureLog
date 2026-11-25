@@ -137,6 +137,19 @@ def set_travelers(visit, users, actor):
     mark_regions_for_travelers(visit.location)
 
 
+def add_travelers(visit, users):
+    """Add ``users`` to the visit's travelers, keeping the ones already there. Each must be a candidate."""
+    from rest_framework.exceptions import ValidationError
+
+    wanted = {user.pk: user for user in users}
+    allowed = set(candidates(visit.location).values_list('pk', flat=True))
+    if any(pk not in allowed for pk in wanted):
+        raise ValidationError({'traveler_uuids': 'Travelers must be the owner or members of the location.'})
+    if wanted:
+        visit.travelers.add(*wanted.values())
+        mark_regions_for_travelers(visit.location)
+
+
 def join(visit, user):
     """Add the user as a traveler. Only candidates may join."""
     from rest_framework.exceptions import PermissionDenied

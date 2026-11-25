@@ -1,5 +1,6 @@
 """Requests and responses of the day plan: days, itinerary items, and plan-wide changes."""
 
+from django.contrib.auth import get_user_model
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -98,6 +99,17 @@ class ReorderResultSerializer(serializers.Serializer):
 
 class LogVisitSerializer(serializers.Serializer):
     date = DayDateField(required=False, allow_null=True, help_text='Needed when the trip has no dates.')
+    traveler_uuids = serializers.ListField(
+        child=serializers.UUIDField(), required=False,
+        help_text='Others who came along. You are always included. Each must be the owner or a member of the trip.',
+    )
+
+    def validate_traveler_uuids(self, value):
+        """Turn the uuids into users."""
+        users = list(get_user_model().objects.filter(uuid__in=value))
+        if len(users) != len(set(value)):
+            raise serializers.ValidationError('Unknown user.')
+        return users
 
 
 class LogItemResultSerializer(serializers.Serializer):
