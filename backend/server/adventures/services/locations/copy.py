@@ -40,9 +40,9 @@ def _copy_photo(photo, user, location_type, location):
 
 
 @transaction.atomic
-def copy_location(original, user, collection=None):
+def copy_location(original, user, collection=None, name=None):
     """
-    Copy a place for ``user`` as a private "Copy of ..." place.
+    Copy a place for ``user`` as a private place, named ``name`` or "Copy of ..." by default.
 
     Everything about the place comes along except its collections, visits and attachments;
     photos are copied as independent files. The user's own category of the same name is
@@ -51,7 +51,7 @@ def copy_location(original, user, collection=None):
     """
     copy = Location(
         user=user,
-        name=f'Copy of {original.name}',
+        name=name if name is not None else f'Copy of {original.name}',
         description=original.description,
         rating=original.rating,
         link=original.link,

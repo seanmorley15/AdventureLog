@@ -248,3 +248,75 @@ def add_to_trip(collection, users, dry_run=False, actor=None):
                 usernames=sorted(user.username for user in wanted.values()), **result,
             )
     return result
+
+
+def take_my_visits(original, user, collection=None):
+    """
+    Give ``user`` their own copy of a location they travelled to but don't own.
+
+    The copy keeps the original's name and gets a copy of each visit they travelled on (dates,
+    timezone and notes), with them as its only traveler. They are then removed from the original
+    visits (see ``remove_or_delete``), so nothing is counted twice. Photos, files and activities
+    on those visits are not copied: they stay with the original visit, and go with it when it
+    is deleted. With ``collection`` the copy goes in
+    that collection, as ``copy_location`` does. All or nothing. The owner of the location gets
+    ``ValidationError``: it is already theirs.
+    """
+    from django.db import transaction
+    from rest_framework.exceptions import ValidationError
+
+    from adventures.models import Visit
+    from adventures.services.locations import copy as copying
+
+    if original.user_id == user.pk:
+        raise ValidationError({'take_my_visits': 'This location is already yours.'})
+    with transaction.atomic():
+        mine = list(original.visits.filter(travelers=user).order_by('start_date', 'created_at'))
+        copy = copying.copy_location(original, user, collection=collection, name=original.name)
+        for visit in mine:
+            moved = Visit.objects.create(
+                location=copy, start_date=visit.start_date, end_date=visit.end_date,
+                timezone=visit.timezone, notes=visit.notes,
+            )
+            moved.travelers.set([user])
+        for visit in mine:
+            remove_or_delete(visit, user)
+        mark_regions_for_travelers(copy)
+    return copy
+
+
+def member_locations(collection, user):
+    """Locations in the collection that ``user`` doesn't own and travelled to: what leaving takes from them."""
+    from adventures.models import Location
+
+    return (
+        Location.objects.filter(collections=collection, visits__travelers=user)
+        .exclude(user=user)
+        .distinct()
+    )
+
+
+def release_member(collection, user, keep_copies):
+    """
+    Take ``user``'s history out of the collection before they leave it (see ``member_locations``).
+
+    With ``keep_copies`` each of those locations is copied to their account with their visits
+    (``take_my_visits``); otherwise they are only removed from its visits. Either way they end
+    up on none of the location's visits, whichever trip a visit was part of. A visit left with
+    nobody is deleted. Region and city credit already marked for them stays. Locations they own
+    are untouched. All or nothing. Returns the number of locations copied.
+    """
+    from django.db import transaction
+
+    from adventures.models import Visit
+
+    copied = 0
+    with transaction.atomic():
+        for location in list(member_locations(collection, user).order_by('name', 'pk')):
+            if keep_copies:
+                take_my_visits(location, user)
+                copied += 1
+            else:
+                for visit in list(Visit.objects.filter(location=location, travelers=user)):
+                    remove_or_delete(visit, user)
+    return copied

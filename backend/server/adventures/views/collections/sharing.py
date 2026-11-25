@@ -1,4 +1,5 @@
 from datetime import timezone as dt_timezone
+from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
@@ -21,6 +22,7 @@ from adventures.serializers.sharing import (
     AddTravelersSerializer,
     GuestLinkCreateSerializer,
     InviteCreateSerializer,
+    LeaveCollectionSerializer,
     MemberRoleSerializer,
     ShareableUserSerializer,
     ShareableUsersQuerySerializer,
@@ -289,7 +291,11 @@ class SharingActionsMixin:
     @extend_schema(
         methods=['DELETE'], tags=['Sharing'], parameters=[USER_PARAMETER], request=None, responses={204: _DELETED},
         summary='Remove a member',
-        description='Owner only. Places they created in the collection belong to the owner and stay.',
+        description=(
+            'Owner only. Places they created in the collection belong to the owner and stay. They keep '
+            'their history: each location in it they travelled to but do not own is copied to their '
+            'account with their visits, and they are taken off the original visits.'
+        ),
     )
     @action(detail=True, methods=['patch', 'delete'], url_path=r'members/(?P<user_uuid>[^/.]+)')
     def member(self, request, pk=None, user_uuid=None):
@@ -300,9 +306,12 @@ class SharingActionsMixin:
         if request.method == 'DELETE':
             if user is None:
                 raise NotFound('That person is not a member of this collection.')
-            collection.shared_with.remove(user)
-            collection.save()
-            record_activity(collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=user.username)
+            with transaction.atomic():
+                # They never chose to go, so they always keep copies of where they travelled.
+                travelers.release_member(collection, user, keep_copies=True)
+                collection.shared_with.remove(user)
+                collection.save()
+                record_activity(collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=user.username)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         role = validated(MemberRoleSerializer, request.data)['role']
@@ -317,24 +326,40 @@ class SharingActionsMixin:
             CollectionMember.objects.update_or_create(collection=collection, user=user, defaults={'role': role})
         return self._sharing_response(collection, request)
 
-    @extend_schema(tags=['Sharing'], request=None, responses={204: _DELETED})
+    @extend_schema(
+        tags=['Sharing'],
+        parameters=[OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')],
+        request=LeaveCollectionSerializer,
+        responses={
+            200: inline_serializer('LeaveCount', {'locations': serializers.IntegerField()}),
+            204: _DELETED,
+        },
+    )
     @action(detail=True, methods=['post'], url_path='leave')
     def leave(self, request, pk=None):
         """
         Leave a collection
 
-        For members. Places you own that are in it stay yours and stay linked.
+        For members. Places you own that are in it stay yours and stay linked. You are taken off
+        every visit at the other locations in it; with `keep_copies` (the default) each of those
+        you travelled to is first copied to your account, under its own name, with your visits.
+        With `?dry_run=1` it returns how many locations that is and changes nothing.
         """
         collection = self.get_object()
         if request.user == collection.user:
             raise APIError('The owner cannot leave their own collection.', code='invalid')
         if not collection.shared_with.filter(id=request.user.id).exists():
             raise APIError('You are not a member of this collection.', code='invalid')
-        collection.shared_with.remove(request.user)
-        collection.save()
-        record_activity(
-            collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=request.user.username, left=True
-        )
+        keep_copies = validated(LeaveCollectionSerializer, request.data)['keep_copies']
+        if request.query_params.get('dry_run', '').lower() in ('1', 'true'):
+            return Response({'locations': travelers.member_locations(collection, request.user).count()})
+        with transaction.atomic():
+            travelers.release_member(collection, request.user, keep_copies)
+            collection.shared_with.remove(request.user)
+            collection.save()
+            record_activity(
+                collection, request, CollectionActivity.Verb.MEMBER_REMOVED, username=request.user.username, left=True
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     # -- Travelers -----------------------------------------------------------------------

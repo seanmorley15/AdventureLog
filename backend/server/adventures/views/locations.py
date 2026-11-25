@@ -9,7 +9,7 @@ from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -46,7 +46,7 @@ from adventures.services.locations.center import collection_center
 from adventures.services.locations.copy import copy_location
 from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
-from adventures.services.travelers import candidates, visited_by, where_ive_been_q
+from adventures.services.travelers import candidates, take_my_visits, visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle
 from adventures.utils.language import resolve_request_language
@@ -329,14 +329,17 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
         Copy a location
 
         Copies a place you can see into your own account, with its photos, files and trails
-        but not its visits. Optionally puts the copy in a collection.
+        but not its visits. Optionally puts the copy in a collection. With `take_my_visits`, for
+        a location you travelled to but don't own (say, before leaving its trip), the copy keeps
+        the original name, your visits move onto it, and you are taken off the original's visits.
         """
         original = self.get_object()
         if not can_read_location(request, original):
             raise PermissionDenied('You do not have permission to copy this location.')
 
         collection = None
-        collection_id = validated(LocationDuplicateRequestSerializer, request.data).get('collection')
+        params = validated(LocationDuplicateRequestSerializer, request.data)
+        collection_id = params.get('collection')
         if collection_id:
             collection = Collection.objects.filter(id=collection_id).first()
             if collection is None:
@@ -345,7 +348,12 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
                 raise PermissionDenied('You do not have permission to add locations to this collection.')
 
         try:
-            new_location = copy_location(original, request.user, collection)
+            if params['take_my_visits']:
+                new_location = take_my_visits(original, request.user, collection=collection)
+            else:
+                new_location = copy_location(original, request.user, collection)
+        except APIException:
+            raise
         except Exception:
             logger.exception('Failed to duplicate location %s', pk)
             raise APIError('The location could not be copied.', code='server_error', status=500)

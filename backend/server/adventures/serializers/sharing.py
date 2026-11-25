@@ -24,6 +24,13 @@ class GuestLinkCreateSerializer(serializers.Serializer):
     )
 
 
+class LeaveCollectionSerializer(serializers.Serializer):
+    keep_copies = serializers.BooleanField(
+        default=True,
+        help_text='Keep your own copies of the locations you visited on this trip, with your visits.',
+    )
+
+
 class AddTravelersSerializer(serializers.Serializer):
     user_uuids = serializers.ListField(
         child=serializers.UUIDField(),

@@ -429,6 +429,13 @@ class LocationDuplicateRequestSerializer(serializers.Serializer):
     collection = serializers.UUIDField(
         required=False, allow_null=True, help_text='Put the copy in this collection (you must be able to edit it).'
     )
+    take_my_visits = serializers.BooleanField(
+        default=False,
+        help_text=(
+            'Move your visits to the copy, which keeps the original name, and take you off the '
+            "original's visits. Not for a location you own."
+        ),
+    )
 
 
 class DuplicateCheckSerializer(serializers.Serializer):
