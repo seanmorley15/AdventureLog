@@ -443,17 +443,23 @@ def release_lost_access(location, ignoring=()):
     return len(users)
 
 
-def lost_access_plan(locations, ignoring=()):
-    """``[(location, [users])]``: who ``lost_access_users`` finds at each of ``locations``, leaving out places where it is nobody."""
+def lost_access_plan(locations, ignoring=(), exclude=None):
+    """
+    ``[(location, [users])]``: who ``lost_access_users`` finds at each of ``locations``, leaving out
+    places where it is nobody. ``exclude`` is a user who is going too (a deleted account): never planned.
+    """
     plan = []
     for location in locations:
-        users = list(lost_access_users(location, ignoring).order_by('pk'))
+        found = lost_access_users(location, ignoring)
+        if exclude is not None:
+            found = found.exclude(pk=exclude.pk)
+        users = list(found.order_by('pk'))
         if users:
             plan.append((location, users))
     return plan
 
 
-def collections_release_plan(collections):
+def collections_release_plan(collections, exclude=None):
     """
     ``lost_access_plan`` for the places of ``collections`` that are about to go with all of
     them at once, so a place held by two of them is judged once, against the collections that
@@ -470,7 +476,7 @@ def collections_release_plan(collections):
         **{user_field: OuterRef('user_id')}
     )
     places = Location.objects.filter(collections__in=collections).filter(Exists(others)).distinct()
-    return lost_access_plan(places, ignoring=collections)
+    return lost_access_plan(places, ignoring=collections, exclude=exclude)
 
 
 def release_preview(plan):
@@ -496,7 +502,7 @@ def release_preview(plan):
     }
 
 
-def release_collections_travelers(collections):
+def release_collections_travelers(collections, exclude=None):
     """
     Before ``collections`` are all deleted, give the lost-access travelers of their places
     their copies (``release_lost_access`` with every one of them ignored at once, so a place
@@ -508,7 +514,7 @@ def release_collections_travelers(collections):
 
     released = 0
     with transaction.atomic():
-        for location, users in collections_release_plan(collections):
+        for location, users in collections_release_plan(collections, exclude):
             for user in users:
                 take_my_visits(location, user)
             released += len(users)

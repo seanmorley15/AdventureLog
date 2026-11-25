@@ -122,3 +122,14 @@ def as_uuid(value):
     except (TypeError, ValueError, AttributeError):
         return None
 
+
+
+def is_dry_run(request) -> bool:
+    """
+    Whether the request asks for a dry run. Fails closed: ``dry_run`` present with anything but an
+    explicit false (``0``, ``false``, ``no``, ``off``) is a dry run, including a bare ``?dry_run``.
+    """
+    params = request.query_params
+    if 'dry_run' not in params:
+        return False
+    return params.get('dry_run', '').strip().lower() not in ('0', 'false', 'no', 'off')

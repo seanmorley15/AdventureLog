@@ -59,7 +59,7 @@ from core.visibility import can_read_published
 from core import pagination
 from core.exceptions import APIError
 from core.geo import point_to_lat_lon
-from core.parsing import as_uuid
+from core.parsing import as_uuid, is_dry_run
 from core.serializers import validated
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 
@@ -560,7 +560,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
                 'Only the collection owner or the place owner can remove a place from a collection. '
                 'You can remove it from the plan instead.'
             )
-        if request.query_params.get('dry_run', '').lower() in ('1', 'true'):
+        if is_dry_run(request):
             plan = lost_access_plan([location], ignoring=[collection])
             preview = release_preview(plan)
             return Response(UnlinkPreviewSerializer({

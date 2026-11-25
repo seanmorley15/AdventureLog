@@ -15,7 +15,7 @@ def deletion_preview(user):
     ``visits_deleted`` and ``others_uploads``: visits at other people's places they were the
     only traveler on, and what others added to them, which go.
     """
-    release = travelers.release_preview(travelers.collections_release_plan(Collection.objects.filter(user=user)))
+    release = travelers.release_preview(travelers.collections_release_plan(Collection.objects.filter(user=user), exclude=user))
     theirs = Location.objects.filter(visits__travelers=user).exclude(user=user).distinct()
     impact = travelers.leave_preview_all_places(theirs, user)
     on_others = Visit.objects.filter(travelers=user).exclude(location__user=user).count()

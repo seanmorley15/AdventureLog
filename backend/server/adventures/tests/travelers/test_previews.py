@@ -179,3 +179,123 @@ class AccountPreviewTests(PreviewBase):
         self.assertEqual(response.status_code, 200, response.content)
         body = response.json()
         self.assertEqual((body['left_shared_collections'], body['kept_copies']), (1, 1))
+
+
+class DryRunFlagTests(PreviewBase):
+    YES = ['1', 'true', 'True', 'yes', 'on', 't', 'y', '']
+    NO = ['0', 'false', 'no', 'off']
+
+    def _unlink(self, value):
+        self.as_user(self.owner)
+        query = 'dry_run' if value == '' else f'dry_run={value}'
+        return self.client.delete(f'/api/locations/{self.hut.id}/collections/{self.trip.id}/?{query}')
+
+    def _delete(self, value):
+        self.as_user(self.owner)
+        query = 'dry_run' if value == '' else f'dry_run={value}'
+        return self.client.delete(f'/api/collections/{self.trip.id}/?{query}')
+
+    def test_anything_but_an_explicit_false_is_a_dry_run(self):
+        before = self._state()
+        for value in self.YES:
+            with self.subTest(value=value):
+                self.assertIn('people_released', self._unlink(value).json())
+                self.assertIn('people_released', self._delete(value).json())
+                self.assertEqual(self._state(), before)
+
+    def test_an_explicit_false_does_the_real_thing(self):
+        for value in self.NO:
+            with self.subTest(value=value):
+                self.assertEqual(self._unlink(value).json().get('linked'), False)
+                self.hut.collections.add(self.trip)
+        self.assertEqual(self._delete('false').status_code, 204)
+        self.assertFalse(Collection.objects.filter(pk=self.trip.pk).exists())
+
+
+class PreviewMatchesRealOutcomeTests(PreviewBase):
+    """The numbers a preview gives are what the real action then does."""
+
+    def setUp(self):
+        super().setUp()
+        self.alone = self._alone_with_a_photo_from_the_owner()
+        self.hut_visits = Visit.objects.filter(location=self.hut).count()
+        self.images = ContentImage.objects.count()
+
+    def _assert_matches(self, preview, copier_names):
+        self.assertEqual(preview['visits_deleted'], 1)
+        self.assertEqual(preview['others_uploads'], 1)
+        self.assertEqual(Visit.objects.filter(location=self.hut).count(), self.hut_visits - preview['visits_deleted'])
+        self.assertFalse(Visit.objects.filter(pk=self.alone.pk).exists())
+        self.assertEqual(ContentImage.objects.count(), self.images - preview['others_uploads'])
+        got = sorted(Location.objects.filter(name='Hut').exclude(pk=self.hut.pk).values_list('user__username', flat=True))
+        self.assertEqual(got, sorted(copier_names))
+        self.assertEqual(sorted(p['username'] for p in preview['people_released']), sorted(copier_names))
+
+    def test_unlink(self):
+        self.as_user(self.owner)
+        url = f'/api/locations/{self.hut.id}/collections/{self.trip.id}/'
+        preview = self.client.delete(url + '?dry_run=1').json()
+        self.client.delete(url)
+        self._assert_matches(preview, ['editor'])
+
+    def test_collection_delete(self):
+        self.as_user(self.owner)
+        url = f'/api/collections/{self.trip.id}/'
+        preview = self.client.delete(url + '?dry_run=1').json()
+        self.assertEqual(self.client.delete(url).status_code, 204)
+        self._assert_matches(preview, ['editor'])
+        self.assertEqual(preview['places'], 1)
+
+    def test_account_deletion(self):
+        from users.services.account_deletion import delete_user_account
+
+        theirs = Collection.objects.create(user=self.stranger, name='Theirs')
+        theirs.shared_with.add(self.owner)
+        spot = Location.objects.create(user=self.stranger, name='Spot')
+        spot.collections.add(theirs)
+        solo = Visit.objects.create(location=spot, start_date=_past())
+        solo.travelers.set([self.owner])
+        ContentImage.objects.create(user=self.stranger, image=ContentFile(PNG, name='s.png'), content_object=solo)
+        both = Visit.objects.create(location=spot, start_date=_past(2))
+        both.travelers.set([self.owner, self.stranger])
+
+        self.as_user(self.owner)
+        preview = self.client.get('/api/account/deletion-preview/').json()
+        delete_user_account(self.owner)
+
+        self.assertEqual([p['username'] for p in preview['people_released']], ['editor'])
+        self.assertEqual(Location.objects.filter(user=self.editor, name='Hut').count(), preview['places_copied'])
+        self.assertFalse(Visit.objects.filter(pk=solo.pk).exists())
+        self.assertEqual(preview['visits_deleted'], 1)
+        self.assertEqual(preview['others_uploads'], 1)
+        self.assertFalse(ContentImage.objects.filter(user=self.stranger).exists())
+        both.refresh_from_db()
+        self.assertEqual([t.pk for t in both.travelers.all()], [self.stranger.pk])
+        self.assertEqual(preview['visits_detached'], 1)
+
+    def test_account_deletion_never_lists_the_deleted_person(self):
+        place = Location.objects.create(user=self.editor, name='Mine')
+        place.collections.add(self.trip)
+        Visit.objects.create(location=place, start_date=_past()).travelers.set([self.owner, self.editor])
+        self.as_user(self.owner)
+        preview = self.client.get('/api/account/deletion-preview/').json()
+        self.assertEqual([p['username'] for p in preview['people_released']], ['editor'])
+        self.assertEqual(preview['places_copied'], 1)
+        from users.services.account_deletion import delete_user_account
+
+        delete_user_account(self.owner)
+        self.assertEqual(Location.objects.filter(name='Mine').count(), 1)
+
+    def test_going_private(self):
+        self.editor.profile_visibility = 'public'
+        self.editor.save()
+        # The editor alone on a visit, with a photo from the owner.
+        self.as_user(self.editor)
+        preview = self.client.get('/api/account/privacy-preview/').json()
+        body = self.client.patch('/api/account/', {'profile_visibility': 'private'}, format='json').json()
+        self.assertEqual(preview['copies'], body['kept_copies'])
+        self.assertEqual(preview['left_shared_collections'], body['left_shared_collections'])
+        self.assertEqual(Location.objects.filter(user=self.editor, name='Hut').count(), preview['copies'])
+        self.assertEqual((preview['visits_deleted'], preview['others_uploads']), (1, 1))
+        self.assertFalse(Visit.objects.filter(pk=self.alone.pk).exists())
+        self.assertEqual(ContentImage.objects.count(), self.images - preview['others_uploads'])

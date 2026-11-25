@@ -47,6 +47,7 @@ from adventures.serializers.collection_detail import (
 from django.contrib.auth import get_user_model
 from core import pagination
 from core.exceptions import APIError
+from core.parsing import is_dry_run
 from core.sync import ClientIdsMixin, ConditionalWritesMixin
 from core.serializers import validated
 from adventures.services import day_plan, travelers
@@ -96,7 +97,7 @@ class CollectionViewSet(ConditionalWritesMixin, ClientIdsMixin, SharingActionsMi
 
     def destroy(self, request, *args, **kwargs):
         collection = self.get_object()
-        if request.query_params.get('dry_run', '').lower() in ('1', 'true'):
+        if is_dry_run(request):
             preview = travelers.release_preview(travelers.collections_release_plan([collection]))
             return Response(CollectionDeletePreviewSerializer({
                 'people_released': preview['people'],

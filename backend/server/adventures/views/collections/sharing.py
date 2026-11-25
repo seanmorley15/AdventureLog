@@ -30,7 +30,7 @@ from adventures.serializers.sharing import (
     SharingStateSerializer,
 )
 from core.exceptions import APIError
-from core.parsing import as_uuid
+from core.parsing import as_uuid, is_dry_run
 from core.serializers import validated
 from django.contrib.auth import get_user_model
 from core.visibility import public_access_allowed, shareable_profiles_q
@@ -42,8 +42,7 @@ logger = logging.getLogger(__name__)
 _DRY_RUN = OpenApiParameter('dry_run', OpenApiTypes.BOOL, description='Only count; change nothing.')
 
 
-def _is_dry_run(request):
-    return request.query_params.get('dry_run', '').lower() in ('1', 'true')
+_is_dry_run = is_dry_run
 
 
 def _sharing_state(collection, request):
@@ -403,7 +402,7 @@ class SharingActionsMixin:
         if not can_edit(request.user, collection):
             raise PermissionDenied('You do not have permission to change this collection.')
         users = validated(AddTravelersSerializer, request.data)['user_uuids']
-        dry_run = request.query_params.get('dry_run', '').lower() in ('1', 'true')
+        dry_run = is_dry_run(request)
         return Response(travelers.add_to_trip(collection, users, dry_run=dry_run, actor=request))
 
     # -- Guest links ---------------------------------------------------------------------
