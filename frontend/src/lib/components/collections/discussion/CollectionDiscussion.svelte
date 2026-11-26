@@ -44,7 +44,7 @@
 <!-- Phones: one scrolling column. Wide screens: comments and activity side by side,
      each scrolling on its own. Bodies are block, not flex, so content never shrinks. -->
 <div
-	class="h-full min-h-0 space-y-4 overflow-y-auto pb-4 lg:grid lg:gap-4 lg:space-y-0 lg:overflow-hidden lg:pb-0 {canEdit
+	class="space-y-4 pb-4 lg:grid lg:h-full lg:min-h-0 lg:gap-4 lg:space-y-0 lg:overflow-hidden lg:pb-0 {canEdit
 		? 'lg:grid-cols-[minmax(0,1fr)_22rem]'
 		: ''}"
 >

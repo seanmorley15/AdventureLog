@@ -126,6 +126,31 @@
 				border-radius: 0.75rem !important;
 				overflow: hidden !important;
 			}
+			/* Phones: the three toolbar groups don't fit on one row, so put the title on its own
+			   row and let the button groups wrap underneath instead of being squeezed or cut off. */
+			@media (max-width: 639px) {
+				.ec-toolbar {
+					flex-wrap: wrap !important;
+					justify-content: space-between !important;
+					gap: 0.5rem !important;
+					padding: 0.625rem !important;
+				}
+				.ec-toolbar > * {
+					column-gap: 0.375rem !important;
+				}
+				.ec-toolbar > .ec-center {
+					order: -1;
+					flex-basis: 100%;
+					justify-content: center;
+				}
+				.ec-toolbar .ec-title {
+					font-size: 1.125rem;
+				}
+				.ec-button {
+					padding: 0.3rem 0.5rem !important;
+					font-size: 0.875rem !important;
+				}
+			}
 		`;
 		document.head.appendChild(style);
 		styleInjected = true;

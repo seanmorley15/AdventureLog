@@ -64,8 +64,8 @@
 	}
 </script>
 
-<div class="flex h-full min-h-0 flex-col">
-	<section class="card flex h-full min-h-0 flex-col bg-base-200 shadow-xl">
+<div class="flex flex-col lg:h-full lg:min-h-0">
+	<section class="card flex flex-col bg-base-200 shadow-xl lg:h-full lg:min-h-0">
 		<div class="card-body flex min-h-0 flex-1 flex-col gap-3 p-3 sm:p-4">
 			<div class="flex flex-wrap items-center justify-between gap-2">
 				<div class="flex min-w-0 items-center gap-2">
@@ -100,7 +100,9 @@
 				<p class="text-sm text-base-content/60">{$t('collections.no_calendar_events')}</p>
 			{/if}
 
-			<div class="collection-calendar min-h-0 flex-1 overflow-y-auto rounded-xl bg-base-100">
+			<div
+				class="collection-calendar rounded-xl bg-base-100 lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+			>
 				<CalendarComponent
 					{events}
 					{initialDate}
