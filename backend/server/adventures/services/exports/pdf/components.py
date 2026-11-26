@@ -13,7 +13,7 @@ from core.formatting import format_short_date
 from .fonts import escape_xml, pdf_markup, renderable_icon
 from .layout import Ctx
 from .maps import MapLeg, MapPoint
-from .text import NOTE_PDF_MAX_LENGTH, body_paragraphs, format_datetime, format_money
+from .text import NOTE_PDF_MAX_LENGTH, body_paragraphs, format_datetime, format_money, entry_local, is_all_day_entry, to_local, visit_dates
 from .theme import (
     COLOR_BORDER,
     COLOR_LIGHT_BG,
@@ -108,8 +108,7 @@ def place_text(ctx: Ctx, location, *, description_max: int = PLACE_DESCRIPTION_M
         out.append(P(coords, s['ItemMeta']))
     if ctx.show_visits if visits is None else visits:
         for visit in sorted(location.visits.all(), key=lambda v: v.start_date or v.created_at):
-            start = visit.start_date.date() if visit.start_date else None
-            end = visit.end_date.date() if visit.end_date else None
+            start, end = visit_dates(visit.start_date, visit.end_date, visit.timezone)
             if start and end and end != start:
                 out.append(P(f'Visited {format_short_date(start)} – {format_short_date(end)}', s['ItemMeta']))
             elif start:
@@ -165,6 +164,14 @@ def transport_text(ctx: Ctx, transport) -> List:
     return out
 
 
+def lodging_nights(lodging) -> int:
+    """Nights between local check-in and check-out dates (0 if either is missing)."""
+    if not lodging.check_in or not lodging.check_out:
+        return 0
+    count = (entry_local(lodging.check_out, lodging.timezone).date() - entry_local(lodging.check_in, lodging.timezone).date()).days
+    return max(count, 0)
+
+
 def lodging_text(ctx: Ctx, lodging) -> List:
     s = ctx.styles
     out: List = [P(lodging.name or 'Stay', s['ItemTitle'])]
@@ -179,11 +186,8 @@ def lodging_text(ctx: Ctx, lodging) -> List:
     if lodging.check_in or lodging.check_out:
         check_in = format_datetime(lodging.check_in, lodging.timezone) if lodging.check_in else '—'
         check_out = format_datetime(lodging.check_out, lodging.timezone) if lodging.check_out else '—'
-        nights = ''
-        if lodging.check_in and lodging.check_out:
-            count = (lodging.check_out.date() - lodging.check_in.date()).days
-            if count > 0:
-                nights = f' · {count} night{"s" if count != 1 else ""}'
+        count = lodging_nights(lodging)
+        nights = f' · {count} night{"s" if count != 1 else ""}' if count else ''
         out.append(P(f'Check-in {check_in}', s['ItemMeta']))
         out.append(P(f'Check-out {check_out}{nights}', s['ItemMeta']))
     if lodging.reservation_number:
@@ -335,14 +339,14 @@ def entry_time(model: str, obj: Any, item=None) -> Tuple[str, str]:
     start = clock(getattr(item, 'start_time', None)) if item else ''
     end = clock(getattr(item, 'end_time', None)) if item else ''
     if model == 'transportation':
-        if not start and obj.date and (obj.date.hour or obj.date.minute):
-            start = clock(obj.date.time())
-        if not end and obj.end_date and (obj.end_date.hour or obj.end_date.minute):
-            end = clock(obj.end_date.time())
+        if not start and obj.date and not is_all_day_entry(obj.date, obj.start_timezone):
+            start = clock(to_local(obj.date, obj.start_timezone).time())
+        if not end and obj.end_date and not is_all_day_entry(obj.end_date, obj.end_timezone):
+            end = clock(to_local(obj.end_date, obj.end_timezone).time())
         return start, (f'arrives {end}' if end else '')
     if model == 'lodging':
-        if not start and obj.check_in and (obj.check_in.hour or obj.check_in.minute):
-            start = clock(obj.check_in.time())
+        if not start and obj.check_in and not is_all_day_entry(obj.check_in, obj.timezone):
+            start = clock(to_local(obj.check_in, obj.timezone).time())
         return start, 'check-in' if start else ''
     return start, (f'until {end}' if end else '')
 
