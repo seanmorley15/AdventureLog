@@ -37,7 +37,7 @@
 	onMount(async () => {
 		if (!enableFetch) return;
 		try {
-			const res = await fetch('/api/integrations/');
+			const res = await fetch('/api/integrations');
 			if (!res.ok) return;
 			const integrations: IntegrationsResponse = await res.json();
 			googleMapsEnabled = Boolean(integrations?.google_maps);
@@ -59,7 +59,7 @@
 				lang: fetchLang || 'en',
 				source
 			});
-			const response = await fetch(`/api/places/description/?${params.toString()}`);
+			const response = await fetch(`/api/places/description?${params.toString()}`);
 			const data = await response.json().catch(() => ({}));
 			if (response.ok && data.extract) {
 				text = data.extract;

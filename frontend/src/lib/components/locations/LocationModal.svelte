@@ -172,7 +172,7 @@
 
 	async function loadIntegrations() {
 		try {
-			const res = await fetch('/api/integrations/');
+			const res = await fetch('/api/integrations');
 			if (!res.ok) return;
 			const integrations = await res.json();
 			googleMapsEnabled = Boolean(integrations?.google_maps);
@@ -237,7 +237,7 @@
 		if (!id || hydratedFor === id) return;
 		if ((untrack(() => locationToEdit?.visits?.length) ?? 0) > 0) return;
 		hydratedFor = id;
-		void fetch(`/api/locations/${id}/`)
+		void fetch(`/api/locations/${id}`)
 			.then((res) => (res.ok ? res.json() : null))
 			.then((full) => {
 				if (!full || location.id !== id) return;

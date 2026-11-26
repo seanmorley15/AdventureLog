@@ -34,7 +34,7 @@
 	async function markVisited(e: MouseEvent) {
 		e.preventDefault();
 		e.stopPropagation();
-		const res = await fetch(`/api/visited-regions/`, {
+		const res = await fetch(`/api/visited-regions`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'POST',
 			body: JSON.stringify({ region: region.id })
@@ -58,7 +58,7 @@
 	async function removeVisit(e: MouseEvent) {
 		e.preventDefault();
 		e.stopPropagation();
-		const res = await fetch(`/api/visited-regions/${region.id}/`, {
+		const res = await fetch(`/api/visited-regions/${region.id}`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'DELETE'
 		});

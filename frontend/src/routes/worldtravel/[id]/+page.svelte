@@ -123,7 +123,7 @@
 	}
 
 	async function markVisited(region: Region) {
-		let res = await fetch(`/api/visited-regions/`, {
+		let res = await fetch(`/api/visited-regions`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ region: region.id })
@@ -145,7 +145,7 @@
 	}
 
 	async function removeVisit(region: Region) {
-		let res = await fetch(`/api/visited-regions/${region.id}/`, {
+		let res = await fetch(`/api/visited-regions/${region.id}`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'DELETE'
 		});

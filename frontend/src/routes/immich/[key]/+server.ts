@@ -16,7 +16,7 @@ export const GET: RequestHandler = async (event) => {
 			});
 		}
 
-		let integrationFetch = await fetch(`${endpoint}/api/integrations/immich/`, {
+		let integrationFetch = await fetch(`${endpoint}/api/integrations/immich`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ export const GET: RequestHandler = async (event) => {
 		const integrationId = integrationData.id;
 
 		// Proxy the request to the backend{
-		const res = await fetch(`${endpoint}/api/integrations/immich/assets/${integrationId}/${key}/`, {
+		const res = await fetch(`${endpoint}/api/integrations/immich/assets/${integrationId}/${key}`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

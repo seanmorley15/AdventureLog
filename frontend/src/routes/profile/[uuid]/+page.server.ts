@@ -38,14 +38,14 @@ export const load: PageServerLoad = async (event) => {
 		}
 	};
 
-	const stats = part<ProfileStatsData>('/stats/');
-	const locations = part<LocationsPage>(`/locations/?page_size=${FIRST_PAGE_SIZE}`);
-	const pins = part<ProfilePin[]>('/pins/');
+	const stats = part<ProfileStatsData>('/stats');
+	const locations = part<LocationsPage>(`/locations?page_size=${FIRST_PAGE_SIZE}`);
+	const pins = part<ProfilePin[]>('/pins');
 
 	// Only the header and collections are awaited: they decide whether there is a profile.
 	let profile;
 	try {
-		profile = await event.fetch(`${base}/?locations=false`, { headers });
+		profile = await event.fetch(`${base}?locations=false`, { headers });
 	} catch (err) {
 		console.error('Profile fetch failed', err);
 		error(503, 'The profile could not be loaded.');

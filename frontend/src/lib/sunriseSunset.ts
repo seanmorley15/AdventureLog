@@ -14,7 +14,7 @@ export async function fetchSunriseSunset(
 	date: string
 ): Promise<SunriseSunset | null> {
 	const params = new URLSearchParams({ date });
-	const response = await fetch(`/api/locations/${locationId}/sun-times/?${params.toString()}`);
+	const response = await fetch(`/api/locations/${locationId}/sun-times?${params.toString()}`);
 	if (!response.ok) {
 		return null;
 	}

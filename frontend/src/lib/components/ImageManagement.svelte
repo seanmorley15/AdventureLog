@@ -186,7 +186,7 @@
 	async function fetchImageFromUrl(imageUrl: string): Promise<Blob | null> {
 		try {
 			// Use backend proxy to avoid CORS issues with external URLs (Wikipedia, etc.)
-			const res = await fetch('/api/images/fetch-from-url/', {
+			const res = await fetch('/api/images/fetch-from-url', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -274,7 +274,7 @@
 
 		try {
 			const res = await fetch(
-				`/api/places/images/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
+				`/api/places/images?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
 			);
 			const data = await res.json();
 
@@ -335,7 +335,7 @@
 
 	async function makePrimaryImage(imageId: string) {
 		try {
-			const res = await fetch(`/api/images/${imageId}/toggle-primary/`, {
+			const res = await fetch(`/api/images/${imageId}/toggle-primary`, {
 				method: 'POST'
 			});
 
@@ -357,7 +357,7 @@
 
 	async function removeImage(imageId: string) {
 		try {
-			const res = await fetch(`/api/images/${imageId}/`, {
+			const res = await fetch(`/api/images/${imageId}`, {
 				method: 'DELETE'
 			});
 
@@ -429,7 +429,7 @@
 
 		try {
 			// The images are downloaded by a background job. Follow it, then load what it created.
-			const started = await startJob('/api/images/import-from-urls/', {
+			const started = await startJob('/api/images/import-from-urls', {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					content_type: contentType,
@@ -443,7 +443,7 @@
 			const created = (
 				await Promise.all(
 					createdIds.map(async (id) => {
-						const res = await fetch(`/api/images/${id}/`);
+						const res = await fetch(`/api/images/${id}`);
 						return res.ok ? ((await res.json()) as ContentImage) : null;
 					})
 				)

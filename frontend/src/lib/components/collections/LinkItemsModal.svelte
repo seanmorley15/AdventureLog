@@ -145,7 +145,7 @@
 			offset: String(offset)
 		});
 		if (term) params.set('q', term);
-		const response = await fetch(`/api/locations/suggest/?${params}`);
+		const response = await fetch(`/api/locations/suggest?${params}`);
 		if (!response.ok) return { results: [] as Pin[], anchored: false, count: 0 };
 		return (await response.json()) as { results: Pin[]; anchored: boolean; count: number };
 	}

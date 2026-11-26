@@ -48,7 +48,7 @@
 		void reloadKey;
 		const controller = new AbortController();
 		failed = false;
-		fetch(`/api/collections/${collection.id}/?as=story`, { signal: controller.signal })
+		fetch(`/api/collections/${collection.id}?as=story`, { signal: controller.signal })
 			.then(async (res) => {
 				if (!res.ok) throw new Error(String(res.status));
 				story = (await res.json()) as Collection;

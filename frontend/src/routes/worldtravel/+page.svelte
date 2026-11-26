@@ -260,7 +260,7 @@
 	async function fetchGlobeSpin() {
 		isLoadingGlobeSpin = true;
 		try {
-			const response = await fetch('/api/globe-spin/');
+			const response = await fetch('/api/globe-spin');
 			if (response.ok) {
 				globeSpinData = await response.json();
 			} else {

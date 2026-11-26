@@ -12,7 +12,7 @@ let cachedCsrf: { token: string; expires: number } | null = null;
 let inflightCsrf: Promise<string | null> | null = null;
 
 async function requestCSRFToken(): Promise<string | null> {
-	const csrfTokenFetch = await fetch(`${getServerEndpoint()}/api/auth/csrf/`);
+	const csrfTokenFetch = await fetch(`${getServerEndpoint()}/api/auth/csrf`);
 	if (csrfTokenFetch.ok) {
 		const csrfToken = await csrfTokenFetch.json();
 		return csrfToken.csrf_token ?? null;
@@ -202,7 +202,7 @@ export async function proxyToDjango(event: RequestEvent) {
 
 export async function checkBackendHealth(): Promise<'reachable' | 'unreachable'> {
 	try {
-		const response = await fetch(`${getServerEndpoint()}/health/`, { method: 'GET' });
+		const response = await fetch(`${getServerEndpoint()}/health`, { method: 'GET' });
 		return response.ok ? 'reachable' : 'unreachable';
 	} catch {
 		return 'unreachable';

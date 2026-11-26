@@ -90,7 +90,7 @@ export async function waitForJob(
 	let delay = FIRST_POLL_MS;
 	for (;;) {
 		await sleep(delay, options.signal);
-		const res = await fetch(`/api/jobs/${id}/`, { signal: options.signal });
+		const res = await fetch(`/api/jobs/${id}`, { signal: options.signal });
 		if (!res.ok) throw await errorFrom(res, 'The job could not be read.');
 		const job = (await res.json()) as Job;
 		options.onUpdate?.(job);

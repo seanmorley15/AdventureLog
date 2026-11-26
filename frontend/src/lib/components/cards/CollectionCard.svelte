@@ -66,7 +66,7 @@
 		if (isDuplicating) return;
 		isDuplicating = true;
 		try {
-			const res = await fetch(`/api/collections/${collection.id}/duplicate/`, {
+			const res = await fetch(`/api/collections/${collection.id}/duplicate`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' }
 			});
@@ -114,7 +114,7 @@
 	}
 
 	async function archiveCollection(is_archived: boolean) {
-		let res = await fetch(`/api/collections/${collection.id}/`, {
+		let res = await fetch(`/api/collections/${collection.id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'

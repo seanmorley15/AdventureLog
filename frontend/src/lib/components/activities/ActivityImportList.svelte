@@ -54,7 +54,7 @@
 		try {
 			const { start, end } = window();
 			const response = await fetch(
-				`/api/integrations/${provider}/activities/?start_date=${start}&end_date=${end}`
+				`/api/integrations/${provider}/activities?start_date=${start}&end_date=${end}`
 			);
 			if (!response.ok) throw new Error(String(response.status));
 			activities = (await response.json()).activities ?? [];

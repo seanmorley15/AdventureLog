@@ -142,7 +142,7 @@
 
 		isLoading = true;
 		try {
-			const response = await fetch(`/api/calendar/events/?start=${range.start}&end=${range.end}`);
+			const response = await fetch(`/api/calendar/events?start=${range.start}&end=${range.end}`);
 			if (!response.ok) throw new Error('Failed to load calendar events');
 			const payload = await response.json();
 			const incoming = (payload.events || []) as CalendarApiEvent[];
@@ -167,7 +167,7 @@
 		if (isDownloadingIcs) return;
 		isDownloadingIcs = true;
 		try {
-			const response = await fetch('/api/calendar/ics/');
+			const response = await fetch('/api/calendar/ics');
 			if (!response.ok) throw new Error('Unable to generate calendar');
 			const blob = await response.blob();
 			const url = URL.createObjectURL(blob);

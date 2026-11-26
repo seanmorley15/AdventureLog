@@ -54,7 +54,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		const serverEndpoint = getServerEndpoint();
 		const cookie = event.request.headers.get('cookie') || '';
 
-		const userFetch = await event.fetch(`${serverEndpoint}/api/account/`, {
+		const userFetch = await event.fetch(`${serverEndpoint}/api/account`, {
 			headers: { cookie }
 		});
 

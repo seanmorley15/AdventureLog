@@ -23,7 +23,7 @@ export const load = (async (event) => {
 
 	const { start, end } = getInitialRange();
 
-	const response = await fetch(`${endpoint}/api/calendar/events/?start=${start}&end=${end}`, {
+	const response = await fetch(`${endpoint}/api/calendar/events?start=${start}&end=${end}`, {
 		headers: { Cookie: `sessionid=${sessionId}` }
 	});
 

@@ -100,7 +100,7 @@
 
 	async function loadIntegrations() {
 		try {
-			const res = await fetch('/api/integrations/');
+			const res = await fetch('/api/integrations');
 			if (!res.ok) return;
 			const integrations = await res.json();
 			googleMapsEnabled = Boolean(integrations?.google_maps);

@@ -9,7 +9,7 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 export const load = (async (event) => {
 	const id = event.params as { id: string };
 	const [request, integrations] = await Promise.all([
-		fetch(`${endpoint}/api/locations/${id.id}/`, {
+		fetch(`${endpoint}/api/locations/${id.id}`, {
 			headers: {
 				Cookie: `sessionid=${event.cookies.get('sessionid')}`
 			},
@@ -17,7 +17,7 @@ export const load = (async (event) => {
 		}),
 		// The viewer's own Immich, for a link to this spot on its map (#1117).
 		event.locals.user
-			? djangoSessionJson<IntegrationsResponse>(event, '/api/integrations/')
+			? djangoSessionJson<IntegrationsResponse>(event, '/api/integrations')
 			: Promise.resolve(null)
 	]);
 	const immichUrl = parseImmichIntegration(integrations?.immich).webUrl;
