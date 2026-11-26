@@ -702,6 +702,13 @@
 	let dayPlanner = $derived(collection ? showsDayPlanner(collection) : false);
 	// Folders keep the catalog sidebar. Trip all-items uses the planner workspace chrome.
 	let catalogView = $derived(false);
+	// The planner views (map + plan list). On phones the header, map and plan list scroll together
+	// in one column under the navbar, instead of the plan list scrolling in a small sheet over a
+	// pinned map. The column is the scroller (the app sets body { overflow: hidden }), which keeps
+	// the planner's sticky day rail and jump-to-day scrolling working.
+	let phoneScrollsPage = $derived(
+		currentView === 'plan' || currentView === 'read' || currentView === 'all'
+	);
 	// Plan, read, trip all-items, the map, calendar, and recommendations fill the space under the tab bar.
 	let lockedPane = $derived(
 		currentView === 'plan' ||
@@ -1166,7 +1173,9 @@
 	<div
 		class={catalogView
 			? 'min-h-screen bg-gradient-to-b from-base-200 via-base-100 to-base-200'
-			: 'flex h-[calc(100dvh-4.75rem)] min-h-0 flex-col'}
+			: phoneScrollsPage
+				? 'h-[calc(100dvh-4.75rem)] overflow-y-auto lg:flex lg:min-h-0 lg:flex-col lg:overflow-visible'
+				: 'flex h-[calc(100dvh-4.75rem)] min-h-0 flex-col'}
 	>
 		<header class="relative z-[100] shrink-0 bg-base-100">
 			{#if coverImage}
@@ -1411,15 +1420,19 @@
 			<div
 				class={catalogView
 					? 'grid grid-cols-1 items-start gap-6 lg:grid-cols-4'
-					: 'min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-1 sm:px-4'}
+					: phoneScrollsPage
+						? 'min-h-0 flex-1 px-3 pb-3 pt-1 sm:px-4 lg:overflow-hidden'
+						: 'min-h-0 flex-1 overflow-hidden px-3 pb-3 pt-1 sm:px-4'}
 			>
 				<!-- Left Column - Main Content -->
 				<div
 					class={catalogView
 						? 'space-y-6 lg:col-span-3'
-						: lockedPane
-							? 'h-full min-h-0 overflow-hidden'
-							: 'h-full min-h-0 overflow-y-auto pb-24'}
+						: phoneScrollsPage
+							? 'lg:h-full lg:min-h-0 lg:overflow-hidden'
+							: lockedPane
+								? 'h-full min-h-0 overflow-hidden'
+								: 'h-full min-h-0 overflow-y-auto pb-24'}
 				>
 					<!-- Description stays with the catalog. The planner and map start immediately. -->
 					{#if collection.description && catalogView}
@@ -1436,7 +1449,7 @@
 
 					<!-- All Items View -->
 					{#if currentView === 'all'}
-						<div class="h-full min-h-0">
+						<div class="lg:h-full lg:min-h-0">
 							<TripWorkspace
 								bind:collection
 								user={data.user}
@@ -1556,7 +1569,7 @@
 
 					<!-- Day plan and read, with the map -->
 					{#if currentView === 'plan' || currentView === 'read'}
-						<div class="h-full min-h-0">
+						<div class="lg:h-full lg:min-h-0">
 							<TripWorkspace
 								bind:collection
 								user={data.user}

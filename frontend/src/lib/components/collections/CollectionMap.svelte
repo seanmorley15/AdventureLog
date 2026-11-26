@@ -75,6 +75,8 @@
 		autoFit?: boolean;
 		/** Let editors add a pin to a day straight from its hover card. */
 		dayPicker?: boolean;
+		/** Passed to FullMap: one finger scrolls the page, two move the map. */
+		cooperativeGestures?: boolean;
 	}
 
 	let {
@@ -94,7 +96,8 @@
 		numberedPins = true,
 		pinStyleToggle = false,
 		autoFit = false,
-		dayPicker = false
+		dayPicker = false,
+		cooperativeGestures = false
 	}: Props = $props();
 
 	let basemapType = $state('default');
@@ -1087,6 +1090,7 @@
 		{clusterEnabled}
 		clusterOptions={resolvedClusterOptions}
 		mapClickEnabled={canModify}
+		{cooperativeGestures}
 		on:mapClick={handleMapClick}
 	>
 		{#snippet marker({ markerProps, markerLngLat, isActive, setActive })}
