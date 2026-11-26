@@ -702,12 +702,15 @@
 	let dayPlanner = $derived(collection ? showsDayPlanner(collection) : false);
 	// Folders keep the catalog sidebar. Trip all-items uses the planner workspace chrome.
 	let catalogView = $derived(false);
-	// The planner views (map + plan list). On phones the header, map and plan list scroll together
-	// in one column under the navbar, instead of the plan list scrolling in a small sheet over a
-	// pinned map. The column is the scroller (the app sets body { overflow: hidden }), which keeps
+	// The map + list views (plan, read, all items, recommendations). On phones the header, map and
+	// list scroll together in one column under the navbar, instead of the list scrolling in a small
+	// sheet over a pinned map. The column is the scroller (the app sets body { overflow: hidden }), which keeps
 	// the planner's sticky day rail and jump-to-day scrolling working.
 	let phoneScrollsPage = $derived(
-		currentView === 'plan' || currentView === 'read' || currentView === 'all'
+		currentView === 'plan' ||
+			currentView === 'read' ||
+			currentView === 'all' ||
+			currentView === 'recommendations'
 	);
 	// Plan, read, trip all-items, the map, calendar, and recommendations fill the space under the tab bar.
 	let lockedPane = $derived(
@@ -1632,7 +1635,7 @@
 
 					<!-- Recommendations View -->
 					{#if currentView === 'recommendations' && canModifyCollection}
-						<div class="h-full min-h-0">
+						<div class="lg:h-full lg:min-h-0">
 							<CollectionRecommendationView bind:collection user={data.user} />
 						</div>
 					{/if}

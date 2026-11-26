@@ -88,6 +88,23 @@
 	let searchedPlace = $state<PlaceSearchResult | null>(null);
 	let lodgingToEdit = $state<Lodging | null>(null);
 	let listScroller = $state<HTMLElement | null>(null);
+
+	// On touch phones the map sits inside the scrolling page, so a one-finger swipe should scroll
+	// the page rather than pan the map. MapLibre reads this once, when the map is created.
+	const touchPhone =
+		typeof window !== 'undefined' &&
+		window.matchMedia('(pointer: coarse) and (max-width: 1023px)').matches;
+
+	/** The element that actually scrolls the list: the list itself on desktop, the page column on phones. */
+	function listScrollParent(): HTMLElement | null {
+		let node: HTMLElement | null = listScroller;
+		while (node) {
+			const overflowY = getComputedStyle(node).overflowY;
+			if (overflowY === 'auto' || overflowY === 'scroll') return node;
+			node = node.parentElement;
+		}
+		return null;
+	}
 	let savedScroll = 0;
 	let requestId = 0;
 	const duplicates = new LocationDuplicateChecker();
@@ -308,18 +325,26 @@
 	}
 
 	function selectRecommendation(item: Recommendation) {
-		if (!selected) savedScroll = listScroller?.scrollTop ?? 0;
+		if (!selected) savedScroll = listScrollParent()?.scrollTop ?? 0;
 		// The search box is replaced by the detail view, so its pick goes with it.
 		searchedPlace = null;
 		selected = item;
 		focusCenter = [item.longitude, item.latitude];
 		focusZoom = 14;
 		if (anchor.kind === 'map') lastSearchCenter = { lng: item.longitude, lat: item.latitude };
+		// On phones the page column scrolls, not the list: bring the detail's top into view.
+		queueMicrotask(() => {
+			const scroller = listScrollParent();
+			if (!listScroller || !scroller || scroller === listScroller) return;
+			if (listScroller.getBoundingClientRect().top < scroller.getBoundingClientRect().top) {
+				listScroller.scrollIntoView({ block: 'start' });
+			}
+		});
 	}
 
 	function backToList() {
 		selected = null;
-		queueMicrotask(() => listScroller?.scrollTo({ top: savedScroll }));
+		queueMicrotask(() => listScrollParent()?.scrollTo({ top: savedScroll }));
 	}
 
 	$effect(() => {
@@ -441,9 +466,11 @@
 	const lodgingFirst = $derived(categoryMeta(category).isLodging);
 </script>
 
-<div class="relative h-full min-h-0 lg:grid lg:grid-cols-2 lg:gap-4">
+<!-- Phones: the map sits on top and the list flows below it, so both scroll with the page.
+     Desktop: map and list side by side, each filling the height under the tab bar. -->
+<div class="relative flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-2 lg:gap-4">
 	<div
-		class="relative h-[42%] overflow-hidden rounded-box lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0"
+		class="relative h-[45dvh] min-h-64 shrink-0 overflow-hidden rounded-box lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0"
 		{@attach captureMapRoot}
 	>
 		<FullMap
@@ -453,6 +480,7 @@
 			zoom={mapZoom}
 			mapClass="h-full w-full"
 			clusterEnabled={false}
+			cooperativeGestures={touchPhone}
 			on:mapMove={rememberMove}
 		>
 			{#snippet overlays()}
@@ -508,10 +536,8 @@
 
 	<div
 		bind:this={listScroller}
-		class="planner-pane absolute inset-x-0 bottom-0 top-[34%] z-10 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-3xl bg-base-100 px-2 pb-8 shadow-2xl lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-2 lg:shadow-none"
+		class="planner-pane pb-8 lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-x-hidden lg:overflow-y-auto lg:overscroll-contain lg:pb-2"
 	>
-		<div class="mx-auto mb-3 mt-2 h-1.5 w-12 rounded-full bg-base-300 lg:hidden"></div>
-
 		{#if selected}
 			<section class="card bg-base-200 shadow-xl">
 				<div class="card-body gap-3 p-4 sm:p-5">
