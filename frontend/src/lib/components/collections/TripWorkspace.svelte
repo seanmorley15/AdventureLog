@@ -30,6 +30,12 @@
 
 	const catalogFilters = new CatalogFilters();
 
+	// On touch phones the map sits inside the scrolling page, so a one-finger swipe should scroll
+	// the page rather than pan the map. MapLibre reads this once, when the map is created.
+	const touchPhone =
+		typeof window !== 'undefined' &&
+		window.matchMedia('(pointer: coarse) and (max-width: 1023px)').matches;
+
 	let selectedDay = $state<number | null>(null);
 	let highlightedDay = $state<number | null>(null);
 
@@ -50,9 +56,11 @@
 	}
 </script>
 
-<div class="relative h-full min-h-0 lg:grid lg:grid-cols-2 lg:gap-4">
+<!-- Phones: the map sits on top and the plan list flows below it, so both scroll with the page.
+     Desktop: map and plan list side by side, each filling the height under the tab bar. -->
+<div class="relative flex flex-col gap-3 lg:grid lg:h-full lg:min-h-0 lg:grid-cols-2 lg:gap-4">
 	<div
-		class="h-[42%] overflow-hidden rounded-box lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0"
+		class="h-[45dvh] min-h-64 shrink-0 overflow-hidden rounded-box lg:col-start-2 lg:row-start-1 lg:h-full lg:min-h-0"
 	>
 		<CollectionMap
 			bind:collection
@@ -71,13 +79,13 @@
 			clusterOptions={{ radius: 300, maxZoom: 8, minPoints: 2 }}
 			autoFit={folder}
 			dayPicker={!children}
+			cooperativeGestures={touchPhone}
 		/>
 	</div>
 
 	<div
-		class="planner-pane absolute inset-x-0 bottom-0 top-[34%] z-10 overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-3xl bg-base-100 px-2 pb-8 shadow-2xl lg:static lg:z-auto lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:rounded-none lg:bg-transparent lg:px-0 lg:pb-2 lg:shadow-none"
+		class="planner-pane pb-8 lg:col-start-1 lg:row-start-1 lg:h-full lg:min-h-0 lg:overflow-x-hidden lg:overflow-y-auto lg:overscroll-contain lg:pb-2"
 	>
-		<div class="mx-auto mb-3 mt-2 h-1.5 w-12 rounded-full bg-base-300 lg:hidden"></div>
 		{#if children}
 			{@render children(catalogFilters)}
 		{:else}

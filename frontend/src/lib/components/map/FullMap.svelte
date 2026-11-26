@@ -61,6 +61,8 @@
 		showMapControls?: boolean;
 		/** Render controls inline (no absolute positioning) — for parent toolbars. */
 		controlsEmbedded?: boolean;
+		/** One finger scrolls the page, two move the map. For maps inside a scrolling page on phones. */
+		cooperativeGestures?: boolean;
 		/** Element to fullscreen; defaults to the FullMap root container. */
 		fullscreenTarget?: HTMLElement | null;
 		zoom?: number | undefined;
@@ -99,6 +101,7 @@
 		mapClass = 'w-full h-full',
 		showMapControls = true,
 		controlsEmbedded = false,
+		cooperativeGestures = false,
 		fullscreenTarget = null,
 		zoom = undefined,
 		center = undefined,
@@ -349,6 +352,7 @@
 		class="{mapClass} fullmap-map"
 		standardControls={false}
 		zoomLevelsToOverscale={null}
+		{cooperativeGestures}
 		{zoom}
 		{center}
 		{bounds}

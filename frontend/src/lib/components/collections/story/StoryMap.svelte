@@ -15,6 +15,8 @@
 		highlightKey?: string | null;
 		onPinClick?: (pin: StoryPin) => void;
 		mapClass?: string;
+		/** Pan with two fingers so one-finger drags scroll the page (phones, page flow). */
+		cooperativeGestures?: boolean;
 	}
 
 	let {
@@ -24,7 +26,8 @@
 		focusKey = null,
 		highlightKey = null,
 		onPinClick,
-		mapClass = 'h-full w-full'
+		mapClass = 'h-full w-full',
+		cooperativeGestures = false
 	}: Props = $props();
 
 	let map: any = $state(undefined);
@@ -131,6 +134,7 @@
 	geoJson={EMPTY}
 	bind:map
 	{mapClass}
+	{cooperativeGestures}
 	clusterEnabled={false}
 	mapClickEnabled={false}
 	showBasemapSelector={false}

@@ -70,7 +70,7 @@
 	}
 </script>
 
-<div class="flex h-full min-h-0 flex-col gap-3">
+<div class="flex flex-col gap-3 lg:h-full lg:min-h-0">
 	<div
 		class="flex shrink-0 flex-wrap items-center gap-3 rounded-xl border px-3 py-2 {visibility ===
 		'private'
@@ -80,7 +80,7 @@
 	>
 		{#if visibility === 'private'}
 			<LockOutline class="h-5 w-5 shrink-0" />
-			<div class="min-w-0 flex-1">
+			<div class="min-w-0 flex-1 basis-48">
 				<p class="font-semibold">{$t('story.tab_private_title')}</p>
 				<p class="text-sm text-base-content/70">
 					{isOwner ? $t('story.tab_private_owner') : $t('story.tab_private_member')}
@@ -98,7 +98,7 @@
 			{:else}
 				<LinkVariant class="h-5 w-5 shrink-0 text-success" />
 			{/if}
-			<div class="min-w-0 flex-1">
+			<div class="min-w-0 flex-1 basis-48">
 				<p class="font-semibold">{$t(`share.story_is_live_${visibility}`)}</p>
 				{#if hidden.length}
 					<p class="truncate text-sm text-base-content/70">
@@ -126,7 +126,7 @@
 	</div>
 
 	<div
-		class="min-h-0 flex-1 overflow-hidden rounded-2xl border border-base-300/70 bg-base-100 shadow-sm"
+		class="overflow-clip rounded-2xl border lg:min-h-0 lg:flex-1 lg:overflow-hidden border-base-300/70 bg-base-100 shadow-sm"
 	>
 		{#if story}
 			<CollectionStory collection={story} {dateFormat} {shareUrl} embedded />

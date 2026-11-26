@@ -72,6 +72,15 @@
 	let isWide = $state(false);
 	// Maps need the browser; they mount after hydration.
 	let mounted = $state(false);
+	// Inside the trip page on a phone the story flows with the page instead of scrolling in a
+	// short box under the trip header: the map strip and day navigator stick to the top.
+	let phoneFlow = $derived(embedded && mounted && !isWide);
+	let mapStripHeight = $state(0);
+	// One-finger drags on the map should scroll the page there, not pan the map.
+	const touchPhone =
+		typeof window !== 'undefined' &&
+		window.matchMedia('(pointer: coarse) and (max-width: 1023px)').matches;
+	let stickyOffset = $derived(phoneFlow && hasMap ? mapStripHeight : 0);
 	let lightbox = $state<{ images: ContentImage[]; index: number; name: string } | null>(null);
 	let canNativeShare = $state(false);
 
@@ -156,12 +165,25 @@
 	//   centers the map on that day's first place.
 	// The cover, intro, and footer are chapters with no key: the map shows the whole trip.
 	const READING_LINE = 0.4;
+	// The column scrolls itself, except in the phone flow where the page column scrolls it.
+	function scrollRoot(node: HTMLElement): HTMLElement | null {
+		for (let el: HTMLElement | null = node; el; el = el.parentElement) {
+			if (/(auto|scroll)/.test(getComputedStyle(el).overflowY)) return el;
+		}
+		return null;
+	}
 	const watchScroll = (node: HTMLElement) => {
 		void story.chapters;
+		void phoneFlow;
+		const root = scrollRoot(node);
+		const target: HTMLElement | Window = root ?? window;
 		let frame = 0;
 		const update = () => {
 			frame = 0;
-			const line = node.getBoundingClientRect().top + node.clientHeight * READING_LINE;
+			// Measure from the bottom of anything stuck on top (the phone map strip).
+			const top = (root ? root.getBoundingClientRect().top : 0) + stickyOffset;
+			const height = (root ? root.clientHeight : window.innerHeight) - stickyOffset;
+			const line = top + height * READING_LINE;
 			const sections = [...node.querySelectorAll<HTMLElement>('[data-chapter]')].map((el) => ({
 				key: el.dataset.chapter || null,
 				top: el.getBoundingClientRect().top,
@@ -177,10 +199,10 @@
 		const onScroll = () => {
 			if (!frame) frame = requestAnimationFrame(update);
 		};
-		node.addEventListener('scroll', onScroll, { passive: true });
+		target.addEventListener('scroll', onScroll, { passive: true });
 		update();
 		return () => {
-			node.removeEventListener('scroll', onScroll);
+			target.removeEventListener('scroll', onScroll);
 			cancelAnimationFrame(frame);
 		};
 	};
@@ -214,6 +236,7 @@
 		highlightKey={hoverEntry}
 		onPinClick={selectPin}
 		{mapClass}
+		cooperativeGestures={phoneFlow && touchPhone}
 	/>
 	<span
 		class="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-base-100/90 px-3 py-1 text-xs font-semibold shadow"
@@ -231,9 +254,17 @@
 
 <!-- The story scrolls in its own column, so the map beside it (or above it on a phone)
      always stays on screen. The parent gives this a height. -->
-<article class="story flex h-full min-h-0 flex-col bg-base-100 lg:flex-row">
+<article
+	class="story flex flex-col bg-base-100 {phoneFlow ? '' : 'h-full min-h-0 lg:flex-row'}"
+	style:--story-sticky="{stickyOffset}px"
+>
 	{#if mounted && !isWide && hasMap}
-		<div class="relative shrink-0 border-b border-base-300 {mobileMapOpen ? 'h-[34dvh]' : 'h-10'}">
+		<div
+			class="shrink-0 border-b border-base-300 {mobileMapOpen ? 'h-[34dvh]' : 'h-10'} {phoneFlow
+				? 'sticky top-0 z-30 bg-base-100'
+				: 'relative'}"
+			bind:clientHeight={mapStripHeight}
+		>
 			{#if mobileMapOpen}
 				{@render map('h-full w-full')}
 			{/if}
@@ -249,7 +280,9 @@
 	{/if}
 
 	<div
-		class="min-h-0 flex-1 overflow-y-auto overscroll-contain {mounted && isWide && hasMap
+		class="{phoneFlow ? '' : 'min-h-0 flex-1 overflow-y-auto overscroll-contain'} {mounted &&
+		isWide &&
+		hasMap
 			? 'lg:w-[56%] lg:max-w-[54rem] lg:flex-none'
 			: ''}"
 		{@attach watchScroll}
@@ -353,6 +386,7 @@
 		{#if navChapters.length > 1}
 			<nav
 				class="sticky top-0 z-20 border-y border-base-300 bg-base-100/90 backdrop-blur"
+				style:top="{stickyOffset}px"
 				aria-label={$t('story.days')}
 			>
 				<div class="flex gap-2 overflow-x-auto px-5 py-2 sm:px-8">
@@ -377,7 +411,11 @@
 				<p class="py-16 text-center text-base-content/60">{$t('story.empty')}</p>
 			{/if}
 			{#each story.chapters as chapter (chapter.key)}
-				<section id={`chapter-${chapter.key}`} data-chapter={chapter.key} class="scroll-mt-16">
+				<section
+					id={`chapter-${chapter.key}`}
+					data-chapter={chapter.key}
+					class="scroll-mt-[calc(var(--story-sticky)+4rem)]"
+				>
 					<header class="mb-6">
 						<p class="text-sm font-bold uppercase tracking-widest" style="color: {chapter.color}">
 							{chapterTitle(chapter)}
