@@ -111,7 +111,7 @@
 		};
 
 		try {
-			const res = await fetch('/api/trails/', {
+			const res = await fetch('/api/trails', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

@@ -169,7 +169,7 @@
 				console.error('Failed to save checklist');
 			}
 		} else {
-			const res = await fetch(`/api/checklists/`, {
+			const res = await fetch(`/api/checklists`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

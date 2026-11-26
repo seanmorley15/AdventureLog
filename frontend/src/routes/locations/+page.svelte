@@ -168,7 +168,7 @@
 		isLocationModalOpen = true;
 		editingLocationId = locationId;
 		try {
-			const res = await fetch(`/api/locations/${locationId}/`);
+			const res = await fetch(`/api/locations/${locationId}`);
 			if (res.ok) {
 				adventureToEdit = await res.json();
 			}

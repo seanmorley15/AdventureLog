@@ -24,7 +24,7 @@ export async function searchApp(
 		params.set('offset', String(options.offset));
 	}
 
-	const response = await fetch(`/api/search/?${params.toString()}`, {
+	const response = await fetch(`/api/search?${params.toString()}`, {
 		signal: options.signal
 	});
 	const payload = await response.json();

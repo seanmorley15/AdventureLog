@@ -123,7 +123,7 @@
 	async function enableImmichIntegration() {
 		const isUpdate = !!immichIntegration?.id;
 		// One connection per user, at one address: create it, or change it in place.
-		const url = '/api/integrations/immich/';
+		const url = '/api/integrations/immich';
 		const method = isUpdate ? 'PATCH' : 'POST';
 
 		try {
@@ -149,7 +149,7 @@
 	async function disableImmichIntegration() {
 		if (!immichIntegration?.id) return;
 
-		const res = await fetch('/api/integrations/immich/', {
+		const res = await fetch('/api/integrations/immich', {
 			method: 'DELETE'
 		});
 		if (res.ok) {
@@ -161,7 +161,7 @@
 	}
 
 	async function stravaAuthorizeRedirect() {
-		const res = await fetch('/api/integrations/strava/authorize/', {
+		const res = await fetch('/api/integrations/strava/authorize', {
 			method: 'GET',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -174,7 +174,7 @@
 	}
 
 	async function stravaDisconnect() {
-		const res = await fetch('/api/integrations/strava/', {
+		const res = await fetch('/api/integrations/strava', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -187,7 +187,7 @@
 	}
 
 	async function wandererDisconnect() {
-		const res = await fetch('/api/integrations/wanderer/', {
+		const res = await fetch('/api/integrations/wanderer', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -242,7 +242,7 @@
 		}
 		endurainConnecting = true;
 		try {
-			const res = await fetch('/api/integrations/endurain/connect/', {
+			const res = await fetch('/api/integrations/endurain/connect', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -287,7 +287,7 @@
 		}
 		endurainConnecting = true;
 		try {
-			const res = await fetch('/api/integrations/endurain/mfa/', {
+			const res = await fetch('/api/integrations/endurain/mfa', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -312,7 +312,7 @@
 	}
 
 	async function endurainDisconnect() {
-		const res = await fetch('/api/integrations/endurain/', {
+		const res = await fetch('/api/integrations/endurain', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -329,7 +329,7 @@
 	async function enableWandererIntegration() {
 		const integrationId = newWandererIntegration.id || wandererIntegration?.id;
 		const isUpdate = !!integrationId;
-		const url = '/api/integrations/wanderer/';
+		const url = '/api/integrations/wanderer';
 		const method = isUpdate ? 'PATCH' : 'POST';
 
 		try {

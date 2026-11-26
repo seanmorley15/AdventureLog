@@ -477,7 +477,7 @@
 	}
 
 	async function fetchVisitedCities() {
-		const response = await fetch('/api/visited-cities/');
+		const response = await fetch('/api/visited-cities');
 		visitedCities = await response.json();
 	}
 

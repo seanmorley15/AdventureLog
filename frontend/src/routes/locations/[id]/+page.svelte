@@ -264,7 +264,7 @@
 		isDuplicating = true;
 		isFabMenuOpen = false;
 		try {
-			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
+			const res = await fetch(`/api/locations/${adventure.id}/duplicate`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' }
 			});

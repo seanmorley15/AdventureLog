@@ -81,21 +81,18 @@ export const load: PageServerLoad = async (event) => {
 		sessionsResponse
 	] = await Promise.all([
 		djangoSessionJson<EmailListResponse>(event, '/api/auth/browser/v1/account/email'),
-		djangoSessionJson<MFAAuthenticatorResponse>(
-			event,
-			'/api/auth/browser/v1/account/authenticators'
-		),
-		djangoSessionJson<IntegrationsSummary>(event, '/api/integrations/'),
+		djangoSessionJson<MFAAuthenticatorResponse>(event,'/api/auth/browser/v1/account/authenticators'),
+		djangoSessionJson<IntegrationsSummary>(event, '/api/integrations'),
 		event
-			.fetch(`${endpoint}/api/server-info/`)
+			.fetch(`${endpoint}/api/server-info`)
 			.then(async (res) => (res.ok ? ((await res.json()) as ServerInfo) : null)),
 		authConfig.then((config) => config.social_providers),
-		djangoSessionJson<ImmichIntegration>(event, '/api/integrations/immich/'),
-		djangoSessionJson<APIKey[]>(event, '/api/account/api-keys/').then((data) => data ?? []),
-		djangoSessionJson<MediaUsage>(event, '/api/account/media-usage/'),
+		djangoSessionJson<ImmichIntegration>(event, '/api/integrations/immich'),
+		djangoSessionJson<APIKey[]>(event, '/api/account/api-keys').then((data) => data ?? []),
+		djangoSessionJson<MediaUsage>(event, '/api/account/media-usage'),
 		authConfig.then((config) => config.password_policy),
-		djangoSessionJson<WandererIntegration>(event, '/api/integrations/wanderer/'),
-		djangoSessionJson<EndurainIntegration>(event, '/api/integrations/endurain/'),
+		djangoSessionJson<WandererIntegration>(event, '/api/integrations/wanderer'),
+		djangoSessionJson<EndurainIntegration>(event, '/api/integrations/endurain'),
 		djangoSessionJson<SessionsListResponse>(event, '/api/auth/browser/v1/auth/sessions')
 	]);
 
@@ -151,7 +148,7 @@ export const actions: Actions = {
 			let date_format = formData.get('date_format') as string | null | undefined;
 			let map_style = formData.get('map_style') as string | null | undefined;
 
-			const resCurrent = await djangoSessionFetch(event, '/api/account/');
+			const resCurrent = await djangoSessionFetch(event, '/api/account');
 
 			if (!resCurrent.ok) {
 				return fail(resCurrent.status, await resCurrent.json());
@@ -231,7 +228,7 @@ export const actions: Actions = {
 
 			let csrfToken = await fetchCSRFToken();
 
-			let res = await fetch(`${endpoint}/api/account/`, {
+			let res = await fetch(`${endpoint}/api/account`, {
 				method: 'PATCH',
 				headers: {
 					Referer: event.url.origin,
@@ -359,7 +356,7 @@ export const actions: Actions = {
 			apiFormData.append('confirm', 'yes');
 
 			// The restore runs in a background job; the page follows it (see lib/jobs.ts).
-			let res = await fetch(`${endpoint}/api/backup/import/`, {
+			let res = await fetch(`${endpoint}/api/backup/import`, {
 				method: 'POST',
 				headers: {
 					Referer: event.url.origin,
@@ -409,7 +406,7 @@ export const actions: Actions = {
 			body.password = password;
 		}
 
-		const res = await fetch(`${endpoint}/api/account/`, {
+		const res = await fetch(`${endpoint}/api/account`, {
 			method: 'DELETE',
 			headers: {
 				Referer: event.url.origin,

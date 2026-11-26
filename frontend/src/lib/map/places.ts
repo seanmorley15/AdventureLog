@@ -46,7 +46,7 @@ export function toPlaceResult(result: Record<string, unknown>): PlaceSearchResul
 }
 
 export async function searchPlaces(query: string): Promise<PlacesSearchMeta> {
-	const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
+	const response = await fetch(`/api/places/search?q=${encodeURIComponent(query)}`);
 	const payload = await response.json();
 	if (!response.ok) {
 		throw new Error(apiErrorMessage(payload, 'Place search failed'));
@@ -113,7 +113,7 @@ export async function fetchFormattedLocation(
 	lng: number
 ): Promise<FormattedLocationData | null> {
 	try {
-		const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}`);
+		const response = await fetch(`/api/places/reverse?lat=${lat}&lon=${lng}`);
 		if (!response.ok) {
 			return null;
 		}
@@ -426,7 +426,7 @@ export async function fetchRecommendations(params: {
 		category: params.category
 	});
 	if (params.limit) searchParams.set('limit', String(params.limit));
-	const response = await fetch(`/api/recommendations/?${searchParams.toString()}`);
+	const response = await fetch(`/api/recommendations?${searchParams.toString()}`);
 	const data = await response.json();
 	if (!response.ok) {
 		throw new Error(apiErrorMessage(data, 'Failed to fetch recommendations'));
@@ -435,7 +435,7 @@ export async function fetchRecommendations(params: {
 }
 
 export async function refetchPins(): Promise<import('#lib/types.js').Pin[]> {
-	const response = await fetch('/api/locations/pins/');
+	const response = await fetch('/api/locations/pins');
 	if (!response.ok) return [];
 	return response.json();
 }

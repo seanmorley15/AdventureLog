@@ -112,7 +112,7 @@ await Promise.all([
 const find = (endpoint, name) =>
   login.evaluate(
     async ([endpoint, name]) => {
-      const res = await fetch(`/api/${endpoint}/?page_size=1000`);
+      const res = await fetch(`/api/${endpoint}?page_size=1000`);
       const data = await res.json();
       return (
         (data.results ?? data).find((item) => item.name === name)?.id ?? null

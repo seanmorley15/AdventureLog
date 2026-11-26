@@ -45,7 +45,7 @@ export const load = (async (event) => {
 		if (is_visited === 'true' || is_visited === 'false') params.set('is_visited', is_visited);
 		if (include_collections === 'false') params.set('in_collection', 'false');
 
-		let initialFetch = await event.fetch(backendApiUrl('/api/locations/', params.toString()), {
+		let initialFetch = await event.fetch(backendApiUrl('/api/locations', params.toString()), {
 			headers: {
 				Cookie: `sessionid=${event.cookies.get('sessionid')}`
 			},
@@ -87,7 +87,7 @@ export const actions: Actions = {
 		let formData = await event.request.formData();
 		let csrfToken = await fetchCSRFToken();
 		let sessionId = event.cookies.get('sessionid');
-		let res = await fetch(`${serverEndpoint}/api/images/`, {
+		let res = await fetch(`${serverEndpoint}/api/images`, {
 			method: 'POST',
 			headers: {
 				Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
@@ -115,7 +115,7 @@ export const actions: Actions = {
 		let formData = await event.request.formData();
 		let csrfToken = await fetchCSRFToken();
 		let sessionId = event.cookies.get('sessionid');
-		let res = await fetch(`${serverEndpoint}/api/attachments/`, {
+		let res = await fetch(`${serverEndpoint}/api/attachments`, {
 			method: 'POST',
 			headers: {
 				Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,

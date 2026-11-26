@@ -301,7 +301,7 @@
 			primary_image: saved.primary_image
 		} as Collection;
 		try {
-			const res = await fetch(`/api/collections/${id}/`);
+			const res = await fetch(`/api/collections/${id}`);
 			if (res.ok && collection?.id === id) {
 				collection = { ...collection, ...((await res.json()) as Collection) };
 			}
@@ -433,7 +433,7 @@
 				locationModalInitialStep = initialStep;
 				if (initialStep === 'visits' && item?.id) {
 					try {
-						const res = await fetch(`/api/locations/${item.id}/`);
+						const res = await fetch(`/api/locations/${item.id}`);
 						adventureToEdit = res.ok ? await res.json() : item;
 					} catch {
 						adventureToEdit = item;
@@ -471,7 +471,7 @@
 		if (!collection) return;
 
 		try {
-			const response = await fetch(`/api/locations/${location.id}/`, {
+			const response = await fetch(`/api/locations/${location.id}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ collections: [...(location.collections || []), collection.id] })
@@ -529,7 +529,7 @@
 		if (!collection) return false;
 		if ((collection.locations ?? []).some((item) => String(item.id) === String(locationId)))
 			return true;
-		const loaded = await fetch(`/api/locations/${locationId}/`);
+		const loaded = await fetch(`/api/locations/${locationId}`);
 		if (!loaded.ok || !(await linkLocationToCollection(locationId, collection.id))) {
 			addToast('error', $t('adventures.collection_link_location_error'));
 			return false;
@@ -548,7 +548,7 @@
 	) {
 		if (!collection || !dayPlanner) return;
 		if (alreadyPlaced(type, objectId, dayIndex, isGlobal)) return;
-		const response = await fetch(`/api/collections/${collection.id}/itinerary-items/`, {
+		const response = await fetch(`/api/collections/${collection.id}/itinerary-items`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -678,7 +678,7 @@
 		if (!collection || makingPlacesPrivate) return;
 		makingPlacesPrivate = true;
 		try {
-			const response = await fetch(`/api/collections/${collection.id}/make-locations-private/`, {
+			const response = await fetch(`/api/collections/${collection.id}/make-locations-private`, {
 				method: 'POST'
 			});
 			if (!response.ok) throw new Error(`HTTP ${response.status}`);

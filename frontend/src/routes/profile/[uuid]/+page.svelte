@@ -52,7 +52,7 @@
 	async function retryStats() {
 		retrying = true;
 		try {
-			const res = await fetch(`/api/users/${encodeURIComponent(profile.username)}/stats/`);
+			const res = await fetch(`/api/users/${encodeURIComponent(profile.username)}/stats`);
 			if (res.ok) retriedStats = await res.json();
 		} finally {
 			retrying = false;

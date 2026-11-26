@@ -26,7 +26,7 @@ export async function linkLocationToCollection(
 	locationId: string,
 	collectionId: string
 ): Promise<boolean> {
-	const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}/`, {
+	const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}`, {
 		method: 'POST'
 	});
 	return res.ok;
@@ -37,7 +37,7 @@ export async function unlinkLocationFromCollection(
 	locationId: string,
 	collectionId: string
 ): Promise<number | null> {
-	const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}/`, {
+	const res = await fetch(`/api/locations/${locationId}/collections/${collectionId}`, {
 		method: 'DELETE'
 	});
 	if (!res.ok) return null;

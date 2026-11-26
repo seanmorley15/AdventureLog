@@ -102,7 +102,7 @@
 		try {
 			const body = new FormData();
 			body.append('file', selected);
-			const response = await fetch('/api/activities/analyze/', { method: 'POST', body });
+			const response = await fetch('/api/activities/analyze', { method: 'POST', body });
 			const data = await response.json().catch(() => null);
 			if (!response.ok) {
 				addToast('error', apiErrorMessage(data, $t('activities.read_failed')));
@@ -178,7 +178,7 @@
 				clearEmpty: editing
 			});
 			const response = await fetch(
-				editing ? `/api/activities/${activity?.id}/` : '/api/activities/',
+				editing ? `/api/activities/${activity?.id}` : '/api/activities',
 				{
 					method: editing ? 'PATCH' : 'POST',
 					body

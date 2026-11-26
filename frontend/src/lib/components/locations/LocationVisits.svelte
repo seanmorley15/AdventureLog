@@ -251,7 +251,7 @@
 			// If editing an existing visit, patch instead of creating new
 			if (visitIdEditing) {
 				const editingId = visitIdEditing;
-				const response = await fetch(`/api/visits/${editingId}/`, {
+				const response = await fetch(`/api/visits/${editingId}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json'
@@ -283,7 +283,7 @@
 				}
 			} else {
 				// post to /api/visits for new visit
-				const response = await fetch('/api/visits/', {
+				const response = await fetch('/api/visits', {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
@@ -370,14 +370,14 @@
 		if (!confirm($t('adventures.confirm_delete_activity'))) return;
 
 		try {
-			const response = await fetch(`/api/activities/${activityId}/`, {
+			const response = await fetch(`/api/activities/${activityId}`, {
 				method: 'DELETE'
 			});
 
 			if (response.ok) {
 				// Refetch the location data to get the updated visits with correct IDs
 
-				const locationResponse = await fetch(`/api/locations/${objectId}/`);
+				const locationResponse = await fetch(`/api/locations/${objectId}`);
 				if (locationResponse.ok) {
 					const updatedLocation = await locationResponse.json();
 					visits = updatedLocation.visits;
@@ -457,7 +457,7 @@
 		}
 
 		// make the DELETE request
-		fetch(`/api/visits/${visitId}/`, {
+		fetch(`/api/visits/${visitId}`, {
 			method: 'DELETE'
 		}).then((response) => {
 			if (!response.ok) {

@@ -150,7 +150,7 @@
 			}
 		} else {
 			console.log('newNote', newNote);
-			const res = await fetch(`/api/notes/`, {
+			const res = await fetch(`/api/notes`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

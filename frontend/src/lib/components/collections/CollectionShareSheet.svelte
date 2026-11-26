@@ -174,7 +174,7 @@
 		searchController = controller;
 		try {
 			const params = new URLSearchParams({ q: query, limit: String(SEARCH_LIMIT) });
-			const res = await fetch(`/api/collections/${collection.id}/shareable-users/?${params}`, {
+			const res = await fetch(`/api/collections/${collection.id}/shareable-users?${params}`, {
 				signal: controller.signal
 			});
 			if (res.ok && searchController === controller) searchResults = await res.json();

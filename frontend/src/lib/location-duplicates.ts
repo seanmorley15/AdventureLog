@@ -39,7 +39,7 @@ export async function checkDuplicateLocations(
 	if (!canCheckDuplicates(input)) return [];
 
 	try {
-		const res = await fetch('/api/locations/check-duplicates/', {
+		const res = await fetch('/api/locations/check-duplicates', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

@@ -170,7 +170,7 @@
 		}
 
 		try {
-			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
+			const response = await fetch(`/api/places/search?q=${encodeURIComponent(query)}`);
 			if (!response.ok) {
 				return;
 			}
@@ -271,7 +271,7 @@
 
 		isSearching = true;
 		try {
-			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(query)}`);
+			const response = await fetch(`/api/places/search?q=${encodeURIComponent(query)}`);
 			const payload = await response.json();
 			const rawResults = payload?.results || [];
 			searchProvider = payload?.provider_used || null;
@@ -314,7 +314,7 @@
 		isReverseGeocoding = true;
 
 		try {
-			const response = await fetch(`/api/places/search/?q=${lat},${lng}`);
+			const response = await fetch(`/api/places/search?q=${lat},${lng}`);
 			const payload = await response.json();
 			const results = payload?.results || [];
 			searchProvider = payload?.provider_used || null;

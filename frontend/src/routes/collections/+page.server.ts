@@ -54,10 +54,10 @@ export const load = (async (event) => {
 	try {
 		// Execute all API calls in parallel
 		const [collectionsRes, sharedRes, archivedRes, invitesRes] = await Promise.all([
-			fetch(`${serverEndpoint}/api/collections/?${params}`, { headers, credentials: 'include' }),
-			fetch(`${serverEndpoint}/api/collections/?${allOf({ membership: 'shared' })}`, { headers }),
-			fetch(`${serverEndpoint}/api/collections/?${allOf({ archived: 'true' })}`, { headers }),
-			fetch(`${serverEndpoint}/api/collections/invitations/`, { headers })
+			fetch(`${serverEndpoint}/api/collections?${params}`, { headers, credentials: 'include' }),
+			fetch(`${serverEndpoint}/api/collections?${allOf({ membership: 'shared' })}`, { headers }),
+			fetch(`${serverEndpoint}/api/collections?${allOf({ archived: 'true' })}`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/invitations`, { headers })
 		]);
 
 		// Check if main collections request failed (most critical)
@@ -123,7 +123,7 @@ export const actions: Actions = {
 			apiFormData.append('existing_locations', existingLocations);
 
 			// The import runs in a background job; the page follows it (see lib/jobs.ts).
-			let res = await fetch(`${serverEndpoint}/api/collections/import/`, {
+			let res = await fetch(`${serverEndpoint}/api/collections/import`, {
 				method: 'POST',
 				headers: {
 					Referer: event.url.origin,

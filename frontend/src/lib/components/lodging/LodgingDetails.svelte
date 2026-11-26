@@ -374,7 +374,7 @@
 				let updatedLocation = await res.json();
 				lodging = updatedLocation;
 			} else {
-				let res = await fetch(`/api/lodgings/`, {
+				let res = await fetch(`/api/lodgings`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'

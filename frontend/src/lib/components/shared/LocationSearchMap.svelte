@@ -243,7 +243,7 @@
 		isSearching = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(searchTerm)}`);
+			const response = await fetch(`/api/places/search?q=${encodeURIComponent(searchTerm)}`);
 			const payload = await response.json();
 			const rawResults = payload?.results || [];
 			searchProvider = payload?.provider_used || null;
@@ -279,7 +279,7 @@
 		isSearchingStart = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(searchTerm)}`);
+			const response = await fetch(`/api/places/search?q=${encodeURIComponent(searchTerm)}`);
 			const payload = await response.json();
 			const rawResults = payload?.results || [];
 			startSearchProvider = payload?.provider_used || null;
@@ -314,7 +314,7 @@
 		isSearchingEnd = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(`/api/places/search/?q=${encodeURIComponent(searchTerm)}`);
+			const response = await fetch(`/api/places/search?q=${encodeURIComponent(searchTerm)}`);
 			const payload = await response.json();
 			const rawResults = payload?.results || [];
 			endSearchProvider = payload?.provider_used || null;
@@ -531,7 +531,7 @@
 		isReverseGeocoding = true;
 
 		try {
-			const response = await fetch(`/api/places/search/?q=${lat},${lng}`);
+			const response = await fetch(`/api/places/search?q=${lat},${lng}`);
 			const payload = await response.json();
 			const results = payload?.results || [];
 			searchProvider = payload?.provider_used || null;
@@ -589,7 +589,7 @@
 		target: 'single' | 'start' | 'end' = 'single'
 	) {
 		try {
-			const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}`);
+			const response = await fetch(`/api/places/reverse?lat=${lat}&lon=${lng}`);
 
 			if (response.ok) {
 				const data = await response.json();

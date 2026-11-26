@@ -86,7 +86,7 @@
 
 	onMount(async () => {
 		try {
-			const response = await fetch('/api/integrations/');
+			const response = await fetch('/api/integrations');
 			if (response.ok) {
 				connected = Boolean((await response.json()).strava?.user);
 			}

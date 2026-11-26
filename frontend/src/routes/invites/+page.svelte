@@ -20,7 +20,7 @@
 
 	async function fetchInvites() {
 		try {
-			const res = await fetch('/api/collections/invitations/', {
+			const res = await fetch('/api/collections/invitations', {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json'
@@ -41,7 +41,7 @@
 
 	async function acceptInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/invitation/accept/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/accept`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -63,7 +63,7 @@
 
 	async function declineInvite(invite: CollectionInvite) {
 		try {
-			const res = await fetch(`/api/collections/${invite.collection}/invitation/decline/`, {
+			const res = await fetch(`/api/collections/${invite.collection}/invitation/decline`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'

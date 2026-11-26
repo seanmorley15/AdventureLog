@@ -86,7 +86,7 @@
 		const params = new URLSearchParams({ thread });
 		if (storySecret) params.set('s', storySecret);
 		try {
-			const res = await fetch(`/api/collections/${collectionId}/comments/?${params}`);
+			const res = await fetch(`/api/collections/${collectionId}/comments?${params}`);
 			if (!res.ok) throw new Error(String(res.status));
 			data = await res.json();
 		} catch {

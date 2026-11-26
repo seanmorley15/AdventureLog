@@ -296,7 +296,7 @@
 	}
 
 	async function checkVisitedRegions() {
-		const res = await fetch('/api/visited-regions/sync/', {
+		const res = await fetch('/api/visited-regions/sync', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -327,7 +327,7 @@
 
 	async function disablePassword() {
 		const action = user.disable_password ? 'disable' : 'enable';
-		const res = await fetch(`/api/account/password-login/${action}/`, {
+		const res = await fetch(`/api/account/password-login/${action}`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -462,7 +462,7 @@
 
 	async function createApiKey() {
 		if (!newApiKeyName.trim()) return;
-		const res = await fetch('/api/account/api-keys/', {
+		const res = await fetch('/api/account/api-keys', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ name: newApiKeyName.trim() })
@@ -499,7 +499,7 @@
 	}
 
 	async function deleteApiKey(id: string) {
-		const res = await fetch(`/api/account/api-keys/${id}/`, { method: 'DELETE' });
+		const res = await fetch(`/api/account/api-keys/${id}`, { method: 'DELETE' });
 		if (res.ok) {
 			apiKeys = apiKeys.filter((k) => k.id !== id);
 			addToast('success', $t('api_keys.key_revoked'));

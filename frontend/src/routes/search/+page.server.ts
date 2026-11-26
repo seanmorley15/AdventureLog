@@ -31,7 +31,7 @@ export const load = (async (event) => {
 		params.set('types', types);
 	}
 
-	const res = await fetch(`${serverEndpoint}/api/search/?${params.toString()}`, {
+	const res = await fetch(`${serverEndpoint}/api/search?${params.toString()}`, {
 		headers: {
 			'Content-Type': 'application/json',
 			Cookie: `sessionid=${sessionId}`

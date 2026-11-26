@@ -63,7 +63,7 @@
 		if (!name) return;
 
 		let cancelled = false;
-		fetch(`/api/places/description/?name=${encodeURIComponent(name)}`)
+		fetch(`/api/places/description?name=${encodeURIComponent(name)}`)
 			.then((res) => (res.ok ? res.json() : null))
 			.then((json) => {
 				if (!cancelled && json && typeof json.extract === 'string') {
@@ -124,7 +124,7 @@
 	}
 
 	async function markVisited(city: City) {
-		let res = await fetch(`/api/visited-cities/`, {
+		let res = await fetch(`/api/visited-cities`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ city: city.id })
@@ -146,7 +146,7 @@
 	}
 
 	async function removeVisit(city: City) {
-		let res = await fetch(`/api/visited-cities/${city.id}/`, {
+		let res = await fetch(`/api/visited-cities/${city.id}`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'DELETE'
 		});

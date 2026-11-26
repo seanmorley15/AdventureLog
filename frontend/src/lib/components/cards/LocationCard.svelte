@@ -170,7 +170,7 @@
 		isDuplicating = true;
 		try {
 			const duplicatePayload = collection?.id ? { collection: collection.id } : null;
-			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
+			const res = await fetch(`/api/locations/${adventure.id}/duplicate`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(duplicatePayload ?? {})

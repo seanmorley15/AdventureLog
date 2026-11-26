@@ -20,9 +20,9 @@ export const load: PageServerLoad = async (event) => {
 	let statsRes: Response;
 	try {
 		[profileRes, pinsRes, statsRes] = await Promise.all([
-			event.fetch(`${base}/?locations=false`),
-			event.fetch(`${base}/pins/`),
-			event.fetch(`${base}/stats/`)
+			event.fetch(`${base}?locations=false`),
+			event.fetch(`${base}/pins`),
+			event.fetch(`${base}/stats`)
 		]);
 	} catch (err) {
 		console.error('Embed fetch failed', err);

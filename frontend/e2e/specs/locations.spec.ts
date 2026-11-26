@@ -95,7 +95,7 @@ test.describe('locations', () => {
 		const name = `Shared Viewpoint ${Date.now().toString(36)}`;
 		await page.goto('/locations');
 		const created = await page.evaluate(async (placeName) => {
-			const res = await fetch('/api/locations/', {
+			const res = await fetch('/api/locations', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ name: placeName, is_public: true })

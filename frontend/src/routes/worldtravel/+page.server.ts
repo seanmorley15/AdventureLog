@@ -10,7 +10,7 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
-		const res = await event.fetch(`${endpoint}/api/countries/`, {
+		const res = await event.fetch(`${endpoint}/api/countries`, {
 			method: 'GET',
 			headers: {
 				Cookie: `sessionid=${event.cookies.get('sessionid')}`
