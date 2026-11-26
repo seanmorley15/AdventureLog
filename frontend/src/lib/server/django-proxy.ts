@@ -181,6 +181,11 @@ export async function proxyToDjango(event: RequestEvent) {
 
 		const cleanHeaders = new Headers(response.headers);
 		cleanHeaders.delete('set-cookie');
+		// fetch() already decoded the body. Forwarding the backend's content-encoding (gzip since
+		// v0.14.0) would make browsers decode it again and fail (ERR_CONTENT_DECODING_FAILED), and its
+		// content-length describes the compressed bytes, not what is streamed here.
+		cleanHeaders.delete('content-encoding');
+		cleanHeaders.delete('content-length');
 
 		// Stream the body through. Buffering it (arrayBuffer) held every export and download in
 		// memory, and glibc rarely gives that memory back, so the process stayed large.
