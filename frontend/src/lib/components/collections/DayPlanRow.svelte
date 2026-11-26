@@ -40,6 +40,7 @@
 		collection?: Collection;
 		onLogVisit?: (row: PlanRow, date?: string) => Promise<LogVisitResult>;
 		onEditObject?: (row: PlanRow) => void;
+		onViewObject?: (row: PlanRow) => void;
 		onEditPlacement?: (row: PlanRow) => void;
 		onToggleOptional?: (row: PlanRow) => void;
 		onAddAgain?: (row: PlanRow) => void;
@@ -59,6 +60,7 @@
 		collection,
 		onLogVisit,
 		onEditObject,
+		onViewObject,
 		onEditPlacement,
 		onToggleOptional,
 		onAddAgain,
@@ -226,11 +228,11 @@
 			<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
 				{#if href}
 					<a {href} class="truncate font-semibold hover:text-primary">{name}</a>
-				{:else if onEditObject && row.object}
+				{:else if (onViewObject || onEditObject) && row.object}
 					<button
 						type="button"
 						class="truncate text-left font-semibold hover:text-primary"
-						onclick={() => onEditObject?.(row)}
+						onclick={() => (onViewObject ?? onEditObject)?.(row)}
 					>
 						{name}
 					</button>

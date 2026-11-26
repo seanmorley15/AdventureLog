@@ -12,6 +12,10 @@ curl -sSL https://get.adventurelog.app | bash
 
 When it finishes, follow [First Steps](first_steps.md).
 
+::: tip First login
+Username: `admin`. The installer prints the generated password at the end and offers to save it to `adventurelog/credentials.txt`. There is no default password.
+:::
+
 ## What the installer does
 
 1. Checks for Docker, Compose v2, enough RAM, and your CPU architecture. On a low-memory host it offers to skip the world data import.

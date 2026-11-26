@@ -1,12 +1,14 @@
 """Building a GPX file from an Endurain activity's streams."""
 
 import re
-from datetime import datetime, timedelta, timezone as dt_timezone
-import gpxpy
-import gpxpy.gpx
+from datetime import datetime, timezone as dt_timezone
+
+from adventures.services.activities import track_to_gpx
+from adventures.services.activities.track import Track, TrackPoint
 from integrations.errors import IntegrationError
 from integrations.models import EndurainIntegration
 
+from .activities import _sport_type_name
 from .client import api_request, fetch_activity_by_id
 from .responses import UNUSABLE_BODY, read_json
 
@@ -43,9 +45,10 @@ def _parse_waypoint_time(value) -> datetime | None:
         except (OSError, OverflowError, ValueError):
             return None
     try:
-        return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
     except ValueError:
         return None
+    return parsed.replace(tzinfo=dt_timezone.utc) if parsed.tzinfo is None else parsed
 
 
 def _extract_lat_lon_points(
@@ -73,6 +76,27 @@ def _extract_elevations(stream_data: dict | None) -> list[float | None]:
             elev = wp.get('altitude')
         elevations.append(float(elev) if elev is not None else None)
     return elevations
+
+
+def _pair_elevations(
+    points: list[tuple[float, float, datetime | None]],
+    elevation_stream: dict | None,
+) -> list[float | None]:
+    """
+    An elevation for each position, or ``None`` where they cannot be matched.
+
+    The two streams are separate lists. They pair by position only when they are the same
+    length; otherwise by timestamp. Guessing a pairing would put altitudes on the wrong points.
+    """
+    elevations = _extract_elevations(elevation_stream)
+    if len(elevations) == len(points):
+        return elevations
+    by_time = {}
+    for waypoint, elevation in zip(_stream_waypoints(elevation_stream), elevations):
+        moment = _parse_waypoint_time(waypoint.get('time'))
+        if moment is not None and elevation is not None:
+            by_time[moment] = elevation
+    return [by_time.get(moment) for _lat, _lon, moment in points]
 
 
 def _fetch_activity_stream(
@@ -115,39 +139,15 @@ def export_activity_gpx(integration: EndurainIntegration, activity_id: int) -> b
         )
 
     elevation_stream = _fetch_activity_stream(integration, activity_id, STREAM_TYPE_ELEVATION)
-    elevations = _extract_elevations(elevation_stream) if elevation_stream else []
+    elevations = _pair_elevations(points, elevation_stream)
 
-    gpx = gpxpy.gpx.GPX()
-    gpx_track = gpxpy.gpx.GPXTrack(name=activity.get('name') or 'Activity')
-    gpx.tracks.append(gpx_track)
-    gpx_segment = gpxpy.gpx.GPXTrackSegment()
-    gpx_track.segments.append(gpx_segment)
-
-    start_time = activity.get('start_time')
-    track_time = None
-    if start_time:
-        try:
-            track_time = datetime.fromisoformat(str(start_time).replace('Z', '+00:00'))
-            if track_time.tzinfo is None:
-                track_time = track_time.replace(tzinfo=dt_timezone.utc)
-        except ValueError:
-            track_time = None
-
-    for index, (lat, lon, point_time) in enumerate(points):
-        if point_time is None and track_time is not None:
-            point_time = track_time + timedelta(seconds=index)
-
-        elevation = None
-        if index < len(elevations):
-            elevation = elevations[index]
-
-        gpx_segment.points.append(
-            gpxpy.gpx.GPXTrackPoint(
-                latitude=lat,
-                longitude=lon,
-                elevation=elevation,
-                time=point_time,
-            )
-        )
-
-    return gpx.to_xml().encode('utf-8')
+    sport_type = _sport_type_name(activity.get('activity_type'))
+    track = Track(
+        segments=[[
+            TrackPoint(lat=lat, lon=lon, ele=elevation, time=moment)
+            for (lat, lon, moment), elevation in zip(points, elevations)
+        ]],
+        name=activity.get('name') or 'Activity',
+        sport=sport_type,
+    )
+    return track_to_gpx(track, sport_type)

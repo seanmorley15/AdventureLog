@@ -9,7 +9,7 @@ MAX_TRACK_POINTS = 5000
 
 def _simplify_lines(lines):
     """
-    Reduce ``lines`` (lists of (lon, lat)) to at most MAX_TRACK_POINTS points in total.
+    Reduce ``lines`` (lists of (lon, lat) or (lon, lat, ele)) to at most MAX_TRACK_POINTS points in total.
 
     A watch records a point every second or so, which is far more than a map can show: a
     long hike is tens of thousands of points and megabytes of JSON in every page that
@@ -34,14 +34,27 @@ def _simplify_lines(lines):
         tolerance *= 2
 
 
+def _line_coords(points):
+    """``(lon, lat, ele)`` when every point has an elevation, so a map can draw a profile; else ``(lon, lat)``."""
+    if points and all(point.elevation is not None for point in points):
+        return [(point.longitude, point.latitude, round(point.elevation, 1)) for point in points]
+    return [(point.longitude, point.latitude) for point in points]
+
+
 def _gpx_to_feature_collection(gpx):
     named_lines = []
     for track in gpx.tracks:
         track_name = track.name or 'GPX Track'
         for segment in track.segments:
-            coords = [(point.longitude, point.latitude) for point in segment.points]
+            coords = _line_coords(segment.points)
             if coords:
                 named_lines.append((track_name, coords))
+    if not named_lines:
+        # A route (planned path) has no recording but still draws.
+        for route in gpx.routes:
+            coords = _line_coords(route.points)
+            if coords:
+                named_lines.append((route.name or 'GPX Route', coords))
 
     lines = _simplify_lines([coords for _, coords in named_lines])
     features = [
@@ -95,8 +108,8 @@ def gpx_to_geojson(gpx_file):
         }
 
 
-# v2: tracks are simplified to MAX_TRACK_POINTS; v1 entries hold full recordings.
-GPX_GEOJSON_CACHE_PREFIX = 'gpx_geojson_v2'
+# v3: coordinates carry elevation and routes draw; v2 entries are 2D, v1 hold full recordings.
+GPX_GEOJSON_CACHE_PREFIX = 'gpx_geojson_v3'
 GPX_GEOJSON_CACHE_TIMEOUT = 60 * 60 * 24 * 7
 
 

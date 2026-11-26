@@ -17,7 +17,7 @@ AdventureLog doesn't keep your password. It stores sign-in tokens on the server,
 ## Use it
 
 1. Open a location and add or edit a visit with dates.
-2. Choose **Endurain activities** on the visit.
+2. Choose **Add activity** on the visit, then **Endurain**.
 3. Import an activity. AdventureLog fetches its GPS track from Endurain and attaches it to the visit as a GPX file.
 
 ## Troubleshooting

@@ -101,8 +101,8 @@ def build_rich_account(owner, friend):
         elevation_gain=1600.0, elevation_loss=10.0, elev_high=3800.0, elev_low=2200.0,
         start_date=datetime(2026, 6, 2, 7, 0, tzinfo=timezone.utc),
         start_date_local=datetime(2026, 6, 2, 9, 0, tzinfo=timezone.utc), timezone='Europe/Paris',
-        average_speed=1.2, max_speed=2.5, average_cadence=80.0, calories=2100.0,
-        start_point=make_point(6.85, 45.85), end_point=make_point(6.86, 45.86), external_service_id='ext-9',
+        average_speed=1.2, max_speed=2.5, average_cadence=80.0, average_heart_rate=138.0, max_heart_rate=171.0,
+        calories=2100.0, start_point=make_point(6.85, 45.85), end_point=make_point(6.86, 45.86), external_service_id='ext-9',
     )
     activity.gpx_file.save('ascent.gpx', ContentFile(GPX), save=False)
     activity.save()

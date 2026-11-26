@@ -637,7 +637,7 @@ export type Trail = {
 };
 
 export type StravaActivity = {
-	id: number;
+	id: string | number; // Strava sends a string (64-bit ids); Endurain a number
 	name: string;
 	type: string;
 	sport_type: string;
@@ -648,10 +648,9 @@ export type StravaActivity = {
 	elapsed_time: number;
 	rest_time: number;
 	total_elevation_gain: number;
-	estimated_elevation_loss: number;
+	elevation_loss?: number | null; // Strava reports none; the imported track gives it
 	elev_high: number;
 	elev_low: number;
-	total_elevation_range: number;
 	start_date: string; // ISO 8601 format
 	start_date_local: string; // ISO 8601 format
 	timezone: string;
@@ -683,7 +682,7 @@ export type StravaActivity = {
 	start_latlng: [number, number] | null; // [latitude, longitude]
 	end_latlng: [number, number] | null; // [latitude, longitude]
 	export_original: string; // URL
-	export_gpx: string; // URL
+	export_gpx: string; // AdventureLog API path that builds the track as GPX
 	visibility: string;
 	photo_count: number;
 	has_heartrate: boolean;
@@ -721,6 +720,8 @@ export type Activity = {
 	average_speed: number | null;
 	max_speed: number | null;
 	average_cadence: number | null;
+	average_heart_rate: number | null; // bpm
+	max_heart_rate: number | null; // bpm
 	calories: number | null;
 	start_lat: number | null;
 	start_lng: number | null;
@@ -728,6 +729,48 @@ export type Activity = {
 	end_lng: number | null;
 	external_service_id: string | null;
 	source_attribution?: string | null; // Credit a provider requires, e.g. "Garmin Forerunner 965"
+};
+
+/** Where an analyzed value came from: a total the device reported, or worked out from the points. */
+export type ActivityValueSource = 'device' | 'computed';
+
+/** What `POST /api/activities/analyze/` reads from a GPX, FIT, TCX, KML or KMZ file. */
+export type ActivityAnalysis = {
+	/** Meters, seconds ("HH:MM:SS" durations), m/s and bpm. Fields the file lacks are missing. */
+	values: Partial<
+		Pick<
+			Activity,
+			| 'name'
+			| 'sport_type'
+			| 'distance'
+			| 'moving_time'
+			| 'elapsed_time'
+			| 'rest_time'
+			| 'elevation_gain'
+			| 'elevation_loss'
+			| 'elev_high'
+			| 'elev_low'
+			| 'start_date'
+			| 'average_speed'
+			| 'max_speed'
+			| 'average_cadence'
+			| 'average_heart_rate'
+			| 'max_heart_rate'
+			| 'calories'
+			| 'start_lat'
+			| 'start_lng'
+			| 'end_lat'
+			| 'end_lng'
+		>
+	>;
+	sources: Record<string, ActivityValueSource>;
+	format: 'gpx' | 'fit' | 'tcx' | 'kml';
+	point_count: number;
+	has_timestamps: boolean;
+	has_elevation: boolean;
+	utc_offset_minutes: number | null;
+	warnings: ('no_timestamps' | 'no_elevation')[];
+	geojson: any | null;
 };
 
 export type Visit = {

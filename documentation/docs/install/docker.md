@@ -25,7 +25,16 @@ Run AdventureLog as three containers: the SvelteKit frontend (`web`), the Django
    docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml up -d --wait
    ```
 
-4. Open **http://localhost:8015**, or your `ORIGIN` / `SITE_URL`. The admin password is generated on first start and printed once in the backend log. [First Steps](first_steps.md) shows how to find it.
+4. Open **http://localhost:8015**, or your `ORIGIN` / `SITE_URL`. 
+
+   ::: tip First login
+   Username: `admin`. There is no default password. A random one is generated on first start and printed once in the backend log:
+
+   ```bash
+   docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml logs server | grep -A3 "Admin username"
+   ```
+
+   :::
 
 ::: tip ARM hosts
 The AdventureLog images are multi-arch. If the `postgis/postgis` image doesn't run on your ARM host, use `imresamu/postgis:16-3.5-alpine` for the `db` service.

@@ -927,7 +927,7 @@
 		"mobile_login": "Мобільний вхід",
 		"access_paused": "Доступ призупинено",
 		"billing": "Виставлення рахунків",
-		"trial_days_left": "Пробна версія: залишилось {днів}д"
+		"trial_days_left": "Пробна версія: залишилось {days}д"
 	},
 	"notes": {
 		"content": "Зміст",
@@ -1500,7 +1500,7 @@
 	},
 	"itinerary": {
 		"add_description": "Додайте опис",
-		"add_to_day": "Додайте до дня",
+		"add_to_day": "Додати до дня {n}",
 		"add_to_trip_context": "Додайте контекст подорожі",
 		"added_to_trip_context": "Додано до контексту подорожі",
 		"auto_generate": "Автоматичне генерування",
@@ -1684,7 +1684,7 @@
 		"subscribed": "Ви підписані",
 		"subscription_scheduled": "Підписка запланована",
 		"trial_badge": "30-денна пробна версія",
-		"trial_ends": "Пробна версія закінчується {дата}",
+		"trial_ends": "Пробна версія закінчується {date}",
 		"trial_progress": "Хід судового розгляду",
 		"unlimited": "Необмежений",
 		"unlimited_usage": "Необмежене використання",

@@ -410,12 +410,14 @@
 	}
 
 	function toggleGooglePhotoSelection(url: string) {
-		if (deselectedGooglePhotoUrls.has(url)) {
-			deselectedGooglePhotoUrls.delete(url);
+		// Plain Sets in $state aren't deeply reactive; assign a fresh Set to trigger updates.
+		const next = new Set(deselectedGooglePhotoUrls);
+		if (next.has(url)) {
+			next.delete(url);
 		} else {
-			deselectedGooglePhotoUrls.add(url);
+			next.add(url);
 		}
-		deselectedGooglePhotoUrls = deselectedGooglePhotoUrls;
+		deselectedGooglePhotoUrls = next;
 	}
 
 	async function importGooglePhotos(urls: string[]) {
@@ -686,7 +688,7 @@
 									? 'border-primary ring-2 ring-primary/30'
 									: 'border-base-300 opacity-70 hover:opacity-100'}"
 								onclick={() => toggleGooglePhotoSelection(url)}
-								disabled={importingGooglePhotos || !objectId}
+								disabled={importingGooglePhotos}
 							>
 								<img
 									src={url}

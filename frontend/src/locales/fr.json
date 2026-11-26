@@ -1500,7 +1500,7 @@
 	},
 	"itinerary": {
 		"add_description": "Ajouter une description",
-		"add_to_day": "Ajouter au jour",
+		"add_to_day": "Ajouter au jour {n}",
 		"add_to_trip_context": "Ajouter un contexte de voyage",
 		"added_to_trip_context": "Ajouté au contexte du voyage",
 		"auto_generate": "Génération automatique",

@@ -433,7 +433,7 @@
 			"items_on_this_day": "Artículos en este día",
 			"no_unscheduled_items": "No hay artículos no programados disponibles",
 			"no_unscheduled_items_desc": "Todos los artículos se han agregado al itinerario o no hay artículos para agregar.",
-			"title": "Vincular elementos a {fecha}"
+			"title": "Vincular elementos a {date}"
 		},
 		"link_copied": "Enlace copiado",
 		"lists": "Liza",
@@ -807,7 +807,7 @@
 		"preferred_currency_desc": "Esta moneda rellena previamente los campos de dinero al agregar nuevos artículos.",
 		"public_profile_sharing_warning": "Actualmente está compartiendo {count} colección(es). Si configuras tu perfil como privado, se te excluirá de esas colecciones.",
 		"public_profile_invite_warning": "Tiene pendientes {count} invitado(s) de colección. Hacer su perfil privado las cancelará.",
-		"public_profile_private_confirm": "Hacer tu perfil privado te eliminará de {shared} colección(es) compartidas y cancelará {invited} invitación(es) pendiente. ¿Quiere continuar?",
+		"public_profile_private_confirm": "Hacer tu perfil privado te eliminará de {shared} colección(es) compartidas y cancelará {invites} invitación(es) pendiente. ¿Quiere continuar?",
 		"public_profile_left_collections": "Su perfil ahora es privado. Ha sido retirado de {count} colección(es) compartidas.",
 		"public_profile_revoked_invites": "Se han cancelado {count} invitación(es) de colección pendientes.",
 		"integrations_hub": {
@@ -1109,7 +1109,7 @@
 		"no_locations_to_explore": "No hay ubicaciones en el mapa para explorar.",
 		"no_results": "No se encontraron lugares",
 		"open_now": "Abierto ahora",
-		"powered_by": "Datos de {proveedor}",
+		"powered_by": "Datos de {provider}",
 		"preview_panel": "Detalles",
 		"quick_add": "Agregar ubicación rápidamente",
 		"random_location": "Ubicación aleatoria",
@@ -1436,7 +1436,7 @@
 	},
 	"itinerary": {
 		"add_description": "Agregar descripción",
-		"add_to_day": "Añadir al día",
+		"add_to_day": "Añadir al día {n}",
 		"add_to_trip_context": "Agregar contexto de viaje",
 		"added_to_trip_context": "Agregado al contexto del viaje",
 		"auto_generate": "Generar automáticamente",
@@ -1522,7 +1522,7 @@
 		"change_server": "Cambiar servidor",
 		"connect_password": "Conectar con contraseña",
 		"connected": "Conectado con éxito a Endurain",
-		"connected_as": "Conectado como {nombre de usuario}",
+		"connected_as": "Conectado como {username}",
 		"connection_error": "Error al conectar con Endurain",
 		"continue": "Continuar",
 		"credentials_required": "Se requieren URL del servidor, nombre de usuario y contraseña.",

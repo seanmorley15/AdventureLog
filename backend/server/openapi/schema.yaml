@@ -473,9 +473,10 @@ paths:
     post:
       operationId: activities_create
       description: 'Attach it to a `visit`, a trip `day`, or a `collection` (its Ideas).
-        Send `multipart/form-data` with a `gpx_file` to upload a track: elevation
-        and start and end points missing from the request are read from it. A day
-        or Ideas activity belongs to the collection owner.'
+        Send `multipart/form-data` with a `gpx_file` (a GPX, FIT, TCX, KML or KMZ
+        track) to fill in the activity: every field missing from the request is worked
+        out from the file, and the file is stored as GPX. A day or Ideas activity
+        belongs to the collection owner.'
       summary: Create an Activity
       tags:
       - Activities
@@ -645,7 +646,8 @@ paths:
           description: The GPX file would exceed the owner's media storage (`media_quota_exceeded`).
     patch:
       operationId: activities_partial_update
-      description: The visit, day or collection cannot be changed.
+      description: The visit, day or collection cannot be changed. A new `gpx_file`
+        replaces the track and fills the fields missing from the request.
       summary: Update an Activity
       parameters:
       - in: path
@@ -816,6 +818,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: The resource does not exist, or you cannot see it (`not_found`).
+  /api/activities/analyze/:
+    post:
+      operationId: activities_analyze
+      description: |-
+        Reads a GPX, FIT, TCX, KML or KMZ file and returns every activity field it can fill (distance,
+        elevation, times, speeds, sport, start point), where each one came from, and the track as
+        GeoJSON for a preview. Nothing is saved: send the file again when creating the activity.
+      summary: Read an activity file
+      tags:
+      - Activities
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityAnalyzeRequestRequest'
+        required: true
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityAnalysis'
+          description: ''
+        '400':
+          description: Not a track file we can read (`activity.unreadable_track`).
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
   /api/attachments/:
     get:
       operationId: attachments_list
@@ -7053,6 +7098,53 @@ paths:
           description: You have not connected Strava (`strava.not_authorized`).
         '502':
           description: Strava failed (`strava.fetch_failed`, `strava.connection_failed`).
+  /api/integrations/strava/activities/{activity_id}/gpx/:
+    get:
+      operationId: strava_activity_gpx
+      description: |-
+        Builds the track from Strava's streams (position, altitude, time, heart rate, cadence), so
+        it can be imported without downloading the file from Strava first.
+      summary: Get a Strava activity as GPX
+      parameters:
+      - in: path
+        name: activity_id
+        schema:
+          type: string
+        description: The Strava activity id.
+        required: true
+      tags:
+      - Integrations
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuthorization: []
+      - SessionTokenAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/gpx+xml:
+              schema:
+                type: string
+                format: binary
+          description: The recorded track as GPX.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No valid credentials were sent (`not_authenticated`), or an
+            API key was rejected (`authentication_failed`).
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: You can see this resource but may not do this to it (`permission_denied`).
+        '404':
+          description: Not connected (`strava.not_authorized`), or the activity has
+            no GPS data (`strava.gpx_unavailable`).
+        '502':
+          description: Strava failed (`strava.fetch_failed`, `strava.connection_failed`).
   /api/integrations/strava/authorize/:
     get:
       operationId: strava_authorize
@@ -9478,7 +9570,7 @@ paths:
       description: |-
         The picture behind a `photos` address from a place search or recommendation. The server
         fetches it from Google with its own API key, so the key never reaches the browser. Only
-        signed-in users can use it, and the browser may keep the picture for a day.
+        signed-in users can use it, and the browser does not keep a copy.
       summary: Get a Google place photo
       parameters:
       - in: query
@@ -12345,6 +12437,14 @@ components:
           type: number
           format: double
           nullable: true
+        average_heart_rate:
+          type: number
+          format: double
+          nullable: true
+        max_heart_rate:
+          type: number
+          format: double
+          nullable: true
         calories:
           type: number
           format: double
@@ -12405,6 +12505,149 @@ components:
       - promoted_location
       - promoted_visit
       - user
+    ActivityAnalysis:
+      type: object
+      description: What an activity file contains, without saving anything.
+      properties:
+        values:
+          allOf:
+          - $ref: '#/components/schemas/ActivityAnalysisValues'
+          description: The fields the file can fill.
+        sources:
+          type: object
+          additionalProperties:
+            enum:
+            - device
+            - computed
+            type: string
+            description: |-
+              * `device` - device
+              * `computed` - computed
+          description: 'Where each value came from: a total the device or provider
+            reported (`device`), or worked out from the track points (`computed`).'
+        format:
+          allOf:
+          - $ref: '#/components/schemas/FormatEnum'
+          description: |-
+            The detected file format.
+
+            * `gpx` - gpx
+            * `fit` - fit
+            * `tcx` - tcx
+            * `kml` - kml
+        point_count:
+          type: integer
+          description: Recorded positions in the file.
+        has_timestamps:
+          type: boolean
+          description: Without timestamps there are no times or speeds.
+        has_elevation:
+          type: boolean
+        utc_offset_minutes:
+          type: integer
+          nullable: true
+          description: The recording device's offset from UTC, when the file says
+            (FIT).
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarningsEnum'
+          description: Things the file lacks that the review form should mention.
+        geojson:
+          nullable: true
+          description: The track as GeoJSON, with elevation as the third coordinate.
+      required:
+      - format
+      - geojson
+      - has_elevation
+      - has_timestamps
+      - point_count
+      - sources
+      - utc_offset_minutes
+      - values
+      - warnings
+    ActivityAnalysisValues:
+      type: object
+      description: The activity fields a track file can fill, in meters, seconds and
+        m/s. Missing ones are left out.
+      properties:
+        name:
+          type: string
+        sport_type:
+          $ref: '#/components/schemas/SportTypeEnum'
+        distance:
+          type: number
+          format: double
+          description: Meters.
+        moving_time:
+          type: string
+        elapsed_time:
+          type: string
+        rest_time:
+          type: string
+        elevation_gain:
+          type: number
+          format: double
+          description: Meters.
+        elevation_loss:
+          type: number
+          format: double
+          description: Meters.
+        elev_high:
+          type: number
+          format: double
+          description: Meters.
+        elev_low:
+          type: number
+          format: double
+          description: Meters.
+        start_date:
+          type: string
+          format: date-time
+          description: UTC.
+        average_speed:
+          type: number
+          format: double
+          description: Meters per second.
+        max_speed:
+          type: number
+          format: double
+          description: Meters per second.
+        average_cadence:
+          type: number
+          format: double
+        average_heart_rate:
+          type: number
+          format: double
+          description: Beats per minute.
+        max_heart_rate:
+          type: number
+          format: double
+          description: Beats per minute.
+        calories:
+          type: number
+          format: double
+        start_lat:
+          type: number
+          format: double
+        start_lng:
+          type: number
+          format: double
+        end_lat:
+          type: number
+          format: double
+        end_lng:
+          type: number
+          format: double
+    ActivityAnalyzeRequestRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: A GPX, FIT, TCX, KML or KMZ file.
+      required:
+      - file
     ActivityEvent:
       type: object
       properties:
@@ -12546,6 +12789,14 @@ components:
           format: double
           nullable: true
         average_cadence:
+          type: number
+          format: double
+          nullable: true
+        average_heart_rate:
+          type: number
+          format: double
+          nullable: true
+        max_heart_rate:
           type: number
           format: double
           nullable: true
@@ -15035,6 +15286,18 @@ components:
       description: |-
         * `link` - link
         * `create` - create
+    FormatEnum:
+      enum:
+      - gpx
+      - fit
+      - tcx
+      - kml
+      type: string
+      description: |-
+        * `gpx` - gpx
+        * `fit` - fit
+        * `tcx` - tcx
+        * `kml` - kml
     GlobeSpin:
       type: object
       properties:
@@ -17111,6 +17374,14 @@ components:
           format: double
           nullable: true
         average_cadence:
+          type: number
+          format: double
+          nullable: true
+        average_heart_rate:
+          type: number
+          format: double
+          nullable: true
+        max_heart_rate:
           type: number
           format: double
           nullable: true
@@ -21389,6 +21660,14 @@ components:
           minLength: 1
       required:
       - server_url
+    WarningsEnum:
+      enum:
+      - no_timestamps
+      - no_elevation
+      type: string
+      description: |-
+        * `no_timestamps` - no_timestamps
+        * `no_elevation` - no_elevation
     WikipediaImage:
       type: object
       properties:

@@ -37,7 +37,15 @@ The [Quick Start Installer](quick_start.md) page explains what the guided instal
 
 Open **http://localhost:8015** (or your configured `SITE_URL`). The first start takes a few minutes. Check the [requirements](getting_started.md#requirements) first; the first boot needs about 2 GB of RAM.
 
-The admin password is generated on first start and printed once in the log. [First Steps](first_steps.md) shows how to find it and what to set up next.
+::: tip First login
+Username: `admin`. There is no default password (`admin` / `admin` will not work). A random one is generated on first start and printed once in the log:
+
+```bash
+docker compose logs app | grep -A3 "Admin username"
+```
+
+Or set a strong `DJANGO_ADMIN_PASSWORD` in `.env` before the first start. See [First Steps](first_steps.md).
+:::
 
 ## Configuration
 

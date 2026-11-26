@@ -1367,7 +1367,7 @@
 	},
 	"itinerary": {
 		"add_description": "Legg til beskrivelse",
-		"add_to_day": "Legg til dag",
+		"add_to_day": "Legg til dag {n}",
 		"add_to_trip_context": "Legg til turkontekst",
 		"added_to_trip_context": "Lagt til turkontekst",
 		"auto_generate": "Auto-generer",
@@ -1444,7 +1444,7 @@
 		"change_server": "Bytt server",
 		"connect_password": "Koble til med passord",
 		"connected": "Koblet til Endurain",
-		"connected_as": "Tilkoblet som {brukernavn}",
+		"connected_as": "Tilkoblet som {username}",
 		"connection_error": "Feil ved tilkobling til Endurain",
 		"continue": "Fortsette",
 		"credentials_required": "Server-URL, brukernavn og passord kreves",

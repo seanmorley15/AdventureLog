@@ -1,3 +1,4 @@
+import os
 import uuid
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -11,7 +12,15 @@ from core.timezones import TIMEZONES
 
 from .base import User, default_user
 from .location import Location, Visit
-from .media import PathAndRename, validate_file_extension
+from .media import PathAndRename
+
+TRACK_FILE_EXTENSIONS = ('.gpx', '.fit', '.tcx', '.kml', '.kmz')
+
+
+def validate_track_file_extension(value):
+    """An activity track is a GPX, FIT, TCX, KML or KMZ file; it is stored as GPX either way."""
+    if os.path.splitext(value.name)[1].lower() not in TRACK_FILE_EXTENSIONS:
+        raise ValidationError('Upload a GPX, FIT, TCX, KML or KMZ file.')
 
 
 class Trail(models.Model):
@@ -129,8 +138,8 @@ class Activity(models.Model):
         null=True,
     )
 
-    # GPX File
-    gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_file_extension], blank=True, null=True, db_index=True)
+    # The recorded track, always stored as GPX whatever format was uploaded.
+    gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_track_file_extension], blank=True, null=True, db_index=True)
 
     # Descriptive
     name = models.CharField(max_length=200)
@@ -144,7 +153,7 @@ class Activity(models.Model):
 
     # Elevation
     elevation_gain = models.FloatField(blank=True, null=True)  # in meters
-    elevation_loss = models.FloatField(blank=True, null=True)  # estimated
+    elevation_loss = models.FloatField(blank=True, null=True)  # in meters
     elev_high = models.FloatField(blank=True, null=True)
     elev_low = models.FloatField(blank=True, null=True)
 
@@ -159,6 +168,8 @@ class Activity(models.Model):
 
     # Optional metrics
     average_cadence = models.FloatField(blank=True, null=True)
+    average_heart_rate = models.FloatField(blank=True, null=True)  # bpm
+    max_heart_rate = models.FloatField(blank=True, null=True)  # bpm
     calories = models.FloatField(blank=True, null=True)
 
     # Coordinates

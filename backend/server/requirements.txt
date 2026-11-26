@@ -1,7 +1,8 @@
-Django==5.2.18
+Django==5.2.19
 djangorestframework>=3.18.3,<3.19
 django-allauth==0.63.6
 django-money==3.6.2
+babel==2.18.0  # transitive via py-moneyed; currency names feed model choices, so a bump needs a migration
 django-invitations==2.1.0
 drf-spectacular==0.30.0
 drf-spectacular-sidecar==2026.9.1  # Swagger UI and ReDoc served locally, not from a CDN
@@ -32,6 +33,8 @@ geopy==2.5.0
 psutil==6.1.1
 geojson==3.3.0
 gpxpy==1.6.2
+fitdecode==0.11.0  # Reads Garmin FIT activity files
+defusedxml==0.7.1  # Safe XML parsing for uploaded TCX and KML files
 pymemcache==4.0.0
 redis==5.2.1  # Optional: only used when CACHE_BACKEND=redis
 legacy-cgi==2.6.4

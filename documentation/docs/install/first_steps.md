@@ -2,6 +2,10 @@
 
 What to do once AdventureLog is running: sign in as the admin, secure the account, and decide who can join. This page applies to every install method.
 
+::: tip Quick answer: how do I log in?
+Username: **`admin`**. Password: **generated on first start, not `admin`**. Find it with `docker compose logs app | grep -A3 "Admin username"` (other install methods in [step 2](#_2-find-the-admin-password)). Or set `DJANGO_ADMIN_PASSWORD` yourself before the first start.
+:::
+
 ## 1. Open AdventureLog
 
 Go to `http://localhost:8015`, or to your `SITE_URL` if you set one. The first start takes a few minutes while the database is created and the world geography data is imported. Until then the page may not load.

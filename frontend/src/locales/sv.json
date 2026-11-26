@@ -481,7 +481,7 @@
 		"add_visit_instead": "Lägg till ett besök istället",
 		"checking_duplicates": "Söker efter platser som du redan har lagt till...",
 		"create_anyway": "Skapa ändå",
-		"did_you_mean": "Menade du {namn}?",
+		"did_you_mean": "Menade du {name}?",
 		"duplicate_check_hint": "Du har redan en liknande plats. \nÖppna den eller skapa en ny plats ändå.",
 		"feet_away": "{distance} fot bort",
 		"kilometers_away": "{distance} km bort",
@@ -1386,7 +1386,7 @@
 		"enter_lodging_name": "Ange logi -namn",
 		"enter_reservation_number": "Ange bokningsnummer",
 		"update_lodging_details": "Uppdatera logiinformation",
-		"invalid_link": "Ange en giltig webbadress (t.ex. https://example.com).",
+		"invalid_link": "Ange en giltig webbadress (t.ex. https://exempel.se).",
 		"save_failed": "Det gick inte att spara boende. Försök igen."
 	},
 	"google_maps": {
@@ -1500,7 +1500,7 @@
 	},
 	"itinerary": {
 		"add_description": "Lägg till beskrivning",
-		"add_to_day": "Lägg till dagen",
+		"add_to_day": "Lägg till dag {n}",
 		"add_to_trip_context": "Lägg till resesammanhang",
 		"added_to_trip_context": "Läggs till i resesammanhang",
 		"auto_generate": "Auto-generera",
@@ -1577,7 +1577,7 @@
 		"change_server": "Byt server",
 		"connect_password": "Anslut med lösenord",
 		"connected": "Ansluten till Endurain framgångsrikt",
-		"connected_as": "Ansluten som {användarnamn}",
+		"connected_as": "Ansluten som {username}",
 		"connection_error": "Fel vid anslutning till Endurain",
 		"continue": "Fortsätta",
 		"credentials_required": "Server URL, användarnamn och lösenord krävs",

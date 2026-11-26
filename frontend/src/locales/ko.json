@@ -1367,7 +1367,7 @@
 	},
 	"itinerary": {
 		"add_description": "설명 추가",
-		"add_to_day": "날짜에 추가",
+		"add_to_day": "{n}일차에 추가",
 		"add_to_trip_context": "여행 맥락 추가",
 		"added_to_trip_context": "여행 컨텍스트에 추가됨",
 		"auto_generate": "자동 생성",

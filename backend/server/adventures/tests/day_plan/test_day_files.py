@@ -173,7 +173,8 @@ class DayFileTests(APITestCase):
     def test_log_visit_copies_gpx_onto_the_only_stop_and_leaves_the_day_activity(self):
         self._write_media('activities/copy-me.gpx', GPX)
         activity = Activity.objects.create(
-            user=self.owner, day=self.day3, name='Day 3 hike', sport_type='Hike', gpx_file='activities/copy-me.gpx'
+            user=self.owner, day=self.day3, name='Day 3 hike', sport_type='Hike', gpx_file='activities/copy-me.gpx',
+            average_heart_rate=131.0, max_heart_rate=166.0,
         )
         response = self.client.post(f'/api/activities/{activity.id}/log-visit/', {}, format='json')
         self.assertEqual(response.status_code, 201, response.content)
@@ -184,6 +185,7 @@ class DayFileTests(APITestCase):
         self.assertIsNotNone(copy)
         self.assertEqual(copy.visit.location_id, self.shelter.id)
         self.assertTrue(copy.gpx_file)
+        self.assertEqual((copy.average_heart_rate, copy.max_heart_rate), (131.0, 166.0))
         self.assertNotEqual(copy.gpx_file.name, activity.gpx_file.name)
         self.assertEqual(Visit.objects.filter(location=self.shelter).count(), 2)
         self.shelter_row.refresh_from_db()

@@ -188,7 +188,7 @@ class PlacesViewSet(viewsets.ViewSet):
 
         The picture behind a `photos` address from a place search or recommendation. The server
         fetches it from Google with its own API key, so the key never reaches the browser. Only
-        signed-in users can use it, and the browser may keep the picture for a day.
+        signed-in users can use it, and the browser does not keep a copy.
         """
         params = validated(PlacePhotoQuerySerializer, request.query_params)
         try:

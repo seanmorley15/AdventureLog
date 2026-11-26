@@ -31,7 +31,7 @@ Run these commands in order:
 **Full Application:**
 - Frontend runs on: http://localhost:8015
 - Backend API runs on: http://localhost:8016
-- Default admin credentials: admin/admin (from .env file)
+- Admin username is `admin`; the password is generated on first start and printed in the app log (`docker compose logs app | grep -A3 "Admin username"`), or set `DJANGO_ADMIN_PASSWORD` in .env to a strong value
 
 ## Validation
 

@@ -111,22 +111,6 @@ export const actions: Actions = {
 			? data
 			: { error: apiErrorMessage(data, `Image upload failed (status ${res.status})`) };
 	},
-	activity: async (event) => {
-		let formData = await event.request.formData();
-		let csrfToken = await fetchCSRFToken();
-		let sessionId = event.cookies.get('sessionid');
-		let res = await fetch(`${serverEndpoint}/api/activities/`, {
-			method: 'POST',
-			headers: {
-				Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
-				'X-CSRFToken': csrfToken,
-				Referer: event.url.origin // Include Referer header
-			},
-			body: formData
-		});
-		let data = await res.json();
-		return res.ok ? data : { error: apiErrorMessage(data, 'Activity upload failed') };
-	},
 	attachment: async (event) => {
 		let formData = await event.request.formData();
 		let csrfToken = await fetchCSRFToken();

@@ -35,6 +35,8 @@ COPY_FIELDS = (
     'average_speed',
     'max_speed',
     'average_cadence',
+    'average_heart_rate',
+    'max_heart_rate',
     'calories',
     'start_point',
     'end_point',

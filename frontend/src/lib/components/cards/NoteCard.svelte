@@ -17,6 +17,7 @@
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '#lib/types.js';
+	import NoteViewDialog from '../NoteViewDialog.svelte';
 	import CardActionsMenu from './parts/CardActionsMenu.svelte';
 	import NoteTextOutline from '~icons/mdi/note-text-outline';
 	import { dateFormatFromUser, formatDisplayDate } from '#lib/dateFormat.js';
@@ -98,73 +99,12 @@
 {/if}
 
 {#if isDetailsOpen}
-	<dialog class="modal modal-open" open>
-		<div class="modal-box max-w-3xl space-y-4">
-			<div class="flex items-start justify-between gap-3">
-				<div class="space-y-2">
-					<h3 class="text-xl font-semibold leading-tight">{note.name}</h3>
-					<div class="flex flex-wrap items-center gap-3 text-sm text-base-content/70">
-						<div class="badge badge-primary badge-sm">{$t('adventures.note')}</div>
-						{#if note.date && note.date !== ''}
-							<div class="flex items-center gap-2">
-								<Calendar class="w-4 h-4 text-primary" />
-								<span>{formatDisplayDate(note.date, dateFormat, { timeZone: 'UTC' })}</span>
-							</div>
-						{/if}
-						{#if note.links && note.links?.length > 0}
-							<div class="badge badge-ghost badge-sm">
-								<LinkVariant class="w-3 h-3 mr-1" />
-								{note.links.length}
-								{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
-							</div>
-						{/if}
-					</div>
-				</div>
-				<button
-					type="button"
-					class="btn btn-circle btn-ghost btn-sm"
-					onclick={() => (isDetailsOpen = false)}
-					aria-label={$t('about.close')}
-				>
-					<Close class="w-4 h-4" />
-				</button>
-			</div>
-
-			{#if note.content && note.content?.length > 0}
-				<article class="prose max-w-none text-base-content">
-					{@html renderMarkdown(note.content || '')}
-				</article>
-			{:else}
-				<p class="text-sm text-base-content/70">No content available.</p>
-			{/if}
-
-			{#if note.links && note.links?.length > 0}
-				<div class="space-y-2">
-					<p class="text-sm font-semibold text-base-content">{$t('adventures.links')}</p>
-					<div class="flex flex-wrap gap-2">
-						{#each note.links as link}
-							<a
-								class="badge badge-outline gap-1"
-								href={link}
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								<LinkVariant class="w-3 h-3" />
-								<span class="break-all text-left">{link}</span>
-							</a>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			<div class="modal-action">
-				<button class="btn" onclick={() => (isDetailsOpen = false)}>Close</button>
-			</div>
-		</div>
-		<form method="dialog" class="modal-backdrop">
-			<button aria-label="close" onclick={() => (isDetailsOpen = false)}>Close</button>
-		</form>
-	</dialog>
+	<NoteViewDialog
+		{note}
+		{user}
+		onEdit={canEdit ? () => ((isDetailsOpen = false), editNote()) : null}
+		onClose={() => (isDetailsOpen = false)}
+	/>
 {/if}
 
 <div

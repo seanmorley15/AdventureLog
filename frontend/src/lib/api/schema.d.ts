@@ -156,7 +156,7 @@ export interface paths {
         put?: never;
         /**
          * Create an Activity
-         * @description Attach it to a `visit`, a trip `day`, or a `collection` (its Ideas). Send `multipart/form-data` with a `gpx_file` to upload a track: elevation and start and end points missing from the request are read from it. A day or Ideas activity belongs to the collection owner.
+         * @description Attach it to a `visit`, a trip `day`, or a `collection` (its Ideas). Send `multipart/form-data` with a `gpx_file` (a GPX, FIT, TCX, KML or KMZ track) to fill in the activity: every field missing from the request is worked out from the file, and the file is stored as GPX. A day or Ideas activity belongs to the collection owner.
          */
         post: operations["activities_create"];
         delete?: never;
@@ -198,7 +198,7 @@ export interface paths {
         head?: never;
         /**
          * Update an Activity
-         * @description The visit, day or collection cannot be changed.
+         * @description The visit, day or collection cannot be changed. A new `gpx_file` replaces the track and fills the fields missing from the request.
          */
         patch: operations["activities_partial_update"];
         trace?: never;
@@ -218,6 +218,28 @@ export interface paths {
          *     the visit when needed). The day activity stays on the day.
          */
         post: operations["activities_log_visit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/activities/analyze/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read an activity file
+         * @description Reads a GPX, FIT, TCX, KML or KMZ file and returns every activity field it can fill (distance,
+         *     elevation, times, speeds, sport, start point), where each one came from, and the track as
+         *     GeoJSON for a preview. Nothing is saved: send the file again when creating the activity.
+         */
+        post: operations["activities_analyze"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2082,6 +2104,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/integrations/strava/activities/{activity_id}/gpx/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a Strava activity as GPX
+         * @description Builds the track from Strava's streams (position, altitude, time, heart rate, cadence), so
+         *     it can be imported without downloading the file from Strava first.
+         */
+        get: operations["strava_activity_gpx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/integrations/strava/authorize/": {
         parameters: {
             query?: never;
@@ -2720,7 +2763,7 @@ export interface paths {
          * Get a Google place photo
          * @description The picture behind a `photos` address from a place search or recommendation. The server
          *     fetches it from Google with its own API key, so the key never reaches the browser. Only
-         *     signed-in users can use it, and the browser may keep the picture for a day.
+         *     signed-in users can use it, and the browser does not keep a copy.
          */
         get: operations["places_photo"];
         put?: never;
@@ -3066,9 +3109,50 @@ export interface paths {
         /**
          * Get a public profile
          * @description The user, their public locations, and their public collections. Private profiles are
-         *     404 to everyone but their owner.
+         *     404 to everyone but their owner. Pass `locations=false` to leave the locations out
+         *     (they are listed a page at a time by `/users/{username}/locations/`).
          */
         get: operations["users_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{username}/locations/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a user's public locations
+         * @description Their public locations a page at a time, in the light form the location lists use.
+         */
+        get: operations["users_locations_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{username}/pins/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a user's map pins
+         * @description Every public location that has coordinates, with just what a map needs.
+         */
+        get: operations["users_pins_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3654,6 +3738,10 @@ export interface components {
             /** Format: double */
             average_cadence?: number | null;
             /** Format: double */
+            average_heart_rate?: number | null;
+            /** Format: double */
+            max_heart_rate?: number | null;
+            /** Format: double */
             calories?: number | null;
             /** Format: double */
             start_lat?: number | null;
@@ -3674,6 +3762,112 @@ export interface components {
             readonly promoted_visit: string | null;
             /** Format: uuid */
             readonly promoted_location: string | null;
+        };
+        /** @description What an activity file contains, without saving anything. */
+        ActivityAnalysis: {
+            /** @description The fields the file can fill. */
+            values: components["schemas"]["ActivityAnalysisValues"];
+            /** @description Where each value came from: a total the device or provider reported (`device`), or worked out from the track points (`computed`). */
+            sources: {
+                [key: string]: "device" | "computed";
+            };
+            /**
+             * @description The detected file format.
+             *
+             *     * `gpx` - gpx
+             *     * `fit` - fit
+             *     * `tcx` - tcx
+             *     * `kml` - kml
+             */
+            format: components["schemas"]["FormatEnum"];
+            /** @description Recorded positions in the file. */
+            point_count: number;
+            /** @description Without timestamps there are no times or speeds. */
+            has_timestamps: boolean;
+            has_elevation: boolean;
+            /** @description The recording device's offset from UTC, when the file says (FIT). */
+            utc_offset_minutes: number | null;
+            /** @description Things the file lacks that the review form should mention. */
+            warnings: components["schemas"]["WarningsEnum"][];
+            /** @description The track as GeoJSON, with elevation as the third coordinate. */
+            geojson: unknown;
+        };
+        /** @description The activity fields a track file can fill, in meters, seconds and m/s. Missing ones are left out. */
+        ActivityAnalysisValues: {
+            name?: string;
+            sport_type?: components["schemas"]["SportTypeEnum"];
+            /**
+             * Format: double
+             * @description Meters.
+             */
+            distance?: number;
+            moving_time?: string;
+            elapsed_time?: string;
+            rest_time?: string;
+            /**
+             * Format: double
+             * @description Meters.
+             */
+            elevation_gain?: number;
+            /**
+             * Format: double
+             * @description Meters.
+             */
+            elevation_loss?: number;
+            /**
+             * Format: double
+             * @description Meters.
+             */
+            elev_high?: number;
+            /**
+             * Format: double
+             * @description Meters.
+             */
+            elev_low?: number;
+            /**
+             * Format: date-time
+             * @description UTC.
+             */
+            start_date?: string;
+            /**
+             * Format: double
+             * @description Meters per second.
+             */
+            average_speed?: number;
+            /**
+             * Format: double
+             * @description Meters per second.
+             */
+            max_speed?: number;
+            /** Format: double */
+            average_cadence?: number;
+            /**
+             * Format: double
+             * @description Beats per minute.
+             */
+            average_heart_rate?: number;
+            /**
+             * Format: double
+             * @description Beats per minute.
+             */
+            max_heart_rate?: number;
+            /** Format: double */
+            calories?: number;
+            /** Format: double */
+            start_lat?: number;
+            /** Format: double */
+            start_lng?: number;
+            /** Format: double */
+            end_lat?: number;
+            /** Format: double */
+            end_lng?: number;
+        };
+        ActivityAnalyzeRequestRequest: {
+            /**
+             * Format: binary
+             * @description A GPX, FIT, TCX, KML or KMZ file.
+             */
+            file: string;
         };
         ActivityEvent: {
             /** Format: uuid */
@@ -3748,6 +3942,10 @@ export interface components {
             max_speed?: number | null;
             /** Format: double */
             average_cadence?: number | null;
+            /** Format: double */
+            average_heart_rate?: number | null;
+            /** Format: double */
+            max_heart_rate?: number | null;
             /** Format: double */
             calories?: number | null;
             /** Format: double */
@@ -4877,6 +5075,14 @@ export interface components {
          * @enum {string}
          */
         ExistingLocationsEnum: "link" | "create";
+        /**
+         * @description * `gpx` - gpx
+         *     * `fit` - fit
+         *     * `tcx` - tcx
+         *     * `kml` - kml
+         * @enum {string}
+         */
+        FormatEnum: "gpx" | "fit" | "tcx" | "kml";
         GlobeSpin: {
             country: components["schemas"]["Country"];
             /** @description Absent when the country has no regions. */
@@ -5780,6 +5986,10 @@ export interface components {
             /** Format: double */
             average_cadence?: number | null;
             /** Format: double */
+            average_heart_rate?: number | null;
+            /** Format: double */
+            max_heart_rate?: number | null;
+            /** Format: double */
             calories?: number | null;
             /** Format: double */
             start_lat?: number | null;
@@ -6482,6 +6692,20 @@ export interface components {
             locations: components["schemas"]["Location"][];
             /** @description Their collections whose visibility is `public`, as cards. */
             collections: components["schemas"]["UltraSlimCollection"][];
+        };
+        PublicProfilePin: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: double */
+            latitude: number;
+            /** Format: double */
+            longitude: number;
+            /** @description The category icon. */
+            category: string | null;
+            /** @description The category name. */
+            category_name: string | null;
+            is_visited: boolean;
         };
         QuickAddImageImport: {
             created_count: number;
@@ -7660,6 +7884,12 @@ export interface components {
             server_url: string;
             api_key?: string;
         };
+        /**
+         * @description * `no_timestamps` - no_timestamps
+         *     * `no_elevation` - no_elevation
+         * @enum {string}
+         */
+        WarningsEnum: "no_timestamps" | "no_elevation";
         WikipediaImage: {
             /** Format: uri */
             source: string;
@@ -8564,6 +8794,54 @@ export interface operations {
             };
             /** @description The resource does not exist, or you cannot see it (`not_found`). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    activities_analyze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["ActivityAnalyzeRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityAnalysis"];
+                };
+            };
+            /** @description Not a track file we can read (`activity.unreadable_track`). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -14926,6 +15204,61 @@ export interface operations {
             };
         };
     };
+    strava_activity_gpx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The Strava activity id. */
+                activity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The recorded track as GPX. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/gpx+xml": string;
+                };
+            };
+            /** @description No valid credentials were sent (`not_authenticated`), or an API key was rejected (`authentication_failed`). */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description Not connected (`strava.not_authorized`), or the activity has no GPS data (`strava.gpx_unavailable`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Strava failed (`strava.fetch_failed`, `strava.connection_failed`). */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     strava_authorize: {
         parameters: {
             query?: never;
@@ -18532,6 +18865,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicProfileDetail"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    users_locations_list: {
+        parameters: {
+            query?: {
+                /** @description A category name. */
+                category?: string;
+                /** @description `recent` by default. */
+                ordering?: "name" | "oldest" | "rating" | "recent";
+            };
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationList"][];
+                };
+            };
+            /** @description The request was not valid. `fields` lists the problems for each input. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationError"];
+                };
+            };
+            /** @description You can see this resource but may not do this to it (`permission_denied`). */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            /** @description The resource does not exist, or you cannot see it (`not_found`). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    users_pins_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicProfilePin"][];
                 };
             };
             /** @description You can see this resource but may not do this to it (`permission_denied`). */

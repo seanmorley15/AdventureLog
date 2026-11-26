@@ -86,6 +86,7 @@ class BackupFidelityTests(APITestCase):
         self.assertEqual(ContentImage.objects.filter(object_id=trail.id).count(), 1)
         ascent = Activity.objects.get(name='Ascent')
         self.assertEqual(ContentImage.objects.filter(object_id=ascent.id).count(), 1)
+        self.assertEqual((ascent.average_heart_rate, ascent.max_heart_rate), (138.0, 171.0))
         run = Activity.objects.get(name='Morning run')
         self.assertEqual((run.external_service_id, run.start_point is not None, run.end_point is not None),
                          ('strava-7', True, True))

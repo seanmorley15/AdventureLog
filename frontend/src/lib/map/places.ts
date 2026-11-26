@@ -1,5 +1,6 @@
 import { apiErrorMessage } from '#lib/api/index.js';
 import type {
+	Category,
 	Location,
 	Lodging,
 	PlaceSearchResult,
@@ -180,6 +181,8 @@ export type QuickAddPayload = {
 	types?: string[];
 	photos?: string[];
 	type?: string;
+	/** The category to file a new location under; the server defaults to "General" when absent. */
+	category?: Category | null;
 };
 
 export type QuickAddOptions = {
@@ -215,6 +218,7 @@ async function postQuickAdd<T>(
 	if (options.collectionId) body.collection = options.collectionId;
 	if (options.itineraryDate) body.itinerary_date = options.itineraryDate;
 	if (payload.type) body.type = payload.type;
+	if (payload.category) body.category = payload.category;
 
 	const res = await fetch(endpoint, {
 		method: 'POST',

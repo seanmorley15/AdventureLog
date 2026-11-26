@@ -4,9 +4,12 @@
 #
 #   ./scripts/optimize-images.sh photos            # travel photos, OG card, icons
 #   ./scripts/optimize-images.sh shots <dir>       # app screenshots from <dir>/{light,dark}/*.png
+#   ./scripts/optimize-images.sh readme <dir>      # GitHub README shots -> brand/screenshots (WebP, light + dark)
 #
 # Screenshots come from scripts/capture-screenshots.mjs (real app, demo data).
 # After adding one, list it in .vitepress/screenshots.ts.
+# For the README set, capture with SHOT_SET=readme. GitHub renders WebP but not
+# reliably AVIF, so the README images are a single 1440px WebP per theme.
 set -euo pipefail
 
 if command -v magick >/dev/null 2>&1 && magick -version 2>/dev/null | grep -q "ImageMagick 7"; then
@@ -45,6 +48,18 @@ case "$mode" in
       done
     done
     ;;
+  readme)
+    src="${2:?usage: optimize-images.sh readme <dir>}"
+    dest="$repo/brand/screenshots"
+    mkdir -p "$dest"
+    for theme in light dark; do
+      for png in "$src/$theme"/*.png; do
+        name="$(basename "$png" .png)"
+        "${im[@]}" "$png" -strip -resize "1440x>" -quality 82 "$dest/$name-$theme.webp"
+        echo "brand/screenshots/$name-$theme"
+      done
+    done
+    ;;
   photos)
     mkdir -p "$public/photos" "$public/og"
     # The maintainer's own travel photos, shipped with the app as login backgrounds.
@@ -70,7 +85,7 @@ case "$mode" in
     echo "og + icons"
     ;;
   *)
-    echo "usage: optimize-images.sh photos | shots <dir>" >&2
+    echo "usage: optimize-images.sh photos | shots <dir> | readme <dir>" >&2
     exit 1
     ;;
 esac
