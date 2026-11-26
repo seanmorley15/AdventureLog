@@ -43,3 +43,4 @@ AdventureLog is made by [Sean Morley](https://seanmorley.com). The [Development 
 | Try it without installing | [Live demo](https://demo.adventurelog.app) |
 | Install it | [Install AdventureLog](../install/getting_started.md) |
 | Learn the app | [How to Use AdventureLog](../usage/usage.md) |
+| Use it on Android | [AdventureLog Client](https://github.com/DesarrolloAntonio/AdventureLog-Client), an unofficial community app |

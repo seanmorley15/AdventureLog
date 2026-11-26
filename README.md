@@ -164,6 +164,14 @@ Connect the tools you already use:
 | [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration.html)       | Attach trails with distance & elevation data    |
 | [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration.html) | Geocoding & location search                     |
 
+### Community apps
+
+Built by the community, not maintained by the AdventureLog team:
+
+| App                                                                                 | Platform                                                                                                 | Purpose                                                                     |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [**AdventureLog Client**](https://github.com/DesarrolloAntonio/AdventureLog-Client) | Android ([Google Play](https://play.google.com/store/apps/details?id=com.desarrollodroide.adventurelog)) | Unofficial native app for your server: locations, trips, map & world travel |
+
 ## Why AdventureLog?
 
 |                   | **AdventureLog**                                 | Typical closed travel apps  |
