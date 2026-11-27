@@ -1,0 +1,6 @@
+# Shell scripts run inside Linux containers; CRLF endings (e.g. from a Windows checkout
+# with core.autocrlf=true) break them.
+*.sh text eol=lf
+.devcontainer/** text eol=lf
+docker/**/*.sh text eol=lf
+backend/entrypoint.sh text eol=lf
