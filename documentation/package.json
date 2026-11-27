@@ -11,8 +11,8 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
-    "prettier": "^3.9.6",
-    "vue": "^3.5.42"
+    "prettier": "^3.10.1",
+    "vue": "^3.5.46"
   },
   "pnpm": {
     "overrides": {
