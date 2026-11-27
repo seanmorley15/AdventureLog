@@ -2,28 +2,28 @@ Django==5.2.19
 djangorestframework>=3.18.3,<3.19
 django-allauth==0.63.6
 django-money==3.6.2
-babel==2.18.0  # transitive via py-moneyed; currency names feed model choices, so a bump needs a migration
+babel==2.19.0  # transitive via py-moneyed; currency names feed model choices, so a bump needs a migration
 django-invitations==2.1.0
 drf-spectacular==0.30.0
-drf-spectacular-sidecar==2026.9.1  # Swagger UI and ReDoc served locally, not from a CDN
+drf-spectacular-sidecar==2026.10.1  # Swagger UI and ReDoc served locally, not from a CDN
 django-cors-headers==4.9.0
 python-dotenv==1.2.4
-psycopg[binary,pool]==3.3.8  # Django uses psycopg 3 when installed; the job worker needs it for LISTEN/NOTIFY
-procrastinate[django]==3.10.0  # Postgres-backed background jobs; the worker runs inside the app container
+psycopg[binary,pool]==3.3.9  # Django uses psycopg 3 when installed; the job worker needs it for LISTEN/NOTIFY
+procrastinate[django]==3.12.0  # Postgres-backed background jobs; the worker runs inside the app container
 pillow==13.0.0
 pillow-heif>=1.8.1,<2
 whitenoise==6.12.0
 django-storages==1.14.6
-boto3==1.43.118
+boto3==1.44.11
 django-resized==1.0.3
 django-geojson==4.2.0
 setuptools==84.2.1
 gunicorn==23.0.0
 qrcode==8.2
-slippers==0.6.2
-django-allauth-ui==1.7.0
-django-widget-tweaks==1.5.1
-django-ical==1.9.2
+slippers==0.7.1
+django-allauth-ui==1.8.1
+django-widget-tweaks==1.6.0
+django-ical==1.10.0
 icalendar==6.1.0
 ijson==3.6.0
 tqdm==4.70.1
