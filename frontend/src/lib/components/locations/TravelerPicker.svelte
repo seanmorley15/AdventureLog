@@ -25,6 +25,14 @@
 	// Nobody checked is invalid, not locked: whoever uses the picker disables saving while it is.
 	const invalid = $derived(selected.length === 0);
 
+	const allSelected = $derived(
+		candidates.length > 0 && candidates.every((person) => selected.includes(person.uuid))
+	);
+
+	function toggleAll() {
+		selected = allSelected ? [] : candidates.map((person) => person.uuid);
+	}
+
 	function toggle(uuid: string, checked: boolean) {
 		if (checked) {
 			if (!selected.includes(uuid)) selected = [...selected, uuid];
@@ -36,6 +44,11 @@
 
 <fieldset class="space-y-2">
 	<legend class={hideLegend ? 'sr-only' : 'field-label'}>{$t('visits.who_was_there')}</legend>
+	{#if candidates.length > 2}
+		<button type="button" class="btn btn-xs btn-ghost" onclick={toggleAll}>
+			{allSelected ? $t('visits.select_none') : $t('visits.select_all')}
+		</button>
+	{/if}
 	<div
 		class="flex flex-wrap gap-2 rounded-box {invalid ? 'border border-error p-1' : ''}"
 		data-invalid={invalid ? 'true' : undefined}

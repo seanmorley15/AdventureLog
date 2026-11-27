@@ -934,29 +934,36 @@
 			<div class="space-y-4 sm:space-y-6">
 				<DetailCard title={$t('adventures.basic_information')} icon={InformationOutline}>
 					<div class="space-y-4">
-						{#if adventure.user}
-							<DetailFact label={$t('detail.added_by')} icon={AccountOutline}>
+						{#snippet person(label: string, who: NonNullable<Location['added_by']>)}
+							<DetailFact {label} icon={AccountOutline}>
 								<span class="flex items-center gap-2">
 									<!-- A fixed-size circle: UserAvatar fills its parent. -->
 									<span class="h-6 w-6 shrink-0 overflow-hidden rounded-full">
 										<UserAvatar
-											user={adventure.user}
-											alt={adventure.user.username}
+											user={who}
+											alt={who.username}
 											className="h-full w-full rounded-full"
 											textClass="text-[10px]"
 										/>
 									</span>
-									{#if canOpenProfile(adventure.user, data.user)}
-										<a href={`/profile/${adventure.user.username}`} class="link link-hover">
-											{adventure.user.first_name || adventure.user.username}
-											{adventure.user.last_name || ''}
+									{#if canOpenProfile(who, data.user)}
+										<a href={`/profile/${who.username}`} class="link link-hover">
+											{who.first_name || who.username}
+											{who.last_name || ''}
 										</a>
 									{:else}
-										{adventure.user.first_name || adventure.user.username}
-										{adventure.user.last_name || ''}
+										{who.first_name || who.username}
+										{who.last_name || ''}
 									{/if}
 								</span>
 							</DetailFact>
+						{/snippet}
+						<!-- Who added the place and who owns it can differ: a collaborator adds places to the owner's trip. -->
+						{#if adventure.added_by && adventure.added_by.uuid !== adventure.user?.uuid}
+							{@render person($t('detail.added_by'), adventure.added_by)}
+							{#if adventure.user}{@render person($t('detail.owner'), adventure.user)}{/if}
+						{:else if adventure.user}
+							{@render person($t('detail.added_by'), adventure.user)}
 						{/if}
 						{#if isOwner || (adventure.collections && adventure.collections.length > 0)}
 							<DetailFact label={$t('navbar.collections')} icon={Folder}>

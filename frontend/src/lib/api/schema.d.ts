@@ -5797,6 +5797,10 @@ export interface components {
             readonly user: components["schemas"]["PublicProfile"] | null;
             /** @description Whether you added the place. Who did is never shown to others. */
             readonly created_by_you: boolean;
+            /** @description Who added the place: `{uuid, username, first_name, last_name, profile_pic}`. Only the owner, members of a collection holding it and the person themselves see it. */
+            readonly added_by: unknown;
+            /** @description Whether you may delete the place: you own it, or you added it and it is still only yours. */
+            readonly can_delete: boolean;
             readonly city: components["schemas"]["City"] | null;
             readonly country: components["schemas"]["Country"] | null;
             readonly region: components["schemas"]["Region"] | null;
@@ -5871,6 +5875,10 @@ export interface components {
             readonly user: unknown;
             /** @description Whether you added the place. */
             readonly created_by_you: boolean;
+            /** @description Who added the place: `{uuid, username, first_name, last_name, profile_pic}`. Only the owner, members of a collection holding it and the person themselves see it. */
+            readonly added_by: unknown;
+            /** @description Whether you may delete the place: you own it, or you added it and it is still only yours. */
+            readonly can_delete: boolean;
             /** Format: decimal */
             readonly price: string | null;
             readonly price_currency: (components["schemas"]["PriceCurrencyEnum"] | components["schemas"]["NullEnum"]) | null;
@@ -5905,6 +5913,10 @@ export interface components {
             readonly user: components["schemas"]["PublicProfile"] | null;
             /** @description Whether you added the place. Who did is never shown to others. */
             readonly created_by_you: boolean;
+            /** @description Who added the place: `{uuid, username, first_name, last_name, profile_pic}`. Only the owner, members of a collection holding it and the person themselves see it. */
+            readonly added_by: unknown;
+            /** @description Whether you may delete the place: you own it, or you added it and it is still only yours. */
+            readonly can_delete: boolean;
             readonly city: components["schemas"]["City"] | null;
             readonly country: components["schemas"]["Country"] | null;
             readonly region: components["schemas"]["Region"] | null;

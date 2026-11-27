@@ -2,6 +2,7 @@
 
 from adventures.models import Location, Collection, Visit, Category
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 from core.serializers import CustomModelSerializer, memoized_count
@@ -59,6 +60,41 @@ def is_created_by_viewer(serializer, obj):
     return bool(viewer and viewer.is_authenticated and obj.created_by_id == viewer.id)
 
 
+ADDED_BY_HELP = 'Who added the place: `{uuid, username, first_name, last_name, profile_pic}`. Only the owner, members of a collection holding it and the person themselves see it.'
+CAN_DELETE_HELP = 'Whether you may delete the place: you own it, or you added it and it is still only yours.'
+
+
+def added_by_for_viewer(serializer, obj):
+    """
+    Who added the place, shown only to the person themselves, the owner and members of a
+    collection holding it. Everyone else (public and guest views) is never told.
+    """
+    creator = obj.created_by
+    request = serializer.context.get('request')
+    viewer = getattr(request, 'user', None)
+    if creator is None or not (viewer and viewer.is_authenticated):
+        return None
+    if viewer.id not in (creator.id, obj.user_id) and not obj.collections.filter(
+        Q(user=viewer) | Q(shared_with=viewer)
+    ).exists():
+        return None
+    return {
+        'uuid': str(creator.uuid),
+        'username': creator.username,
+        'first_name': creator.first_name,
+        'last_name': creator.last_name,
+        'profile_pic': _build_profile_pic_url(creator),
+    }
+
+
+def can_delete_for_viewer(serializer, obj):
+    """The owner may delete; so may the person who added it, while it is only theirs (see ``creator_may_delete``)."""
+    viewer = getattr(serializer.context.get('request'), 'user', None)
+    if not (viewer and viewer.is_authenticated):
+        return False
+    return obj.user_id == viewer.id or travelers.creator_may_delete(obj, viewer)
+
+
 class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serializers.ModelSerializer):
     """
     Lightweight serializer for location list endpoints (e.g. /filtered/).
@@ -70,6 +106,8 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     created_by_you = serializers.SerializerMethodField()
+    added_by = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
     collections = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
@@ -77,7 +115,7 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
         fields = [
             'id', 'name', 'rating', 'tags', 'location', 'is_public', 'collections',
             'created_at', 'updated_at', 'images', 'link', 'longitude', 'latitude',
-            'is_visited', 'category', 'user', 'created_by_you', 'price', 'price_currency',
+            'is_visited', 'category', 'user', 'created_by_you', 'added_by', 'can_delete', 'price', 'price_currency',
         ]
         read_only_fields = fields
 
@@ -102,6 +140,14 @@ class LocationListSerializer(MediaFieldsMixin, CoordinateSerializerMixin, serial
     @extend_schema_field(serializers.BooleanField(help_text='Whether you added the place.'))
     def get_created_by_you(self, obj):
         return is_created_by_viewer(self, obj)
+
+    @extend_schema_field(serializers.JSONField(allow_null=True, help_text=ADDED_BY_HELP))
+    def get_added_by(self, obj):
+        return added_by_for_viewer(self, obj)
+
+    @extend_schema_field(serializers.BooleanField(help_text=CAN_DELETE_HELP))
+    def get_can_delete(self, obj):
+        return can_delete_for_viewer(self, obj)
 
     @extend_schema_field(serializers.JSONField(allow_null=True, help_text='The owner.'))
     def get_user(self, obj):
@@ -145,20 +191,30 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
     trails = TrailSerializer(many=True, read_only=True, required=False)
     user = serializers.SerializerMethodField(help_text='The owner. The owner themselves also sees their account fields.')
     created_by_you = serializers.SerializerMethodField(help_text='Whether you added the place. Who did is never shown to others.')
+    added_by = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
         fields = [
             'id', 'name', 'description', 'rating', 'tags', 'location', 
             'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'created_by_you', 'city', 'country', 'region', 'trails',
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'created_by_you', 'added_by', 'can_delete', 'city', 'country', 'region', 'trails',
             'price', 'price_currency'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'created_by_you', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'created_by_you', 'added_by', 'can_delete', 'is_visited']
 
     @extend_schema_field(serializers.BooleanField())
     def get_created_by_you(self, instance):
         return is_created_by_viewer(self, instance)
+
+    @extend_schema_field(serializers.JSONField(allow_null=True, help_text=ADDED_BY_HELP))
+    def get_added_by(self, instance):
+        return added_by_for_viewer(self, instance)
+
+    @extend_schema_field(serializers.BooleanField(help_text=CAN_DELETE_HELP))
+    def get_can_delete(self, instance):
+        return can_delete_for_viewer(self, instance)
 
     @extend_schema_field(PublicProfileSerializer(allow_null=True))
     def get_user(self, instance):
@@ -188,7 +244,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             # Slim representation for nested contexts, but keep allowed fields
             fields_to_remove = [
                 'visits', 'attachments', 'trails', 'collections',
-                'user', 'created_by_you', 'city', 'country', 'region'
+                'user', 'created_by_you', 'added_by', 'can_delete', 'city', 'country', 'region'
             ]
             for field in fields_to_remove:
                 # Keep field if explicitly allowed for nested mode
@@ -288,20 +344,25 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
             category_data['name'] = name.lower()
         return category_data
     
-    def get_or_create_category(self, category_data):
-        user = self.context['request'].user
-        
+    def get_or_create_category(self, category_data, owner=None):
+        """
+        The category to put on a place, from the place owner's own categories. ``owner``
+        is the place owner; it differs from the requester when a collaborator creates a
+        place inside someone else's collection, and a place can only use its owner's
+        categories.
+        """
+        user = owner or self.context['request'].user
+
         if isinstance(category_data, Category):
-            return category_data
-        
-        if isinstance(category_data, dict):
-            name = category_data.get('name', '').lower()
-            display_name = category_data.get('display_name', name)
-            icon = category_data.get('icon', '🌍')
-        else:
+            if category_data.user_id == user.pk:
+                return category_data
             name = category_data.name.lower()
             display_name = category_data.display_name
             icon = category_data.icon
+        elif isinstance(category_data, dict):
+            name = category_data.get('name', '').lower()
+            display_name = category_data.get('display_name', name)
+            icon = category_data.get('icon', '🌍')
 
         category, created = Category.objects.get_or_create(
             user=user,
@@ -327,7 +388,7 @@ class LocationSerializer(MediaFieldsMixin, CoordinateSerializerMixin, CustomMode
 
         # Handle category
         if category_data:
-            category = self.get_or_create_category(category_data)
+            category = self.get_or_create_category(category_data, owner=location.user)
             location.category = category
         
         # Handle collections - set after location is saved

@@ -250,10 +250,12 @@
 	// Locations you traveled to but someone else owns say whose they are.
 	let ownerShortName = $derived(adventure.user?.first_name || adventure.user?.username || '');
 	// Creator avatar helpers
+	// Who added the place: the creator when the server says, else the owner (places from before creators were recorded).
+	let creator = $derived(adventure.added_by ?? adventure.user);
 	let creatorDisplayName = $derived(
-		adventure.user?.first_name
-			? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
-			: adventure.user?.username || 'Unknown User'
+		creator?.first_name
+			? `${creator.first_name} ${creator.last_name || ''}`.trim()
+			: creator?.username || 'Unknown User'
 	);
 </script>
 
@@ -497,7 +499,7 @@
 									{/if}
 								{/if}
 
-								{#if user?.uuid == adventure.user?.uuid}
+								{#if user?.uuid == adventure.user?.uuid || adventure.can_delete}
 									<div class="divider my-1"></div>
 									<li>
 										<button
@@ -590,17 +592,19 @@
 			</div>
 		{/if}
 
-		{#if adventure.user && collection}
+		{#if creator && collection}
 			<div class="mt-auto flex items-center gap-2 pt-1 text-xs text-base-content/60">
 				<UserAvatar
-					user={adventure.user}
+					user={creator}
 					alt={creatorDisplayName}
 					className="h-5 w-5 shrink-0 rounded-full"
 					imgClass="h-5 w-5 shrink-0 rounded-full object-cover"
 					textClass="text-[9px]"
 				/>
 				<span class="truncate">
-					{$t('cards.added_by', { values: { name: creatorDisplayName } })}
+					{adventure.created_by_you
+						? $t('cards.added_by_you')
+						: $t('cards.added_by', { values: { name: creatorDisplayName } })}
 				</span>
 			</div>
 		{/if}

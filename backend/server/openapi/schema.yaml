@@ -16977,6 +16977,17 @@ components:
           type: boolean
           readOnly: true
           description: Whether you added the place. Who did is never shown to others.
+        added_by:
+          nullable: true
+          description: 'Who added the place: `{uuid, username, first_name, last_name,
+            profile_pic}`. Only the owner, members of a collection holding it and
+            the person themselves see it.'
+          readOnly: true
+        can_delete:
+          type: boolean
+          description: 'Whether you may delete the place: you own it, or you added
+            it and it is still only yours.'
+          readOnly: true
         city:
           allOf:
           - $ref: '#/components/schemas/City'
@@ -17009,7 +17020,9 @@ components:
           - $ref: '#/components/schemas/PriceCurrencyEnum'
           - $ref: '#/components/schemas/NullEnum'
       required:
+      - added_by
       - attachments
+      - can_delete
       - city
       - country
       - created_at
@@ -17162,6 +17175,17 @@ components:
           type: boolean
           description: Whether you added the place.
           readOnly: true
+        added_by:
+          nullable: true
+          description: 'Who added the place: `{uuid, username, first_name, last_name,
+            profile_pic}`. Only the owner, members of a collection holding it and
+            the person themselves see it.'
+          readOnly: true
+        can_delete:
+          type: boolean
+          description: 'Whether you may delete the place: you own it, or you added
+            it and it is still only yours.'
+          readOnly: true
         price:
           type: string
           format: decimal
@@ -17175,6 +17199,8 @@ components:
           - $ref: '#/components/schemas/PriceCurrencyEnum'
           - $ref: '#/components/schemas/NullEnum'
       required:
+      - added_by
+      - can_delete
       - category
       - collections
       - created_at
@@ -17281,6 +17307,17 @@ components:
           type: boolean
           readOnly: true
           description: Whether you added the place. Who did is never shown to others.
+        added_by:
+          nullable: true
+          description: 'Who added the place: `{uuid, username, first_name, last_name,
+            profile_pic}`. Only the owner, members of a collection holding it and
+            the person themselves see it.'
+          readOnly: true
+        can_delete:
+          type: boolean
+          description: 'Whether you may delete the place: you own it, or you added
+            it and it is still only yours.'
+          readOnly: true
         city:
           allOf:
           - $ref: '#/components/schemas/City'
@@ -17321,7 +17358,9 @@ components:
           - $ref: '#/components/schemas/QuickAddImageImport'
           description: Present when some photos failed to import.
       required:
+      - added_by
       - attachments
+      - can_delete
       - city
       - country
       - created_at

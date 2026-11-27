@@ -143,9 +143,12 @@ params = validated(LocationListQuerySerializer, request.query_params)   # core.s
 - Taking a place out of a collection (`DELETE /api/locations/{id}/collections/{collection_id}/`, or a `PATCH`
   `collections` list that drops it) is for the collection owner, the place owner, or the person who added the
   place while they are still an editor of that collection; anyone else gets 403. Who added a place is stored
-  as `Location.created_by` (set on create, never writable, not exported in backups) and is never shown: the
-  location serializers expose only `created_by_you`, true for the signed-in creator and false for everyone
-  else, including guests. A copy made by `copy_location` has no `created_by`. A place taken out this way stays
+  as `Location.created_by` (set on create, never writable, not exported in backups). The location serializers
+  expose `created_by_you` (true for the signed-in creator) and `added_by` (the creator's name and picture), the
+  latter only to the creator, the owner and members of a collection holding the place; public and guest views
+  get `null`. `can_delete` says whether the viewer may `DELETE` the place: the owner always, and the creator
+  only while it is in exactly one collection they still edit, nobody else travelled to it, and nobody else added
+  a photo, attachment, activity or trail (otherwise 403). A copy made by `copy_location` has no `created_by`. A place taken out this way stays
   on the trip owner's map and list. Editors can still remove the placement from the plan
   (`DELETE /api/collections/{id}/itinerary-items/{item_id}/`), which leaves the place in the collection as an
   unscheduled stop. The list endpoint's `can_unlink` follows the same rule.

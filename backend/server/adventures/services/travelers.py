@@ -712,3 +712,36 @@ def release_collections_travelers(collections, exclude=None):
 def release_collection_travelers(collection):
     """``release_collections_travelers`` for one collection about to be deleted."""
     return release_collections_travelers([collection])
+
+
+def creator_may_delete(location, user):
+    """
+    Whether ``user``, who added ``location`` to someone else's trip, may delete the place itself.
+
+    Only while it is theirs alone in practice: they are still an editor of the one collection
+    holding it, nobody else travelled to it, and nobody else added a photo, attachment, activity
+    or trail. Then deleting it takes nothing from anyone and leaves the owner nothing stray.
+    """
+    from django.contrib.contenttypes.models import ContentType
+
+    from adventures.access.audience import EDITOR, member_role
+    from adventures.models import ContentAttachment, ContentImage, Visit
+
+    if (
+        user is None or not getattr(user, 'is_authenticated', False)
+        or location.created_by_id != user.id or location.user_id == user.id
+    ):
+        return False
+    collections = list(location.collections.all()[:2])
+    if len(collections) != 1 or member_role(collections[0], user) != EDITOR:
+        return False
+    visits = location.visits.all()
+    if Visit.travelers.through.objects.filter(visit__in=visits).exclude(customuser_id=user.id).exists():
+        return False
+    if location.trails.exists() or _uploads_on(visits.values('pk'), [user]):
+        return False
+    location_type = ContentType.objects.get_for_model(location)
+    return not (
+        ContentImage.objects.filter(content_type=location_type, object_id=location.pk).exclude(user=user).exists()
+        or ContentAttachment.objects.filter(content_type=location_type, object_id=location.pk).exclude(user=user).exists()
+    )

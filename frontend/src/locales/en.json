@@ -1381,6 +1381,7 @@
 		"photos_and_files": "Photos & files",
 		"nothing_here_yet": "Nothing has been added to this location yet. Edit it to add a description, photos, or visits.",
 		"added_by": "Added by",
+		"owner": "Owner",
 		"activity_summary": "Activity summary",
 		"total_elevation": "Total elevation",
 		"photos_hint": "Tap a photo to see it full size.",
@@ -1999,6 +2000,8 @@
 	},
 	"visits": {
 		"who_was_there": "Who was there",
+		"select_all": "Select all",
+		"select_none": "Select none",
 		"i_was_there_too": "I was there too",
 		"i_wasnt_there": "I wasn't there",
 		"remove_me_from_visit": "Remove me from this visit",
@@ -2381,6 +2384,7 @@
 		"more_links": "+{count} more",
 		"open_card": "Open {name}",
 		"added_by": "Added by {name}",
+		"added_by_you": "Added by you",
 		"with_owner": "with {name}",
 		"collection_actions": "Collection actions",
 		"item_actions": "More actions"

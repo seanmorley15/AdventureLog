@@ -245,6 +245,10 @@ export type Location = {
 	user: User | null;
 	/** True when the signed-in user added the place; who did is never sent. */
 	created_by_you?: boolean;
+	/** Who added the place; sent only to the owner, members of its collections and the creator. */
+	added_by?: Pick<User, 'uuid' | 'username' | 'first_name' | 'last_name' | 'profile_pic'> | null;
+	/** Whether the signed-in user may delete it: they own it, or added it and it is still only theirs. */
+	can_delete?: boolean;
 	city?: City | null;
 	region?: Region | null;
 	country?: Country | null;

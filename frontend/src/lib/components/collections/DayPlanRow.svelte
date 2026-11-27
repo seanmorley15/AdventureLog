@@ -83,6 +83,21 @@
 	}: Props = $props();
 
 	let askingDate = $state(false);
+	let logAnchor = $state<HTMLElement | null>(null);
+
+	function closeLogPrompt() {
+		askingDate = false;
+		dateRequired = false;
+	}
+
+	// The "who went" popover closes on a click anywhere else (which also leaves only one
+	// open when another row's Log visit is clicked) and on Escape.
+	function dismissOutside(event: PointerEvent) {
+		if (askingDate && logAnchor && !logAnchor.contains(event.target as Node)) closeLogPrompt();
+	}
+	function dismissOnEscape(event: KeyboardEvent) {
+		if (askingDate && event.key === 'Escape') closeLogPrompt();
+	}
 	let visitDate = $state(new Date().toISOString().slice(0, 10));
 	let logging = $state(false);
 	let joining = $state(false);
@@ -228,6 +243,8 @@
 		else if (visitDate) void logVisit(visitDate);
 	}
 </script>
+
+<svelte:window onpointerdown={dismissOutside} onkeydown={dismissOnEscape} />
 
 <div
 	id={!continuation && row.type
@@ -381,7 +398,7 @@
 				</button>
 			</form>
 		{:else if canLog}
-			<div class="relative">
+			<div class="relative" bind:this={logAnchor}>
 				<button
 					type="button"
 					class="btn btn-sm btn-ghost"
@@ -398,7 +415,17 @@
 						class="absolute right-0 top-full z-[250] mt-1 flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg"
 						onsubmit={confirmDate}
 					>
-						<p class="text-sm font-medium">{$t('itinerary.who_went')}</p>
+						<div class="flex items-center justify-between gap-2">
+							<p class="text-sm font-medium">{$t('itinerary.who_went')}</p>
+							<button
+								type="button"
+								class="btn btn-xs btn-ghost btn-circle"
+								aria-label={$t('about.close')}
+								onclick={closeLogPrompt}
+							>
+								<Close class="h-4 w-4" />
+							</button>
+						</div>
 						<TravelerPicker candidates={collaborators} bind:selected={picked} hideLegend />
 						{#if !hasProjectedDate || dateRequired}
 							<input

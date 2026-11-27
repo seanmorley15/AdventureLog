@@ -202,6 +202,65 @@ class CreatorUnlinkTests(APITestCase):
         self.assertEqual(location.user_id, self.owner.id)
         self.assertEqual(location.created_by_id, self.editor.id)
 
+    def test_collaborator_create_with_a_category_uses_the_owners_category(self):
+        # The UI sends the collaborator's own category; the place belongs to the owner,
+        # so it must end up on the owner's category of that name, not fail validation.
+        from adventures.models import Category
+        mine = Category.objects.create(user=self.editor, name='hike', display_name='Hike', icon='x')
+        self.client.force_authenticate(user=self.editor)
+        for category in ({'name': 'hike'}, {'name': 'museum', 'display_name': 'Museum', 'icon': 'm'}):
+            response = self.client.post(
+                '/api/locations/',
+                {'name': 'Cat', 'category': category, 'collections': [str(self.trip.id)]},
+                format='json',
+            )
+            self.assertEqual(response.status_code, 201, response.content)
+            location = Location.objects.get(pk=response.json()['id'])
+            self.assertEqual(location.category.user_id, self.owner.id)
+            self.assertEqual(location.category.name, category['name'])
+        self.assertNotEqual(location.category_id, mine.id)
+
+    def test_creator_may_delete_a_place_that_is_only_theirs(self):
+        location = self.create_in_trip(self.editor)
+        self.client.force_authenticate(user=self.editor)
+        self.assertTrue(self.client.get(f'/api/locations/{location.id}/').json()['can_delete'])
+        self.assertEqual(self.client.delete(f'/api/locations/{location.id}/').status_code, 204)
+        self.assertFalse(Location.objects.filter(pk=location.pk).exists())
+
+    def test_creator_may_not_delete_once_someone_else_is_involved(self):
+        from adventures.models import Visit
+        location = self.create_in_trip(self.editor)
+        visit = Visit.objects.create(location=location, start_date='2026-01-01', end_date='2026-01-02')
+        visit.travelers.set([self.editor, self.other_editor])
+        self.client.force_authenticate(user=self.editor)
+        self.assertFalse(self.client.get(f'/api/locations/{location.id}/').json()['can_delete'])
+        self.assertEqual(self.client.delete(f'/api/locations/{location.id}/').status_code, 403)
+        self.assertTrue(Location.objects.filter(pk=location.pk).exists())
+
+    def test_creator_may_not_delete_a_place_in_two_trips_or_that_others_added(self):
+        location = self.create_in_trip(self.editor)
+        other_trip = Collection.objects.create(user=self.owner, name='Other')
+        other_trip.shared_with.add(self.editor)
+        location.collections.add(other_trip)
+        self.client.force_authenticate(user=self.editor)
+        self.assertEqual(self.client.delete(f'/api/locations/{location.id}/').status_code, 403)
+        # a different editor who did not add it
+        solo = self.create_in_trip(self.editor, 'Solo')
+        self.client.force_authenticate(user=self.other_editor)
+        self.assertEqual(self.client.delete(f'/api/locations/{solo.id}/').status_code, 403)
+
+    def test_added_by_is_shown_to_members_and_never_to_the_public(self):
+        location = self.create_in_trip(self.editor)
+        for viewer in (self.editor, self.owner, self.other_editor):
+            self.client.force_authenticate(user=viewer)
+            added_by = self.client.get(f'/api/locations/{location.id}/').json()['added_by']
+            self.assertEqual(added_by['username'], self.editor.username)
+        Location.objects.filter(pk=location.pk).update(is_public=True)
+        self.client.force_authenticate(user=make_user('cu-stranger'))
+        body = self.client.get(f'/api/locations/{location.id}/').json()
+        self.assertIsNone(body.get('added_by'))
+        self.assertFalse(body['can_delete'])
+
     def test_created_by_is_set_on_create_outside_a_collection(self):
         self.client.force_authenticate(user=self.editor)
         response = self.client.post('/api/locations/', {'name': 'Solo'}, format='json')

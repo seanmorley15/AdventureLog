@@ -51,7 +51,7 @@ from adventures.services.locations.copy import copy_location, shared_file_names
 from adventures.services.locations.matching import find_duplicate_locations
 from adventures.services.media_quota import ensure_room_for_names
 from adventures.services.quick_add import finish_quick_add, prepare_location_quick_add
-from adventures.services.travelers import candidates, lost_access_plan, release_summary, take_my_visits, visited_by, where_ive_been_q
+from adventures.services.travelers import candidates, creator_may_delete, lost_access_plan, release_summary, take_my_visits, visited_by, where_ive_been_q
 from adventures.services.sunrise_sunset.times import get_sunrise_sunset_for_date
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunriseSunsetThrottle, SharingPreviewThrottle
 from adventures.utils.language import resolve_request_language
@@ -264,7 +264,7 @@ class LocationViewSet(ConditionalWritesMixin, ClientIdsMixin, PaginatedResponseM
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.user != request.user:
+        if instance.user != request.user and not creator_may_delete(instance, request.user):
             raise PermissionDenied('Only the owner can delete this location.')
         return super().destroy(request, *args, **kwargs)
 
