@@ -13,7 +13,7 @@ ARG PNPM_VERSION=10.32.1
 # Shared build stages
 # ---------------------------------------------------------------------------
 
-FROM node:22-bookworm-slim AS node-runtime
+FROM node:25-bookworm-slim AS node-runtime
 
 FROM cgr.dev/chainguard/node:latest-dev@sha256:54684aac47cea4f3b819370ef6a88d22603c9735208934c235461599af4eab57 AS frontend-build
 ARG PNPM_VERSION
